@@ -1,0 +1,328 @@
+#include <iostream>
+#include <fstream>
+#include <regex>
+#include <iomanip>
+
+#ifdef __unix__
+#define clear_screen() system("clear")
+#elif defined(_WIN32) || defined(WIN32)
+#define clear_screen() system("cls")
+#endif
+
+#include "lexer.h"
+#include "parser.h"
+#include "semantic_analysis.h"
+#include "interpreter.h"
+
+
+#define EMPTY_FILE_FAILURE 666
+
+
+class Program {
+public:
+	std::string name;
+	std::string source;
+	Program(std::string name, std::string source)
+		:name(name), source(source) {}
+};
+
+Program load_source(std::string workspace, std::string file_name) {
+	std::string source;
+	std::string path = workspace + file_name;
+
+	// read the file
+	std::ifstream file;
+	file.open(path);
+
+	if (!file) {
+		std::cout << "Could not load file from \"" << path << "\"." << std::endl;
+	}
+	else {
+		// convert whole program to std::string
+		std::string line;
+		while (std::getline(file, line))
+		{
+			source.append(line + "\n");
+		}
+	}
+
+	// skips the Byte Order Mark (BOM) that defines UTF-8 in some text files.
+	if ((unsigned char)source[0] == 0xEF &&
+		(unsigned char)source[1] == 0xBB &&
+		(unsigned char)source[2] == 0xBF) {
+		source = source.substr(3, source.size());
+	}
+
+	return Program(file_name, source);
+}
+
+int interpreter(std::string workspace, std::string main_file, std::vector<std::string> files) {
+	std::vector<Program> source_programs;
+
+	Program program = load_source(workspace, main_file);
+	if (program.source.empty()) return EMPTY_FILE_FAILURE;
+	source_programs.push_back(program);
+
+	for (auto file_name : files) {
+		program = load_source(workspace, file_name);
+		if (program.source.empty()) return EMPTY_FILE_FAILURE;
+		source_programs.push_back(program);
+	}
+
+	// create Global Scopes
+	visitor::SemanticScope semantic_global_scope;
+	visitor::InterpreterScope interpreter_global_scope;
+
+	try {
+		std::vector<parser::ASTProgramNode*> programs;
+
+		for (auto source : source_programs) {
+			// tokenise and initialise parser
+			lexer::Lexer lexer(source.source);
+			parser::Parser parser(&lexer, source.name);
+
+			// try to parse as program
+			programs.push_back(parser.parse_program());
+		}
+
+		// if this succeeds, perform semantic analysis modifying global scope
+		visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, programs);
+		semantic_analyser.start();
+		//semantic_analyser.visit(prog);
+
+		// interpreter
+		visitor::Interpreter interpreter(&interpreter_global_scope, programs);
+		//interpreter.visit(prog);
+		interpreter.start();
+	}
+	catch (const std::exception& e) {
+		std::cerr << e.what() << std::endl;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+//int repl()
+//{
+//	// REPL greeting
+//	std::cout << "CPLang 1.0.0 [2023]" << std::endl;
+//	std::cout << "Type \"#help\" for more information." << std::endl;
+//
+//	// create Global Scopes
+//	visitor::SemanticScope semantic_global_scope;
+//	visitor::InterpreterScope interpreter_global_scope;
+//
+//	// indefinite User input
+//	for (;;) {
+//
+//		// variables for user input
+//		std::string input_line;
+//		std::string program;
+//		bool file_load = false;
+//		bool expr = false;
+//
+//		// user prompt
+//		std::cout << "\n>>> _\b";
+//		std::getline(std::cin, input_line);
+//
+//		// remove leading/trailing whitespaces
+//		input_line = std::regex_replace(input_line, std::regex("^ +| +$"), "$1");
+//
+//		// quit
+//		if (input_line == "#quit") {
+//			break;
+//		}
+//
+//		// help
+//		else if (input_line == "#help") {
+//
+//			std::cout << "\n" << "Welcome to MiniLang 1.0.0! \n";
+//
+//			std::cout << "To use this interactive REPL, just type in regular MiniLang commands and hit\n";
+//			std::cout << "enter. You can also make use of the following commands: \n\n";
+//
+//			std::cout << " #load file-path";
+//			std::cout << "  Loads variable and function declarations from a specified\n";
+//			std::cout << std::setw(18);
+//			std::cout << "" << "file into memory, e.g.\n";
+//			std::cout << std::setw(18);
+//			std::cout << "" << ">>> #load ~/hello_world.prog\n";
+//			std::cout << " #quit            Exits the MiniLang REPL.\n";
+//			std::cout << std::setw(18);
+//			std::cout << "" << "functions and variables in the global scope.\n";
+//			std::cout << " #clear           Clears the terminal window." << std::endl;
+//		}
+//
+//		// load File
+//		else if (input_line.substr(0, 5) == "#load") {
+//			std::cout << input_line << std::endl;
+//
+//			// if length <= 6, then the user specified no file
+//			if (input_line.size() <= 6) {
+//				std::cout << "File path expected after '#load'." << std::endl;
+//			}
+//
+//			else {
+//
+//				// get file directory
+//				std::string file_dir = input_line.substr(6);
+//
+//				// remove any whitespaces from that
+//				file_dir = std::regex_replace(file_dir, std::regex("^ +| +$"), "$1");
+//
+//				// read the file
+//				std::ifstream file;
+//				file.open(file_dir);
+//
+//				if (!file)
+//					std::cout << "Could not load file from \"" + file_dir + "\"." << std::endl;
+//
+//				else {
+//					// convert whole program to std::string
+//					std::string line;
+//					while (std::getline(file, line))
+//						program.append(line + "\n");
+//
+//					// flag to indicate that this statement is for file loading
+//					file_load = true;
+//				}
+//
+//				file.close();
+//			}
+//		}
+//
+//		// clear Screen
+//		else if (input_line == "#clear") {
+//			clear_screen();
+//		}
+//
+//		// parse as program
+//		else {
+//
+//			// add line to program
+//			program += input_line;
+//
+//			// count number of open scopes
+//			unsigned int open_scopes = 0;
+//			open_scopes += std::count(input_line.begin(), input_line.end(), '{');
+//			open_scopes -= std::count(input_line.begin(), input_line.end(), '}');
+//
+//			while (open_scopes) {
+//				std::cout << "... _\b";
+//
+//				// read next line
+//				input_line.clear();
+//				getline(std::cin, input_line);
+//
+//				// update scope count
+//				open_scopes += std::count(input_line.begin(), input_line.end(), '{');
+//				open_scopes -= std::count(input_line.begin(), input_line.end(), '}');
+//
+//				// add line to program
+//				program += input_line + "\n";
+//			}
+//		}
+//
+//		try {
+//
+//			// tokenise and initialise parser
+//			lexer::Lexer lexer(program);
+//			parser::Parser parser(&lexer);
+//			parser::ASTProgramNode* prog;
+//
+//			// try to parse as program
+//			try {
+//				prog = parser.parse_program();
+//			}
+//
+//			// catch by trying to parse as expression
+//			catch (const std::exception& e) {
+//
+//				try {
+//					// if expression ends with ';', get rid of it
+//					if (program.back() == ';')
+//						program.pop_back();
+//
+//					// parse again, create program node manually
+//					lexer::Lexer expr_lexer(program);
+//					parser = parser::Parser(&expr_lexer, 0);  // do not consume first token
+//					prog = new parser::ASTProgramNode(
+//						std::vector<parser::ASTNode*>({ parser.parse_expression() }));
+//
+//					expr = true;
+//				}
+//				catch (const std::exception& expr_e) {
+//
+//					// throw original error
+//					throw std::runtime_error(e.what());
+//				}
+//			}
+//
+//			// try to analyse in a temporary copy of the global scope (just in case
+//			// the program is invalid)
+//			visitor::SemanticScope temp = semantic_global_scope;
+//			visitor::SemanticAnalyser temp_semantic_analyser(&temp);
+//			temp_semantic_analyser.visit(prog);
+//
+//			// if this succeeds, perform semantic analysis modifying global scope
+//			visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope);
+//			semantic_analyser.visit(prog);
+//
+//			// interpreter
+//			visitor::Interpreter interpreter(&interpreter_global_scope);
+//			interpreter.visit(prog);
+//
+//			// if loading file, show user that everything went well
+//			if (file_load)
+//				std::cout << "File loaded successfully." << std::endl;
+//
+//			// if expression, show user output
+//			else if (expr) {
+//				auto current = interpreter.current_expr();
+//				switch (current.first) {
+//				case parser::TYPE::INT:
+//					std::cout << current.second.i;
+//					break;
+//				case parser::TYPE::FLOAT:
+//					std::cout << current.second.f;
+//					break;
+//				case parser::TYPE::BOOL:
+//					std::cout << ((current.second.b) ? "true" : "false");
+//					break;
+//				case parser::TYPE::STRING:
+//					std::cout << current.second.s;
+//					break;
+//				}
+//			}
+//		}
+//
+//		// catch exception and print error
+//		catch (const std::exception& e) {
+//			std::cerr << e.what() << std::endl;
+//		}
+//	}
+//
+//	return EXIT_SUCCESS;
+//}
+
+/**
+ * The main function implements the interpreter.
+ * @return 0
+ */
+int main(int argc, const char* argv[]) {
+	return interpreter("../../../samples/project/", "main.cp", { "math.cp", "problems.cp"});
+
+	// check if it has arguments
+	if (argc > 1) {
+		std::string workspace = argv[0];
+		std::string main_file = argv[1];
+		std::vector<std::string> files;
+
+		for (int i = 3; i < argc; ++i) {
+			files.push_back(argv[i]);
+		}
+
+		return interpreter(workspace, main_file, files);
+	}
+	//return repl();
+}
