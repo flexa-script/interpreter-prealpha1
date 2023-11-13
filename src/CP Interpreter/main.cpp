@@ -13,6 +13,7 @@
 #include "parser.h"
 #include "semantic_analysis.h"
 #include "interpreter.h"
+#include "util.h"
 
 
 #define EMPTY_FILE_FAILURE 666
@@ -310,19 +311,35 @@ int interpreter(std::string workspace, std::string main_file, std::vector<std::s
  * @return 0
  */
 int main(int argc, const char* argv[]) {
-	return interpreter("../../../samples/project/", "main.cp", { "math.cp", "problems.cp"});
+	long result = 0;
+	//result = interpreter("C:\\Users\\Carlos\\Documents\\newProject\\", "main.cp", { });
+	//system("pause");
+	//return result;
+	//return interpreter("C:\\Users\\Carlos\\Documents\\newProject\\", "main.cp", { "math.cp", "problems.cp"});
 
 	// check if it has arguments
 	if (argc > 1) {
-		std::string workspace = argv[0];
-		std::string main_file = argv[1];
+		std::string workspace = argv[1];
+		std::string main_file = argv[2];
 		std::vector<std::string> files;
 
-		for (int i = 3; i < argc; ++i) {
-			files.push_back(argv[i]);
+		if(argc>= 3) {
+			std::string strfiles = argv[3];
+			strfiles = strfiles.substr(1, strfiles.length() - 2);
+			std::vector<std::string> auxFiles = split(strfiles, ',');
+			for (auto file : auxFiles) {
+				files.push_back(trim(file));
+			}
 		}
 
-		return interpreter(workspace, main_file, files);
+		result = interpreter(workspace, main_file, files);
 	}
+
+	//for (int i = 0; i < argc; ++i) {
+	//	std::cout << argv[i] << std::endl;
+	//}
 	//return repl();
+	//std::cout << std::endl << std::endl;
+	system("pause");
+	return result;
 }
