@@ -97,7 +97,7 @@ std::vector<std::tuple<std::string, std::string, std::string>> InterpreterScope:
 			list.emplace_back(std::make_tuple(var.first, "int", std::to_string(var.second.second.i)));
 			break;
 		case parser::TYPE::FLOAT:
-			list.emplace_back(std::make_tuple(var.first, "real", std::to_string(var.second.second.f)));
+			list.emplace_back(std::make_tuple(var.first, "float", std::to_string(var.second.second.f)));
 			break;
 		case parser::TYPE::BOOL:
 			list.emplace_back(std::make_tuple(var.first, "bool", (var.second.second.b) ? "true" : "false"));
@@ -131,13 +131,14 @@ void Interpreter::start() {
 
 void visitor::Interpreter::visit(parser::ASTProgramNode* prog) {
 	// For each statement, accept
-	for (auto& statement : prog->statements)
+	for (auto& statement : prog->statements) {
 		statement->accept(this);
+	}
 }
 
 void visitor::Interpreter::visit(parser::ASTUsingNode* usg) {
 	for (auto program : programs) {
-		if (usg->library == program->name.substr(0, program->name.length() - 3)) {
+		if (usg->library == program->name) {
 			auto prev_program = current_program;
 			current_program = program;
 			start();
@@ -615,7 +616,7 @@ std::string visitor::type_str(parser::TYPE t) {
 	case parser::TYPE::INT:
 		return "int";
 	case parser::TYPE::FLOAT:
-		return "real";
+		return "float";
 	case parser::TYPE::BOOL:
 		return "bool";
 	case parser::TYPE::STRING:

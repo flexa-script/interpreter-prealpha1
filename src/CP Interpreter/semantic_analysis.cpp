@@ -138,7 +138,7 @@ void SemanticAnalyser::visit(parser::ASTProgramNode* prog)
 void SemanticAnalyser::visit(parser::ASTUsingNode* usg)
 {
 	for (auto program : programs) {
-		if (usg->library == program->name.substr(0, program->name.length() - 3)) {
+		if (usg->library == program->name) {
 			auto prev_program = current_program;
 			current_program = program;
 			start();
@@ -315,18 +315,15 @@ void SemanticAnalyser::visit(parser::ASTWhileNode* whilenode)
 	whilenode->block->accept(this);
 }
 
-void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* func)
-{
+void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* func) {
 	// First check that all enclosing scopes have not already defined the function
-	for (auto& scope : scopes)
-		if (scope->already_declared(func->identifier, func->signature))
-		{
+	for (auto& scope : scopes) {
+		if (scope->already_declared(func->identifier, func->signature)) {
 			// Determine line number of error and the corresponding function signature
 			int line = scope->declaration_line(func->identifier, func->signature);
 			std::string signature = "(";
 			bool has_params = false;
-			for (auto param : func->signature)
-			{
+			for (auto param : func->signature) {
 				has_params = true;
 				signature += type_str(param) + ", ";
 			}
@@ -339,6 +336,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* func)
 				". Function " + func->identifier + signature +
 				" already defined on line " + std::to_string(line) + ".");
 		}
+	}
 
 	// Add function to symbol table
 	scopes.back()->declare(func->identifier, func->type, func->signature, func->line_number);
@@ -396,14 +394,14 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* bin)
 	bin->right->accept(this);
 	parser::TYPE r_type = current_expression_type;
 
-	// These only work for int/real
+	// These only work for int/float
 	if (op == "*" || op == "/" || op == "-" || op == "%")
 	{
 		if ((l_type != parser::TYPE::INT && l_type != parser::TYPE::FLOAT) || (r_type != parser::TYPE::INT && r_type != parser::TYPE::FLOAT))
 			throw std::runtime_error("Expected numerical operands for '" + op +
 				"' operator on line " + std::to_string(bin->line_number) + ".");
 
-		// If both int, then expression is int, otherwise real
+		// If both int, then expression is int, otherwise float
 		current_expression_type = (l_type == parser::TYPE::INT && r_type == parser::TYPE::INT) ? parser::TYPE::INT : parser::TYPE::FLOAT;
 	}
 	else if (op == "+")
@@ -511,13 +509,11 @@ void SemanticAnalyser::visit(parser::ASTExprFunctionCallNode* func)
 
 	// Make sure the function exists in some scope i
 	unsigned long i;
-	for (i = scopes.size() - 1; !scopes[i]->already_declared(func->identifier, signature); i--)
-		if (i <= 0)
-		{
+	for (i = scopes.size() - 1; !scopes[i]->already_declared(func->identifier, signature); i--) {
+		if (i <= 0) {
 			std::string func_name = func->identifier + "(";
 			bool has_params = false;
-			for (auto param : signature)
-			{
+			for (auto param : signature) {
 				has_params = true;
 				func_name += type_str(param) + ", ";
 			}
@@ -528,21 +524,25 @@ void SemanticAnalyser::visit(parser::ASTExprFunctionCallNode* func)
 				std::to_string(func->line_number) + " was never declared " +
 				((scopes.size() == 1) ? "globally." : "in this scope."));
 		}
+	}
 
 	// Set current expression type to the return value of the function
 	current_expression_type = scopes[i]->type(func->identifier, std::move(signature));
 }
 
-void SemanticAnalyser::visit(parser::ASTFloatParseNode* str_parser)
+void SemanticAnalyser::visit(parser::ASTFloatParseNode* float_parser)
 {
+	current_expression_type = parser::TYPE::FLOAT;
 }
 
-void SemanticAnalyser::visit(parser::ASTIntParseNode* str_parser)
+void SemanticAnalyser::visit(parser::ASTIntParseNode* int_parser)
 {
+	current_expression_type = parser::TYPE::INT;
 }
 
 void SemanticAnalyser::visit(parser::ASTStringParseNode* str_parser)
 {
+	current_expression_type = parser::TYPE::STRING;
 }
 
 void SemanticAnalyser::visit(parser::ASTExprReadNode* read)
