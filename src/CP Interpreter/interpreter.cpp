@@ -7,6 +7,17 @@
 using namespace visitor;
 
 
+InterpreterScope::InterpreterScope(std::string name) : name(name) {}
+
+
+InterpreterScope::InterpreterScope() {
+	name = "";
+}
+
+std::string InterpreterScope::getName() {
+	return name;
+}
+
 bool InterpreterScope::already_declared(std::string identifier) {
 	return variable_symbol_table.find(identifier) != variable_symbol_table.end();
 }
@@ -70,9 +81,11 @@ std::vector<std::string> InterpreterScope::variable_names_of(std::string identif
 	auto funcs = function_symbol_table.equal_range(identifier);
 
 	// Match given signature to function in multimap
-	for (auto i = funcs.first; i != funcs.second; i++)
-		if (std::get<0>(i->second) == signature)
+	for (auto i = funcs.first; i != funcs.second; i++) {
+		if (std::get<0>(i->second) == signature) {
 			return std::get<1>(i->second);
+		}
+	}
 
 }
 
@@ -114,13 +127,15 @@ std::vector<std::tuple<std::string, std::string, std::string>> InterpreterScope:
 Interpreter::Interpreter() {
 	// Add global scope
 	scopes.push_back(new InterpreterScope());
+	current_expression_type = parser::TYPE::VOID;
+	current_program = nullptr;
 }
 
 Interpreter::Interpreter(InterpreterScope* global_scope, std::vector<parser::ASTProgramNode*> programs)
-	: programs(programs), current_program(programs[0])
-{
+	: programs(programs), current_program(programs[0]) {
 	// Add global scope
 	scopes.push_back(global_scope);
+	current_expression_type = parser::TYPE::VOID;
 }
 
 Interpreter::~Interpreter() = default;
@@ -249,11 +264,13 @@ void visitor::Interpreter::visit(parser::ASTFunctionCallNode* func) {
 
 	// Determine in which scope the function is declared
 	unsigned long i;
-	for (i = scopes.size() - 1; !scopes[i]->already_declared(func->identifier, signature); i--);
+	for (i = scopes.size() - 1; !scopes[i]->already_declared(func->identifier, signature); --i);
 
 	// Populate the global vector of function parameter names, to be used in creation of
 	// function scope
 	current_function_parameters = scopes[i]->variable_names_of(func->identifier, signature);
+
+	currentFunctionName = func->identifier;
 
 	// Visit the corresponding function block
 	scopes[i]->block_of(func->identifier, signature)->accept(this);
@@ -262,11 +279,18 @@ void visitor::Interpreter::visit(parser::ASTFunctionCallNode* func) {
 void visitor::Interpreter::visit(parser::ASTReturnNode* ret) {
 	// Update current expression
 	ret->expr->accept(this);
+	for (long i = scopes.size() - 1; i >= 0; --i) {
+		if (!scopes[i]->getName().empty()) {
+			returnFromFunctionName = scopes[i]->getName();
+			returnFromFunction = true;
+			break;
+		}
+	}
 }
 
 void visitor::Interpreter::visit(parser::ASTBlockNode* block) {
 	// Create new scope
-	scopes.push_back(new InterpreterScope());
+	scopes.push_back(new InterpreterScope(currentFunctionName));
 
 	// Check whether this is a function block by seeing if we have any current function
 	// parameters. If we do, then add them to the current scope.
@@ -290,10 +314,19 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* block) {
 	// Clear the global function parameter/argument vectors
 	current_function_parameters.clear();
 	current_function_arguments.clear();
+	currentFunctionName = "";
 
 	// Visit each statement in the block
-	for (auto& stmt : block->statements)
+	for (auto& stmt : block->statements) {
 		stmt->accept(this);
+		if (returnFromFunction) {
+			if (!returnFromFunctionName.empty() && returnFromFunctionName == scopes.back()->getName()) {
+				returnFromFunctionName = "";
+				returnFromFunction = false;
+			}
+			break;
+		}
+	}
 
 	// Close scope
 	scopes.pop_back();
@@ -308,8 +341,9 @@ void visitor::Interpreter::visit(parser::ASTIfNode* ifNode) {
 		ifNode->if_block->accept(this);
 	}
 	else {
-		if (ifNode->else_block)
+		if (ifNode->else_block) {
 			ifNode->else_block->accept(this);
+		}
 	}
 
 }
@@ -525,8 +559,9 @@ void visitor::Interpreter::visit(parser::ASTExprFunctionCallNode* func) {
 	}
 
 	// Update the global vector current_function_arguments
-	for (auto arg : current_function_arguments)
+	for (auto arg : current_function_arguments) {
 		this->current_function_arguments.push_back(arg);
+	}
 
 	// Determine in which scope the function is declared
 	unsigned long i;
@@ -535,6 +570,8 @@ void visitor::Interpreter::visit(parser::ASTExprFunctionCallNode* func) {
 	// Populate the global vector of function parameter names, to be used in creation of
 	// function scope
 	current_function_parameters = scopes[i]->variable_names_of(func->identifier, signature);
+
+	currentFunctionName = func->identifier;
 
 	// Visit the corresponding function block
 	scopes[i]->block_of(func->identifier, signature)->accept(this);
@@ -545,7 +582,7 @@ void visitor::Interpreter::visit(parser::ASTFloatParseNode* str_parser)
 	// Visit expression node to update current value/type
 	str_parser->expr->accept(this);
 
-	// Print, depending on type
+	// parse depending on type
 	switch (current_expression_type) {
 	case parser::TYPE::INT:
 		current_expression_value.f = static_cast<long double>(current_expression_value.i);
@@ -563,7 +600,7 @@ void visitor::Interpreter::visit(parser::ASTIntParseNode* str_parser)
 	// Visit expression node to update current value/type
 	str_parser->expr->accept(this);
 
-	// Print, depending on type
+	// parse depending on type
 	switch (current_expression_type) {
 	case parser::TYPE::FLOAT:
 		current_expression_value.i = static_cast<long long>(round(current_expression_value.f));
@@ -581,7 +618,7 @@ void visitor::Interpreter::visit(parser::ASTStringParseNode* str_parser)
 	// Visit expression node to update current value/type
 	str_parser->expr->accept(this);
 
-	// Print, depending on type
+	// parse depending on type
 	switch (current_expression_type) {
 	case parser::TYPE::INT:
 		current_expression_value.s = std::to_string(current_expression_value.i);

@@ -24,6 +24,9 @@ namespace visitor
 	class InterpreterScope
 	{
 	public:
+		InterpreterScope();
+		InterpreterScope(std::string);
+
 		bool already_declared(std::string);
 		bool already_declared(std::string, std::vector<parser::TYPE>);
 		void declare(std::string, __int64_t);
@@ -39,15 +42,12 @@ namespace visitor
 
 		std::vector<std::tuple<std::string, std::string, std::string>>  variable_list();
 
-	private:
-		std::map<std::string,
-			std::pair<parser::TYPE,
-			value_t>> variable_symbol_table;
+		std::string getName();
 
-		std::multimap<std::string,
-			std::tuple<std::vector<parser::TYPE>,
-			std::vector<std::string>,
-			parser::ASTBlockNode*>> function_symbol_table;
+	private:
+		std::string name;
+		std::map<std::string, std::pair<parser::TYPE, value_t>> variable_symbol_table;
+		std::multimap<std::string, std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*>> function_symbol_table;
 	};
 
 	class Interpreter : public Visitor
@@ -60,6 +60,9 @@ namespace visitor
 		value_t current_expression_value;
 		std::vector<std::string> current_function_parameters;
 		std::vector<std::pair<parser::TYPE, value_t>> current_function_arguments;
+		std::string currentFunctionName;
+		std::string returnFromFunctionName;
+		bool returnFromFunction = false;
 
 	public:
 		Interpreter();
