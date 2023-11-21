@@ -192,7 +192,7 @@ int repl() {
 
 			// if expression, show user output
 			else if (expr) {
-				auto current = interpreter.current_expr();
+				auto current = interpreter.currentExpr();
 				switch (current.first) {
 				case parser::TYPE::INT:
 					std::cout << current.second.i;

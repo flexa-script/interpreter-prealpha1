@@ -80,7 +80,7 @@ namespace visitor
 		void visit(parser::ASTExprReadNode*) override;
 	};
 
-	std::string type_str(parser::TYPE);
+	std::string typeStr(parser::TYPE);
 }
 
 #endif //SEMANTIC_ANALYSIS_H

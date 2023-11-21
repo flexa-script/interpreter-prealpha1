@@ -27,7 +27,7 @@ namespace parser {
 	private:
 		void consumeToken();
 
-		// Statement Nodes
+		// statement Nodes
 		ASTStatementNode* parseProgramStatement();
 
 		ASTUsingNode* parseUsingStatement();

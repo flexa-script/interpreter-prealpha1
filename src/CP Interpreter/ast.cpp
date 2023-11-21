@@ -7,8 +7,8 @@ using namespace parser;
 
 
 // Program Node
-ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string name) :
-	statements(std::move(statements)), name(name) {}
+ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string name)
+	: statements(std::move(statements)), name(name) {}
 
 // Statement Nodes
 ASTUsingNode::ASTUsingNode(std::string library, unsigned int lineNumber) :
@@ -41,17 +41,17 @@ ASTFunctionCallNode::ASTFunctionCallNode(std::string identifier, std::vector<AST
 ASTReturnNode::ASTReturnNode(ASTExprNode* expr, unsigned int lineNumber) :
 	expr(expr), lineNumber(lineNumber) {}
 
-ASTBlockNode::ASTBlockNode(std::vector<ASTStatementNode*> statements, unsigned int lineNumber) :
-	statements(std::move(statements)), lineNumber(lineNumber) {}
+ASTBlockNode::ASTBlockNode(std::vector<ASTStatementNode*> statements, unsigned int lineNumber)
+	: statements(std::move(statements)), lineNumber(lineNumber) {}
 
-ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* ifBlock, unsigned int lineNumber, ASTBlockNode* elseBlock) :
-	condition(condition), ifBlock(ifBlock), lineNumber(lineNumber), elseBlock(elseBlock) {}
+ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* ifBlock, unsigned int lineNumber, ASTBlockNode* elseBlock)
+	: condition(condition), ifBlock(ifBlock), lineNumber(lineNumber), elseBlock(elseBlock) {}
 
-ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int lineNumber) :
-	condition(condition), block(block), lineNumber(lineNumber) {}
+ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int lineNumber)
+	: condition(condition), block(block), lineNumber(lineNumber) {}
 
-ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<std::pair<std::string, TYPE>> parameters, TYPE type, ASTBlockNode* block, unsigned int lineNumber) :
-	identifier(std::move(identifier)), parameters(std::move(parameters)), type(type), block(block), lineNumber(lineNumber) {
+ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<std::pair<std::string, TYPE>> parameters, TYPE type, ASTBlockNode* block, unsigned int lineNumber)
+	: identifier(std::move(identifier)), parameters(std::move(parameters)), type(type), block(block), lineNumber(lineNumber) {
 	// generate signature
 	this->signature = std::vector<TYPE>();
 

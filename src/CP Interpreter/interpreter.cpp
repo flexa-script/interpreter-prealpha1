@@ -26,45 +26,46 @@ bool InterpreterScope::alreadyDeclared(std::string identifier, std::vector<parse
 	auto funcs = functionSymbolTable.equal_range(identifier);
 
 	// If key is not present in multimap
-	if (std::distance(funcs.first, funcs.second) == 0)
+	if (std::distance(funcs.first, funcs.second) == 0) {
 		return false;
+	}
 
 	// Check signature for each function in multimap
-	for (auto i = funcs.first; i != funcs.second; i++)
-		if (std::get<0>(i->second) == signature)
+	for (auto i = funcs.first; i != funcs.second; i++) {
+		if (std::get<0>(i->second) == signature) {
 			return true;
+		}
+	}
 
 	// Function with matching signature not found
 	return false;
 }
 
-void InterpreterScope::declare(std::string identifier, __int64_t int_value) {
+void InterpreterScope::declare(std::string identifier, __int64_t intValue) {
 	value_t value;
-	value.i = int_value;
+	value.i = intValue;
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::INT, value);
 }
 
-void InterpreterScope::declare(std::string identifier, long double real_value) {
+void InterpreterScope::declare(std::string identifier, long double realValue) {
 	value_t value;
-	value.f = real_value;
+	value.f = realValue;
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::FLOAT, value);
 }
 
-void InterpreterScope::declare(std::string identifier, bool bool_value) {
+void InterpreterScope::declare(std::string identifier, bool boolValue) {
 	value_t value;
-	value.b = bool_value;
+	value.b = boolValue;
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::BOOL, value);
 }
 
-void InterpreterScope::declare(std::string identifier, std::string string_value) {
+void InterpreterScope::declare(std::string identifier, std::string stringValue) {
 	value_t value;
-	value.s = string_value;
+	value.s = stringValue;
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::STRING, value);
 }
 
-void InterpreterScope::declare(std::string identifier, std::vector<parser::TYPE> signature,
-	std::vector<std::string> variableNames, parser::ASTBlockNode* block) {
-
+void InterpreterScope::declare(std::string identifier, std::vector<parser::TYPE> signature, std::vector<std::string> variableNames, parser::ASTBlockNode* block) {
 	functionSymbolTable.insert(std::make_pair(identifier, std::make_tuple(signature, variableNames, block)));
 }
 
@@ -76,8 +77,7 @@ value_t InterpreterScope::valueof(std::string identifier) {
 	return variableSymbolTable[identifier].second;
 }
 
-std::vector<std::string> InterpreterScope::variablenamesof(std::string identifier,
-	std::vector<parser::TYPE> signature) {
+std::vector<std::string> InterpreterScope::variablenamesof(std::string identifier, std::vector<parser::TYPE> signature) {
 	auto funcs = functionSymbolTable.equal_range(identifier);
 
 	// Match given signature to function in multimap
@@ -93,10 +93,11 @@ parser::ASTBlockNode* InterpreterScope::blockof(std::string identifier, std::vec
 	auto funcs = functionSymbolTable.equal_range(identifier);
 
 	// Match given signature to function in multimap
-	for (auto i = funcs.first; i != funcs.second; i++)
+	for (auto i = funcs.first; i != funcs.second; i++) {
 		if (std::get<0>(i->second) == signature) {
 			return std::get<2>(i->second);
 		}
+	}
 
 	return nullptr;
 }
@@ -104,7 +105,7 @@ parser::ASTBlockNode* InterpreterScope::blockof(std::string identifier, std::vec
 std::vector<std::tuple<std::string, std::string, std::string>> InterpreterScope::variableList() {
 	std::vector<std::tuple<std::string, std::string, std::string>> list;
 
-	for (auto const& var : variableSymbolTable)
+	for (auto const& var : variableSymbolTable) {
 		switch (var.second.first) {
 		case parser::TYPE::INT:
 			list.emplace_back(std::make_tuple(var.first, "int", std::to_string(var.second.second.i)));
@@ -119,22 +120,23 @@ std::vector<std::tuple<std::string, std::string, std::string>> InterpreterScope:
 			list.emplace_back(std::make_tuple(var.first, "string", var.second.second.s));
 			break;
 		}
+	}
 
-	return std::move(list);
+	return list;
 }
 
 
 Interpreter::Interpreter() {
-	// Add global scope
+	// add global scope
 	scopes.push_back(new InterpreterScope());
 	currentExpressionType = parser::TYPE::VOID;
 	currentProgram = nullptr;
 }
 
-Interpreter::Interpreter(InterpreterScope* global_scope, std::vector<parser::ASTProgramNode*> programs)
+Interpreter::Interpreter(InterpreterScope* globalScope, std::vector<parser::ASTProgramNode*> programs)
 	: programs(programs), currentProgram(programs[0]) {
-	// Add global scope
-	scopes.push_back(global_scope);
+	// add global scope
+	scopes.push_back(globalScope);
 	currentExpressionType = parser::TYPE::VOID;
 }
 
@@ -145,7 +147,7 @@ void Interpreter::start() {
 }
 
 void visitor::Interpreter::visit(parser::ASTProgramNode* prog) {
-	// For each statement, accept
+	// for each statement, accept
 	for (auto& statement : prog->statements) {
 		statement->accept(this);
 	}
@@ -215,10 +217,10 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* assign) {
 }
 
 void visitor::Interpreter::visit(parser::ASTPrintNode* print) {
-	// Visit expression node to update current value/type
+	// visit expression node to update current value/type
 	print->expr->accept(this);
 
-	// Print, depending on type
+	// print, depending on type
 	switch (currentExpressionType) {
 	case parser::TYPE::INT:
 		std::cout << currentExpressionValue.i;
@@ -241,11 +243,11 @@ void visitor::Interpreter::visit(parser::ASTReadNode* read) {
 }
 
 void visitor::Interpreter::visit(parser::ASTFunctionCallNode* func) {
-	// Determine the signature of the function
+	// determine the signature of the function
 	std::vector<parser::TYPE> signature;
 	std::vector<std::pair<parser::TYPE, value_t>> currentFunctionArguments;
 
-	// For each parameter,
+	// for each parameter,
 	for (auto param : func->parameters) {
 		// visit to update current expr type
 		param->accept(this);
@@ -258,26 +260,27 @@ void visitor::Interpreter::visit(parser::ASTFunctionCallNode* func) {
 		currentFunctionArguments.emplace_back(currentExpressionType, currentExpressionValue);
 	}
 
-	// Update the global vector current_function_arguments
-	for (auto arg : currentFunctionArguments)
+	// update the global vector current_function_arguments
+	for (auto arg : currentFunctionArguments) {
 		this->currentFunctionArguments.push_back(arg);
+	}
 
-	// Determine in which scope the function is declared
+	// determine in which scope the function is declared
 	unsigned long i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclared(func->identifier, signature); --i);
 
-	// Populate the global vector of function parameter names, to be used in creation of
+	// populate the global vector of function parameter names, to be used in creation of
 	// function scope
 	currentFunctionParameters = scopes[i]->variablenamesof(func->identifier, signature);
 
 	currentFunctionName = func->identifier;
 
-	// Visit the corresponding function block
+	// visit the corresponding function block
 	scopes[i]->blockof(func->identifier, signature)->accept(this);
 }
 
 void visitor::Interpreter::visit(parser::ASTReturnNode* ret) {
-	// Update current expression
+	// update current expression
 	ret->expr->accept(this);
 	for (long i = scopes.size() - 1; i >= 0; --i) {
 		if (!scopes[i]->getName().empty()) {
@@ -289,10 +292,10 @@ void visitor::Interpreter::visit(parser::ASTReturnNode* ret) {
 }
 
 void visitor::Interpreter::visit(parser::ASTBlockNode* block) {
-	// Create new scope
+	// create new scope
 	scopes.push_back(new InterpreterScope(currentFunctionName));
 
-	// Check whether this is a function block by seeing if we have any current function
+	// check whether this is a function block by seeing if we have any current function
 	// parameters. If we do, then add them to the current scope.
 	for (unsigned int i = 0; i < currentFunctionArguments.size(); i++) {
 		switch (currentFunctionArguments[i].first) {
@@ -311,12 +314,12 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* block) {
 		}
 	}
 
-	// Clear the global function parameter/argument vectors
+	// clear the global function parameter/argument vectors
 	currentFunctionParameters.clear();
 	currentFunctionArguments.clear();
 	currentFunctionName = "";
 
-	// Visit each statement in the block
+	// visit each statement in the block
 	for (auto& stmt : block->statements) {
 		stmt->accept(this);
 		if (returnFromFunction) {
@@ -349,20 +352,20 @@ void visitor::Interpreter::visit(parser::ASTIfNode* ifNode) {
 }
 
 void visitor::Interpreter::visit(parser::ASTWhileNode* whileNode) {
-	// Evaluate while condition
+	// evaluate while condition
 	whileNode->condition->accept(this);
 
 	while (currentExpressionValue.b) {
-		// Execute block
+		// execute block
 		whileNode->block->accept(this);
 
-		// Re-evaluate while condition
+		// re-evaluate while condition
 		whileNode->condition->accept(this);
 	}
 }
 
 void visitor::Interpreter::visit(parser::ASTFunctionDefinitionNode* func) {
-	// Add function to symbol table
+	// add function to symbol table
 	scopes.back()->declare(func->identifier, func->signature, func->variableNames, func->block);
 }
 
@@ -395,25 +398,25 @@ void visitor::Interpreter::visit(parser::ASTLiteralNode<std::string>* lit) {
 }
 
 void visitor::Interpreter::visit(parser::ASTBinaryExprNode* bin) {
-	// Operator
+	// operator
 	std::string op = bin->op;
 
-	// Visit left node first
+	// visit left node first
 	bin->left->accept(this);
 	parser::TYPE l_type = currentExpressionType;
 	value_t l_value = currentExpressionValue;
 
-	// Then right node
+	// then right node
 	bin->right->accept(this);
 	parser::TYPE r_type = currentExpressionType;
 	value_t r_value = currentExpressionValue;
 
-	// Expression struct
+	// expression struct
 	value_t v;
 
-	// Arithmetic operators for now
+	// arithmetic operators for now
 	if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%") {
-		// Two ints
+		// two ints
 		if (l_type == parser::TYPE::INT && r_type == parser::TYPE::INT) {
 			currentExpressionType = parser::TYPE::INT;
 			if (op == "+") {
@@ -426,17 +429,16 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* bin) {
 				v.i = l_value.i * r_value.i;
 			}
 			else if (op == "/") {
-				if (r_value.i == 0)
-					throw std::runtime_error("Division by zero encountered on line "
-						+ std::to_string(bin->lineNumber) + ".");
+				if (r_value.i == 0) {
+					throw std::runtime_error("Division by zero encountered on line " + std::to_string(bin->lineNumber) + ".");
+				}
 				v.i = l_value.i / r_value.i;
 			}
 			else if (op == "%") {
 				v.i = l_value.i % r_value.i;
 			}
 		}
-		else if (l_type == parser::TYPE::FLOAT || r_type == parser::TYPE::FLOAT) // At least one real
-		{
+		else if (l_type == parser::TYPE::FLOAT || r_type == parser::TYPE::FLOAT) { // at least one real
 			currentExpressionType = parser::TYPE::FLOAT;
 			long double l = l_value.f, r = r_value.f;
 			if (l_type == parser::TYPE::INT) {
@@ -455,76 +457,83 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* bin) {
 				v.f = l * r;
 			}
 			else if (op == "/") {
-				if (r == 0)
-					throw std::runtime_error("Division by zero encountered on line "
-						+ std::to_string(bin->lineNumber) + ".");
+				if (r == 0) {
+					throw std::runtime_error("Division by zero encountered on line " + std::to_string(bin->lineNumber) + ".");
+				}
 				v.f = l / r;
 			}
 			else if (op == "%") {
 				v.f = l * r;
 			}
 		}
-		else // Remaining case is for strings
-		{
+		else { // remaining case is for strings
 			currentExpressionType = parser::TYPE::STRING;
 			v.s = l_value.s + r_value.s;
 		}
 	}
-	else if (op == "and" || op == "or") // Now bool
-	{
+	else if (op == "and" || op == "or") { // now bool
 		currentExpressionType = parser::TYPE::BOOL;
-		if (op == "and")
+		if (op == "and") {
 			v.b = l_value.b && r_value.b;
-		else if (op == "or")
+		}
+		else if (op == "or") {
 			v.b = l_value.b || r_value.b;
+		}
 	}
-	else // Now Comparator Operators
-	{
+	else { // now Comparator Operators
 		currentExpressionType = parser::TYPE::BOOL;
-		if (l_type == parser::TYPE::BOOL)
+		if (l_type == parser::TYPE::BOOL) {
 			v.b = (op == "==") ? l_value.b == r_value.b : l_value.b != r_value.b;
-		else if (l_type == parser::TYPE::STRING)
+		}
+		else if (l_type == parser::TYPE::STRING) {
 			v.b = (op == "==") ? l_value.s == r_value.s : l_value.s != r_value.s;
+		}
 		else {
 			long double l = l_value.f, r = r_value.f;
 
-			if (l_type == parser::TYPE::INT)
+			if (l_type == parser::TYPE::INT) {
 				l = l_value.i;
-
-			if (r_type == parser::TYPE::INT)
+			}
+			if (r_type == parser::TYPE::INT) {
 				r = r_value.i;
-
-			if (op == "==")
+			}
+			if (op == "==") {
 				v.b = l == r;
-			else if (op == "!=")
+			}
+			else if (op == "!=") {
 				v.b = l != r;
-			else if (op == "<")
+			}
+			else if (op == "<") {
 				v.b = l < r;
-			else if (op == ">")
+			}
+			else if (op == ">") {
 				v.b = l > r;
-			else if (op == ">=")
+			}
+			else if (op == ">=") {
 				v.b = l >= r;
-			else if (op == "<=")
+			}
+			else if (op == "<=") {
 				v.b = l <= r;
+			}
 		}
 	}
 
-	// Update current expression
+	// update current expression
 	currentExpressionValue = v;
 }
 
 void visitor::Interpreter::visit(parser::ASTIdentifierNode* id) {
-	// Determine innermost scope in which variable is declared
+	// determine innermost scope in which variable is declared
 	unsigned long i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclared(id->identifier); i--);
 
-	// Update current expression
+	// update current expression
 	currentExpressionType = scopes[i]->typeof(id->identifier);
 	currentExpressionValue = scopes[i]->valueof(id->identifier);
 }
 
 void visitor::Interpreter::visit(parser::ASTUnaryExprNode* un) {
-	// Update current expression
+	// update current expression
 	un->expr->accept(this);
 	switch (currentExpressionType) {
 	case parser::TYPE::INT:
@@ -541,11 +550,11 @@ void visitor::Interpreter::visit(parser::ASTUnaryExprNode* un) {
 }
 
 void visitor::Interpreter::visit(parser::ASTExprFunctionCallNode* func) {
-	// Determine the signature of the function
+	// determine the signature of the function
 	std::vector<parser::TYPE> signature;
 	std::vector<std::pair<parser::TYPE, value_t>> currentFunctionArguments;
 
-	// For each parameter
+	// for each parameter
 	for (auto param : func->parameters) {
 		// visit to update current expr type
 		param->accept(this);
@@ -558,29 +567,27 @@ void visitor::Interpreter::visit(parser::ASTExprFunctionCallNode* func) {
 		currentFunctionArguments.emplace_back(currentExpressionType, currentExpressionValue);
 	}
 
-	// Update the global vector current_function_arguments
+	// update the global vector current_function_arguments
 	for (auto arg : currentFunctionArguments) {
 		this->currentFunctionArguments.push_back(arg);
 	}
 
-	// Determine in which scope the function is declared
+	// determine in which scope the function is declared
 	unsigned long i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclared(func->identifier, signature); i--);
 
-	// Populate the global vector of function parameter names, to be used in creation of
-	// function scope
+	// populate the global vector of function parameter names, to be used in creation of function scope
 	currentFunctionParameters = scopes[i]->variablenamesof(func->identifier, signature);
 
 	currentFunctionName = func->identifier;
 
-	// Visit the corresponding function block
+	// visit the corresponding function block
 	scopes[i]->blockof(func->identifier, signature)->accept(this);
 }
 
-void visitor::Interpreter::visit(parser::ASTFloatParseNode* str_parser)
-{
-	// Visit expression node to update current value/type
-	str_parser->expr->accept(this);
+void visitor::Interpreter::visit(parser::ASTFloatParseNode* floatParser) {
+	// visit expression node to update current value/type
+	floatParser->expr->accept(this);
 
 	// parse depending on type
 	switch (currentExpressionType) {
@@ -595,10 +602,10 @@ void visitor::Interpreter::visit(parser::ASTFloatParseNode* str_parser)
 	currentExpressionType = parser::TYPE::FLOAT;
 }
 
-void visitor::Interpreter::visit(parser::ASTIntParseNode* str_parser)
+void visitor::Interpreter::visit(parser::ASTIntParseNode* intParser)
 {
-	// Visit expression node to update current value/type
-	str_parser->expr->accept(this);
+	// visit expression node to update current value/type
+	intParser->expr->accept(this);
 
 	// parse depending on type
 	switch (currentExpressionType) {
@@ -613,10 +620,10 @@ void visitor::Interpreter::visit(parser::ASTIntParseNode* str_parser)
 	currentExpressionType = parser::TYPE::INT;
 }
 
-void visitor::Interpreter::visit(parser::ASTStringParseNode* str_parser)
+void visitor::Interpreter::visit(parser::ASTStringParseNode* strParser)
 {
-	// Visit expression node to update current value/type
-	str_parser->expr->accept(this);
+	// visit expression node to update current value/type
+	strParser->expr->accept(this);
 
 	// parse depending on type
 	switch (currentExpressionType) {
@@ -641,12 +648,12 @@ void visitor::Interpreter::visit(parser::ASTExprReadNode* read) {
 	currentExpressionValue.s = std::move(line);
 }
 
-std::pair<parser::TYPE, value_t> Interpreter::current_expr() {
+std::pair<parser::TYPE, value_t> Interpreter::currentExpr() {
 	return std::move(std::make_pair(currentExpressionType, currentExpressionValue));
 };
 
 
-std::string visitor::type_str(parser::TYPE t) {
+std::string visitor::typeStr(parser::TYPE t) {
 	switch (t) {
 	case parser::TYPE::VOID:
 		return "void";

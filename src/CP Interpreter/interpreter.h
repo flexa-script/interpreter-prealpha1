@@ -95,10 +95,10 @@ namespace visitor
 		void visit(parser::ASTStringParseNode*) override;
 		void visit(parser::ASTExprReadNode*) override;
 
-		std::pair<parser::TYPE, value_t> current_expr();
+		std::pair<parser::TYPE, value_t> currentExpr();
 	};
 
-	std::string type_str(parser::TYPE);
+	std::string typeStr(parser::TYPE);
 }
 
 #endif //INTERPRETER_H
