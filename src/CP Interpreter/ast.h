@@ -129,8 +129,8 @@ namespace parser {
 		ASTIfNode(ASTExprNode*, ASTBlockNode*, unsigned int, ASTBlockNode* = nullptr);
 
 		ASTExprNode* condition;
-		ASTBlockNode* if_block;
-		ASTBlockNode* else_block;
+		ASTBlockNode* ifBlock;
+		ASTBlockNode* elseBlock;
 		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
@@ -154,7 +154,7 @@ namespace parser {
 
 		std::string identifier;
 		std::vector<std::pair<std::string, TYPE>> parameters;
-		std::vector<std::string> variable_names;
+		std::vector<std::string> variableNames;
 		std::vector<TYPE> signature;
 		TYPE type;
 		ASTBlockNode* block;
@@ -200,7 +200,7 @@ namespace parser {
 	public:
 		ASTUnaryExprNode(std::string, ASTExprNode*, unsigned int);
 
-		std::string unary_op;
+		std::string unaryOp;
 		ASTExprNode* expr;
 		unsigned int lineNumber;
 

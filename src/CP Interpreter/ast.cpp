@@ -59,12 +59,12 @@ ASTBlockNode::ASTBlockNode(std::vector<ASTStatementNode*> statements, unsigned i
 	statements(std::move(statements)),
 	lineNumber(lineNumber) {}
 
-ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* if_block, unsigned int lineNumber, ASTBlockNode* else_block)
+ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* ifBlock, unsigned int lineNumber, ASTBlockNode* elseBlock)
 	:
 	condition(condition),
-	if_block(if_block),
+	ifBlock(ifBlock),
 	lineNumber(lineNumber),
-	else_block(else_block) {}
+	elseBlock(elseBlock) {}
 
 ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int lineNumber) :
 	condition(condition),
@@ -83,7 +83,7 @@ ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier,
 	this->signature = std::vector<TYPE>();
 
 	for (auto param : this->parameters) {
-		variable_names.push_back(param.first);
+		variableNames.push_back(param.first);
 		signature.push_back(param.second);
 	}
 }
@@ -100,8 +100,8 @@ ASTIdentifierNode::ASTIdentifierNode(std::string identifier, unsigned int lineNu
 	identifier(std::move(identifier)),
 	lineNumber(lineNumber) {}
 
-ASTUnaryExprNode::ASTUnaryExprNode(std::string unary_op, ASTExprNode* expr, unsigned int lineNumber) :
-	unary_op(std::move(unary_op)),
+ASTUnaryExprNode::ASTUnaryExprNode(std::string unaryOp, ASTExprNode* expr, unsigned int lineNumber) :
+	unaryOp(std::move(unaryOp)),
 	expr(expr),
 	lineNumber(lineNumber) {}
 

@@ -27,39 +27,39 @@ namespace visitor
 		InterpreterScope();
 		InterpreterScope(std::string);
 
-		bool already_declared(std::string);
-		bool already_declared(std::string, std::vector<parser::TYPE>);
+		bool alreadyDeclared(std::string);
+		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
 		void declare(std::string, __int64_t);
 		void declare(std::string, long double);
 		void declare(std::string, bool);
 		void declare(std::string, std::string);
 		void declare(std::string, std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*);
 
-		parser::TYPE type_of(std::string);
-		value_t value_of(std::string);
-		std::vector<std::string> variable_names_of(std::string, std::vector<parser::TYPE>);
-		parser::ASTBlockNode* block_of(std::string, std::vector<parser::TYPE>);
+		parser::TYPE typeof(std::string);
+		value_t valueof(std::string);
+		std::vector<std::string> variablenamesof(std::string, std::vector<parser::TYPE>);
+		parser::ASTBlockNode* blockof(std::string, std::vector<parser::TYPE>);
 
-		std::vector<std::tuple<std::string, std::string, std::string>>  variable_list();
+		std::vector<std::tuple<std::string, std::string, std::string>>  variableList();
 
 		std::string getName();
 
 	private:
 		std::string name;
-		std::map<std::string, std::pair<parser::TYPE, value_t>> variable_symbol_table;
-		std::multimap<std::string, std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*>> function_symbol_table;
+		std::map<std::string, std::pair<parser::TYPE, value_t>> variableSymbolTable;
+		std::multimap<std::string, std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*>> functionSymbolTable;
 	};
 
 	class Interpreter : public Visitor
 	{
 	private:
 		std::vector<parser::ASTProgramNode*> programs;
-		parser::ASTProgramNode* current_program;
+		parser::ASTProgramNode* currentProgram;
 		std::vector<InterpreterScope*> scopes;
-		parser::TYPE current_expression_type;
-		value_t current_expression_value;
-		std::vector<std::string> current_function_parameters;
-		std::vector<std::pair<parser::TYPE, value_t>> current_function_arguments;
+		parser::TYPE currentExpressionType;
+		value_t currentExpressionValue;
+		std::vector<std::string> currentFunctionParameters;
+		std::vector<std::pair<parser::TYPE, value_t>> currentFunctionArguments;
 		std::string currentFunctionName;
 		std::string returnFromFunctionName;
 		bool returnFromFunction = false;

@@ -147,7 +147,7 @@ int repl() {
 
 			// try to parse as program
 			try {
-				prog = parser.parse_program();
+				prog = parser.parseProgram();
 			}
 
 			// catch by trying to parse as expression
@@ -162,7 +162,7 @@ int repl() {
 					// parse again, create program node manually
 					lexer::Lexer expr_lexer(program);
 					parser = parser::Parser(&expr_lexer, 0);  // do not consume first token
-					prog = new parser::ASTProgramNode(std::vector<parser::ASTNode*>({ parser.parse_expression() }), "main");
+					prog = new parser::ASTProgramNode(std::vector<parser::ASTNode*>({ parser.parseExpression() }), "main");
 
 					expr = true;
 				}
@@ -288,7 +288,7 @@ int interpreter(std::vector<Program> source_programs) {
 			parser::Parser parser(&lexer, source.name);
 
 			// try to parse as program
-			programs.push_back(parser.parse_program());
+			programs.push_back(parser.parseProgram());
 		}
 
 		// if this succeeds, perform semantic analysis modifying global scope

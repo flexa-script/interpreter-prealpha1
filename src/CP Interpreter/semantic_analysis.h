@@ -15,16 +15,16 @@ namespace visitor
 	private:
 		std::map<std::string,
 			std::pair<parser::TYPE,
-			unsigned int>> variable_symbol_table;
+			unsigned int>> variableSymbolTable;
 
 		std::multimap<std::string,
 			std::tuple<parser::TYPE,
 			std::vector<parser::TYPE>,
-			unsigned int>> function_symbol_table;
+			unsigned int>> functionSymbolTable;
 
 	public:
-		bool already_declared(std::string);
-		bool already_declared(std::string, std::vector<parser::TYPE>);
+		bool alreadyDeclared(std::string);
+		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
 		void declare(std::string, parser::TYPE, unsigned int);
 		void declare(std::string, parser::TYPE, std::vector<parser::TYPE>, unsigned int);
 		parser::TYPE type(std::string);
@@ -40,11 +40,11 @@ namespace visitor
 	{
 	private:
 		std::vector<parser::ASTProgramNode*> programs;
-		parser::ASTProgramNode* current_program;
+		parser::ASTProgramNode* currentProgram;
 		std::vector<SemanticScope*> scopes;
 		std::stack<parser::TYPE> functions;
-		parser::TYPE current_expression_type;
-		std::vector<std::pair<std::string, parser::TYPE>> current_function_parameters;
+		parser::TYPE currentExpressionType;
+		std::vector<std::pair<std::string, parser::TYPE>> currentFunctionParameters;
 
 	private:
 		bool returns(parser::ASTStatementNode*);

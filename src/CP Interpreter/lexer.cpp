@@ -8,14 +8,15 @@ using namespace lexer;
 
 
 Lexer::Lexer(std::string& program) {
-	unsigned int current_index = 0;
+	unsigned int currentIndex = 0;
 
-	// Tokenise the program, ignoring comments
+	// tokenise the program, ignoring comments
 	Token t;
-	while (current_index <= program.length()) {
-		t = nextToken(program, current_index);
-		if (t.type != TOK_COMMENT)
+	while (currentIndex <= program.length()) {
+		t = nextToken(program, currentIndex);
+		if (t.type != TOK_COMMENT) {
 			tokens.push_back(t);
+		}
 	}
 }
 
@@ -30,10 +31,7 @@ Token Lexer::nextToken() {
 }
 
 int Lexer::transitionDelta(int s, char sigma) {
-	/*
-	 * Check which transition type we have, and then refer to the
-	 * transition table.
-	 */
+	// check which transition type we have, and then refer to the transition table
 	switch (sigma) {
 	case '0':
 	case '1':
@@ -104,85 +102,91 @@ int Lexer::transitionDelta(int s, char sigma) {
 
 		// [A-Z] or [a-z]
 		if (((0x41 <= ascii) && (ascii <= 0x5A)) ||
-			((0x61 <= ascii) && (ascii <= 0x7A)))
+			((0x61 <= ascii) && (ascii <= 0x7A))) {
 			return transitions[LETTER][s];
+		}
 
 		// printable
-		if ((0x20 <= ascii) && (ascii <= 0x7E))
+		if ((0x20 <= ascii) && (ascii <= 0x7E)) {
 			return transitions[PRINTABLE][s];
+		}
 
 		// other
 		return transitions[OTHER][s];
 	}
 }
 
-Token Lexer::nextToken(std::string& program, unsigned int& current_index) {
-	// Setup stack and lexeme
-	int current_state = 0;
-	std::stack<int> state_stack;
-	char current_symbol;
+Token Lexer::nextToken(std::string& program, unsigned int& currentIndex) {
+	// setup stack and lexeme
+	int currentState = 0;
+	std::stack<int> stateStack;
+	char currentSymbol;
 	std::string lexeme;
 
-	// Push 'BAD' state on the stack
-	state_stack.push(-1);
+	// push 'BAD' state on the stack
+	stateStack.push(-1);
 
-	// Ignore whitespaces or newlines in front of lexeme
-	while (current_index < program.length() &&
-		(program[current_index] == ' ' || program[current_index] == '\n' || program[current_index] == '\t')) {
-		current_index++;
+	// ignore whitespaces or newlines in front of lexeme
+	while (currentIndex < program.length() && (program[currentIndex] == ' ' || program[currentIndex] == '\n' || program[currentIndex] == '\t')) {
+		currentIndex++;
 	}
 
-	// Check if EOF
-	if (current_index == program.length()) {
+	// check if EOF
+	if (currentIndex == program.length()) {
 		lexeme = (char)EOF;
-		current_index++;
-		return Token(22, lexeme, getLineNumber(program, current_index));
+		currentIndex++;
+		return Token(22, lexeme, getLineNumber(program, currentIndex));
 	}
 
-	// While current state is not error state
-	while (current_state != e) {
-		current_symbol = program[current_index];
-		lexeme += current_symbol;
+	// while current state is not error state
+	while (currentState != e) {
+		currentSymbol = program[currentIndex];
+		lexeme += currentSymbol;
 
-		// If current state is final, remove previously recorded final states
-		if (isFinal[current_state])
-			while (!state_stack.empty())
-				state_stack.pop();
+		// if current state is final, remove previously recorded final states
+		if (isFinal[currentState]) {
+			while (!stateStack.empty()) {
+				stateStack.pop();
+			}
+		}
 
 		// and push current one on the stack
-		state_stack.push(current_state);
+		stateStack.push(currentState);
 
-		// Go to next state using delta function in DFA
-		current_state = transitionDelta(current_state, current_symbol);
+		// go to next state using delta function in DFA
+		currentState = transitionDelta(currentState, currentSymbol);
 
-		// Update current index for next iteration
-		current_index++;
+		// update current index for next iteration
+		currentIndex++;
 	}
 
-	// Rollback loop
-	while (current_state != -1 && !isFinal[current_state]) {
-		current_state = state_stack.top();
-		state_stack.pop();
+	// rollback loop
+	while (currentState != -1 && !isFinal[currentState]) {
+		currentState = stateStack.top();
+		stateStack.pop();
 		lexeme.pop_back();
-		current_index--;
+		currentIndex--;
 	}
 
-	if (current_state == -1)
+	if (currentState == -1) {
 		throw std::runtime_error("Lexical error.");
+	}
 
-
-	if (isFinal[current_state])
-		return Token(current_state, std::move(lexeme), getLineNumber(program, current_index));
-	else
-		throw std::runtime_error(
-			"Lexical error on line " + std::to_string(getLineNumber(program, current_index)) + ".");
+	if (isFinal[currentState]) {
+		return Token(currentState, std::move(lexeme), getLineNumber(program, currentIndex));
+	}
+	else {
+		throw std::runtime_error("Lexical error on line " + std::to_string(getLineNumber(program, currentIndex)) + ".");
+	}
 }
 
 unsigned int Lexer::getLineNumber(std::string& program, unsigned int index) {
 	unsigned int line = 1;
-	for (int i = 0; i < index; i++)
-		if (program[i] == '\n')
+	for (int i = 0; i < index; i++) {
+		if (program[i] == '\n') {
 			line++;
+		}
+	}
 	return line;
 }
 

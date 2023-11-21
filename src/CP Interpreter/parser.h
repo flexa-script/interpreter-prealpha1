@@ -20,79 +20,79 @@ namespace parser {
 
 		Parser(lexer::Lexer*, std::string, unsigned int);
 
-		ASTProgramNode* parse_program();
+		ASTProgramNode* parseProgram();
 
-		ASTExprNode* parse_expression();  // public for repl
+		ASTExprNode* parseExpression();  // public for repl
 
 	private:
-		void consume_token();
+		void consumeToken();
 
 		// Statement Nodes
-		ASTStatementNode* parse_program_statement();
+		ASTStatementNode* parseProgramStatement();
 
-		ASTUsingNode* parse_using_statement();
+		ASTUsingNode* parseUsingStatement();
 
-		ASTStatementNode* parse_block_statement();
+		ASTStatementNode* parseBlockStatement();
 
-		ASTDeclarationNode* parse_declaration_statement();
+		ASTDeclarationNode* parseDeclarationStatement();
 
-		ASTAssignmentNode* parse_assignment_statement();
+		ASTAssignmentNode* parseAssignmentStatement();
 
-		ASTPrintNode* parse_print_statement();
+		ASTPrintNode* parsePrintStatement();
 
-		ASTReadNode* parse_read_statement();
+		ASTReadNode* parseReadStatement();
 
-		ASTFunctionCallNode* parse_function_call();
+		ASTFunctionCallNode* parseFunctionCall();
 
-		ASTReturnNode* parse_return_statement();
+		ASTReturnNode* parseReturnStatement();
 
-		ASTBlockNode* parse_block();
+		ASTBlockNode* parseBlock();
 
-		ASTIfNode* parse_if_statement();
+		ASTIfNode* parseIfStatement();
 
-		ASTWhileNode* parse_while_statement();
+		ASTWhileNode* parseWhileStatement();
 
-		ASTFunctionDefinitionNode* parse_function_definition();
+		ASTFunctionDefinitionNode* parseFunctionDefinition();
 
-		ASTStatementNode* parse_identifier();
+		ASTStatementNode* parseIdentifier();
 
-		// Expression Nodes
-		ASTExprNode* parse_expression_tail(ASTExprNode*);
+		// expression nodes
+		ASTExprNode* parseExpressionTail(ASTExprNode*);
 
-		ASTExprNode* parse_logical_expression();
+		ASTExprNode* parseLogicalExpression();
 
-		ASTExprNode* parse_logical_expression_tail(ASTExprNode*);
+		ASTExprNode* parseLogicalExpressionTail(ASTExprNode*);
 
-		ASTExprNode* parse_relational_expression();
+		ASTExprNode* parseRelationalExpression();
 
-		ASTExprNode* parse_relational_expression_tail(ASTExprNode*);
+		ASTExprNode* parseRelationalExpressionTail(ASTExprNode*);
 
-		ASTExprNode* parse_simple_expression();
+		ASTExprNode* parseSimpleExpression();
 
-		ASTExprNode* parse_simple_expression_tail(ASTExprNode*);
+		ASTExprNode* parseSimpleExpressionTail(ASTExprNode*);
 
-		ASTExprNode* parse_term();
+		ASTExprNode* parseTerm();
 
-		ASTExprNode* parse_term_tail(ASTExprNode*);
+		ASTExprNode* parseTermTail(ASTExprNode*);
 
-		ASTExprNode* parse_factor();
+		ASTExprNode* parseFactor();
 
-		ASTExprFunctionCallNode* parse_expr_function_call();
+		ASTExprFunctionCallNode* parseExprFunctionCall();
 
-		ASTExprReadNode* parse_expr_read_node();
+		ASTExprReadNode* parseExprReadNode();
 
-		ASTFloatParseNode* parse_float_parse_exp();
+		ASTFloatParseNode* parseFloatParseExp();
 
-		ASTIntParseNode* parse_int_parse_exp();
+		ASTIntParseNode* parseIntParseExp();
 
-		ASTStringParseNode* parse_string_parse_exp();
+		ASTStringParseNode* parseStringParseExp();
 
-		// Parse Types and parameters
-		TYPE parse_type(std::string&);
+		// parse types and parameters
+		TYPE parseType(std::string&);
 
-		std::vector<ASTExprNode*>* parse_actual_params();
+		std::vector<ASTExprNode*>* parseActualParams();
 
-		std::pair<std::string, TYPE>* parse_formal_param();
+		std::pair<std::string, TYPE>* parseFormalParam();
 	};
 }
 
