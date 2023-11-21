@@ -59,14 +59,14 @@ namespace lexer {
 	public:
 		Token();
 
-		Token(int, std::string, unsigned int line_number = 0);
+		Token(int, std::string, unsigned int lineNumber = 0);
 
 		TOKEN type;
 		std::string value;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 	private:
-		TOKEN determine_token_type(int, std::string&);
+		TOKEN determineTokenType(int, std::string&);
 	};
 };
 

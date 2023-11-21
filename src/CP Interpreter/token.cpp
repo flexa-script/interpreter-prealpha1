@@ -6,12 +6,12 @@ using namespace lexer;
 
 Token::Token() = default;
 
-Token::Token(int final_state, std::string value, unsigned int line_number) :
-	type(determine_token_type(final_state, value)),
+Token::Token(int final_state, std::string value, unsigned int lineNumber) :
+	type(determineTokenType(final_state, value)),
 	value(value),
-	line_number(line_number) {}
+	lineNumber(lineNumber) {}
 
-TOKEN Token::determine_token_type(int final_state, std::string& value) {
+TOKEN Token::determineTokenType(int final_state, std::string& value) {
 	switch (final_state) {
 	case 1:
 		return TOK_INT;

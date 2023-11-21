@@ -9,8 +9,8 @@ namespace parser {
 	class Parser {
 	private:
 		lexer::Lexer* lex;
-		lexer::Token current_token;
-		lexer::Token next_token;
+		lexer::Token currentToken;
+		lexer::Token nextToken;
 
 	public:
 		std::string name;

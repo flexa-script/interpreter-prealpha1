@@ -428,7 +428,7 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* bin) {
 			else if (op == "/") {
 				if (r_value.i == 0)
 					throw std::runtime_error("Division by zero encountered on line "
-						+ std::to_string(bin->line_number) + ".");
+						+ std::to_string(bin->lineNumber) + ".");
 				v.i = l_value.i / r_value.i;
 			}
 			else if (op == "%") {
@@ -457,7 +457,7 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* bin) {
 			else if (op == "/") {
 				if (r == 0)
 					throw std::runtime_error("Division by zero encountered on line "
-						+ std::to_string(bin->line_number) + ".");
+						+ std::to_string(bin->lineNumber) + ".");
 				v.f = l / r;
 			}
 			else if (op == "%") {

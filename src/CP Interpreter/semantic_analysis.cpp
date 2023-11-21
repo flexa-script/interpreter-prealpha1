@@ -29,14 +29,14 @@ bool SemanticScope::already_declared(std::string identifier, std::vector<parser:
 	return false;
 }
 
-void SemanticScope::declare(std::string identifier, parser::TYPE type, unsigned int line_number)
+void SemanticScope::declare(std::string identifier, parser::TYPE type, unsigned int lineNumber)
 {
-	variable_symbol_table[identifier] = std::make_pair(type, line_number);
+	variable_symbol_table[identifier] = std::make_pair(type, lineNumber);
 }
 
-void SemanticScope::declare(std::string identifier, parser::TYPE type, std::vector<parser::TYPE> signature, unsigned int line_number)
+void SemanticScope::declare(std::string identifier, parser::TYPE type, std::vector<parser::TYPE> signature, unsigned int lineNumber)
 {
-	function_symbol_table.insert(std::make_pair(identifier, std::make_tuple(type, signature, line_number)));
+	function_symbol_table.insert(std::make_pair(identifier, std::make_tuple(type, signature, lineNumber)));
 }
 
 parser::TYPE SemanticScope::type(std::string identifier)
@@ -154,7 +154,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl)
 
 	// If variable already declared, throw error
 	if (current_scope->already_declared(decl->identifier))
-		throw std::runtime_error("Variable redeclaration on line " + std::to_string(decl->line_number) + ". '" +
+		throw std::runtime_error("Variable redeclaration on line " + std::to_string(decl->lineNumber) + ". '" +
 			decl->identifier + "' was already declared in this scope on line " +
 			std::to_string(current_scope->declaration_line(decl->identifier)) + ".");
 
@@ -163,12 +163,12 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl)
 
 	// allow mismatched type in the case of declaration of int to real
 	if (decl->type == parser::TYPE::FLOAT && current_expression_type == parser::TYPE::INT)
-		current_scope->declare(decl->identifier, parser::TYPE::FLOAT, decl->line_number);
+		current_scope->declare(decl->identifier, parser::TYPE::FLOAT, decl->lineNumber);
 	else if (decl->type == current_expression_type) // types match
-		current_scope->declare(decl->identifier, decl->type, decl->line_number);
+		current_scope->declare(decl->identifier, decl->type, decl->lineNumber);
 	else // types don't match
 		throw std::runtime_error("Found " + type_str(current_expression_type) + " on line " +
-			std::to_string(decl->line_number) + " in definition of '" +
+			std::to_string(decl->lineNumber) + " in definition of '" +
 			decl->identifier + "', expected " + type_str(decl->type) + ".");
 }
 
@@ -179,7 +179,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* assign)
 	for (i = scopes.size() - 1; !scopes[i]->already_declared(assign->identifier); i--)
 		if (i <= 0)
 			throw std::runtime_error("Identifier '" + assign->identifier + "' being reassigned on line " +
-				std::to_string(assign->line_number) + " was never declared " +
+				std::to_string(assign->lineNumber) + " was never declared " +
 				((scopes.size() == 1) ? "globally." : "in this scope."));
 
 
@@ -195,7 +195,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* assign)
 	// otherwise throw error
 	else if (current_expression_type != type)
 		throw std::runtime_error("Mismatched type for '" + assign->identifier + "' on line " +
-			std::to_string(assign->line_number) + ". Expected " + type_str(type) +
+			std::to_string(assign->lineNumber) + ". Expected " + type_str(type) +
 			", found " + type_str(current_expression_type) + ".");
 }
 
@@ -241,7 +241,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionCallNode* func)
 			func_name.pop_back();   // remove last comma
 			func_name += ")";
 			throw std::runtime_error("Function '" + func_name + "' appearing on line " +
-				std::to_string(func->line_number) + " was never declared " +
+				std::to_string(func->lineNumber) + " was never declared " +
 				((scopes.size() == 1) ? "globally." : "in this scope."));
 		}
 
@@ -256,7 +256,7 @@ void SemanticAnalyser::visit(parser::ASTReturnNode* ret)
 
 	// If we are not global, check that we return current function return type
 	if (!functions.empty() && current_expression_type != functions.top())
-		throw std::runtime_error("Invalid return type on line " + std::to_string(ret->line_number) +
+		throw std::runtime_error("Invalid return type on line " + std::to_string(ret->lineNumber) +
 			". Expected " + type_str(functions.top()) + ", found " +
 			type_str(current_expression_type) + ".");
 }
@@ -269,7 +269,7 @@ void SemanticAnalyser::visit(parser::ASTBlockNode* block)
 	// Check whether this is a function block by seeing if we have any current function
 	// parameters. If we do, then add them to the current scope.
 	for (auto param : current_function_parameters)
-		scopes.back()->declare(param.first, param.second, block->line_number);
+		scopes.back()->declare(param.first, param.second, block->lineNumber);
 
 	// Clear the global function parameters vector
 	current_function_parameters.clear();
@@ -289,7 +289,7 @@ void SemanticAnalyser::visit(parser::ASTIfNode* ifnode)
 
 	// Make sure it is boolean
 	if (current_expression_type != parser::TYPE::BOOL)
-		throw std::runtime_error("Invalid if-condition on line " + std::to_string(ifnode->line_number)
+		throw std::runtime_error("Invalid if-condition on line " + std::to_string(ifnode->lineNumber)
 			+ ", expected boolean expression.");
 
 	// Check the if block
@@ -308,7 +308,7 @@ void SemanticAnalyser::visit(parser::ASTWhileNode* whilenode)
 
 	// Make sure it is boolean
 	if (current_expression_type != parser::TYPE::BOOL)
-		throw std::runtime_error("Invalid while-condition on line " + std::to_string(whilenode->line_number)
+		throw std::runtime_error("Invalid while-condition on line " + std::to_string(whilenode->lineNumber)
 			+ ", expected boolean expression.");
 
 	// Check the while block
@@ -332,14 +332,14 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* func) {
 			signature += ")";
 
 
-			throw std::runtime_error("Error on line " + std::to_string(func->line_number) +
+			throw std::runtime_error("Error on line " + std::to_string(func->lineNumber) +
 				". Function " + func->identifier + signature +
 				" already defined on line " + std::to_string(line) + ".");
 		}
 	}
 
 	// Add function to symbol table
-	scopes.back()->declare(func->identifier, func->type, func->signature, func->line_number);
+	scopes.back()->declare(func->identifier, func->type, func->signature, func->lineNumber);
 
 	// Push current function type onto function stack
 	functions.push(func->type);
@@ -354,7 +354,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* func) {
 	// Check that the function body returns
 	if (!returns(func->block) && func->type != parser::TYPE::VOID)
 		throw std::runtime_error("Function " + func->identifier + " defined on line " +
-			std::to_string(func->line_number) + " is not guaranteed to " +
+			std::to_string(func->lineNumber) + " is not guaranteed to " +
 			"return a value.");
 
 	// End the current function
@@ -399,7 +399,7 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* bin)
 	{
 		if ((l_type != parser::TYPE::INT && l_type != parser::TYPE::FLOAT) || (r_type != parser::TYPE::INT && r_type != parser::TYPE::FLOAT))
 			throw std::runtime_error("Expected numerical operands for '" + op +
-				"' operator on line " + std::to_string(bin->line_number) + ".");
+				"' operator on line " + std::to_string(bin->lineNumber) + ".");
 
 		// If both int, then expression is int, otherwise float
 		current_expression_type = (l_type == parser::TYPE::INT && r_type == parser::TYPE::INT) ? parser::TYPE::INT : parser::TYPE::FLOAT;
@@ -409,14 +409,14 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* bin)
 		// + works for all types except bool
 		if (l_type == parser::TYPE::BOOL || r_type == parser::TYPE::BOOL)
 			throw std::runtime_error("Invalid operand for '+' operator, expected numerical or string"
-				" operand on line " + std::to_string(bin->line_number) + ".");
+				" operand on line " + std::to_string(bin->lineNumber) + ".");
 
 		if (l_type == parser::TYPE::STRING && r_type == parser::TYPE::STRING) // If both string, no error
 			current_expression_type = parser::TYPE::STRING;
 		else if (l_type == parser::TYPE::STRING || r_type == parser::TYPE::STRING) // only one is string, error
 			throw std::runtime_error("Mismatched operands for '+' operator, found " + type_str(l_type) +
 				" on the left, but " + type_str(r_type) + " on the right (line " +
-				std::to_string(bin->line_number) + ").");
+				std::to_string(bin->lineNumber) + ").");
 		else // real/int possibilities remain. If both int, then result is int, otherwise result is real
 			current_expression_type = (l_type == parser::TYPE::INT && r_type == parser::TYPE::INT) ?
 			parser::TYPE::INT : parser::TYPE::FLOAT;
@@ -427,7 +427,7 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* bin)
 		if (l_type == parser::TYPE::BOOL && r_type == parser::TYPE::BOOL)
 			current_expression_type = parser::TYPE::BOOL;
 		else throw std::runtime_error("Expected two boolean-type operands for '" + op + "' operator " +
-			"on line " + std::to_string(bin->line_number) + ".");
+			"on line " + std::to_string(bin->lineNumber) + ".");
 	}
 	else if (op == "<" || op == ">" || op == "<=" || op == ">=")
 	{
@@ -435,7 +435,7 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* bin)
 		if ((l_type != parser::TYPE::FLOAT && l_type != parser::TYPE::INT) ||
 			(r_type != parser::TYPE::FLOAT && r_type != parser::TYPE::INT))
 			throw std::runtime_error("Expected two numerical operands for '" + op + "' operator " +
-				"on line " + std::to_string(bin->line_number) + ".");
+				"on line " + std::to_string(bin->lineNumber) + ".");
 		current_expression_type = parser::TYPE::BOOL;
 	}
 	else if (op == "==" || op == "!=")
@@ -444,7 +444,7 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* bin)
 		if (l_type != r_type && (l_type != parser::TYPE::FLOAT || r_type != parser::TYPE::INT) &&
 			(l_type != parser::TYPE::INT || r_type != parser::TYPE::FLOAT))
 			throw std::runtime_error("Expected arguments of the same type '" + op + "' operator " +
-				"on line " + std::to_string(bin->line_number) + ".");
+				"on line " + std::to_string(bin->lineNumber) + ".");
 		current_expression_type = parser::TYPE::BOOL;
 	}
 	else
@@ -460,7 +460,7 @@ void SemanticAnalyser::visit(parser::ASTIdentifierNode* id)
 	for (i = scopes.size() - 1; !scopes[i]->already_declared(id->identifier); i--)
 		if (i <= 0)
 			throw std::runtime_error("Identifier '" + id->identifier + "' appearing on line " +
-				std::to_string(id->line_number) + " in '" + current_program->name + "' was never declared " +
+				std::to_string(id->lineNumber) + " in '" + current_program->name + "' was never declared " +
 				((scopes.size() == 1) ? "globally." : "in this scope."));
 
 	// Update current expression type
@@ -479,16 +479,16 @@ void SemanticAnalyser::visit(parser::ASTUnaryExprNode* un)
 	case parser::TYPE::FLOAT:
 		if (un->unary_op != "+" && un->unary_op != "-")
 			throw std::runtime_error("Operator '" + un->unary_op + "' in front of numerical " +
-				"expression on line " + std::to_string(un->line_number) + ".");
+				"expression on line " + std::to_string(un->lineNumber) + ".");
 		break;
 	case parser::TYPE::BOOL:
 		if (un->unary_op != "not")
 			throw std::runtime_error("Operator '" + un->unary_op + "' in front of boolean " +
-				"expression on line " + std::to_string(un->line_number) + ".");
+				"expression on line " + std::to_string(un->lineNumber) + ".");
 		break;
 	default:
 		throw std::runtime_error("Incompatible unary operator '" + un->unary_op + "' in front of " +
-			"expression on line " + std::to_string(un->line_number) + ".");
+			"expression on line " + std::to_string(un->lineNumber) + ".");
 	}
 }
 
@@ -521,7 +521,7 @@ void SemanticAnalyser::visit(parser::ASTExprFunctionCallNode* func)
 			func_name.pop_back();   // remove last comma
 			func_name += ")";
 			throw std::runtime_error("Function '" + func_name + "' appearing on line " +
-				std::to_string(func->line_number) + " was never declared " +
+				std::to_string(func->lineNumber) + " was never declared " +
 				((scopes.size() == 1) ? "globally." : "in this scope."));
 		}
 	}
@@ -550,7 +550,7 @@ void SemanticAnalyser::visit(parser::ASTExprReadNode* read)
 	if (current_expression_type != parser::TYPE::STRING)
 	{
 		throw std::runtime_error("Function 'read()' appearing on line " +
-			std::to_string(read->line_number) +
+			std::to_string(read->lineNumber) +
 			" is trying to assing an invalid type.");
 	}
 }

@@ -46,7 +46,7 @@ namespace parser {
 		ASTUsingNode(std::string, unsigned int);
 
 		std::string library;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -58,7 +58,7 @@ namespace parser {
 		TYPE type;
 		std::string identifier;
 		ASTExprNode* expr;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -69,7 +69,7 @@ namespace parser {
 
 		std::string identifier;
 		ASTExprNode* expr;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -79,7 +79,7 @@ namespace parser {
 		ASTPrintNode(ASTExprNode*, unsigned int);
 
 		ASTExprNode* expr;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -88,7 +88,7 @@ namespace parser {
 	public:
 		ASTReadNode(unsigned int);
 
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -99,7 +99,7 @@ namespace parser {
 
 		std::string identifier;
 		std::vector<ASTExprNode*> parameters;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -109,7 +109,7 @@ namespace parser {
 		ASTReturnNode(ASTExprNode*, unsigned int);
 
 		ASTExprNode* expr;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -119,7 +119,7 @@ namespace parser {
 		ASTBlockNode(std::vector<ASTStatementNode*>, unsigned int);
 
 		std::vector<ASTStatementNode*> statements;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -131,7 +131,7 @@ namespace parser {
 		ASTExprNode* condition;
 		ASTBlockNode* if_block;
 		ASTBlockNode* else_block;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -142,7 +142,7 @@ namespace parser {
 
 		ASTExprNode* condition;
 		ASTBlockNode* block;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -158,7 +158,7 @@ namespace parser {
 		std::vector<TYPE> signature;
 		TYPE type;
 		ASTBlockNode* block;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -167,9 +167,9 @@ namespace parser {
 	template<typename T>
 	class ASTLiteralNode : public ASTExprNode {
 	public:
-		ASTLiteralNode(T val, unsigned int line_number) : val(val), line_number(line_number) {};
+		ASTLiteralNode(T val, unsigned int lineNumber) : val(val), lineNumber(lineNumber) {};
 		T val;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -181,7 +181,7 @@ namespace parser {
 		std::string op;
 		ASTExprNode* left;
 		ASTExprNode* right;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -191,7 +191,7 @@ namespace parser {
 		explicit ASTIdentifierNode(std::string, unsigned int);
 
 		std::string identifier;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -202,7 +202,7 @@ namespace parser {
 
 		std::string unary_op;
 		ASTExprNode* expr;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -213,7 +213,7 @@ namespace parser {
 
 		std::string identifier;
 		std::vector<ASTExprNode*> parameters;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -223,7 +223,7 @@ namespace parser {
 		ASTFloatParseNode(ASTExprNode*, unsigned int);
 
 		ASTExprNode* expr;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -233,7 +233,7 @@ namespace parser {
 		ASTIntParseNode(ASTExprNode*, unsigned int);
 
 		ASTExprNode* expr;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -243,7 +243,7 @@ namespace parser {
 		ASTStringParseNode(ASTExprNode*, unsigned int);
 
 		ASTExprNode* expr;
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -252,7 +252,7 @@ namespace parser {
 	public:
 		ASTExprReadNode(unsigned int);
 
-		unsigned int line_number;
+		unsigned int lineNumber;
 
 		void accept(visitor::Visitor*) override;
 	};
