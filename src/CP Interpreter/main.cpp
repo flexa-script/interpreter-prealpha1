@@ -25,32 +25,32 @@ int repl() {
 	std::cout << "Type \"#help\" for more information.\n";
 
 	// create Global Scopes
-	visitor::SemanticScope semantic_global_scope;
-	visitor::InterpreterScope interpreter_global_scope;
+	visitor::SemanticScope semanticGlobalScope;
+	visitor::InterpreterScope interpreterGlobalScope;
 
 	// indefinite User input
 	for (;;) {
 
 		// variables for user input
-		std::string input_line;
+		std::string inputLine;
 		std::string program;
 		bool file_load = false;
 		bool expr = false;
 
 		// user prompt
 		std::cout << ">>> ";
-		std::getline(std::cin, input_line);
+		std::getline(std::cin, inputLine);
 
 		// remove leading/trailing whitespaces
-		input_line = std::regex_replace(input_line, std::regex("^ +| +$"), "$1");
+		inputLine = std::regex_replace(inputLine, std::regex("^ +| +$"), "$1");
 
 		// quit
-		if (input_line == "#quit") {
+		if (inputLine == "#quit") {
 			break;
 		}
 
 		// help
-		else if (input_line == "#help") {
+		else if (inputLine == "#help") {
 			std::cout << "\n" << "Welcome to MiniLang 1.0.0! \n";
 			std::cout << "To use this interactive REPL, just type in regular CP commands and hit\n";
 			std::cout << "enter. You can also make use of the following commands: \n\n";
@@ -69,28 +69,28 @@ int repl() {
 		}
 
 		// load File
-		else if (input_line.substr(0, 5) == "#load") {
-			std::cout << input_line << std::endl;
+		else if (inputLine.substr(0, 5) == "#load") {
+			std::cout << inputLine << std::endl;
 
 			// if length <= 6, then the user specified no file
-			if (input_line.size() <= 6) {
+			if (inputLine.size() <= 6) {
 				std::cout << "File path expected after '#load'." << std::endl;
 			}
 
 			else {
 
 				// get file directory
-				std::string file_dir = input_line.substr(6);
+				std::string fileDir = inputLine.substr(6);
 
 				// remove any whitespaces from that
-				file_dir = std::regex_replace(file_dir, std::regex("^ +| +$"), "$1");
+				fileDir = std::regex_replace(fileDir, std::regex("^ +| +$"), "$1");
 
 				// read the file
 				std::ifstream file;
-				file.open(file_dir);
+				file.open(fileDir);
 
 				if (!file) {
-					std::cout << "Could not load file from \"" + file_dir + "\"." << std::endl;
+					std::cout << "Could not load file from \"" + fileDir + "\"." << std::endl;
 				}
 				else {
 					// convert whole program to std::string
@@ -107,7 +107,7 @@ int repl() {
 		}
 
 		// clear Screen
-		else if (input_line == "#clear") {
+		else if (inputLine == "#clear") {
 			clear_screen();
 		}
 
@@ -115,26 +115,26 @@ int repl() {
 		else {
 
 			// add line to program
-			program += input_line;
+			program += inputLine;
 
 			// count number of open scopes
-			unsigned int open_scopes = 0;
-			open_scopes += std::count(input_line.begin(), input_line.end(), '{');
-			open_scopes -= std::count(input_line.begin(), input_line.end(), '}');
+			unsigned int openScopes = 0;
+			openScopes += std::count(inputLine.begin(), inputLine.end(), '{');
+			openScopes -= std::count(inputLine.begin(), inputLine.end(), '}');
 
-			while (open_scopes) {
+			while (openScopes) {
 				std::cout << "... ";
 
 				// read next line
-				input_line.clear();
-				getline(std::cin, input_line);
+				inputLine.clear();
+				getline(std::cin, inputLine);
 
 				// update scope count
-				open_scopes += std::count(input_line.begin(), input_line.end(), '{');
-				open_scopes -= std::count(input_line.begin(), input_line.end(), '}');
+				openScopes += std::count(inputLine.begin(), inputLine.end(), '{');
+				openScopes -= std::count(inputLine.begin(), inputLine.end(), '}');
 
 				// add line to program
-				program += input_line + "\n";
+				program += inputLine + "\n";
 			}
 		}
 
@@ -174,16 +174,16 @@ int repl() {
 
 			// try to analyse in a temporary copy of the global scope (just in case the program is invalid)
 			auto programs = std::vector<parser::ASTProgramNode*>({ prog });
-			visitor::SemanticScope temp = semantic_global_scope;
-			visitor::SemanticAnalyser temp_semantic_analyser(&temp, programs);
-			temp_semantic_analyser.start();
+			visitor::SemanticScope temp = semanticGlobalScope;
+			visitor::SemanticAnalyser tempSemanticAnalyser(&temp, programs);
+			tempSemanticAnalyser.start();
 
 			// if this succeeds, perform semantic analysis modifying global scope
-			visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, programs);
-			temp_semantic_analyser.start();
+			visitor::SemanticAnalyser semantic_analyser(&semanticGlobalScope, programs);
+			tempSemanticAnalyser.start();
 
 			// interpreter
-			visitor::Interpreter interpreter(&interpreter_global_scope, programs);
+			visitor::Interpreter interpreter(&interpreterGlobalScope, programs);
 			interpreter.visit(prog);
 
 			// if loading file, show user that everything went well
@@ -230,9 +230,9 @@ public:
 		:name(name), source(source) {}
 };
 
-Program loadSource(std::string workspace, std::string file_name) {
+Program loadSource(std::string workspace, std::string fileName) {
 	std::string source;
-	std::string path = workspace + file_name;
+	std::string path = workspace + fileName;
 
 	// read the file
 	std::ifstream file;
@@ -244,8 +244,7 @@ Program loadSource(std::string workspace, std::string file_name) {
 	else {
 		// convert whole program to std::string
 		std::string line;
-		while (std::getline(file, line))
-		{
+		while (std::getline(file, line)) {
 			source.append(line + "\n");
 		}
 	}
@@ -257,32 +256,32 @@ Program loadSource(std::string workspace, std::string file_name) {
 		source = source.substr(3, source.size());
 	}
 
-	return Program(file_name.substr(0, file_name.length() - 3), source);
+	return Program(fileName.substr(0, fileName.length() - 3), source);
 }
 
-std::vector<Program> loadPrograms(std::string workspace, std::string main_file, std::vector<std::string> files) {
-	std::vector<Program> source_programs;
+std::vector<Program> loadPrograms(std::string workspace, std::string mainFile, std::vector<std::string> files) {
+	std::vector<Program> sourcePrograms;
 
-	Program program = loadSource(workspace, main_file);
+	Program program = loadSource(workspace, mainFile);
 	if (program.source.empty()) throw EMPTY_FILE_FAILURE;
-	source_programs.push_back(program);
+	sourcePrograms.push_back(program);
 
 	for (auto file_name : files) {
 		program = loadSource(workspace, file_name);
 		if (program.source.empty()) throw EMPTY_FILE_FAILURE;
-		source_programs.push_back(program);
+		sourcePrograms.push_back(program);
 	}
 }
 
-int interpreter(std::vector<Program> source_programs) {
+int interpreter(std::vector<Program> sourcePrograms) {
 	// create Global Scopes
-	visitor::SemanticScope semantic_global_scope;
-	visitor::InterpreterScope interpreter_global_scope;
+	visitor::SemanticScope semanticGlobalScope;
+	visitor::InterpreterScope interpreterGlobalScope;
 
 	try {
 		std::vector<parser::ASTProgramNode*> programs;
 
-		for (auto source : source_programs) {
+		for (auto source : sourcePrograms) {
 			// tokenise and initialise parser
 			lexer::Lexer lexer(source.source);
 			parser::Parser parser(&lexer, source.name);
@@ -292,11 +291,11 @@ int interpreter(std::vector<Program> source_programs) {
 		}
 
 		// if this succeeds, perform semantic analysis modifying global scope
-		visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, programs);
-		semantic_analyser.start();
+		visitor::SemanticAnalyser semanticAnalyser(&semanticGlobalScope, programs);
+		semanticAnalyser.start();
 
 		// interpreter
-		visitor::Interpreter interpreter(&interpreter_global_scope, programs);
+		visitor::Interpreter interpreter(&interpreterGlobalScope, programs);
 		interpreter.start();
 	}
 	catch (const std::exception& e) {
@@ -372,7 +371,7 @@ int main(int argc, const char* argv[]) {
 	// check if it has arguments
 	if (argc == 4) {
 		std::string workspace = argv[1];
-		std::string main_file = argv[2];
+		std::string mainFile = argv[2];
 		std::vector<std::string> files;
 
 		if(argc>= 3) {
@@ -383,7 +382,7 @@ int main(int argc, const char* argv[]) {
 				files.push_back(trim(file));
 			}
 		}
-		auto programs = loadPrograms(workspace, main_file, files);
+		auto programs = loadPrograms(workspace, mainFile, files);
 		result = interpreter(programs);
 	}
 

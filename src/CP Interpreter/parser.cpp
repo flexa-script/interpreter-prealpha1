@@ -527,8 +527,8 @@ std::pair<std::string, TYPE>* Parser::parseFormalParam() {
 };
 
 ASTExprNode* Parser::parseExpression() {
-	ASTExprNode* simple_expr = parseLogicalExpression();
-	return parseExpressionTail(simple_expr);
+	ASTExprNode* simpleExpression = parseLogicalExpression();
+	return parseExpressionTail(simpleExpression);
 }
 
 ASTExprNode* Parser::parseExpressionTail(ASTExprNode* lhs) {
@@ -544,8 +544,8 @@ ASTExprNode* Parser::parseExpressionTail(ASTExprNode* lhs) {
 }
 
 ASTExprNode* Parser::parseLogicalExpression() {
-	ASTExprNode* relational_expr = parseRelationalExpression();
-	return parseLogicalExpressionTail(relational_expr);
+	ASTExprNode* relationalExpression = parseRelationalExpression();
+	return parseLogicalExpressionTail(relationalExpression);
 }
 
 ASTExprNode* Parser::parseLogicalExpressionTail(ASTExprNode* lhs) {
@@ -676,13 +676,13 @@ ASTExprNode* Parser::parseFactor() {
 	}
 
 	case lexer::TOK_FLOAT_TYPE:
-		return parseFloatParseExp();
+		return parseExprToFloat();
 
 	case lexer::TOK_INT_TYPE:
-		return parseIntParseExp();
+		return parseExprToInt();
 
 	case lexer::TOK_STRING_TYPE:
-		return parseStringParseExp();
+		return parseExprToString();
 
 	case lexer::TOK_IDENTIFIER: // Identifier or function call case
 		if (nextToken.type == lexer::TOK_LEFT_BRACKET)
@@ -690,7 +690,7 @@ ASTExprNode* Parser::parseFactor() {
 		else return new ASTIdentifierNode(currentToken.value, lineNumber);
 
 	case lexer::TOK_READ: // Read case
-		return parseExprReadNode();
+		return parseExprRead();
 
 	case lexer::TOK_LEFT_BRACKET: // Subexpression case
 	{
@@ -741,7 +741,7 @@ ASTExprFunctionCallNode* Parser::parseExprFunctionCall() {
 	return new ASTExprFunctionCallNode(identifier, *parameters, lineNumber);
 }
 
-ASTFloatParseNode* Parser::parseFloatParseExp() {
+ASTFloatParseNode* Parser::parseExprToFloat() {
 	// determine line number
 	unsigned int lineNumber = currentToken.lineNumber;
 
@@ -762,7 +762,7 @@ ASTFloatParseNode* Parser::parseFloatParseExp() {
 	return new ASTFloatParseNode(expr, lineNumber);
 }
 
-ASTIntParseNode* Parser::parseIntParseExp() {
+ASTIntParseNode* Parser::parseExprToInt() {
 	// determine line number
 	unsigned int lineNumber = currentToken.lineNumber;
 
@@ -783,7 +783,7 @@ ASTIntParseNode* Parser::parseIntParseExp() {
 	return new ASTIntParseNode(expr, lineNumber);
 }
 
-ASTStringParseNode* Parser::parseStringParseExp() {
+ASTStringParseNode* Parser::parseExprToString() {
 	// determine line number
 	unsigned int lineNumber = currentToken.lineNumber;
 
@@ -804,7 +804,7 @@ ASTStringParseNode* Parser::parseStringParseExp() {
 	return new ASTStringParseNode(expr, lineNumber);
 }
 
-ASTExprReadNode* Parser::parseExprReadNode() {
+ASTExprReadNode* Parser::parseExprRead() {
 	// determine line number
 	unsigned int lineNumber = currentToken.lineNumber;
 

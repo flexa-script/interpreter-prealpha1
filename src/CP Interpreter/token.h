@@ -6,11 +6,6 @@
 
 namespace lexer {
 
-	/*
-	 * An enum containing token types.
-	 * This enum encodes the possible token types as described in table 1.3
-	 * in the report.
-	 */
 	enum TOKEN {
 		TOK_INT,
 		TOK_FLOAT,
@@ -50,11 +45,6 @@ namespace lexer {
 		TOK_ERROR
 	};
 
-	/**
-	 * Represents and individual token in the program.
-	 * This class stores the token type and value, as well as the line number in
-	 * which the token occurs (for error reporting).
-	 */
 	class Token {
 	public:
 		Token();

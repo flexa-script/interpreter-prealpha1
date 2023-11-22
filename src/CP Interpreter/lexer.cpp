@@ -186,6 +186,9 @@ unsigned int Lexer::getLineNumber(std::string& program, unsigned int index) {
 		if (program[i] == '\n') {
 			line++;
 		}
+		else {
+
+		}
 	}
 	return line;
 }

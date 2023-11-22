@@ -25,19 +25,19 @@ bool InterpreterScope::alreadyDeclared(std::string identifier) {
 bool InterpreterScope::alreadyDeclared(std::string identifier, std::vector<parser::TYPE> signature) {
 	auto funcs = functionSymbolTable.equal_range(identifier);
 
-	// If key is not present in multimap
+	// if key is not present in multimap
 	if (std::distance(funcs.first, funcs.second) == 0) {
 		return false;
 	}
 
-	// Check signature for each function in multimap
+	// check signature for each function in multimap
 	for (auto i = funcs.first; i != funcs.second; i++) {
 		if (std::get<0>(i->second) == signature) {
 			return true;
 		}
 	}
 
-	// Function with matching signature not found
+	// function with matching signature not found
 	return false;
 }
 
@@ -80,7 +80,7 @@ value_t InterpreterScope::valueof(std::string identifier) {
 std::vector<std::string> InterpreterScope::variablenamesof(std::string identifier, std::vector<parser::TYPE> signature) {
 	auto funcs = functionSymbolTable.equal_range(identifier);
 
-	// Match given signature to function in multimap
+	// match given signature to function in multimap
 	for (auto i = funcs.first; i != funcs.second; i++) {
 		if (std::get<0>(i->second) == signature) {
 			return std::get<1>(i->second);
@@ -92,7 +92,7 @@ std::vector<std::string> InterpreterScope::variablenamesof(std::string identifie
 parser::ASTBlockNode* InterpreterScope::blockof(std::string identifier, std::vector<parser::TYPE> signature) {
 	auto funcs = functionSymbolTable.equal_range(identifier);
 
-	// Match given signature to function in multimap
+	// match given signature to function in multimap
 	for (auto i = funcs.first; i != funcs.second; i++) {
 		if (std::get<0>(i->second) == signature) {
 			return std::get<2>(i->second);
@@ -165,10 +165,10 @@ void visitor::Interpreter::visit(parser::ASTUsingNode* usg) {
 }
 
 void visitor::Interpreter::visit(parser::ASTDeclarationNode* decl) {
-	// Visit expression to update current value/type
+	// visit expression to update current value/type
 	decl->expr->accept(this);
 
-	// Declare variable, depending on type
+	// declare variable, depending on type
 	switch (decl->type) {
 	case parser::TYPE::INT:
 		scopes.back()->declare(decl->identifier, currentExpressionValue.i);
@@ -189,14 +189,14 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* decl) {
 }
 
 void visitor::Interpreter::visit(parser::ASTAssignmentNode* assign) {
-	// Determine innermost scope in which variable is declared
+	// determine innermost scope in which variable is declared
 	unsigned long i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclared(assign->identifier); i--);
 
-	// Visit expression node to update current value/type
+	// visit expression node to update current value/type
 	assign->expr->accept(this);
 
-	// Redeclare variable, depending on type
+	// redeclare variable, depending on type
 	switch (scopes[i]->typeof(assign->identifier)) {
 	case parser::TYPE::INT:
 		scopes[i]->declare(assign->identifier, currentExpressionValue.i);
@@ -602,8 +602,7 @@ void visitor::Interpreter::visit(parser::ASTFloatParseNode* floatParser) {
 	currentExpressionType = parser::TYPE::FLOAT;
 }
 
-void visitor::Interpreter::visit(parser::ASTIntParseNode* intParser)
-{
+void visitor::Interpreter::visit(parser::ASTIntParseNode* intParser) {
 	// visit expression node to update current value/type
 	intParser->expr->accept(this);
 
@@ -620,8 +619,7 @@ void visitor::Interpreter::visit(parser::ASTIntParseNode* intParser)
 	currentExpressionType = parser::TYPE::INT;
 }
 
-void visitor::Interpreter::visit(parser::ASTStringParseNode* strParser)
-{
+void visitor::Interpreter::visit(parser::ASTStringParseNode* strParser) {
 	// visit expression node to update current value/type
 	strParser->expr->accept(this);
 

@@ -29,10 +29,10 @@ namespace visitor
 		void declare(std::string, parser::TYPE, std::vector<parser::TYPE>, unsigned int);
 		parser::TYPE type(std::string);
 		parser::TYPE type(std::string, std::vector<parser::TYPE>);
-		unsigned int declaration_line(std::string);
-		unsigned int declaration_line(std::string, std::vector<parser::TYPE>);
+		unsigned int declarationLine(std::string);
+		unsigned int declarationLine(std::string, std::vector<parser::TYPE>);
 
-		std::vector<std::pair<std::string, std::string>> function_list();
+		std::vector<std::pair<std::string, std::string>> functionList();
 
 	};
 

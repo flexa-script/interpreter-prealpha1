@@ -79,13 +79,13 @@ namespace parser {
 
 		ASTExprFunctionCallNode* parseExprFunctionCall();
 
-		ASTExprReadNode* parseExprReadNode();
+		ASTExprReadNode* parseExprRead();
 
-		ASTFloatParseNode* parseFloatParseExp();
+		ASTFloatParseNode* parseExprToFloat();
 
-		ASTIntParseNode* parseIntParseExp();
+		ASTIntParseNode* parseExprToInt();
 
-		ASTStringParseNode* parseStringParseExp();
+		ASTStringParseNode* parseExprToString();
 
 		// parse types and parameters
 		TYPE parseType(std::string&);

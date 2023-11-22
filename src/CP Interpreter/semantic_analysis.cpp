@@ -64,7 +64,7 @@ parser::TYPE SemanticScope::type(std::string identifier, std::vector<parser::TYP
 	throw std::runtime_error("Something went wrong when determining the type of '" + identifier + "'.");
 }
 
-unsigned int SemanticScope::declaration_line(std::string identifier) {
+unsigned int SemanticScope::declarationLine(std::string identifier) {
 	if (alreadyDeclared(identifier)) {
 		return variableSymbolTable[std::move(identifier)].second;
 	}
@@ -72,7 +72,7 @@ unsigned int SemanticScope::declaration_line(std::string identifier) {
 	throw std::runtime_error("Something went wrong when determining the line number of '" + identifier + "'.");
 }
 
-unsigned int SemanticScope::declaration_line(std::string identifier, std::vector<parser::TYPE> signature) {
+unsigned int SemanticScope::declarationLine(std::string identifier, std::vector<parser::TYPE> signature) {
 	auto funcs = functionSymbolTable.equal_range(identifier);
 
 	// if key is not present in multimap
@@ -92,7 +92,7 @@ unsigned int SemanticScope::declaration_line(std::string identifier, std::vector
 }
 
 
-std::vector<std::pair<std::string, std::string>> SemanticScope::function_list() {
+std::vector<std::pair<std::string, std::string>> SemanticScope::functionList() {
 	std::vector<std::pair<std::string, std::string>> list;
 
 	for (auto func = functionSymbolTable.begin(), last = functionSymbolTable.end(); func != last; func = functionSymbolTable.upper_bound(func->first)) {
@@ -150,7 +150,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl) {
 
 	// if variable already declared, throw error
 	if (currentScope->alreadyDeclared(decl->identifier)) {
-		throw std::runtime_error("Variable redeclaration on line " + std::to_string(decl->lineNumber) + ". '" + decl->identifier + "' was already declared in this scope on line " + std::to_string(currentScope->declaration_line(decl->identifier)) + ".");
+		throw std::runtime_error("Variable redeclaration on line " + std::to_string(decl->lineNumber) + ". '" + decl->identifier + "' was already declared in this scope on line " + std::to_string(currentScope->declarationLine(decl->identifier)) + ".");
 	}
 
 	// visit the expression to update current type
@@ -233,10 +233,10 @@ void SemanticAnalyser::visit(parser::ASTFunctionCallNode* func) {
 }
 
 void SemanticAnalyser::visit(parser::ASTReturnNode* ret) {
-	// Update current expression
+	// update current expression
 	ret->expr->accept(this);
 
-	// If we are not global, check that we return current function return type
+	// if we are not global, check that we return current function return type
 	if (!functions.empty() && currentExpressionType != functions.top()) {
 		throw std::runtime_error("Invalid return type on line " + std::to_string(ret->lineNumber) + ". Expected " + typeStr(functions.top()) + ", found " + typeStr(currentExpressionType) + ".");
 	}
@@ -282,15 +282,15 @@ void SemanticAnalyser::visit(parser::ASTIfNode* ifNode) {
 }
 
 void SemanticAnalyser::visit(parser::ASTWhileNode* whileNode) {
-	// Set current type to while expression
+	// set current type to while expression
 	whileNode->condition->accept(this);
 
-	// Make sure it is boolean
+	// make sure it is boolean
 	if (currentExpressionType != parser::TYPE::BOOL)
 		throw std::runtime_error("Invalid while-condition on line " + std::to_string(whileNode->lineNumber)
 			+ ", expected boolean expression.");
 
-	// Check the while block
+	// check the while block
 	whileNode->block->accept(this);
 }
 
@@ -299,7 +299,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* func) {
 	for (auto& scope : scopes) {
 		if (scope->alreadyDeclared(func->identifier, func->signature)) {
 			// determine line number of error and the corresponding function signature
-			int line = scope->declaration_line(func->identifier, func->signature);
+			int line = scope->declarationLine(func->identifier, func->signature);
 			std::string signature = "(";
 			bool has_params = false;
 			for (auto param : func->signature) {

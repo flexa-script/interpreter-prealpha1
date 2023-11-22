@@ -11,35 +11,35 @@ ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string nam
 	: statements(std::move(statements)), name(name) {}
 
 // Statement Nodes
-ASTUsingNode::ASTUsingNode(std::string library, unsigned int lineNumber) :
-	library(std::move(library)), lineNumber(lineNumber) {}
+ASTUsingNode::ASTUsingNode(std::string library, unsigned int lineNumber)
+	: library(std::move(library)), lineNumber(lineNumber) {}
 
-ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string identifier, ASTExprNode* expr, unsigned int lineNumber) :
-	type(type), identifier(std::move(identifier)), expr(expr), lineNumber(lineNumber) {}
+ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string identifier, ASTExprNode* expr, unsigned int lineNumber)
+	: type(type), identifier(std::move(identifier)), expr(expr), lineNumber(lineNumber) {}
 
-ASTAssignmentNode::ASTAssignmentNode(std::string identifier, ASTExprNode* expr, unsigned int lineNumber) :
-	identifier(std::move(identifier)), expr(expr), lineNumber(lineNumber) {}
+ASTAssignmentNode::ASTAssignmentNode(std::string identifier, ASTExprNode* expr, unsigned int lineNumber)
+	: identifier(std::move(identifier)), expr(expr), lineNumber(lineNumber) {}
 
-ASTFloatParseNode::ASTFloatParseNode(ASTExprNode* expr, unsigned int lineNumber) :
-	expr(expr), lineNumber(lineNumber) {}
+ASTFloatParseNode::ASTFloatParseNode(ASTExprNode* expr, unsigned int lineNumber)
+	: expr(expr), lineNumber(lineNumber) {}
 
-ASTIntParseNode::ASTIntParseNode(ASTExprNode* expr, unsigned int lineNumber) :
-	expr(expr), lineNumber(lineNumber) {}
+ASTIntParseNode::ASTIntParseNode(ASTExprNode* expr, unsigned int lineNumber)
+	: expr(expr), lineNumber(lineNumber) {}
 
-ASTStringParseNode::ASTStringParseNode(ASTExprNode* expr, unsigned int lineNumber) :
-	expr(expr), lineNumber(lineNumber) {}
+ASTStringParseNode::ASTStringParseNode(ASTExprNode* expr, unsigned int lineNumber)
+	: expr(expr), lineNumber(lineNumber) {}
 
-ASTPrintNode::ASTPrintNode(ASTExprNode* expr, unsigned int lineNumber) :
-	expr(expr), lineNumber(lineNumber) {}
+ASTPrintNode::ASTPrintNode(ASTExprNode* expr, unsigned int lineNumber)
+	: expr(expr), lineNumber(lineNumber) {}
 
-ASTReadNode::ASTReadNode(unsigned int lineNumber) :
-	lineNumber(lineNumber) {}
+ASTReadNode::ASTReadNode(unsigned int lineNumber)
+	: lineNumber(lineNumber) {}
 
-ASTFunctionCallNode::ASTFunctionCallNode(std::string identifier, std::vector<ASTExprNode*> parameters, unsigned int lineNumber) :
-	identifier(std::move(identifier)), parameters(std::move(parameters)), lineNumber(lineNumber) {}
+ASTFunctionCallNode::ASTFunctionCallNode(std::string identifier, std::vector<ASTExprNode*> parameters, unsigned int lineNumber)
+	: identifier(std::move(identifier)), parameters(std::move(parameters)), lineNumber(lineNumber) {}
 
-ASTReturnNode::ASTReturnNode(ASTExprNode* expr, unsigned int lineNumber) :
-	expr(expr), lineNumber(lineNumber) {}
+ASTReturnNode::ASTReturnNode(ASTExprNode* expr, unsigned int lineNumber)
+	: expr(expr), lineNumber(lineNumber) {}
 
 ASTBlockNode::ASTBlockNode(std::vector<ASTStatementNode*> statements, unsigned int lineNumber)
 	: statements(std::move(statements)), lineNumber(lineNumber) {}
@@ -63,20 +63,20 @@ ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std
 
 
 // Expression Nodes
-ASTBinaryExprNode::ASTBinaryExprNode(std::string op, ASTExprNode* left, ASTExprNode* right, unsigned int lineNumber) :
-	op(std::move(op)), left(left), right(right), lineNumber(lineNumber) {}
+ASTBinaryExprNode::ASTBinaryExprNode(std::string op, ASTExprNode* left, ASTExprNode* right, unsigned int lineNumber)
+	: op(std::move(op)), left(left), right(right), lineNumber(lineNumber) {}
 
-ASTIdentifierNode::ASTIdentifierNode(std::string identifier, unsigned int lineNumber) :
-	identifier(std::move(identifier)), lineNumber(lineNumber) {}
+ASTIdentifierNode::ASTIdentifierNode(std::string identifier, unsigned int lineNumber)
+	: identifier(std::move(identifier)), lineNumber(lineNumber) {}
 
-ASTUnaryExprNode::ASTUnaryExprNode(std::string unaryOp, ASTExprNode* expr, unsigned int lineNumber) :
-	unaryOp(std::move(unaryOp)), expr(expr), lineNumber(lineNumber) {}
+ASTUnaryExprNode::ASTUnaryExprNode(std::string unaryOp, ASTExprNode* expr, unsigned int lineNumber)
+	: unaryOp(std::move(unaryOp)), expr(expr), lineNumber(lineNumber) {}
 
-ASTExprFunctionCallNode::ASTExprFunctionCallNode(std::string identifier, std::vector<ASTExprNode*> parameters, unsigned int lineNumber) :
-	identifier(std::move(identifier)), parameters(std::move(parameters)), lineNumber(lineNumber) {}
+ASTExprFunctionCallNode::ASTExprFunctionCallNode(std::string identifier, std::vector<ASTExprNode*> parameters, unsigned int lineNumber)
+	: identifier(std::move(identifier)), parameters(std::move(parameters)), lineNumber(lineNumber) {}
 
-ASTExprReadNode::ASTExprReadNode(unsigned int lineNumber) :
-	lineNumber(lineNumber) {}
+ASTExprReadNode::ASTExprReadNode(unsigned int lineNumber)
+	: lineNumber(lineNumber) {}
 
 
 // Accept functions for visitors

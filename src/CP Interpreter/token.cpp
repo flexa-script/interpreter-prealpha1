@@ -11,8 +11,8 @@ Token::Token(int finalState, std::string value, unsigned int lineNumber) :
 	value(value),
 	lineNumber(lineNumber) {}
 
-TOKEN Token::determineTokenType(int final_state, std::string& value) {
-	switch (final_state) {
+TOKEN Token::determineTokenType(int finalState, std::string& value) {
+	switch (finalState) {
 	case 1:
 		return TOK_INT;
 
