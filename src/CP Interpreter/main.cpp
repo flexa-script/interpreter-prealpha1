@@ -54,7 +54,7 @@ int repl() {
 			std::cout << "\n" << "Welcome to MiniLang 1.0.0! \n";
 			std::cout << "To use this interactive REPL, just type in regular CP commands and hit\n";
 			std::cout << "enter. You can also make use of the following commands: \n\n";
-			
+
 			std::cout << " #load \"file path\"  Loads variable and function declarations from a specified\n";
 			std::cout << std::setw(20);
 			std::cout << "" << "file into memory, e.g.\n";
@@ -335,14 +335,10 @@ std::vector<Program> debugPrograms() {
 		"  return val;"
 		"}";
 	sourcePrograms.push_back(Program("math", source));
-	
+
 	return sourcePrograms;
 }
 
-/**
- * The main function implements the interpreter.
- * @return 0
- */
 int main(int argc, const char* argv[]) {
 	int result = 0;
 	std::vector<std::string> args;
@@ -363,19 +359,14 @@ int main(int argc, const char* argv[]) {
 		}
 	}
 
-	//result = interpreter("C:\\Users\\Carlos\\Documents\\newProject\\", "main.cp", { });
-	//system("pause");
-	//return result;
-	//return interpreter("C:\\Users\\Carlos\\Documents\\newProject\\", "main.cp", { "math.cp", "problems.cp"});
-
 	// check if it has arguments
-	if (argc == 4) {
+	if (argc == 3) {
 		std::string workspace = argv[1];
 		std::string mainFile = argv[2];
 		std::vector<std::string> files;
 
-		if(argc>= 3) {
-			std::string strfiles = argv[3];
+		if (argc > 3) {
+			std::string strfiles = argv[4];
 			strfiles = strfiles.substr(1, strfiles.length() - 2);
 			std::vector<std::string> auxFiles = split(strfiles, ',');
 			for (auto file : auxFiles) {
@@ -386,11 +377,6 @@ int main(int argc, const char* argv[]) {
 		result = interpreter(programs);
 	}
 
-	//for (int i = 0; i < argc; ++i) {
-	//	std::cout << argv[i] << std::endl;
-	//}
-	//return repl();
-	//std::cout << std::endl << std::endl;
 	system("pause");
 	return result;
 }
