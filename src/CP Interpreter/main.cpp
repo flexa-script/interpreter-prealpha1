@@ -232,7 +232,7 @@ public:
 
 Program loadSource(std::string workspace, std::string fileName) {
 	std::string source;
-	std::string path = workspace + fileName;
+	std::string path = workspace + '\\' + fileName;
 
 	// read the file
 	std::ifstream file;
@@ -256,7 +256,10 @@ Program loadSource(std::string workspace, std::string fileName) {
 		source = source.substr(3, source.size());
 	}
 
-	return Program(fileName.substr(0, fileName.length() - 3), source);
+	std::string libName = fileName.substr(0, fileName.length() - 3);
+	std::replace(libName.begin(), libName.end(), '/', '.');
+	std::replace(libName.begin(), libName.end(), '\\', '.');
+	return Program(libName, source);
 }
 
 std::vector<Program> loadPrograms(std::string workspace, std::string mainFile, std::vector<std::string> files) {
@@ -271,6 +274,8 @@ std::vector<Program> loadPrograms(std::string workspace, std::string mainFile, s
 		if (program.source.empty()) throw EMPTY_FILE_FAILURE;
 		sourcePrograms.push_back(program);
 	}
+
+	return sourcePrograms;
 }
 
 int interpreter(std::vector<Program> sourcePrograms) {
@@ -360,13 +365,13 @@ int main(int argc, const char* argv[]) {
 	}
 
 	// check if it has arguments
-	if (argc == 3) {
+	if (argc >= 3) {
 		std::string workspace = argv[1];
 		std::string mainFile = argv[2];
 		std::vector<std::string> files;
 
-		if (argc > 3) {
-			std::string strfiles = argv[4];
+		if (argc >= 4) {
+			std::string strfiles = argv[3];
 			strfiles = strfiles.substr(1, strfiles.length() - 2);
 			std::vector<std::string> auxFiles = split(strfiles, ',');
 			for (auto file : auxFiles) {
