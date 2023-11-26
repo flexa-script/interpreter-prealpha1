@@ -9,10 +9,8 @@
 #include "ast.h"
 
 
-namespace visitor
-{
-	typedef struct vT
-	{
+namespace visitor {
+	typedef struct vT {
 		vT() : i(0), f(0), b(0), s("") {};
 		__int64_t i;
 		long double f;
@@ -21,8 +19,7 @@ namespace visitor
 	} value_t;
 
 
-	class InterpreterScope
-	{
+	class InterpreterScope {
 	public:
 		InterpreterScope();
 		InterpreterScope(std::string);
@@ -50,8 +47,7 @@ namespace visitor
 		std::multimap<std::string, std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*>> functionSymbolTable;
 	};
 
-	class Interpreter : public Visitor
-	{
+	class Interpreter : public Visitor {
 	private:
 		std::vector<parser::ASTProgramNode*> programs;
 		parser::ASTProgramNode* currentProgram;

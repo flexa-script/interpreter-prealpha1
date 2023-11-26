@@ -8,10 +8,8 @@
 #include "ast.h"
 
 
-namespace visitor
-{
-	class SemanticScope
-	{
+namespace visitor {
+	class SemanticScope {
 	private:
 		std::map<std::string,
 			std::pair<parser::TYPE,
@@ -36,8 +34,7 @@ namespace visitor
 
 	};
 
-	class SemanticAnalyser : Visitor
-	{
+	class SemanticAnalyser : Visitor {
 	private:
 		std::vector<parser::ASTProgramNode*> programs;
 		parser::ASTProgramNode* currentProgram;

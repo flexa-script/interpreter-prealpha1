@@ -34,10 +34,8 @@ namespace parser
 	class ASTExprReadNode;
 }
 
-namespace visitor
-{
-	class Visitor
-	{
+namespace visitor {
+	class Visitor {
 	public:
 		virtual void visit(parser::ASTProgramNode*) = 0;
 		virtual void visit(parser::ASTUsingNode*) = 0;
