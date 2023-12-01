@@ -154,15 +154,18 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	}
 	else {
 		switch (type) {
+		case parser::TYPE::BOOL:
+			expr = new ASTLiteralNode<bool>(false, lineNumber);
+			break;
 		case parser::TYPE::INT:
 			expr = new ASTLiteralNode<__int64_t>(0, lineNumber);
 			break;
 		case parser::TYPE::FLOAT:
 			expr = new ASTLiteralNode<long double>(0., lineNumber);
 			break;
-		case parser::TYPE::BOOL:
-			expr = new ASTLiteralNode<bool>(false, lineNumber);
-			break;
+		//case parser::TYPE::CHAR:
+		//	expr = new ASTLiteralNode<char>(0, lineNumber);
+		//	break;
 		case parser::TYPE::STRING:
 			expr = new ASTLiteralNode<std::string>("", lineNumber);
 			break;
@@ -623,16 +626,16 @@ ASTExprNode* Parser::parseFactor() {
 
 	switch (currentToken.type) {
 		// Literal Cases
-	case lexer::TOK_INT:
+	case lexer::TOK_INT_LITERAL:
 		return new ASTLiteralNode<__int64_t>(std::stoll(currentToken.value), lineNumber);
 
-	case lexer::TOK_FLOAT:
+	case lexer::TOK_FLOAT_LITERAL:
 		return new ASTLiteralNode<long double>(std::stold(currentToken.value), lineNumber);
 
-	case lexer::TOK_BOOL:
+	case lexer::TOK_BOOL_LITERAL:
 		return new ASTLiteralNode<bool>(currentToken.value == "true", lineNumber);
 
-	case lexer::TOK_STRING: {
+	case lexer::TOK_STRING_LITERAL: {
 		// remove " character from front and end of lexeme
 		std::string str = currentToken.value.substr(1, currentToken.value.size() - 2);
 

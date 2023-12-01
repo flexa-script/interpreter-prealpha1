@@ -7,13 +7,24 @@
 namespace lexer {
 
 	enum TOKEN {
-		TOK_INT,
-		TOK_FLOAT,
+		TOK_BOOL_LITERAL,
+		TOK_INT_LITERAL,
+		TOK_FLOAT_LITERAL,
+		TOK_CHAR_LITERAL,
+		TOK_STRING_LITERAL,
 		TOK_ADDITIVE_OP,
 		TOK_MULTIPLICATIVE_OP,
 		TOK_RELATIONAL_OP,
 		TOK_LOGICAL_AND_OP,
 		TOK_LOGICAL_OR_OP,
+		TOK_NOT,
+		TOK_VOID_TYPE,
+		TOK_ANY_TYPE,
+		TOK_INT_TYPE,
+		TOK_FLOAT_TYPE,
+		TOK_BOOL_TYPE,
+		TOK_CHAR_TYPE,
+		TOK_STRING_TYPE,
 		TOK_EQUALS,
 		TOK_USING,
 		TOK_VAR,
@@ -24,20 +35,14 @@ namespace lexer {
 		TOK_WHILE,
 		TOK_PRINT,
 		TOK_READ,
-		TOK_VOID_TYPE,
-		TOK_INT_TYPE,
-		TOK_FLOAT_TYPE,
-		TOK_BOOL_TYPE,
-		TOK_STRING_TYPE,
-		TOK_BOOL,
-		TOK_NOT,
 		TOK_IDENTIFIER,
 		TOK_COMMENT,
-		TOK_STRING,
 		TOK_LEFT_CURLY,
 		TOK_RIGHT_CURLY,
 		TOK_LEFT_BRACKET,
 		TOK_RIGHT_BRACKET,
+		TOK_LEFT_BRACE,
+		TOK_RIGHT_BRACE,
 		TOK_COMMA,
 		TOK_SEMICOLON,
 		TOK_COLON,
@@ -49,14 +54,12 @@ namespace lexer {
 	public:
 		Token();
 
-		Token(int, std::string, unsigned int lineNumber = 0);
+		Token(TOKEN, std::string, unsigned int lineNumber = 0);
 
 		TOKEN type;
 		std::string value;
 		unsigned int lineNumber;
 
-	private:
-		TOKEN determineTokenType(int, std::string&);
 	};
 };
 

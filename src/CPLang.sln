@@ -9,6 +9,8 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug -d Flag|x64 = Debug -d Flag|x64
 		Debug -d Flag|x86 = Debug -d Flag|x86
+		Debug File|x64 = Debug File|x64
+		Debug File|x86 = Debug File|x86
 		Debug Project|x64 = Debug Project|x64
 		Debug Project|x86 = Debug Project|x86
 		Debug|x64 = Debug|x64
@@ -21,6 +23,10 @@ Global
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug -d Flag|x64.Build.0 = Debug Project|x64
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug -d Flag|x86.ActiveCfg = Debug Project|Win32
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug -d Flag|x86.Build.0 = Debug Project|Win32
+		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug File|x64.ActiveCfg = Debug File|x64
+		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug File|x64.Build.0 = Debug File|x64
+		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug File|x86.ActiveCfg = Debug File|Win32
+		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug File|x86.Build.0 = Debug File|Win32
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Project|x64.ActiveCfg = Debug File|x64
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Project|x64.Build.0 = Debug File|x64
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Project|x86.ActiveCfg = Debug File|Win32

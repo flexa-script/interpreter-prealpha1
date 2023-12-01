@@ -367,7 +367,11 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* bin) {
 	// these only work for int/float
 	if (op == "*" || op == "/" || op == "-" || op == "%") {
 		if ((l_type != parser::TYPE::INT && l_type != parser::TYPE::FLOAT) || (r_type != parser::TYPE::INT && r_type != parser::TYPE::FLOAT)) {
-			throw std::runtime_error(currentProgram->name + ": Expected numerical operands for '" + op + "' operator on line " + std::to_string(bin->lineNumber) + ".");
+			throw std::runtime_error(currentProgram->name + ": expected numerical operands for '" + op + "' operator on line " + std::to_string(bin->lineNumber) + ".");
+		}
+
+		if (op == "%" && (l_type == parser::TYPE::FLOAT || r_type == parser::TYPE::FLOAT)) {
+			throw std::runtime_error(currentProgram->name + ": invalid operands to binary expression ('" + typeStr(l_type) + " and '" + typeStr(r_type) + "') on line " + std::to_string(bin->lineNumber) + ".");
 		}
 
 		// if both int, then expression is int, otherwise float

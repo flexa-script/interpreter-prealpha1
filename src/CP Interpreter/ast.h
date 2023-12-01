@@ -10,7 +10,7 @@
 namespace parser {
 	// Types
 	enum class TYPE {
-		VOID, INT, FLOAT, BOOL, STRING
+		VOID, ANY, BOOL, INT, FLOAT, CHAR, STRING
 	};
 
 	// Abstract Nodes
