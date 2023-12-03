@@ -159,9 +159,9 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 		case parser::TYPE::FLOAT:
 			expr = new ASTLiteralNode<long double>(0., row, col);
 			break;
-			//case parser::TYPE::CHAR:
-			//	expr = new ASTLiteralNode<char>(0, lineNumber);
-			//	break;
+		case parser::TYPE::CHAR:
+			expr = new ASTLiteralNode<char>(0, row, col);
+			break;
 		case parser::TYPE::STRING:
 			expr = new ASTLiteralNode<std::string>("", row, col);
 			break;
@@ -637,14 +637,17 @@ ASTExprNode* Parser::parseFactor() {
 
 	switch (currentToken.type) {
 		// Literal Cases
+	case lexer::TOK_BOOL_LITERAL:
+		return new ASTLiteralNode<bool>(currentToken.value == "true", row, col);
+
 	case lexer::TOK_INT_LITERAL:
 		return new ASTLiteralNode<__int64_t>(std::stoll(currentToken.value), row, col);
 
 	case lexer::TOK_FLOAT_LITERAL:
 		return new ASTLiteralNode<long double>(std::stold(currentToken.value), row, col);
 
-	case lexer::TOK_BOOL_LITERAL:
-		return new ASTLiteralNode<bool>(currentToken.value == "true", row, col);
+	case lexer::TOK_CHAR_LITERAL:
+		return new ASTLiteralNode<char>(currentToken.value.c_str()[0], row, col);
 
 	case lexer::TOK_STRING_LITERAL: {
 		// remove " character from front and end of lexeme
@@ -866,14 +869,17 @@ TYPE Parser::parseType(std::string& identifier) {
 	case lexer::TOK_VOID_TYPE:
 		return TYPE::VOID;
 
+	case lexer::TOK_BOOL_TYPE:
+		return TYPE::BOOL;
+
 	case lexer::TOK_INT_TYPE:
 		return TYPE::INT;
 
 	case lexer::TOK_FLOAT_TYPE:
 		return TYPE::FLOAT;
 
-	case lexer::TOK_BOOL_TYPE:
-		return TYPE::BOOL;
+	case lexer::TOK_CHAR_TYPE:
+		return TYPE::CHAR;
 
 	case lexer::TOK_STRING_TYPE:
 		return TYPE::STRING;

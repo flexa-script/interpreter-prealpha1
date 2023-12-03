@@ -86,6 +86,11 @@ void ASTBinaryExprNode::accept(visitor::Visitor* v) {
 
 namespace parser {
 	template<>
+	void ASTLiteralNode<bool>::accept(visitor::Visitor* v) {
+		v->visit(this);
+	}
+
+	template<>
 	void ASTLiteralNode<__int64_t>::accept(visitor::Visitor* v) {
 		v->visit(this);
 	}
@@ -96,7 +101,7 @@ namespace parser {
 	}
 
 	template<>
-	void ASTLiteralNode<bool>::accept(visitor::Visitor* v) {
+	void ASTLiteralNode<char>::accept(visitor::Visitor* v) {
 		v->visit(this);
 	}
 

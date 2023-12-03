@@ -41,6 +41,12 @@ bool InterpreterScope::alreadyDeclared(std::string identifier, std::vector<parse
 	return false;
 }
 
+void InterpreterScope::declare(std::string identifier, bool boolValue) {
+	value_t value;
+	value.b = boolValue;
+	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::BOOL, value);
+}
+
 void InterpreterScope::declare(std::string identifier, __int64_t intValue) {
 	value_t value;
 	value.i = intValue;
@@ -53,10 +59,10 @@ void InterpreterScope::declare(std::string identifier, long double realValue) {
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::FLOAT, value);
 }
 
-void InterpreterScope::declare(std::string identifier, bool boolValue) {
+void InterpreterScope::declare(std::string identifier, char charValue) {
 	value_t value;
-	value.b = boolValue;
-	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::BOOL, value);
+	value.c = charValue;
+	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::CHAR, value);
 }
 
 void InterpreterScope::declare(std::string identifier, std::string stringValue) {
@@ -107,14 +113,17 @@ std::vector<std::tuple<std::string, std::string, std::string>> InterpreterScope:
 
 	for (auto const& var : variableSymbolTable) {
 		switch (var.second.first) {
+		case parser::TYPE::BOOL:
+			list.emplace_back(std::make_tuple(var.first, "bool", (var.second.second.b) ? "true" : "false"));
+			break;
 		case parser::TYPE::INT:
 			list.emplace_back(std::make_tuple(var.first, "int", std::to_string(var.second.second.i)));
 			break;
 		case parser::TYPE::FLOAT:
 			list.emplace_back(std::make_tuple(var.first, "float", std::to_string(var.second.second.f)));
 			break;
-		case parser::TYPE::BOOL:
-			list.emplace_back(std::make_tuple(var.first, "bool", (var.second.second.b) ? "true" : "false"));
+		case parser::TYPE::CHAR:
+			list.emplace_back(std::make_tuple(var.first, "char", std::to_string(var.second.second.c)));
 			break;
 		case parser::TYPE::STRING:
 			list.emplace_back(std::make_tuple(var.first, "string", var.second.second.s));
@@ -170,6 +179,9 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* decl) {
 
 	// declare variable, depending on type
 	switch (decl->type) {
+	case parser::TYPE::BOOL:
+		scopes.back()->declare(decl->identifier, currentExpressionValue.b);
+		break;
 	case parser::TYPE::INT:
 		scopes.back()->declare(decl->identifier, currentExpressionValue.i);
 		break;
@@ -179,8 +191,8 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* decl) {
 		else
 			scopes.back()->declare(decl->identifier, currentExpressionValue.f);
 		break;
-	case parser::TYPE::BOOL:
-		scopes.back()->declare(decl->identifier, currentExpressionValue.b);
+	case parser::TYPE::CHAR:
+		scopes.back()->declare(decl->identifier, currentExpressionValue.c);
 		break;
 	case parser::TYPE::STRING:
 		scopes.back()->declare(decl->identifier, currentExpressionValue.s);
@@ -198,6 +210,9 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* assign) {
 
 	// redeclare variable, depending on type
 	switch (scopes[i]->typeof(assign->identifier)) {
+	case parser::TYPE::BOOL:
+		scopes[i]->declare(assign->identifier, currentExpressionValue.b);
+		break;
 	case parser::TYPE::INT:
 		scopes[i]->declare(assign->identifier, currentExpressionValue.i);
 		break;
@@ -207,8 +222,8 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* assign) {
 		else
 			scopes[i]->declare(assign->identifier, currentExpressionValue.f);
 		break;
-	case parser::TYPE::BOOL:
-		scopes[i]->declare(assign->identifier, currentExpressionValue.b);
+	case parser::TYPE::CHAR:
+		scopes[i]->declare(assign->identifier, currentExpressionValue.c);
 		break;
 	case parser::TYPE::STRING:
 		scopes[i]->declare(assign->identifier, currentExpressionValue.s);
@@ -222,14 +237,17 @@ void visitor::Interpreter::visit(parser::ASTPrintNode* print) {
 
 	// print, depending on type
 	switch (currentExpressionType) {
+	case parser::TYPE::BOOL:
+		std::cout << ((currentExpressionValue.b) ? "true" : "false");
+		break;
 	case parser::TYPE::INT:
 		std::cout << currentExpressionValue.i;
 		break;
 	case parser::TYPE::FLOAT:
 		std::cout << currentExpressionValue.f;
 		break;
-	case parser::TYPE::BOOL:
-		std::cout << ((currentExpressionValue.b) ? "true" : "false");
+	case parser::TYPE::CHAR:
+		std::cout << currentExpressionValue.c;
 		break;
 	case parser::TYPE::STRING:
 		std::cout << currentExpressionValue.s;
@@ -299,14 +317,17 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* block) {
 	// parameters. If we do, then add them to the current scope.
 	for (unsigned int i = 0; i < currentFunctionArguments.size(); i++) {
 		switch (currentFunctionArguments[i].first) {
+		case parser::TYPE::BOOL:
+			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second.b);
+			break;
 		case parser::TYPE::INT:
 			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second.i);
 			break;
 		case parser::TYPE::FLOAT:
 			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second.f);
 			break;
-		case parser::TYPE::BOOL:
-			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second.b);
+		case parser::TYPE::CHAR:
+			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second.c);
 			break;
 		case parser::TYPE::STRING:
 			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second.s);
@@ -369,6 +390,13 @@ void visitor::Interpreter::visit(parser::ASTFunctionDefinitionNode* func) {
 	scopes.back()->declare(func->identifier, func->signature, func->variableNames, func->block);
 }
 
+void visitor::Interpreter::visit(parser::ASTLiteralNode<bool>* lit) {
+	value_t v;
+	v.b = lit->val;
+	currentExpressionType = parser::TYPE::BOOL;
+	currentExpressionValue = std::move(v);
+}
+
 void visitor::Interpreter::visit(parser::ASTLiteralNode<__int64_t>* lit) {
 	value_t v;
 	v.i = lit->val;
@@ -383,10 +411,10 @@ void visitor::Interpreter::visit(parser::ASTLiteralNode<long double>* lit) {
 	currentExpressionValue = std::move(v);
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<bool>* lit) {
+void visitor::Interpreter::visit(parser::ASTLiteralNode<char>* lit) {
 	value_t v;
-	v.b = lit->val;
-	currentExpressionType = parser::TYPE::BOOL;
+	v.c = lit->val;
+	currentExpressionType = parser::TYPE::CHAR;
 	currentExpressionValue = std::move(v);
 }
 
@@ -594,6 +622,9 @@ void visitor::Interpreter::visit(parser::ASTFloatParseNode* floatParser) {
 	case parser::TYPE::STRING:
 		currentExpressionValue.f = std::stold(currentExpressionValue.s);
 		break;
+	case parser::TYPE::CHAR:
+		currentExpressionValue.f = currentExpressionValue.c;
+		break;
 	}
 
 	currentExpressionType = parser::TYPE::FLOAT;
@@ -610,6 +641,9 @@ void visitor::Interpreter::visit(parser::ASTIntParseNode* intParser) {
 		break;
 	case parser::TYPE::STRING:
 		currentExpressionValue.i = std::stoll(currentExpressionValue.s);
+		break;
+	case parser::TYPE::CHAR:
+		currentExpressionValue.i = currentExpressionValue.c;
 		break;
 	}
 
@@ -630,6 +664,9 @@ void visitor::Interpreter::visit(parser::ASTStringParseNode* strParser) {
 		break;
 	case parser::TYPE::BOOL:
 		currentExpressionValue.s = currentExpressionValue.b ? "true" : "false";
+		break;
+	case parser::TYPE::CHAR:
+		currentExpressionValue.s = currentExpressionValue.c;
 		break;
 	}
 
@@ -656,12 +693,14 @@ std::string visitor::typeStr(parser::TYPE t) {
 	switch (t) {
 	case parser::TYPE::VOID:
 		return "void";
+	case parser::TYPE::BOOL:
+		return "bool";
 	case parser::TYPE::INT:
 		return "int";
 	case parser::TYPE::FLOAT:
 		return "float";
-	case parser::TYPE::BOOL:
-		return "bool";
+	case parser::TYPE::CHAR:
+		return "char";
 	case parser::TYPE::STRING:
 		return "string";
 	default:

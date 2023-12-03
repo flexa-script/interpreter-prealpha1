@@ -11,10 +11,11 @@
 
 namespace visitor {
 	typedef struct vT {
-		vT() : i(0), f(0), b(0), s("") {};
+		vT() : b(0), i(0), f(0), c(0), s("") {};
+		bool b;
 		__int64_t i;
 		long double f;
-		bool b;
+		char c;
 		std::string s;
 	} value_t;
 
@@ -26,9 +27,10 @@ namespace visitor {
 
 		bool alreadyDeclared(std::string);
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
+		void declare(std::string, bool);
 		void declare(std::string, __int64_t);
 		void declare(std::string, long double);
-		void declare(std::string, bool);
+		void declare(std::string, char);
 		void declare(std::string, std::string);
 		void declare(std::string, std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*);
 
@@ -78,9 +80,10 @@ namespace visitor {
 		void visit(parser::ASTIfNode*) override;
 		void visit(parser::ASTWhileNode*) override;
 		void visit(parser::ASTFunctionDefinitionNode*) override;
+		void visit(parser::ASTLiteralNode<bool>*) override;
 		void visit(parser::ASTLiteralNode<__int64_t>*) override;
 		void visit(parser::ASTLiteralNode<long double>*) override;
-		void visit(parser::ASTLiteralNode<bool>*) override;
+		void visit(parser::ASTLiteralNode<char>*) override;
 		void visit(parser::ASTLiteralNode<std::string>*) override;
 		void visit(parser::ASTBinaryExprNode*) override;
 		void visit(parser::ASTIdentifierNode*) override;

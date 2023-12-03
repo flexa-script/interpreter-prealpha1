@@ -336,6 +336,10 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* func) {
 	functions.pop();
 }
 
+void SemanticAnalyser::visit(parser::ASTLiteralNode<bool>*) {
+	currentExpressionType = parser::TYPE::BOOL;
+}
+
 void SemanticAnalyser::visit(parser::ASTLiteralNode<__int64_t>*) {
 	currentExpressionType = parser::TYPE::INT;
 }
@@ -344,8 +348,8 @@ void SemanticAnalyser::visit(parser::ASTLiteralNode<long double>*) {
 	currentExpressionType = parser::TYPE::FLOAT;
 }
 
-void SemanticAnalyser::visit(parser::ASTLiteralNode<bool>*) {
-	currentExpressionType = parser::TYPE::BOOL;
+void SemanticAnalyser::visit(parser::ASTLiteralNode<char>*) {
+	currentExpressionType = parser::TYPE::CHAR;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<std::string>*) {
@@ -442,16 +446,16 @@ void SemanticAnalyser::visit(parser::ASTUnaryExprNode* un) {
 	case parser::TYPE::INT:
 	case parser::TYPE::FLOAT:
 		if (un->unaryOp != "+" && un->unaryOp != "-") {
-			throw std::runtime_error(msgHeader(un->row, un->col) + "operator '" + un->unaryOp + "' in front of numerical expression on line.");
+			throw std::runtime_error(msgHeader(un->row, un->col) + "operator '" + un->unaryOp + "' in front of numerical expression.");
 		}
 		break;
 	case parser::TYPE::BOOL:
 		if (un->unaryOp != "not") {
-			throw std::runtime_error(msgHeader(un->row, un->col) + "operator '" + un->unaryOp + "' in front of boolean expression on line.");
+			throw std::runtime_error(msgHeader(un->row, un->col) + "operator '" + un->unaryOp + "' in front of boolean expression.");
 		}
 		break;
 	default:
-		throw std::runtime_error(msgHeader(un->row, un->col) + "incompatible unary operator '" + un->unaryOp + "' in front of expression on line.");
+		throw std::runtime_error(msgHeader(un->row, un->col) + "incompatible unary operator '" + un->unaryOp + "' in front of expression.");
 	}
 }
 
@@ -489,15 +493,35 @@ void SemanticAnalyser::visit(parser::ASTExprFunctionCallNode* func) {
 	currentExpressionType = scopes[i]->type(func->identifier, std::move(signature));
 }
 
-void SemanticAnalyser::visit(parser::ASTFloatParseNode* float_parser) {
+void SemanticAnalyser::visit(parser::ASTFloatParseNode* floatParser) {
+	// handle different cases
+	switch (currentExpressionType) {
+	case parser::TYPE::INT:
+	case parser::TYPE::FLOAT:
+	case parser::TYPE::CHAR:
+		break;
+	default:
+		throw std::runtime_error(msgHeader(floatParser->row, floatParser->col) + "float cant't parse '" + typeStr(currentExpressionType) + "'.");
+	}
+
 	currentExpressionType = parser::TYPE::FLOAT;
 }
 
-void SemanticAnalyser::visit(parser::ASTIntParseNode* int_parser) {
+void SemanticAnalyser::visit(parser::ASTIntParseNode* intParser) {
+	// handle different cases
+	switch (currentExpressionType) {
+	case parser::TYPE::STRING:
+	case parser::TYPE::FLOAT:
+	case parser::TYPE::CHAR:
+		break;
+	default:
+		throw std::runtime_error(msgHeader(intParser->row, intParser->col) + "int cant't parse '" + typeStr(currentExpressionType) + "'.");
+	}
+
 	currentExpressionType = parser::TYPE::INT;
 }
 
-void SemanticAnalyser::visit(parser::ASTStringParseNode* str_parser) {
+void SemanticAnalyser::visit(parser::ASTStringParseNode* strParser) {
 	currentExpressionType = parser::TYPE::STRING;
 }
 
@@ -511,12 +535,14 @@ std::string typeStr(parser::TYPE t) {
 	switch (t) {
 	case parser::TYPE::VOID:
 		return "void";
+	case parser::TYPE::BOOL:
+		return "bool";
 	case parser::TYPE::INT:
 		return "int";
 	case parser::TYPE::FLOAT:
 		return "real";
-	case parser::TYPE::BOOL:
-		return "bool";
+	case parser::TYPE::CHAR:
+		return "char";
 	case parser::TYPE::STRING:
 		return "string";
 	default:
