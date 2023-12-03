@@ -6,7 +6,5 @@ using namespace lexer;
 
 Token::Token() = default;
 
-Token::Token(TOKEN type, std::string value, unsigned int lineNumber) :
-	type(type),
-	value(value),
-	lineNumber(lineNumber) {}
+Token::Token(TOKEN_TYPE type, std::string value, unsigned int row, unsigned int col)
+	: type(type), value(value), row(row), col(col) {}

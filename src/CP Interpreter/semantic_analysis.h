@@ -45,6 +45,7 @@ namespace visitor {
 
 	private:
 		bool returns(parser::ASTStatementNode*);
+		std::string msgHeader(unsigned int, unsigned int);
 
 	public:
 		SemanticAnalyser(SemanticScope*, std::vector<parser::ASTProgramNode*>);

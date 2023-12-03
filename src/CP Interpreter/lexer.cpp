@@ -7,89 +7,140 @@
 using namespace lexer;
 
 
-Lexer::Lexer(std::string& source) 
-	: source(source) {
+Lexer::Lexer(std::string& source, std::string name) 
+	: source(source), name(name) {
 	tokenize();
 }
 
 void Lexer::tokenize() {
-	while (currentIndex < source.length()) {
-		char currentChar = source[currentIndex];
+	currentRow = 1;
+	currentCol = 1;
 
-		if (std::isspace(currentChar)) {
+	while (hasNext()) {
+		currentChar = source[currentIndex];
+
+		if (currentChar == '\n') {
+			++currentRow;
+		}
+
+		if (isSpace()) {
 			// ignore white spaces
 			advance();
 		}
+		else if (currentChar == '/' && (getNextChar() == '/' || getNextChar() == '*')) {
+			processComment();
+		}
 		else if (currentChar == '\'') {
-			// character
+			startCol = currentCol;
 			tokens.push_back(processChar());
 		}
 		else if (currentChar == '"') {
-			// string
+			startCol = currentCol;
 			tokens.push_back(processString());
 		}
 		else if (std::isalpha(currentChar) || currentChar == '_') {
-			// identifier and reserved words
+			startCol = currentCol;
 			tokens.push_back(processIdentifier());
 		}
 		else if (std::isdigit(currentChar) || currentChar == '.') {
-			// number
+			startCol = currentCol;
 			tokens.push_back(processNumber());
 		}
 		else {
-			// symbol
+			startCol = currentCol;
 			tokens.push_back(processSymbol());
 		}
 	}
 
-	tokens.push_back(Token(TOKEN::TOK_EOF, "", getLineNumber()));
+	tokens.push_back(Token(TOKEN_TYPE::TOK_EOF, "", 0, 0));
+}
+
+char Lexer::getNextChar() {
+	return currentIndex + 1 < source.length() ? source[currentIndex + 1] : -1;
+}
+
+bool Lexer::hasNext() {
+	return currentIndex < source.length();
+}
+
+bool Lexer::isSpace() {
+	return std::isspace(currentChar) || currentChar == '\t' || currentChar == '\r' || currentChar == '\n';
 }
 
 void Lexer::advance() {
-	currentIndex++;
+	if (currentChar == '\n') {
+		currentCol = 1;
+	}
+	else {
+		++currentCol;
+	}
+	beforeChar = currentChar;
+	currentChar = source[++currentIndex];
+}
+
+Token Lexer::processComment() {
+	std::string comment;
+	bool isBlock = false;
+
+	comment += currentChar;
+	advance();
+
+	if (currentChar == '*') {
+		isBlock = true;
+	}
+
+	do {
+		comment += currentChar;
+		advance();
+	} while (hasNext() && (isBlock && (currentChar != '/' || beforeChar != '*') || !isBlock && currentChar != '\n'));
+
+	comment += currentChar;
+	advance();
+
+	return Token(TOKEN_TYPE::TOK_COMMENT, comment, currentRow, startCol);
 }
 
 Token Lexer::processString() {
 	std::string str;
-	TOKEN type;
+	TOKEN_TYPE type;
 
 	do {
-		str += source[currentIndex];
+		str += currentChar;
 		advance();
-	} while (source[currentIndex] != '"' || source[currentIndex - 1] == '\\');
-	str += source[currentIndex];
+	} while (hasNext() && (currentChar != '"' || beforeChar == '\\'));
+	str += currentChar;
 	advance();
 
-	return Token(TOKEN::TOK_STRING_LITERAL, str, getLineNumber());
+	return Token(TOKEN_TYPE::TOK_STRING_LITERAL, str, currentRow, startCol);
 }
 
 Token Lexer::processChar() {
 	std::string chr;
-	TOKEN type;
+	TOKEN_TYPE type;
 
-	chr += source[currentIndex];
+	chr += currentChar;
 	advance();
-	if (source[currentIndex] == '\\') {
-		chr += source[currentIndex];
+	if (hasNext() && currentChar == '\\') {
+		chr += currentChar;
 		advance();
 	}
-	chr += source[currentIndex];
+	chr += currentChar;
 	advance();
-	if (source[currentIndex] != '\'') {
-		throw std::runtime_error("Lexical error on line " + std::to_string(getLineNumber()) + ", expected \"'\" to close character constant.");
+	if (hasNext() && currentChar != '\'') {
+		throw std::runtime_error(msgHeader() + "lexical error: expected \"'\" to close character constant.");
 	}
-	chr += source[currentIndex];
+	chr += currentChar;
 	advance();
 
-	return Token(TOKEN::TOK_CHAR_LITERAL, chr, getLineNumber());
+	return Token(TOKEN_TYPE::TOK_CHAR_LITERAL, chr, currentRow, startCol);
 }
 
 Token Lexer::processIdentifier() {
 	std::string identifier;
-	TOKEN type;
+	TOKEN_TYPE type;
 
-	while (std::isalnum(source[currentIndex]) || source[currentIndex] == '_' || source[currentIndex] == '.') {
-		identifier += source[currentIndex];
+	while (hasNext() && (std::isalnum(currentChar) || currentChar == '_' || currentChar == '.')) {
+		identifier += currentChar;
 		advance();
 	}
 
@@ -133,41 +184,45 @@ Token Lexer::processIdentifier() {
 		type = TOK_NOT;
 	else type = TOK_IDENTIFIER;
 
-	return Token(type, identifier, getLineNumber());
+	return Token(type, identifier, currentRow, startCol);
 }
 
 Token Lexer::processNumber() {
 	std::string number;
-	TOKEN type;
+	TOKEN_TYPE type;
 	bool hasDot = false;
 
-	while (std::isdigit(source[currentIndex]) || source[currentIndex] == '.') {
-		if (source[currentIndex] == '.') {
+	while (hasNext() && (std::isdigit(currentChar) || currentChar == '.')) {
+		if (currentChar == '.') {
 			if (hasDot){
-				throw std::runtime_error("Lexical error on line " + std::to_string(getLineNumber()) + ", found a double dot number.");
+				throw std::runtime_error(msgHeader() + "lexical error: found a double dot float.");
 			}
 			hasDot = true;
 		}
-		number += source[currentIndex];
+		number += currentChar;
 		advance();
 	}
 
 	if (hasDot) {
 		type = TOK_FLOAT_LITERAL;
 	}
+	else if (currentChar == 'f') {
+		type = TOK_FLOAT_LITERAL;
+		advance();
+	}
 	else {
 		type = TOK_INT_LITERAL;
 	}
 
-	return Token(type, number, getLineNumber());
+	return Token(type, number, currentRow, startCol);
 }
 
 Token Lexer::processSymbol() {
 	char symbol;
 	std::string strSymbol;
-	TOKEN type;
-	symbol = source[currentIndex];
-	strSymbol = source[currentIndex];
+	TOKEN_TYPE type;
+	symbol = currentChar;
+	strSymbol = currentChar;
 	advance();
 
 	switch (symbol) {
@@ -231,17 +286,7 @@ Token Lexer::processSymbol() {
 		type = TOK_ERROR;
 	}
 
-	return Token(type, strSymbol, getLineNumber());
-}
-
-unsigned int Lexer::getLineNumber() {
-	unsigned int line = 1;
-	for (int i = 0; i < currentIndex; i++) {
-		if (source[i] == '\n') {
-			line++;
-		}
-	}
-	return line;
+	return Token(type, strSymbol, currentRow, startCol);
 }
 
 Token Lexer::nextToken() {
@@ -252,6 +297,10 @@ Token Lexer::nextToken() {
 		std::string error = "Final token surpassed.";
 		return Token(TOK_ERROR, error);
 	}
+}
+
+std::string Lexer::msgHeader() {
+	return name + '[' + std::to_string(currentRow) + ':' + std::to_string(currentCol) + "]: ";
 }
 
 Lexer::~Lexer() = default;

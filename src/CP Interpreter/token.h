@@ -6,7 +6,7 @@
 
 namespace lexer {
 
-	enum TOKEN {
+	enum TOKEN_TYPE {
 		TOK_BOOL_LITERAL,
 		TOK_INT_LITERAL,
 		TOK_FLOAT_LITERAL,
@@ -54,11 +54,12 @@ namespace lexer {
 	public:
 		Token();
 
-		Token(TOKEN, std::string, unsigned int lineNumber = 0);
+		Token(TOKEN_TYPE, std::string, unsigned int row = 0, unsigned int col = 0);
 
-		TOKEN type;
+		TOKEN_TYPE type;
 		std::string value;
-		unsigned int lineNumber;
+		unsigned int row;
+		unsigned int col;
 
 	};
 };

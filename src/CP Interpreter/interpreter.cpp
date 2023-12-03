@@ -430,7 +430,7 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* bin) {
 			}
 			else if (op == "/") {
 				if (r_value.i == 0) {
-					throw std::runtime_error(currentProgram->name + ": division by zero encountered on line " + std::to_string(bin->lineNumber) + ".");
+					throw std::runtime_error(msgHeader(bin->row, bin->col) + "division by zero encountered.");
 				}
 				v.i = l_value.i / r_value.i;
 			}
@@ -458,7 +458,7 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* bin) {
 			}
 			else if (op == "/") {
 				if (r == 0) {
-					throw std::runtime_error(currentProgram->name + ": division by zero encountered on line " + std::to_string(bin->lineNumber) + ".");
+					throw std::runtime_error(msgHeader(bin->row, bin->col) + "division by zero encountered.");
 				}
 				v.f = l / r;
 			}
@@ -646,6 +646,10 @@ void visitor::Interpreter::visit(parser::ASTExprReadNode* read) {
 std::pair<parser::TYPE, value_t> Interpreter::currentExpr() {
 	return std::move(std::make_pair(currentExpressionType, currentExpressionValue));
 };
+
+std::string Interpreter::msgHeader(unsigned int row, unsigned int col) {
+	return currentProgram->name + '[' + std::to_string(row) + ':' + std::to_string(col) + "]: ";
+}
 
 
 std::string visitor::typeStr(parser::TYPE t) {

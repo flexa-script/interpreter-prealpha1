@@ -26,6 +26,7 @@ namespace parser {
 
 	private:
 		void consumeToken();
+		std::string msgHeader();
 
 		// statement Nodes
 		ASTStatementNode* parseProgramStatement();

@@ -141,7 +141,7 @@ int repl() {
 		try {
 
 			// tokenise and initialise parser
-			lexer::Lexer lexer(program);
+			lexer::Lexer lexer(program, "main");
 			parser::Parser parser(&lexer, "main");
 			parser::ASTProgramNode* prog;
 
@@ -160,7 +160,7 @@ int repl() {
 					}
 
 					// parse again, create program node manually
-					lexer::Lexer expr_lexer(program);
+					lexer::Lexer expr_lexer(program, "main");
 					parser = parser::Parser(&expr_lexer, 0);  // do not consume first token
 					prog = new parser::ASTProgramNode(std::vector<parser::ASTNode*>({ parser.parseExpression() }), "main");
 
@@ -288,7 +288,7 @@ int interpreter(std::vector<Program> sourcePrograms) {
 
 		for (auto source : sourcePrograms) {
 			// tokenise and initialise parser
-			lexer::Lexer lexer(source.source);
+			lexer::Lexer lexer(source.source, source.name);
 			parser::Parser parser(&lexer, source.name);
 
 			// try to parse as program

@@ -92,6 +92,9 @@ namespace visitor {
 		void visit(parser::ASTExprReadNode*) override;
 
 		std::pair<parser::TYPE, value_t> currentExpr();
+
+	private:
+		std::string msgHeader(unsigned int, unsigned int);
 	};
 
 	std::string typeStr(parser::TYPE);
