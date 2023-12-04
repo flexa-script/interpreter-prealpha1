@@ -2,6 +2,7 @@
 #define VISITOR_H
 
 #include <string>
+#include <any>
 
 #if defined(_WIN32) || defined(WIN32)
 typedef __int64 __int64_t;
@@ -54,6 +55,7 @@ namespace visitor {
 		virtual void visit(parser::ASTLiteralNode<long double>*) = 0;
 		virtual void visit(parser::ASTLiteralNode<char>*) = 0;
 		virtual void visit(parser::ASTLiteralNode<std::string>*) = 0;
+		virtual void visit(parser::ASTLiteralNode<std::any>*) = 0;
 		virtual void visit(parser::ASTBinaryExprNode*) = 0;
 		virtual void visit(parser::ASTIdentifierNode*) = 0;
 		virtual void visit(parser::ASTUnaryExprNode*) = 0;

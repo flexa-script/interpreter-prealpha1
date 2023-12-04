@@ -157,10 +157,10 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl) {
 	decl->expr->accept(this);
 
 	// allow mismatched type in the case of declaration of int to real
-	if (decl->type == parser::TYPE::FLOAT && currentExpressionType == parser::TYPE::INT) {
-		currentScope->declare(decl->identifier, parser::TYPE::FLOAT, decl->row);
+	if (decl->type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT) {
+		currentScope->declare(decl->identifier, parser::TYPE::T_FLOAT, decl->row);
 	}
-	else if (decl->type == currentExpressionType) { // types match
+	else if (decl->type == currentExpressionType || decl->type == parser::TYPE::T_ANY) { // types match
 		currentScope->declare(decl->identifier, decl->type, decl->row);
 	}
 	else { // types don't match
@@ -184,7 +184,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* assign) {
 	assign->expr->accept(this);
 
 	// allow mismatched type in the case of declaration of int to real
-	if (type == parser::TYPE::FLOAT && currentExpressionType == parser::TYPE::INT) {}
+	if (type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT) {}
 	// otherwise throw error
 	else if (currentExpressionType != type) {
 		throw std::runtime_error(msgHeader(assign->row, assign->col) + "mismatched type for '" + assign->identifier + "'. Expected " + typeStr(type) + ", found " + typeStr(currentExpressionType) + ".");
@@ -268,7 +268,7 @@ void SemanticAnalyser::visit(parser::ASTIfNode* ifNode) {
 	ifNode->condition->accept(this);
 
 	// make sure it is boolean
-	if (currentExpressionType != parser::TYPE::BOOL) {
+	if (currentExpressionType != parser::TYPE::T_BOOL) {
 		throw std::runtime_error(msgHeader(ifNode->row, ifNode->col) + "invalid if-condition, expected boolean expression.");
 	}
 
@@ -286,7 +286,7 @@ void SemanticAnalyser::visit(parser::ASTWhileNode* whileNode) {
 	whileNode->condition->accept(this);
 
 	// make sure it is boolean
-	if (currentExpressionType != parser::TYPE::BOOL)
+	if (currentExpressionType != parser::TYPE::T_BOOL)
 		throw std::runtime_error(msgHeader(whileNode->row, whileNode->col) + "invalid while-condition, expected boolean expression.");
 
 	// check the while block
@@ -328,7 +328,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* func) {
 	func->block->accept(this);
 
 	// check that the function body returns
-	if (!returns(func->block) && func->type != parser::TYPE::VOID) {
+	if (!returns(func->block) && func->type != parser::TYPE::T_VOID) {
 		throw std::runtime_error(msgHeader(func->row, func->col) + "defined function " + func->identifier + " is not guaranteed to return a value.");
 	}
 
@@ -337,23 +337,27 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* func) {
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<bool>*) {
-	currentExpressionType = parser::TYPE::BOOL;
+	currentExpressionType = parser::TYPE::T_BOOL;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<__int64_t>*) {
-	currentExpressionType = parser::TYPE::INT;
+	currentExpressionType = parser::TYPE::T_INT;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<long double>*) {
-	currentExpressionType = parser::TYPE::FLOAT;
+	currentExpressionType = parser::TYPE::T_FLOAT;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<char>*) {
-	currentExpressionType = parser::TYPE::CHAR;
+	currentExpressionType = parser::TYPE::T_CHAR;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<std::string>*) {
-	currentExpressionType = parser::TYPE::STRING;
+	currentExpressionType = parser::TYPE::T_STRING;
+}
+
+void SemanticAnalyser::visit(parser::ASTLiteralNode<std::any>*) {
+	currentExpressionType = parser::TYPE::T_ANY;
 }
 
 void SemanticAnalyser::visit(parser::ASTBinaryExprNode* bin) {
@@ -370,36 +374,36 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* bin) {
 
 	// these only work for int/float
 	if (op == "*" || op == "/" || op == "-" || op == "%") {
-		if ((l_type != parser::TYPE::INT && l_type != parser::TYPE::FLOAT) || (r_type != parser::TYPE::INT && r_type != parser::TYPE::FLOAT)) {
+		if ((l_type != parser::TYPE::T_INT && l_type != parser::TYPE::T_FLOAT) || (r_type != parser::TYPE::T_INT && r_type != parser::TYPE::T_FLOAT)) {
 			throw std::runtime_error(msgHeader(bin->row, bin->col) + "expected numerical operands for '" + op + "' operator.");
 		}
 
-		if (op == "%" && (l_type == parser::TYPE::FLOAT || r_type == parser::TYPE::FLOAT)) {
+		if (op == "%" && (l_type == parser::TYPE::T_FLOAT || r_type == parser::TYPE::T_FLOAT)) {
 			throw std::runtime_error(msgHeader(bin->row, bin->col) + "invalid operands to binary expression ('" + typeStr(l_type) + " and '" + typeStr(r_type) + "').");
 		}
 
 		// if both int, then expression is int, otherwise float
-		currentExpressionType = (l_type == parser::TYPE::INT && r_type == parser::TYPE::INT) ? parser::TYPE::INT : parser::TYPE::FLOAT;
+		currentExpressionType = (l_type == parser::TYPE::T_INT && r_type == parser::TYPE::T_INT) ? parser::TYPE::T_INT : parser::TYPE::T_FLOAT;
 	}
 	else if (op == "+") {
 		// + works for all types except bool
-		if (l_type == parser::TYPE::BOOL || r_type == parser::TYPE::BOOL) {
+		if (l_type == parser::TYPE::T_BOOL || r_type == parser::TYPE::T_BOOL) {
 			throw std::runtime_error(msgHeader(bin->row, bin->col) + "invalid operand for '+' operator, expected numerical or string operand.");
 		}
-		if (l_type == parser::TYPE::STRING && r_type == parser::TYPE::STRING) { // If both string, no error
-			currentExpressionType = parser::TYPE::STRING;
+		if (l_type == parser::TYPE::T_STRING && r_type == parser::TYPE::T_STRING) { // If both string, no error
+			currentExpressionType = parser::TYPE::T_STRING;
 		}
-		else if (l_type == parser::TYPE::STRING || r_type == parser::TYPE::STRING) { // only one is string, error
+		else if (l_type == parser::TYPE::T_STRING || r_type == parser::TYPE::T_STRING) { // only one is string, error
 			throw std::runtime_error(msgHeader(bin->row, bin->col) + "mismatched operands for '+' operator, found " + typeStr(l_type) + " on the left, but " + typeStr(r_type) + " on the right.");
 		}
 		else { // real/int possibilities remain. If both int, then result is int, otherwise result is real
-			currentExpressionType = (l_type == parser::TYPE::INT && r_type == parser::TYPE::INT) ? parser::TYPE::INT : parser::TYPE::FLOAT;
+			currentExpressionType = (l_type == parser::TYPE::T_INT && r_type == parser::TYPE::T_INT) ? parser::TYPE::T_INT : parser::TYPE::T_FLOAT;
 		}
 	}
 	else if (op == "and" || op == "or") {
 		// and/or only work for bool
-		if (l_type == parser::TYPE::BOOL && r_type == parser::TYPE::BOOL) {
-			currentExpressionType = parser::TYPE::BOOL;
+		if (l_type == parser::TYPE::T_BOOL && r_type == parser::TYPE::T_BOOL) {
+			currentExpressionType = parser::TYPE::T_BOOL;
 		}
 		else {
 			throw std::runtime_error(msgHeader(bin->row, bin->col) + "expected two boolean-type operands for '" + op + "' operator.");
@@ -407,17 +411,17 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* bin) {
 	}
 	else if (op == "<" || op == ">" || op == "<=" || op == ">=") {
 		// rel-ops only work for numeric types
-		if ((l_type != parser::TYPE::FLOAT && l_type != parser::TYPE::INT) || (r_type != parser::TYPE::FLOAT && r_type != parser::TYPE::INT)) {
+		if ((l_type != parser::TYPE::T_FLOAT && l_type != parser::TYPE::T_INT) || (r_type != parser::TYPE::T_FLOAT && r_type != parser::TYPE::T_INT)) {
 			throw std::runtime_error(msgHeader(bin->row, bin->col) + "expected two numerical operands for '" + op + "' operator.");
 		}
-		currentExpressionType = parser::TYPE::BOOL;
+		currentExpressionType = parser::TYPE::T_BOOL;
 	}
 	else if (op == "==" || op == "!=") {
 		// == and != only work for like types
-		if (l_type != r_type && (l_type != parser::TYPE::FLOAT || r_type != parser::TYPE::INT) && (l_type != parser::TYPE::INT || r_type != parser::TYPE::FLOAT)) {
+		if (l_type != r_type && (l_type != parser::TYPE::T_FLOAT || r_type != parser::TYPE::T_INT) && (l_type != parser::TYPE::T_INT || r_type != parser::TYPE::T_FLOAT)) {
 			throw std::runtime_error(msgHeader(bin->row, bin->col) + "expected arguments of the same type '" + op + "' operator.");
 		}
-		currentExpressionType = parser::TYPE::BOOL;
+		currentExpressionType = parser::TYPE::T_BOOL;
 	}
 	else {
 		throw std::runtime_error(msgHeader(bin->row, bin->col) + "unhandled semantic error in binary operator.");
@@ -443,13 +447,13 @@ void SemanticAnalyser::visit(parser::ASTUnaryExprNode* un) {
 
 	// handle different cases
 	switch (currentExpressionType) {
-	case parser::TYPE::INT:
-	case parser::TYPE::FLOAT:
+	case parser::TYPE::T_INT:
+	case parser::TYPE::T_FLOAT:
 		if (un->unaryOp != "+" && un->unaryOp != "-") {
 			throw std::runtime_error(msgHeader(un->row, un->col) + "operator '" + un->unaryOp + "' in front of numerical expression.");
 		}
 		break;
-	case parser::TYPE::BOOL:
+	case parser::TYPE::T_BOOL:
 		if (un->unaryOp != "not") {
 			throw std::runtime_error(msgHeader(un->row, un->col) + "operator '" + un->unaryOp + "' in front of boolean expression.");
 		}
@@ -496,55 +500,57 @@ void SemanticAnalyser::visit(parser::ASTExprFunctionCallNode* func) {
 void SemanticAnalyser::visit(parser::ASTFloatParseNode* floatParser) {
 	// handle different cases
 	switch (currentExpressionType) {
-	case parser::TYPE::INT:
-	case parser::TYPE::FLOAT:
-	case parser::TYPE::CHAR:
+	case parser::TYPE::T_INT:
+	case parser::TYPE::T_FLOAT:
+	case parser::TYPE::T_CHAR:
 		break;
 	default:
 		throw std::runtime_error(msgHeader(floatParser->row, floatParser->col) + "float cant't parse '" + typeStr(currentExpressionType) + "'.");
 	}
 
-	currentExpressionType = parser::TYPE::FLOAT;
+	currentExpressionType = parser::TYPE::T_FLOAT;
 }
 
 void SemanticAnalyser::visit(parser::ASTIntParseNode* intParser) {
 	// handle different cases
 	switch (currentExpressionType) {
-	case parser::TYPE::STRING:
-	case parser::TYPE::FLOAT:
-	case parser::TYPE::CHAR:
+	case parser::TYPE::T_STRING:
+	case parser::TYPE::T_FLOAT:
+	case parser::TYPE::T_CHAR:
 		break;
 	default:
 		throw std::runtime_error(msgHeader(intParser->row, intParser->col) + "int cant't parse '" + typeStr(currentExpressionType) + "'.");
 	}
 
-	currentExpressionType = parser::TYPE::INT;
+	currentExpressionType = parser::TYPE::T_INT;
 }
 
 void SemanticAnalyser::visit(parser::ASTStringParseNode* strParser) {
-	currentExpressionType = parser::TYPE::STRING;
+	currentExpressionType = parser::TYPE::T_STRING;
 }
 
 void SemanticAnalyser::visit(parser::ASTExprReadNode* read) {
-	if (currentExpressionType != parser::TYPE::STRING) {
+	if (currentExpressionType != parser::TYPE::T_STRING) {
 		throw std::runtime_error(msgHeader(read->row, read->col) + "function 'read()' is trying to assing an invalid type.");
 	}
 }
 
 std::string typeStr(parser::TYPE t) {
 	switch (t) {
-	case parser::TYPE::VOID:
+	case parser::TYPE::T_VOID:
 		return "void";
-	case parser::TYPE::BOOL:
+	case parser::TYPE::T_BOOL:
 		return "bool";
-	case parser::TYPE::INT:
+	case parser::TYPE::T_INT:
 		return "int";
-	case parser::TYPE::FLOAT:
+	case parser::TYPE::T_FLOAT:
 		return "real";
-	case parser::TYPE::CHAR:
+	case parser::TYPE::T_CHAR:
 		return "char";
-	case parser::TYPE::STRING:
+	case parser::TYPE::T_STRING:
 		return "string";
+	case parser::TYPE::T_ANY:
+		return "any";
 	default:
 		throw std::runtime_error("Invalid type encountered.");
 	}

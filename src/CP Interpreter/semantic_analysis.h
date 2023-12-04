@@ -69,6 +69,7 @@ namespace visitor {
 		void visit(parser::ASTLiteralNode<long double>*) override;
 		void visit(parser::ASTLiteralNode<char>*) override;
 		void visit(parser::ASTLiteralNode<std::string>*) override;
+		void visit(parser::ASTLiteralNode<std::any>*) override;
 		void visit(parser::ASTBinaryExprNode*) override;
 		void visit(parser::ASTIdentifierNode*) override;
 		void visit(parser::ASTUnaryExprNode*) override;

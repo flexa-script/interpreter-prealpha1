@@ -4,6 +4,7 @@
 
 #include <map>
 #include <stack>
+#include <any>
 
 #include "visitor.h"
 #include "ast.h"
@@ -11,12 +12,13 @@
 
 namespace visitor {
 	typedef struct vT {
-		vT() : b(0), i(0), f(0), c(0), s("") {};
+		vT() : b(0), i(0), f(0), c(0), s(""), a(nullptr) {};
 		bool b;
 		__int64_t i;
 		long double f;
 		char c;
 		std::string s;
+		std::any a;
 	} value_t;
 
 
@@ -32,6 +34,7 @@ namespace visitor {
 		void declare(std::string, long double);
 		void declare(std::string, char);
 		void declare(std::string, std::string);
+		void declare(std::string, std::any);
 		void declare(std::string, std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*);
 
 		parser::TYPE typeof(std::string);
@@ -85,6 +88,7 @@ namespace visitor {
 		void visit(parser::ASTLiteralNode<long double>*) override;
 		void visit(parser::ASTLiteralNode<char>*) override;
 		void visit(parser::ASTLiteralNode<std::string>*) override;
+		void visit(parser::ASTLiteralNode<std::any>*) override;
 		void visit(parser::ASTBinaryExprNode*) override;
 		void visit(parser::ASTIdentifierNode*) override;
 		void visit(parser::ASTUnaryExprNode*) override;

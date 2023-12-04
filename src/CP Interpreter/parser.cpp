@@ -150,19 +150,22 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	}
 	else {
 		switch (type) {
-		case parser::TYPE::BOOL:
+		case parser::TYPE::T_BOOL:
 			expr = new ASTLiteralNode<bool>(false, row, col);
 			break;
-		case parser::TYPE::INT:
+		case parser::TYPE::T_INT:
 			expr = new ASTLiteralNode<__int64_t>(0, row, col);
 			break;
-		case parser::TYPE::FLOAT:
+		case parser::TYPE::T_FLOAT:
 			expr = new ASTLiteralNode<long double>(0., row, col);
 			break;
-		case parser::TYPE::CHAR:
+		case parser::TYPE::T_CHAR:
 			expr = new ASTLiteralNode<char>(0, row, col);
 			break;
-		case parser::TYPE::STRING:
+		case parser::TYPE::T_STRING:
+			expr = new ASTLiteralNode<std::string>("", row, col);
+			break;
+		case parser::TYPE::T_ANY:
 			expr = new ASTLiteralNode<std::string>("", row, col);
 			break;
 		default:
@@ -496,7 +499,7 @@ ASTFunctionDefinitionNode* Parser::parseFunctionDefinition() {
 		consumeToken();
 	}
 	else {
-		type = TYPE::VOID;
+		type = TYPE::T_VOID;
 	}
 
 	if (currentToken.type != lexer::TOK_LEFT_CURLY) {
@@ -647,7 +650,7 @@ ASTExprNode* Parser::parseFactor() {
 		return new ASTLiteralNode<long double>(std::stold(currentToken.value), row, col);
 
 	case lexer::TOK_CHAR_LITERAL:
-		return new ASTLiteralNode<char>(currentToken.value.c_str()[0], row, col);
+		return new ASTLiteralNode<char>(currentToken.value.c_str()[1], row, col);
 
 	case lexer::TOK_STRING_LITERAL: {
 		// remove " character from front and end of lexeme
@@ -867,22 +870,25 @@ std::string Parser::msgHeader() {
 TYPE Parser::parseType(std::string& identifier) {
 	switch (currentToken.type) {
 	case lexer::TOK_VOID_TYPE:
-		return TYPE::VOID;
+		return TYPE::T_VOID;
 
 	case lexer::TOK_BOOL_TYPE:
-		return TYPE::BOOL;
+		return TYPE::T_BOOL;
 
 	case lexer::TOK_INT_TYPE:
-		return TYPE::INT;
+		return TYPE::T_INT;
 
 	case lexer::TOK_FLOAT_TYPE:
-		return TYPE::FLOAT;
+		return TYPE::T_FLOAT;
 
 	case lexer::TOK_CHAR_TYPE:
-		return TYPE::CHAR;
+		return TYPE::T_CHAR;
 
 	case lexer::TOK_STRING_TYPE:
-		return TYPE::STRING;
+		return TYPE::T_STRING;
+
+	case lexer::TOK_ANY_TYPE:
+		return TYPE::T_ANY;
 
 	default:
 		throw std::runtime_error(msgHeader() + "expected type for " + identifier + " after ':'.");

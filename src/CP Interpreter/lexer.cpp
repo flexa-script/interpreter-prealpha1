@@ -174,6 +174,8 @@ Token Lexer::processIdentifier() {
 		type = TOK_CHAR_TYPE;
 	else if (identifier == "string")
 		type = TOK_STRING_TYPE;
+	else if (identifier == "any")
+		type = TOK_ANY_TYPE;
 	else if (identifier == "true" || identifier == "false")
 		type = TOK_BOOL_LITERAL;
 	else if (identifier == "and")
