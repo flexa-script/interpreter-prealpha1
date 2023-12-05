@@ -662,7 +662,7 @@ ASTExprNode* Parser::parseFactor() {
 			// replace
 			str.replace(pos, 2, "\"");
 			// get next occurrence from current position
-			pos = str.find("\\\"", pos + 2);
+			pos = str.find("\\\"", pos + 1);
 		}
 
 		// replace \n with newline
@@ -671,7 +671,7 @@ ASTExprNode* Parser::parseFactor() {
 			// replace
 			str.replace(pos, 2, "\n");
 			// get next occurrence from current position
-			pos = str.find("\\n", pos + 2);
+			pos = str.find("\\n", pos + 1);
 		}
 
 		// replace \t with tab
@@ -680,7 +680,7 @@ ASTExprNode* Parser::parseFactor() {
 			// replace
 			str.replace(pos, 2, "\t");
 			// get next occurrence from current position
-			pos = str.find("\\t", pos + 2);
+			pos = str.find("\\t", pos + 1);
 		}
 
 		// replace \b with backslash
@@ -689,7 +689,7 @@ ASTExprNode* Parser::parseFactor() {
 			// replace
 			str.replace(pos, 2, "\\");
 			// get next occurrence from current position
-			pos = str.find("\\b", pos + 2);
+			pos = str.find("\\b", pos + 1);
 		}
 
 		return new ASTLiteralNode<std::string>(std::move(str), row, col);

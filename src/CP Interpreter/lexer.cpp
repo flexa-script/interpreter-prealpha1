@@ -241,11 +241,31 @@ Token Lexer::processSymbol() {
 
 	case '<':
 	case '>':
+		if (currentChar == '=') {
+			strSymbol += currentChar;
+			advance();
+		}
 		type = TOK_RELATIONAL_OP;
 		break;
 
 	case '=':
-		type = TOK_EQUALS;
+		if (currentChar == '=') {
+			strSymbol += currentChar;
+			advance();
+			type = TOK_RELATIONAL_OP;
+		}
+		else {
+			type = TOK_EQUALS;
+		}
+		break;
+
+	case '!':
+		if (currentChar != '=') {
+			throw std::runtime_error(msgHeader() + "lexical error: expected '!'.");
+		}
+		strSymbol += currentChar;
+		advance();
+		type = TOK_RELATIONAL_OP;
 		break;
 
 	case '{':
