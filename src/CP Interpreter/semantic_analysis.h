@@ -4,24 +4,41 @@
 #include <map>
 #include <vector>
 #include <stack>
+#include <xutility>
 
 #include "ast.h"
 
 
 namespace visitor {
+
+	typedef struct Variable {
+		Variable(std::string identifier, parser::TYPE type, bool isAny, unsigned int row, unsigned int col)
+			: identifier(identifier), type(type), isAny(isAny), row(row), col(col) {};
+		std::string identifier;
+		parser::TYPE type;
+		bool isAny;
+		unsigned int row;
+		unsigned int col;
+
+		//template <class _Ty>
+		//bool operator==(const _Ty t2) {
+		//	auto v2 = (Variable)t2;
+		//	return identifier == v2.identifier && type == v2.type && isAny == v2.isAny && row == v2.row && col == v2.col;
+		//}
+	} Variable_t;
+
 	class SemanticScope {
 	private:
-		std::vector<std::string> anyVars;
-		std::map<std::string, std::pair<parser::TYPE, unsigned int>> variableSymbolTable;
+		std::vector<Variable_t> variableSymbolTable;
 		std::multimap<std::string, std::tuple<parser::TYPE, std::vector<parser::TYPE>, unsigned int>> functionSymbolTable;
 
 	public:
 		bool isAnyVar(std::string);
 		bool alreadyDeclared(std::string);
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
-		void notifyAnyVar(std::string);
-		void declare(std::string, parser::TYPE, unsigned int);
+		void declare(std::string, parser::TYPE, bool, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::vector<parser::TYPE>, unsigned int);
+		void changeVarType(std::string, parser::TYPE);
 		parser::TYPE type(std::string);
 		parser::TYPE type(std::string, std::vector<parser::TYPE>);
 		unsigned int declarationLine(std::string);

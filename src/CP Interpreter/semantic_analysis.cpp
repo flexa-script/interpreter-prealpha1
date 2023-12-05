@@ -8,7 +8,25 @@ using namespace visitor;
 
 
 bool SemanticScope::alreadyDeclared(std::string identifier) {
-	return variableSymbolTable.find(identifier) != variableSymbolTable.end();
+	for (auto variable : variableSymbolTable) {
+		if (variable.identifier == identifier) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
+void SemanticScope::changeVarType(std::string identifier, parser::TYPE type) {
+	std::vector<Variable_t> newVariableSymbolTable;
+	for (size_t i = 0; i < variableSymbolTable.size(); ++i) {
+		Variable_t variable = variableSymbolTable[i];
+		if (variable.identifier == identifier) {
+			variable.type = type;
+		}
+		newVariableSymbolTable.push_back(variable);
+	}
+	variableSymbolTable = newVariableSymbolTable;
 }
 
 bool SemanticScope::alreadyDeclared(std::string identifier, std::vector<parser::TYPE> signature) {
@@ -30,29 +48,28 @@ bool SemanticScope::alreadyDeclared(std::string identifier, std::vector<parser::
 }
 
 bool SemanticScope::isAnyVar(std::string identifier) {
-	for (auto anyVar : anyVars) {
-		if (anyVar == identifier) {
-			return true;
+	for (auto variable : variableSymbolTable) {
+		if (variable.identifier == identifier) {
+			return variable.isAny;
 		}
 	}
 	return false;
 }
 
-void SemanticScope::declare(std::string identifier, parser::TYPE type, unsigned int row) {
-	variableSymbolTable[identifier] = std::make_pair(type, row);
+void SemanticScope::declare(std::string identifier, parser::TYPE type, bool isAny, unsigned int row, unsigned int col) {
+	Variable_t var(identifier, type, isAny, row, col);
+	variableSymbolTable.push_back(var);
 }
 
 void SemanticScope::declare(std::string identifier, parser::TYPE type, std::vector<parser::TYPE> signature, unsigned int row) {
 	functionSymbolTable.insert(std::make_pair(identifier, std::make_tuple(type, signature, row)));
 }
 
-void SemanticScope::notifyAnyVar(std::string identifier) {
-	anyVars.push_back(identifier);
-}
-
 parser::TYPE SemanticScope::type(std::string identifier) {
-	if (alreadyDeclared(identifier)) {
-		return variableSymbolTable[identifier].first;
+	for (auto variable : variableSymbolTable) {
+		if (variable.identifier == identifier) {
+			return variable.type;
+		}
 	}
 
 	throw std::runtime_error("Something went wrong when determining the type of '" + identifier + "'.");
@@ -78,8 +95,10 @@ parser::TYPE SemanticScope::type(std::string identifier, std::vector<parser::TYP
 }
 
 unsigned int SemanticScope::declarationLine(std::string identifier) {
-	if (alreadyDeclared(identifier)) {
-		return variableSymbolTable[std::move(identifier)].second;
+	for (auto variable : variableSymbolTable) {
+		if (variable.identifier == identifier) {
+			return variable.row;
+		}
 	}
 
 	throw std::runtime_error("Something went wrong when determining the line number of '" + identifier + "'.");
@@ -171,13 +190,10 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl) {
 
 	// allow mismatched type in the case of declaration of int to real
 	if (decl->type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT) {
-		currentScope->declare(decl->identifier, parser::TYPE::T_FLOAT, decl->row);
+		currentScope->declare(decl->identifier, parser::TYPE::T_FLOAT, false, decl->row, decl->col);
 	}
 	else if (decl->type == currentExpressionType || decl->type == parser::TYPE::T_ANY) { // types match
-		currentScope->declare(decl->identifier, currentExpressionType, decl->row);
-		if (decl->type == parser::TYPE::T_ANY) {
-			currentScope->notifyAnyVar(decl->identifier);
-		}
+		currentScope->declare(decl->identifier, currentExpressionType, decl->type == parser::TYPE::T_ANY, decl->row, decl->col);
 	}
 	else { // types don't match
 		throw std::runtime_error(msgHeader(decl->row, decl->col) + "found " + typeStr(currentExpressionType) + " in definition of '" + decl->identifier + "', expected " + typeStr(decl->type) + ".");
@@ -186,7 +202,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl) {
 
 void SemanticAnalyser::visit(parser::ASTAssignmentNode* assign) {
 	// determine the inner-most scope in which the value is declared
-	unsigned long i;
+	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclared(assign->identifier); i--) {
 		if (i <= 0) {
 			throw std::runtime_error(msgHeader(assign->row, assign->col) + "identifier '" + assign->identifier + "' being reassigned was never declared " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
@@ -206,6 +222,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* assign) {
 		type == parser::TYPE::T_INT && currentExpressionType == parser::TYPE::T_FLOAT || 
 		isAnyVariable) {
 		// TODO change any type
+		scopes[i]->changeVarType(assign->identifier, currentExpressionType);
 	}
 	// otherwise throw error
 	else if (currentExpressionType != type) {
@@ -234,7 +251,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionCallNode* func) {
 	}
 
 	// make sure the function exists in some scope i
-	unsigned long i;
+	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclared(func->identifier, signature); i--) {
 		if (i <= 0) {
 			std::string funcName = func->identifier + "(";
@@ -270,7 +287,7 @@ void SemanticAnalyser::visit(parser::ASTBlockNode* block) {
 
 	// check whether this is a function block by seeing if we have any current function parameters. If we do, then add them to the current scope.
 	for (auto param : currentFunctionParameters) {
-		scopes.back()->declare(param.first, param.second, block->row);
+		scopes.back()->declare(param.first, param.second, false, block->row, block->col);
 	}
 
 	// clear the global function parameters vector
@@ -452,7 +469,7 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* bin) {
 
 void SemanticAnalyser::visit(parser::ASTIdentifierNode* id) {
 	// determine the inner-most scope in which the value is declared
-	unsigned long i;
+	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclared(id->identifier); i--) {
 		if (i <= 0) {
 			throw std::runtime_error(msgHeader(id->row, id->col) + "identifier '" + id->identifier + "' was never declared " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
@@ -499,7 +516,7 @@ void SemanticAnalyser::visit(parser::ASTExprFunctionCallNode* func) {
 	}
 
 	// make sure the function exists in some scope i
-	unsigned long i;
+	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclared(func->identifier, signature); i--) {
 		if (i <= 0) {
 			std::string func_name = func->identifier + "(";
