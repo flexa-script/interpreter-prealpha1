@@ -29,12 +29,25 @@ bool SemanticScope::alreadyDeclared(std::string identifier, std::vector<parser::
 	return false;
 }
 
+bool SemanticScope::isAnyVar(std::string identifier) {
+	for (auto anyVar : anyVars) {
+		if (anyVar == identifier) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void SemanticScope::declare(std::string identifier, parser::TYPE type, unsigned int row) {
 	variableSymbolTable[identifier] = std::make_pair(type, row);
 }
 
 void SemanticScope::declare(std::string identifier, parser::TYPE type, std::vector<parser::TYPE> signature, unsigned int row) {
 	functionSymbolTable.insert(std::make_pair(identifier, std::make_tuple(type, signature, row)));
+}
+
+void SemanticScope::notifyAnyVar(std::string identifier) {
+	anyVars.push_back(identifier);
 }
 
 parser::TYPE SemanticScope::type(std::string identifier) {
@@ -161,7 +174,10 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl) {
 		currentScope->declare(decl->identifier, parser::TYPE::T_FLOAT, decl->row);
 	}
 	else if (decl->type == currentExpressionType || decl->type == parser::TYPE::T_ANY) { // types match
-		currentScope->declare(decl->identifier, decl->type, decl->row);
+		currentScope->declare(decl->identifier, currentExpressionType, decl->row);
+		if (decl->type == parser::TYPE::T_ANY) {
+			currentScope->notifyAnyVar(decl->identifier);
+		}
 	}
 	else { // types don't match
 		throw std::runtime_error(msgHeader(decl->row, decl->col) + "found " + typeStr(currentExpressionType) + " in definition of '" + decl->identifier + "', expected " + typeStr(decl->type) + ".");
@@ -180,11 +196,17 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* assign) {
 	// get the type of the originally declared variable
 	parser::TYPE type = scopes[i]->type(assign->identifier);
 
+	auto isAnyVariable = scopes[i]->isAnyVar(assign->identifier);
+
 	// visit the expression to update current type
 	assign->expr->accept(this);
 
 	// allow mismatched type in the case of declaration of int to real
-	if (type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT) {}
+	if (type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT || 
+		type == parser::TYPE::T_INT && currentExpressionType == parser::TYPE::T_FLOAT || 
+		isAnyVariable) {
+		// TODO change any type
+	}
 	// otherwise throw error
 	else if (currentExpressionType != type) {
 		throw std::runtime_error(msgHeader(assign->row, assign->col) + "mismatched type for '" + assign->identifier + "'. Expected " + typeStr(type) + ", found " + typeStr(currentExpressionType) + ".");
@@ -390,10 +412,10 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* bin) {
 		if (l_type == parser::TYPE::T_BOOL || r_type == parser::TYPE::T_BOOL) {
 			throw std::runtime_error(msgHeader(bin->row, bin->col) + "invalid operand for '+' operator, expected numerical or string operand.");
 		}
-		if (l_type == parser::TYPE::T_STRING && r_type == parser::TYPE::T_STRING) { // If both string, no error
-			currentExpressionType = parser::TYPE::T_STRING;
+		if ((l_type == parser::TYPE::T_STRING || l_type == parser::TYPE::T_CHAR) && (r_type == parser::TYPE::T_STRING || r_type == parser::TYPE::T_CHAR)) { // If both string, no error
+			currentExpressionType = (l_type == parser::TYPE::T_CHAR && r_type == parser::TYPE::T_CHAR) ? parser::TYPE::T_CHAR : parser::TYPE::T_STRING;
 		}
-		else if (l_type == parser::TYPE::T_STRING || r_type == parser::TYPE::T_STRING) { // only one is string, error
+		else if ((l_type == parser::TYPE::T_STRING || l_type == parser::TYPE::T_CHAR) || (r_type == parser::TYPE::T_STRING || r_type == parser::TYPE::T_CHAR)) { // only one is string, error
 			throw std::runtime_error(msgHeader(bin->row, bin->col) + "mismatched operands for '+' operator, found " + typeStr(l_type) + " on the left, but " + typeStr(r_type) + " on the right.");
 		}
 		else { // real/int possibilities remain. If both int, then result is int, otherwise result is real

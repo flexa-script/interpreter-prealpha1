@@ -11,18 +11,15 @@
 namespace visitor {
 	class SemanticScope {
 	private:
-		std::map<std::string,
-			std::pair<parser::TYPE,
-			unsigned int>> variableSymbolTable;
-
-		std::multimap<std::string,
-			std::tuple<parser::TYPE,
-			std::vector<parser::TYPE>,
-			unsigned int>> functionSymbolTable;
+		std::vector<std::string> anyVars;
+		std::map<std::string, std::pair<parser::TYPE, unsigned int>> variableSymbolTable;
+		std::multimap<std::string, std::tuple<parser::TYPE, std::vector<parser::TYPE>, unsigned int>> functionSymbolTable;
 
 	public:
+		bool isAnyVar(std::string);
 		bool alreadyDeclared(std::string);
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
+		void notifyAnyVar(std::string);
 		void declare(std::string, parser::TYPE, unsigned int);
 		void declare(std::string, parser::TYPE, std::vector<parser::TYPE>, unsigned int);
 		parser::TYPE type(std::string);
