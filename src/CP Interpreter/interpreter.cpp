@@ -600,6 +600,14 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* bin) {
 				v.f = l / r;
 			}
 		}
+		else if (l_type == parser::TYPE::T_CHAR && r_type == parser::TYPE::T_STRING) { // char and string
+			currentExpressionType = parser::TYPE::T_STRING;
+			v.s = l_value.c + r_value.s;
+		}
+		else if (l_type == parser::TYPE::T_STRING && r_type == parser::TYPE::T_CHAR) { // string and char
+			currentExpressionType = parser::TYPE::T_STRING;
+			v.s = l_value.s + r_value.c;
+		}
 		else { // remaining case is for strings
 			currentExpressionType = parser::TYPE::T_STRING;
 			v.s = l_value.s + r_value.s;
