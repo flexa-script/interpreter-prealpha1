@@ -256,7 +256,7 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* assign) {
 	assign->expr->accept(this);
 
 	// redeclare variable, depending on type
-	switch (scopes[i]->typeof(assign->identifier)) {
+	switch (currentExpressionType) {
 	case parser::TYPE::T_BOOL:
 		scopes[i]->declare(assign->identifier, currentExpressionValue.b);
 		break;
