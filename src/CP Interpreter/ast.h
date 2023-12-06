@@ -10,7 +10,7 @@
 namespace parser {
 	// Types
 	enum class TYPE {
-		T_VOID, T_NULL, T_ANY, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING
+		T_ND, T_VOID, T_NULL, T_ANY, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING
 	};
 
 	// Abstract Nodes

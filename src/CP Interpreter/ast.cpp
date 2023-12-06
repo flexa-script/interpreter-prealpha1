@@ -109,6 +109,11 @@ namespace parser {
 	void ASTLiteralNode<std::string>::accept(visitor::Visitor* v) {
 		v->visit(this);
 	}
+
+	template<>
+	void ASTLiteralNode<std::any>::accept(visitor::Visitor* v) {
+		v->visit(this);
+	}
 }
 
 void ASTExprFunctionCallNode::accept(visitor::Visitor* v) {

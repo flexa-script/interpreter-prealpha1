@@ -117,7 +117,7 @@ ASTStatementNode* Parser::parseIdentifier() {
 
 ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	// node attributes
-	TYPE type;
+	TYPE type = TYPE::T_ND;
 	std::string identifier;
 	ASTExprNode* expr;
 	unsigned int row = currentToken.row;
@@ -131,24 +131,32 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	identifier = currentToken.value;
 
 	consumeToken();
-	if (currentToken.type != lexer::TOK_COLON) {
-		throw std::runtime_error(msgHeader() + "expected assignment operator '=' for " + identifier + ".");
+	if (currentToken.type == lexer::TOK_COLON) {
+		//throw std::runtime_error(msgHeader() + "expected assignment operator '=' for " + identifier + ".");
+
+		consumeToken();
+		type = parseType(identifier);
+		consumeToken();
 	}
 
-	consumeToken();
-	type = parseType(identifier);
-
-	consumeToken();
 	if (currentToken.type == lexer::TOK_EQUALS) {
 		// parse the right hand side
 		expr = parseExpression();
 
-		consumeToken();
-		if (currentToken.type != lexer::TOK_SEMICOLON) {
-			throw std::runtime_error(msgHeader() + "expected ';' after assignment of " + identifier + ".");
+		if (type == TYPE::T_ND) {
+			type = parseType(identifier);
 		}
+		
+		//consumeToken();
+		//if (currentToken.type != lexer::TOK_SEMICOLON) {
+		//	throw std::runtime_error(msgHeader() + "expected ';' after assignment of " + identifier + ".");
+		//}
 	}
 	else {
+		if (type == TYPE::T_ND) {
+			throw std::runtime_error(msgHeader() + "expected assignment or type for " + identifier + ".");
+		}
+
 		switch (type) {
 		case parser::TYPE::T_BOOL:
 			expr = new ASTLiteralNode<bool>(false, row, col);
@@ -166,11 +174,16 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 			expr = new ASTLiteralNode<std::string>("", row, col);
 			break;
 		case parser::TYPE::T_ANY:
-			expr = new ASTLiteralNode<std::string>("", row, col);
+			expr = new ASTLiteralNode<std::any>(0, row, col);
 			break;
 		default:
 			throw std::runtime_error(msgHeader() + "expected type for " + identifier + " after ':'.");
 		}
+	}
+
+	consumeToken();
+	if (currentToken.type != lexer::TOK_SEMICOLON) {
+		throw std::runtime_error(msgHeader() + "expected ';' after assignment of " + identifier + ".");
 	}
 
 	// create ASTExpressionNode to return
@@ -873,18 +886,23 @@ TYPE Parser::parseType(std::string& identifier) {
 		return TYPE::T_VOID;
 
 	case lexer::TOK_BOOL_TYPE:
+	case lexer::TOK_BOOL_LITERAL:
 		return TYPE::T_BOOL;
 
 	case lexer::TOK_INT_TYPE:
+	case lexer::TOK_INT_LITERAL:
 		return TYPE::T_INT;
 
 	case lexer::TOK_FLOAT_TYPE:
+	case lexer::TOK_FLOAT_LITERAL:
 		return TYPE::T_FLOAT;
 
 	case lexer::TOK_CHAR_TYPE:
+	case lexer::TOK_CHAR_LITERAL:
 		return TYPE::T_CHAR;
 
 	case lexer::TOK_STRING_TYPE:
+	case lexer::TOK_STRING_LITERAL:
 		return TYPE::T_STRING;
 
 	case lexer::TOK_ANY_TYPE:
