@@ -662,8 +662,31 @@ ASTExprNode* Parser::parseFactor() {
 	case lexer::TOK_FLOAT_LITERAL:
 		return new ASTLiteralNode<long double>(std::stold(currentToken.value), row, col);
 
-	case lexer::TOK_CHAR_LITERAL:
-		return new ASTLiteralNode<char>(currentToken.value.c_str()[1], row, col);
+	case lexer::TOK_CHAR_LITERAL: {
+		char chr = 0;
+		if (currentToken.value == "'\\\\'") {
+			chr = '\\';
+		}
+		else if (currentToken.value == "'\\n'") {
+			chr = '\n';
+		}
+		else if (currentToken.value == "'\\''") {
+			chr = '\'';
+		}
+		else if (currentToken.value == "'\\t'") {
+			chr = '\t';
+		}
+		else if (currentToken.value == "'\\b'") {
+			chr = '\b';
+		}
+		else if (currentToken.value == "'\\0'") {
+			chr = '\0';
+		}
+		else {
+			chr = currentToken.value.c_str()[1];
+		}
+		return new ASTLiteralNode<char>(chr, row, col);
+	}
 
 	case lexer::TOK_STRING_LITERAL: {
 		// remove " character from front and end of lexeme
@@ -703,6 +726,15 @@ ASTExprNode* Parser::parseFactor() {
 			str.replace(pos, 2, "\\");
 			// get next occurrence from current position
 			pos = str.find("\\b", pos + 1);
+		}
+
+		// replace \b with backslash
+		pos = str.find("\\0");
+		while (pos != std::string::npos) {
+			// replace
+			str.replace(pos, 2, "\\");
+			// get next occurrence from current position
+			pos = str.find("\\0", pos + 1);
 		}
 
 		return new ASTLiteralNode<std::string>(std::move(str), row, col);

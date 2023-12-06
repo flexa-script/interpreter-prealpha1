@@ -182,7 +182,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl) {
 
 	// if variable already declared, throw error
 	if (currentScope->alreadyDeclared(decl->identifier)) {
-		throw std::runtime_error(msgHeader(decl->row, decl->col) + "variable redeclaration. '" + decl->identifier + "' was already declared in this scope on line " + std::to_string(currentScope->declarationLine(decl->identifier)) + ".");
+		throw std::runtime_error(msgHeader(decl->row, decl->col) + "variable redeclaration. '" + decl->identifier + "' was already declared in this scope.");
 	}
 
 	// visit the expression to update current type
@@ -349,7 +349,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* func) {
 			signature += ")";
 
 
-			throw std::runtime_error(msgHeader(func->row, func->col) + "error: function " + func->identifier + signature + " already defined on line " + std::to_string(line) + ".");
+			throw std::runtime_error(msgHeader(func->row, func->col) + "error: function " + func->identifier + signature + " already defined.");
 		}
 	}
 
