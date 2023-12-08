@@ -97,6 +97,7 @@ namespace visitor {
 		void visit(parser::ASTIntParseNode*) override;
 		void visit(parser::ASTStringParseNode*) override;
 		void visit(parser::ASTExprReadNode*) override;
+		void visit(parser::ASTThisNode*) override;
 
 		std::pair<parser::TYPE, value_t> currentExpr();
 

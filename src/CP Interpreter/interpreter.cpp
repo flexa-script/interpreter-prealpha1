@@ -790,6 +790,13 @@ void visitor::Interpreter::visit(parser::ASTStringParseNode* strParser) {
 	currentExpressionType = parser::TYPE::T_STRING;
 }
 
+void visitor::Interpreter::visit(parser::ASTThisNode* thisNode) {
+	value_t v;
+	v.s = scopes.back()->getName();
+	currentExpressionType = parser::TYPE::T_STRING;
+	currentExpressionValue = std::move(v);
+}
+
 void visitor::Interpreter::visit(parser::ASTExprReadNode* read) {
 	std::string line;
 	std::getline(std::cin, line);

@@ -62,6 +62,7 @@ ASTUsingNode* Parser::parseUsingStatement() {
 ASTStatementNode* Parser::parseProgramStatement() {
 	switch (currentToken.type) {
 	case lexer::TOK_VAR:
+	case lexer::TOK_CONST:
 		return parseDeclarationStatement();
 	case lexer::TOK_DEF:
 		return parseFunctionDefinition();
@@ -86,7 +87,12 @@ ASTStatementNode* Parser::parseProgramStatement() {
 ASTStatementNode* Parser::parseBlockStatement() {
 	switch (currentToken.type) {
 	case lexer::TOK_VAR:
+	case lexer::TOK_CONST:
 		return parseDeclarationStatement();
+	//case lexer::TOK_THIS:
+	//	return parseThisStatement();
+	//case lexer::TOK_STRUCT:
+	//	return parseStructStatement();
 	case lexer::TOK_PRINT:
 		return parsePrintStatement();
 	case lexer::TOK_READ:
@@ -116,12 +122,12 @@ ASTStatementNode* Parser::parseIdentifier() {
 }
 
 ASTDeclarationNode* Parser::parseDeclarationStatement() {
-	// node attributes
 	TYPE type = TYPE::T_ND;
 	std::string identifier;
 	ASTExprNode* expr;
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
+	bool isConst = currentToken.type == lexer::TOK_CONST;
 
 	// consume identifier
 	consumeToken();
@@ -140,7 +146,6 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	}
 
 	if (currentToken.type == lexer::TOK_EQUALS) {
-		// parse the right hand side
 		expr = parseExpression();
 
 		if (type == TYPE::T_ND) {
@@ -186,16 +191,13 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 		throw std::runtime_error(msgHeader() + "expected ';' after assignment of " + identifier + ".");
 	}
 
-	// create ASTExpressionNode to return
-	return new ASTDeclarationNode(type, identifier, expr, row, col);
+	return new ASTDeclarationNode(type, identifier, expr, isConst, row, col);
 }
 
 ASTAssignmentNode* Parser::parseAssignmentStatement() {
-	// node attributes
 	std::string identifier;
 	ASTExprNode* expr;
 
-	// determine line number
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
 
@@ -749,6 +751,9 @@ ASTExprNode* Parser::parseFactor() {
 	case lexer::TOK_STRING_TYPE:
 		return parseExprToString();
 
+	case lexer::TOK_THIS:
+		return parseExprThis();
+
 	case lexer::TOK_IDENTIFIER: // Identifier or function call case
 		if (nextToken.type == lexer::TOK_LEFT_BRACKET)
 			return parseExprFunctionCall();
@@ -849,6 +854,14 @@ ASTIntParseNode* Parser::parseExprToInt() {
 	}
 
 	return new ASTIntParseNode(expr, row, col);
+}
+
+ASTThisNode* Parser::parseExprThis() {
+	// determine line number
+	unsigned int row = currentToken.row;
+	unsigned int col = currentToken.col;
+
+	return new ASTThisNode(name, row, col);
 }
 
 ASTStringParseNode* Parser::parseExprToString() {

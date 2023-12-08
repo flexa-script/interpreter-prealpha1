@@ -33,6 +33,7 @@ namespace parser
 	class ASTIntParseNode;
 	class ASTStringParseNode;
 	class ASTExprReadNode;
+	class ASTThisNode;
 }
 
 namespace visitor {
@@ -64,6 +65,7 @@ namespace visitor {
 		virtual void visit(parser::ASTIntParseNode*) = 0;
 		virtual void visit(parser::ASTStringParseNode*) = 0;
 		virtual void visit(parser::ASTExprReadNode*) = 0;
+		virtual void visit(parser::ASTThisNode*) = 0;
 	};
 }
 

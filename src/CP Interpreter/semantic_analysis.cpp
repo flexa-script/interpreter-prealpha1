@@ -56,8 +56,17 @@ bool SemanticScope::isAnyVar(std::string identifier) {
 	return false;
 }
 
-void SemanticScope::declare(std::string identifier, parser::TYPE type, bool isAny, unsigned int row, unsigned int col) {
-	Variable_t var(identifier, type, isAny, row, col);
+bool SemanticScope::isConst(std::string identifier) {
+	for (auto variable : variableSymbolTable) {
+		if (variable.identifier == identifier) {
+			return variable.isConst;
+		}
+	}
+	return false;
+}
+
+void SemanticScope::declare(std::string identifier, parser::TYPE type, bool isAny, bool isConst, unsigned int row, unsigned int col) {
+	Variable_t var(identifier, type, isAny, isConst, row, col);
 	variableSymbolTable.push_back(var);
 }
 
@@ -190,10 +199,10 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl) {
 
 	// allow mismatched type in the case of declaration of int to real
 	if (decl->type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT) {
-		currentScope->declare(decl->identifier, parser::TYPE::T_FLOAT, false, decl->row, decl->col);
+		currentScope->declare(decl->identifier, parser::TYPE::T_FLOAT, false, decl->isConst, decl->row, decl->col);
 	}
 	else if (decl->type == currentExpressionType || decl->type == parser::TYPE::T_ANY) { // types match
-		currentScope->declare(decl->identifier, currentExpressionType, decl->type == parser::TYPE::T_ANY, decl->row, decl->col);
+		currentScope->declare(decl->identifier, currentExpressionType, decl->type == parser::TYPE::T_ANY, decl->isConst, decl->row, decl->col);
 	}
 	else { // types don't match
 		throw std::runtime_error(msgHeader(decl->row, decl->col) + "found " + typeStr(currentExpressionType) + " in definition of '" + decl->identifier + "', expected " + typeStr(decl->type) + ".");
@@ -208,6 +217,11 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* assign) {
 			throw std::runtime_error(msgHeader(assign->row, assign->col) + "identifier '" + assign->identifier + "' being reassigned was never declared " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
 		}
 	}
+
+	if (scopes[i]->isConst(assign->identifier)) {
+		throw std::runtime_error(msgHeader(assign->row, assign->col) + "'" + assign->identifier + "' constant being reassigned " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
+	}
+	
 
 	// get the type of the originally declared variable
 	parser::TYPE type = scopes[i]->type(assign->identifier);
@@ -287,7 +301,7 @@ void SemanticAnalyser::visit(parser::ASTBlockNode* block) {
 
 	// check whether this is a function block by seeing if we have any current function parameters. If we do, then add them to the current scope.
 	for (auto param : currentFunctionParameters) {
-		scopes.back()->declare(param.first, param.second, false, block->row, block->col);
+		scopes.back()->declare(param.first, param.second, false, false, block->row, block->col);
 	}
 
 	// clear the global function parameters vector
@@ -572,6 +586,10 @@ void SemanticAnalyser::visit(parser::ASTExprReadNode* read) {
 	if (currentExpressionType != parser::TYPE::T_STRING) {
 		throw std::runtime_error(msgHeader(read->row, read->col) + "function 'read()' is trying to assing an invalid type.");
 	}
+}
+
+void SemanticAnalyser::visit(parser::ASTThisNode* read) {
+	
 }
 
 std::string typeStr(parser::TYPE t) {

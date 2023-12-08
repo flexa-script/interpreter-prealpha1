@@ -88,6 +88,8 @@ namespace parser {
 
 		ASTStringParseNode* parseExprToString();
 
+		ASTThisNode* parseExprThis();
+
 		// parse types and parameters
 		TYPE parseType(std::string&);
 

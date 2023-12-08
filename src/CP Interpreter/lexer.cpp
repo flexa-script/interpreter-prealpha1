@@ -146,10 +146,16 @@ Token Lexer::processIdentifier() {
 
 	if (identifier == "using")
 		type = TOK_USING;
+	else if (identifier == "const")
+		type = TOK_CONST;
 	else if (identifier == "var")
 		type = TOK_VAR;
+	else if (identifier == "struct")
+		type = TOK_STRUCT;
 	else if (identifier == "def")
 		type = TOK_DEF;
+	else if (identifier == "this")
+		type = TOK_THIS;
 	else if (identifier == "return")
 		type = TOK_RETURN;
 	else if (identifier == "if")

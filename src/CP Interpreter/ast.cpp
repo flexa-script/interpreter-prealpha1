@@ -14,11 +14,14 @@ ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string nam
 ASTUsingNode::ASTUsingNode(std::string library, unsigned int row, unsigned int col)
 	: library(std::move(library)), row(row), col(col) {}
 
-ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string identifier, ASTExprNode* expr, unsigned int row, unsigned int col)
-	: type(type), identifier(std::move(identifier)), expr(expr), row(row), col(col) {}
+ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string identifier, ASTExprNode* expr, bool isConst, unsigned int row, unsigned int col)
+	: type(type), identifier(std::move(identifier)), expr(expr), isConst(isConst), row(row), col(col) {}
 
 ASTAssignmentNode::ASTAssignmentNode(std::string identifier, ASTExprNode* expr, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), expr(expr), row(row), col(col) {}
+
+ASTThisNode::ASTThisNode(std::string ref, unsigned int row, unsigned int col)
+	: ref(ref), row(row), col(col) {}
 
 ASTFloatParseNode::ASTFloatParseNode(ASTExprNode* expr, unsigned int row, unsigned int col)
 	: expr(expr), row(row), col(col) {}
@@ -157,6 +160,10 @@ void ASTPrintNode::accept(visitor::Visitor* v) {
 }
 
 void ASTReadNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+void ASTThisNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 

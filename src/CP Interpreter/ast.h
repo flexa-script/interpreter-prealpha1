@@ -54,11 +54,12 @@ namespace parser {
 
 	class ASTDeclarationNode : public ASTStatementNode {
 	public:
-		ASTDeclarationNode(TYPE, std::string, ASTExprNode*, unsigned int, unsigned int);
+		ASTDeclarationNode(TYPE, std::string, ASTExprNode*, bool isConst, unsigned int, unsigned int);
 
 		TYPE type;
 		std::string identifier;
 		ASTExprNode* expr;
+		bool isConst;
 		unsigned int row;
 		unsigned int col;
 
@@ -228,6 +229,17 @@ namespace parser {
 
 		std::string identifier;
 		std::vector<ASTExprNode*> parameters;
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
+	class ASTThisNode : public ASTExprNode {
+	public:
+		ASTThisNode(std::string, unsigned int, unsigned int);
+
+		std::string ref;
 		unsigned int row;
 		unsigned int col;
 
