@@ -27,7 +27,7 @@ struct_decl       = "struct" identifier "{" { formal_params } "}"
 
 formal_params     = formal_param { "," formal_param }
 
-formal_param      = identifier ":" type
+formal_param      = var_identifier ":" type
 
 while_statement   = "while" "(" expression ")" block
 
@@ -35,11 +35,11 @@ if_statement      = "if" "(" expression ")" block [ "else" block ]
 
 return_statement  = "return" [ expression ]
 
-variable_decl     = "var" identifier [ ":" type ] [ "=" expression ]
+variable_decl     = "var" var_identifier [ ":" type ] [ "=" expression ]
 
-constant_decl     = "const" identifier [ ":" type ] "=" expression
+constant_decl     = "const" var_identifier [ ":" type ] "=" expression
 
-assignment        = path_identifier "=" expression
+assignment        = var_identifier "=" expression
 
 expression        = simple_expression { relational_op simple_expression }
 
@@ -48,7 +48,7 @@ simple_expression = term { additive_op term }
 term              = factor { multiplicative_op factor }
 
 factor            = literal
-                  | path_identifier
+                  | var_identifier
                   | function_call
                   | sub_expression
                   | unary
@@ -67,7 +67,9 @@ additive_op       = "+" | "-" | "or"
 
 multiplicative_op = "*" | "/" | "%" | "and"
 
-identifier        = ( "_" | letter ) { "_" | letter | digit } [ array_def ]
+identifier        = ( "_" | letter ) { "_" | letter | digit }
+
+var_identifier    = path_identifier [ array_def ]
 
 array_def         = "[" { int_literal } "]" { array_def }
 
