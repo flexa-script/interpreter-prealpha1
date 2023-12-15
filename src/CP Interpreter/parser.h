@@ -6,6 +6,7 @@
 
 
 namespace parser {
+
 	class Parser {
 	private:
 		lexer::Lexer* lex;
@@ -49,11 +50,17 @@ namespace parser {
 
 		ASTBlockNode* parseBlock();
 
+		ASTBlockNode* parseStructBlock();
+
+		ASTStatementNode* parseStructBlockStatement();
+
 		ASTIfNode* parseIfStatement();
 
 		ASTWhileNode* parseWhileStatement();
 
 		ASTFunctionDefinitionNode* parseFunctionDefinition();
+
+		ASTStructDefinitionNode* parseStructDefinition();
 
 		ASTStatementNode* parseIdentifier();
 
@@ -95,7 +102,7 @@ namespace parser {
 
 		std::vector<ASTExprNode*>* parseActualParams();
 
-		std::pair<std::string, TYPE>* parseFormalParam();
+		VariableDefinition_t* parseFormalParam();
 	};
 }
 

@@ -66,6 +66,8 @@ ASTStatementNode* Parser::parseProgramStatement() {
 		return parseDeclarationStatement();
 	case lexer::TOK_DEF:
 		return parseFunctionDefinition();
+	case lexer::TOK_STRUCT:
+		return parseStructDefinition();
 	case lexer::TOK_PRINT:
 		return parsePrintStatement();
 	case lexer::TOK_READ:
@@ -89,10 +91,8 @@ ASTStatementNode* Parser::parseBlockStatement() {
 	case lexer::TOK_VAR:
 	case lexer::TOK_CONST:
 		return parseDeclarationStatement();
-	//case lexer::TOK_THIS:
-	//	return parseThisStatement();
-	//case lexer::TOK_STRUCT:
-	//	return parseStructStatement();
+	case lexer::TOK_STRUCT:
+		return parseStructDefinition();
 	case lexer::TOK_PRINT:
 		return parsePrintStatement();
 	case lexer::TOK_READ:
@@ -124,6 +124,7 @@ ASTStatementNode* Parser::parseIdentifier() {
 ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	TYPE type = TYPE::T_ND;
 	std::string identifier;
+	std::string typeName = "";
 	ASTExprNode* expr;
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
@@ -138,10 +139,13 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 
 	consumeToken();
 	if (currentToken.type == lexer::TOK_COLON) {
-		//throw std::runtime_error(msgHeader() + "expected assignment operator '=' for " + identifier + ".");
-
 		consumeToken();
 		type = parseType(identifier);
+
+		if (currentToken.type == lexer::TOK_IDENTIFIER) {
+			typeName = currentToken.value;
+		}
+
 		consumeToken();
 	}
 
@@ -152,10 +156,10 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 			type = parseType(identifier);
 		}
 		
-		//consumeToken();
-		//if (currentToken.type != lexer::TOK_SEMICOLON) {
-		//	throw std::runtime_error(msgHeader() + "expected ';' after assignment of " + identifier + ".");
-		//}
+		consumeToken();
+		if (currentToken.type != lexer::TOK_SEMICOLON) {
+			throw std::runtime_error(msgHeader() + "expected ';' after assignment of " + identifier + ".");
+		}
 	}
 	else {
 		if (type == TYPE::T_ND) {
@@ -179,19 +183,18 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 			expr = new ASTLiteralNode<std::string>("", row, col);
 			break;
 		case parser::TYPE::T_ANY:
-			expr = new ASTLiteralNode<std::any>(0, row, col);
+			expr = new ASTLiteralNode<std::any>(NULL, row, col);
+			break;
+		case parser::TYPE::T_STRUCT:{
+			expr = nullptr;
+		}
 			break;
 		default:
 			throw std::runtime_error(msgHeader() + "expected type for " + identifier + " after ':'.");
 		}
 	}
 
-	consumeToken();
-	if (currentToken.type != lexer::TOK_SEMICOLON) {
-		throw std::runtime_error(msgHeader() + "expected ';' after assignment of " + identifier + ".");
-	}
-
-	return new ASTDeclarationNode(type, identifier, expr, isConst, row, col);
+	return new ASTDeclarationNode(type, typeName, identifier, expr, isConst, row, col);
 }
 
 ASTAssignmentNode* Parser::parseAssignmentStatement() {
@@ -363,6 +366,46 @@ ASTBlockNode* Parser::parseBlock() {
 	}
 }
 
+ASTBlockNode* Parser::parseStructBlock() {
+	auto statements = new std::vector<ASTStatementNode*>;
+
+	// determine line number
+	unsigned int row = currentToken.row;
+	unsigned int col = currentToken.col;
+
+	// current token is '{', consume first token of statement
+	consumeToken();
+
+	// while not reached end of block or end of file
+	while (currentToken.type != lexer::TOK_RIGHT_CURLY && currentToken.type != lexer::TOK_ERROR && currentToken.type != lexer::TOK_EOF) {
+		// parse the statement
+		statements->push_back(parseStructBlockStatement());
+
+		// consume first token of next statement
+		consumeToken();
+	}
+
+	// if block ended by '}', return block
+	if (currentToken.type == lexer::TOK_RIGHT_CURLY) {
+		return new ASTBlockNode(*statements, row, col);
+	}
+	// otherwise the user left the block open
+	else {
+		throw std::runtime_error(name + ": Reached end of file while parsing. Mismatched scopes.");
+	}
+}
+
+ASTStatementNode* Parser::parseStructBlockStatement() {
+	switch (currentToken.type) {
+	case lexer::TOK_VAR:
+	case lexer::TOK_CONST:
+		return parseDeclarationStatement();
+
+	default:
+		throw std::runtime_error(msgHeader() + "invalid declaration starting with '" + currentToken.value + "' encountered.");
+	}
+}
+
 ASTIfNode* Parser::parseIfStatement() {
 	// node attributes
 	ASTExprNode* condition;
@@ -453,7 +496,7 @@ ASTWhileNode* Parser::parseWhileStatement() {
 ASTFunctionDefinitionNode* Parser::parseFunctionDefinition() {
 	// node attributes
 	std::string identifier;
-	std::vector<std::pair<std::string, TYPE>> parameters;
+	std::vector<VariableDefinition_t> parameters;
 	TYPE type;
 	ASTBlockNode* block;
 	unsigned int row = currentToken.row;
@@ -527,8 +570,59 @@ ASTFunctionDefinitionNode* Parser::parseFunctionDefinition() {
 	return new ASTFunctionDefinitionNode(identifier, parameters, type, block, row, col);
 }
 
-std::pair<std::string, TYPE>* Parser::parseFormalParam() {
+ASTStructDefinitionNode* Parser::parseStructDefinition() {
+	// node attributes
 	std::string identifier;
+	std::vector<VariableDefinition_t> variables;
+	unsigned int row = currentToken.row;
+	unsigned int col = currentToken.col;
+
+	// consume identifier
+	consumeToken();
+	if (currentToken.type != lexer::TOK_IDENTIFIER) {
+		throw std::runtime_error(msgHeader() + "expected struct identifier after keyword 'struct'.");
+	}
+
+	identifier = currentToken.value;
+
+	// consume {
+	consumeToken();
+	if (currentToken.type != lexer::TOK_LEFT_CURLY) {
+		throw std::runtime_error(msgHeader() + "expected '{' after identifier of struct '" + identifier + "' definition.");
+	}
+
+	do {
+		// consume var
+		consumeToken();
+		// consume identifier
+		consumeToken();
+
+		// parse parameter
+		variables.push_back(*parseFormalParam());
+
+		// consume ';'
+		consumeToken();
+
+	} while (currentToken.type == lexer::TOK_SEMICOLON && nextToken.type != lexer::TOK_RIGHT_CURLY);
+
+	// consume }
+	consumeToken();
+	if (currentToken.type != lexer::TOK_RIGHT_CURLY) {
+		throw std::runtime_error(msgHeader() + "expected '}' to close struct.");
+	}
+
+	// consume ;
+	consumeToken();
+	if (currentToken.type != lexer::TOK_SEMICOLON) {
+		throw std::runtime_error(msgHeader() + "expected ';' after struct definition.");
+	}
+
+	return new ASTStructDefinitionNode(identifier, variables, row, col);
+}
+
+VariableDefinition_t* Parser::parseFormalParam() {
+	std::string identifier;
+	std::string typeName;
 	TYPE type;
 
 	// make sure current token is identifier
@@ -546,9 +640,10 @@ std::pair<std::string, TYPE>* Parser::parseFormalParam() {
 
 	// consume type
 	consumeToken();
+	typeName = currentToken.value;
 	type = parseType(identifier);
 
-	return new std::pair<std::string, TYPE>(identifier, type);
+	return new VariableDefinition_t(identifier, type, typeName, type == TYPE::T_ANY, false, currentToken.row, currentToken.col);
 
 };
 
@@ -861,7 +956,7 @@ ASTThisNode* Parser::parseExprThis() {
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
 
-	return new ASTThisNode(name, row, col);
+	return new ASTThisNode(row, col);
 }
 
 ASTStringParseNode* Parser::parseExprToString() {
@@ -952,6 +1047,9 @@ TYPE Parser::parseType(std::string& identifier) {
 
 	case lexer::TOK_ANY_TYPE:
 		return TYPE::T_ANY;
+
+	case lexer::TOK_IDENTIFIER:
+		return TYPE::T_STRUCT;
 
 	default:
 		throw std::runtime_error(msgHeader() + "expected type for " + identifier + " after ':'.");

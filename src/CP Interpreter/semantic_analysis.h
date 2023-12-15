@@ -11,30 +11,24 @@
 
 namespace visitor {
 
-	typedef struct Variable {
-		Variable(std::string identifier, parser::TYPE type, bool isAny, bool isConst, unsigned int row, unsigned int col)
-			: identifier(identifier), type(type), isAny(isAny), isConst(isConst), row(row), col(col) {};
-		std::string identifier;
-		parser::TYPE type;
-		bool isAny;
-		bool isConst;
-		unsigned int row;
-		unsigned int col;
-	} Variable_t;
-
 	class SemanticScope {
 	private:
-		std::vector<Variable_t> variableSymbolTable;
+		std::vector<parser::StructureDefinition_t> structures;
+		std::vector<parser::VariableDefinition_t> variableSymbolTable;
 		std::multimap<std::string, std::tuple<parser::TYPE, std::vector<parser::TYPE>, unsigned int>> functionSymbolTable;
 
 	public:
 		bool isAnyVar(std::string);
 		bool isConst(std::string);
+		bool alreadyDeclaredStructureType(std::string);
 		bool alreadyDeclared(std::string);
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
-		void declare(std::string, parser::TYPE, bool, bool, unsigned int, unsigned int);
+		void declareStructureType(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
+		void declareStructureTypeVariables(std::string, std::string);
+		void declare(std::string, parser::TYPE, std::string, bool, bool, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::vector<parser::TYPE>, unsigned int);
 		void changeVarType(std::string, parser::TYPE);
+		parser::StructureDefinition_t findDeclaredStructureType(std::string);
 		parser::TYPE type(std::string);
 		parser::TYPE type(std::string, std::vector<parser::TYPE>);
 		unsigned int declarationLine(std::string);
@@ -51,7 +45,7 @@ namespace visitor {
 		std::vector<SemanticScope*> scopes;
 		std::stack<parser::TYPE> functions;
 		parser::TYPE currentExpressionType;
-		std::vector<std::pair<std::string, parser::TYPE>> currentFunctionParameters;
+		std::vector<parser::VariableDefinition_t> currentFunctionParameters;
 
 	private:
 		bool returns(parser::ASTStatementNode*);
@@ -74,6 +68,7 @@ namespace visitor {
 		void visit(parser::ASTIfNode*) override;
 		void visit(parser::ASTWhileNode*) override;
 		void visit(parser::ASTFunctionDefinitionNode*) override;
+		void visit(parser::ASTStructDefinitionNode*) override;
 		void visit(parser::ASTLiteralNode<bool>*) override;
 		void visit(parser::ASTLiteralNode<__int64_t>*) override;
 		void visit(parser::ASTLiteralNode<long double>*) override;

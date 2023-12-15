@@ -2,14 +2,14 @@
 #define VISITOR_H
 
 #include <string>
+#include <vector>
 #include <any>
 
 #if defined(_WIN32) || defined(WIN32)
 typedef __int64 __int64_t;
 #endif
 
-namespace parser
-{
+namespace parser {
 	class ASTProgramNode;
 
 	class ASTUsingNode;
@@ -23,6 +23,7 @@ namespace parser
 	class ASTIfNode;
 	class ASTWhileNode;
 	class ASTFunctionDefinitionNode;
+	class ASTStructDefinitionNode;
 
 	template <typename T> class ASTLiteralNode;
 	class ASTBinaryExprNode;
@@ -51,6 +52,7 @@ namespace visitor {
 		virtual void visit(parser::ASTIfNode*) = 0;
 		virtual void visit(parser::ASTWhileNode*) = 0;
 		virtual void visit(parser::ASTFunctionDefinitionNode*) = 0;
+		virtual void visit(parser::ASTStructDefinitionNode*) = 0;
 		virtual void visit(parser::ASTLiteralNode<bool>*) = 0;
 		virtual void visit(parser::ASTLiteralNode<__int64_t>*) = 0;
 		virtual void visit(parser::ASTLiteralNode<long double>*) = 0;

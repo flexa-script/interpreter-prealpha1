@@ -42,39 +42,44 @@ bool InterpreterScope::alreadyDeclared(std::string identifier, std::vector<parse
 }
 
 void InterpreterScope::declare(std::string identifier, bool boolValue) {
-	value_t value;
+	Value_t value;
 	value.b = boolValue;
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_BOOL, value);
 }
 
 void InterpreterScope::declare(std::string identifier, __int64_t intValue) {
-	value_t value;
+	Value_t value;
 	value.i = intValue;
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_INT, value);
 }
 
 void InterpreterScope::declare(std::string identifier, long double realValue) {
-	value_t value;
+	Value_t value;
 	value.f = realValue;
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_FLOAT, value);
 }
 
 void InterpreterScope::declare(std::string identifier, char charValue) {
-	value_t value;
+	Value_t value;
 	value.c = charValue;
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_CHAR, value);
 }
 
 void InterpreterScope::declare(std::string identifier, std::string stringValue) {
-	value_t value;
+	Value_t value;
 	value.s = stringValue;
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_STRING, value);
 }
 
 void InterpreterScope::declare(std::string identifier, std::any anyValue) {
-	value_t value;
+	Value_t value;
 	value.a = anyValue;
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_ANY, value);
+}
+
+void InterpreterScope::declareStructureType(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
+	parser::StructureDefinition_t type(name, variables, row, col);
+	structures.push_back(type);
 }
 
 void InterpreterScope::declare(std::string identifier, std::vector<parser::TYPE> signature, std::vector<std::string> variableNames, parser::ASTBlockNode* block) {
@@ -85,7 +90,7 @@ parser::TYPE InterpreterScope::typeof(std::string identifier) {
 	return variableSymbolTable[identifier].first;
 }
 
-value_t InterpreterScope::valueof(std::string identifier) {
+Value_t InterpreterScope::valueof(std::string identifier) {
 	return variableSymbolTable[identifier].second;
 }
 
@@ -202,7 +207,9 @@ void visitor::Interpreter::visit(parser::ASTUsingNode* usg) {
 
 void visitor::Interpreter::visit(parser::ASTDeclarationNode* decl) {
 	// visit expression to update current value/type
-	decl->expr->accept(this);
+	if (decl->expr) {
+		decl->expr->accept(this);
+	}
 
 	// declare variable, depending on type
 	switch (decl->type) {
@@ -225,10 +232,7 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* decl) {
 		scopes.back()->declare(decl->identifier, currentExpressionValue.s);
 		break;
 	case parser::TYPE::T_ANY:
-		if (currentExpressionType == parser::TYPE::T_NULL) {
-			scopes.back()->declare(decl->identifier, (char)0);
-		}
-		else if (currentExpressionType == parser::TYPE::T_BOOL) {
+		if (currentExpressionType == parser::TYPE::T_BOOL) {
 			scopes.back()->declare(decl->identifier, currentExpressionValue.b);
 		}
 		else if (currentExpressionType == parser::TYPE::T_INT) {
@@ -244,7 +248,50 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* decl) {
 			scopes.back()->declare(decl->identifier, currentExpressionValue.s);
 		}
 		break;
+	case parser::TYPE::T_STRUCT:
+		scopes.back()->declareStructureTypeVariables(decl->identifier, decl->typeName);
+		break;
+
 	}
+}
+
+void InterpreterScope::declareStructureTypeVariables(std::string identifier, std::string typeName) {
+	auto typeStruct = findDeclaredStructureType(typeName);
+	for (auto varTypeStruct : typeStruct.variables) {
+		auto currentIdentifier = identifier + '.' + varTypeStruct.identifier;
+		switch (varTypeStruct.type) {
+		case parser::TYPE::T_BOOL:
+			declare(currentIdentifier, false);
+			break;
+		case parser::TYPE::T_INT:
+			declare(currentIdentifier, (long long)0);
+			break;
+		case parser::TYPE::T_FLOAT:
+			declare(currentIdentifier, ((long double)0));
+			break;
+		case parser::TYPE::T_CHAR:
+			declare(currentIdentifier, '\0');
+			break;
+		case parser::TYPE::T_STRING:
+			declare(currentIdentifier, "");
+			break;
+		case parser::TYPE::T_ANY:
+			declare(currentIdentifier, std::any());
+			break;
+		case parser::TYPE::T_STRUCT:
+			declareStructureTypeVariables(currentIdentifier, varTypeStruct.typeName);
+			break;
+		}
+	}
+}
+
+parser::StructureDefinition_t InterpreterScope::findDeclaredStructureType(std::string identifier) {
+	for (auto variable : structures) {
+		if (variable.identifier == identifier) {
+			return variable;
+		}
+	}
+	throw std::runtime_error("Can't found '" + identifier + "'.");
 }
 
 void visitor::Interpreter::visit(parser::ASTAssignmentNode* assign) {
@@ -362,7 +409,7 @@ void visitor::Interpreter::visit(parser::ASTReadNode* read) {
 void visitor::Interpreter::visit(parser::ASTFunctionCallNode* func) {
 	// determine the signature of the function
 	std::vector<parser::TYPE> signature;
-	std::vector<std::pair<parser::TYPE, value_t>> currentFunctionArguments;
+	std::vector<std::pair<parser::TYPE, Value_t>> currentFunctionArguments;
 
 	// for each parameter,
 	for (auto param : func->parameters) {
@@ -492,43 +539,48 @@ void visitor::Interpreter::visit(parser::ASTFunctionDefinitionNode* func) {
 	scopes.back()->declare(func->identifier, func->signature, func->variableNames, func->block);
 }
 
+void visitor::Interpreter::visit(parser::ASTStructDefinitionNode* structure) {
+	// add function to symbol table
+	scopes.back()->declareStructureType(structure->identifier, structure->variables, structure->row, structure->col);
+}
+
 void visitor::Interpreter::visit(parser::ASTLiteralNode<bool>* lit) {
-	value_t v;
+	Value_t v;
 	v.b = lit->val;
 	currentExpressionType = parser::TYPE::T_BOOL;
 	currentExpressionValue = std::move(v);
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<__int64_t>* lit) {
-	value_t v;
+	Value_t v;
 	v.i = lit->val;
 	currentExpressionType = parser::TYPE::T_INT;
 	currentExpressionValue = std::move(v);
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<long double>* lit) {
-	value_t v;
+	Value_t v;
 	v.f = lit->val;
 	currentExpressionType = parser::TYPE::T_FLOAT;
 	currentExpressionValue = std::move(v);
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<char>* lit) {
-	value_t v;
+	Value_t v;
 	v.c = lit->val;
 	currentExpressionType = parser::TYPE::T_CHAR;
 	currentExpressionValue = std::move(v);
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<std::string>* lit) {
-	value_t v;
+	Value_t v;
 	v.s = lit->val;
 	currentExpressionType = parser::TYPE::T_STRING;
 	currentExpressionValue = std::move(v);
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<std::any>* lit) {
-	value_t v;
+	Value_t v;
 	v.a = lit->val;
 	currentExpressionType = parser::TYPE::T_ANY;
 	currentExpressionValue = std::move(v);
@@ -541,15 +593,15 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* bin) {
 	// visit left node first
 	bin->left->accept(this);
 	parser::TYPE l_type = currentExpressionType;
-	value_t l_value = currentExpressionValue;
+	Value_t l_value = currentExpressionValue;
 
 	// then right node
 	bin->right->accept(this);
 	parser::TYPE r_type = currentExpressionType;
-	value_t r_value = currentExpressionValue;
+	Value_t r_value = currentExpressionValue;
 
 	// expression struct
-	value_t v;
+	Value_t v;
 
 	// arithmetic operators for now
 	if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%") {
@@ -694,7 +746,7 @@ void visitor::Interpreter::visit(parser::ASTUnaryExprNode* un) {
 void visitor::Interpreter::visit(parser::ASTExprFunctionCallNode* func) {
 	// determine the signature of the function
 	std::vector<parser::TYPE> signature;
-	std::vector<std::pair<parser::TYPE, value_t>> currentFunctionArguments;
+	std::vector<std::pair<parser::TYPE, Value_t>> currentFunctionArguments;
 
 	// for each parameter
 	for (auto param : func->parameters) {
@@ -791,7 +843,7 @@ void visitor::Interpreter::visit(parser::ASTStringParseNode* strParser) {
 }
 
 void visitor::Interpreter::visit(parser::ASTThisNode* thisNode) {
-	value_t v;
+	Value_t v;
 	v.s = scopes.back()->getName();
 	currentExpressionType = parser::TYPE::T_STRING;
 	currentExpressionValue = std::move(v);
@@ -804,7 +856,7 @@ void visitor::Interpreter::visit(parser::ASTExprReadNode* read) {
 	currentExpressionValue.s = std::move(line);
 }
 
-std::pair<parser::TYPE, value_t> Interpreter::currentExpr() {
+std::pair<parser::TYPE, Value_t> Interpreter::currentExpr() {
 	return std::move(std::make_pair(currentExpressionType, currentExpressionValue));
 };
 
@@ -829,6 +881,8 @@ std::string visitor::typeStr(parser::TYPE t) {
 		return "string";
 	case parser::TYPE::T_ANY:
 		return "any";
+	case parser::TYPE::T_STRUCT:
+		return "struct";
 	default:
 		throw std::runtime_error("Invalid type encountered.");
 	}

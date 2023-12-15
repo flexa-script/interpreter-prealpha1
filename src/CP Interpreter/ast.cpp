@@ -14,14 +14,14 @@ ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string nam
 ASTUsingNode::ASTUsingNode(std::string library, unsigned int row, unsigned int col)
 	: library(std::move(library)), row(row), col(col) {}
 
-ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string identifier, ASTExprNode* expr, bool isConst, unsigned int row, unsigned int col)
-	: type(type), identifier(std::move(identifier)), expr(expr), isConst(isConst), row(row), col(col) {}
+ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string typeName, std::string identifier, ASTExprNode* expr, bool isConst, unsigned int row, unsigned int col)
+	: type(type), typeName(std::move(typeName)), identifier(std::move(identifier)), expr(expr), isConst(isConst), row(row), col(col) {}
 
 ASTAssignmentNode::ASTAssignmentNode(std::string identifier, ASTExprNode* expr, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), expr(expr), row(row), col(col) {}
 
-ASTThisNode::ASTThisNode(std::string ref, unsigned int row, unsigned int col)
-	: ref(ref), row(row), col(col) {}
+ASTThisNode::ASTThisNode(unsigned int row, unsigned int col)
+	: row(row), col(col) {}
 
 ASTFloatParseNode::ASTFloatParseNode(ASTExprNode* expr, unsigned int row, unsigned int col)
 	: expr(expr), row(row), col(col) {}
@@ -53,16 +53,19 @@ ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* ifBlock, unsigned int
 ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: condition(condition), block(block), row(row), col(col) {}
 
-ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<std::pair<std::string, TYPE>> parameters, TYPE type, ASTBlockNode* block, unsigned int row, unsigned int col)
+ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<VariableDefinition_t> parameters, TYPE type, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), parameters(std::move(parameters)), type(type), block(block), row(row), col(col) {
 	// generate signature
 	this->signature = std::vector<TYPE>();
 
 	for (auto param : this->parameters) {
-		variableNames.push_back(param.first);
-		signature.push_back(param.second);
+		variableNames.push_back(param.identifier);
+		signature.push_back(param.type);
 	}
 }
+
+ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
+	: identifier(std::move(identifier)), variables(std::move(variables)), row(row), col(col) {}
 
 
 // Expression Nodes
@@ -188,6 +191,10 @@ void ASTWhileNode::accept(visitor::Visitor* v) {
 }
 
 void ASTFunctionDefinitionNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+void ASTStructDefinitionNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 

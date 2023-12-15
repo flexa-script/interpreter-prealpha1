@@ -7,6 +7,24 @@
 using namespace visitor;
 
 
+parser::StructureDefinition_t SemanticScope::findDeclaredStructureType(std::string identifier) {
+	for (auto variable : structures) {
+		if (variable.identifier == identifier) {
+			return variable;
+		}
+	}
+	throw std::runtime_error("Can't found '" + identifier + "'.");
+}
+
+bool SemanticScope::alreadyDeclaredStructureType(std::string identifier) {
+	for (auto variable : structures) {
+		if (variable.identifier == identifier) {
+			return true;
+		}
+	}
+	return false;
+}
+
 bool SemanticScope::alreadyDeclared(std::string identifier) {
 	for (auto variable : variableSymbolTable) {
 		if (variable.identifier == identifier) {
@@ -16,11 +34,10 @@ bool SemanticScope::alreadyDeclared(std::string identifier) {
 	return false;
 }
 
-
 void SemanticScope::changeVarType(std::string identifier, parser::TYPE type) {
-	std::vector<Variable_t> newVariableSymbolTable;
+	std::vector<parser::VariableDefinition_t> newVariableSymbolTable;
 	for (size_t i = 0; i < variableSymbolTable.size(); ++i) {
-		Variable_t variable = variableSymbolTable[i];
+		parser::VariableDefinition_t variable = variableSymbolTable[i];
 		if (variable.identifier == identifier) {
 			variable.type = type;
 		}
@@ -65,8 +82,13 @@ bool SemanticScope::isConst(std::string identifier) {
 	return false;
 }
 
-void SemanticScope::declare(std::string identifier, parser::TYPE type, bool isAny, bool isConst, unsigned int row, unsigned int col) {
-	Variable_t var(identifier, type, isAny, isConst, row, col);
+void SemanticScope::declareStructureType(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
+	parser::StructureDefinition_t type(name, variables, row, col);
+	structures.push_back(type);
+}
+
+void SemanticScope::declare(std::string identifier, parser::TYPE type, std::string typeName, bool isAny, bool isConst, unsigned int row, unsigned int col) {
+	parser::VariableDefinition_t var(identifier, type, typeName, isAny, isConst, row, col);
 	variableSymbolTable.push_back(var);
 }
 
@@ -158,6 +180,7 @@ SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, std::vector<pars
 	: programs(programs), currentProgram(programs[0]) {
 	// add global scope
 	scopes.push_back(global_scope);
+	currentExpressionType = parser::TYPE::T_ND;
 };
 
 SemanticAnalyser::~SemanticAnalyser() = default;
@@ -195,17 +218,38 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl) {
 	}
 
 	// visit the expression to update current type
-	decl->expr->accept(this);
+	if (decl->expr) {
+		decl->expr->accept(this);
+	}
 
 	// allow mismatched type in the case of declaration of int to real
 	if (decl->type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT) {
-		currentScope->declare(decl->identifier, parser::TYPE::T_FLOAT, false, decl->isConst, decl->row, decl->col);
+		currentScope->declare(decl->identifier, parser::TYPE::T_FLOAT, "", false, decl->isConst, decl->row, decl->col);
 	}
-	else if (decl->type == currentExpressionType || decl->type == parser::TYPE::T_ANY) { // types match
-		currentScope->declare(decl->identifier, currentExpressionType, decl->type == parser::TYPE::T_ANY, decl->isConst, decl->row, decl->col);
+	else if (decl->type == currentExpressionType || decl->type == parser::TYPE::T_ANY || decl->type == parser::TYPE::T_STRUCT) { // types match
+		if (decl->type == parser::TYPE::T_STRUCT) {
+			currentScope->declareStructureTypeVariables(decl->identifier, decl->typeName);
+		}
+		else {
+			currentScope->declare(decl->identifier, currentExpressionType, decl->typeName, decl->type == parser::TYPE::T_ANY, decl->isConst, decl->row, decl->col);
+		}
 	}
 	else { // types don't match
 		throw std::runtime_error(msgHeader(decl->row, decl->col) + "found " + typeStr(currentExpressionType) + " in definition of '" + decl->identifier + "', expected " + typeStr(decl->type) + ".");
+	}
+}
+
+void SemanticScope::declareStructureTypeVariables(std::string identifier, std::string typeName) {
+	auto typeStruct = findDeclaredStructureType(typeName);
+	for (auto varTypeStruct : typeStruct.variables) {
+		auto currentIdentifier = identifier + '.' + varTypeStruct.identifier;
+		switch (varTypeStruct.type) {
+		case parser::TYPE::T_STRUCT:
+			declareStructureTypeVariables(currentIdentifier, varTypeStruct.typeName);
+		default:
+			declare(currentIdentifier, varTypeStruct.type, varTypeStruct.typeName, varTypeStruct.isAny, varTypeStruct.isConst, varTypeStruct.row, varTypeStruct.col);
+			break;
+		}
 	}
 }
 
@@ -301,7 +345,7 @@ void SemanticAnalyser::visit(parser::ASTBlockNode* block) {
 
 	// check whether this is a function block by seeing if we have any current function parameters. If we do, then add them to the current scope.
 	for (auto param : currentFunctionParameters) {
-		scopes.back()->declare(param.first, param.second, false, false, block->row, block->col);
+		scopes.back()->declare(param.identifier, param.type, param.typeName, param.isAny, param.isConst, param.row, param.col);
 	}
 
 	// clear the global function parameters vector
@@ -370,7 +414,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* func) {
 	// add function to symbol table
 	scopes.back()->declare(func->identifier, func->type, func->signature, func->row);
 
-	// push current function type onto function stack
+	// push current function type into function stack
 	functions.push(func->type);
 
 	// empty and update current function parameters vector
@@ -387,6 +431,17 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* func) {
 
 	// end the current function
 	functions.pop();
+}
+
+void SemanticAnalyser::visit(parser::ASTStructDefinitionNode* structDef) {
+	// first check that all enclosing scopes have not already defined the struct
+	for (auto& scope : scopes) {
+		if (scope->alreadyDeclaredStructureType(structDef->identifier)) {
+			throw std::runtime_error(msgHeader(structDef->row, structDef->col) + "error: struct " + structDef->identifier + " already defined.");
+		}
+	}
+
+	scopes.back()->declareStructureType(structDef->identifier, structDef->variables, structDef->row, structDef->col);
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<bool>*) {
@@ -608,6 +663,8 @@ std::string typeStr(parser::TYPE t) {
 		return "string";
 	case parser::TYPE::T_ANY:
 		return "any";
+	case parser::TYPE::T_STRUCT:
+		return "struct";
 	default:
 		throw std::runtime_error("Invalid type encountered.");
 	}

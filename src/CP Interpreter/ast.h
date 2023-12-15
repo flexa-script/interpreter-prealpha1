@@ -10,8 +10,29 @@
 namespace parser {
 	// Types
 	enum class TYPE {
-		T_ND, T_VOID, T_NULL, T_ANY, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING
+		T_ND, T_VOID, T_NULL, T_ANY, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_STRUCT
 	};
+
+	typedef struct VariableDefinition {
+		VariableDefinition(std::string identifier, parser::TYPE type, std::string typeName, bool isAny, bool isConst, unsigned int row, unsigned int col)
+			: identifier(identifier), type(type), typeName(typeName), isAny(isAny), isConst(isConst), row(row), col(col) {};
+		std::string identifier;
+		std::string typeName;
+		parser::TYPE type;
+		bool isAny;
+		bool isConst;
+		unsigned int row;
+		unsigned int col;
+	} VariableDefinition_t;
+
+	typedef struct StructureDefinition {
+		StructureDefinition(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
+			: identifier(identifier), variables(variables), row(row), col(col) {};
+		std::string identifier;
+		std::vector<VariableDefinition_t> variables;
+		unsigned int row;
+		unsigned int col;
+	} StructureDefinition_t;
 
 	// Abstract Nodes
 	class ASTNode {
@@ -54,10 +75,11 @@ namespace parser {
 
 	class ASTDeclarationNode : public ASTStatementNode {
 	public:
-		ASTDeclarationNode(TYPE, std::string, ASTExprNode*, bool isConst, unsigned int, unsigned int);
+		ASTDeclarationNode(TYPE, std::string, std::string, ASTExprNode*, bool isConst, unsigned int, unsigned int);
 
 		TYPE type;
 		std::string identifier;
+		std::string typeName;
 		ASTExprNode* expr;
 		bool isConst;
 		unsigned int row;
@@ -160,15 +182,26 @@ namespace parser {
 
 	class ASTFunctionDefinitionNode : public ASTStatementNode {
 	public:
-		ASTFunctionDefinitionNode(std::string, std::vector<std::pair<std::string, TYPE>>,
-			TYPE, ASTBlockNode*, unsigned int, unsigned int);
+		ASTFunctionDefinitionNode(std::string, std::vector<VariableDefinition_t>, TYPE, ASTBlockNode*, unsigned int, unsigned int);
 
 		std::string identifier;
-		std::vector<std::pair<std::string, TYPE>> parameters;
+		std::vector<VariableDefinition_t> parameters;
 		std::vector<std::string> variableNames;
 		std::vector<TYPE> signature;
 		TYPE type;
 		ASTBlockNode* block;
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
+	class ASTStructDefinitionNode : public ASTStatementNode {
+	public:
+		ASTStructDefinitionNode(std::string, std::vector<VariableDefinition_t>, unsigned int, unsigned int);
+
+		std::string identifier;
+		std::vector<VariableDefinition_t> variables;
 		unsigned int row;
 		unsigned int col;
 
@@ -237,9 +270,8 @@ namespace parser {
 
 	class ASTThisNode : public ASTExprNode {
 	public:
-		ASTThisNode(std::string, unsigned int, unsigned int);
+		ASTThisNode(unsigned int, unsigned int);
 
-		std::string ref;
 		unsigned int row;
 		unsigned int col;
 

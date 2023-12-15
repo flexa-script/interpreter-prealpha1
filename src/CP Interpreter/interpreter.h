@@ -11,16 +11,15 @@
 
 
 namespace visitor {
-	typedef struct vT {
-		vT() : b(0), i(0), f(0), c(0), s(""), a(nullptr) {};
+	typedef struct Value {
+		Value() : b(0), i(0), f(0), c(0), s(""), a(nullptr) {};
 		bool b;
 		__int64_t i;
 		long double f;
 		char c;
 		std::string s;
 		std::any a;
-	} value_t;
-
+	} Value_t;
 
 	class InterpreterScope {
 	public:
@@ -36,9 +35,12 @@ namespace visitor {
 		void declare(std::string, std::string);
 		void declare(std::string, std::any);
 		void declare(std::string, std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*);
+		void declareStructureType(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
+		void declareStructureTypeVariables(std::string, std::string);
+		parser::StructureDefinition_t findDeclaredStructureType(std::string);
 
 		parser::TYPE typeof(std::string);
-		value_t valueof(std::string);
+		Value_t valueof(std::string);
 		std::vector<std::string> variablenamesof(std::string, std::vector<parser::TYPE>);
 		parser::ASTBlockNode* blockof(std::string, std::vector<parser::TYPE>);
 
@@ -48,7 +50,8 @@ namespace visitor {
 
 	private:
 		std::string name;
-		std::map<std::string, std::pair<parser::TYPE, value_t>> variableSymbolTable;
+		std::vector<parser::StructureDefinition_t> structures;
+		std::map<std::string, std::pair<parser::TYPE, Value_t>> variableSymbolTable;
 		std::multimap<std::string, std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*>> functionSymbolTable;
 	};
 
@@ -58,9 +61,9 @@ namespace visitor {
 		parser::ASTProgramNode* currentProgram;
 		std::vector<InterpreterScope*> scopes;
 		parser::TYPE currentExpressionType;
-		value_t currentExpressionValue;
+		Value_t currentExpressionValue;
 		std::vector<std::string> currentFunctionParameters;
-		std::vector<std::pair<parser::TYPE, value_t>> currentFunctionArguments;
+		std::vector<std::pair<parser::TYPE, Value_t>> currentFunctionArguments;
 		std::string currentFunctionName;
 		std::string returnFromFunctionName;
 		bool returnFromFunction = false;
@@ -83,6 +86,7 @@ namespace visitor {
 		void visit(parser::ASTIfNode*) override;
 		void visit(parser::ASTWhileNode*) override;
 		void visit(parser::ASTFunctionDefinitionNode*) override;
+		void visit(parser::ASTStructDefinitionNode*) override;
 		void visit(parser::ASTLiteralNode<bool>*) override;
 		void visit(parser::ASTLiteralNode<__int64_t>*) override;
 		void visit(parser::ASTLiteralNode<long double>*) override;
@@ -99,7 +103,7 @@ namespace visitor {
 		void visit(parser::ASTExprReadNode*) override;
 		void visit(parser::ASTThisNode*) override;
 
-		std::pair<parser::TYPE, value_t> currentExpr();
+		std::pair<parser::TYPE, Value_t> currentExpr();
 
 	private:
 		std::string msgHeader(unsigned int, unsigned int);
