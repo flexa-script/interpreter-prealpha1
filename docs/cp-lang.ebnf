@@ -1,0 +1,104 @@
+(**
+ * Author: Carlos Machado
+ * Ref.: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
+ *)
+
+program           = { libs statement }
+
+libs              = lib { lib }
+
+lib               = "using" path_identifier ";"
+
+statement         = struct_decl ";"
+                  | variable_decl ";"
+                  | constant_decl ";"
+                  | assignment ";"
+                  | if_statement
+                  | while_statement
+                  | return_statement ";"
+                  | function_decl
+                  | block
+
+block             = "{" { statement } "}"
+
+function_decl     = "def" identifier "(" [ formal_params ] ")" [ ":" type ] block
+
+struct_decl       = "struct" identifier "{" { formal_params } "}"
+
+formal_params     = formal_param { "," formal_param }
+
+formal_param      = identifier ":" type
+
+while_statement   = "while" "(" expression ")" block
+
+if_statement      = "if" "(" expression ")" block [ "else" block ]
+
+return_statement  = "return" [ expression ]
+
+variable_decl     = "var" identifier [ ":" type ] [ "=" expression ]
+
+constant_decl     = "const" identifier [ ":" type ] "=" expression
+
+assignment        = path_identifier "=" expression
+
+expression        = simple_expression { relational_op simple_expression }
+
+simple_expression = term { additive_op term }
+
+term              = factor { multiplicative_op factor }
+
+factor            = literal
+                  | path_identifier
+                  | function_call
+                  | sub_expression
+                  | unary
+
+unary             = ( "+" | "-" | "not" ) { expression }
+
+sub_expression    = "(" expression ")"
+
+function_call     = identifier "(" [actual_params] ")"
+
+actual_params     = expression { "," expression }
+
+relational_op     = "<" | ">" | "==" | "!=" | "<=" | ">="
+
+additive_op       = "+" | "-" | "or"
+
+multiplicative_op = "*" | "/" | "%" | "and"
+
+identifier        = ( "_" | letter ) { "_" | letter | digit } [ array_def ]
+
+array_def         = "[" { int_literal } "]" { array_def }
+
+path_identifier   = identifier { "." identifier }
+
+literal           = bool_literal
+                  | int_literal
+                  | float_literal
+                  | char_literal
+                  | string_literal
+
+bool_literal      = "true" | "false"
+
+int_literal       = digit { digit }
+
+float_literal     = digit { digit } "." { digit }
+                    | "." digit { digit }
+
+char_literal      = "'" printable "'"
+
+string_literal    = """ { printable } """
+
+printable         = digit | letter | " " | "!" | "\"" | "#" | "$" | "%" | "&"
+                  | "'" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";"
+                  | "<" | "=" | ">" | "?" | "@" | "[" | "\\" | "]" | "^" | "_" | "`"
+                  | "{" | "|" | "}" | "~"
+
+letter            = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K"
+                  | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V"
+                  | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g"
+                  | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r"
+                  | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+
+digit             = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
