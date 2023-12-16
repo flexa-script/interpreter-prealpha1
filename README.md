@@ -1,9 +1,10 @@
 # CP Interpreter
 
 ## TODO
-- [ ] Add a default interface to implements core libs
 - [ ] Add array support
+- [ ] Add null support
 - [ ] Fix cp dependencies/libs loader
+- [ ] Add a default interface to implements core libs
 
 ## The CP Language
 
