@@ -12,6 +12,7 @@ namespace parser {
 		lexer::Lexer* lex;
 		lexer::Token currentToken;
 		lexer::Token nextToken;
+		TYPE currentArrayType = TYPE::T_ND;
 
 	public:
 		std::string name;
@@ -27,7 +28,6 @@ namespace parser {
 
 	private:
 		void consumeToken();
-		std::string msgHeader();
 
 		// statement Nodes
 		ASTStatementNode* parseProgramStatement();
@@ -97,12 +97,30 @@ namespace parser {
 
 		ASTThisNode* parseExprThis();
 
-		// parse types and parameters
-		TYPE parseType(std::string&);
-
 		std::vector<ASTExprNode*>* parseActualParams();
 
 		VariableDefinition_t* parseFormalParam();
+
+		// parse types and parameters
+		TYPE parseType(std::string&);
+
+		void checkArrayType(TYPE);
+
+		std::string msgHeader();
+
+		bool parseBoolLiteral();
+
+		__int64_t parseIntLiteral();
+
+		long double parseFloatLiteral();
+
+		char parseCharLiteral();
+
+		std::string parseStringLiteral();
+
+		std::vector<std::any>* parseArrayLiteral();
+
+		std::vector<std::any>* makeArrayLiteral(std::string, TYPE, std::vector<int>, int);
 	};
 }
 

@@ -9,6 +9,14 @@
 typedef __int64 __int64_t;
 #endif
 
+typedef bool                  cp_bool;
+typedef __int64_t             cp_int;
+typedef long double           cp_float;
+typedef char                  cp_char;
+typedef std::string           cp_string;
+typedef std::any              cp_any;
+typedef std::vector<std::any> cp_array;
+
 namespace parser {
 	class ASTProgramNode;
 
@@ -59,6 +67,7 @@ namespace visitor {
 		virtual void visit(parser::ASTLiteralNode<char>*) = 0;
 		virtual void visit(parser::ASTLiteralNode<std::string>*) = 0;
 		virtual void visit(parser::ASTLiteralNode<std::any>*) = 0;
+		virtual void visit(parser::ASTLiteralNode<std::vector<std::any>*>*) = 0;
 		virtual void visit(parser::ASTBinaryExprNode*) = 0;
 		virtual void visit(parser::ASTIdentifierNode*) = 0;
 		virtual void visit(parser::ASTUnaryExprNode*) = 0;

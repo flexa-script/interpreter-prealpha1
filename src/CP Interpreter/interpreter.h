@@ -12,13 +12,14 @@
 
 namespace visitor {
 	typedef struct Value {
-		Value() : b(0), i(0), f(0), c(0), s(""), a(nullptr) {};
+		Value() : b(0), i(0), f(0), c(0), s(""), a(std::any()), arr(new std::vector<std::any>()) {};
 		bool b;
 		__int64_t i;
 		long double f;
 		char c;
 		std::string s;
 		std::any a;
+		std::vector<std::any>* arr;
 	} Value_t;
 
 	class InterpreterScope {
@@ -34,6 +35,7 @@ namespace visitor {
 		void declare(std::string, char);
 		void declare(std::string, std::string);
 		void declare(std::string, std::any);
+		void declare(std::string, std::vector<std::any>*);
 		void declare(std::string, std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*);
 		void declareStructureType(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
 		void declareStructureTypeVariables(std::string, std::string);
@@ -93,6 +95,7 @@ namespace visitor {
 		void visit(parser::ASTLiteralNode<char>*) override;
 		void visit(parser::ASTLiteralNode<std::string>*) override;
 		void visit(parser::ASTLiteralNode<std::any>*) override;
+		void visit(parser::ASTLiteralNode<std::vector<std::any>*>*) override;
 		void visit(parser::ASTBinaryExprNode*) override;
 		void visit(parser::ASTIdentifierNode*) override;
 		void visit(parser::ASTUnaryExprNode*) override;
@@ -107,6 +110,7 @@ namespace visitor {
 
 	private:
 		std::string msgHeader(unsigned int, unsigned int);
+		void determineArrayType(std::vector<std::any>*);
 	};
 
 	std::string typeStr(parser::TYPE);

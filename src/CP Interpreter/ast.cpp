@@ -14,11 +14,11 @@ ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string nam
 ASTUsingNode::ASTUsingNode(std::string library, unsigned int row, unsigned int col)
 	: library(std::move(library)), row(row), col(col) {}
 
-ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string typeName, std::string identifier, ASTExprNode* expr, bool isConst, unsigned int row, unsigned int col)
-	: type(type), typeName(std::move(typeName)), identifier(std::move(identifier)), expr(expr), isConst(isConst), row(row), col(col) {}
+ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string typeName, std::string identifier, ASTExprNode* expr, bool isConst, TYPE arrayType, std::vector<int> dim, unsigned int row, unsigned int col)
+	: type(type), typeName(std::move(typeName)), identifier(std::move(identifier)), expr(expr), isConst(isConst), arrayType(arrayType), dim(dim), row(row), col(col) {}
 
-ASTAssignmentNode::ASTAssignmentNode(std::string identifier, ASTExprNode* expr, unsigned int row, unsigned int col)
-	: identifier(std::move(identifier)), expr(expr), row(row), col(col) {}
+ASTAssignmentNode::ASTAssignmentNode(std::string identifier, ASTExprNode* expr, std::vector<unsigned int> accessVector, unsigned int row, unsigned int col)
+	: identifier(std::move(identifier)), expr(expr), accessVector(accessVector), row(row), col(col) {}
 
 ASTThisNode::ASTThisNode(unsigned int row, unsigned int col)
 	: row(row), col(col) {}
@@ -118,6 +118,11 @@ namespace parser {
 
 	template<>
 	void ASTLiteralNode<std::any>::accept(visitor::Visitor* v) {
+		v->visit(this);
+	}
+
+	template<>
+	void ASTLiteralNode<std::vector<std::any>*>::accept(visitor::Visitor* v) {
 		v->visit(this);
 	}
 }

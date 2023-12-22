@@ -10,15 +10,16 @@
 namespace parser {
 	// Types
 	enum class TYPE {
-		T_ND, T_VOID, T_NULL, T_ANY, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_STRUCT
+		T_ND, T_VOID, T_NULL, T_ANY, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_STRUCT, T_ARRAY
 	};
 
 	typedef struct VariableDefinition {
-		VariableDefinition(std::string identifier, parser::TYPE type, std::string typeName, bool isAny, bool isConst, unsigned int row, unsigned int col)
-			: identifier(identifier), type(type), typeName(typeName), isAny(isAny), isConst(isConst), row(row), col(col) {};
+		VariableDefinition(std::string identifier, TYPE type, std::string typeName, TYPE arrayType, bool isAny, bool isConst, unsigned int row, unsigned int col)
+			: identifier(identifier), type(type), typeName(typeName), arrayType(arrayType), isAny(isAny), isConst(isConst), row(row), col(col) {};
 		std::string identifier;
 		std::string typeName;
 		parser::TYPE type;
+		parser::TYPE arrayType;
 		bool isAny;
 		bool isConst;
 		unsigned int row;
@@ -75,13 +76,15 @@ namespace parser {
 
 	class ASTDeclarationNode : public ASTStatementNode {
 	public:
-		ASTDeclarationNode(TYPE, std::string, std::string, ASTExprNode*, bool isConst, unsigned int, unsigned int);
+		ASTDeclarationNode(TYPE, std::string, std::string, ASTExprNode*, bool, TYPE, std::vector<int>, unsigned int, unsigned int);
 
 		TYPE type;
 		std::string identifier;
 		std::string typeName;
 		ASTExprNode* expr;
 		bool isConst;
+		TYPE arrayType;
+		std::vector<int> dim;
 		unsigned int row;
 		unsigned int col;
 
@@ -90,10 +93,11 @@ namespace parser {
 
 	class ASTAssignmentNode : public ASTStatementNode {
 	public:
-		ASTAssignmentNode(std::string, ASTExprNode*, unsigned int, unsigned int);
+		ASTAssignmentNode(std::string, ASTExprNode*, std::vector<unsigned int>, unsigned int, unsigned int);
 
 		std::string identifier;
 		ASTExprNode* expr;
+		std::vector<unsigned int> accessVector;
 		unsigned int row;
 		unsigned int col;
 

@@ -25,10 +25,11 @@ namespace visitor {
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
 		void declareStructureType(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
 		void declareStructureTypeVariables(std::string, std::string);
-		void declare(std::string, parser::TYPE, std::string, bool, bool, unsigned int, unsigned int);
+		void declare(std::string, parser::TYPE, std::string, parser::TYPE, bool, bool, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::vector<parser::TYPE>, unsigned int);
 		void changeVarType(std::string, parser::TYPE);
 		parser::StructureDefinition_t findDeclaredStructureType(std::string);
+		parser::TYPE arrayType(std::string);
 		parser::TYPE type(std::string);
 		parser::TYPE type(std::string, std::vector<parser::TYPE>);
 		unsigned int declarationLine(std::string);
@@ -49,6 +50,7 @@ namespace visitor {
 
 	private:
 		bool returns(parser::ASTStatementNode*);
+		void determineArrayType(std::vector<std::any>*);
 		std::string msgHeader(unsigned int, unsigned int);
 
 	public:
@@ -75,6 +77,7 @@ namespace visitor {
 		void visit(parser::ASTLiteralNode<char>*) override;
 		void visit(parser::ASTLiteralNode<std::string>*) override;
 		void visit(parser::ASTLiteralNode<std::any>*) override;
+		void visit(parser::ASTLiteralNode<std::vector<std::any>*>*) override;
 		void visit(parser::ASTBinaryExprNode*) override;
 		void visit(parser::ASTIdentifierNode*) override;
 		void visit(parser::ASTUnaryExprNode*) override;

@@ -115,7 +115,7 @@ ASTStatementNode* Parser::parseIdentifier() {
 	if (nextToken.value == "(") {
 		return parseFunctionCall();
 	}
-	else if (nextToken.value == "=") {
+	else if (nextToken.value == "[" || nextToken.value == "=") {
 		return parseAssignmentStatement();
 	}
 	throw std::runtime_error(msgHeader() + "expected '=' or '(' after identifier.");
@@ -123,12 +123,15 @@ ASTStatementNode* Parser::parseIdentifier() {
 
 ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	TYPE type = TYPE::T_ND;
+	currentArrayType = TYPE::T_ND;
 	std::string identifier;
 	std::string typeName = "";
 	ASTExprNode* expr;
+	auto dim = std::vector<int>();
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
 	bool isConst = currentToken.type == lexer::TOK_CONST;
+	//bool isArray = false;
 
 	// consume identifier
 	consumeToken();
@@ -138,9 +141,33 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	identifier = currentToken.value;
 
 	consumeToken();
+
+	if (currentToken.type == lexer::TOK_LEFT_BRACE) {
+		type = TYPE::T_ARRAY;
+		do {
+			auto size = -1;
+			consumeToken();
+			if (currentToken.type == lexer::TOK_INT_LITERAL) {
+				size = stoi(currentToken.value);
+				consumeToken();
+			}
+			if (currentToken.type != lexer::TOK_RIGHT_BRACE) {
+				throw std::runtime_error(msgHeader() + "expected ']' after array size constant.");
+			}
+			consumeToken();
+			dim.push_back(size);
+
+		} while (currentToken.type == lexer::TOK_LEFT_BRACE);
+	}
+
 	if (currentToken.type == lexer::TOK_COLON) {
 		consumeToken();
-		type = parseType(identifier);
+		if (type == TYPE::T_ND) {
+			type = parseType(identifier);
+		}
+		else if (type == TYPE::T_ARRAY) {
+			currentArrayType = parseType(identifier);
+		}
 
 		if (currentToken.type == lexer::TOK_IDENTIFIER) {
 			typeName = currentToken.value;
@@ -149,13 +176,20 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 		consumeToken();
 	}
 
+	if (dim.size() > 0 && dim.at(0) <= 0 && currentToken.type != lexer::TOK_EQUALS) {
+		throw std::runtime_error(msgHeader() + "expected array size or assignment of '" + identifier + "' definition.");
+	}
+
 	if (currentToken.type == lexer::TOK_EQUALS) {
 		expr = parseExpression();
 
 		if (type == TYPE::T_ND) {
 			type = parseType(identifier);
 		}
-		
+
+		// todo
+		// validate array size
+
 		consumeToken();
 		if (currentToken.type != lexer::TOK_SEMICOLON) {
 			throw std::runtime_error(msgHeader() + "expected ';' after assignment of " + identifier + ".");
@@ -163,43 +197,86 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	}
 	else {
 		if (type == TYPE::T_ND) {
-			throw std::runtime_error(msgHeader() + "expected assignment or type for " + identifier + ".");
+			type = TYPE::T_ANY;
 		}
-
+		if (currentArrayType == TYPE::T_ND) {
+			currentArrayType = TYPE::T_ANY;
+		}
 		switch (type) {
-		case parser::TYPE::T_BOOL:
+		case TYPE::T_BOOL:
 			expr = new ASTLiteralNode<bool>(false, row, col);
 			break;
-		case parser::TYPE::T_INT:
+		case TYPE::T_INT:
 			expr = new ASTLiteralNode<__int64_t>(0, row, col);
 			break;
-		case parser::TYPE::T_FLOAT:
+		case TYPE::T_FLOAT:
 			expr = new ASTLiteralNode<long double>(0., row, col);
 			break;
-		case parser::TYPE::T_CHAR:
+		case TYPE::T_CHAR:
 			expr = new ASTLiteralNode<char>(0, row, col);
 			break;
-		case parser::TYPE::T_STRING:
+		case TYPE::T_STRING:
 			expr = new ASTLiteralNode<std::string>("", row, col);
 			break;
-		case parser::TYPE::T_ANY:
-			expr = new ASTLiteralNode<std::any>(NULL, row, col);
+		case TYPE::T_ANY:
+			expr = new ASTLiteralNode<std::any>(std::any(), row, col);
 			break;
-		case parser::TYPE::T_STRUCT:{
+		case TYPE::T_ARRAY:
+			expr = new ASTLiteralNode<std::vector<std::any>*>(makeArrayLiteral(identifier, currentArrayType, dim, 0), row, col);
+			break;
+		case TYPE::T_STRUCT:
 			expr = nullptr;
-		}
 			break;
 		default:
 			throw std::runtime_error(msgHeader() + "expected type for " + identifier + " after ':'.");
 		}
 	}
 
-	return new ASTDeclarationNode(type, typeName, identifier, expr, isConst, row, col);
+	return new ASTDeclarationNode(type, typeName, identifier, expr, isConst, currentArrayType, dim, row, col);
+}
+
+std::vector<std::any>* Parser::makeArrayLiteral(std::string identifier, TYPE type, std::vector<int> dim, int currDim) {
+	auto arr = new std::vector<std::any>();
+
+	for (size_t i = 0; i < dim.at(currDim); ++i) {
+		if (dim.size() - 1 == currDim) {
+			switch (type) {
+			case TYPE::T_BOOL:
+				arr->push_back(false);
+				break;
+			case TYPE::T_INT:
+				arr->push_back((cp_int)0);
+				break;
+			case TYPE::T_FLOAT:
+				arr->push_back((cp_float)0.);
+				break;
+			case TYPE::T_CHAR:
+				arr->push_back('\0');
+				break;
+			case TYPE::T_STRING:
+				arr->push_back((cp_string)"");
+				break;
+			case TYPE::T_ND:
+			case TYPE::T_ANY:
+				arr->push_back(std::any());
+				break;
+			case TYPE::T_STRUCT:
+				arr->push_back(std::any());
+			}
+		}
+		else {
+			arr->push_back(makeArrayLiteral(identifier, type, dim, currDim + 1));
+		}
+
+	}
+
+	return arr;
 }
 
 ASTAssignmentNode* Parser::parseAssignmentStatement() {
 	std::string identifier;
 	ASTExprNode* expr;
+	auto accessVector = std::vector<unsigned int>();
 
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
@@ -207,6 +284,25 @@ ASTAssignmentNode* Parser::parseAssignmentStatement() {
 	identifier = currentToken.value;
 
 	consumeToken();
+
+	if (currentToken.type == lexer::TOK_LEFT_BRACE) {
+		do {
+			auto pos = 0;
+			consumeToken();
+			if (currentToken.type != lexer::TOK_INT_LITERAL) {
+				throw std::runtime_error(msgHeader() + "expected int literal");
+			}
+			pos = stoi(currentToken.value);
+			consumeToken();
+			if (currentToken.type != lexer::TOK_RIGHT_BRACE) {
+				throw std::runtime_error(msgHeader() + "expected ']' after array position constant");
+			}
+			consumeToken();
+			accessVector.push_back(pos);
+
+		} while (currentToken.type == lexer::TOK_LEFT_BRACE);
+	}
+
 	if (currentToken.type != lexer::TOK_EQUALS) {
 		throw std::runtime_error(msgHeader() + "expected assignment operator '=' after " + identifier + ".");
 	}
@@ -219,7 +315,7 @@ ASTAssignmentNode* Parser::parseAssignmentStatement() {
 		throw std::runtime_error(msgHeader() + "expected ';' after assignment of " + identifier + ".");
 	}
 
-	return new ASTAssignmentNode(identifier, expr, row, col);
+	return new ASTAssignmentNode(identifier, expr, accessVector, row, col);
 }
 
 ASTPrintNode* Parser::parsePrintStatement() {
@@ -624,6 +720,7 @@ VariableDefinition_t* Parser::parseFormalParam() {
 	std::string identifier;
 	std::string typeName;
 	TYPE type;
+	auto dim = std::vector<int>();
 
 	// make sure current token is identifier
 	if (currentToken.type != lexer::TOK_IDENTIFIER) {
@@ -631,8 +728,25 @@ VariableDefinition_t* Parser::parseFormalParam() {
 	}
 	identifier = currentToken.value;
 
-	// consume ':'
 	consumeToken();
+
+	if (currentToken.type == lexer::TOK_LEFT_BRACE) {
+		type = TYPE::T_ARRAY;
+		do {
+			auto size = -1;
+			consumeToken();
+			if (currentToken.type == lexer::TOK_INT_LITERAL) {
+				size = stoi(currentToken.value);
+				consumeToken();
+			}
+			if (currentToken.type != lexer::TOK_RIGHT_BRACE) {
+				throw std::runtime_error(msgHeader() + "expected ']' after array size constant.");
+			}
+			consumeToken();
+			dim.push_back(size);
+
+		} while (currentToken.type == lexer::TOK_LEFT_BRACE);
+	}
 
 	if (currentToken.type != lexer::TOK_COLON) {
 		throw std::runtime_error(msgHeader() + "expected ':' after '" + identifier + "'.");
@@ -640,10 +754,18 @@ VariableDefinition_t* Parser::parseFormalParam() {
 
 	// consume type
 	consumeToken();
-	typeName = currentToken.value;
-	type = parseType(identifier);
 
-	return new VariableDefinition_t(identifier, type, typeName, type == TYPE::T_ANY, false, currentToken.row, currentToken.col);
+	if (type == TYPE::T_ARRAY) {
+		currentArrayType = parseType(identifier);
+	}
+	else {
+		type = parseType(identifier);
+	}
+	if (currentToken.type == lexer::TOK_IDENTIFIER) {
+		typeName = currentToken.value;
+	}
+
+	return new VariableDefinition_t(identifier, type, typeName, currentArrayType, type == TYPE::T_ANY, false, currentToken.row, currentToken.col);
 
 };
 
@@ -744,98 +866,29 @@ ASTExprNode* Parser::parseTermTail(ASTExprNode* lhs) {
 ASTExprNode* Parser::parseFactor() {
 	consumeToken();
 
-	// Determine line number
+	// determine line number
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
 
 	switch (currentToken.type) {
-		// Literal Cases
+		// literal cases
 	case lexer::TOK_BOOL_LITERAL:
-		return new ASTLiteralNode<bool>(currentToken.value == "true", row, col);
+		return new ASTLiteralNode<bool>(parseBoolLiteral(), row, col);
 
 	case lexer::TOK_INT_LITERAL:
-		return new ASTLiteralNode<__int64_t>(std::stoll(currentToken.value), row, col);
+		return new ASTLiteralNode<__int64_t>(parseIntLiteral(), row, col);
 
 	case lexer::TOK_FLOAT_LITERAL:
-		return new ASTLiteralNode<long double>(std::stold(currentToken.value), row, col);
+		return new ASTLiteralNode<long double>(parseFloatLiteral(), row, col);
 
-	case lexer::TOK_CHAR_LITERAL: {
-		char chr = 0;
-		if (currentToken.value == "'\\\\'") {
-			chr = '\\';
-		}
-		else if (currentToken.value == "'\\n'") {
-			chr = '\n';
-		}
-		else if (currentToken.value == "'\\''") {
-			chr = '\'';
-		}
-		else if (currentToken.value == "'\\t'") {
-			chr = '\t';
-		}
-		else if (currentToken.value == "'\\b'") {
-			chr = '\b';
-		}
-		else if (currentToken.value == "'\\0'") {
-			chr = '\0';
-		}
-		else {
-			chr = currentToken.value.c_str()[1];
-		}
-		return new ASTLiteralNode<char>(chr, row, col);
-	}
+	case lexer::TOK_CHAR_LITERAL:
+		return new ASTLiteralNode<char>(parseCharLiteral(), row, col);
 
-	case lexer::TOK_STRING_LITERAL: {
-		// remove " character from front and end of lexeme
-		std::string str = currentToken.value.substr(1, currentToken.value.size() - 2);
+	case lexer::TOK_STRING_LITERAL:
+		return new ASTLiteralNode<std::string>(parseStringLiteral(), row, col);
 
-		// replace \" with quote
-		size_t pos = str.find("\\\"");
-		while (pos != std::string::npos) {
-			// replace
-			str.replace(pos, 2, "\"");
-			// get next occurrence from current position
-			pos = str.find("\\\"", pos + 1);
-		}
-
-		// replace \n with newline
-		pos = str.find("\\n");
-		while (pos != std::string::npos) {
-			// replace
-			str.replace(pos, 2, "\n");
-			// get next occurrence from current position
-			pos = str.find("\\n", pos + 1);
-		}
-
-		// replace \t with tab
-		pos = str.find("\\t");
-		while (pos != std::string::npos) {
-			// replace
-			str.replace(pos, 2, "\t");
-			// get next occurrence from current position
-			pos = str.find("\\t", pos + 1);
-		}
-
-		// replace \b with backslash
-		pos = str.find("\\b");
-		while (pos != std::string::npos) {
-			// replace
-			str.replace(pos, 2, "\\");
-			// get next occurrence from current position
-			pos = str.find("\\b", pos + 1);
-		}
-
-		// replace \b with backslash
-		pos = str.find("\\0");
-		while (pos != std::string::npos) {
-			// replace
-			str.replace(pos, 2, "\\");
-			// get next occurrence from current position
-			pos = str.find("\\0", pos + 1);
-		}
-
-		return new ASTLiteralNode<std::string>(std::move(str), row, col);
-	}
+	case lexer::TOK_LEFT_CURLY:
+		return new ASTLiteralNode<std::vector<std::any>*>(parseArrayLiteral(), row, col);
 
 	case lexer::TOK_FLOAT_TYPE:
 		return parseExprToFloat();
@@ -849,16 +902,14 @@ ASTExprNode* Parser::parseFactor() {
 	case lexer::TOK_THIS:
 		return parseExprThis();
 
-	case lexer::TOK_IDENTIFIER: // Identifier or function call case
-		if (nextToken.type == lexer::TOK_LEFT_BRACKET)
-			return parseExprFunctionCall();
+	case lexer::TOK_IDENTIFIER: // identifier or function call case
+		if (nextToken.type == lexer::TOK_LEFT_BRACKET) return parseExprFunctionCall();
 		else return new ASTIdentifierNode(currentToken.value, row, col);
 
-	case lexer::TOK_READ: // Read case
+	case lexer::TOK_READ: // read case
 		return parseExprRead();
 
-	case lexer::TOK_LEFT_BRACKET: // Subexpression case
-	{
+	case lexer::TOK_LEFT_BRACKET: { // subexpression case
 		ASTExprNode* sub_expr = parseExpression();
 		consumeToken();
 		if (currentToken.type != lexer::TOK_RIGHT_BRACKET) {
@@ -867,7 +918,7 @@ ASTExprNode* Parser::parseFactor() {
 		return sub_expr;
 	}
 
-	case lexer::TOK_ADDITIVE_OP: // Unary expression case
+	case lexer::TOK_ADDITIVE_OP: // unary expression case
 	case lexer::TOK_NOT: {
 		std::string currentTokenValue = currentToken.value;
 		return new ASTUnaryExprNode(currentTokenValue, parseExpression(), row, col);
@@ -876,6 +927,158 @@ ASTExprNode* Parser::parseFactor() {
 	default:
 		throw std::runtime_error(msgHeader() + "expected expression.");
 	}
+}
+
+std::vector<std::any>* Parser::parseArrayLiteral() {
+	auto arr = new std::vector<std::any>();
+	std::string identifier = "";
+	consumeToken();
+	do {
+		if (currentToken.type == lexer::TOK_LEFT_CURLY) {
+			arr->push_back(parseArrayLiteral());
+		}
+		else {
+			auto type = parseType(identifier);
+			switch (type) {
+			case parser::TYPE::T_BOOL:
+				checkArrayType(TYPE::T_BOOL);
+				arr->push_back(parseBoolLiteral());
+				break;
+			case parser::TYPE::T_INT: {
+				checkArrayType(TYPE::T_INT);
+				auto val = parseIntLiteral();
+				arr->push_back(parseIntLiteral());
+			}
+									break;
+			case parser::TYPE::T_FLOAT:
+				checkArrayType(TYPE::T_FLOAT);
+				arr->push_back(parseFloatLiteral());
+				break;
+			case parser::TYPE::T_CHAR:
+				checkArrayType(TYPE::T_CHAR);
+				arr->push_back(parseCharLiteral());
+				break;
+			case parser::TYPE::T_STRING:
+				checkArrayType(TYPE::T_STRING);
+				arr->push_back(parseStringLiteral());
+				break;
+			}
+		}
+
+		consumeToken();
+		if (currentToken.type == lexer::TOK_COMMA) {
+			consumeToken();
+		}
+
+	} while (currentToken.type == lexer::TOK_LEFT_CURLY || currentToken.type == lexer::TOK_BOOL_LITERAL || currentToken.type == lexer::TOK_INT_LITERAL
+		|| currentToken.type == lexer::TOK_FLOAT_LITERAL || currentToken.type == lexer::TOK_CHAR_LITERAL || currentToken.type == lexer::TOK_STRING_LITERAL);
+
+
+	if (currentToken.type != lexer::TOK_RIGHT_CURLY) {
+		throw std::runtime_error(msgHeader() + "expected '}'.");
+	}
+
+	return arr;
+}
+
+void Parser::checkArrayType(TYPE type) {
+	if (currentArrayType == TYPE::T_ND) {
+		currentArrayType = type;
+		return;
+	}
+	if (currentArrayType != type) {
+		throw std::runtime_error(msgHeader() + "invalid type encontered on array declaration");
+	}
+}
+
+bool Parser::parseBoolLiteral() {
+	return currentToken.value == "true";
+}
+
+__int64_t Parser::parseIntLiteral() {
+	return std::stoll(currentToken.value);
+}
+
+long double Parser::parseFloatLiteral() {
+	return std::stold(currentToken.value);
+}
+
+char Parser::parseCharLiteral() {
+	char chr = 0;
+	if (currentToken.value == "'\\\\'") {
+		chr = '\\';
+	}
+	else if (currentToken.value == "'\\n'") {
+		chr = '\n';
+	}
+	else if (currentToken.value == "'\\''") {
+		chr = '\'';
+	}
+	else if (currentToken.value == "'\\t'") {
+		chr = '\t';
+	}
+	else if (currentToken.value == "'\\b'") {
+		chr = '\b';
+	}
+	else if (currentToken.value == "'\\0'") {
+		chr = '\0';
+	}
+	else {
+		chr = currentToken.value.c_str()[1];
+	}
+	return chr;
+}
+
+std::string Parser::parseStringLiteral() {
+	// remove " character from front and end of lexeme
+	std::string str = currentToken.value.substr(1, currentToken.value.size() - 2);
+
+	// replace \" with quote
+	size_t pos = str.find("\\\"");
+	while (pos != std::string::npos) {
+		// replace
+		str.replace(pos, 2, "\"");
+		// get next occurrence from current position
+		pos = str.find("\\\"", pos + 1);
+	}
+
+	// replace \n with newline
+	pos = str.find("\\n");
+	while (pos != std::string::npos) {
+		// replace
+		str.replace(pos, 2, "\n");
+		// get next occurrence from current position
+		pos = str.find("\\n", pos + 1);
+	}
+
+	// replace \t with tab
+	pos = str.find("\\t");
+	while (pos != std::string::npos) {
+		// replace
+		str.replace(pos, 2, "\t");
+		// get next occurrence from current position
+		pos = str.find("\\t", pos + 1);
+	}
+
+	// replace \b with backslash
+	pos = str.find("\\b");
+	while (pos != std::string::npos) {
+		// replace
+		str.replace(pos, 2, "\\");
+		// get next occurrence from current position
+		pos = str.find("\\b", pos + 1);
+	}
+
+	// replace \b with backslash
+	pos = str.find("\\0");
+	while (pos != std::string::npos) {
+		// replace
+		str.replace(pos, 2, "\\");
+		// get next occurrence from current position
+		pos = str.find("\\0", pos + 1);
+	}
+
+	return str;
 }
 
 ASTExprFunctionCallNode* Parser::parseExprFunctionCall() {
