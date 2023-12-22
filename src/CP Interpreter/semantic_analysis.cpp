@@ -8,12 +8,12 @@ using namespace visitor;
 
 
 parser::StructureDefinition_t SemanticScope::findDeclaredStructureType(std::string identifier) {
-	for (auto variable : structures) {
-		if (variable.identifier == identifier) {
-			return variable;
+	for (auto structure : structures) {
+		if (structure.identifier == identifier) {
+			return structure;
 		}
 	}
-	throw std::runtime_error("Can't found '" + identifier + "'.");
+	throw std::runtime_error("can't found '" + identifier + "' type.");
 }
 
 bool SemanticScope::alreadyDeclaredStructureType(std::string identifier) {
@@ -103,7 +103,7 @@ parser::TYPE SemanticScope::arrayType(std::string identifier) {
 		}
 	}
 
-	throw std::runtime_error("Something went wrong when determining the type of '" + identifier + "'.");
+	throw std::runtime_error("something went wrong when determining the type of '" + identifier + "' array.");
 }
 
 parser::TYPE SemanticScope::type(std::string identifier) {
@@ -113,7 +113,7 @@ parser::TYPE SemanticScope::type(std::string identifier) {
 		}
 	}
 
-	throw std::runtime_error("Something went wrong when determining the type of '" + identifier + "'.");
+	throw std::runtime_error("something went wrong when determining the type of '" + identifier + "' variable.");
 }
 
 parser::TYPE SemanticScope::type(std::string identifier, std::vector<parser::TYPE> signature) {
@@ -121,7 +121,7 @@ parser::TYPE SemanticScope::type(std::string identifier, std::vector<parser::TYP
 
 	// if key is not present in multimap
 	if (std::distance(funcs.first, funcs.second) == 0) {
-		throw std::runtime_error("Something went wrong when determining the type of '" + identifier + "'.");
+		throw std::runtime_error("something went wrong when determining the type of '" + identifier + "' function.");
 	}
 
 	// check signature for each
@@ -132,7 +132,7 @@ parser::TYPE SemanticScope::type(std::string identifier, std::vector<parser::TYP
 	}
 
 	// function with matching signature not found
-	throw std::runtime_error("Something went wrong when determining the type of '" + identifier + "'.");
+	throw std::runtime_error("something went wrong when determining the type of '" + identifier + "' function.");
 }
 
 unsigned int SemanticScope::declarationLine(std::string identifier) {
@@ -150,7 +150,7 @@ unsigned int SemanticScope::declarationLine(std::string identifier, std::vector<
 
 	// if key is not present in multimap
 	if (std::distance(funcs.first, funcs.second) == 0) {
-		throw std::runtime_error("Something went wrong when determining the line number of '" + identifier + "'.");
+		throw std::runtime_error("something went wrong when determining the line number of '" + identifier + "'.");
 	}
 
 	// check signature for each
@@ -161,7 +161,7 @@ unsigned int SemanticScope::declarationLine(std::string identifier, std::vector<
 	}
 
 	// function with matching signature not found
-	throw std::runtime_error("Something went wrong when determining the line number of '" + identifier + "'.");
+	throw std::runtime_error("something went wrong when determining the line number of '" + identifier + "'.");
 }
 
 
