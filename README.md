@@ -1,5 +1,11 @@
 # CP Interpreter
 
+## TODO
+- [ ] Add array support
+- [ ] Add null support
+- [ ] Fix cp dependencies/libs loader
+- [ ] Add a default interface to implements core libs
+
 ## The CP Language
 
 CP is an strongly-typed programming language. The language supports C-style comments, that is, `//...` for single-line comments and `/*...*/` for multiline comments. There are four datatypes in the language: `int` for integer values, `float` for floating point numbers, `bool` for boolean values and `string` for string literals. The language detects when integer values are assigned to real variables and performs an automatic typecast, except for the case of function parameters. For example, the function call `f(1)` would be invalid if the `f` expects a `float` argument, so we must write `f(1.0)` or `f(1.)`.  In turn, this strictness allows for multiple functions of the same name to be defined within the same scope, provided they have different signature. MiniLang supports variable shadowing.
