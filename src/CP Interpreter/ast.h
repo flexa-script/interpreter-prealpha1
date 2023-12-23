@@ -282,32 +282,11 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
-	class ASTFloatParseNode : public ASTExprNode {
+	class ASTTypeParseNode : public ASTExprNode {
 	public:
-		ASTFloatParseNode(ASTExprNode*, unsigned int, unsigned int);
+		ASTTypeParseNode(TYPE, ASTExprNode*, unsigned int, unsigned int);
 
-		ASTExprNode* expr;
-		unsigned int row;
-		unsigned int col;
-
-		void accept(visitor::Visitor*) override;
-	};
-
-	class ASTIntParseNode : public ASTExprNode {
-	public:
-		ASTIntParseNode(ASTExprNode*, unsigned int, unsigned int);
-
-		ASTExprNode* expr;
-		unsigned int row;
-		unsigned int col;
-
-		void accept(visitor::Visitor*) override;
-	};
-
-	class ASTStringParseNode : public ASTExprNode {
-	public:
-		ASTStringParseNode(ASTExprNode*, unsigned int, unsigned int);
-
+		TYPE type;
 		ASTExprNode* expr;
 		unsigned int row;
 		unsigned int col;

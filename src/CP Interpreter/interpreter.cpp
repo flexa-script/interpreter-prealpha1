@@ -317,7 +317,7 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* assign) {
 	if (type != parser::TYPE::T_ARRAY) {
 		type = currentExpressionType;
 	}
-	
+
 	// redeclare variable, depending on type
 	switch (type) {
 	case parser::TYPE::T_BOOL:
@@ -870,72 +870,136 @@ void visitor::Interpreter::visit(parser::ASTExprFunctionCallNode* func) {
 	scopes[i]->blockof(func->identifier, signature)->accept(this);
 }
 
-void visitor::Interpreter::visit(parser::ASTFloatParseNode* floatParser) {
+void visitor::Interpreter::visit(parser::ASTTypeParseNode* typeParser) {
 	// visit expression node to update current value/type
-	floatParser->expr->accept(this);
+	typeParser->expr->accept(this);
 
-	// parse depending on type
-	switch (currentExpressionType) {
-	case parser::TYPE::T_FLOAT:
-		break;
-	case parser::TYPE::T_INT:
-		currentExpressionValue.f = static_cast<long double>(currentExpressionValue.i);
-		break;
-	case parser::TYPE::T_STRING:
-		currentExpressionValue.f = std::stold(currentExpressionValue.s);
-		break;
-	case parser::TYPE::T_CHAR:
-		currentExpressionValue.f = currentExpressionValue.c;
-		break;
-	}
-
-	currentExpressionType = parser::TYPE::T_FLOAT;
-}
-
-void visitor::Interpreter::visit(parser::ASTIntParseNode* intParser) {
-	// visit expression node to update current value/type
-	intParser->expr->accept(this);
-
-	// parse depending on type
-	switch (currentExpressionType) {
-	case parser::TYPE::T_INT:
-		break;
-	case parser::TYPE::T_FLOAT:
-		currentExpressionValue.i = static_cast<long long>(round(currentExpressionValue.f));
-		break;
-	case parser::TYPE::T_STRING:
-		currentExpressionValue.i = std::stoll(currentExpressionValue.s);
-		break;
-	case parser::TYPE::T_CHAR:
-		currentExpressionValue.i = currentExpressionValue.c;
-		break;
-	}
-
-	currentExpressionType = parser::TYPE::T_INT;
-}
-
-void visitor::Interpreter::visit(parser::ASTStringParseNode* strParser) {
-	// visit expression node to update current value/type
-	strParser->expr->accept(this);
-
-	// parse depending on type
-	switch (currentExpressionType) {
-	case parser::TYPE::T_INT:
-		currentExpressionValue.s = std::to_string(currentExpressionValue.i);
-		break;
-	case parser::TYPE::T_FLOAT:
-		currentExpressionValue.s = std::to_string(currentExpressionValue.f);
-		break;
+	switch (typeParser->type) {
 	case parser::TYPE::T_BOOL:
-		currentExpressionValue.s = currentExpressionValue.b ? "true" : "false";
+		switch (currentExpressionType) {
+		case parser::TYPE::T_BOOL:
+			break;
+		case parser::TYPE::T_INT:
+			currentExpressionValue.b = currentExpressionValue.i != 0;
+			break;
+		case parser::TYPE::T_FLOAT:
+			currentExpressionValue.b = currentExpressionValue.f != .0;
+			break;
+		case parser::TYPE::T_CHAR:
+			currentExpressionValue.b = currentExpressionValue.c != '\0';
+			break;
+		case parser::TYPE::T_STRING:
+			currentExpressionValue.b = currentExpressionValue.s.empty();
+			break;
+		}
 		break;
-	case parser::TYPE::T_CHAR:
-		currentExpressionValue.s = currentExpressionValue.c;
+
+	case parser::TYPE::T_INT:
+		switch (currentExpressionType) {
+		case parser::TYPE::T_BOOL:
+			currentExpressionValue.i = currentExpressionValue.b;
+			break;
+		case parser::TYPE::T_INT:
+			break;
+		case parser::TYPE::T_FLOAT:
+			currentExpressionValue.i = static_cast<long long>(round(currentExpressionValue.f));
+			break;
+		case parser::TYPE::T_CHAR:
+			currentExpressionValue.i = currentExpressionValue.c;
+			break;
+		case parser::TYPE::T_STRING:
+			currentExpressionValue.i = std::stoll(currentExpressionValue.s);
+			break;
+		}
 		break;
+
+	case parser::TYPE::T_FLOAT:
+		switch (currentExpressionType) {
+		case parser::TYPE::T_BOOL:
+			currentExpressionValue.f = currentExpressionValue.b;
+			break;
+		case parser::TYPE::T_INT:
+			currentExpressionValue.f = static_cast<long double>(currentExpressionValue.i);
+			break;
+		case parser::TYPE::T_FLOAT:
+			break;
+		case parser::TYPE::T_CHAR:
+			currentExpressionValue.f = currentExpressionValue.c;
+			break;
+		case parser::TYPE::T_STRING:
+			currentExpressionValue.f = std::stold(currentExpressionValue.s);
+			break;
+		}
+		break;
+
+	case parser::TYPE::T_STRING:
+		switch (currentExpressionType) {
+		case parser::TYPE::T_BOOL:
+			currentExpressionValue.s = currentExpressionValue.b ? "true" : "false";
+			break;
+		case parser::TYPE::T_INT:
+			currentExpressionValue.s = std::to_string(currentExpressionValue.i);
+			break;
+		case parser::TYPE::T_FLOAT:
+			currentExpressionValue.s = std::to_string(currentExpressionValue.f);
+			break;
+		case parser::TYPE::T_CHAR:
+			currentExpressionValue.s = currentExpressionValue.c;
+			break;
+		case parser::TYPE::T_STRING:
+			break;
+		}
+		break;
+
 	}
 
-	currentExpressionType = parser::TYPE::T_STRING;
+	currentExpressionType = typeParser->type;
 }
+
+//void visitor::Interpreter::visit(parser::ASTIntParseNode* intParser) {
+//	// visit expression node to update current value/type
+//	intParser->expr->accept(this);
+//
+//	// parse depending on type
+//	switch (currentExpressionType) {
+//	case parser::TYPE::T_INT:
+//		break;
+//	case parser::TYPE::T_FLOAT:
+//		currentExpressionValue.i = static_cast<long long>(round(currentExpressionValue.f));
+//		break;
+//	case parser::TYPE::T_STRING:
+//		currentExpressionValue.i = std::stoll(currentExpressionValue.s);
+//		break;
+//	case parser::TYPE::T_CHAR:
+//		currentExpressionValue.i = currentExpressionValue.c;
+//		break;
+//	}
+//
+//	currentExpressionType = parser::TYPE::T_INT;
+//}
+
+//void visitor::Interpreter::visit(parser::ASTStringParseNode* strParser) {
+//	// visit expression node to update current value/type
+//	strParser->expr->accept(this);
+//
+//	// parse depending on type
+//	switch (currentExpressionType) {
+//	case parser::TYPE::T_INT:
+//		currentExpressionValue.s = std::to_string(currentExpressionValue.i);
+//		break;
+//	case parser::TYPE::T_FLOAT:
+//		currentExpressionValue.s = std::to_string(currentExpressionValue.f);
+//		break;
+//	case parser::TYPE::T_BOOL:
+//		currentExpressionValue.s = currentExpressionValue.b ? "true" : "false";
+//		break;
+//	case parser::TYPE::T_CHAR:
+//		currentExpressionValue.s = currentExpressionValue.c;
+//		break;
+//	}
+//
+//	currentExpressionType = parser::TYPE::T_STRING;
+//}
 
 void visitor::Interpreter::visit(parser::ASTThisNode* thisNode) {
 	Value_t v;

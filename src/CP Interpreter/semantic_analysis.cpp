@@ -662,42 +662,9 @@ void SemanticAnalyser::visit(parser::ASTExprFunctionCallNode* func) {
 	currentExpressionType = scopes[i]->type(func->identifier, std::move(signature));
 }
 
-void SemanticAnalyser::visit(parser::ASTFloatParseNode* floatParser) {
-	floatParser->expr->accept(this);
-
-	// handle different cases
-	switch (currentExpressionType) {
-	case parser::TYPE::T_STRING:
-	case parser::TYPE::T_INT:
-	case parser::TYPE::T_FLOAT:
-	case parser::TYPE::T_CHAR:
-		break;
-	default:
-		throw std::runtime_error(msgHeader(floatParser->row, floatParser->col) + "float cant't parse '" + typeStr(currentExpressionType) + "'.");
-	}
-
-	currentExpressionType = parser::TYPE::T_FLOAT;
-}
-
-void SemanticAnalyser::visit(parser::ASTIntParseNode* intParser) {
-	intParser->expr->accept(this);
-
-	// handle different cases
-	switch (currentExpressionType) {
-	case parser::TYPE::T_STRING:
-	case parser::TYPE::T_FLOAT:
-	case parser::TYPE::T_INT:
-	case parser::TYPE::T_CHAR:
-		break;
-	default:
-		throw std::runtime_error(msgHeader(intParser->row, intParser->col) + "int cant't parse '" + typeStr(currentExpressionType) + "'.");
-	}
-
-	currentExpressionType = parser::TYPE::T_INT;
-}
-
-void SemanticAnalyser::visit(parser::ASTStringParseNode* strParser) {
-	currentExpressionType = parser::TYPE::T_STRING;
+void SemanticAnalyser::visit(parser::ASTTypeParseNode* typeParser) {
+	typeParser->expr->accept(this);
+	currentExpressionType = typeParser->type;
 }
 
 void SemanticAnalyser::visit(parser::ASTExprReadNode* read) {

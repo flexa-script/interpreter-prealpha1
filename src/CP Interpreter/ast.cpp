@@ -23,14 +23,8 @@ ASTAssignmentNode::ASTAssignmentNode(std::string identifier, ASTExprNode* expr, 
 ASTThisNode::ASTThisNode(unsigned int row, unsigned int col)
 	: row(row), col(col) {}
 
-ASTFloatParseNode::ASTFloatParseNode(ASTExprNode* expr, unsigned int row, unsigned int col)
-	: expr(expr), row(row), col(col) {}
-
-ASTIntParseNode::ASTIntParseNode(ASTExprNode* expr, unsigned int row, unsigned int col)
-	: expr(expr), row(row), col(col) {}
-
-ASTStringParseNode::ASTStringParseNode(ASTExprNode* expr, unsigned int row, unsigned int col)
-	: expr(expr), row(row), col(col) {}
+ASTTypeParseNode::ASTTypeParseNode(TYPE type, ASTExprNode* expr, unsigned int row, unsigned int col)
+	: type(type), expr(expr), row(row), col(col) {}
 
 ASTPrintNode::ASTPrintNode(ASTExprNode* expr, unsigned int row, unsigned int col)
 	: expr(expr), row(row), col(col) {}
@@ -151,15 +145,7 @@ void ASTAssignmentNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-void ASTFloatParseNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-void ASTIntParseNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-void ASTStringParseNode::accept(visitor::Visitor* v) {
+void ASTTypeParseNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 

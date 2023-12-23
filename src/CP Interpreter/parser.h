@@ -89,11 +89,7 @@ namespace parser {
 
 		ASTExprReadNode* parseExprRead();
 
-		ASTFloatParseNode* parseExprToFloat();
-
-		ASTIntParseNode* parseExprToInt();
-
-		ASTStringParseNode* parseExprToString();
+		ASTTypeParseNode* parseExprTypeParse();
 
 		ASTThisNode* parseExprThis();
 
@@ -102,7 +98,7 @@ namespace parser {
 		VariableDefinition_t* parseFormalParam();
 
 		// parse types and parameters
-		TYPE parseType(std::string&);
+		TYPE parseType(std::string);
 
 		void checkArrayType(TYPE);
 
