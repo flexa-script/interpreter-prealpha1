@@ -224,7 +224,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl) {
 
 	// if variable already declared, throw error
 	if (currentScope->alreadyDeclared(decl->identifier)) {
-		throw std::runtime_error(msgHeader(decl->row, decl->col) + "variable redeclaration. '" + decl->identifier + "' was already declared in this scope.");
+		throw std::runtime_error(msgHeader(decl->row, decl->col) + "variable '" + decl->identifier + "' already declared");
 	}
 
 	// visit the expression to update current type

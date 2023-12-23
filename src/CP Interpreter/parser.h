@@ -121,6 +121,8 @@ namespace parser {
 		std::vector<std::any>* parseArrayLiteral();
 
 		std::vector<std::any>* makeArrayLiteral(std::string, TYPE, std::vector<int>, int);
+
+		std::vector<int> calcArrayDimSize(std::vector<std::any>*);
 	};
 }
 

@@ -121,6 +121,22 @@ ASTStatementNode* Parser::parseIdentifier() {
 	throw std::runtime_error(msgHeader() + "expected '=' or '(' after identifier.");
 }
 
+std::vector<int> Parser::calcArrayDimSize(std::vector<std::any>* value) {
+	auto dim = std::vector<int>();
+	std::any val = value->at(0);
+
+	dim.push_back(value->size());
+	if (val.type() == typeid(std::vector<std::any>*)) {
+		auto dim2 = calcArrayDimSize(std::any_cast<std::vector<std::any>*>(val));
+		dim.insert(dim.end(), dim2.begin(), dim2.end());
+	}
+	//else {
+	//	dim.push_back(value->size());
+	//}
+
+	return dim;
+}
+
 ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	TYPE type = TYPE::T_ND;
 	currentArrayType = TYPE::T_ND;
@@ -131,7 +147,6 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
 	bool isConst = currentToken.type == lexer::TOK_CONST;
-	//bool isArray = false;
 
 	// consume identifier
 	consumeToken();
@@ -187,8 +202,24 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 			type = parseType(identifier);
 		}
 
-		// todo
 		// validate array size
+		if (type == TYPE::T_ARRAY) {
+			auto val = dynamic_cast<ASTLiteralNode<std::vector<std::any>*>*>(expr)->val;
+			if (typeid(val) != typeid(std::vector<std::any>*)) {
+				throw std::runtime_error(msgHeader() + "expected array definition expression assigning " + identifier + " array");
+			}
+			auto exprDim = calcArrayDimSize(std::any_cast<std::vector<std::any>*>(val));
+
+			if (dim.size() != exprDim.size()) {
+				throw std::runtime_error(msgHeader() + "invalid expression dimension assigning " + identifier + " array");
+			}
+
+			for (size_t dc = 0; dc < dim.size(); ++dc) {
+				if (dim.at(dc) != exprDim.at(dc)) {
+					throw std::runtime_error(msgHeader() + "invalid expression size assigning " + identifier + " array");
+				}
+			}
+		}
 
 		consumeToken();
 		if (currentToken.type != lexer::TOK_SEMICOLON) {
