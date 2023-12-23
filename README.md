@@ -21,7 +21,7 @@
 - [X] Add collum on errors
 - [X] Add type convert support
 - [X] Remove mandatory variable type definition
-- [ ] Fix cp dependencies/libs loader
+- [X] Fix cp dependencies/libs loader
 - [ ] Add a default interface to implements core libs
 
 ## The CP Language
