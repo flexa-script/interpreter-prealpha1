@@ -22,6 +22,8 @@
 - [X] Add type convert support
 - [X] Remove mandatory variable type definition
 - [X] Fix cp dependencies/libs loader
+- [ ] Add a I/O library
+- [ ] Add a graphic library
 - [ ] Add a default interface to implements core libs
 
 ## The CP Language
