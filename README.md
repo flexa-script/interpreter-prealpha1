@@ -18,7 +18,7 @@
 - [X] Add any type
 - [X] Add struct support
 - [X] Add array type
-- [ ] Add null support
+<!--- [ ] Add null support-->
 - [X] Add collum on errors
 - [X] Add type convert support
 - [X] Remove mandatory variable type definition
