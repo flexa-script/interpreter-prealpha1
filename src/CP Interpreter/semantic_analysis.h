@@ -46,6 +46,7 @@ namespace visitor {
 		std::vector<SemanticScope*> scopes;
 		std::stack<parser::TYPE> functions;
 		parser::TYPE currentExpressionType;
+		bool currentExpressionIsArray;
 		std::vector<parser::VariableDefinition_t> currentFunctionParameters;
 
 	private:

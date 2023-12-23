@@ -192,7 +192,7 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	}
 
 	if (dim.size() > 0 && dim.at(0) <= 0 && currentToken.type != lexer::TOK_EQUALS) {
-		throw std::runtime_error(msgHeader() + "expected array size or assignment of '" + identifier + "' definition.");
+		throw std::runtime_error(msgHeader() + "expected array size or assignment defining '" + identifier + "'");
 	}
 
 	if (currentToken.type == lexer::TOK_EQUALS) {
@@ -206,17 +206,17 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 		if (type == TYPE::T_ARRAY) {
 			auto val = dynamic_cast<ASTLiteralNode<std::vector<std::any>*>*>(expr)->val;
 			if (typeid(val) != typeid(std::vector<std::any>*)) {
-				throw std::runtime_error(msgHeader() + "expected array definition expression assigning " + identifier + " array");
+				throw std::runtime_error(msgHeader() + "expected array definition expression assigning '" + identifier + "' array");
 			}
 			auto exprDim = calcArrayDimSize(std::any_cast<std::vector<std::any>*>(val));
 
 			if (dim.size() != exprDim.size()) {
-				throw std::runtime_error(msgHeader() + "invalid expression dimension assigning " + identifier + " array");
+				throw std::runtime_error(msgHeader() + "invalid expression dimension assigning '" + identifier + "' array");
 			}
 
 			for (size_t dc = 0; dc < dim.size(); ++dc) {
 				if (dim.at(dc) != exprDim.at(dc)) {
-					throw std::runtime_error(msgHeader() + "invalid expression size assigning " + identifier + " array");
+					throw std::runtime_error(msgHeader() + "invalid expression size assigning '" + identifier + "' array");
 				}
 			}
 		}

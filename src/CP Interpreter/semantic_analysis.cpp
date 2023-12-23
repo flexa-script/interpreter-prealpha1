@@ -103,7 +103,7 @@ parser::TYPE SemanticScope::arrayType(std::string identifier) {
 		}
 	}
 
-	throw std::runtime_error("something went wrong when determining the type of '" + identifier + "' array.");
+	throw std::runtime_error("something went wrong when determining the type of '" + identifier + "' array");
 }
 
 parser::TYPE SemanticScope::type(std::string identifier) {
@@ -113,7 +113,7 @@ parser::TYPE SemanticScope::type(std::string identifier) {
 		}
 	}
 
-	throw std::runtime_error("something went wrong when determining the type of '" + identifier + "' variable.");
+	throw std::runtime_error("something went wrong when determining the type of '" + identifier + "' variable");
 }
 
 parser::TYPE SemanticScope::type(std::string identifier, std::vector<parser::TYPE> signature) {
@@ -121,7 +121,7 @@ parser::TYPE SemanticScope::type(std::string identifier, std::vector<parser::TYP
 
 	// if key is not present in multimap
 	if (std::distance(funcs.first, funcs.second) == 0) {
-		throw std::runtime_error("something went wrong when determining the type of '" + identifier + "' function.");
+		throw std::runtime_error("something went wrong when determining the type of '" + identifier + "' function");
 	}
 
 	// check signature for each
@@ -132,7 +132,7 @@ parser::TYPE SemanticScope::type(std::string identifier, std::vector<parser::TYP
 	}
 
 	// function with matching signature not found
-	throw std::runtime_error("something went wrong when determining the type of '" + identifier + "' function.");
+	throw std::runtime_error("something went wrong when determining the type of '" + identifier + "' function");
 }
 
 unsigned int SemanticScope::declarationLine(std::string identifier) {
@@ -142,7 +142,7 @@ unsigned int SemanticScope::declarationLine(std::string identifier) {
 		}
 	}
 
-	throw std::runtime_error("Something went wrong when determining the line number of '" + identifier + "'.");
+	throw std::runtime_error("Something went wrong when determining the line number of '" + identifier + "'");
 }
 
 unsigned int SemanticScope::declarationLine(std::string identifier, std::vector<parser::TYPE> signature) {
@@ -150,7 +150,7 @@ unsigned int SemanticScope::declarationLine(std::string identifier, std::vector<
 
 	// if key is not present in multimap
 	if (std::distance(funcs.first, funcs.second) == 0) {
-		throw std::runtime_error("something went wrong when determining the line number of '" + identifier + "'.");
+		throw std::runtime_error("something went wrong when determining the line number of '" + identifier + "'");
 	}
 
 	// check signature for each
@@ -161,7 +161,7 @@ unsigned int SemanticScope::declarationLine(std::string identifier, std::vector<
 	}
 
 	// function with matching signature not found
-	throw std::runtime_error("something went wrong when determining the line number of '" + identifier + "'.");
+	throw std::runtime_error("something went wrong when determining the line number of '" + identifier + "'");
 }
 
 
@@ -275,20 +275,24 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* assign) {
 		}
 	}
 
-	// todo: validate if is array
-
 	if (scopes[i]->isConst(assign->identifier)) {
 		throw std::runtime_error(msgHeader(assign->row, assign->col) + "'" + assign->identifier + "' constant being reassigned " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
 	}
 	
 	// get the type of the originally declared variable
 	parser::TYPE type = scopes[i]->type(assign->identifier);
-	type = type == parser::TYPE::T_ARRAY ? scopes[i]->arrayType(assign->identifier) : type;
 
 	auto isAnyVariable = scopes[i]->isAnyVar(assign->identifier);
 
 	// visit the expression to update current type
 	assign->expr->accept(this);
+
+	if (type == parser::TYPE::T_ARRAY) {
+		if (currentExpressionIsArray) {
+			throw std::runtime_error(msgHeader(assign->row, assign->col) + "'" + assign->identifier + "' array being reassigned " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
+		}
+		type = scopes[i]->arrayType(assign->identifier);
+	}
 
 	// allow mismatched type in the case of declaration of int to real
 	if (type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT || 
@@ -460,30 +464,37 @@ void SemanticAnalyser::visit(parser::ASTStructDefinitionNode* structDef) {
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<bool>*) {
+	currentExpressionIsArray = false;
 	currentExpressionType = parser::TYPE::T_BOOL;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<__int64_t>*) {
+	currentExpressionIsArray = false;
 	currentExpressionType = parser::TYPE::T_INT;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<long double>*) {
+	currentExpressionIsArray = false;
 	currentExpressionType = parser::TYPE::T_FLOAT;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<char>*) {
+	currentExpressionIsArray = false;
 	currentExpressionType = parser::TYPE::T_CHAR;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<std::string>*) {
+	currentExpressionIsArray = false;
 	currentExpressionType = parser::TYPE::T_STRING;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<std::any>*) {
+	currentExpressionIsArray = false;
 	currentExpressionType = parser::TYPE::T_ANY;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<std::vector<std::any>*>* litArr) {
+	currentExpressionIsArray = true;
 	determineArrayType(litArr->val);
 }
 
