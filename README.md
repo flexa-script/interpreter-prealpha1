@@ -20,7 +20,7 @@
 - [X] Add array type
 - [ ] Add null support
 - [X] Add collum on errors
-- [ ] Add type convert support
+- [X] Add type convert support
 - [X] Remove mandatory variable type definition
 - [ ] Fix cp dependencies/libs loader
 - [ ] Add a default interface to implements core libs
