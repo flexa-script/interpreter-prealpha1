@@ -21,8 +21,8 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug -d Flag|x64.ActiveCfg = Debug Project|x64
-		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug -d Flag|x64.Build.0 = Debug Project|x64
+		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug -d Flag|x64.ActiveCfg = Debug -d Flag|x64
+		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug -d Flag|x64.Build.0 = Debug -d Flag|x64
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug -d Flag|x86.ActiveCfg = Debug Project|Win32
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug -d Flag|x86.Build.0 = Debug Project|Win32
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug File|x64.ActiveCfg = Debug File|x64
@@ -33,8 +33,8 @@ Global
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Lib|x64.Build.0 = Debug Lib|x64
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Lib|x86.ActiveCfg = Debug Lib|Win32
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Lib|x86.Build.0 = Debug Lib|Win32
-		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Project|x64.ActiveCfg = Debug File|x64
-		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Project|x64.Build.0 = Debug File|x64
+		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Project|x64.ActiveCfg = Debug Project|x64
+		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Project|x64.Build.0 = Debug Project|x64
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Project|x86.ActiveCfg = Debug File|Win32
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Project|x86.Build.0 = Debug File|Win32
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug|x64.ActiveCfg = Debug|x64

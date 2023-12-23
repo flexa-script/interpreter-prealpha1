@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug -d Flag|Win32">
+      <Configuration>Debug -d Flag</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug -d Flag|x64">
+      <Configuration>Debug -d Flag</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug File|Win32">
       <Configuration>Debug File</Configuration>
       <Platform>Win32</Platform>
@@ -46,6 +54,7 @@
     <ClInclude Include="ast.h" />
     <ClInclude Include="CPInterpreter.h" />
     <ClInclude Include="CPRepl.h" />
+    <ClInclude Include="CPUtil.h" />
     <ClInclude Include="interpreter.h" />
     <ClInclude Include="lexer.h" />
     <ClInclude Include="parser.h" />
@@ -58,6 +67,7 @@
     <ClCompile Include="ast.cpp" />
     <ClCompile Include="CPInterpreter.cpp" />
     <ClCompile Include="CPRepl.cpp" />
+    <ClCompile Include="CPUtil.cpp" />
     <ClCompile Include="interpreter.cpp" />
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="main.cpp" />
@@ -135,6 +145,12 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug -d Flag|x64'">
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug -d Flag|Win32'">
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

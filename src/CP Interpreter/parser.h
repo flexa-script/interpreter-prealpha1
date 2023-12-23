@@ -19,7 +19,6 @@ namespace parser {
 
 	public:
 		explicit Parser(lexer::Lexer*, std::string);
-
 		Parser(lexer::Lexer*, std::string, unsigned int);
 
 		ASTProgramNode* parseProgram();

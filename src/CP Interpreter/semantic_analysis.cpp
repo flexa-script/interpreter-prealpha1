@@ -233,8 +233,9 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl) {
 	}
 
 	// allow mismatched type in the case of declaration of int to real
-	if (decl->type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT) {
-		currentScope->declare(decl->identifier, parser::TYPE::T_FLOAT, "", decl->arrayType, false, decl->isConst, decl->row, decl->col);
+	if (decl->type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT
+		|| decl->type == parser::TYPE::T_STRING && currentExpressionType == parser::TYPE::T_CHAR) {
+		currentScope->declare(decl->identifier, decl->type, "", decl->arrayType, false, decl->isConst, decl->row, decl->col);
 	}
 	else if (decl->type == currentExpressionType || decl->type == parser::TYPE::T_ANY || decl->type == parser::TYPE::T_STRUCT || decl->type == parser::TYPE::T_ARRAY) { // types match
 		if (decl->type == parser::TYPE::T_STRUCT) {

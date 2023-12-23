@@ -4,72 +4,34 @@
 int CPInterpreter::execute(int argc, const char* argv[]) {
 	if (argc == 2) {
 		std::string arg = argv[1];
-		if (tolower(arg) == "-d" || tolower(arg) == "--debug") {
+		if (axe::tolower(arg) == "-d" || axe::tolower(arg) == "--debug") {
 			std::vector<Program> programs = debugPrograms();
 			return interpreter(programs);
 		}
 	}
 
-	//check if it has arguments
-	if (argc >= 3) {
-		std::string workspace = argv[1];
-		std::string mainFile = argv[2];
-		std::vector<std::string> files;
-
-		if (argc >= 4) {
-			std::string strfiles = argv[3];
-			strfiles = strfiles.substr(1, strfiles.length() - 2);
-			std::vector<std::string> auxFiles = split(strfiles, ',');
-			for (auto file : auxFiles) {
-				files.push_back(trim(file));
-			}
-		}
-		auto programs = loadPrograms(workspace, mainFile, files);
+	std::vector<std::string> files;
+	for (size_t i = 1; i < argc; ++i) {
+		files.push_back(argv[i]);
+	}
+	if (files.size() > 0) {
+		auto programs = loadPrograms(files);
 		return interpreter(programs);
 	}
+
+	return 0;
 }
 
-Program CPInterpreter::loadSource(std::string workspace, std::string fileName) {
-	std::string source;
-	std::string path = workspace + '\\' + fileName;
-
-	// read the file
-	std::ifstream file;
-	file.open(path);
-
-	if (!file) {
-		std::cout << "Could not load file from \"" << path << "\"." << std::endl;
-	}
-	else {
-		// convert whole program to std::string
-		std::string line;
-		while (std::getline(file, line)) {
-			source.append(line + "\n");
-		}
-	}
-
-	// skips the Byte Order Mark (BOM) that defines UTF-8 in some text files.
-	if ((unsigned char)source[0] == 0xEF &&
-		(unsigned char)source[1] == 0xBB &&
-		(unsigned char)source[2] == 0xBF) {
-		source = source.substr(3, source.size());
-	}
-
-	std::string libName = fileName.substr(0, fileName.length() - 3);
-	std::replace(libName.begin(), libName.end(), '/', '.');
-	std::replace(libName.begin(), libName.end(), '\\', '.');
-	return Program(libName, source);
-}
-
-std::vector<Program> CPInterpreter::loadPrograms(std::string workspace, std::string mainFile, std::vector<std::string> files) {
+std::vector<Program> CPInterpreter::loadPrograms(std::vector<std::string> files) {
 	std::vector<Program> sourcePrograms;
+	auto startLibNameIndex = files[0].find_last_of('\\') + 1;
 
-	Program program = loadSource(workspace, mainFile);
+	auto program = Program(CPUtil::getLibName(startLibNameIndex, files[0]), CPUtil::loadSource(files[0]));
 	if (program.source.empty()) throw std::runtime_error("file '" + program.name + "' is empty");
 	sourcePrograms.push_back(program);
 
-	for (auto file_name : files) {
-		program = loadSource(workspace, file_name);
+	for (size_t i = 1; i < files.size(); ++i) {
+		program = Program(CPUtil::getLibName(startLibNameIndex, files[i]), CPUtil::loadSource(files[i]));
 		if (program.source.empty()) throw std::runtime_error("file '" + program.name + "' is empty");
 		sourcePrograms.push_back(program);
 	}

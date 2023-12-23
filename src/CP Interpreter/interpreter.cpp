@@ -235,7 +235,10 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* decl) {
 		scopes.back()->declare(decl->identifier, currentExpressionValue.c);
 		break;
 	case parser::TYPE::T_STRING:
-		scopes.back()->declare(decl->identifier, currentExpressionValue.s);
+		if (currentExpressionType == parser::TYPE::T_CHAR)
+			scopes.back()->declare(decl->identifier, currentExpressionValue.c);
+		else
+			scopes.back()->declare(decl->identifier, currentExpressionValue.s);
 		break;
 	case parser::TYPE::T_ANY:
 		if (currentExpressionType == parser::TYPE::T_BOOL) {

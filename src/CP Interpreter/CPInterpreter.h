@@ -11,6 +11,7 @@
 #include "semantic_analysis.h"
 #include "interpreter.h"
 #include "util.h"
+#include "CPUtil.h"
 
 
 typedef struct Program {
@@ -24,9 +25,7 @@ class CPInterpreter {
 public:
 	int execute(int, const char*[]);
 
-	Program loadSource(std::string, std::string);
-
-	std::vector<Program> loadPrograms(std::string, std::string, std::vector<std::string>);
+	std::vector<Program> loadPrograms(std::vector<std::string>);
 
 	int interpreter(std::vector<Program>);
 
