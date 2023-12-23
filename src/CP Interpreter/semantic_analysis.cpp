@@ -663,8 +663,11 @@ void SemanticAnalyser::visit(parser::ASTExprFunctionCallNode* func) {
 }
 
 void SemanticAnalyser::visit(parser::ASTFloatParseNode* floatParser) {
+	floatParser->expr->accept(this);
+
 	// handle different cases
 	switch (currentExpressionType) {
+	case parser::TYPE::T_STRING:
 	case parser::TYPE::T_INT:
 	case parser::TYPE::T_FLOAT:
 	case parser::TYPE::T_CHAR:
@@ -677,10 +680,13 @@ void SemanticAnalyser::visit(parser::ASTFloatParseNode* floatParser) {
 }
 
 void SemanticAnalyser::visit(parser::ASTIntParseNode* intParser) {
+	intParser->expr->accept(this);
+
 	// handle different cases
 	switch (currentExpressionType) {
 	case parser::TYPE::T_STRING:
 	case parser::TYPE::T_FLOAT:
+	case parser::TYPE::T_INT:
 	case parser::TYPE::T_CHAR:
 		break;
 	default:

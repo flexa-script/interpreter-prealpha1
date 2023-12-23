@@ -876,6 +876,8 @@ void visitor::Interpreter::visit(parser::ASTFloatParseNode* floatParser) {
 
 	// parse depending on type
 	switch (currentExpressionType) {
+	case parser::TYPE::T_FLOAT:
+		break;
 	case parser::TYPE::T_INT:
 		currentExpressionValue.f = static_cast<long double>(currentExpressionValue.i);
 		break;
@@ -896,6 +898,8 @@ void visitor::Interpreter::visit(parser::ASTIntParseNode* intParser) {
 
 	// parse depending on type
 	switch (currentExpressionType) {
+	case parser::TYPE::T_INT:
+		break;
 	case parser::TYPE::T_FLOAT:
 		currentExpressionValue.i = static_cast<long long>(round(currentExpressionValue.f));
 		break;

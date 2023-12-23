@@ -199,7 +199,7 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 		expr = parseExpression();
 
 		if (type == TYPE::T_ND) {
-			type = parseType(identifier);
+			type = TYPE::T_ANY;
 		}
 
 		// validate array size
@@ -227,12 +227,6 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 		}
 	}
 	else {
-		if (type == TYPE::T_ND) {
-			type = TYPE::T_ANY;
-		}
-		if (currentArrayType == TYPE::T_ND) {
-			currentArrayType = TYPE::T_ANY;
-		}
 		switch (type) {
 		case TYPE::T_BOOL:
 			expr = new ASTLiteralNode<bool>(false, row, col);
