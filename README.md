@@ -1,8 +1,27 @@
 # CP Interpreter
 
 ## TODO
-- [ ] Add array support
+- [X] Add load file from param
+- [X] Rewrite the lexer
+- [X] Rewrite EBNF
+- [X] Implements new EBNF existent commands
+- [X] Change expression evaluation to left to right
+- [X] Add and precedence
+- [X] Add void support to function
+- [X] Add void return
+- [X] Add mod (%) operation support
+- [X] Add library support
+- [X] Add this to get current function name (future an object?)
+- [X] Add const support
+- [X] Add float type
+- [X] Add char type
+- [X] Add any type
+- [X] Add struct support
+- [X] Add array type
 - [ ] Add null support
+- [X] Add collum on errors
+- [ ] Add type convert support
+- [X] Remove mandatory variable type definition
 - [ ] Fix cp dependencies/libs loader
 - [ ] Add a default interface to implements core libs
 
