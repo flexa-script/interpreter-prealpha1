@@ -44,6 +44,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ast.h" />
+    <ClInclude Include="CPInterpreter.h" />
+    <ClInclude Include="CPRepl.h" />
     <ClInclude Include="interpreter.h" />
     <ClInclude Include="lexer.h" />
     <ClInclude Include="parser.h" />
@@ -54,12 +56,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ast.cpp" />
+    <ClCompile Include="CPInterpreter.cpp" />
+    <ClCompile Include="CPRepl.cpp" />
     <ClCompile Include="interpreter.cpp" />
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="semantic_analysis.cpp" />
     <ClCompile Include="token.cpp" />
+    <ClCompile Include="util.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

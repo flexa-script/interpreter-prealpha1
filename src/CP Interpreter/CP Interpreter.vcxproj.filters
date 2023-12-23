@@ -57,6 +57,12 @@
     <ClInclude Include="visitor.h">
       <Filter>Header Files\visitor</Filter>
     </ClInclude>
+    <ClInclude Include="CPInterpreter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPRepl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -79,6 +85,15 @@
     </ClCompile>
     <ClCompile Include="semantic_analysis.cpp">
       <Filter>Source Files\visitor</Filter>
+    </ClCompile>
+    <ClCompile Include="CPInterpreter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CPRepl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="util.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
