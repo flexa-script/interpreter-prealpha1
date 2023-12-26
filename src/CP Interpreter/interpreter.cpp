@@ -628,39 +628,39 @@ cp_struct visitor::Interpreter::redeclareStructureTypeVariables(std::string iden
 	str.second = new std::vector<cp_struct_value>();
 
 	for (size_t i = 0; i < str.second->size(); ++i) {
-		cp_struct_value* variable = &str.second->at(i);
-		auto currentIdentifier = identifier + '.' + variable->first;
-		if (variable->second->currentType == parser::TYPE::T_STRUCT) {
-			cp_struct subStr = redeclareStructureTypeVariables(currentIdentifier, variable->second->str);
+		cp_struct_value variable = str.second->at(i);
+		auto currentIdentifier = identifier + '.' + variable.first;
+		if (variable.second->currentType == parser::TYPE::T_STRUCT) {
+			cp_struct subStr = redeclareStructureTypeVariables(currentIdentifier, variable.second->str);
 			Value_t* val = scopes.back()->declare(currentIdentifier, subStr);
-			rstr.second->push_back(cp_struct_value(variable->first, val));
+			rstr.second->push_back(cp_struct_value(variable.first, val));
 		}
 		else {
 			Value_t* val;
-			switch (variable->second->currentType) {
+			switch (variable.second->currentType) {
 			case parser::TYPE::T_BOOL:
-				val = scopes.back()->declare(currentIdentifier, variable->second->b);
+				val = scopes.back()->declare(currentIdentifier, variable.second->b);
 				break;
 			case parser::TYPE::T_INT:
-				val = scopes.back()->declare(currentIdentifier, variable->second->i);
+				val = scopes.back()->declare(currentIdentifier, variable.second->i);
 				break;
 			case parser::TYPE::T_FLOAT:
-				val = scopes.back()->declare(currentIdentifier, variable->second->f);
+				val = scopes.back()->declare(currentIdentifier, variable.second->f);
 				break;
 			case parser::TYPE::T_CHAR:
-				val = scopes.back()->declare(currentIdentifier, variable->second->c);
+				val = scopes.back()->declare(currentIdentifier, variable.second->c);
 				break;
 			case parser::TYPE::T_STRING:
-				val = scopes.back()->declare(currentIdentifier, variable->second->s);
+				val = scopes.back()->declare(currentIdentifier, variable.second->s);
 				break;
 			case parser::TYPE::T_ANY:
-				val = scopes.back()->declare(currentIdentifier, variable->second->a);
+				val = scopes.back()->declare(currentIdentifier, variable.second->a);
 				break;
 			case parser::TYPE::T_ARRAY:
-				val = scopes.back()->declare(currentIdentifier, variable->second->arr);
+				val = scopes.back()->declare(currentIdentifier, variable.second->arr);
 				break;
 			}
-			rstr.second->push_back(cp_struct_value(variable->first, val));
+			rstr.second->push_back(cp_struct_value(variable.first, val));
 		}
 	}
 	return rstr;
