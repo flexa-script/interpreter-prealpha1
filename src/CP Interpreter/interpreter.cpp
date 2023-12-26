@@ -632,7 +632,7 @@ cp_struct visitor::Interpreter::redeclareStructureTypeVariables(std::string iden
 		auto currentIdentifier = identifier + '.' + variable->first;
 		if (variable->second->currentType == parser::TYPE::T_STRUCT) {
 			cp_struct subStr = redeclareStructureTypeVariables(currentIdentifier, variable->second->str);
-			Value_t* val = scopes.back()->declare(currentIdentifier, variable->second->str);
+			Value_t* val = scopes.back()->declare(currentIdentifier, subStr);
 			rstr.second->push_back(cp_struct_value(variable->first, val));
 		}
 		else {
