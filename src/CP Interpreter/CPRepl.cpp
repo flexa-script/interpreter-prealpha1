@@ -177,19 +177,19 @@ int CPRepl::execute() {
 				auto current = interpreter.currentExpr();
 				switch (current.first) {
 				case parser::TYPE::T_BOOL:
-					std::cout << ((current.second.b) ? "true" : "false");
+					std::cout << ((current.second->b) ? "true" : "false");
 					break;
 				case parser::TYPE::T_INT:
-					std::cout << current.second.i;
+					std::cout << current.second->i;
 					break;
 				case parser::TYPE::T_FLOAT:
-					std::cout << current.second.f;
+					std::cout << current.second->f;
 					break;
 				case parser::TYPE::T_CHAR:
-					std::cout << current.second.c;
+					std::cout << current.second->c;
 					break;
 				case parser::TYPE::T_STRING:
-					std::cout << current.second.s;
+					std::cout << current.second->s;
 					break;
 				}
 			}

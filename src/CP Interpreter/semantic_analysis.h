@@ -24,12 +24,13 @@ namespace visitor {
 		bool alreadyDeclared(std::string);
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
 		void declareStructureType(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
-		void declareStructureTypeVariables(std::string, std::string);
 		void declare(std::string, parser::TYPE, std::string, parser::TYPE, bool, bool, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::vector<parser::TYPE>, unsigned int);
 		void changeVarType(std::string, parser::TYPE);
+		void changeVarTypeName(std::string, std::string);
 		parser::StructureDefinition_t findDeclaredStructureType(std::string);
 		parser::TYPE arrayType(std::string);
+		std::string typeName(std::string);
 		parser::TYPE type(std::string);
 		parser::TYPE type(std::string, std::vector<parser::TYPE>);
 		unsigned int declarationLine(std::string);
@@ -46,11 +47,13 @@ namespace visitor {
 		std::vector<SemanticScope*> scopes;
 		std::stack<parser::TYPE> functions;
 		parser::TYPE currentExpressionType;
+		std::string currentExpressionTypeName;
 		bool currentExpressionIsArray;
 		std::vector<parser::VariableDefinition_t> currentFunctionParameters;
 
 	private:
 		bool returns(parser::ASTStatementNode*);
+		void declareStructureTypeVariables(std::string, std::string);
 		void determineArrayType(std::vector<std::any>*);
 		std::string msgHeader(unsigned int, unsigned int);
 

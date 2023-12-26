@@ -9,13 +9,29 @@
 typedef __int64 __int64_t;
 #endif
 
+struct Value;
+
 typedef bool                  cp_bool;
 typedef __int64_t             cp_int;
 typedef long double           cp_float;
 typedef char                  cp_char;
 typedef std::string           cp_string;
 typedef std::any              cp_any;
-typedef std::vector<std::any> cp_array;
+
+typedef std::vector<Value*>* cp_array;
+typedef std::pair<std::string, std::vector<std::pair<std::string, Value*>>*> cp_struct;
+
+typedef struct Value {
+	Value() : b(0), i(0), f(0), c(0), s(""), a(std::any()), str(cp_struct()), arr(cp_array()) {};
+	cp_bool b;
+	cp_int i;
+	cp_float f;
+	cp_char c;
+	cp_string s;
+	cp_any a;
+	cp_struct str;
+	cp_array arr;
+} Value_t;
 
 namespace parser {
 	class ASTProgramNode;

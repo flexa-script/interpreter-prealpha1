@@ -17,8 +17,8 @@ ASTUsingNode::ASTUsingNode(std::string library, unsigned int row, unsigned int c
 ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string typeName, std::string identifier, ASTExprNode* expr, bool isConst, TYPE arrayType, std::vector<int> dim, unsigned int row, unsigned int col)
 	: type(type), typeName(std::move(typeName)), identifier(std::move(identifier)), expr(expr), isConst(isConst), arrayType(arrayType), dim(dim), row(row), col(col) {}
 
-ASTAssignmentNode::ASTAssignmentNode(std::string identifier, ASTExprNode* expr, std::vector<unsigned int> accessVector, unsigned int row, unsigned int col)
-	: identifier(std::move(identifier)), expr(expr), accessVector(accessVector), row(row), col(col) {}
+ASTAssignmentNode::ASTAssignmentNode(std::string identifier, std::vector<std::string> identifierVector, ASTExprNode* expr, std::vector<unsigned int> accessVector, unsigned int row, unsigned int col)
+	: identifier(std::move(identifier)), identifierVector(identifierVector), expr(expr), accessVector(accessVector), row(row), col(col) {}
 
 ASTThisNode::ASTThisNode(unsigned int row, unsigned int col)
 	: row(row), col(col) {}
@@ -66,8 +66,8 @@ ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::ve
 ASTBinaryExprNode::ASTBinaryExprNode(std::string op, ASTExprNode* left, ASTExprNode* right, unsigned int row, unsigned int col)
 	: op(std::move(op)), left(left), right(right), row(row), col(col) {}
 
-ASTIdentifierNode::ASTIdentifierNode(std::string identifier, unsigned int row, unsigned int col)
-	: identifier(std::move(identifier)), row(row), col(col) {}
+ASTIdentifierNode::ASTIdentifierNode(std::string identifier, std::vector<std::string> identifierVector, unsigned int row, unsigned int col)
+	: identifier(std::move(identifier)), identifierVector(identifierVector), row(row), col(col) {}
 
 ASTUnaryExprNode::ASTUnaryExprNode(std::string unaryOp, ASTExprNode* expr, unsigned int row, unsigned int col)
 	: unaryOp(std::move(unaryOp)), expr(expr), row(row), col(col) {}

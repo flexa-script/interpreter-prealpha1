@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "parser.h"
+#include "util.h"
 
 
 using namespace parser;
@@ -301,12 +302,20 @@ std::vector<std::any>* Parser::makeArrayLiteral(std::string identifier, TYPE typ
 ASTAssignmentNode* Parser::parseAssignmentStatement() {
 	std::string identifier;
 	ASTExprNode* expr;
+	auto identifierVector = std::vector<std::string>();
 	auto accessVector = std::vector<unsigned int>();
 
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
 
 	identifier = currentToken.value;
+
+	if (axe::contains(identifier, ".")) {
+		identifierVector = axe::split(identifier, '.');
+	}
+	else {
+		identifierVector.push_back(identifier);
+	}
 
 	consumeToken();
 
@@ -340,7 +349,7 @@ ASTAssignmentNode* Parser::parseAssignmentStatement() {
 		throw std::runtime_error(msgHeader() + "expected ';' after assignment of " + identifier + ".");
 	}
 
-	return new ASTAssignmentNode(identifier, expr, accessVector, row, col);
+	return new ASTAssignmentNode(identifierVector[0], identifierVector, expr, accessVector, row, col);
 }
 
 ASTPrintNode* Parser::parsePrintStatement() {
@@ -744,7 +753,7 @@ ASTStructDefinitionNode* Parser::parseStructDefinition() {
 VariableDefinition_t* Parser::parseFormalParam() {
 	std::string identifier;
 	std::string typeName;
-	TYPE type;
+	TYPE type = TYPE::T_ND;
 	auto dim = std::vector<int>();
 
 	// make sure current token is identifier
@@ -926,8 +935,19 @@ ASTExprNode* Parser::parseFactor() {
 		return parseExprThis();
 
 	case lexer::TOK_IDENTIFIER: // identifier or function call case
-		if (nextToken.type == lexer::TOK_LEFT_BRACKET) return parseExprFunctionCall();
-		else return new ASTIdentifierNode(currentToken.value, row, col);
+		if (nextToken.type == lexer::TOK_LEFT_BRACKET) {
+			return parseExprFunctionCall();
+		}
+		else {
+			auto identifierVector = std::vector<std::string>();
+			if (axe::contains(currentToken.value, ".")) {
+				identifierVector = axe::split(currentToken.value, '.');
+			}
+			else {
+				identifierVector.push_back(currentToken.value);
+			}
+			return new ASTIdentifierNode(identifierVector[0], identifierVector, row, col);
+		}
 
 	case lexer::TOK_READ: // read case
 		return parseExprRead();

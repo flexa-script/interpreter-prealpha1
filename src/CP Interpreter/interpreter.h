@@ -11,38 +11,41 @@
 
 
 namespace visitor {
-	typedef struct Value {
-		Value() : b(0), i(0), f(0), c(0), s(""), a(std::any()), arr(new std::vector<std::any>()) {};
-		bool b;
-		__int64_t i;
-		long double f;
-		char c;
-		std::string s;
-		std::any a;
-		std::vector<std::any>* arr;
-	} Value_t;
+	//typedef struct Value {
+	//	Value() : b(0), i(0), f(0), c(0), s(""), a(std::any()), str(cp_struct()), arr(cp_array()) {};
+	//	cp_bool b;
+	//	cp_int i;
+	//	cp_float f;
+	//	cp_char c;
+	//	cp_string s;
+	//	cp_any a;
+	//	cp_struct str;
+	//	cp_array arr;
+	//} Value_t;
 
 	class InterpreterScope {
 	public:
 		InterpreterScope();
 		InterpreterScope(std::string);
-
+		
+		bool alreadyDeclaredStructureType(std::string);
 		bool alreadyDeclared(std::string);
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
-		void declare(std::string, bool);
-		void declare(std::string, __int64_t);
-		void declare(std::string, long double);
-		void declare(std::string, char);
-		void declare(std::string, std::string);
-		void declare(std::string, std::any);
-		void declare(std::string, std::vector<std::any>*);
+		Value_t* declare(std::string, bool);
+		Value_t* declare(std::string, __int64_t);
+		Value_t* declare(std::string, long double);
+		Value_t* declare(std::string, char);
+		Value_t* declare(std::string, std::string);
+		Value_t* declare(std::string, std::any);
+		Value_t* declare(std::string, std::string, cp_struct);
+		Value_t* declare(std::string, std::vector<std::any>*);
 		void declare(std::string, std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*);
 		void declareStructureType(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
-		void declareStructureTypeVariables(std::string, std::string);
 		parser::StructureDefinition_t findDeclaredStructureType(std::string);
 
+		std::string typenameof(std::string);
 		parser::TYPE typeof(std::string);
-		Value_t valueof(std::string);
+		Value_t* valueof(std::string);
 		std::vector<std::string> variablenamesof(std::string, std::vector<parser::TYPE>);
 		parser::ASTBlockNode* blockof(std::string, std::vector<parser::TYPE>);
 
@@ -53,7 +56,8 @@ namespace visitor {
 	private:
 		std::string name;
 		std::vector<parser::StructureDefinition_t> structures;
-		std::map<std::string, std::pair<parser::TYPE, Value_t>> variableSymbolTable;
+		std::map<std::string, std::pair<parser::TYPE, Value_t*>> variableSymbolTable;
+		std::map<std::string, std::string> typeNamesTable;
 		std::multimap<std::string, std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*>> functionSymbolTable;
 	};
 
@@ -63,12 +67,18 @@ namespace visitor {
 		parser::ASTProgramNode* currentProgram;
 		std::vector<InterpreterScope*> scopes;
 		parser::TYPE currentExpressionType;
-		Value_t currentExpressionValue;
+		std::string currentExpressionTypeName;
+		Value_t* currentExpressionValue;
 		std::vector<std::string> currentFunctionParameters;
-		std::vector<std::pair<parser::TYPE, Value_t>> currentFunctionArguments;
+		std::vector<std::pair<parser::TYPE, Value_t*>> currentFunctionArguments;
 		std::string currentFunctionName;
 		std::string returnFromFunctionName;
 		bool returnFromFunction = false;
+
+	private:
+		std::string msgHeader(unsigned int, unsigned int);
+		void determineArrayType(std::vector<std::any>*);
+		void declareStructureTypeVariables(std::string, std::string, cp_struct&);
 
 	public:
 		Interpreter();
@@ -104,11 +114,7 @@ namespace visitor {
 		void visit(parser::ASTExprReadNode*) override;
 		void visit(parser::ASTThisNode*) override;
 
-		std::pair<parser::TYPE, Value_t> currentExpr();
-
-	private:
-		std::string msgHeader(unsigned int, unsigned int);
-		void determineArrayType(std::vector<std::any>*);
+		std::pair<parser::TYPE, Value_t*> currentExpr();
 	};
 
 	std::string typeStr(parser::TYPE);
