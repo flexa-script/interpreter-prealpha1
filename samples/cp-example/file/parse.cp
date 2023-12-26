@@ -1,0 +1,5 @@
+var boolVal = bool("true");
+var intVal = int("10");
+var floatVal = float("10");
+var charVal = char("c");
+var stringVal = string(666);
