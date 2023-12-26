@@ -103,19 +103,19 @@ namespace parser {
 
 		std::string msgHeader();
 
-		bool parseBoolLiteral();
+		cp_bool parseBoolLiteral();
 
-		__int64_t parseIntLiteral();
+		cp_int parseIntLiteral();
 
-		long double parseFloatLiteral();
+		cp_float parseFloatLiteral();
 
-		char parseCharLiteral();
+		cp_char parseCharLiteral();
 
-		std::string parseStringLiteral();
+		cp_string parseStringLiteral();
 
-		std::vector<std::any>* parseArrayLiteral();
+		cp_array parseArrayLiteral();
 
-		std::vector<std::any>* makeArrayLiteral(std::string, TYPE, std::vector<int>, int);
+		cp_array makeArrayLiteral(std::string, TYPE, std::vector<int>, int);
 
 		std::vector<int> calcArrayDimSize(std::vector<std::any>*);
 	};

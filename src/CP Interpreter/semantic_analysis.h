@@ -54,7 +54,7 @@ namespace visitor {
 	private:
 		bool returns(parser::ASTStatementNode*);
 		void declareStructureTypeVariables(std::string, std::string);
-		void determineArrayType(std::vector<std::any>*);
+		void determineArrayType(cp_array);
 		std::string msgHeader(unsigned int, unsigned int);
 
 	public:
@@ -75,13 +75,13 @@ namespace visitor {
 		void visit(parser::ASTWhileNode*) override;
 		void visit(parser::ASTFunctionDefinitionNode*) override;
 		void visit(parser::ASTStructDefinitionNode*) override;
-		void visit(parser::ASTLiteralNode<bool>*) override;
-		void visit(parser::ASTLiteralNode<__int64_t>*) override;
-		void visit(parser::ASTLiteralNode<long double>*) override;
+		void visit(parser::ASTLiteralNode<cp_bool>*) override;
+		void visit(parser::ASTLiteralNode<cp_int>*) override;
+		void visit(parser::ASTLiteralNode<cp_float>*) override;
 		void visit(parser::ASTLiteralNode<char>*) override;
-		void visit(parser::ASTLiteralNode<std::string>*) override;
-		void visit(parser::ASTLiteralNode<std::any>*) override;
-		void visit(parser::ASTLiteralNode<std::vector<std::any>*>*) override;
+		void visit(parser::ASTLiteralNode<cp_string>*) override;
+		void visit(parser::ASTLiteralNode<cp_any>*) override;
+		void visit(parser::ASTLiteralNode<cp_array>*) override;
 		void visit(parser::ASTBinaryExprNode*) override;
 		void visit(parser::ASTIdentifierNode*) override;
 		void visit(parser::ASTUnaryExprNode*) override;

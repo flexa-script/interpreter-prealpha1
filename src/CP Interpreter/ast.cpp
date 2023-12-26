@@ -86,37 +86,37 @@ void ASTBinaryExprNode::accept(visitor::Visitor* v) {
 
 namespace parser {
 	template<>
-	void ASTLiteralNode<bool>::accept(visitor::Visitor* v) {
+	void ASTLiteralNode<cp_bool>::accept(visitor::Visitor* v) {
 		v->visit(this);
 	}
 
 	template<>
-	void ASTLiteralNode<__int64_t>::accept(visitor::Visitor* v) {
+	void ASTLiteralNode<cp_int>::accept(visitor::Visitor* v) {
 		v->visit(this);
 	}
 
 	template<>
-	void ASTLiteralNode<long double>::accept(visitor::Visitor* v) {
+	void ASTLiteralNode<cp_float>::accept(visitor::Visitor* v) {
 		v->visit(this);
 	}
 
 	template<>
-	void ASTLiteralNode<char>::accept(visitor::Visitor* v) {
+	void ASTLiteralNode<cp_char>::accept(visitor::Visitor* v) {
 		v->visit(this);
 	}
 
 	template<>
-	void ASTLiteralNode<std::string>::accept(visitor::Visitor* v) {
+	void ASTLiteralNode<cp_string>::accept(visitor::Visitor* v) {
 		v->visit(this);
 	}
 
 	template<>
-	void ASTLiteralNode<std::any>::accept(visitor::Visitor* v) {
+	void ASTLiteralNode<cp_any>::accept(visitor::Visitor* v) {
 		v->visit(this);
 	}
 
 	template<>
-	void ASTLiteralNode<std::vector<std::any>*>::accept(visitor::Visitor* v) {
+	void ASTLiteralNode<cp_array>::accept(visitor::Visitor* v) {
 		v->visit(this);
 	}
 }

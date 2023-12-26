@@ -230,25 +230,25 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	else {
 		switch (type) {
 		case TYPE::T_BOOL:
-			expr = new ASTLiteralNode<bool>(false, row, col);
+			expr = new ASTLiteralNode<cp_bool>(false, row, col);
 			break;
 		case TYPE::T_INT:
-			expr = new ASTLiteralNode<__int64_t>(0, row, col);
+			expr = new ASTLiteralNode<cp_int>(0, row, col);
 			break;
 		case TYPE::T_FLOAT:
-			expr = new ASTLiteralNode<long double>(0., row, col);
+			expr = new ASTLiteralNode<cp_float>(0., row, col);
 			break;
 		case TYPE::T_CHAR:
-			expr = new ASTLiteralNode<char>(0, row, col);
+			expr = new ASTLiteralNode<cp_char>(0, row, col);
 			break;
 		case TYPE::T_STRING:
-			expr = new ASTLiteralNode<std::string>("", row, col);
+			expr = new ASTLiteralNode<cp_string>("", row, col);
 			break;
 		case TYPE::T_ANY:
-			expr = new ASTLiteralNode<std::any>(std::any(), row, col);
+			expr = new ASTLiteralNode<cp_any>(cp_any(), row, col);
 			break;
 		case TYPE::T_ARRAY:
-			expr = new ASTLiteralNode<std::vector<std::any>*>(makeArrayLiteral(identifier, currentArrayType, dim, 0), row, col);
+			expr = new ASTLiteralNode<cp_array>(makeArrayLiteral(identifier, currentArrayType, dim, 0), row, col);
 			break;
 		case TYPE::T_STRUCT:
 			expr = nullptr;
@@ -261,38 +261,40 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	return new ASTDeclarationNode(type, typeName, identifier, expr, isConst, currentArrayType, dim, row, col);
 }
 
-std::vector<std::any>* Parser::makeArrayLiteral(std::string identifier, TYPE type, std::vector<int> dim, int currDim) {
-	auto arr = new std::vector<std::any>();
+cp_array Parser::makeArrayLiteral(std::string identifier, TYPE type, std::vector<int> dim, int currDim) {
+	auto arr = new std::vector<Value_t*>();
 
 	for (size_t i = 0; i < dim.at(currDim); ++i) {
+		Value_t* val = new Value_t();
 		if (dim.size() - 1 == currDim) {
 			switch (type) {
 			case TYPE::T_BOOL:
-				arr->push_back(false);
+				val->set((cp_bool)false);
 				break;
 			case TYPE::T_INT:
-				arr->push_back((cp_int)0);
+				val->set((cp_int)0);
 				break;
 			case TYPE::T_FLOAT:
-				arr->push_back((cp_float)0.);
+				val->set((cp_float).0);
 				break;
 			case TYPE::T_CHAR:
-				arr->push_back('\0');
+				val->set((cp_char)'\0');
 				break;
 			case TYPE::T_STRING:
-				arr->push_back((cp_string)"");
+				val->set(cp_string());
 				break;
 			case TYPE::T_ND:
 			case TYPE::T_ANY:
-				arr->push_back(std::any());
+				val->set(cp_any());
 				break;
 			case TYPE::T_STRUCT:
-				arr->push_back(std::any());
+				val->set(cp_struct());
 			}
 		}
 		else {
-			arr->push_back(makeArrayLiteral(identifier, type, dim, currDim + 1));
+			val->set(makeArrayLiteral(identifier, type, dim, currDim + 1));
 		}
+		arr->push_back(val);
 
 	}
 
@@ -907,22 +909,22 @@ ASTExprNode* Parser::parseFactor() {
 	switch (currentToken.type) {
 		// literal cases
 	case lexer::TOK_BOOL_LITERAL:
-		return new ASTLiteralNode<bool>(parseBoolLiteral(), row, col);
+		return new ASTLiteralNode<cp_bool>(parseBoolLiteral(), row, col);
 
 	case lexer::TOK_INT_LITERAL:
-		return new ASTLiteralNode<__int64_t>(parseIntLiteral(), row, col);
+		return new ASTLiteralNode<cp_int>(parseIntLiteral(), row, col);
 
 	case lexer::TOK_FLOAT_LITERAL:
-		return new ASTLiteralNode<long double>(parseFloatLiteral(), row, col);
+		return new ASTLiteralNode<cp_float>(parseFloatLiteral(), row, col);
 
 	case lexer::TOK_CHAR_LITERAL:
-		return new ASTLiteralNode<char>(parseCharLiteral(), row, col);
+		return new ASTLiteralNode<cp_char>(parseCharLiteral(), row, col);
 
 	case lexer::TOK_STRING_LITERAL:
-		return new ASTLiteralNode<std::string>(parseStringLiteral(), row, col);
+		return new ASTLiteralNode<cp_string>(parseStringLiteral(), row, col);
 
 	case lexer::TOK_LEFT_CURLY:
-		return new ASTLiteralNode<std::vector<std::any>*>(parseArrayLiteral(), row, col);
+		return new ASTLiteralNode<cp_array>(parseArrayLiteral(), row, col);
 
 	case lexer::TOK_BOOL_TYPE:
 	case lexer::TOK_INT_TYPE:
@@ -972,40 +974,40 @@ ASTExprNode* Parser::parseFactor() {
 	}
 }
 
-std::vector<std::any>* Parser::parseArrayLiteral() {
-	auto arr = new std::vector<std::any>();
+cp_array Parser::parseArrayLiteral() {
+	auto arr = new std::vector<Value_t*>();
 	consumeToken();
 	do {
+		Value_t* val = new Value_t();
 		if (currentToken.type == lexer::TOK_LEFT_CURLY) {
-			arr->push_back(parseArrayLiteral());
+			val->set(parseArrayLiteral());
 		}
 		else {
 			auto type = parseType("array");
 			switch (type) {
 			case parser::TYPE::T_BOOL:
 				checkArrayType(TYPE::T_BOOL);
-				arr->push_back(parseBoolLiteral());
+				val->set(parseBoolLiteral());
 				break;
-			case parser::TYPE::T_INT: {
+			case parser::TYPE::T_INT:
 				checkArrayType(TYPE::T_INT);
-				auto val = parseIntLiteral();
-				arr->push_back(parseIntLiteral());
-			}
-									break;
+				val->set(parseIntLiteral());
+				break;
 			case parser::TYPE::T_FLOAT:
 				checkArrayType(TYPE::T_FLOAT);
-				arr->push_back(parseFloatLiteral());
+				val->set(parseFloatLiteral());
 				break;
 			case parser::TYPE::T_CHAR:
 				checkArrayType(TYPE::T_CHAR);
-				arr->push_back(parseCharLiteral());
+				val->set(parseCharLiteral());
 				break;
 			case parser::TYPE::T_STRING:
 				checkArrayType(TYPE::T_STRING);
-				arr->push_back(parseStringLiteral());
+				val->set(parseStringLiteral());
 				break;
 			}
 		}
+		arr->push_back(val);
 
 		consumeToken();
 		if (currentToken.type == lexer::TOK_COMMA) {
@@ -1033,19 +1035,19 @@ void Parser::checkArrayType(TYPE type) {
 	}
 }
 
-bool Parser::parseBoolLiteral() {
+cp_bool Parser::parseBoolLiteral() {
 	return currentToken.value == "true";
 }
 
-__int64_t Parser::parseIntLiteral() {
+cp_int Parser::parseIntLiteral() {
 	return std::stoll(currentToken.value);
 }
 
-long double Parser::parseFloatLiteral() {
+cp_float Parser::parseFloatLiteral() {
 	return std::stold(currentToken.value);
 }
 
-char Parser::parseCharLiteral() {
+cp_char Parser::parseCharLiteral() {
 	char chr = 0;
 	if (currentToken.value == "'\\\\'") {
 		chr = '\\';
@@ -1071,7 +1073,7 @@ char Parser::parseCharLiteral() {
 	return chr;
 }
 
-std::string Parser::parseStringLiteral() {
+cp_string Parser::parseStringLiteral() {
 	// remove " character from front and end of lexeme
 	std::string str = currentToken.value.substr(1, currentToken.value.size() - 2);
 

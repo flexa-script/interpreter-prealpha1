@@ -31,14 +31,14 @@ namespace visitor {
 		bool alreadyDeclaredStructureType(std::string);
 		bool alreadyDeclared(std::string);
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
-		Value_t* declare(std::string, bool);
-		Value_t* declare(std::string, __int64_t);
-		Value_t* declare(std::string, long double);
-		Value_t* declare(std::string, char);
-		Value_t* declare(std::string, std::string);
-		Value_t* declare(std::string, std::any);
-		Value_t* declare(std::string, std::string, cp_struct);
-		Value_t* declare(std::string, std::vector<std::any>*);
+		Value_t* declare(std::string, cp_bool);
+		Value_t* declare(std::string, cp_int);
+		Value_t* declare(std::string, cp_float);
+		Value_t* declare(std::string, cp_char);
+		Value_t* declare(std::string, cp_string);
+		Value_t* declare(std::string, cp_any);
+		Value_t* declare(std::string, cp_struct);
+		Value_t* declare(std::string, cp_array);
 		void declare(std::string, std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*);
 		void declareStructureType(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
 		parser::StructureDefinition_t findDeclaredStructureType(std::string);
@@ -77,8 +77,9 @@ namespace visitor {
 
 	private:
 		std::string msgHeader(unsigned int, unsigned int);
-		void determineArrayType(std::vector<std::any>*);
-		void declareStructureTypeVariables(std::string, std::string, cp_struct&);
+		void determineArrayType(cp_array);
+		cp_struct declareStructureTypeVariables(std::string, std::string);
+		cp_struct redeclareStructureTypeVariables(std::string, cp_struct);
 
 	public:
 		Interpreter();
@@ -99,13 +100,13 @@ namespace visitor {
 		void visit(parser::ASTWhileNode*) override;
 		void visit(parser::ASTFunctionDefinitionNode*) override;
 		void visit(parser::ASTStructDefinitionNode*) override;
-		void visit(parser::ASTLiteralNode<bool>*) override;
-		void visit(parser::ASTLiteralNode<__int64_t>*) override;
-		void visit(parser::ASTLiteralNode<long double>*) override;
-		void visit(parser::ASTLiteralNode<char>*) override;
-		void visit(parser::ASTLiteralNode<std::string>*) override;
-		void visit(parser::ASTLiteralNode<std::any>*) override;
-		void visit(parser::ASTLiteralNode<std::vector<std::any>*>*) override;
+		void visit(parser::ASTLiteralNode<cp_bool>*) override;
+		void visit(parser::ASTLiteralNode<cp_int>*) override;
+		void visit(parser::ASTLiteralNode<cp_float>*) override;
+		void visit(parser::ASTLiteralNode<cp_char>*) override;
+		void visit(parser::ASTLiteralNode<cp_string>*) override;
+		void visit(parser::ASTLiteralNode<cp_any>*) override;
+		void visit(parser::ASTLiteralNode<cp_array>*) override;
 		void visit(parser::ASTBinaryExprNode*) override;
 		void visit(parser::ASTIdentifierNode*) override;
 		void visit(parser::ASTUnaryExprNode*) override;

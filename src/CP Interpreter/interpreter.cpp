@@ -42,9 +42,6 @@ bool InterpreterScope::alreadyDeclared(std::string identifier, std::vector<parse
 
 	// check signature for each function in multimap
 	for (auto i = funcs.first; i != funcs.second; i++) {
-		//if (std::get<0>(i->second) == signature) {
-		//	return true;
-		//}
 		auto funcSig = std::get<0>(i->second);
 		for (size_t it = 0; it < funcSig.size(); ++it) {
 			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::TYPE::T_ANY) {
@@ -56,59 +53,107 @@ bool InterpreterScope::alreadyDeclared(std::string identifier, std::vector<parse
 	return true;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, bool boolValue) {
-	Value_t* value = new Value_t();
-	value->b = boolValue;
+Value_t* InterpreterScope::declare(std::string identifier, cp_bool boolValue) {
+	Value_t* value;
+	if (alreadyDeclared(identifier)) {
+		value = valueof(identifier);
+	}
+	else {
+		value = new Value_t();
+	}
+	value->set(boolValue);
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_BOOL, value);
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, __int64_t intValue) {
-	Value_t* value = new Value_t();
-	value->i = intValue;
+Value_t* InterpreterScope::declare(std::string identifier, cp_int intValue) {
+	Value_t* value;
+	if (alreadyDeclared(identifier)) {
+		value = valueof(identifier);
+	}
+	else {
+		value = new Value_t();
+	}
+	value->set(intValue);
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_INT, value);
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, long double realValue) {
-	Value_t* value = new Value_t();
-	value->f = realValue;
+Value_t* InterpreterScope::declare(std::string identifier, cp_float realValue) {
+	Value_t* value;
+	if (alreadyDeclared(identifier)) {
+		value = valueof(identifier);
+	}
+	else {
+		value = new Value_t();
+	}
+	value->set(realValue);
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_FLOAT, value);
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, char charValue) {
-	Value_t* value = new Value_t();
-	value->c = charValue;
+Value_t* InterpreterScope::declare(std::string identifier, cp_char charValue) {
+	Value_t* value;
+	if (alreadyDeclared(identifier)) {
+		value = valueof(identifier);
+	}
+	else {
+		value = new Value_t();
+	}
+	value->set(charValue);
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_CHAR, value);
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, std::string stringValue) {
-	Value_t* value = new Value_t();
-	value->s = stringValue;
+Value_t* InterpreterScope::declare(std::string identifier, cp_string stringValue) {
+	Value_t* value;
+	if (alreadyDeclared(identifier)) {
+		value = valueof(identifier);
+	}
+	else {
+		value = new Value_t();
+	}
+	value->set(stringValue);
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_STRING, value);
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, std::any anyValue) {
-	Value_t* value = new Value_t();
-	value->a = anyValue;
+Value_t* InterpreterScope::declare(std::string identifier, cp_any anyValue) {
+	Value_t* value;
+	if (alreadyDeclared(identifier)) {
+		value = valueof(identifier);
+	}
+	else {
+		value = new Value_t();
+	}
+	value->set(anyValue);
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_ANY, value);
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, std::string typeName, cp_struct strValue) {
-	Value_t* value = new Value_t();
-	value->str = strValue;
+Value_t* InterpreterScope::declare(std::string identifier, cp_struct strValue) {
+	Value_t* value;
+	if (alreadyDeclared(identifier)) {
+		value = valueof(identifier);
+	}
+	else {
+		value = new Value_t();
+	}
+	value->set(strValue);
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_STRUCT, value);
-	typeNamesTable[identifier] = typeName;
+	typeNamesTable[identifier] = strValue.first;
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, std::vector<std::any>* arrValue) {
-	Value_t* value = new Value_t();
-	value->arr = arrValue;
+Value_t* InterpreterScope::declare(std::string identifier, cp_array arrValue) {
+	Value_t* value;
+	if (alreadyDeclared(identifier)) {
+		value = valueof(identifier);
+	}
+	else {
+		value = new Value_t();
+	}
+	value->set(arrValue);
 	variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_ARRAY, value);
 	return value;
 }
@@ -145,9 +190,6 @@ std::vector<std::string> InterpreterScope::variablenamesof(std::string identifie
 
 	// match given signature to function in multimap
 	for (auto i = funcs.first; i != funcs.second; i++) {
-		//if (std::get<0>(i->second) == signature) {
-		//	return std::get<1>(i->second);
-		//}
 		auto funcSig = std::get<0>(i->second);
 		for (size_t it = 0; it < funcSig.size(); ++it) {
 			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::TYPE::T_ANY) {
@@ -164,9 +206,6 @@ parser::ASTBlockNode* InterpreterScope::blockof(std::string identifier, std::vec
 
 	// match given signature to function in multimap
 	for (auto i = funcs.first; i != funcs.second; i++) {
-		//if (std::get<0>(i->second) == signature) {
-		//	return std::get<2>(i->second);
-		//}
 		auto funcSig = std::get<0>(i->second);
 		for (size_t it = 0; it < funcSig.size(); ++it) {
 			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::TYPE::T_ANY) {
@@ -281,7 +320,7 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* decl) {
 		break;
 	case parser::TYPE::T_FLOAT:
 		if (currentExpressionType == parser::TYPE::T_INT)
-			scopes.back()->declare(decl->identifier, (long double)currentExpressionValue->i);
+			scopes.back()->declare(decl->identifier, (cp_float)currentExpressionValue->i);
 		else
 			scopes.back()->declare(decl->identifier, currentExpressionValue->f);
 		break;
@@ -290,91 +329,61 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* decl) {
 		break;
 	case parser::TYPE::T_STRING:
 		if (currentExpressionType == parser::TYPE::T_CHAR)
-			scopes.back()->declare(decl->identifier, currentExpressionValue->c);
+			scopes.back()->declare(decl->identifier, std::to_string(currentExpressionValue->c));
 		else
 			scopes.back()->declare(decl->identifier, currentExpressionValue->s);
 		break;
 	case parser::TYPE::T_ANY:
-		if (currentExpressionType == parser::TYPE::T_BOOL) {
+		switch (currentExpressionType) {
+		case parser::TYPE::T_BOOL:
 			scopes.back()->declare(decl->identifier, currentExpressionValue->b);
-		}
-		else if (currentExpressionType == parser::TYPE::T_INT) {
+			break;
+		case parser::TYPE::T_INT:
 			scopes.back()->declare(decl->identifier, currentExpressionValue->i);
-		}
-		else if (currentExpressionType == parser::TYPE::T_FLOAT) {
+			break;
+		case parser::TYPE::T_FLOAT:
 			scopes.back()->declare(decl->identifier, currentExpressionValue->f);
-		}
-		else if (currentExpressionType == parser::TYPE::T_CHAR) {
+			break;
+		case parser::TYPE::T_CHAR:
 			scopes.back()->declare(decl->identifier, currentExpressionValue->c);
-		}
-		else if (currentExpressionType == parser::TYPE::T_STRING) {
+			break;
+		case parser::TYPE::T_STRING:
 			scopes.back()->declare(decl->identifier, currentExpressionValue->s);
+			break;
+		case parser::TYPE::T_ARRAY:
+			scopes.back()->declare(decl->identifier, currentExpressionValue->arr);
+			break;
+		case parser::TYPE::T_STRUCT: {
+			cp_struct str = declareStructureTypeVariables(decl->identifier, currentExpressionTypeName);
+			scopes.back()->declare(decl->identifier, str);
+			break;
 		}
-		else if (currentExpressionType == parser::TYPE::T_STRUCT) {
-			cp_struct str;
-			str.first = currentExpressionTypeName;
-			str.second = new std::vector<std::pair<std::string, std::any>>();
-			declareStructureTypeVariables(decl->identifier, currentExpressionTypeName, str);
-			scopes.back()->declare(decl->identifier, currentExpressionTypeName, str);
 		}
 		break;
-	case parser::TYPE::T_STRUCT: {
-		cp_struct str;
-		str.first = decl->typeName;
-		str.second = new std::vector<std::pair<std::string, std::any>>();
-		declareStructureTypeVariables(decl->identifier, decl->typeName, str);
-		scopes.back()->declare(decl->identifier, decl->typeName, str);
-		break;
-	}
 	case parser::TYPE::T_ARRAY:
 		scopes.back()->declare(decl->identifier, currentExpressionValue->arr);
 		break;
+	case parser::TYPE::T_STRUCT: {
+		cp_struct str = declareStructureTypeVariables(decl->identifier, decl->typeName);
+		scopes.back()->declare(decl->identifier, str);
+		break;
+	}
 	}
 }
 
-void visitor::Interpreter::declareStructureTypeVariables(std::string identifier, std::string typeName, cp_struct &str) {
+cp_struct visitor::Interpreter::declareStructureTypeVariables(std::string identifier, std::string typeName) {
+	cp_struct str;
+	str.first = typeName;
+	str.second = new std::vector<cp_struct_value>();
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredStructureType(typeName); --i);
 	auto typeStruct = scopes[i]->findDeclaredStructureType(typeName);
-	//auto typeStruct = findDeclaredStructureType(typeName);
 	for (auto varTypeStruct : typeStruct.variables) {
 		auto currentIdentifier = identifier + '.' + varTypeStruct.identifier;
-		//switch (varTypeStruct.type) {
-		//case parser::TYPE::T_BOOL:
-		//	scopes.back()->declare(currentIdentifier, (cp_bool)false);
-		//	break;
-		//case parser::TYPE::T_INT:
-		//	scopes.back()->declare(currentIdentifier, (cp_int)0);
-		//	break;
-		//case parser::TYPE::T_FLOAT:
-		//	scopes.back()->declare(currentIdentifier, ((cp_float)0));
-		//	break;
-		//case parser::TYPE::T_CHAR:
-		//	scopes.back()->declare(currentIdentifier, (cp_char)'\0');
-		//	break;
-		//case parser::TYPE::T_STRING:
-		//	scopes.back()->declare(currentIdentifier, cp_string());
-		//	break;
-		//case parser::TYPE::T_ANY:
-		//	scopes.back()->declare(currentIdentifier, cp_any());
-		//	break;
-		//case parser::TYPE::T_ARRAY:
-		//	scopes.back()->declare(currentIdentifier, cp_array());
-		//	break;
-		//case parser::TYPE::T_STRUCT:
-		//	cp_struct str;
-		//	str.first = varTypeStruct.typeName;
-		//	scopes.back()->declare(currentIdentifier, str);
-		//	declareStructureTypeVariables(currentIdentifier, varTypeStruct.typeName);
-		//	break;
-		//}
 		if (varTypeStruct.type == parser::TYPE::T_STRUCT) {
-			cp_struct subStr;
-			subStr.first = varTypeStruct.typeName;
-			subStr.second = new std::vector<std::pair<std::string, std::any>>();
-			declareStructureTypeVariables(currentIdentifier, varTypeStruct.typeName, subStr);
-			scopes.back()->declare(currentIdentifier, varTypeStruct.typeName, subStr);
-			str.second->push_back(std::pair<std::string, std::any>(varTypeStruct.identifier, subStr));
+			cp_struct subStr = declareStructureTypeVariables(currentIdentifier, varTypeStruct.typeName);
+			Value_t* val = scopes.back()->declare(currentIdentifier, subStr);
+			str.second->push_back(cp_struct_value(varTypeStruct.identifier, val));
 		}
 		else {
 			Value_t* val;
@@ -401,9 +410,10 @@ void visitor::Interpreter::declareStructureTypeVariables(std::string identifier,
 				val = scopes.back()->declare(currentIdentifier, cp_array());
 				break;
 			}
-			str.second->push_back(std::pair<std::string, std::any>(varTypeStruct.identifier, val));
+			str.second->push_back(cp_struct_value(varTypeStruct.identifier, val));
 		}
 	}
+	return str;
 }
 
 parser::StructureDefinition_t InterpreterScope::findDeclaredStructureType(std::string identifier) {
@@ -451,113 +461,57 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* assign) {
 		scopes[i]->declare(actualIdentifier, currentExpressionValue->s);
 		break;
 	case parser::TYPE::T_STRUCT: {
-		//if (axe::contains(actualIdentifier, ".")) {
-		//	auto identifiers = axe::split(actualIdentifier, '.');
-		//	auto str = scopes.back()->valueof(identifiers[0]);
-		//	auto currentVal = str->str.second;
-		//	size_t s = 0;
-		//	for (s = 0; s < identifiers.size() - 1; ++s) {
-		//		for (size_t vi = 0; vi < currentVal->size(); ++vi) {
-		//			if (currentVal->at(vi).first == identifiers.at(i + 1)) {
-		//				currentVal = std::any_cast<std::vector<std::pair<std::string, std::any>>*>(currentVal->at(vi).second);
-		//			}
-		//		}
-		//	}
-		//	std::any newVal;
-		//	switch (currentExpressionType) {
-		//	case parser::TYPE::T_BOOL:
-		//		newVal = currentExpressionValue->b;
-		//		break;
-		//	case parser::TYPE::T_INT:
-		//		newVal = currentExpressionValue->i;
-		//		break;
-		//	case parser::TYPE::T_FLOAT:
-		//		newVal = currentExpressionValue->f;
-		//		break;
-		//	case parser::TYPE::T_CHAR:
-		//		newVal = currentExpressionValue->c;
-		//		break;
-		//	case parser::TYPE::T_STRING:
-		//		newVal = currentExpressionValue->s;
-		//		break;
-		//	}
-
-		//	//currentVal->at() = newVal;
-
-
-		//}
-		scopes.back()->declare(actualIdentifier, currentExpressionValue->str.first, currentExpressionValue->str);
-		//declareStructureTypeVariables(assign->identifier, currentExpressionValue.str.first);
+		scopes[i]->declare(actualIdentifier, currentExpressionValue->str);
 		break;
 	}
 	case parser::TYPE::T_ARRAY:
 		Value_t* val = scopes[i]->valueof(actualIdentifier);
-		std::vector<std::any>* currentVal = val->arr;
+		cp_array currentVal = val->arr;
 		size_t s = 0;
 		for (s = 0; s < assign->accessVector.size() - 1; ++s) {
-			currentVal = std::any_cast<std::vector<std::any>*>(currentVal->at(assign->accessVector[s]));
+			currentVal = currentVal->at(assign->accessVector[s])->arr;
 		}
-		std::any newVal;
-		switch (currentExpressionType) {
-		case parser::TYPE::T_BOOL:
-			newVal = currentExpressionValue->b;
-			break;
-		case parser::TYPE::T_INT:
-			newVal = currentExpressionValue->i;
-			break;
-		case parser::TYPE::T_FLOAT:
-			newVal = currentExpressionValue->f;
-			break;
-		case parser::TYPE::T_CHAR:
-			newVal = currentExpressionValue->c;
-			break;
-		case parser::TYPE::T_STRING:
-			newVal = currentExpressionValue->s;
-			break;
-		}
-
-		currentVal->at(assign->accessVector[s]) = newVal;
+		currentVal->at(assign->accessVector[s]) = currentExpressionValue;
 
 		break;
 	}
 }
 
-void printValue(std::any value) {
-	if (value.type() == typeid(nullptr)) {
+void printValue(Value_t* value) {
+	if (value->currentType == parser::TYPE::T_NULL) {
 		std::cout << "null";
 	}
-	else if (value.type() == typeid(bool)) {
-		std::cout << std::any_cast<bool>(value);
+	else if (value->currentType == parser::TYPE::T_BOOL) {
+		std::cout << value->b;
 	}
-	else if (value.type() == typeid(__int64_t)) {
-		std::cout << std::any_cast<__int64_t>(value);
+	else if (value->currentType == parser::TYPE::T_INT) {
+		std::cout << value->i;
 	}
-	else if (value.type() == typeid(long double)) {
-		std::cout << std::any_cast<long double>(value);
+	else if (value->currentType == parser::TYPE::T_FLOAT) {
+		std::cout << value->f;
 	}
-	else if (value.type() == typeid(char)) {
-		std::cout << std::any_cast<char>(value);
+	else if (value->currentType == parser::TYPE::T_CHAR) {
+		std::cout << value->c;
 	}
-	else if (value.type() == typeid(std::string)) {
-		std::cout << std::any_cast<std::string>(value);
+	else if (value->currentType == parser::TYPE::T_STRING) {
+		std::cout << value->s;
 	}
 	else {
 		std::cout << "null";
 	}
 }
 
-void printArray(std::vector<std::any>* value) {
+void printArray(cp_array value) {
 	std::cout << '[';
-	auto vec_value = std::any_cast<std::vector<std::any>*>(value);
-	for (auto i = 0; i < vec_value->size(); ++i) {
-		std::any val = vec_value->at(i);
-		if (val.type() == typeid(std::vector<std::any>*)) {
-			printArray(std::any_cast<std::vector<std::any>*>(val));
+	for (auto i = 0; i < value->size(); ++i) {
+		std::any val = value->at(i);
+		if (value->at(i)->currentType == parser::TYPE::T_ARRAY) {
+			printArray(value->at(i)->arr);
 		}
 		else {
-			printValue(val);
+			printValue(value->at(i));
 		}
-		if (i < vec_value->size() - 1) {
+		if (i < value->size() - 1) {
 			std::cout << ',';
 		}
 	}
@@ -668,6 +622,50 @@ void visitor::Interpreter::visit(parser::ASTReturnNode* ret) {
 	}
 }
 
+cp_struct visitor::Interpreter::redeclareStructureTypeVariables(std::string identifier, cp_struct str) {
+	cp_struct rstr;
+	str.first = str.first;
+	str.second = new std::vector<cp_struct_value>();
+
+	for (size_t i = 0; i < str.second->size(); ++i) {
+		cp_struct_value* variable = &str.second->at(i);
+		auto currentIdentifier = identifier + '.' + variable->first;
+		if (variable->second->currentType == parser::TYPE::T_STRUCT) {
+			cp_struct subStr = redeclareStructureTypeVariables(currentIdentifier, variable->second->str);
+			Value_t* val = scopes.back()->declare(currentIdentifier, variable->second->str);
+			rstr.second->push_back(cp_struct_value(variable->first, val));
+		}
+		else {
+			Value_t* val;
+			switch (variable->second->currentType) {
+			case parser::TYPE::T_BOOL:
+				val = scopes.back()->declare(currentIdentifier, variable->second->b);
+				break;
+			case parser::TYPE::T_INT:
+				val = scopes.back()->declare(currentIdentifier, variable->second->i);
+				break;
+			case parser::TYPE::T_FLOAT:
+				val = scopes.back()->declare(currentIdentifier, variable->second->f);
+				break;
+			case parser::TYPE::T_CHAR:
+				val = scopes.back()->declare(currentIdentifier, variable->second->c);
+				break;
+			case parser::TYPE::T_STRING:
+				val = scopes.back()->declare(currentIdentifier, variable->second->s);
+				break;
+			case parser::TYPE::T_ANY:
+				val = scopes.back()->declare(currentIdentifier, variable->second->a);
+				break;
+			case parser::TYPE::T_ARRAY:
+				val = scopes.back()->declare(currentIdentifier, variable->second->arr);
+				break;
+			}
+			rstr.second->push_back(cp_struct_value(variable->first, val));
+		}
+	}
+	return rstr;
+}
+
 void visitor::Interpreter::visit(parser::ASTBlockNode* block) {
 	// create new scope
 	scopes.push_back(new InterpreterScope(currentFunctionName));
@@ -694,10 +692,11 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* block) {
 		case parser::TYPE::T_ANY:
 			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second->a);
 			break;
-		case parser::TYPE::T_STRUCT:
-			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second->str.first, currentFunctionArguments[i].second->str);
-			//declareStructureTypeVariables(currentFunctionParameters[i], currentFunctionArguments[i].second.str.first);
+		case parser::TYPE::T_STRUCT: {
+			cp_struct rstr = redeclareStructureTypeVariables(currentFunctionParameters[i], currentFunctionArguments[i].second->str);
+			scopes.back()->declare(currentFunctionParameters[i], rstr);
 			break;
+		}
 		case parser::TYPE::T_ARRAY:
 			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second->arr);
 			break;
@@ -763,81 +762,63 @@ void visitor::Interpreter::visit(parser::ASTStructDefinitionNode* structure) {
 	scopes.back()->declareStructureType(structure->identifier, structure->variables, structure->row, structure->col);
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<bool>* lit) {
+void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_bool>* lit) {
 	Value_t* value = new Value_t();
-	value->b = lit->val;
+	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_BOOL;
 	currentExpressionValue = std::move(value);
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<__int64_t>* lit) {
+void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_int>* lit) {
 	Value_t* value = new Value_t();
-	value->i = lit->val;
+	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_INT;
 	currentExpressionValue = std::move(value);
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<long double>* lit) {
+void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_float>* lit) {
 	Value_t* value = new Value_t();
-	value->f = lit->val;
+	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_FLOAT;
 	currentExpressionValue = std::move(value);
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<char>* lit) {
+void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_char>* lit) {
 	Value_t* value = new Value_t();
-	value->c = lit->val;
+	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_CHAR;
 	currentExpressionValue = std::move(value);
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<std::string>* lit) {
+void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_string>* lit) {
 	Value_t* value = new Value_t();
-	value->s = lit->val;
+	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_STRING;
 	currentExpressionValue = std::move(value);
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<std::any>* lit) {
+void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_any>* lit) {
 	Value_t* value = new Value_t();
-	value->a = lit->val;
+	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_ANY;
 	currentExpressionValue = std::move(value);
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<std::vector<std::any>*>* lit) {
+void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_array>* lit) {
 	Value_t* value = new Value_t();
-	value->arr = lit->val;
+	value->set(lit->val);
 	determineArrayType(lit->val);
 	currentExpressionValue = value;
 }
 
-void Interpreter::determineArrayType(std::vector<std::any>* arr) {
+void Interpreter::determineArrayType(cp_array arr) {
 	if (arr->size() > 0) {
-		std::any val = arr->at(0);
-		if (val.type() == typeid(bool)) {
-			currentExpressionType = parser::TYPE::T_BOOL;
-		}
-		else if (val.type() == typeid(__int64_t)) {
-			currentExpressionType = parser::TYPE::T_INT;
-		}
-		else if (val.type() == typeid(long double)) {
-			currentExpressionType = parser::TYPE::T_FLOAT;
-		}
-		else if (val.type() == typeid(char)) {
-			currentExpressionType = parser::TYPE::T_CHAR;
-		}
-		else if (val.type() == typeid(std::string)) {
-			currentExpressionType = parser::TYPE::T_STRING;
-		}
-		else if (val.type() == typeid(std::any)) {
-			currentExpressionType = parser::TYPE::T_ANY;
-		}
-		else if (val.type() == typeid(std::vector<std::any>*)) {
-			determineArrayType(any_cast<std::vector<std::any>*>(val));
+		Value_t* val = arr->at(0);
+		if (val->currentType == parser::TYPE::T_ARRAY) {
+			determineArrayType(val->arr);
 		}
 		else {
-			currentExpressionType = parser::TYPE::T_ANY;
+			currentExpressionType = val->currentType;
 		}
 	}
 }
@@ -865,27 +846,27 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* bin) {
 		if (l_type == parser::TYPE::T_INT && r_type == parser::TYPE::T_INT) {
 			currentExpressionType = parser::TYPE::T_INT;
 			if (op == "+") {
-				value->i = l_value->i + r_value->i;
+				value->set((cp_int)(l_value->i + r_value->i));
 			}
 			else if (op == "-") {
-				value->i = l_value->i - r_value->i;
+				value->set((cp_int)(l_value->i - r_value->i));
 			}
 			else if (op == "*") {
-				value->i = l_value->i * r_value->i;
+				value->set((cp_int)(l_value->i * r_value->i));
 			}
 			else if (op == "/") {
 				if (r_value->i == 0) {
 					throw std::runtime_error(msgHeader(bin->row, bin->col) + "division by zero encountered.");
 				}
-				value->i = l_value->i / r_value->i;
+				value->set((cp_int)(l_value->i / r_value->i));
 			}
 			else if (op == "%") {
-				value->i = l_value->i % r_value->i;
+				value->set((cp_int)(l_value->i % r_value->i));
 			}
 		}
 		else if (l_type == parser::TYPE::T_FLOAT || r_type == parser::TYPE::T_FLOAT) { // at least one real
 			currentExpressionType = parser::TYPE::T_FLOAT;
-			long double l = l_value->f, r = r_value->f;
+			cp_float l = l_value->f, r = r_value->f;
 			if (l_type == parser::TYPE::T_INT) {
 				l = l_value->i;
 			}
@@ -893,53 +874,53 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* bin) {
 				r = r_value->i;
 			}
 			if (op == "+") {
-				value->f = l + r;
+				value->set((cp_float)(l + r));
 			}
 			else if (op == "-") {
-				value->f = l - r;
+				value->set((cp_float)(l - r));
 			}
 			else if (op == "*") {
-				value->f = l * r;
+				value->set((cp_float)(l * r));
 			}
 			else if (op == "/") {
 				if (r == 0) {
 					throw std::runtime_error(msgHeader(bin->row, bin->col) + "division by zero encountered.");
 				}
-				value->f = l / r;
+				value->set((cp_float)l / r);
 			}
 		}
 		else if (l_type == parser::TYPE::T_CHAR && r_type == parser::TYPE::T_STRING) { // char and string
 			currentExpressionType = parser::TYPE::T_STRING;
-			value->s = l_value->c + r_value->s;
+			value->set(cp_string(l_value->c + r_value->s));
 		}
 		else if (l_type == parser::TYPE::T_STRING && r_type == parser::TYPE::T_CHAR) { // string and char
 			currentExpressionType = parser::TYPE::T_STRING;
-			value->s = l_value->s + r_value->c;
+			value->set(cp_string(l_value->s + r_value->c));
 		}
 		else { // remaining case is for strings
 			currentExpressionType = parser::TYPE::T_STRING;
-			value->s = l_value->s + r_value->s;
+			value->set(cp_string(l_value->s + r_value->s));
 		}
 	}
 	else if (op == "and" || op == "or") { // now bool
 		currentExpressionType = parser::TYPE::T_BOOL;
 		if (op == "and") {
-			value->b = l_value->b && r_value->b;
+			value->set((cp_bool)(l_value->b && r_value->b));
 		}
 		else if (op == "or") {
-			value->b = l_value->b || r_value->b;
+			value->set((cp_bool)(l_value->b || r_value->b));
 		}
 	}
 	else { // now comparator operators
 		currentExpressionType = parser::TYPE::T_BOOL;
 		if (l_type == parser::TYPE::T_BOOL) {
-			value->b = (op == "==") ? l_value->b == r_value->b : l_value->b != r_value->b;
+			value->set((cp_bool)((op == "==") ? l_value->b == r_value->b : l_value->b != r_value->b));
 		}
 		else if (l_type == parser::TYPE::T_STRING) {
-			value->b = (op == "==") ? l_value->s == r_value->s : l_value->s != r_value->s;
+			value->set((cp_bool)((op == "==") ? l_value->s == r_value->s : l_value->s != r_value->s));
 		}
 		else {
-			long double l = l_value->f, r = r_value->f;
+			cp_float l = l_value->f, r = r_value->f;
 
 			if (l_type == parser::TYPE::T_INT) {
 				l = l_value->i;
@@ -948,22 +929,22 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* bin) {
 				r = r_value->i;
 			}
 			if (op == "==") {
-				value->b = l == r;
+				value->set((cp_bool)(l == r));
 			}
 			else if (op == "!=") {
-				value->b = l != r;
+				value->set((cp_bool)(l != r));
 			}
 			else if (op == "<") {
-				value->b = l < r;
+				value->set((cp_bool)(l < r));
 			}
 			else if (op == ">") {
-				value->b = l > r;
+				value->set((cp_bool)(l > r));
 			}
 			else if (op == ">=") {
-				value->b = l >= r;
+				value->set((cp_bool)(l >= r));
 			}
 			else if (op == "<=") {
-				value->b = l <= r;
+				value->set((cp_bool)(l <= r));
 			}
 		}
 	}
@@ -999,14 +980,14 @@ void visitor::Interpreter::visit(parser::ASTUnaryExprNode* un) {
 	switch (currentExpressionType) {
 	case parser::TYPE::T_INT:
 		if (un->unaryOp == "-")
-			currentExpressionValue->i *= -1;
+			currentExpressionValue->set(cp_int(currentExpressionValue->i * -1));
 		break;
 	case parser::TYPE::T_FLOAT:
 		if (un->unaryOp == "-")
-			currentExpressionValue->f *= -1;
+			currentExpressionValue->set(cp_float(currentExpressionValue->f * -1));
 		break;
 	case parser::TYPE::T_BOOL:
-		currentExpressionValue->b ^= 1;
+		currentExpressionValue->set(cp_bool(currentExpressionValue->b ^ -1));
 	}
 }
 
@@ -1056,16 +1037,16 @@ void visitor::Interpreter::visit(parser::ASTTypeParseNode* typeParser) {
 		case parser::TYPE::T_BOOL:
 			break;
 		case parser::TYPE::T_INT:
-			currentExpressionValue->b = currentExpressionValue->i != 0;
+			currentExpressionValue->set(cp_bool(currentExpressionValue->i != 0));
 			break;
 		case parser::TYPE::T_FLOAT:
-			currentExpressionValue->b = currentExpressionValue->f != .0;
+			currentExpressionValue->set(cp_bool(currentExpressionValue->f != .0));
 			break;
 		case parser::TYPE::T_CHAR:
-			currentExpressionValue->b = currentExpressionValue->c != '\0';
+			currentExpressionValue->set(cp_bool(currentExpressionValue->c != '\0'));
 			break;
 		case parser::TYPE::T_STRING:
-			currentExpressionValue->b = currentExpressionValue->s.empty();
+			currentExpressionValue->set(cp_bool(currentExpressionValue->s.empty()));
 			break;
 		}
 		break;
@@ -1073,18 +1054,18 @@ void visitor::Interpreter::visit(parser::ASTTypeParseNode* typeParser) {
 	case parser::TYPE::T_INT:
 		switch (currentExpressionType) {
 		case parser::TYPE::T_BOOL:
-			currentExpressionValue->i = currentExpressionValue->b;
+			currentExpressionValue->set(cp_int(currentExpressionValue->b));
 			break;
 		case parser::TYPE::T_INT:
 			break;
 		case parser::TYPE::T_FLOAT:
-			currentExpressionValue->i = static_cast<long long>(round(currentExpressionValue->f));
+			currentExpressionValue->set(cp_int(currentExpressionValue->f));
 			break;
 		case parser::TYPE::T_CHAR:
-			currentExpressionValue->i = currentExpressionValue->c;
+			currentExpressionValue->set(cp_int(currentExpressionValue->c));
 			break;
 		case parser::TYPE::T_STRING:
-			currentExpressionValue->i = std::stoll(currentExpressionValue->s);
+			currentExpressionValue->set(cp_int(std::stoll(currentExpressionValue->s)));
 			break;
 		}
 		break;
@@ -1092,18 +1073,18 @@ void visitor::Interpreter::visit(parser::ASTTypeParseNode* typeParser) {
 	case parser::TYPE::T_FLOAT:
 		switch (currentExpressionType) {
 		case parser::TYPE::T_BOOL:
-			currentExpressionValue->f = currentExpressionValue->b;
+			currentExpressionValue->set(cp_float(currentExpressionValue->b));
 			break;
 		case parser::TYPE::T_INT:
-			currentExpressionValue->f = static_cast<long double>(currentExpressionValue->i);
+			currentExpressionValue->set(cp_float(currentExpressionValue->i));
 			break;
 		case parser::TYPE::T_FLOAT:
 			break;
 		case parser::TYPE::T_CHAR:
-			currentExpressionValue->f = currentExpressionValue->c;
+			currentExpressionValue->set(cp_float(currentExpressionValue->c));
 			break;
 		case parser::TYPE::T_STRING:
-			currentExpressionValue->f = std::stold(currentExpressionValue->s);
+			currentExpressionValue->set(cp_float(std::stold(currentExpressionValue->s)));
 			break;
 		}
 		break;
@@ -1111,16 +1092,16 @@ void visitor::Interpreter::visit(parser::ASTTypeParseNode* typeParser) {
 	case parser::TYPE::T_STRING:
 		switch (currentExpressionType) {
 		case parser::TYPE::T_BOOL:
-			currentExpressionValue->s = currentExpressionValue->b ? "true" : "false";
+			currentExpressionValue->set(cp_string(currentExpressionValue->b ? "true" : "false"));
 			break;
 		case parser::TYPE::T_INT:
-			currentExpressionValue->s = std::to_string(currentExpressionValue->i);
+			currentExpressionValue->set(cp_string(std::to_string(currentExpressionValue->i)));
 			break;
 		case parser::TYPE::T_FLOAT:
-			currentExpressionValue->s = std::to_string(currentExpressionValue->f);
+			currentExpressionValue->set(cp_string(std::to_string(currentExpressionValue->f)));
 			break;
 		case parser::TYPE::T_CHAR:
-			currentExpressionValue->s = currentExpressionValue->c;
+			currentExpressionValue->set(cp_string(std::to_string(currentExpressionValue->c)));
 			break;
 		case parser::TYPE::T_STRING:
 			break;
@@ -1143,7 +1124,7 @@ void visitor::Interpreter::visit(parser::ASTExprReadNode* read) {
 	std::string line;
 	std::getline(std::cin, line);
 
-	currentExpressionValue->s = std::move(line);
+	currentExpressionValue->set(cp_string(std::move(line)));
 }
 
 std::pair<parser::TYPE, Value_t*> Interpreter::currentExpr() {

@@ -527,64 +527,49 @@ void SemanticAnalyser::visit(parser::ASTStructDefinitionNode* structDef) {
 	scopes.back()->declareStructureType(structDef->identifier, structDef->variables, structDef->row, structDef->col);
 }
 
-void SemanticAnalyser::visit(parser::ASTLiteralNode<bool>*) {
+void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_bool>*) {
 	currentExpressionIsArray = false;
 	currentExpressionType = parser::TYPE::T_BOOL;
 }
 
-void SemanticAnalyser::visit(parser::ASTLiteralNode<__int64_t>*) {
+void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_int>*) {
 	currentExpressionIsArray = false;
 	currentExpressionType = parser::TYPE::T_INT;
 }
 
-void SemanticAnalyser::visit(parser::ASTLiteralNode<long double>*) {
+void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_float>*) {
 	currentExpressionIsArray = false;
 	currentExpressionType = parser::TYPE::T_FLOAT;
 }
 
-void SemanticAnalyser::visit(parser::ASTLiteralNode<char>*) {
+void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_char>*) {
 	currentExpressionIsArray = false;
 	currentExpressionType = parser::TYPE::T_CHAR;
 }
 
-void SemanticAnalyser::visit(parser::ASTLiteralNode<std::string>*) {
+void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_string>*) {
 	currentExpressionIsArray = false;
 	currentExpressionType = parser::TYPE::T_STRING;
 }
 
-void SemanticAnalyser::visit(parser::ASTLiteralNode<std::any>*) {
+void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_any>*) {
 	currentExpressionIsArray = false;
 	currentExpressionType = parser::TYPE::T_ANY;
 }
 
-void SemanticAnalyser::visit(parser::ASTLiteralNode<std::vector<std::any>*>* litArr) {
+void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_array>* litArr) {
 	currentExpressionIsArray = true;
 	determineArrayType(litArr->val);
 }
 
-void SemanticAnalyser::determineArrayType(std::vector<std::any>* arr) {
+void SemanticAnalyser::determineArrayType(cp_array arr) {
 	if (arr->size() > 0) {
-		std::any val = arr->at(0);
-		if (val.type() == typeid(bool)) {
-			currentExpressionType = parser::TYPE::T_BOOL;
+		Value_t* val = arr->at(0);
+		if (val->currentType == parser::TYPE::T_ARRAY) {
+			determineArrayType(val->arr);
 		}
-		else if (val.type() == typeid(__int64_t)) {
-			currentExpressionType = parser::TYPE::T_INT;
-		}
-		else if (val.type() == typeid(long double)) {
-			currentExpressionType = parser::TYPE::T_FLOAT;
-		}
-		else if (val.type() == typeid(char)) {
-			currentExpressionType = parser::TYPE::T_CHAR;
-		}
-		else if (val.type() == typeid(std::string)) {
-			currentExpressionType = parser::TYPE::T_STRING;
-		}
-		else if (val.type() == typeid(std::any)) {
-			currentExpressionType = parser::TYPE::T_ANY;
-		}
-		else if (val.type() == typeid(std::vector<std::any>*)) {
-			determineArrayType(any_cast<std::vector<std::any>*>(val));
+		else {
+			currentExpressionType = val->currentType;
 		}
 	}
 }
