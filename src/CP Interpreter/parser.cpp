@@ -630,6 +630,7 @@ ASTFunctionDefinitionNode* Parser::parseFunctionDefinition() {
 	std::string identifier;
 	std::vector<VariableDefinition_t> parameters;
 	TYPE type;
+	std::string typeName = "";
 	ASTBlockNode* block;
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
@@ -683,6 +684,11 @@ ASTFunctionDefinitionNode* Parser::parseFunctionDefinition() {
 	if (currentToken.type == lexer::TOK_COLON) {
 		// consume type
 		consumeToken();
+
+		if (currentToken.type == lexer::TOK_IDENTIFIER) {
+			typeName = currentToken.value;
+		}
+
 		type = parseType(identifier);
 
 		// consume '{'
@@ -699,7 +705,7 @@ ASTFunctionDefinitionNode* Parser::parseFunctionDefinition() {
 	// parse block
 	block = parseBlock();
 
-	return new ASTFunctionDefinitionNode(identifier, parameters, type, block, row, col);
+	return new ASTFunctionDefinitionNode(identifier, parameters, type, typeName, block, row, col);
 }
 
 ASTStructDefinitionNode* Parser::parseStructDefinition() {

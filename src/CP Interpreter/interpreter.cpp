@@ -624,8 +624,8 @@ void visitor::Interpreter::visit(parser::ASTReturnNode* ret) {
 
 cp_struct visitor::Interpreter::redeclareStructureTypeVariables(std::string identifier, cp_struct str) {
 	cp_struct rstr;
-	str.first = str.first;
-	str.second = new std::vector<cp_struct_value>();
+	rstr.first = str.first;
+	rstr.second = new std::vector<cp_struct_value>();
 
 	for (size_t i = 0; i < str.second->size(); ++i) {
 		cp_struct_value variable = str.second->at(i);
@@ -766,42 +766,42 @@ void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_bool>* lit) {
 	Value_t* value = new Value_t();
 	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_BOOL;
-	currentExpressionValue = std::move(value);
+	currentExpressionValue = value;
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_int>* lit) {
 	Value_t* value = new Value_t();
 	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_INT;
-	currentExpressionValue = std::move(value);
+	currentExpressionValue = value;
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_float>* lit) {
 	Value_t* value = new Value_t();
 	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_FLOAT;
-	currentExpressionValue = std::move(value);
+	currentExpressionValue = value;
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_char>* lit) {
 	Value_t* value = new Value_t();
 	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_CHAR;
-	currentExpressionValue = std::move(value);
+	currentExpressionValue = value;
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_string>* lit) {
 	Value_t* value = new Value_t();
 	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_STRING;
-	currentExpressionValue = std::move(value);
+	currentExpressionValue = value;
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_any>* lit) {
 	Value_t* value = new Value_t();
 	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_ANY;
-	currentExpressionValue = std::move(value);
+	currentExpressionValue = value;
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_array>* lit) {

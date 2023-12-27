@@ -35,6 +35,18 @@ namespace parser {
 		unsigned int col;
 	} StructureDefinition_t;
 
+	typedef struct FunctionDefinition {
+		FunctionDefinition(std::string identifier, TYPE type, std::string typeName, std::vector<parser::TYPE> signature, bool isAny, unsigned int row, unsigned int col)
+			: identifier(identifier), type(type), typeName(typeName), signature(signature), isAny(isAny), row(row), col(col) {};
+		std::string identifier;
+		parser::TYPE type;
+		std::string typeName;
+		std::vector<parser::TYPE> signature;
+		bool isAny;
+		unsigned int row;
+		unsigned int col;
+	} FunctionDefinition_t;
+
 	// Abstract Nodes
 	class ASTNode {
 	public:
@@ -187,13 +199,14 @@ namespace parser {
 
 	class ASTFunctionDefinitionNode : public ASTStatementNode {
 	public:
-		ASTFunctionDefinitionNode(std::string, std::vector<VariableDefinition_t>, TYPE, ASTBlockNode*, unsigned int, unsigned int);
+		ASTFunctionDefinitionNode(std::string, std::vector<VariableDefinition_t>, TYPE, std::string, ASTBlockNode*, unsigned int, unsigned int);
 
 		std::string identifier;
 		std::vector<VariableDefinition_t> parameters;
 		std::vector<std::string> variableNames;
 		std::vector<TYPE> signature;
 		TYPE type;
+		std::string typeName;
 		ASTBlockNode* block;
 		unsigned int row;
 		unsigned int col;

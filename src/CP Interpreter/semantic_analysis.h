@@ -15,7 +15,8 @@ namespace visitor {
 	private:
 		std::vector<parser::StructureDefinition_t> structures;
 		std::vector<parser::VariableDefinition_t> variableSymbolTable;
-		std::multimap<std::string, std::tuple<parser::TYPE, std::vector<parser::TYPE>, unsigned int>> functionSymbolTable;
+		std::vector<parser::FunctionDefinition_t> functionSymbolTable;
+		//std::multimap<std::string, std::tuple<parser::TYPE, std::vector<parser::TYPE>, unsigned int>> functionSymbolTable;
 
 	public:
 		bool isAnyVar(std::string);
@@ -25,13 +26,14 @@ namespace visitor {
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
 		void declareStructureType(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::string, parser::TYPE, bool, bool, unsigned int, unsigned int);
-		void declare(std::string, parser::TYPE, std::vector<parser::TYPE>, unsigned int);
+		void declare(std::string, parser::TYPE, std::string, std::vector<parser::TYPE>, bool, unsigned int, unsigned int);
 		void changeVarType(std::string, parser::TYPE);
 		void changeVarTypeName(std::string, std::string);
 		parser::StructureDefinition_t findDeclaredStructureType(std::string);
 		parser::TYPE arrayType(std::string);
 		std::string typeName(std::string);
 		parser::TYPE type(std::string);
+		std::string typeName(std::string, std::vector<parser::TYPE>);
 		parser::TYPE type(std::string, std::vector<parser::TYPE>);
 		unsigned int declarationLine(std::string);
 		unsigned int declarationLine(std::string, std::vector<parser::TYPE>);
