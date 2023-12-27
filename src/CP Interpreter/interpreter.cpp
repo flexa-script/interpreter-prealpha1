@@ -170,55 +170,55 @@ Value_t* InterpreterScope::declare(std::string identifier, cp_struct strValue, s
 		size_t i;
 		for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredStructureType(strValue.first); --i);
 		auto typeStruct = scopes[i]->findDeclaredStructureType(strValue.first);
-		for (size_t i = 0; i < value->str.second->size(); ++i) {
+		for (size_t i = 0; i < value->str.second.size(); ++i) {
 			auto currentIdentifier = identifier + '.' + typeStruct.variables.at(i).identifier;
-			if (value->str.second->at(i).second->currentType == parser::TYPE::T_STRUCT) {
-				declare(currentIdentifier, strValue.second->at(i).second->str, scopes);
+			if (value->str.second.at(i).second->currentType == parser::TYPE::T_STRUCT) {
+				declare(currentIdentifier, strValue.second.at(i).second->str, scopes);
 			}
 			else {
-				switch (value->str.second->at(i).second->currentType) {
+				switch (value->str.second.at(i).second->currentType) {
 				case parser::TYPE::T_BOOL:
-					declare(currentIdentifier, strValue.second->at(i).second->b);
+					declare(currentIdentifier, strValue.second.at(i).second->b);
 					break;
 				case parser::TYPE::T_INT:
-					declare(currentIdentifier, strValue.second->at(i).second->i);
+					declare(currentIdentifier, strValue.second.at(i).second->i);
 					break;
 				case parser::TYPE::T_FLOAT:
-					declare(currentIdentifier, strValue.second->at(i).second->f);
+					declare(currentIdentifier, strValue.second.at(i).second->f);
 					break;
 				case parser::TYPE::T_CHAR:
-					declare(currentIdentifier, strValue.second->at(i).second->c);
+					declare(currentIdentifier, strValue.second.at(i).second->c);
 					break;
 				case parser::TYPE::T_STRING:
-					declare(currentIdentifier, strValue.second->at(i).second->s);
+					declare(currentIdentifier, strValue.second.at(i).second->s);
 					break;
 				case parser::TYPE::T_ANY:
-					switch (strValue.second->at(i).second->currentType) {
+					switch (strValue.second.at(i).second->currentType) {
 					case parser::TYPE::T_BOOL:
-						declare(currentIdentifier, strValue.second->at(i).second->b);
+						declare(currentIdentifier, strValue.second.at(i).second->b);
 						break;
 					case parser::TYPE::T_INT:
-						declare(currentIdentifier, strValue.second->at(i).second->i);
+						declare(currentIdentifier, strValue.second.at(i).second->i);
 						break;
 					case parser::TYPE::T_FLOAT:
-						declare(currentIdentifier, strValue.second->at(i).second->f);
+						declare(currentIdentifier, strValue.second.at(i).second->f);
 						break;
 					case parser::TYPE::T_CHAR:
-						declare(currentIdentifier, strValue.second->at(i).second->c);
+						declare(currentIdentifier, strValue.second.at(i).second->c);
 						break;
 					case parser::TYPE::T_STRING:
-						declare(currentIdentifier, strValue.second->at(i).second->s);
+						declare(currentIdentifier, strValue.second.at(i).second->s);
 						break;
 					case parser::TYPE::T_ARRAY:
-						declare(currentIdentifier, strValue.second->at(i).second->arr);
+						declare(currentIdentifier, strValue.second.at(i).second->arr);
 						break;
 					case  parser::TYPE::T_STRUCT:
-						declare(currentIdentifier, strValue.second->at(i).second->str, scopes);
+						declare(currentIdentifier, strValue.second.at(i).second->str, scopes);
 						break;
 					}
 					break;
 				case parser::TYPE::T_ARRAY:
-					declare(currentIdentifier, strValue.second->at(i).second->arr);
+					declare(currentIdentifier, strValue.second.at(i).second->arr);
 					break;
 				}
 			}
@@ -471,7 +471,7 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* decl) {
 cp_struct visitor::Interpreter::declareStructureTypeVariables(std::string identifier, std::string typeName) {
 	cp_struct str;
 	str.first = typeName;
-	str.second = new std::vector<cp_struct_value>();
+	str.second = cp_struct_values();
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredStructureType(typeName); --i);
 	auto typeStruct = scopes[i]->findDeclaredStructureType(typeName);
@@ -480,7 +480,7 @@ cp_struct visitor::Interpreter::declareStructureTypeVariables(std::string identi
 		if (varTypeStruct.type == parser::TYPE::T_STRUCT) {
 			cp_struct subStr = declareStructureTypeVariables(currentIdentifier, varTypeStruct.typeName);
 			Value_t* val = scopes.back()->declare(currentIdentifier, subStr, scopes);
-			str.second->push_back(cp_struct_value(varTypeStruct.identifier, val));
+			str.second.push_back(cp_struct_value(varTypeStruct.identifier, val));
 		}
 		else {
 			Value_t* val;
@@ -507,7 +507,7 @@ cp_struct visitor::Interpreter::declareStructureTypeVariables(std::string identi
 				val = scopes.back()->declare(currentIdentifier, cp_array());
 				break;
 			}
-			str.second->push_back(cp_struct_value(varTypeStruct.identifier, val));
+			str.second.push_back(cp_struct_value(varTypeStruct.identifier, val));
 		}
 	}
 	return str;
@@ -744,15 +744,15 @@ void visitor::Interpreter::visit(parser::ASTReturnNode* ret) {
 cp_struct visitor::Interpreter::redeclareStructureTypeVariables(std::string identifier, cp_struct str) {
 	cp_struct rstr;
 	rstr.first = str.first;
-	rstr.second = new std::vector<cp_struct_value>();
+	rstr.second = cp_struct_values();
 
-	for (size_t i = 0; i < str.second->size(); ++i) {
-		cp_struct_value variable = str.second->at(i);
+	for (size_t i = 0; i < str.second.size(); ++i) {
+		cp_struct_value variable = str.second.at(i);
 		auto currentIdentifier = identifier + '.' + variable.first;
 		if (variable.second->currentType == parser::TYPE::T_STRUCT) {
 			cp_struct subStr = redeclareStructureTypeVariables(currentIdentifier, variable.second->str);
 			Value_t* val = scopes.back()->declare(currentIdentifier, subStr, scopes);
-			rstr.second->push_back(cp_struct_value(variable.first, val));
+			rstr.second.push_back(cp_struct_value(variable.first, val));
 		}
 		else {
 			Value_t* val;
@@ -779,7 +779,7 @@ cp_struct visitor::Interpreter::redeclareStructureTypeVariables(std::string iden
 				val = scopes.back()->declare(currentIdentifier, variable.second->arr);
 				break;
 			}
-			rstr.second->push_back(cp_struct_value(variable.first, val));
+			rstr.second.push_back(cp_struct_value(variable.first, val));
 		}
 	}
 	return rstr;

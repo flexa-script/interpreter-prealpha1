@@ -11,18 +11,6 @@
 
 
 namespace visitor {
-	//typedef struct Value {
-	//	Value() : b(0), i(0), f(0), c(0), s(""), a(std::any()), str(cp_struct()), arr(cp_array()) {};
-	//	cp_bool b;
-	//	cp_int i;
-	//	cp_float f;
-	//	cp_char c;
-	//	cp_string s;
-	//	cp_any a;
-	//	cp_struct str;
-	//	cp_array arr;
-	//} Value_t;
-
 	class InterpreterScope {
 	public:
 		InterpreterScope();
