@@ -17,14 +17,26 @@
 - [X] Add char type
 - [X] Add any type
 - [X] Add struct support
-- [X] Add array type<!--- [ ] Add null support-->
+- [X] Add array type
+- [ ] Add null support?
 - [X] Add collum on errors
 - [X] Add type convert support
 - [X] Remove mandatory variable type definition
 - [X] Fix cp dependencies/libs loader
-- [ ] Add a I/O library
-- [ ] Add a graphic library
 - [ ] Add a default interface to implements core libs
+- [ ] Add core library:
+    - [ ] File I/O
+    - [ ] Graphics
+    - [ ] Mouse
+    - [ ] Sound
+    - [ ] Keyboard
+    - [ ] Text
+    - [ ] Time
+    - [ ] Web/API
+    - [ ] Util
+- [ ] Add CP library:
+    - [ ] Math
+    - [ ] Util
 
 ## The CP Language
 
