@@ -122,18 +122,15 @@ ASTStatementNode* Parser::parseIdentifier() {
 	throw std::runtime_error(msgHeader() + "expected '=' or '(' after identifier.");
 }
 
-std::vector<int> Parser::calcArrayDimSize(std::vector<std::any>* value) {
+std::vector<int> Parser::calcArrayDimSize(cp_array value) {
 	auto dim = std::vector<int>();
-	std::any val = value->at(0);
+	Value_t* val = value.at(0);
 
-	dim.push_back(value->size());
-	if (val.type() == typeid(std::vector<std::any>*)) {
-		auto dim2 = calcArrayDimSize(std::any_cast<std::vector<std::any>*>(val));
+	dim.push_back(value.size());
+	if (val->currentType == TYPE::T_ARRAY) {
+		auto dim2 = calcArrayDimSize(val->arr);
 		dim.insert(dim.end(), dim2.begin(), dim2.end());
 	}
-	//else {
-	//	dim.push_back(value->size());
-	//}
 
 	return dim;
 }
@@ -205,11 +202,11 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 
 		// validate array size
 		if (type == TYPE::T_ARRAY) {
-			auto val = dynamic_cast<ASTLiteralNode<std::vector<std::any>*>*>(expr)->val;
-			if (typeid(val) != typeid(std::vector<std::any>*)) {
+			auto val = dynamic_cast<ASTLiteralNode<cp_array>*>(expr)->val;
+			if (typeid(val) != typeid(cp_array)) {
 				throw std::runtime_error(msgHeader() + "expected array definition expression assigning '" + identifier + "' array");
 			}
-			auto exprDim = calcArrayDimSize(std::any_cast<std::vector<std::any>*>(val));
+			auto exprDim = calcArrayDimSize(std::any_cast<cp_array>(val));
 
 			if (dim.size() != exprDim.size()) {
 				throw std::runtime_error(msgHeader() + "invalid expression dimension assigning '" + identifier + "' array");
@@ -262,7 +259,7 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 }
 
 cp_array Parser::makeArrayLiteral(std::string identifier, TYPE type, std::vector<int> dim, int currDim) {
-	auto arr = new std::vector<Value_t*>();
+	auto arr = cp_array();
 
 	for (size_t i = 0; i < dim.at(currDim); ++i) {
 		Value_t* val = new Value_t();
@@ -294,7 +291,7 @@ cp_array Parser::makeArrayLiteral(std::string identifier, TYPE type, std::vector
 		else {
 			val->set(makeArrayLiteral(identifier, type, dim, currDim + 1));
 		}
-		arr->push_back(val);
+		arr.push_back(val);
 
 	}
 
@@ -981,7 +978,7 @@ ASTExprNode* Parser::parseFactor() {
 }
 
 cp_array Parser::parseArrayLiteral() {
-	auto arr = new std::vector<Value_t*>();
+	auto arr = cp_array();
 	consumeToken();
 	do {
 		Value_t* val = new Value_t();
@@ -1013,7 +1010,7 @@ cp_array Parser::parseArrayLiteral() {
 				break;
 			}
 		}
-		arr->push_back(val);
+		arr.push_back(val);
 
 		consumeToken();
 		if (currentToken.type == lexer::TOK_COMMA) {

@@ -624,8 +624,8 @@ void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_array>* litArr) {
 }
 
 void SemanticAnalyser::determineArrayType(cp_array arr) {
-	if (arr->size() > 0) {
-		Value_t* val = arr->at(0);
+	if (arr.size() > 0) {
+		Value_t* val = arr.at(0);
 		if (val->currentType == parser::TYPE::T_ARRAY) {
 			determineArrayType(val->arr);
 		}

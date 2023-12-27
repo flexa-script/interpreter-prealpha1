@@ -23,7 +23,7 @@ typedef long double           cp_float;
 typedef char                  cp_char;
 typedef std::string           cp_string;
 typedef std::any              cp_any;
-typedef std::vector<Value*>*  cp_array;
+typedef std::vector<Value*>   cp_array;
 
 typedef std::pair<std::string, Value*>                 cp_struct_value;
 typedef std::vector<cp_struct_value>*                  cp_struct_value_vector;
@@ -31,6 +31,7 @@ typedef std::pair<std::string, cp_struct_value_vector> cp_struct;
 
 typedef struct Value {
 	Value() : b(0), i(0), f(0), c(0), s(""), a(std::any()), str(cp_struct()), arr(cp_array()), currentType(parser::TYPE::T_ND) {};
+	
 	parser::TYPE currentType;
 	cp_bool b;
 	cp_int i;
@@ -40,6 +41,7 @@ typedef struct Value {
 	cp_any a;
 	cp_array arr;
 	cp_struct str;
+
 	void set(cp_bool b) {
 		this->b = b;
 		currentType = parser::TYPE::T_BOOL;
@@ -74,6 +76,17 @@ typedef struct Value {
 	}
 	void setNull() {
 		currentType = parser::TYPE::T_NULL;
+	}
+	void copyFrom(Value* value) {
+		currentType = value->currentType;
+		b = value->b;
+		i = value->i;
+		f = value->f;
+		c = value->c;
+		s = value->s;
+		a = value->a;
+		arr = value->arr;
+		str = value->str;
 	}
 } Value_t;
 

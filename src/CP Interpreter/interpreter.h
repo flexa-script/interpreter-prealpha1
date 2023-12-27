@@ -37,7 +37,7 @@ namespace visitor {
 		Value_t* declare(std::string, cp_char);
 		Value_t* declare(std::string, cp_string);
 		Value_t* declare(std::string, cp_any);
-		Value_t* declare(std::string, cp_struct);
+		Value_t* declare(std::string, cp_struct, std::vector<InterpreterScope*>);
 		Value_t* declare(std::string, cp_array);
 		void declare(std::string, std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*);
 		void declareStructureType(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
@@ -68,7 +68,7 @@ namespace visitor {
 		std::vector<InterpreterScope*> scopes;
 		parser::TYPE currentExpressionType;
 		std::string currentExpressionTypeName;
-		Value_t* currentExpressionValue;
+		Value_t currentExpressionValue;
 		std::vector<std::string> currentFunctionParameters;
 		std::vector<std::pair<parser::TYPE, Value_t*>> currentFunctionArguments;
 		std::string currentFunctionName;

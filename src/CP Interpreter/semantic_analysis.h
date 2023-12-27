@@ -55,6 +55,7 @@ namespace visitor {
 
 	private:
 		bool returns(parser::ASTStatementNode*);
+		parser::StructureDefinition_t findDeclaredStructureType(std::string);
 		void declareStructureTypeVariables(std::string, std::string);
 		void determineArrayType(cp_array);
 		std::string msgHeader(unsigned int, unsigned int);
