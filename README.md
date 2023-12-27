@@ -11,18 +11,21 @@
 - [X] Add void return
 - [X] Add mod (%) operation support
 - [X] Add library support
+- [X] Add collum on errors
 - [X] Add this to get current function name (future an object?)
 - [X] Add const support
 - [X] Add float type
 - [X] Add char type
 - [X] Add any type
-- [X] Add struct support
 - [X] Add array type
+- [X] Add struct support
+    - [ ] Add struct array-like constructor
+    - [ ] Add Java class behavior
 - [ ] Add null support?
-- [X] Add collum on errors
 - [X] Add type convert support
 - [X] Remove mandatory variable type definition
 - [X] Fix cp dependencies/libs loader
+- [ ] Add string array-like accessor
 - [ ] Add a default interface to implements core libs
 - [ ] Add core library:
     - [ ] File I/O
