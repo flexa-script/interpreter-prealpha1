@@ -178,99 +178,54 @@ Value_t* InterpreterScope::declare(std::string identifier, cp_array arrValue) {
 
 Value_t* InterpreterScope::declare(std::string identifier, cp_struct strValue, std::vector<InterpreterScope*> scopes) {
 	Value_t* value;
+
+	// if already declared, we get current value to always work with the same memory value
+	// this is important when we handle with structure variables, so they can be handled by self
 	if (alreadyDeclared(identifier)) {
 		value = valueof(identifier);
-
-		size_t i;
-		for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredStructureType(strValue.first); --i);
-		auto typeStruct = scopes[i]->findDeclaredStructureDefinition(strValue.first);
-
-		for (size_t i = 0; i < value->str.second.size(); ++i) {
-			auto currentIdentifier = identifier + '.' + typeStruct.variables.at(i).identifier;
-			if (value->str.second.at(i).second->currentType == parser::TYPE::T_STRUCT) {
-				value->str.second.at(i).second = strValue.second.at(i).second;
-				variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_STRUCT, value->str.second.at(i).second);
-				typeNamesTable[currentIdentifier] = value->str.second.at(i).first;
-				declare(currentIdentifier, strValue.second.at(i).second->str, scopes);
-			}
-			else {
-				value->str.second.at(i).second = strValue.second.at(i).second;
-				//variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_STRUCT, value->str.second.at(i).second);
-				switch (value->str.second.at(i).second->currentType) {
-				case parser::TYPE::T_BOOL:
-					variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_BOOL, value->str.second.at(i).second);
-					break;
-				case parser::TYPE::T_INT:
-					variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_INT, value->str.second.at(i).second);
-					break;
-				case parser::TYPE::T_FLOAT:
-					variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_FLOAT, value->str.second.at(i).second);
-					break;
-				case parser::TYPE::T_CHAR:
-					variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_CHAR, value->str.second.at(i).second);
-					break;
-				case parser::TYPE::T_STRING:
-					variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_STRING, value->str.second.at(i).second);
-					break;
-				case parser::TYPE::T_ARRAY:
-					variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_ARRAY, value->str.second.at(i).second);
-					break;
-				}
-				//switch (value->str.second.at(i).second->currentType) {
-				//case parser::TYPE::T_BOOL:
-				//	declare(currentIdentifier, strValue.second.at(i).second->b);
-				//	break;
-				//case parser::TYPE::T_INT:
-				//	declare(currentIdentifier, strValue.second.at(i).second->i);
-				//	break;
-				//case parser::TYPE::T_FLOAT:
-				//	declare(currentIdentifier, strValue.second.at(i).second->f);
-				//	break;
-				//case parser::TYPE::T_CHAR:
-				//	declare(currentIdentifier, strValue.second.at(i).second->c);
-				//	break;
-				//case parser::TYPE::T_STRING:
-				//	declare(currentIdentifier, strValue.second.at(i).second->s);
-				//	break;
-				//case parser::TYPE::T_ANY:
-				//	switch (strValue.second.at(i).second->currentType) {
-				//	case parser::TYPE::T_BOOL:
-				//		declare(currentIdentifier, strValue.second.at(i).second->b);
-				//		break;
-				//	case parser::TYPE::T_INT:
-				//		declare(currentIdentifier, strValue.second.at(i).second->i);
-				//		break;
-				//	case parser::TYPE::T_FLOAT:
-				//		declare(currentIdentifier, strValue.second.at(i).second->f);
-				//		break;
-				//	case parser::TYPE::T_CHAR:
-				//		declare(currentIdentifier, strValue.second.at(i).second->c);
-				//		break;
-				//	case parser::TYPE::T_STRING:
-				//		declare(currentIdentifier, strValue.second.at(i).second->s);
-				//		break;
-				//	case parser::TYPE::T_ARRAY:
-				//		declare(currentIdentifier, strValue.second.at(i).second->arr);
-				//		break;
-				//	case  parser::TYPE::T_STRUCT:
-				//		declare(currentIdentifier, strValue.second.at(i).second->str, scopes);
-				//		break;
-				//	}
-				//	break;
-				//case parser::TYPE::T_ARRAY:
-				//	declare(currentIdentifier, strValue.second.at(i).second->arr);
-				//	break;
-				//}
-			}
-		}
 	}
 	else {
 		value = new Value_t();
 		value->set(strValue);
 	}
 
-	//variableSymbolTable[identifier] = std::make_pair(parser::TYPE::T_STRUCT, value);
-	//typeNamesTable[identifier] = strValue.first;
+	size_t i;
+	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredStructureType(strValue.first); --i);
+	auto typeStruct = scopes[i]->findDeclaredStructureDefinition(strValue.first);
+
+	for (size_t i = 0; i < value->str.second.size(); ++i) {
+		auto currentIdentifier = identifier + '.' + typeStruct.variables.at(i).identifier;
+		if (value->str.second.at(i).second->currentType == parser::TYPE::T_STRUCT) {
+			value->str.second.at(i).second = strValue.second.at(i).second;
+			variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_STRUCT, value->str.second.at(i).second);
+			typeNamesTable[currentIdentifier] = value->str.second.at(i).first;
+			declare(currentIdentifier, strValue.second.at(i).second->str, scopes);
+		}
+		else {
+			value->str.second.at(i).second = strValue.second.at(i).second;
+			switch (value->str.second.at(i).second->currentType) {
+			case parser::TYPE::T_BOOL:
+				variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_BOOL, value->str.second.at(i).second);
+				break;
+			case parser::TYPE::T_INT:
+				variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_INT, value->str.second.at(i).second);
+				break;
+			case parser::TYPE::T_FLOAT:
+				variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_FLOAT, value->str.second.at(i).second);
+				break;
+			case parser::TYPE::T_CHAR:
+				variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_CHAR, value->str.second.at(i).second);
+				break;
+			case parser::TYPE::T_STRING:
+				variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_STRING, value->str.second.at(i).second);
+				break;
+			case parser::TYPE::T_ARRAY:
+				variableSymbolTable[currentIdentifier] = std::make_pair(parser::TYPE::T_ARRAY, value->str.second.at(i).second);
+				break;
+			}
+		}
+	}
+
 	return value;
 }
 
@@ -562,10 +517,6 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* assign) {
 	std::string actualIdentifier = assign->identifier;
 	if (assign->identifierVector.size() > 1) {
 		actualIdentifier = axe::join(assign->identifierVector, ".");
-	}
-
-	if (actualIdentifier == "list") {
-		bool debug = true;
 	}
 
 	// determine innermost scope in which variable is declared

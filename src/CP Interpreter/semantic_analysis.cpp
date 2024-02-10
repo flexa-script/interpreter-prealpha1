@@ -333,7 +333,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl) {
 	else if (decl->type == currentExpressionType || decl->type == parser::TYPE::T_ANY || decl->type == parser::TYPE::T_STRUCT || decl->type == parser::TYPE::T_ARRAY) { // types match
 		// handle struct
 		if (decl->type == parser::TYPE::T_STRUCT || currentExpressionType == parser::TYPE::T_STRUCT) {
-			if (currentExpressionType == parser::TYPE::T_STRUCT && decl->type != parser::TYPE::T_ANY) {
+			if (currentExpressionType == parser::TYPE::T_STRUCT && decl->type != parser::TYPE::T_STRUCT && decl->type != parser::TYPE::T_ANY) {
 				throw std::runtime_error(msgHeader(decl->row, decl->col) + "trying to assign struct '" + decl->identifier + "' (" + (currentExpressionTypeName.empty() ? "" : " (" + currentExpressionTypeName + ")") + "), expected " + typeStr(decl->type) + (decl->typeName.empty() ? "" : " (" + decl->typeName + ")") + "");
 			}
 
@@ -719,7 +719,7 @@ void SemanticAnalyser::determineArrayType(cp_array arr) {
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_struct>* litStr) {
 	currentExpressionIsArray = false;
-	currentExpressionType = parser::TYPE::T_ARRAY;
+	currentExpressionType = parser::TYPE::T_STRUCT;
 	currentExpressionTypeName = litStr->val.first;
 }
 
