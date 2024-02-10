@@ -8,7 +8,7 @@
 using namespace visitor;
 
 
-parser::StructureDefinition_t SemanticScope::findDeclaredStructureType(std::string identifier) {
+parser::StructureDefinition_t SemanticScope::findDeclaredStructureDefinition(std::string identifier) {
 	for (auto structure : structures) {
 		if (structure.identifier == identifier) {
 			return structure;
@@ -107,7 +107,7 @@ bool SemanticScope::isConst(std::string identifier) {
 	return false;
 }
 
-void SemanticScope::declareStructureType(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
+void SemanticScope::declareStructureDefinition(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
 	parser::StructureDefinition_t type(name, variables, row, col);
 	structures.push_back(type);
 }
@@ -382,7 +382,7 @@ void SemanticAnalyser::declareStructureTypeVariables(std::string identifier, std
 	cp_struct_values values = str.second;
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredStructureType(typeName); --i);
-	auto typeStruct = scopes[i]->findDeclaredStructureType(typeName);
+	auto typeStruct = scopes[i]->findDeclaredStructureDefinition(typeName);
 	//auto typeStruct = findDeclaredStructureType(typeName);
 
 	for (auto const& strValue : values) {
@@ -664,7 +664,7 @@ void SemanticAnalyser::visit(parser::ASTStructDefinitionNode* structDef) {
 		}
 	}
 
-	scopes.back()->declareStructureType(structDef->identifier, structDef->variables, structDef->row, structDef->col);
+	scopes.back()->declareStructureDefinition(structDef->identifier, structDef->variables, structDef->row, structDef->col);
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_bool>*) {

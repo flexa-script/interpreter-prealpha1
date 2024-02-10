@@ -96,13 +96,6 @@ namespace parser {
 
 		VariableDefinition_t* parseFormalParam();
 
-		// parse types and parameters
-		TYPE parseType(std::string);
-
-		void checkArrayType(TYPE);
-
-		std::string msgHeader();
-
 		cp_bool parseBoolLiteral();
 
 		cp_int parseIntLiteral();
@@ -117,9 +110,16 @@ namespace parser {
 
 		cp_struct parseStructConstructor();
 
-		cp_array makeArrayLiteral(std::string, TYPE, std::vector<int>, int);
+		//cp_array makeArrayLiteral(std::string, TYPE, std::vector<int>, int);
 
 		std::vector<int> calcArrayDimSize(cp_array);
+
+		// parse types and parameters
+		TYPE parseType(std::string);
+
+		void checkArrayType(TYPE);
+
+		std::string msgHeader();
 	};
 }
 

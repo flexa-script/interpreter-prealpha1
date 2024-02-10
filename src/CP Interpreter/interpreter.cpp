@@ -28,7 +28,7 @@ bool InterpreterScope::alreadyDeclaredStructureType(std::string identifier) {
 	return false;
 }
 
-parser::StructureDefinition_t InterpreterScope::findDeclaredStructureType(std::string identifier) {
+parser::StructureDefinition_t InterpreterScope::findDeclaredStructureDefinition(std::string identifier) {
 	for (auto variable : structures) {
 		if (variable.identifier == identifier) {
 			return variable;
@@ -183,7 +183,7 @@ Value_t* InterpreterScope::declare(std::string identifier, cp_struct strValue, s
 
 		size_t i;
 		for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredStructureType(strValue.first); --i);
-		auto typeStruct = scopes[i]->findDeclaredStructureType(strValue.first);
+		auto typeStruct = scopes[i]->findDeclaredStructureDefinition(strValue.first);
 
 		for (size_t i = 0; i < value->str.second.size(); ++i) {
 			auto currentIdentifier = identifier + '.' + typeStruct.variables.at(i).identifier;
@@ -274,7 +274,7 @@ Value_t* InterpreterScope::declare(std::string identifier, cp_struct strValue, s
 	return value;
 }
 
-void InterpreterScope::declareStructureType(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
+void InterpreterScope::declareStructureDefinition(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
 	parser::StructureDefinition_t type(name, variables, row, col);
 	structures.push_back(type);
 }
@@ -519,7 +519,7 @@ cp_struct visitor::Interpreter::declareStructureTypeVariables(std::string identi
 	str.second = cp_struct_values();
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredStructureType(typeName); --i);
-	auto typeStruct = scopes[i]->findDeclaredStructureType(typeName);
+	auto typeStruct = scopes[i]->findDeclaredStructureDefinition(typeName);
 	for (auto varTypeStruct : typeStruct.variables) {
 		auto currentIdentifier = identifier + '.' + varTypeStruct.identifier;
 		if (varTypeStruct.type == parser::TYPE::T_STRUCT) {
@@ -923,7 +923,7 @@ void visitor::Interpreter::visit(parser::ASTFunctionDefinitionNode* func) {
 }
 
 void visitor::Interpreter::visit(parser::ASTStructDefinitionNode* structure) {
-	scopes.back()->declareStructureType(structure->identifier, structure->variables, structure->row, structure->col);
+	scopes.back()->declareStructureDefinition(structure->identifier, structure->variables, structure->row, structure->col);
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_bool>* lit) {

@@ -24,12 +24,12 @@ namespace visitor {
 		bool alreadyDeclaredStructureType(std::string);
 		bool alreadyDeclared(std::string);
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
-		void declareStructureType(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
+		void declareStructureDefinition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::string, parser::TYPE, bool, bool, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::string, std::vector<parser::TYPE>, bool, unsigned int, unsigned int);
 		void changeVarType(std::string, parser::TYPE);
 		void changeVarTypeName(std::string, std::string);
-		parser::StructureDefinition_t findDeclaredStructureType(std::string);
+		parser::StructureDefinition_t findDeclaredStructureDefinition(std::string);
 		parser::TYPE arrayType(std::string);
 		std::string typeName(std::string);
 		parser::TYPE type(std::string);

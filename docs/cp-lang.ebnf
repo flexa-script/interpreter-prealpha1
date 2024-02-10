@@ -90,7 +90,7 @@ float_literal     = digit { digit } "." { digit }
 
 char_literal      = "'" printable "'"
 
-string_literal    = """ { printable } """
+string_literal    = "\"" { printable } "\""
 
 printable         = digit | letter | " " | "!" | "\"" | "#" | "$" | "%" | "&"
                   | "'" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";"

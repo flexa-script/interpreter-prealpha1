@@ -30,8 +30,9 @@ typedef std::vector<cp_struct_value>             cp_struct_values;
 typedef std::pair<std::string, cp_struct_values> cp_struct;
 
 typedef struct Value {
-	Value() : b(0), i(0), f(0), c(0), s(""), a(std::any()), str(cp_struct()), arr(cp_array()), actualType(parser::TYPE::T_ND), currentType(parser::TYPE::T_ND) {};
+	Value() : b(0), i(0), f(0), c(0), s(""), a(std::any()), str(cp_struct()), arr(cp_array()), hasValue(false), actualType(parser::TYPE::T_ND), currentType(parser::TYPE::T_ND) {};
 
+	bool hasValue;
 	parser::TYPE actualType;
 	parser::TYPE currentType;
 	cp_bool b;
@@ -47,44 +48,57 @@ typedef struct Value {
 		this->b = b;
 		currentType = parser::TYPE::T_BOOL;
 		actualType = currentType;
+		hasValue = true;
 	}
 	void set(cp_int i) {
 		this->i = i;
 		currentType = parser::TYPE::T_INT;
 		actualType = currentType;
+		hasValue = true;
 	}
 	void set(cp_float f) {
 		this->f = f;
 		currentType = parser::TYPE::T_FLOAT;
 		actualType = currentType;
+		hasValue = true;
 	}
 	void set(cp_char c) {
 		this->c = c;
 		currentType = parser::TYPE::T_CHAR;
 		actualType = currentType;
+		hasValue = true;
 	}
 	void set(cp_string s) {
 		this->s = s;
 		currentType = parser::TYPE::T_STRING;
 		actualType = currentType;
+		hasValue = true;
 	}
 	void set(cp_any a) {
 		this->a = a;
 		currentType = parser::TYPE::T_ANY;
 		actualType = currentType;
+		hasValue = true;
 	}
 	void set(cp_array arr) {
 		this->arr = arr;
 		currentType = parser::TYPE::T_ARRAY;
 		actualType = currentType;
+		hasValue = true;
 	}
 	void set(cp_struct str) {
 		this->str = str;
 		currentType = parser::TYPE::T_STRUCT;
 		actualType = currentType;
+		hasValue = true;
+	}
+	void setType(parser::TYPE type) {
+		currentType = type;
+		actualType = type;
 	}
 	void setNull() {
 		currentType = parser::TYPE::T_NULL;
+		hasValue = false;
 	}
 	void copyFrom(Value* value) {
 		actualType = value->actualType;

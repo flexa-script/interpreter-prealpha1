@@ -259,45 +259,45 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	return new ASTDeclarationNode(type, typeName, identifier, expr, isConst, currentArrayType, dim, row, col);
 }
 
-cp_array Parser::makeArrayLiteral(std::string identifier, TYPE type, std::vector<int> dim, int currDim) {
-	auto arr = cp_array();
-
-	for (size_t i = 0; i < dim.at(currDim); ++i) {
-		Value_t* val = new Value_t();
-		if (dim.size() - 1 == currDim) {
-			switch (type) {
-			case TYPE::T_BOOL:
-				val->set((cp_bool)false);
-				break;
-			case TYPE::T_INT:
-				val->set((cp_int)0);
-				break;
-			case TYPE::T_FLOAT:
-				val->set((cp_float).0);
-				break;
-			case TYPE::T_CHAR:
-				val->set((cp_char)'\0');
-				break;
-			case TYPE::T_STRING:
-				val->set(cp_string());
-				break;
-			case TYPE::T_ND:
-			case TYPE::T_ANY:
-				val->set(cp_any());
-				break;
-			case TYPE::T_STRUCT:
-				val->set(cp_struct());
-			}
-		}
-		else {
-			val->set(makeArrayLiteral(identifier, type, dim, currDim + 1));
-		}
-		arr.push_back(val);
-
-	}
-
-	return arr;
-}
+//cp_array Parser::makeArrayLiteral(std::string identifier, TYPE type, std::vector<int> dim, int currDim) {
+//	auto arr = cp_array();
+//
+//	for (size_t i = 0; i < dim.at(currDim); ++i) {
+//		Value_t* val = new Value_t();
+//		if (dim.size() - 1 == currDim) {
+//			switch (type) {
+//			case TYPE::T_BOOL:
+//				val->set((cp_bool)false);
+//				break;
+//			case TYPE::T_INT:
+//				val->set((cp_int)0);
+//				break;
+//			case TYPE::T_FLOAT:
+//				val->set((cp_float).0);
+//				break;
+//			case TYPE::T_CHAR:
+//				val->set((cp_char)'\0');
+//				break;
+//			case TYPE::T_STRING:
+//				val->set(cp_string());
+//				break;
+//			case TYPE::T_ND:
+//			case TYPE::T_ANY:
+//				val->set(cp_any());
+//				break;
+//			case TYPE::T_STRUCT:
+//				val->set(cp_struct());
+//			}
+//		}
+//		else {
+//			val->set(makeArrayLiteral(identifier, type, dim, currDim + 1));
+//		}
+//		arr.push_back(val);
+//
+//	}
+//
+//	return arr;
+//}
 
 ASTAssignmentNode* Parser::parseAssignmentStatement() {
 	std::string identifier;

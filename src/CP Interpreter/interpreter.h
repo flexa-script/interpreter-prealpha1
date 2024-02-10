@@ -12,6 +12,13 @@
 
 namespace visitor {
 	class InterpreterScope {
+	private:
+		std::string name;
+		std::vector<parser::StructureDefinition_t> structures;
+		std::map<std::string, std::pair<parser::TYPE, Value_t*>> variableSymbolTable;
+		std::map<std::string, std::string> typeNamesTable;
+		std::multimap<std::string, std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*>> functionSymbolTable;
+
 	public:
 		InterpreterScope();
 		InterpreterScope(std::string);
@@ -29,8 +36,8 @@ namespace visitor {
 		Value_t* declare(std::string, cp_struct, std::vector<InterpreterScope*>);
 		Value_t* declare(std::string, cp_array);
 		void declare(std::string, std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*);
-		void declareStructureType(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
-		parser::StructureDefinition_t findDeclaredStructureType(std::string);
+		void declareStructureDefinition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
+		parser::StructureDefinition_t findDeclaredStructureDefinition(std::string);
 
 		std::string typenameof(std::string);
 		parser::TYPE typeof(std::string);
@@ -42,12 +49,6 @@ namespace visitor {
 
 		std::string getName();
 
-	private:
-		std::string name;
-		std::vector<parser::StructureDefinition_t> structures;
-		std::map<std::string, std::pair<parser::TYPE, Value_t*>> variableSymbolTable;
-		std::map<std::string, std::string> typeNamesTable;
-		std::multimap<std::string, std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*>> functionSymbolTable;
 	};
 
 	class Interpreter : public Visitor {
