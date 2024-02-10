@@ -55,8 +55,7 @@ namespace visitor {
 
 	private:
 		bool returns(parser::ASTStatementNode*);
-		parser::StructureDefinition_t findDeclaredStructureType(std::string);
-		void declareStructureTypeVariables(std::string, std::string);
+		void declareStructureTypeVariables(std::string, std::string, cp_struct, parser::ASTLiteralNode<cp_struct>*);
 		void determineArrayType(cp_array);
 		std::string msgHeader(unsigned int, unsigned int);
 
@@ -85,6 +84,7 @@ namespace visitor {
 		void visit(parser::ASTLiteralNode<cp_string>*) override;
 		void visit(parser::ASTLiteralNode<cp_any>*) override;
 		void visit(parser::ASTLiteralNode<cp_array>*) override;
+		void visit(parser::ASTLiteralNode<cp_struct>*) override;
 		void visit(parser::ASTBinaryExprNode*) override;
 		void visit(parser::ASTIdentifierNode*) override;
 		void visit(parser::ASTUnaryExprNode*) override;

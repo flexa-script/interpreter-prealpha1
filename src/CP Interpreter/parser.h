@@ -115,6 +115,8 @@ namespace parser {
 
 		cp_array parseArrayLiteral();
 
+		cp_struct parseStructConstructor();
+
 		cp_array makeArrayLiteral(std::string, TYPE, std::vector<int>, int);
 
 		std::vector<int> calcArrayDimSize(cp_array);

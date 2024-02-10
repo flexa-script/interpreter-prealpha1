@@ -225,34 +225,35 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 		}
 	}
 	else {
-		switch (type) {
-		case TYPE::T_BOOL:
-			expr = new ASTLiteralNode<cp_bool>(false, row, col);
-			break;
-		case TYPE::T_INT:
-			expr = new ASTLiteralNode<cp_int>(0, row, col);
-			break;
-		case TYPE::T_FLOAT:
-			expr = new ASTLiteralNode<cp_float>(0., row, col);
-			break;
-		case TYPE::T_CHAR:
-			expr = new ASTLiteralNode<cp_char>(0, row, col);
-			break;
-		case TYPE::T_STRING:
-			expr = new ASTLiteralNode<cp_string>("", row, col);
-			break;
-		case TYPE::T_ANY:
-			expr = new ASTLiteralNode<cp_any>(cp_any(), row, col);
-			break;
-		case TYPE::T_ARRAY:
-			expr = new ASTLiteralNode<cp_array>(makeArrayLiteral(identifier, currentArrayType, dim, 0), row, col);
-			break;
-		case TYPE::T_STRUCT:
-			expr = nullptr;
-			break;
-		default:
-			throw std::runtime_error(msgHeader() + "expected type for " + identifier + " after ':'.");
-		}
+		//switch (type) {
+		//case TYPE::T_BOOL:
+		//	expr = new ASTLiteralNode<cp_bool>(false, row, col);
+		//	break;
+		//case TYPE::T_INT:
+		//	expr = new ASTLiteralNode<cp_int>(0, row, col);
+		//	break;
+		//case TYPE::T_FLOAT:
+		//	expr = new ASTLiteralNode<cp_float>(0., row, col);
+		//	break;
+		//case TYPE::T_CHAR:
+		//	expr = new ASTLiteralNode<cp_char>(0, row, col);
+		//	break;
+		//case TYPE::T_STRING:
+		//	expr = new ASTLiteralNode<cp_string>("", row, col);
+		//	break;
+		//case TYPE::T_ANY:
+		//	expr = new ASTLiteralNode<cp_any>(cp_any(), row, col);
+		//	break;
+		//case TYPE::T_ARRAY:
+		//	expr = new ASTLiteralNode<cp_array>(makeArrayLiteral(identifier, currentArrayType, dim, 0), row, col);
+		//	break;
+		//case TYPE::T_STRUCT:
+		//	expr = nullptr;
+		//	break;
+		//default:
+		//	throw std::runtime_error(msgHeader() + "expected type for " + identifier + " after ':'.");
+		//}
+		expr = nullptr;
 	}
 
 	return new ASTDeclarationNode(type, typeName, identifier, expr, isConst, currentArrayType, dim, row, col);
@@ -940,10 +941,13 @@ ASTExprNode* Parser::parseFactor() {
 		return parseExprThis();
 
 	case lexer::TOK_IDENTIFIER: // identifier or function call case
-		if (nextToken.type == lexer::TOK_LEFT_BRACKET) {
+		switch (nextToken.type)
+		{
+		case lexer::TOK_LEFT_BRACKET:
 			return parseExprFunctionCall();
-		}
-		else {
+		case lexer::TOK_LEFT_CURLY:
+			return new ASTLiteralNode<cp_struct>(parseStructConstructor(), row, col);
+		default: {
 			auto identifierVector = std::vector<std::string>();
 			if (axe::contains(currentToken.value, ".")) {
 				identifierVector = axe::split(currentToken.value, '.');
@@ -953,6 +957,20 @@ ASTExprNode* Parser::parseFactor() {
 			}
 			return new ASTIdentifierNode(identifierVector[0], identifierVector, row, col);
 		}
+		}
+		//if (nextToken.type == lexer::TOK_LEFT_BRACKET) {
+		//	return parseExprFunctionCall();
+		//}
+		//else {
+		//	auto identifierVector = std::vector<std::string>();
+		//	if (axe::contains(currentToken.value, ".")) {
+		//		identifierVector = axe::split(currentToken.value, '.');
+		//	}
+		//	else {
+		//		identifierVector.push_back(currentToken.value);
+		//	}
+		//	return new ASTIdentifierNode(identifierVector[0], identifierVector, row, col);
+		//}
 
 	case lexer::TOK_READ: // read case
 		return parseExprRead();
@@ -1017,7 +1035,7 @@ cp_array Parser::parseArrayLiteral() {
 			consumeToken();
 		}
 
-	} while (currentToken.type == lexer::TOK_LEFT_CURLY || currentToken.type == lexer::TOK_BOOL_LITERAL || currentToken.type == lexer::TOK_INT_LITERAL
+	} while (currentToken.type == lexer::TOK_LEFT_CURLY || currentToken.type == lexer::TOK_BOOL_LITERAL || currentToken.type == lexer::TOK_INT_LITERAL || currentToken.type == lexer::TOK_IDENTIFIER
 		|| currentToken.type == lexer::TOK_FLOAT_LITERAL || currentToken.type == lexer::TOK_CHAR_LITERAL || currentToken.type == lexer::TOK_STRING_LITERAL);
 
 
@@ -1026,6 +1044,70 @@ cp_array Parser::parseArrayLiteral() {
 	}
 
 	return arr;
+}
+
+cp_struct Parser::parseStructConstructor() {
+	auto str = cp_struct();
+	str.first = currentToken.value;
+	str.second = cp_struct_values();
+
+	consumeToken();
+
+	do {
+		auto strValue = cp_struct_value();
+
+		consumeToken();
+		if (currentToken.type != lexer::TOK_IDENTIFIER) {
+			throw std::runtime_error(msgHeader() + "expected identifier");
+		}
+
+		strValue.first = currentToken.value;
+
+		consumeToken();
+		if (currentToken.type != lexer::TOK_EQUALS) {
+			throw std::runtime_error(msgHeader() + "expected '='");
+		}
+
+		consumeToken();
+
+		Value_t* val = new Value_t();
+		auto type = parseType("struct");
+		switch (type) {
+		case parser::TYPE::T_BOOL:
+			val->set(parseBoolLiteral());
+			break;
+		case parser::TYPE::T_INT:
+			val->set(parseIntLiteral());
+			break;
+		case parser::TYPE::T_FLOAT:
+			val->set(parseFloatLiteral());
+			break;
+		case parser::TYPE::T_CHAR:
+			val->set(parseCharLiteral());
+			break;
+		case parser::TYPE::T_STRING:
+			val->set(parseStringLiteral());
+			break;
+		case parser::TYPE::T_STRUCT:
+			val->set(parseStructConstructor());
+			break;
+		}
+		strValue.second = val;
+		str.second.push_back(strValue);
+
+		consumeToken();
+		//if (currentToken.type == lexer::TOK_COMMA) {
+		//	consumeToken();
+		//}
+
+	} while (nextToken.type == lexer::TOK_IDENTIFIER);
+
+
+	if (currentToken.type != lexer::TOK_RIGHT_CURLY) {
+		throw std::runtime_error(msgHeader() + "expected '}'");
+	}
+
+	return str;
 }
 
 void Parser::checkArrayType(TYPE type) {

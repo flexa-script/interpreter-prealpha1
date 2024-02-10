@@ -19,6 +19,7 @@ namespace visitor {
 		bool alreadyDeclaredStructureType(std::string);
 		bool alreadyDeclared(std::string);
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
+		Value_t* declareNull(std::string, parser::TYPE);
 		Value_t* declare(std::string, cp_bool);
 		Value_t* declare(std::string, cp_int);
 		Value_t* declare(std::string, cp_float);
@@ -95,6 +96,7 @@ namespace visitor {
 		void visit(parser::ASTLiteralNode<cp_string>*) override;
 		void visit(parser::ASTLiteralNode<cp_any>*) override;
 		void visit(parser::ASTLiteralNode<cp_array>*) override;
+		void visit(parser::ASTLiteralNode<cp_struct>*) override;
 		void visit(parser::ASTBinaryExprNode*) override;
 		void visit(parser::ASTIdentifierNode*) override;
 		void visit(parser::ASTUnaryExprNode*) override;

@@ -119,6 +119,11 @@ namespace parser {
 	void ASTLiteralNode<cp_array>::accept(visitor::Visitor* v) {
 		v->visit(this);
 	}
+
+	template<>
+	void ASTLiteralNode<cp_struct>::accept(visitor::Visitor* v) {
+		v->visit(this);
+	}
 }
 
 void ASTExprFunctionCallNode::accept(visitor::Visitor* v) {

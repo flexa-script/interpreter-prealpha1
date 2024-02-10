@@ -8,10 +8,6 @@
 
 
 namespace parser {
-	// Types
-	//enum class TYPE {
-	//	T_ND, T_VOID, T_NULL, T_ANY, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_STRUCT, T_ARRAY
-	//};
 
 	typedef struct VariableDefinition {
 		VariableDefinition(std::string identifier, TYPE type, std::string typeName, TYPE arrayType, bool isAny, bool isConst, unsigned int row, unsigned int col)
