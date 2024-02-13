@@ -94,7 +94,7 @@ namespace parser {
 
 		std::vector<ASTExprNode*>* parseActualParams();
 
-		VariableDefinition_t* parseFormalParam();
+		VariableDecl_t* parseFormalParam();
 
 		cp_bool parseBoolLiteral();
 

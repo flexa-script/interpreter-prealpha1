@@ -1,3 +1,5 @@
+// list.cp
+
 struct Node {
   var has_value : bool;
   var value : any;
@@ -5,7 +7,7 @@ struct Node {
 };
 
 struct List {
-  var fisrt : Node;
+  var first : Node;
 };
 
 def list_add(list : List, value : any) {
@@ -13,10 +15,10 @@ def list_add(list : List, value : any) {
     var newNode : Node;
     newNode.has_value = true;
     newNode.value = value;
-    list.fisrt = newNode;
+    list.first = newNode;
   } else {
     var prevNode : Node;
-    var currNode = list.fisrt;
+    var currNode = list.first;
 
     while (currNode.has_value) {
       prevNode = currNode;
@@ -32,11 +34,11 @@ def list_add(list : List, value : any) {
 }
 
 def list_print(list : List) {
-  if (not list.fisrt.has_value) {
+  if (not list.first.has_value) {
     print("[]");
 
   } else {
-    var node = list.fisrt;
+    var node = list.first;
     print("[");
     while (node.has_value) {
       print(string(node.value));
@@ -49,16 +51,17 @@ def list_print(list : List) {
   }
 }
 
-
-var list : Node = Node {
-  has_value = false,
-  value = 0
+var list : List = List {
+  first = Node {
+    has_value = false,
+    value = 0
+  }
 };
 
 list_add(list, 10);
 list_add(list, 9);
- list_add(list, 8);
- list_add(list, 7);
+list_add(list, 8);
+list_add(list, 7);
 
 print(list);
 print('\n');

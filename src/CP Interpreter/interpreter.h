@@ -13,6 +13,7 @@
 namespace visitor {
 	class InterpreterScope {
 	private:
+		//std::vector<InterpreterScope*> interpreterScopes;
 		std::string name;
 		std::vector<parser::StructureDefinition_t> structures;
 		std::map<std::string, std::pair<parser::TYPE, Value_t*>> variableSymbolTable;
@@ -22,21 +23,23 @@ namespace visitor {
 	public:
 		InterpreterScope();
 		InterpreterScope(std::string);
+		//InterpreterScope(std::string, std::vector<InterpreterScope*>);
 		
 		bool alreadyDeclaredStructureType(std::string);
 		bool alreadyDeclared(std::string);
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
 		Value_t* declareNull(std::string, parser::TYPE);
+		Value_t* declareNullStruct(std::string, parser::TYPE, std::string, bool);
 		Value_t* declare(std::string, cp_bool);
 		Value_t* declare(std::string, cp_int);
 		Value_t* declare(std::string, cp_float);
 		Value_t* declare(std::string, cp_char);
 		Value_t* declare(std::string, cp_string);
-		Value_t* declare(std::string, cp_any);
-		Value_t* declare(std::string, cp_struct, std::vector<InterpreterScope*>);
+		//Value_t* declare(std::string, cp_any);
+		Value_t* declare(std::string, cp_struct/*, std::vector<InterpreterScope*>*/);
 		Value_t* declare(std::string, cp_array);
 		void declare(std::string, std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*);
-		void declareStructureDefinition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
+		void declareStructureDefinition(std::string, std::vector<parser::VariableDecl_t>, unsigned int, unsigned int);
 		parser::StructureDefinition_t findDeclaredStructureDefinition(std::string);
 
 		std::string typenameof(std::string);
@@ -44,6 +47,8 @@ namespace visitor {
 		Value_t* valueof(std::string);
 		std::vector<std::string> variablenamesof(std::string, std::vector<parser::TYPE>);
 		parser::ASTBlockNode* blockof(std::string, std::vector<parser::TYPE>);
+
+		std::map<std::string, std::pair<parser::TYPE, Value_t*>> getVariableSymbolTable();
 
 		std::vector<std::tuple<std::string, std::string, std::string>>  variableList();
 
@@ -68,8 +73,15 @@ namespace visitor {
 	private:
 		std::string msgHeader(unsigned int, unsigned int);
 		void determineArrayType(cp_array);
-		cp_struct declareStructureTypeVariables(std::string, std::string);
-		cp_struct redeclareStructureTypeVariables(std::string, cp_struct);
+		void declare(std::vector<std::string>, Value_t);
+		Value_t* accessValue(std::vector<std::string>, bool);
+		//std::pair<parser::TYPE, Value_t*> findDeclaredVariable(std::string);
+		std::string findTypeName(std::vector<std::string>);
+		parser::TYPE findType(std::vector<std::string>);
+		Value_t* findValue(std::vector<std::string>);
+		bool alreadyDeclaredVar(std::vector<std::string>);
+		//cp_struct declareStructureDefinitionVariables(std::string, std::string);
+		//cp_struct redeclareStructureTypeVariables(std::string, cp_struct);
 
 	public:
 		Interpreter();
@@ -95,7 +107,7 @@ namespace visitor {
 		void visit(parser::ASTLiteralNode<cp_float>*) override;
 		void visit(parser::ASTLiteralNode<cp_char>*) override;
 		void visit(parser::ASTLiteralNode<cp_string>*) override;
-		void visit(parser::ASTLiteralNode<cp_any>*) override;
+		//void visit(parser::ASTLiteralNode<cp_any>*) override;
 		void visit(parser::ASTLiteralNode<cp_array>*) override;
 		void visit(parser::ASTLiteralNode<cp_struct>*) override;
 		void visit(parser::ASTBinaryExprNode*) override;

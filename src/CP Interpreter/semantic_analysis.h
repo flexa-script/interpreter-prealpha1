@@ -14,22 +14,27 @@ namespace visitor {
 	class SemanticScope {
 	private:
 		std::vector<parser::StructureDefinition_t> structures;
-		std::vector<parser::VariableDefinition_t> variableSymbolTable;
-		std::vector<parser::FunctionDefinition_t> functionSymbolTable;
+		std::vector<parser::VariableDecl_t> variableSymbolTable;
+		std::vector<parser::FunctionDecl_t> functionSymbolTable;
+		//std::vector<SemanticScope*> outerScopes;
 		//std::multimap<std::string, std::tuple<parser::TYPE, std::vector<parser::TYPE>, unsigned int>> functionSymbolTable;
 
 	public:
+		SemanticScope();
+		//SemanticScope(std::vector<SemanticScope*>);
+
 		bool isAnyVar(std::string);
 		bool isConst(std::string);
 		bool alreadyDeclaredStructureType(std::string);
 		bool alreadyDeclared(std::string);
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
-		void declareStructureDefinition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
+		void declareStructureDefinition(std::string, std::vector<parser::VariableDecl_t>, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::string, parser::TYPE, bool, bool, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::string, std::vector<parser::TYPE>, bool, unsigned int, unsigned int);
 		void changeVarType(std::string, parser::TYPE);
 		void changeVarTypeName(std::string, std::string);
 		parser::StructureDefinition_t findDeclaredStructureDefinition(std::string);
+		//parser::VariableDecl_t findDeclaredVariable(std::string);
 		parser::TYPE arrayType(std::string);
 		std::string typeName(std::string);
 		parser::TYPE type(std::string);
@@ -37,6 +42,7 @@ namespace visitor {
 		parser::TYPE type(std::string, std::vector<parser::TYPE>);
 		unsigned int declarationLine(std::string);
 		unsigned int declarationLine(std::string, std::vector<parser::TYPE>);
+		std::vector<parser::VariableDecl_t> getVariableSymbolTable();
 
 		std::vector<std::pair<std::string, std::string>> functionList();
 
@@ -50,12 +56,19 @@ namespace visitor {
 		std::stack<parser::TYPE> functions;
 		parser::TYPE currentExpressionType;
 		std::string currentExpressionTypeName;
-		bool currentExpressionIsArray;
-		std::vector<parser::VariableDefinition_t> currentFunctionParameters;
+		bool isCurrentExpressionArray;
+		//bool isFunctionDefinitionContext;
+		std::vector<parser::VariableDecl_t> currentFunctionParameters;
 
 	private:
 		bool returns(parser::ASTStatementNode*);
-		void declareStructureTypeVariables(std::string, std::string, cp_struct, parser::ASTLiteralNode<cp_struct>*);
+		//void declareStructureDefinitionVariables(std::string, std::string, cp_struct, parser::ASTLiteralNode<cp_struct>*);
+		//void declareStructureDefinitionFirstLevelVariables(std::string, std::string);
+		//void redeclareStructureTypeVariables(std::string, std::string, int, int);
+		parser::VariableDecl_t findDeclaredVariable(std::string);
+		std::string findTypeName(std::string);
+		parser::TYPE findType(std::string);
+		bool isAnyVar(std::string);
 		void determineArrayType(cp_array);
 		std::string msgHeader(unsigned int, unsigned int);
 
@@ -82,7 +95,7 @@ namespace visitor {
 		void visit(parser::ASTLiteralNode<cp_float>*) override;
 		void visit(parser::ASTLiteralNode<char>*) override;
 		void visit(parser::ASTLiteralNode<cp_string>*) override;
-		void visit(parser::ASTLiteralNode<cp_any>*) override;
+		//void visit(parser::ASTLiteralNode<cp_any>*) override;
 		void visit(parser::ASTLiteralNode<cp_array>*) override;
 		void visit(parser::ASTLiteralNode<cp_struct>*) override;
 		void visit(parser::ASTBinaryExprNode*) override;

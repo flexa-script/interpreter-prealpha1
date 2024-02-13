@@ -1,5 +1,3 @@
-// struct-decl-value-sub.cp
-
 struct Element {
   var has_value : bool;
   var value : any;
@@ -17,7 +15,4 @@ list.root = Element {
   value = 10
 };
 
-print(list.root.has_value);
-print('\n');
 print(list.root.value);
-print('\n');

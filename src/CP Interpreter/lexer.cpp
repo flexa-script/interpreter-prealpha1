@@ -81,6 +81,8 @@ void Lexer::advance() {
 Token Lexer::processComment() {
 	std::string comment;
 	bool isBlock = false;
+	int row = currentRow;
+	int col = currentCol;
 
 	comment += currentChar;
 	advance();
@@ -90,14 +92,23 @@ Token Lexer::processComment() {
 	}
 
 	do {
+		if (currentChar == '\n') {
+			++currentRow;
+		}
+
 		comment += currentChar;
 		advance();
 	} while (hasNext() && (isBlock && (currentChar != '/' || beforeChar != '*') || !isBlock && currentChar != '\n'));
 
+
+	if (currentChar == '\n') {
+		++currentRow;
+	}
+
 	comment += currentChar;
 	advance();
 
-	return Token(TOKEN_TYPE::TOK_COMMENT, comment, currentRow, startCol);
+	return Token(TOKEN_TYPE::TOK_COMMENT, comment, row, col);
 }
 
 Token Lexer::processString() {
@@ -328,7 +339,7 @@ Token Lexer::nextToken() {
 }
 
 std::string Lexer::msgHeader() {
-	return name + '[' + std::to_string(currentRow) + ':' + std::to_string(currentCol) + "]: ";
+	return "(LERR) " + name + '[' + std::to_string(currentRow) + ':' + std::to_string(currentCol) + "]: ";
 }
 
 Lexer::~Lexer() = default;

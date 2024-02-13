@@ -626,7 +626,7 @@ ASTWhileNode* Parser::parseWhileStatement() {
 ASTFunctionDefinitionNode* Parser::parseFunctionDefinition() {
 	// node attributes
 	std::string identifier;
-	std::vector<VariableDefinition_t> parameters;
+	std::vector<VariableDecl_t> parameters;
 	TYPE type;
 	std::string typeName = "";
 	ASTBlockNode* block;
@@ -709,7 +709,7 @@ ASTFunctionDefinitionNode* Parser::parseFunctionDefinition() {
 ASTStructDefinitionNode* Parser::parseStructDefinition() {
 	// node attributes
 	std::string identifier;
-	std::vector<VariableDefinition_t> variables;
+	std::vector<VariableDecl_t> variables;
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
 
@@ -756,7 +756,7 @@ ASTStructDefinitionNode* Parser::parseStructDefinition() {
 	return new ASTStructDefinitionNode(identifier, variables, row, col);
 }
 
-VariableDefinition_t* Parser::parseFormalParam() {
+VariableDecl_t* Parser::parseFormalParam() {
 	std::string identifier;
 	std::string typeName;
 	TYPE type = TYPE::T_ND;
@@ -805,7 +805,7 @@ VariableDefinition_t* Parser::parseFormalParam() {
 		typeName = currentToken.value;
 	}
 
-	return new VariableDefinition_t(identifier, type, typeName, currentArrayType, type == TYPE::T_ANY, false, currentToken.row, currentToken.col);
+	return new VariableDecl_t(identifier, type, typeName, currentArrayType, type == TYPE::T_ANY, false, currentToken.row, currentToken.col);
 
 };
 
@@ -999,7 +999,7 @@ cp_array Parser::parseArrayLiteral() {
 	auto arr = cp_array();
 	consumeToken();
 	do {
-		Value_t* val = new Value_t();
+		Value_t* val = new Value_t(TYPE::T_ND);
 		if (currentToken.type == lexer::TOK_LEFT_CURLY) {
 			val->set(parseArrayLiteral());
 		}
@@ -1070,7 +1070,7 @@ cp_struct Parser::parseStructConstructor() {
 
 		consumeToken();
 
-		Value_t* val = new Value_t();
+		Value_t* val = new Value_t(TYPE::T_ND);
 		auto type = parseType("struct");
 		switch (type) {
 		case parser::TYPE::T_BOOL:
@@ -1306,7 +1306,7 @@ std::vector<ASTExprNode*>* Parser::parseActualParams() {
 }
 
 std::string Parser::msgHeader() {
-	return name + '[' + std::to_string(currentToken.row) + ':' + std::to_string(currentToken.col) + "]: ";
+	return "(PERR) " + name + '[' + std::to_string(currentToken.row) + ':' + std::to_string(currentToken.col) + "]: ";
 }
 
 TYPE Parser::parseType(std::string identifier) {

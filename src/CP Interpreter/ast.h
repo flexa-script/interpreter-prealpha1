@@ -20,13 +20,19 @@ namespace parser {
 		bool isConst;
 		unsigned int row;
 		unsigned int col;
-	} VariableDefinition_t;
+	} VariableDecl_t;
 
 	typedef struct StructureDefinition {
-		StructureDefinition(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
+		StructureDefinition(std::string identifier, std::vector<VariableDecl_t> variables, unsigned int row, unsigned int col)
 			: identifier(identifier), variables(variables), row(row), col(col) {};
+		StructureDefinition() {
+			identifier = "";
+			variables = std::vector<VariableDecl_t>();
+			row = 0;
+			col = 0;
+		};
 		std::string identifier;
-		std::vector<VariableDefinition_t> variables;
+		std::vector<VariableDecl_t> variables;
 		unsigned int row;
 		unsigned int col;
 	} StructureDefinition_t;
@@ -41,7 +47,7 @@ namespace parser {
 		bool isAny;
 		unsigned int row;
 		unsigned int col;
-	} FunctionDefinition_t;
+	} FunctionDecl_t;
 
 	// Abstract Nodes
 	class ASTNode {
@@ -195,10 +201,10 @@ namespace parser {
 
 	class ASTFunctionDefinitionNode : public ASTStatementNode {
 	public:
-		ASTFunctionDefinitionNode(std::string, std::vector<VariableDefinition_t>, TYPE, std::string, ASTBlockNode*, unsigned int, unsigned int);
+		ASTFunctionDefinitionNode(std::string, std::vector<VariableDecl_t>, TYPE, std::string, ASTBlockNode*, unsigned int, unsigned int);
 
 		std::string identifier;
-		std::vector<VariableDefinition_t> parameters;
+		std::vector<VariableDecl_t> parameters;
 		std::vector<std::string> variableNames;
 		std::vector<TYPE> signature;
 		TYPE type;
@@ -212,10 +218,10 @@ namespace parser {
 
 	class ASTStructDefinitionNode : public ASTStatementNode {
 	public:
-		ASTStructDefinitionNode(std::string, std::vector<VariableDefinition_t>, unsigned int, unsigned int);
+		ASTStructDefinitionNode(std::string, std::vector<VariableDecl_t>, unsigned int, unsigned int);
 
 		std::string identifier;
-		std::vector<VariableDefinition_t> variables;
+		std::vector<VariableDecl_t> variables;
 		unsigned int row;
 		unsigned int col;
 

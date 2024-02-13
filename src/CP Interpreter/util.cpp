@@ -24,6 +24,16 @@ namespace axe {
         return strings;
     }
 
+    std::list<std::string> splitList(std::string string, char sep) {
+        std::list<std::string> strings;
+        std::istringstream stringstream(string);
+        std::string currentString;
+        while (std::getline(stringstream, currentString, sep)) {
+            strings.push_back(currentString);
+        }
+        return strings;
+    }
+
     bool contains(std::string string, std::string cont) {
         return string.find(cont) != std::string::npos;
     }
