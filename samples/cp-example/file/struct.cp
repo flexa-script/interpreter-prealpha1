@@ -1,3 +1,5 @@
+// struct.cp
+
 struct SubStruct {
   var a : int;
 };

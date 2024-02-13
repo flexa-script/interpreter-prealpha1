@@ -749,7 +749,7 @@ void SemanticAnalyser::visit(parser::ASTIfNode* ifNode) {
 	ifNode->condition->accept(this);
 
 	// make sure it is boolean
-	if (currentExpressionType != parser::TYPE::T_BOOL) {
+	if (currentExpressionType != parser::TYPE::T_BOOL && currentExpressionType != parser::TYPE::T_STRUCT) {
 		throw std::runtime_error(msgHeader(ifNode->row, ifNode->col) + "invalid if-condition, expected boolean expression.");
 	}
 
@@ -767,7 +767,7 @@ void SemanticAnalyser::visit(parser::ASTWhileNode* whileNode) {
 	whileNode->condition->accept(this);
 
 	// make sure it is boolean
-	if (currentExpressionType != parser::TYPE::T_BOOL)
+	if (currentExpressionType != parser::TYPE::T_BOOL && currentExpressionType != parser::TYPE::T_STRUCT)
 		throw std::runtime_error(msgHeader(whileNode->row, whileNode->col) + "invalid while-condition, expected boolean expression.");
 
 	// check the while block
@@ -988,6 +988,7 @@ void SemanticAnalyser::visit(parser::ASTUnaryExprNode* un) {
 		}
 		break;
 	case parser::TYPE::T_BOOL:
+	case parser::TYPE::T_STRUCT:
 		if (un->unaryOp != "not") {
 			throw std::runtime_error(msgHeader(un->row, un->col) + "operator '" + un->unaryOp + "' in front of boolean expression.");
 		}

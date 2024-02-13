@@ -1,23 +1,70 @@
-// struct-decl-value-sub.cp
+// list.cp
 
-struct Element {
-  var has_value : bool;
+struct Node {
   var value : any;
-  var next : Element;
+  var next : Node;
 };
 
-struct List{
-  var root : Element;
+struct List {
+  var first : Node;
 };
 
-var list : List;
+def list_add(list : List, value : any) {
+  if (not list.first) {
+    var newNode : Node;
+    newNode.value = value;
+    list.first = newNode;
+  } else {
+    var prevNode : Node;
+    var currNode = list.first;
 
-list.root = Element {
-  has_value = true,
-  value = 10
+    while (currNode) {
+      prevNode = currNode;
+      currNode = currNode.next;
+    }
+
+    var newNode : Node;
+    newNode.value = value;
+
+    currNode.next = newNode;
+  }
+}
+
+def list_print(list : List) {
+  if (not list.first) {
+    print("[]");
+  } else {
+    var node = list.first;
+    print("[");
+    while (node) {
+      print(string(node.value));
+      if (node.next) {
+        print(",");
+      }
+      node = node.next;
+    }
+    print("]");
+  }
+}
+
+var list : List = List {
+  first = Node {
+    value = 1,
+    next = Node {
+      value = 2,
+      next = Node {
+        value = 3
+      }
+    }
+  }
 };
 
-print(list.root.has_value);
+//list_add(list, 10);
+//list_add(list, 9);
+//list_add(list, 8);
+//list_add(list, 7);
+
+print(list);
 print('\n');
-print(list.root.value);
+list_print(list);
 print('\n');

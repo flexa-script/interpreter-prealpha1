@@ -30,6 +30,7 @@ namespace visitor {
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
 		Value_t* declareNull(std::string, parser::TYPE);
 		Value_t* declareNullStruct(std::string, parser::TYPE, std::string, bool);
+		void declare(std::string, Value_t*);
 		Value_t* declare(std::string, cp_bool);
 		Value_t* declare(std::string, cp_int);
 		Value_t* declare(std::string, cp_float);

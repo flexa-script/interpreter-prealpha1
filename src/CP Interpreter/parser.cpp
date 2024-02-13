@@ -1008,22 +1008,27 @@ cp_array Parser::parseArrayLiteral() {
 			switch (type) {
 			case parser::TYPE::T_BOOL:
 				checkArrayType(TYPE::T_BOOL);
+				val->setType(parser::TYPE::T_BOOL);
 				val->set(parseBoolLiteral());
 				break;
 			case parser::TYPE::T_INT:
 				checkArrayType(TYPE::T_INT);
+				val->setType(parser::TYPE::T_INT);
 				val->set(parseIntLiteral());
 				break;
 			case parser::TYPE::T_FLOAT:
 				checkArrayType(TYPE::T_FLOAT);
+				val->setType(parser::TYPE::T_FLOAT);
 				val->set(parseFloatLiteral());
 				break;
 			case parser::TYPE::T_CHAR:
 				checkArrayType(TYPE::T_CHAR);
+				val->setType(parser::TYPE::T_CHAR);
 				val->set(parseCharLiteral());
 				break;
 			case parser::TYPE::T_STRING:
 				checkArrayType(TYPE::T_STRING);
+				val->setType(parser::TYPE::T_STRING);
 				val->set(parseStringLiteral());
 				break;
 			}
@@ -1074,21 +1079,27 @@ cp_struct Parser::parseStructConstructor() {
 		auto type = parseType("struct");
 		switch (type) {
 		case parser::TYPE::T_BOOL:
+			val->setType(parser::TYPE::T_BOOL);
 			val->set(parseBoolLiteral());
 			break;
 		case parser::TYPE::T_INT:
+			val->setType(parser::TYPE::T_INT);
 			val->set(parseIntLiteral());
 			break;
 		case parser::TYPE::T_FLOAT:
+			val->setType(parser::TYPE::T_FLOAT);
 			val->set(parseFloatLiteral());
 			break;
 		case parser::TYPE::T_CHAR:
+			val->setType(parser::TYPE::T_CHAR);
 			val->set(parseCharLiteral());
 			break;
 		case parser::TYPE::T_STRING:
+			val->setType(parser::TYPE::T_STRING);
 			val->set(parseStringLiteral());
 			break;
 		case parser::TYPE::T_STRUCT:
+			val->setType(parser::TYPE::T_STRUCT);
 			val->set(parseStructConstructor());
 			break;
 		}
