@@ -23,7 +23,7 @@ namespace visitor {
 		SemanticScope();
 		//SemanticScope(std::vector<SemanticScope*>);
 
-		bool isAnyVar(std::string);
+		bool findAnyVar(std::string);
 		bool isConst(std::string);
 		bool alreadyDeclaredStructureType(std::string);
 		bool alreadyDeclared(std::string);
@@ -36,6 +36,7 @@ namespace visitor {
 		parser::StructureDefinition_t findDeclaredStructureDefinition(std::string);
 		//parser::VariableDecl_t findDeclaredVariable(std::string);
 		parser::TYPE arrayType(std::string);
+		parser::VariableDecl_t var(std::string);
 		std::string typeName(std::string);
 		parser::TYPE type(std::string);
 		std::string typeName(std::string, std::vector<parser::TYPE>);
@@ -66,9 +67,9 @@ namespace visitor {
 		void declareStructureDefinitionFirstLevelVariables(std::string, std::string);
 		//void redeclareStructureTypeVariables(std::string, std::string, int, int);
 		parser::VariableDecl_t findDeclaredVariable(std::string);
-		//std::string findTypeName(std::string);
-		//parser::TYPE findType(std::string);
-		//bool isAnyVar(std::string);
+		std::string findTypeName(std::string);
+		parser::TYPE findType(std::string);
+		bool findAnyVar(std::string);
 		void determineArrayType(cp_array);
 		std::string msgHeader(unsigned int, unsigned int);
 
