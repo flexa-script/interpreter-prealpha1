@@ -13,6 +13,7 @@ def list_add(list : List, value : any) {
   if (not list.first) {
     var newNode : Node;
     newNode.value = value;
+    newNode.next = null;
     list.first = newNode;
   } else {
     var prevNode : Node;
@@ -47,22 +48,25 @@ def list_print(list : List) {
   }
 }
 
-var list : List = List {
-  first = Node {
-    value = 1,
-    next = Node {
-      value = 2,
-      next = Node {
-        value = 3
-      }
-    }
-  }
-};
+//var list : List = List {
+//  first = Node {
+//    value = 1,
+//    next = Node {
+//      value = 2,
+//      next = Node {
+//        value = 3,
+//        next = null
+//      }
+//    }
+//  }
+//};
 
-//list_add(list, 10);
-//list_add(list, 9);
-//list_add(list, 8);
-//list_add(list, 7);
+var list : List;
+
+list_add(list, 10);
+list_add(list, 9);
+list_add(list, 8);
+list_add(list, 7);
 
 print(list);
 print('\n');

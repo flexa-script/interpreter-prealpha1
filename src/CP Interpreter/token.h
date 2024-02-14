@@ -31,6 +31,7 @@ namespace lexer {
 		TOK_VAR,
 		TOK_STRUCT,
 		TOK_DEF,
+		TOK_NULL,
 		TOK_THIS,
 		TOK_RETURN,
 		TOK_IF,

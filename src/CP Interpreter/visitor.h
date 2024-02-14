@@ -138,6 +138,7 @@ namespace parser {
 	class ASTExprFunctionCallNode;
 	class ASTTypeParseNode;
 	class ASTExprReadNode;
+	class ASTNullNode;
 	class ASTThisNode;
 }
 
@@ -171,6 +172,7 @@ namespace visitor {
 		virtual void visit(parser::ASTExprFunctionCallNode*) = 0;
 		virtual void visit(parser::ASTTypeParseNode*) = 0;
 		virtual void visit(parser::ASTExprReadNode*) = 0;
+		virtual void visit(parser::ASTNullNode*) = 0;
 		virtual void visit(parser::ASTThisNode*) = 0;
 	};
 }

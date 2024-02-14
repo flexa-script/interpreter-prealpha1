@@ -20,6 +20,9 @@ ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string typeName, std::str
 ASTAssignmentNode::ASTAssignmentNode(std::string identifier, std::vector<std::string> identifierVector, ASTExprNode* expr, std::vector<unsigned int> accessVector, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), identifierVector(identifierVector), expr(expr), accessVector(accessVector), row(row), col(col) {}
 
+ASTNullNode::ASTNullNode(unsigned int row, unsigned int col)
+	: row(row), col(col) {}
+
 ASTThisNode::ASTThisNode(unsigned int row, unsigned int col)
 	: row(row), col(col) {}
 
@@ -159,6 +162,10 @@ void ASTPrintNode::accept(visitor::Visitor* v) {
 }
 
 void ASTReadNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+void ASTNullNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 

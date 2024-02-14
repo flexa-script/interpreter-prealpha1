@@ -195,6 +195,8 @@ Token Lexer::processIdentifier() {
 		type = TOK_ANY_TYPE;
 	else if (identifier == "true" || identifier == "false")
 		type = TOK_BOOL_LITERAL;
+	else if (identifier == "null")
+		type = TOK_NULL;
 	else if (identifier == "and")
 		type = TOK_LOGICAL_AND_OP;
 	else if (identifier == "or")

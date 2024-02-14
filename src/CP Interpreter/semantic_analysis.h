@@ -57,18 +57,18 @@ namespace visitor {
 		parser::TYPE currentExpressionType;
 		std::string currentExpressionTypeName;
 		bool isCurrentExpressionArray;
-		//bool isFunctionDefinitionContext;
+		bool isFunctionDefinitionContext;
 		std::vector<parser::VariableDecl_t> currentFunctionParameters;
 
 	private:
 		bool returns(parser::ASTStatementNode*);
-		//void declareStructureDefinitionVariables(std::string, std::string, cp_struct, parser::ASTLiteralNode<cp_struct>*);
-		//void declareStructureDefinitionFirstLevelVariables(std::string, std::string);
+		void declareStructureDefinitionVariables(std::string, std::string, cp_struct, parser::ASTLiteralNode<cp_struct>*);
+		void declareStructureDefinitionFirstLevelVariables(std::string, std::string);
 		//void redeclareStructureTypeVariables(std::string, std::string, int, int);
 		parser::VariableDecl_t findDeclaredVariable(std::string);
-		std::string findTypeName(std::string);
-		parser::TYPE findType(std::string);
-		bool isAnyVar(std::string);
+		//std::string findTypeName(std::string);
+		//parser::TYPE findType(std::string);
+		//bool isAnyVar(std::string);
 		void determineArrayType(cp_array);
 		std::string msgHeader(unsigned int, unsigned int);
 
@@ -104,6 +104,7 @@ namespace visitor {
 		void visit(parser::ASTExprFunctionCallNode*) override;
 		void visit(parser::ASTTypeParseNode*) override;
 		void visit(parser::ASTExprReadNode*) override;
+		void visit(parser::ASTNullNode*) override;
 		void visit(parser::ASTThisNode*) override;
 	};
 

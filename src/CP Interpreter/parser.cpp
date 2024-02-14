@@ -937,6 +937,9 @@ ASTExprNode* Parser::parseFactor() {
 	case lexer::TOK_STRING_TYPE:
 		return parseExprTypeParse();
 
+	case lexer::TOK_NULL:
+		return new ASTNullNode(row, col);
+
 	case lexer::TOK_THIS:
 		return parseExprThis();
 
@@ -1006,6 +1009,10 @@ cp_array Parser::parseArrayLiteral() {
 		else {
 			auto type = parseType("array");
 			switch (type) {
+			case parser::TYPE::T_NULL:
+				val->setType(parser::TYPE::T_NULL);
+				val->setNull();
+				break;
 			case parser::TYPE::T_BOOL:
 				checkArrayType(TYPE::T_BOOL);
 				val->setType(parser::TYPE::T_BOOL);
@@ -1078,6 +1085,10 @@ cp_struct Parser::parseStructConstructor() {
 		Value_t* val = new Value_t(TYPE::T_ND);
 		auto type = parseType("struct");
 		switch (type) {
+		case parser::TYPE::T_NULL:
+			val->setType(parser::TYPE::T_NULL);
+			val->setNull();
+			break;
 		case parser::TYPE::T_BOOL:
 			val->setType(parser::TYPE::T_BOOL);
 			val->set(parseBoolLiteral());
@@ -1324,6 +1335,9 @@ TYPE Parser::parseType(std::string identifier) {
 	switch (currentToken.type) {
 	case lexer::TOK_VOID_TYPE:
 		return TYPE::T_VOID;
+
+	case lexer::TOK_NULL:
+		return TYPE::T_NULL;
 
 	case lexer::TOK_BOOL_TYPE:
 	case lexer::TOK_BOOL_LITERAL:

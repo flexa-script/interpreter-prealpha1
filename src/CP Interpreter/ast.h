@@ -289,6 +289,16 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
+	class ASTNullNode : public ASTExprNode {
+	public:
+		ASTNullNode(unsigned int, unsigned int);
+
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
 	class ASTThisNode : public ASTExprNode {
 	public:
 		ASTThisNode(unsigned int, unsigned int);
