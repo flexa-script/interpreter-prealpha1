@@ -52,9 +52,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ast.h" />
-    <ClInclude Include="CPInterpreter.h" />
-    <ClInclude Include="CPRepl.h" />
-    <ClInclude Include="CPUtil.h" />
+    <ClInclude Include="cpinterpreter.h" />
+    <ClInclude Include="cprepl.h" />
+    <ClInclude Include="cputil.h" />
     <ClInclude Include="interpreter.h" />
     <ClInclude Include="lexer.h" />
     <ClInclude Include="parser.h" />
@@ -65,9 +65,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ast.cpp" />
-    <ClCompile Include="CPInterpreter.cpp" />
-    <ClCompile Include="CPRepl.cpp" />
-    <ClCompile Include="CPUtil.cpp" />
+    <ClCompile Include="cpinterpreter.cpp" />
+    <ClCompile Include="cprepl.cpp" />
+    <ClCompile Include="cputil.cpp" />
     <ClCompile Include="interpreter.cpp" />
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="main.cpp" />

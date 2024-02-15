@@ -57,13 +57,13 @@
     <ClInclude Include="visitor.h">
       <Filter>Header Files\visitor</Filter>
     </ClInclude>
-    <ClInclude Include="CPInterpreter.h">
+    <ClInclude Include="cpinterpreter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CPRepl.h">
+    <ClInclude Include="cprepl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CPUtil.h">
+    <ClInclude Include="cputil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -89,16 +89,16 @@
     <ClCompile Include="semantic_analysis.cpp">
       <Filter>Source Files\visitor</Filter>
     </ClCompile>
-    <ClCompile Include="CPInterpreter.cpp">
+    <ClCompile Include="cpinterpreter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CPRepl.cpp">
+    <ClCompile Include="cprepl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CPUtil.cpp">
+    <ClCompile Include="cputil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
