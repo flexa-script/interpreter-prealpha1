@@ -979,12 +979,12 @@ ASTExprNode* Parser::parseFactor() {
 		return parseExprRead();
 
 	case lexer::TOK_LEFT_BRACKET: { // subexpression case
-		ASTExprNode* sub_expr = parseExpression();
+		ASTExprNode* subExpr = parseExpression();
 		consumeToken();
 		if (currentToken.type != lexer::TOK_RIGHT_BRACKET) {
 			throw std::runtime_error(msgHeader() + "expected ')' after expression.");
 		}
-		return sub_expr;
+		return subExpr;
 	}
 
 	case lexer::TOK_ADDITIVE_OP: // unary expression case
