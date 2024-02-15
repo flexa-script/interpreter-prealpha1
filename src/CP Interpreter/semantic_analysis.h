@@ -14,8 +14,8 @@ namespace visitor {
 	class SemanticScope {
 	private:
 		std::vector<parser::StructureDefinition_t> structures;
-		std::vector<parser::VariableDecl_t> variableSymbolTable;
-		std::vector<parser::FunctionDecl_t> functionSymbolTable;
+		std::vector<parser::VariableDefinition_t> variableSymbolTable;
+		std::vector<parser::FunctionDefinition_t> functionSymbolTable;
 		//std::vector<SemanticScope*> outerScopes;
 		//std::multimap<std::string, std::tuple<parser::TYPE, std::vector<parser::TYPE>, unsigned int>> functionSymbolTable;
 
@@ -28,7 +28,7 @@ namespace visitor {
 		bool alreadyDeclaredStructureType(std::string);
 		bool alreadyDeclared(std::string);
 		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
-		void declareStructureDefinition(std::string, std::vector<parser::VariableDecl_t>, unsigned int, unsigned int);
+		void declareStructureDefinition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::string, parser::TYPE, bool, bool, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::string, std::vector<parser::TYPE>, bool, unsigned int, unsigned int);
 		void changeVarType(std::string, parser::TYPE);
@@ -36,14 +36,14 @@ namespace visitor {
 		parser::StructureDefinition_t findDeclaredStructureDefinition(std::string);
 		//parser::VariableDecl_t findDeclaredVariable(std::string);
 		parser::TYPE arrayType(std::string);
-		parser::VariableDecl_t var(std::string);
+		parser::VariableDefinition_t var(std::string);
 		std::string typeName(std::string);
 		parser::TYPE type(std::string);
 		std::string typeName(std::string, std::vector<parser::TYPE>);
 		parser::TYPE type(std::string, std::vector<parser::TYPE>);
 		unsigned int declarationLine(std::string);
 		unsigned int declarationLine(std::string, std::vector<parser::TYPE>);
-		std::vector<parser::VariableDecl_t> getVariableSymbolTable();
+		std::vector<parser::VariableDefinition_t> getVariableSymbolTable();
 
 		std::vector<std::pair<std::string, std::string>> functionList();
 
@@ -59,14 +59,14 @@ namespace visitor {
 		std::string currentExpressionTypeName;
 		bool isCurrentExpressionArray;
 		bool isFunctionDefinitionContext;
-		std::vector<parser::VariableDecl_t> currentFunctionParameters;
+		std::vector<parser::VariableDefinition_t> currentFunctionParameters;
 
 	private:
 		bool returns(parser::ASTStatementNode*);
 		void declareStructureDefinitionVariables(std::string, std::string, cp_struct, parser::ASTLiteralNode<cp_struct>*);
 		void declareStructureDefinitionFirstLevelVariables(std::string, std::string);
 		//void redeclareStructureTypeVariables(std::string, std::string, int, int);
-		parser::VariableDecl_t findDeclaredVariable(std::string);
+		parser::VariableDefinition_t findDeclaredVariable(std::string);
 		std::string findTypeName(std::string);
 		parser::TYPE findType(std::string);
 		bool findAnyVar(std::string);

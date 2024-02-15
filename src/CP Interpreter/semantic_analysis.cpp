@@ -36,7 +36,7 @@ bool SemanticScope::alreadyDeclaredStructureType(std::string identifier) {
 }
 
 
-std::vector<parser::VariableDecl_t> SemanticScope::getVariableSymbolTable() {
+std::vector<parser::VariableDefinition_t> SemanticScope::getVariableSymbolTable() {
 	return variableSymbolTable;
 }
 
@@ -50,9 +50,9 @@ bool SemanticScope::alreadyDeclared(std::string identifier) {
 }
 
 void SemanticScope::changeVarTypeName(std::string identifier, std::string typeName) {
-	std::vector<parser::VariableDecl_t> newVariableSymbolTable;
+	std::vector<parser::VariableDefinition_t> newVariableSymbolTable;
 	for (size_t i = 0; i < variableSymbolTable.size(); ++i) {
-		parser::VariableDecl_t variable = variableSymbolTable[i];
+		parser::VariableDefinition_t variable = variableSymbolTable[i];
 		if (variable.identifier == identifier) {
 			variable.typeName = typeName;
 		}
@@ -62,9 +62,9 @@ void SemanticScope::changeVarTypeName(std::string identifier, std::string typeNa
 }
 
 void SemanticScope::changeVarType(std::string identifier, parser::TYPE type) {
-	std::vector<parser::VariableDecl_t> newVariableSymbolTable;
+	std::vector<parser::VariableDefinition_t> newVariableSymbolTable;
 	for (size_t i = 0; i < variableSymbolTable.size(); ++i) {
-		parser::VariableDecl_t variable = variableSymbolTable[i];
+		parser::VariableDefinition_t variable = variableSymbolTable[i];
 		if (variable.identifier == identifier) {
 			variable.type = type;
 		}
@@ -74,7 +74,7 @@ void SemanticScope::changeVarType(std::string identifier, parser::TYPE type) {
 }
 
 bool SemanticScope::alreadyDeclared(std::string identifier, std::vector<parser::TYPE> signature) {
-	std::vector<parser::FunctionDecl_t> funcs = std::vector<parser::FunctionDecl_t>();
+	std::vector<parser::FunctionDefinition_t> funcs = std::vector<parser::FunctionDefinition_t>();
 
 	for (auto fun : functionSymbolTable) {
 		if (fun.identifier == identifier) {
@@ -121,18 +121,18 @@ bool SemanticScope::isConst(std::string identifier) {
 	return false;
 }
 
-void SemanticScope::declareStructureDefinition(std::string name, std::vector<parser::VariableDecl_t> variables, unsigned int row, unsigned int col) {
+void SemanticScope::declareStructureDefinition(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
 	parser::StructureDefinition_t type(name, variables, row, col);
 	structures.push_back(type);
 }
 
 void SemanticScope::declare(std::string identifier, parser::TYPE type, std::string typeName, parser::TYPE arrayType, bool isAny, bool isConst, unsigned int row, unsigned int col) {
-	parser::VariableDecl_t var(identifier, type, typeName, arrayType, isAny, isConst, row, col);
+	parser::VariableDefinition_t var(identifier, type, typeName, arrayType, isAny, isConst, row, col);
 	variableSymbolTable.push_back(var);
 }
 
 void SemanticScope::declare(std::string identifier, parser::TYPE type, std::string typeName, std::vector<parser::TYPE> signature, bool isAny, unsigned int row, unsigned int col) {
-	parser::FunctionDecl_t fun(identifier, type, typeName, signature, isAny, row, col);
+	parser::FunctionDefinition_t fun(identifier, type, typeName, signature, isAny, row, col);
 	functionSymbolTable.push_back(fun);
 	//functionSymbolTable.insert(std::make_pair(identifier, std::make_tuple(type, signature, row)));
 }
@@ -221,7 +221,7 @@ parser::TYPE SemanticScope::arrayType(std::string identifier) {
 //	throw std::runtime_error("error: '" + identifier + "' variable not found");
 //}
 
-parser::VariableDecl_t SemanticScope::var(std::string identifier) {
+parser::VariableDefinition_t SemanticScope::var(std::string identifier) {
 	for (auto variable : variableSymbolTable) {
 		if (variable.identifier == identifier) {
 			return variable;
@@ -238,7 +238,7 @@ parser::TYPE SemanticScope::type(std::string identifier) {
 }
 
 std::string SemanticScope::typeName(std::string identifier, std::vector<parser::TYPE> signature) {
-	std::vector<parser::FunctionDecl_t> funcs = std::vector<parser::FunctionDecl_t>();
+	std::vector<parser::FunctionDefinition_t> funcs = std::vector<parser::FunctionDefinition_t>();
 
 	for (auto fun : functionSymbolTable) {
 		if (fun.identifier == identifier) {
@@ -268,7 +268,7 @@ std::string SemanticScope::typeName(std::string identifier, std::vector<parser::
 }
 
 parser::TYPE SemanticScope::type(std::string identifier, std::vector<parser::TYPE> signature) {
-	std::vector<parser::FunctionDecl_t> funcs = std::vector<parser::FunctionDecl_t>();
+	std::vector<parser::FunctionDefinition_t> funcs = std::vector<parser::FunctionDefinition_t>();
 
 	for (auto fun : functionSymbolTable) {
 		if (fun.identifier == identifier) {
@@ -308,7 +308,7 @@ unsigned int SemanticScope::declarationLine(std::string identifier) {
 }
 
 unsigned int SemanticScope::declarationLine(std::string identifier, std::vector<parser::TYPE> signature) {
-	std::vector<parser::FunctionDecl_t> funcs = std::vector<parser::FunctionDecl_t>();
+	std::vector<parser::FunctionDefinition_t> funcs = std::vector<parser::FunctionDefinition_t>();
 
 	for (auto fun : functionSymbolTable) {
 		if (fun.identifier == identifier) {
@@ -447,10 +447,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl) {
 			}
 
 			currentScope->declare(decl->identifier, strType, strTypeName, decl->arrayType, decl->type == parser::TYPE::T_ANY, decl->isConst, decl->row, decl->col);
-			if (strExpr) {
-				// ERROR: ta tentando declarar 
-				// var currNode = list.first;
-				// na definição da função, mas list.first é parâmetro
+			if (strExpr && !isFunctionDefinitionContext) {
 				declareStructureDefinitionVariables(decl->identifier, currentExpressionTypeName, strExpr->val, strExpr);
 			}
 			else {
@@ -509,7 +506,7 @@ void SemanticAnalyser::declareStructureDefinitionVariables(std::string identifie
 	}
 }
 
-parser::VariableDecl_t SemanticAnalyser::findDeclaredVariable(std::string identifier) {
+parser::VariableDefinition_t SemanticAnalyser::findDeclaredVariable(std::string identifier) {
 	int i;
 	for (i = scopes.size() - 1; i >= 0 && !scopes[i]->alreadyDeclared(identifier); --i) {
 		if (i <= 0) {

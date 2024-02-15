@@ -14,7 +14,7 @@ struct Test {
 var test : Test;
 
 test.i = 10;
-test.sub.a = 99;
+test.sub.a = 99; // erro, test.sub não declarado
 
 print(test.i);
 print('\n');

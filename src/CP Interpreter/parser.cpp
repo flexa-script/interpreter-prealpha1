@@ -626,7 +626,7 @@ ASTWhileNode* Parser::parseWhileStatement() {
 ASTFunctionDefinitionNode* Parser::parseFunctionDefinition() {
 	// node attributes
 	std::string identifier;
-	std::vector<VariableDecl_t> parameters;
+	std::vector<VariableDefinition_t> parameters;
 	TYPE type;
 	std::string typeName = "";
 	ASTBlockNode* block;
@@ -709,7 +709,7 @@ ASTFunctionDefinitionNode* Parser::parseFunctionDefinition() {
 ASTStructDefinitionNode* Parser::parseStructDefinition() {
 	// node attributes
 	std::string identifier;
-	std::vector<VariableDecl_t> variables;
+	std::vector<VariableDefinition_t> variables;
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
 
@@ -756,7 +756,7 @@ ASTStructDefinitionNode* Parser::parseStructDefinition() {
 	return new ASTStructDefinitionNode(identifier, variables, row, col);
 }
 
-VariableDecl_t* Parser::parseFormalParam() {
+VariableDefinition_t* Parser::parseFormalParam() {
 	std::string identifier;
 	std::string typeName;
 	TYPE type = TYPE::T_ND;
@@ -805,7 +805,7 @@ VariableDecl_t* Parser::parseFormalParam() {
 		typeName = currentToken.value;
 	}
 
-	return new VariableDecl_t(identifier, type, typeName, currentArrayType, type == TYPE::T_ANY, false, currentToken.row, currentToken.col);
+	return new VariableDefinition_t(identifier, type, typeName, currentArrayType, type == TYPE::T_ANY, false, currentToken.row, currentToken.col);
 
 };
 

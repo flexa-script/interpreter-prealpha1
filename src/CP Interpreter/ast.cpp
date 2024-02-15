@@ -50,7 +50,7 @@ ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* ifBlock, unsigned int
 ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: condition(condition), block(block), row(row), col(col) {}
 
-ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<VariableDecl_t> parameters, TYPE type, std::string typeName, ASTBlockNode* block, unsigned int row, unsigned int col)
+ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<VariableDefinition_t> parameters, TYPE type, std::string typeName, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), parameters(std::move(parameters)), type(type), typeName(typeName), block(block), row(row), col(col) {
 	// generate signature
 	this->signature = std::vector<TYPE>();
@@ -61,7 +61,7 @@ ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std
 	}
 }
 
-ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::vector<VariableDecl_t> variables, unsigned int row, unsigned int col)
+ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), variables(std::move(variables)), row(row), col(col) {}
 
 
