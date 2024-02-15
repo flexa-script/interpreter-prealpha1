@@ -1,5 +1,5 @@
 #include "util.h"
-#include "CPUtil.h"
+#include "cputil.h"
 
 
 std::string CPUtil::loadSource(std::string path) {

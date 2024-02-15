@@ -11,7 +11,7 @@
 #include "semantic_analysis.h"
 #include "interpreter.h"
 #include "util.h"
-#include "CPUtil.h"
+#include "cputil.h"
 
 
 typedef struct Program {

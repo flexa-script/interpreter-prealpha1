@@ -1,5 +1,5 @@
-#include "CPRepl.h"
-#include "CPInterpreter.h"
+#include "cprepl.h"
+#include "cpinterpreter.h"
 
 
 int main(int argc, const char* argv[]) {
