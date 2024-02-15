@@ -14,7 +14,10 @@ struct Test {
 var test : Test;
 
 test.i = 10;
-test.sub.a = 99; // erro, test.sub não declarado
+//test.sub.a = 99; // erro, test.sub não declarado
+test.sub = SubStruct {
+  a = 99
+};
 
 print(test.i);
 print('\n');

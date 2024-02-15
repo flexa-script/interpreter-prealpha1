@@ -11,14 +11,11 @@ namespace parser {
 
 	typedef struct VariableDefinition {
 		VariableDefinition(std::string identifier, TYPE type, std::string typeName, TYPE arrayType, bool isAny, bool isConst, unsigned int row, unsigned int col)
-			: identifier(identifier), type(type), typeName(typeName), arrayType(arrayType), isAny(isAny), isConst(isConst), row(row), col(col) {
-			//subVariables = std::vector<VariableDefinition_t>();
-		};
+			: identifier(identifier), type(type), typeName(typeName), arrayType(arrayType), isAny(isAny), isConst(isConst), row(row), col(col) {};
 		std::string identifier;
 		std::string typeName;
 		parser::TYPE type;
 		parser::TYPE arrayType;
-		//std::vector<parser::VariableDefinition_t> subVariables;
 		bool isAny;
 		bool isConst;
 		unsigned int row;
