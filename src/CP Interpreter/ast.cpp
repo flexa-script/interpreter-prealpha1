@@ -113,11 +113,6 @@ namespace parser {
 		v->visit(this);
 	}
 
-	//template<>
-	//void ASTLiteralNode<cp_any>::accept(visitor::Visitor* v) {
-	//	v->visit(this);
-	//}
-
 	template<>
 	void ASTLiteralNode<cp_array>::accept(visitor::Visitor* v) {
 		v->visit(this);

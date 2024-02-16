@@ -32,4 +32,4 @@ public:
 	std::vector<Program> debugPrograms();
 };
 
-#endif//CPINTERPRETER_H
+#endif //CPINTERPRETER_H

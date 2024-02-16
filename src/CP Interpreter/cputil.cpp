@@ -31,11 +31,8 @@ std::string CPUtil::loadSource(std::string path) {
 }
 
 std::string CPUtil::getLibName(size_t index, std::string path) {
-	//auto splPath = axe::split(path, '\\');
-	//std::string fileName = splPath.at(splPath.size() - 1);
 	std::string fileName = path.substr(index, path.size());
 	std::string libName = fileName.substr(0, fileName.length() - 3);
-	//std::replace(libName.begin(), libName.end(), '/', '.');
 	std::replace(libName.begin(), libName.end(), '\\', '.');
 	return libName;
 }

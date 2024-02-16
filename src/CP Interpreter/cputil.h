@@ -13,4 +13,4 @@ public:
 	static std::string getLibName(size_t, std::string);
 };
 
-#endif // CPUTIL_H
+#endif //CPUTIL_H

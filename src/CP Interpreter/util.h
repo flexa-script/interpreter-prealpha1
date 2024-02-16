@@ -14,4 +14,4 @@ namespace axe {
 	std::string join(std::vector<std::string>, const char* const);
 }
 
-#endif // UTIL_H
+#endif //UTIL_H

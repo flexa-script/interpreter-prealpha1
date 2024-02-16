@@ -225,79 +225,11 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 		}
 	}
 	else {
-		//switch (type) {
-		//case TYPE::T_BOOL:
-		//	expr = new ASTLiteralNode<cp_bool>(false, row, col);
-		//	break;
-		//case TYPE::T_INT:
-		//	expr = new ASTLiteralNode<cp_int>(0, row, col);
-		//	break;
-		//case TYPE::T_FLOAT:
-		//	expr = new ASTLiteralNode<cp_float>(0., row, col);
-		//	break;
-		//case TYPE::T_CHAR:
-		//	expr = new ASTLiteralNode<cp_char>(0, row, col);
-		//	break;
-		//case TYPE::T_STRING:
-		//	expr = new ASTLiteralNode<cp_string>("", row, col);
-		//	break;
-		//case TYPE::T_ANY:
-		//	expr = new ASTLiteralNode<cp_any>(cp_any(), row, col);
-		//	break;
-		//case TYPE::T_ARRAY:
-		//	expr = new ASTLiteralNode<cp_array>(makeArrayLiteral(identifier, currentArrayType, dim, 0), row, col);
-		//	break;
-		//case TYPE::T_STRUCT:
-		//	expr = nullptr;
-		//	break;
-		//default:
-		//	throw std::runtime_error(msgHeader() + "expected type for " + identifier + " after ':'.");
-		//}
 		expr = nullptr;
 	}
 
 	return new ASTDeclarationNode(type, typeName, identifier, expr, isConst, currentArrayType, dim, row, col);
 }
-
-//cp_array Parser::makeArrayLiteral(std::string identifier, TYPE type, std::vector<int> dim, int currDim) {
-//	auto arr = cp_array();
-//
-//	for (size_t i = 0; i < dim.at(currDim); ++i) {
-//		Value_t* val = new Value_t();
-//		if (dim.size() - 1 == currDim) {
-//			switch (type) {
-//			case TYPE::T_BOOL:
-//				val->set((cp_bool)false);
-//				break;
-//			case TYPE::T_INT:
-//				val->set((cp_int)0);
-//				break;
-//			case TYPE::T_FLOAT:
-//				val->set((cp_float).0);
-//				break;
-//			case TYPE::T_CHAR:
-//				val->set((cp_char)'\0');
-//				break;
-//			case TYPE::T_STRING:
-//				val->set(cp_string());
-//				break;
-//			case TYPE::T_ND:
-//			case TYPE::T_ANY:
-//				val->set(cp_any());
-//				break;
-//			case TYPE::T_STRUCT:
-//				val->set(cp_struct());
-//			}
-//		}
-//		else {
-//			val->set(makeArrayLiteral(identifier, type, dim, currDim + 1));
-//		}
-//		arr.push_back(val);
-//
-//	}
-//
-//	return arr;
-//}
 
 ASTAssignmentNode* Parser::parseAssignmentStatement() {
 	std::string identifier;
@@ -961,19 +893,6 @@ ASTExprNode* Parser::parseFactor() {
 			return new ASTIdentifierNode(identifierVector[0], identifierVector, row, col);
 		}
 		}
-		//if (nextToken.type == lexer::TOK_LEFT_BRACKET) {
-		//	return parseExprFunctionCall();
-		//}
-		//else {
-		//	auto identifierVector = std::vector<std::string>();
-		//	if (axe::contains(currentToken.value, ".")) {
-		//		identifierVector = axe::split(currentToken.value, '.');
-		//	}
-		//	else {
-		//		identifierVector.push_back(currentToken.value);
-		//	}
-		//	return new ASTIdentifierNode(identifierVector[0], identifierVector, row, col);
-		//}
 
 	case lexer::TOK_READ: // read case
 		return parseExprRead();
@@ -1118,9 +1037,6 @@ cp_struct Parser::parseStructConstructor() {
 		str.second.push_back(strValue);
 
 		consumeToken();
-		//if (currentToken.type == lexer::TOK_COMMA) {
-		//	consumeToken();
-		//}
 
 	} while (nextToken.type == lexer::TOK_IDENTIFIER);
 
