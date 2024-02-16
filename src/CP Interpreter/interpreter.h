@@ -29,7 +29,7 @@ namespace visitor {
 
 	private:
 		void determineArrayType(cp_array);
-		void declareStructureVariable(std::vector<std::string>, Value_t);
+		void declareStructureVariable(std::vector<std::string>, Value_t, std::vector<unsigned int>);
 
 		std::string msgHeader(unsigned int, unsigned int);
 

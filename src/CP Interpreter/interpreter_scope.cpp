@@ -72,111 +72,112 @@ bool InterpreterScope::alreadyDeclaredFunction(std::string identifier, std::vect
 	return false;
 }
 
-Value_t* InterpreterScope::declareNull(std::string identifier, parser::TYPE type) {
+Value_t* InterpreterScope::declareNull(std::string identifier, parser::TYPE type, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
-		value = valueof(identifier);
+		value = valueof(identifier, accessVector);
 	}
 	else {
 		value = new Value_t(type);
+		variableSymbolTable[identifier] = value;
 	}
 	value->setNull();
-	variableSymbolTable[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declareNullStruct(std::string identifier, parser::TYPE type, std::string typeName) {
-	Value_t* value = declareNull(identifier, type);
+Value_t* InterpreterScope::declareNullStruct(std::string identifier, parser::TYPE type, std::string typeName, std::vector<unsigned int> accessVector) {
+	Value_t* value = declareNull(identifier, type, accessVector);
 	value->str.first = typeName;
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_bool boolValue) {
+Value_t* InterpreterScope::declare(std::string identifier, cp_bool boolValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
-		value = valueof(identifier);
+		value = valueof(identifier, accessVector);
 	}
 	else {
 		value = new Value_t(parser::TYPE::T_BOOL);
+		variableSymbolTable[identifier] = value;
 	}
 	value->set(boolValue);
-	variableSymbolTable[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_int intValue) {
+Value_t* InterpreterScope::declare(std::string identifier, cp_int intValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
-		value = valueof(identifier);
+		value = valueof(identifier, accessVector);
 	}
 	else {
 		value = new Value_t(parser::TYPE::T_INT);
+		variableSymbolTable[identifier] = value;
 	}
 	value->set(intValue);
-	variableSymbolTable[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_float realValue) {
+Value_t* InterpreterScope::declare(std::string identifier, cp_float realValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
-		value = valueof(identifier);
+		value = valueof(identifier, accessVector);
 	}
 	else {
 		value = new Value_t(parser::TYPE::T_FLOAT);
+		variableSymbolTable[identifier] = value;
 	}
 	value->set(realValue);
-	variableSymbolTable[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_char charValue) {
+Value_t* InterpreterScope::declare(std::string identifier, cp_char charValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
-		value = valueof(identifier);
+		value = valueof(identifier, accessVector);
 	}
 	else {
 		value = new Value_t(parser::TYPE::T_CHAR);
+		variableSymbolTable[identifier] = value;
 	}
 	value->set(charValue);
-	variableSymbolTable[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_string stringValue) {
+Value_t* InterpreterScope::declare(std::string identifier, cp_string stringValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
-		value = valueof(identifier);
+		value = valueof(identifier, accessVector);
 	}
 	else {
 		value = new Value_t(parser::TYPE::T_STRING);
+		variableSymbolTable[identifier] = value;
 	}
 	value->set(stringValue);
-	variableSymbolTable[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_array arrValue) {
+Value_t* InterpreterScope::declare(std::string identifier, cp_array arrValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
-		value = valueof(identifier);
+		value = valueof(identifier, accessVector);
 	}
 	else {
 		value = new Value_t(parser::TYPE::T_ARRAY);
+		variableSymbolTable[identifier] = value;
 	}
 	value->set(arrValue);
-	variableSymbolTable[identifier] = value;
 	return value;
 }
 
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_struct strValue) {
+Value_t* InterpreterScope::declare(std::string identifier, cp_struct strValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
-		value = valueof(identifier);
+		value = valueof(identifier, accessVector);
 	}
 	else {
 		value = new Value_t(parser::TYPE::T_STRUCT);
+		variableSymbolTable[identifier] = value;
 	}
 	value->set(strValue);
 
@@ -186,7 +187,6 @@ Value_t* InterpreterScope::declare(std::string identifier, cp_struct strValue) {
 		currTypeName = strValue.first;
 	}
 
-	variableSymbolTable[identifier] = value;
 	return value;
 }
 
@@ -199,17 +199,27 @@ void InterpreterScope::declare(std::string identifier, std::vector<parser::TYPE>
 	functionSymbolTable.insert(std::make_pair(identifier, std::make_tuple(signature, variableNames, block)));
 }
 
-std::string InterpreterScope::typenameof(std::string identifier) {
-	Value_t* value = valueof(identifier);
+std::string InterpreterScope::typenameof(std::string identifier, std::vector<unsigned int> accessVector) {
+	Value_t* value = valueof(identifier, accessVector);
 	return value->str.first;
 }
 
-parser::TYPE InterpreterScope::typeof(std::string identifier) {
-	Value_t* value = valueof(identifier);
+parser::TYPE InterpreterScope::typeof(std::string identifier, std::vector<unsigned int> accessVector) {
+	Value_t* value = valueof(identifier, accessVector);
 	return value->currentType;
 }
 
-Value_t* InterpreterScope::valueof(std::string identifier) {
+Value_t* InterpreterScope::accessvalueofarray(Value_t* arr, std::vector<unsigned int> accessVector) {
+	Value_t* val = arr;
+	cp_array* currentVal = &val->arr;
+	size_t s = 0;
+	for (s = 0; s < accessVector.size() - 1; ++s) {
+		currentVal = &currentVal->at(accessVector[s])->arr;
+	}
+	return currentVal->at(accessVector[s]);
+}
+
+Value_t* InterpreterScope::valueof(std::string identifier, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 
 	if (axe::contains(identifier, ".")) {
@@ -227,6 +237,10 @@ Value_t* InterpreterScope::valueof(std::string identifier) {
 	}
 	else {
 		value = variableSymbolTable[identifier];
+	}
+
+	if (accessVector.size() > 0) {
+		return accessvalueofarray(value, accessVector);
 	}
 
 	return value;
