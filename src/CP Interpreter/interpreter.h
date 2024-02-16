@@ -14,7 +14,7 @@ namespace visitor {
 	class InterpreterScope {
 	private:
 		std::string name;
-		std::vector<parser::StructureDefinition_t> structures;
+		std::vector<parser::StructureDefinition_t> structureSymbolTable;
 		std::map<std::string, Value_t*> variableSymbolTable;
 		std::multimap<std::string, std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*>> functionSymbolTable;
 
@@ -22,9 +22,9 @@ namespace visitor {
 		InterpreterScope();
 		InterpreterScope(std::string);
 		
-		bool alreadyDeclaredStructureType(std::string);
-		bool alreadyDeclared(std::string);
-		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
+		bool alreadyDeclaredStructureDefinition(std::string);
+		bool alreadyDeclaredVariable(std::string);
+		bool alreadyDeclaredFunction(std::string, std::vector<parser::TYPE>);
 		Value_t* declareNull(std::string, parser::TYPE);
 		Value_t* declareNullStruct(std::string, parser::TYPE, std::string);
 		Value_t* declare(std::string, cp_bool);
@@ -36,18 +36,19 @@ namespace visitor {
 		Value_t* declare(std::string, cp_array);
 		void declare(std::string, std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*);
 		void declareStructureDefinition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
+
 		parser::StructureDefinition_t findDeclaredStructureDefinition(std::string);
 
 		std::string typenameof(std::string);
 		parser::TYPE typeof(std::string);
 		Value_t* valueof(std::string);
+
 		std::vector<std::string> variablenamesof(std::string, std::vector<parser::TYPE>);
 		parser::ASTBlockNode* blockof(std::string, std::vector<parser::TYPE>);
 
 		std::vector<std::tuple<std::string, std::string, std::string>>  variableList();
 
 		std::string getName();
-
 	};
 
 	class Interpreter : public Visitor {
@@ -65,9 +66,10 @@ namespace visitor {
 		bool returnFromFunction = false;
 
 	private:
-		std::string msgHeader(unsigned int, unsigned int);
 		void determineArrayType(cp_array);
 		void declareStructureVariable(std::vector<std::string>, Value_t);
+
+		std::string msgHeader(unsigned int, unsigned int);
 
 	public:
 		Interpreter();

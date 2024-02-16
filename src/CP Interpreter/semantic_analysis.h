@@ -13,24 +13,24 @@ namespace visitor {
 
 	class SemanticScope {
 	private:
-		std::vector<parser::StructureDefinition_t> structures;
+		std::vector<parser::StructureDefinition_t> structureSymbolTable;
 		std::vector<parser::VariableDefinition_t> variableSymbolTable;
 		std::vector<parser::FunctionDefinition_t> functionSymbolTable;
 
 	public:
 		SemanticScope();
 
-		bool findAnyVar(std::string);
-		bool isConst(std::string);
-		bool alreadyDeclaredStructureType(std::string);
-		bool alreadyDeclared(std::string);
-		bool alreadyDeclared(std::string, std::vector<parser::TYPE>);
+		bool alreadyDeclaredStructureDefinition(std::string);
+		bool alreadyDeclaredVariable(std::string);
+		bool alreadyDeclaredFunction(std::string, std::vector<parser::TYPE>);
 		void declareStructureDefinition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::string, parser::TYPE, bool, bool, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::string, std::vector<parser::TYPE>, bool, unsigned int, unsigned int);
 		void changeVarType(std::string, parser::TYPE);
 		void changeVarTypeName(std::string, std::string);
 		parser::StructureDefinition_t findDeclaredStructureDefinition(std::string);
+		bool findAnyVar(std::string);
+		bool isConst(std::string);
 		parser::TYPE arrayType(std::string);
 		parser::VariableDefinition_t var(std::string);
 		std::string typeName(std::string);
