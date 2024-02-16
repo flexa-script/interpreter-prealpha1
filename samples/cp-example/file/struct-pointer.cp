@@ -1,3 +1,5 @@
+// struct-pointer.cp
+
 struct Element {
   var has_value : bool;
   var value : any;

@@ -1054,6 +1054,18 @@ void SemanticAnalyser::visit(parser::ASTExprFunctionCallNode* func) {
 
 void SemanticAnalyser::visit(parser::ASTTypeParseNode* typeParser) {
 	typeParser->expr->accept(this);
+
+	//if (typeParser->type == parser::TYPE::T_INT) {
+	//	if (currentExpressionType == parser::TYPE::T_STRING) {
+	//		try {
+	//			std::stoll(typeParser->expr);
+	//		}
+	//		catch (...) {
+
+	//		}
+	//	}
+	//}
+
 	currentExpressionType = typeParser->type;
 }
 

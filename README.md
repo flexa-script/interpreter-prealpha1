@@ -12,16 +12,16 @@
 - [X] Add mod (%) operation support
 - [X] Add library support
 - [X] Add collum on errors
-- [X] Add this to get current function name (future an object?)
+- [X] Add 'this' token to get current function name (future an object?)
 - [X] Add const support
 - [X] Add float type
 - [X] Add char type
 - [X] Add any type
 - [X] Add array type
 - [X] Add struct support
-    - [ ] Add struct array-like constructor
-    - [ ] Add Java class behavior
-- [ ] Add null support?
+    - [X] Add struct array-like constructor
+    - [X] Add Java class behavior
+- [X] Add null support?
 - [X] Add type convert support
 - [X] Remove mandatory variable type definition
 - [X] Fix cp dependencies/libs loader

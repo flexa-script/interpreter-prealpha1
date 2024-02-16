@@ -1314,7 +1314,7 @@ void visitor::Interpreter::visit(parser::ASTTypeParseNode* astnode) {
 			currentExpressionValue.set(cp_bool(currentExpressionValue.c != '\0'));
 			break;
 		case parser::TYPE::T_STRING:
-			currentExpressionValue.set(cp_bool(currentExpressionValue.s.empty()));
+			currentExpressionValue.set(cp_bool(!currentExpressionValue.s.empty()));
 			break;
 		}
 		break;
@@ -1333,7 +1333,12 @@ void visitor::Interpreter::visit(parser::ASTTypeParseNode* astnode) {
 			currentExpressionValue.set(cp_int(currentExpressionValue.c));
 			break;
 		case parser::TYPE::T_STRING:
-			currentExpressionValue.set(cp_int(std::stoll(currentExpressionValue.s)));
+			try {
+				currentExpressionValue.set(cp_int(std::stoll(currentExpressionValue.s)));
+			}
+			catch (...) {
+				throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "'" + currentExpressionValue.s + "' is not a valid value to parse int");
+			}
 			break;
 		}
 		break;
@@ -1352,7 +1357,36 @@ void visitor::Interpreter::visit(parser::ASTTypeParseNode* astnode) {
 			currentExpressionValue.set(cp_float(currentExpressionValue.c));
 			break;
 		case parser::TYPE::T_STRING:
-			currentExpressionValue.set(cp_float(std::stold(currentExpressionValue.s)));
+			try {
+				currentExpressionValue.set(cp_float(std::stold(currentExpressionValue.s)));
+			}
+			catch (...) {
+				throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "'" + currentExpressionValue.s + "' is not a valid value to parse float");
+			}
+			break;
+		}
+		break;
+
+	case parser::TYPE::T_CHAR:
+		switch (currentExpressionType) {
+		case parser::TYPE::T_BOOL:
+			currentExpressionValue.set(cp_char(currentExpressionValue.b));
+			break;
+		case parser::TYPE::T_INT:
+			currentExpressionValue.set(cp_char(currentExpressionValue.i));
+			break;
+		case parser::TYPE::T_FLOAT:
+			currentExpressionValue.set(cp_char(currentExpressionValue.f));
+			break;
+		case parser::TYPE::T_CHAR:
+			break;
+		case parser::TYPE::T_STRING:
+			if (currentExpressionValue.s.size() > 1) {
+				throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "'" + currentExpressionValue.s + "' is not a valid value to parse char");
+			}
+			else {
+				currentExpressionValue.set(cp_char(currentExpressionValue.s[0]));
+			}
 			break;
 		}
 		break;
