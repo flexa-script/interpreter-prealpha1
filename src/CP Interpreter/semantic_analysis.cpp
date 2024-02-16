@@ -87,6 +87,9 @@ bool SemanticScope::alreadyDeclared(std::string identifier, std::vector<parser::
 	// check signature for each function in functionSymbolTable
 	for (auto fun : funcs) {
 		auto funcSig = fun.signature;
+		if (funcSig.size() == 0 && signature.size() == 0) {
+			return true;
+		}
 		auto found = true;
 		for (size_t it = 0; it < funcSig.size(); ++it) {
 			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::TYPE::T_ANY) {
@@ -317,8 +320,6 @@ void SemanticAnalyser::visit(parser::ASTUsingNode* usg) {
 }
 
 void SemanticAnalyser::visit(parser::ASTDeclarationNode* decl) {
-	//if (inFunctionDefinitionContext) return;
-
 	// current scope is the scope at the back
 	SemanticScope* currentScope = scopes.back();
 
@@ -506,7 +507,6 @@ bool SemanticAnalyser::findAnyVar(std::string identifier) {
 
 void SemanticAnalyser::visit(parser::ASTAssignmentNode* assign) {
 	std::string actualIdentifier = assign->identifier;
-	//std::string errorIdentifier = axe::join(assign->identifierVector, ".");
 	if (assign->identifierVector.size() > 1) {
 		actualIdentifier = axe::join(assign->identifierVector, ".");
 	}
@@ -640,7 +640,6 @@ void SemanticAnalyser::visit(parser::ASTBlockNode* block) {
 	for (auto param : currentFunctionParameters) {
 		if (param.type == parser::TYPE::T_STRUCT) {
 			scopes.back()->declare(param.identifier, param.type, param.typeName, param.arrayType, param.isAny, param.isConst, param.row, param.col);
-			//redeclareStructureTypeVariables(param.identifier, param.typeName, param.row, param.col);
 		}
 		else {
 			scopes.back()->declare(param.identifier, param.type, param.typeName, param.arrayType, param.isAny, param.isConst, param.row, param.col);
@@ -703,8 +702,10 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* func) {
 				has_params = true;
 				signature += typeStr(param) + ", ";
 			}
-			signature.pop_back();   // remove last whitespace
-			signature.pop_back();   // remove last comma
+			if (func->signature.size() > 0) {
+				signature.pop_back();   // remove last whitespace
+				signature.pop_back();   // remove last comma
+			}
 			signature += ")";
 
 

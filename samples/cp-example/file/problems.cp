@@ -53,34 +53,8 @@ def problem2() {
     print("---------- Problem 2 ----------\n");
     print("The sum of the even-valued terms in the Fibonacci sequence whose values do not exceed four million is: " + string(sum));
     print("\n-------------------------------\n\n");
-}
-
-/**
- * Problem 3: Largest Prime Factor
- * The prime factors of 13195 are 5, 7, 13 and 29.
- * What is the largest prime factor of the number 600851475143?
- */
-def problem3() {
-    var number = 600851475143;
-    var largestPrime = 0;
-    var factor = 2;
-
-    while (number > 1) {
-        if (number % factor == 0) {
-            largestPrime = factor;
-            while (number % factor == 0) {
-                number = number / factor;
-            }
-        }
-        factor = factor + 1;
-    }
-
-    print("---------- Problem 3 ----------\n");
-    print("The largest prime factor of the number 600851475143 is: " + string(largestPrime));
-    print("\n-------------------------------\n\n");
 
 }
 
 problem1();
 problem2();
-problem3();
