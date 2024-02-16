@@ -884,13 +884,34 @@ ASTExprNode* Parser::parseFactor() {
 			return new ASTLiteralNode<cp_struct>(parseStructConstructor(), row, col);
 		default: {
 			auto identifierVector = std::vector<std::string>();
+			auto accessVector = std::vector<unsigned int>();
 			if (axe::contains(currentToken.value, ".")) {
 				identifierVector = axe::split(currentToken.value, '.');
 			}
 			else {
 				identifierVector.push_back(currentToken.value);
 			}
-			return new ASTIdentifierNode(identifierVector[0], identifierVector, row, col);
+
+			if (nextToken.type == lexer::TOK_LEFT_BRACE) {
+				consumeToken();
+				do {
+					auto pos = 0;
+					consumeToken();
+					if (currentToken.type != lexer::TOK_INT_LITERAL) {
+						throw std::runtime_error(msgHeader() + "expected int literal");
+					}
+					pos = stoi(currentToken.value);
+					consumeToken();
+					if (currentToken.type != lexer::TOK_RIGHT_BRACE) {
+						throw std::runtime_error(msgHeader() + "expected ']' after array position constant");
+					}
+					//consumeToken();
+					accessVector.push_back(pos);
+
+				} while (nextToken.type == lexer::TOK_LEFT_BRACE);
+			}
+
+			return new ASTIdentifierNode(identifierVector[0], identifierVector, accessVector, row, col);
 		}
 		}
 

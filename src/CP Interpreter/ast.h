@@ -255,10 +255,11 @@ namespace parser {
 
 	class ASTIdentifierNode : public ASTExprNode {
 	public:
-		explicit ASTIdentifierNode(std::string, std::vector<std::string>, unsigned int, unsigned int);
+		explicit ASTIdentifierNode(std::string, std::vector<std::string>, std::vector<unsigned int>, unsigned int, unsigned int);
 
 		std::string identifier;
 		std::vector<std::string> identifierVector;
+		std::vector<unsigned int> accessVector;
 		unsigned int row;
 		unsigned int col;
 

@@ -69,8 +69,8 @@ ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::ve
 ASTBinaryExprNode::ASTBinaryExprNode(std::string op, ASTExprNode* left, ASTExprNode* right, unsigned int row, unsigned int col)
 	: op(std::move(op)), left(left), right(right), row(row), col(col) {}
 
-ASTIdentifierNode::ASTIdentifierNode(std::string identifier, std::vector<std::string> identifierVector, unsigned int row, unsigned int col)
-	: identifier(std::move(identifier)), identifierVector(identifierVector), row(row), col(col) {}
+ASTIdentifierNode::ASTIdentifierNode(std::string identifier, std::vector<std::string> identifierVector, std::vector<unsigned int> accessVector, unsigned int row, unsigned int col)
+	: identifier(std::move(identifier)), identifierVector(identifierVector), accessVector(accessVector), row(row), col(col) {}
 
 ASTUnaryExprNode::ASTUnaryExprNode(std::string unaryOp, ASTExprNode* expr, unsigned int row, unsigned int col)
 	: unaryOp(std::move(unaryOp)), expr(expr), row(row), col(col) {}
