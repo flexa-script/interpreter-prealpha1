@@ -21,7 +21,7 @@
 - [X] Add struct support
     - [X] Add struct array-like constructor
     - [X] Add Java class behavior
-- [X] Add null support?
+- [X] Add null support
 - [X] Add type convert support
 - [X] Remove mandatory variable type definition
 - [X] Fix cp dependencies/libs loader
