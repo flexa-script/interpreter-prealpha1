@@ -66,6 +66,12 @@
     <ClInclude Include="cputil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="semantic_scope.h">
+      <Filter>Header Files\visitor</Filter>
+    </ClInclude>
+    <ClInclude Include="interpreter_scope.h">
+      <Filter>Header Files\visitor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -100,6 +106,12 @@
     </ClCompile>
     <ClCompile Include="cputil.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="semantic_scope.cpp">
+      <Filter>Source Files\visitor</Filter>
+    </ClCompile>
+    <ClCompile Include="interpreter_scope.cpp">
+      <Filter>Source Files\visitor</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

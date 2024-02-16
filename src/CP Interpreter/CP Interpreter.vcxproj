@@ -56,9 +56,11 @@
     <ClInclude Include="cprepl.h" />
     <ClInclude Include="cputil.h" />
     <ClInclude Include="interpreter.h" />
+    <ClInclude Include="interpreter_scope.h" />
     <ClInclude Include="lexer.h" />
     <ClInclude Include="parser.h" />
     <ClInclude Include="semantic_analysis.h" />
+    <ClInclude Include="semantic_scope.h" />
     <ClInclude Include="token.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="visitor.h" />
@@ -69,10 +71,12 @@
     <ClCompile Include="cprepl.cpp" />
     <ClCompile Include="cputil.cpp" />
     <ClCompile Include="interpreter.cpp" />
+    <ClCompile Include="interpreter_scope.cpp" />
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="semantic_analysis.cpp" />
+    <ClCompile Include="semantic_scope.cpp" />
     <ClCompile Include="token.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
