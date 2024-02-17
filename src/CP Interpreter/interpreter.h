@@ -23,6 +23,7 @@ namespace visitor {
 		Value_t currentExpressionValue;
 		std::vector<std::string> currentFunctionParameters;
 		std::vector<std::pair<parser::TYPE, Value_t*>> currentFunctionArguments;
+
 		std::string currentFunctionName;
 		std::string returnFromFunctionName;
 		bool returnFromFunction = false;

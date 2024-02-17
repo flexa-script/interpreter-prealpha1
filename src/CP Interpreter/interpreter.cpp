@@ -792,19 +792,17 @@ void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredVariable(astnode->identifier); i--);
 
-	currentExpressionType = scopes[i]->typeof(actualIdentifier, astnode->accessVector);
-	if (currentExpressionType == parser::TYPE::T_STRING && astnode->accessVector.size() == 1) {
+	currentExpressionValue = *scopes[i]->valueof(actualIdentifier, astnode->accessVector);
+	currentExpressionType = currentExpressionValue.currentType;
+	currentExpressionTypeName = currentExpressionType == parser::TYPE::T_STRUCT ? currentExpressionValue.str.first : "";
+
+	if (currentExpressionType == parser::TYPE::T_STRING && astnode->accessVector.size() > 0 && scopes[i]->hasStringAccess) {
 		currentExpressionType = parser::TYPE::T_CHAR;
 		auto charValue = Value_t(currentExpressionType);
-		charValue.set(cp_char(scopes[i]->valueof(actualIdentifier, astnode->accessVector)->s[astnode->accessVector[0]]));
+		charValue.set(cp_char(currentExpressionValue.s[astnode->accessVector[astnode->accessVector.size() - 1]]));
 		currentExpressionValue = charValue;
 		currentExpressionTypeName = "";
 	}
-	else {
-		currentExpressionValue = *scopes[i]->valueof(actualIdentifier, astnode->accessVector);
-		currentExpressionTypeName = currentExpressionType == parser::TYPE::T_STRUCT ? scopes[i]->typenameof(actualIdentifier, astnode->accessVector) : "";
-	}
-
 }
 
 void visitor::Interpreter::visit(parser::ASTUnaryExprNode* astnode) {

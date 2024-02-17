@@ -210,13 +210,16 @@ parser::TYPE InterpreterScope::typeof(std::string identifier, std::vector<unsign
 }
 
 Value_t* InterpreterScope::accessvalueofarray(Value_t* arr, std::vector<unsigned int> accessVector) {
-	Value_t* val = arr;
-	cp_array* currentVal = &val->arr;
+	cp_array* currentVal = &arr->arr;
 	size_t s = 0;
 	for (s = 0; s < accessVector.size() - 1; ++s) {
-		currentVal = &currentVal->at(accessVector[s])->arr;
+		if (currentVal->at(accessVector.at(s))->currentType != parser::TYPE::T_ARRAY) {
+			hasStringAccess = true;
+			break;
+		}
+		currentVal = &currentVal->at(accessVector.at(s))->arr;
 	}
-	return currentVal->at(accessVector[s]);
+	return currentVal->at(accessVector.at(s));
 }
 
 Value_t* InterpreterScope::valueof(std::string identifier, std::vector<unsigned int> accessVector) {
@@ -240,6 +243,7 @@ Value_t* InterpreterScope::valueof(std::string identifier, std::vector<unsigned 
 	}
 
 	if (accessVector.size() > 0 && value->actualType == parser::TYPE::T_ARRAY) {
+		hasStringAccess = false;
 		return accessvalueofarray(value, accessVector);
 	}
 

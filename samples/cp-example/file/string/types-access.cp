@@ -25,4 +25,6 @@ print(arrValue[0]);
 print("\n");
 print(strArray[0]);
 print("\n");
+print(strArray[2][1]);
+print("\n");
 print("\n\n");

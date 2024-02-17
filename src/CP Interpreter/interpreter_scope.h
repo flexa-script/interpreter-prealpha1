@@ -12,6 +12,9 @@
 
 namespace visitor {
 	class InterpreterScope {
+	public:
+		bool hasStringAccess = false;
+
 	private:
 		std::string name;
 		std::vector<parser::StructureDefinition_t> structureSymbolTable;
