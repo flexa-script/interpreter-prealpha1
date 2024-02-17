@@ -943,6 +943,7 @@ cp_array Parser::parseArrayLiteral() {
 	do {
 		Value_t* val = new Value_t(TYPE::T_ND);
 		if (currentToken.type == lexer::TOK_LEFT_CURLY) {
+			val->forceType(parser::TYPE::T_ARRAY);
 			val->set(parseArrayLiteral());
 		}
 		else {
