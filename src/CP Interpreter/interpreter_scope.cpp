@@ -239,7 +239,7 @@ Value_t* InterpreterScope::valueof(std::string identifier, std::vector<unsigned 
 		value = variableSymbolTable[identifier];
 	}
 
-	if (accessVector.size() > 0) {
+	if (accessVector.size() > 0 && value->actualType == parser::TYPE::T_ARRAY) {
 		return accessvalueofarray(value, accessVector);
 	}
 

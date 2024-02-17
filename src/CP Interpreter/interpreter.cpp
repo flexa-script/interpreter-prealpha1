@@ -693,11 +693,15 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* astnode) {
 		}
 		else if (l_type == parser::TYPE::T_CHAR && r_type == parser::TYPE::T_STRING) { // char and string
 			currentExpressionType = parser::TYPE::T_STRING;
-			value.set(cp_string(l_value.c + r_value.s));
+			value.set(cp_string(std::string{ l_value.c } + r_value.s));
 		}
 		else if (l_type == parser::TYPE::T_STRING && r_type == parser::TYPE::T_CHAR) { // string and char
 			currentExpressionType = parser::TYPE::T_STRING;
-			value.set(cp_string(l_value.s + r_value.c));
+			value.set(cp_string(l_value.s + std::string{ r_value.c }));
+		}
+		else if (l_type == parser::TYPE::T_CHAR && r_type == parser::TYPE::T_CHAR) { // char and string
+			currentExpressionType = parser::TYPE::T_STRING;
+			value.set(cp_string(std::string{ l_value.c } + std::string{ r_value.c }));
 		}
 		else { // remaining case is for strings
 			currentExpressionType = parser::TYPE::T_STRING;
@@ -789,8 +793,17 @@ void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredVariable(astnode->identifier); i--);
 
 	currentExpressionType = scopes[i]->typeof(actualIdentifier, astnode->accessVector);
-	currentExpressionValue = *scopes[i]->valueof(actualIdentifier, astnode->accessVector);
-	currentExpressionTypeName = currentExpressionType == parser::TYPE::T_STRUCT ? scopes[i]->typenameof(actualIdentifier, astnode->accessVector) : "";
+	if (currentExpressionType == parser::TYPE::T_STRING && astnode->accessVector.size() == 1) {
+		currentExpressionType = parser::TYPE::T_CHAR;
+		auto charValue = Value_t(currentExpressionType);
+		charValue.set(cp_char(scopes[i]->valueof(actualIdentifier, astnode->accessVector)->s[astnode->accessVector[0]]));
+		currentExpressionValue = charValue;
+		currentExpressionTypeName = "";
+	}
+	else {
+		currentExpressionValue = *scopes[i]->valueof(actualIdentifier, astnode->accessVector);
+		currentExpressionTypeName = currentExpressionType == parser::TYPE::T_STRUCT ? scopes[i]->typenameof(actualIdentifier, astnode->accessVector) : "";
+	}
 
 }
 

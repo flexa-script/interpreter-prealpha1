@@ -280,9 +280,12 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 						break;
 					}
 				}
+				if (var.dim.size() != newDim.size()) {
+					throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid dimension trying assign '" + actualIdentifier + "' array");
+				}
 				for (size_t i = 0; i < var.dim.size(); ++i) {
-					if (var.dim[i] != newDim[i]) {
-						throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array size trying assign '" + actualIdentifier + "' array");
+					if (var.dim[i] != -1 && var.dim[i] != newDim[i]) {
+						throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid size trying assign '" + actualIdentifier + "' array");
 					}
 				}
 			}
@@ -625,9 +628,10 @@ void SemanticAnalyser::visit(parser::ASTIdentifierNode* id) {
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredVariable(isFunctionDefinitionContext ? id->identifier : actualIdentifier); i--) {
 		if (i <= 0) {
-			throw std::runtime_error(msgHeader(id->row, id->col) + "identifier '" + actualIdentifier + "' was never declared " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
+			throw std::runtime_error(msgHeader(id->row, id->col) + "identifier '" + actualIdentifier + "' was never declared " + ((scopes.size() == 1) ? "globally" : "in this scope") + "");
 		}
 	}
+
 
 	// update current expression type
 	if (isFunctionDefinitionContext) {
@@ -637,6 +641,10 @@ void SemanticAnalyser::visit(parser::ASTIdentifierNode* id) {
 	else {
 		currentExpressionType = scopes[i]->type(actualIdentifier);
 		currentExpressionTypeName = scopes[i]->typeName(actualIdentifier);
+	}
+
+	if (id->accessVector.size() > 0 && currentExpressionType != parser::TYPE::T_ARRAY && currentExpressionType != parser::TYPE::T_STRING) {
+		throw std::runtime_error(msgHeader(id->row, id->col) + "'" + actualIdentifier + "' is not an array or string");
 	}
 }
 
