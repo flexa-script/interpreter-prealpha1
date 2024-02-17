@@ -964,7 +964,7 @@ void visitor::Interpreter::visit(parser::ASTTypeParseNode* astnode) {
 			currentExpressionValue.set(cp_string(std::to_string(currentExpressionValue.f)));
 			break;
 		case parser::TYPE::T_CHAR:
-			currentExpressionValue.set(cp_string(std::to_string(currentExpressionValue.c)));
+			currentExpressionValue.set(cp_string(std::string{ currentExpressionValue.c }));
 			break;
 		case parser::TYPE::T_STRING:
 			break;
@@ -973,6 +973,7 @@ void visitor::Interpreter::visit(parser::ASTTypeParseNode* astnode) {
 
 	}
 
+	currentExpressionValue.forceType(astnode->type);
 	currentExpressionType = astnode->type;
 }
 
