@@ -905,7 +905,6 @@ ASTExprNode* Parser::parseFactor() {
 					if (currentToken.type != lexer::TOK_RIGHT_BRACE) {
 						throw std::runtime_error(msgHeader() + "expected ']' after array position constant");
 					}
-					//consumeToken();
 					accessVector.push_back(pos);
 
 				} while (nextToken.type == lexer::TOK_LEFT_BRACE);
@@ -978,6 +977,10 @@ cp_array Parser::parseArrayLiteral() {
 				val->setType(parser::TYPE::T_STRING);
 				val->set(parseStringLiteral());
 				break;
+			case parser::TYPE::T_STRUCT:
+				val->setType(parser::TYPE::T_STRUCT);
+				val->set(parseStructConstructor());
+				break;
 			}
 		}
 		arr.push_back(val);
@@ -1048,6 +1051,10 @@ cp_struct Parser::parseStructConstructor() {
 		case parser::TYPE::T_STRING:
 			val->setType(parser::TYPE::T_STRING);
 			val->set(parseStringLiteral());
+			break;
+		case parser::TYPE::T_ARRAY:
+			val->setType(parser::TYPE::T_ARRAY);
+			val->set(parseArrayLiteral());
 			break;
 		case parser::TYPE::T_STRUCT:
 			val->setType(parser::TYPE::T_STRUCT);
@@ -1301,6 +1308,9 @@ TYPE Parser::parseType(std::string identifier) {
 
 	case lexer::TOK_IDENTIFIER:
 		return TYPE::T_STRUCT;
+
+	case lexer::TOK_LEFT_CURLY:
+		return TYPE::T_ARRAY;
 
 	default:
 		throw std::runtime_error(msgHeader() + "expected type for " + identifier + " after ':'.");

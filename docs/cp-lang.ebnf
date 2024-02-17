@@ -21,7 +21,7 @@ statement         = struct_decl ";"
 
 block             = "{" { statement } "}"
 
-function_decl     = "def" identifier "(" [ formal_params ] ")" [ ":" type ] block
+function_decl     = "def" identifier "(" [ formal_params ] ")" [ ":" def_type ] block
 
 struct_decl       = "struct" identifier "{" { formal_params } "}"
 
@@ -80,17 +80,30 @@ literal           = bool_literal
                   | float_literal
                   | char_literal
                   | string_literal
+                  | array_literal
+                  | struct_literal
+                  | null_literal
 
 bool_literal      = "true" | "false"
 
 int_literal       = digit { digit }
 
 float_literal     = digit { digit } "." { digit }
-                    | "." digit { digit }
+                  | "." digit { digit }
 
 char_literal      = "'" printable "'"
 
 string_literal    = "\"" { printable } "\""
+
+array_literal     = "{" literal { "," literal } "}"
+
+struct_literal    = identifier "{" { "var" identifier ":" type { "," literal } } "}"
+
+null_literal      = "null"
+
+def_type          = type | "void"
+
+type              = "bool" | "int" | "float" | "char" | "string" | identifier
 
 printable         = digit | letter | " " | "!" | "\"" | "#" | "$" | "%" | "&"
                   | "'" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";"

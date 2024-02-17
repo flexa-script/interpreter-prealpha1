@@ -287,6 +287,11 @@ void Interpreter::declareStructureVariable(std::vector<std::string> identifierVe
 }
 
 void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
+	std::string actualIdentifier = astnode->identifier;
+	if (astnode->identifierVector.size() > 1) {
+		actualIdentifier = axe::join(astnode->identifierVector, ".");
+	}
+
 	// determine innermost scope in which variable is declared
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredVariable(astnode->identifier); i--);
@@ -294,40 +299,18 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
 
-	auto type = scopes[i]->typeof(astnode->identifier, astnode->accessVector);
+	auto type = scopes[i]->typeof(actualIdentifier, astnode->accessVector);
 	if (type != parser::TYPE::T_ARRAY && type != parser::TYPE::T_STRUCT) {
 		type = currentExpressionType;
 	}
 
 	if (currentExpressionType != parser::TYPE::T_NULL && currentExpressionValue.hasValue) {
-		// redeclare variable, depending on type
-		switch (type) {
-		case parser::TYPE::T_BOOL:
-			scopes[i]->declare(astnode->identifier, currentExpressionValue.b, astnode->accessVector);
-			break;
-		case parser::TYPE::T_INT:
-			scopes[i]->declare(astnode->identifier, currentExpressionValue.i, astnode->accessVector);
-			break;
-		case parser::TYPE::T_FLOAT:
-			scopes[i]->declare(astnode->identifier, currentExpressionValue.f, astnode->accessVector);
-			break;
-		case parser::TYPE::T_CHAR:
-			scopes[i]->declare(astnode->identifier, currentExpressionValue.c, astnode->accessVector);
-			break;
-		case parser::TYPE::T_STRING:
-			scopes[i]->declare(astnode->identifier, currentExpressionValue.s, astnode->accessVector);
-			break;
-		case parser::TYPE::T_STRUCT: {
-			if (astnode->identifierVector.size() == 1) {
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.str, astnode->accessVector);
-			}
-			else {
-				declareStructureVariable(astnode->identifierVector, currentExpressionValue, astnode->accessVector);
-			}
-			break;
+		if (astnode->identifierVector.size() > 1) {
+			declareStructureVariable(astnode->identifierVector, currentExpressionValue, astnode->accessVector);
 		}
-		case parser::TYPE::T_ARRAY:
-			switch (currentExpressionType) {
+		else {
+			// redeclare variable, depending on type
+			switch (type) {
 			case parser::TYPE::T_BOOL:
 				scopes[i]->declare(astnode->identifier, currentExpressionValue.b, astnode->accessVector);
 				break;
@@ -343,56 +326,90 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 			case parser::TYPE::T_STRING:
 				scopes[i]->declare(astnode->identifier, currentExpressionValue.s, astnode->accessVector);
 				break;
-			case parser::TYPE::T_STRUCT: {
-				if (astnode->identifierVector.size() == 1) {
-					scopes[i]->declare(astnode->identifier, currentExpressionValue.str, astnode->accessVector);
-				}
-				else {
-					declareStructureVariable(astnode->identifierVector, currentExpressionValue, astnode->accessVector);
-				}
+			case parser::TYPE::T_STRUCT:
+				scopes[i]->declare(astnode->identifier, currentExpressionValue.str, astnode->accessVector);
 				break;
-			}
 			case parser::TYPE::T_ARRAY:
 				scopes[i]->declare(astnode->identifier, currentExpressionValue.arr, astnode->accessVector);
 				break;
+				//case parser::TYPE::T_STRUCT: {
+				//	if (astnode->identifierVector.size() == 1) {
+				//		scopes[i]->declare(astnode->identifier, currentExpressionValue.str, astnode->accessVector);
+				//	}
+				//	else {
+				//		declareStructureVariable(astnode->identifierVector, currentExpressionValue, astnode->accessVector);
+				//	}
+				//	break;
+				//}
+				//case parser::TYPE::T_ARRAY:
+				//	switch (currentExpressionType) {
+				//	case parser::TYPE::T_BOOL:
+				//		scopes[i]->declare(astnode->identifier, currentExpressionValue.b, astnode->accessVector);
+				//		break;
+				//	case parser::TYPE::T_INT:
+				//		scopes[i]->declare(astnode->identifier, currentExpressionValue.i, astnode->accessVector);
+				//		break;
+				//	case parser::TYPE::T_FLOAT:
+				//		scopes[i]->declare(astnode->identifier, currentExpressionValue.f, astnode->accessVector);
+				//		break;
+				//	case parser::TYPE::T_CHAR:
+				//		scopes[i]->declare(astnode->identifier, currentExpressionValue.c, astnode->accessVector);
+				//		break;
+				//	case parser::TYPE::T_STRING:
+				//		scopes[i]->declare(astnode->identifier, currentExpressionValue.s, astnode->accessVector);
+				//		break;
+				//	case parser::TYPE::T_STRUCT: {
+				//		if (astnode->identifierVector.size() == 1) {
+				//			scopes[i]->declare(astnode->identifier, currentExpressionValue.str, astnode->accessVector);
+				//		}
+				//		else {
+				//			declareStructureVariable(astnode->identifierVector, currentExpressionValue, astnode->accessVector);
+				//		}
+				//		break;
+				//	}
+				//	case parser::TYPE::T_ARRAY:
+				//		scopes[i]->declare(astnode->identifier, currentExpressionValue.arr, astnode->accessVector);
+				//		break;
+				//	}
+
+
+				//	//Value_t* val = scopes[i]->valueof(astnode->identifier);
+				//	//cp_array* currentVal = &val->arr;
+				//	//size_t s = 0;
+				//	//for (s = 0; s < astnode->accessVector.size() - 1; ++s) {
+				//	//	currentVal = &currentVal->at(astnode->accessVector[s])->arr;
+				//	//}
+
+				//	//Value_t* newVal = new Value_t(currentExpressionType);
+				//	//switch (currentExpressionType) {
+				//	//case parser::TYPE::T_BOOL:
+				//	//	newVal->set(currentExpressionValue.b);
+				//	//	break;
+				//	//case parser::TYPE::T_INT:
+				//	//	newVal->set(currentExpressionValue.i);
+				//	//	break;
+				//	//case parser::TYPE::T_FLOAT:
+				//	//	newVal->set(currentExpressionValue.f);
+				//	//	break;
+				//	//case parser::TYPE::T_CHAR:
+				//	//	newVal->set(currentExpressionValue.c);
+				//	//	break;
+				//	//case parser::TYPE::T_STRING:
+				//	//	newVal->set(currentExpressionValue.s);
+				//	//	break;
+				//	//case parser::TYPE::T_ARRAY:
+				//	//	newVal->set(currentExpressionValue.arr);
+				//	//	break;
+				//	//case parser::TYPE::T_STRUCT:
+				//	//	newVal->set(currentExpressionValue.str);
+				//	//	break;
+				//	//}
+
+				//	//currentVal->at(astnode->accessVector[s]) = newVal;
+
+				//	break;
 			}
 
-
-			//Value_t* val = scopes[i]->valueof(astnode->identifier);
-			//cp_array* currentVal = &val->arr;
-			//size_t s = 0;
-			//for (s = 0; s < astnode->accessVector.size() - 1; ++s) {
-			//	currentVal = &currentVal->at(astnode->accessVector[s])->arr;
-			//}
-
-			//Value_t* newVal = new Value_t(currentExpressionType);
-			//switch (currentExpressionType) {
-			//case parser::TYPE::T_BOOL:
-			//	newVal->set(currentExpressionValue.b);
-			//	break;
-			//case parser::TYPE::T_INT:
-			//	newVal->set(currentExpressionValue.i);
-			//	break;
-			//case parser::TYPE::T_FLOAT:
-			//	newVal->set(currentExpressionValue.f);
-			//	break;
-			//case parser::TYPE::T_CHAR:
-			//	newVal->set(currentExpressionValue.c);
-			//	break;
-			//case parser::TYPE::T_STRING:
-			//	newVal->set(currentExpressionValue.s);
-			//	break;
-			//case parser::TYPE::T_ARRAY:
-			//	newVal->set(currentExpressionValue.arr);
-			//	break;
-			//case parser::TYPE::T_STRUCT:
-			//	newVal->set(currentExpressionValue.str);
-			//	break;
-			//}
-
-			//currentVal->at(astnode->accessVector[s]) = newVal;
-
-			break;
 		}
 	}
 	else {
@@ -1074,6 +1091,8 @@ std::string visitor::typeStr(parser::TYPE t) {
 	switch (t) {
 	case parser::TYPE::T_VOID:
 		return "void";
+	case parser::TYPE::T_NULL:
+		return "null";
 	case parser::TYPE::T_BOOL:
 		return "bool";
 	case parser::TYPE::T_INT:
@@ -1086,10 +1105,10 @@ std::string visitor::typeStr(parser::TYPE t) {
 		return "string";
 	case parser::TYPE::T_ANY:
 		return "any";
-	case parser::TYPE::T_STRUCT:
-		return "struct";
 	case parser::TYPE::T_ARRAY:
 		return "array";
+	case parser::TYPE::T_STRUCT:
+		return "struct";
 	default:
 		throw std::runtime_error("IERR: invalid type encountered.");
 	}

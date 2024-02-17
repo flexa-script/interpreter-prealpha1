@@ -129,8 +129,10 @@ void SemanticAnalyser::declareStructureDefinitionVariables(std::string identifie
 		auto currentIdentifier = identifier + '.' + strValue.first;
 
 		bool found = false;
-		for (auto varTypeStruct : typeStruct.variables) {
-			if (varTypeStruct.identifier == strValue.first) {
+		parser::VariableDefinition_t* varTypeStruct = nullptr;
+		for (size_t i = 0; i < typeStruct.variables.size(); ++i) {
+			varTypeStruct = &typeStruct.variables[i];
+			if (varTypeStruct->identifier == strValue.first) {
 				found = true;
 				break;
 			}
@@ -142,7 +144,7 @@ void SemanticAnalyser::declareStructureDefinitionVariables(std::string identifie
 			declareStructureDefinitionVariables(currentIdentifier, strValue.second->str.first, strValue.second->str, expr);
 		}
 		else {
-			scopes.back()->declare(currentIdentifier, strValue.second->actualType, "", parser::TYPE::T_ND, false, false, expr->row, expr->col);
+			scopes.back()->declare(currentIdentifier, strValue.second->actualType, "", varTypeStruct->arrayType, false, false, expr->row, expr->col);
 		}
 	}
 }
@@ -696,6 +698,8 @@ std::string typeStr(parser::TYPE t) {
 	switch (t) {
 	case parser::TYPE::T_VOID:
 		return "void";
+	case parser::TYPE::T_NULL:
+		return "null";
 	case parser::TYPE::T_BOOL:
 		return "bool";
 	case parser::TYPE::T_INT:
@@ -708,10 +712,10 @@ std::string typeStr(parser::TYPE t) {
 		return "string";
 	case parser::TYPE::T_ANY:
 		return "any";
-	case parser::TYPE::T_STRUCT:
-		return "struct";
 	case parser::TYPE::T_ARRAY:
 		return "array";
+	case parser::TYPE::T_STRUCT:
+		return "struct";
 	default:
 		throw std::runtime_error("SERR: Invalid type encountered.");
 	}
