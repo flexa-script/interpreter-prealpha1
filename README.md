@@ -18,6 +18,7 @@
 - [X] Add char type
 - [X] Add any type
 - [X] Add array type
+  - [ ] Make array accessor accepts expression
 - [X] Add struct support
     - [X] Add struct array-like constructor
     - [X] Add Java class behavior

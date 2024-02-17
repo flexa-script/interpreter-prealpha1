@@ -910,8 +910,12 @@ ASTExprNode* Parser::parseFactor() {
 						throw std::runtime_error(msgHeader() + "expected ']' after array position constant");
 					}
 					accessVector.push_back(pos);
+
+					if (nextToken.type == lexer::TOK_LEFT_BRACE) {
+						consumeToken();
+					}
 					
-				} while (nextToken.type == lexer::TOK_LEFT_BRACE);
+				} while (currentToken.type == lexer::TOK_LEFT_BRACE);
 			}
 
 			return new ASTIdentifierNode(identifierVector[0], identifierVector, accessVector, row, col);

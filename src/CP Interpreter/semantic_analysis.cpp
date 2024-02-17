@@ -60,6 +60,9 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 		|| astnode->type == parser::TYPE::T_STRING && currentExpressionType == parser::TYPE::T_CHAR) {
 		currentScope->declare(astnode->identifier, astnode->type, astnode->typeName, astnode->arrayType, astnode->dim, false, astnode->isConst, astnode->row, astnode->col);
 	}
+	if (astnode->type != parser::TYPE::T_ARRAY && isCurrentExpressionArray) {
+		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "trying to assign array expression to '" + astnode->identifier + "' variable");
+	}
 	// handle equal types and special types (any, struct and array)
 	else if (astnode->type == currentExpressionType || astnode->type == parser::TYPE::T_ANY || astnode->type == parser::TYPE::T_STRUCT || astnode->type == parser::TYPE::T_ARRAY) { // types match
 		// handle struct

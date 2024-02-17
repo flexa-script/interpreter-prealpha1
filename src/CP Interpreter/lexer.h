@@ -13,8 +13,9 @@ namespace lexer {
 
     public:
         Lexer(std::string&, std::string);
-        Token nextToken();
         ~Lexer();
+
+        Token nextToken();
 
     private:
         char beforeChar;
