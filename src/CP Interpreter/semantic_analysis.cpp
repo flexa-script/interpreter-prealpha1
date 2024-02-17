@@ -621,17 +621,17 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(parser::ASTIdentifierNode* id) {
-	std::string actualIdentifier = id->identifier;
-	if (id->identifierVector.size() > 1) {
-		actualIdentifier = axe::join(id->identifierVector, ".");
+void SemanticAnalyser::visit(parser::ASTIdentifierNode* astnode) {
+	std::string actualIdentifier = astnode->identifier;
+	if (astnode->identifierVector.size() > 1) {
+		actualIdentifier = axe::join(astnode->identifierVector, ".");
 	}
 
 	// determine the inner-most scope in which the value is declared
 	size_t i;
-	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredVariable(isFunctionDefinitionContext ? id->identifier : actualIdentifier); i--) {
+	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredVariable(isFunctionDefinitionContext ? astnode->identifier : actualIdentifier); i--) {
 		if (i <= 0) {
-			throw std::runtime_error(msgHeader(id->row, id->col) + "identifier '" + actualIdentifier + "' was never declared " + ((scopes.size() == 1) ? "globally" : "in this scope") + "");
+			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "identifier '" + actualIdentifier + "' was never declared " + ((scopes.size() == 1) ? "globally" : "in this scope") + "");
 		}
 	}
 
@@ -646,8 +646,8 @@ void SemanticAnalyser::visit(parser::ASTIdentifierNode* id) {
 		currentExpressionTypeName = scopes[i]->typeName(actualIdentifier);
 	}
 
-	if (id->accessVector.size() > 0 && currentExpressionType != parser::TYPE::T_ARRAY && currentExpressionType != parser::TYPE::T_STRING) {
-		throw std::runtime_error(msgHeader(id->row, id->col) + "'" + actualIdentifier + "' is not an array or string");
+	if (astnode->accessVector.size() > 0 && currentExpressionType != parser::TYPE::T_ARRAY && currentExpressionType != parser::TYPE::T_STRING) {
+		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "'" + actualIdentifier + "' is not an array or string");
 	}
 }
 
@@ -733,14 +733,14 @@ std::string SemanticAnalyser::msgHeader(unsigned int row, unsigned int col) {
 }
 
 // determines whether a statement definitely returns or not
-bool SemanticAnalyser::returns(parser::ASTStatementNode* stmt) {
+bool SemanticAnalyser::returns(parser::ASTStatementNode* astnode) {
 	// base case: if the statement is a return statement, then it definitely returns
-	if (dynamic_cast<parser::ASTReturnNode*>(stmt)) {
+	if (dynamic_cast<parser::ASTReturnNode*>(astnode)) {
 		return true;
 	}
 
 	// for a block, if at least one statement returns, then the block returns
-	if (auto block = dynamic_cast<parser::ASTBlockNode*>(stmt)) {
+	if (auto block = dynamic_cast<parser::ASTBlockNode*>(astnode)) {
 		for (auto& blk_stmt : block->statements) {
 			if (returns(blk_stmt)) {
 				return true;
@@ -749,14 +749,14 @@ bool SemanticAnalyser::returns(parser::ASTStatementNode* stmt) {
 	}
 
 	// an if-(else) block returns only if both the if and the else statement return.
-	if (auto ifstmt = dynamic_cast<parser::ASTIfNode*>(stmt)) {
+	if (auto ifstmt = dynamic_cast<parser::ASTIfNode*>(astnode)) {
 		if (ifstmt->elseBlock) {
 			return (returns(ifstmt->ifBlock) && returns(ifstmt->elseBlock));
 		}
 	}
 
 	// a while block returns if its block returns
-	if (auto whilestmt = dynamic_cast<parser::ASTWhileNode*>(stmt)) {
+	if (auto whilestmt = dynamic_cast<parser::ASTWhileNode*>(astnode)) {
 		return returns(whilestmt->block);
 	}
 	// other statements do not return

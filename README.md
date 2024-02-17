@@ -12,7 +12,7 @@
 - [X] Add mod (%) operation support
 - [X] Add library support
 - [X] Add collum on errors
-- [X] Add 'this' token to get current function name (future an object?)
+- [X] Add 'this' token to get current function name
 - [X] Add const support
 - [X] Add float type
 - [X] Add char type
@@ -26,7 +26,17 @@
 - [X] Add type convert support
 - [X] Remove mandatory variable type definition
 - [X] Fix cp dependencies/libs loader
-- [ ] Add string array-like accessor
+- [X] Add string array-like accessor
+- [ ] Add statements:
+    - [ ] for
+    - [ ] else if
+    - [ ] switch
+    - [ ] enum
+    - [ ] immediate if?
+- [ ] Add built in funcs:
+    - [ ] len: returns size of array/string
+    - [ ] round: round a float number
+    - [ ] type: returns type of object
 - [ ] Add a default interface to implements core libs
 - [ ] Add core library:
     - [ ] File I/O
@@ -34,12 +44,16 @@
     - [ ] Mouse
     - [ ] Sound
     - [ ] Keyboard
-    - [ ] Text
     - [ ] Time
     - [ ] Web/API
     - [ ] Util
 - [ ] Add CP library:
+    - [ ] String
     - [ ] Math
+    - [ ] Collections
+        - [ ] List
+        - [ ] Queue
+        - [ ] Stack
     - [ ] Util
 
 ## Rules
