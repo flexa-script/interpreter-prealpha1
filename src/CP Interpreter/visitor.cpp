@@ -15,7 +15,7 @@ namespace parser {
 		case parser::TYPE::T_INT:
 			return "int";
 		case parser::TYPE::T_FLOAT:
-			return "real";
+			return "float";
 		case parser::TYPE::T_CHAR:
 			return "char";
 		case parser::TYPE::T_STRING:
