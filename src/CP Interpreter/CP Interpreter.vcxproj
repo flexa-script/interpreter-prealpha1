@@ -79,6 +79,7 @@
     <ClCompile Include="semantic_scope.cpp" />
     <ClCompile Include="token.cpp" />
     <ClCompile Include="util.cpp" />
+    <ClCompile Include="visitor.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

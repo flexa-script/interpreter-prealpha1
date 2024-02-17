@@ -113,5 +113,8 @@
     <ClCompile Include="interpreter_scope.cpp">
       <Filter>Source Files\visitor</Filter>
     </ClCompile>
+    <ClCompile Include="visitor.cpp">
+      <Filter>Source Files\visitor</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

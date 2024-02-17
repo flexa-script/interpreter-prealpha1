@@ -403,8 +403,6 @@ void visitor::Interpreter::visit(parser::ASTPrintNode* astnode) {
 		std::cout << currentExpressionValue.s;
 		break;
 	case parser::TYPE::T_STRUCT:
-		// TODO: print struct function
-		//std::cout << currentExpressionValue.str.first << " { ... }";
 		printStruct(currentExpressionValue.str);
 		break;
 	case parser::TYPE::T_ARRAY:
@@ -1005,31 +1003,4 @@ std::pair<parser::TYPE, Value_t*> Interpreter::currentExpr() {
 
 std::string Interpreter::msgHeader(unsigned int row, unsigned int col) {
 	return "(IERR) " + currentProgram->name + '[' + std::to_string(row) + ':' + std::to_string(col) + "]: ";
-}
-
-std::string visitor::typeStr(parser::TYPE t) {
-	switch (t) {
-	case parser::TYPE::T_VOID:
-		return "void";
-	case parser::TYPE::T_NULL:
-		return "null";
-	case parser::TYPE::T_BOOL:
-		return "bool";
-	case parser::TYPE::T_INT:
-		return "int";
-	case parser::TYPE::T_FLOAT:
-		return "float";
-	case parser::TYPE::T_CHAR:
-		return "char";
-	case parser::TYPE::T_STRING:
-		return "string";
-	case parser::TYPE::T_ANY:
-		return "any";
-	case parser::TYPE::T_ARRAY:
-		return "array";
-	case parser::TYPE::T_STRUCT:
-		return "struct";
-	default:
-		throw std::runtime_error("IERR: invalid type encountered.");
-	}
 }

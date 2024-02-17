@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <any>
+#include <stdexcept>
 
 #if defined(_WIN32) || defined(WIN32)
 typedef __int64 __int64_t;
@@ -13,8 +14,9 @@ struct Value;
 
 namespace parser {
 	enum class TYPE {
-		T_ND, T_VOID, T_NULL, T_ANY, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_STRUCT, T_ARRAY
+		T_ND, T_VOID, T_NULL, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ANY, T_ARRAY, T_STRUCT
 	};
+	std::string typeStr(TYPE t);
 }
 
 typedef bool                  cp_bool;

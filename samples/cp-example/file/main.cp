@@ -1,74 +1,32 @@
-// list.cp
-
-struct Node {
-  var value : any;
-  var next : Node;
-};
-
-struct List {
-  var first : Node;
-};
-
-def list_add(list : List, value : any) {
-  if (not list.first) {
-    var newNode : Node;
-    newNode.value = value;
-    newNode.next = null;
-    list.first = newNode;
-  } else {
-    var prevNode : Node;
-    var currNode = list.first;
-
-    while (currNode) {
-      prevNode = currNode;
-      currNode = currNode.next;
+def main() {
+    if (6 % 3 == 0 or 10 % 5 == 0) {
+        print("Mod ok\n");
     }
 
-    var newNode : Node;
-    newNode.value = value;
-
-    currNode.next = newNode;
-  }
-}
-
-def list_print(list : List) {
-  if (not list.first) {
-    print("[]");
-  } else {
-    var node = list.first;
-    print("[");
-    while (node) {
-      print(string(node.value));
-      if (node.next) {
-        print(",");
-      }
-      node = node.next;
+    if (true and false or false and true) {
+        print("Não deveria entrar\n");
     }
-    print("]");
-  }
+
+    if (true or true and false) {
+        print("Deveria entrar\n");
+    }
+
+    var a: bool = true or false and false;
+    var b: bool = false and false or true;
+
+    if (a == b) { // different precedence
+        if (a == true) {
+            print("&& has higher precedence than || \n");
+        } else { // a == false
+            print("|| has higher precedence than && \n");
+        }
+    } else { // a != b, same precedence
+        if (a == true) { // and b == false
+            print("&& and || have equal precedence, and are executed right to left. \n");
+        } else { // a == false, b == true
+            print("&& and || have equal precedence, and are executed left to right. \n");
+        }
+    }
 }
 
-//var list : List = List {
-//  first = Node {
-//    value = 1,
-//    next = Node {
-//      value = 2,
-//      next = Node {
-//        value = 3,
-//        next = null
-//      }
-//    }
-//  }
-//};
-
-var list : List;
-
-list_add(list, 10);
-list_add(list, 9);
-list_add(list, 8);
-list_add(list, 7);
-
-print(list);
-print('\n');
-list_print(list);
-print('\n');
+main();

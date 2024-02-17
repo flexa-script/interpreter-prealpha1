@@ -8,17 +8,16 @@
 using namespace visitor;
 
 
-
 SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, std::vector<parser::ASTProgramNode*> programs)
 	: programs(programs), currentProgram(programs[0]) {
 	// add global scope
 	scopes.push_back(global_scope);
 	currentExpressionType = parser::TYPE::T_ND;
 	isCurrentExpressionArray = false;
+	isFunctionDefinitionContext = false;
 };
 
 SemanticAnalyser::~SemanticAnalyser() = default;
-
 
 void SemanticAnalyser::start() {
 	visit(currentProgram);
@@ -66,7 +65,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 		// handle struct
 		if (astnode->type == parser::TYPE::T_STRUCT || currentExpressionType == parser::TYPE::T_STRUCT) {
 			if (currentExpressionType == parser::TYPE::T_STRUCT && astnode->type != parser::TYPE::T_STRUCT && astnode->type != parser::TYPE::T_ANY) {
-				throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "trying to assign struct '" + astnode->identifier + "' (" + (currentExpressionTypeName.empty() ? "" : " (" + currentExpressionTypeName + ")") + "), expected " + typeStr(astnode->type) + (astnode->typeName.empty() ? "" : " (" + astnode->typeName + ")") + "");
+				throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "trying to assign struct '" + astnode->identifier + "' (" + (currentExpressionTypeName.empty() ? "" : " (" + currentExpressionTypeName + ")") + "), expected " + parser::typeStr(astnode->type) + (astnode->typeName.empty() ? "" : " (" + astnode->typeName + ")") + "");
 			}
 
 			parser::ASTLiteralNode<cp_struct>* strExpr = nullptr;
@@ -74,7 +73,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 			// has expression to declare
 			if (astnode->expr) {
 				if (currentExpressionType != parser::TYPE::T_STRUCT && currentExpressionType != parser::TYPE::T_NULL) {
-					throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "found " + typeStr(currentExpressionType) + (currentExpressionTypeName.empty() ? "" : " (" + currentExpressionTypeName + ")") + " in definition of '" + astnode->identifier + "', expected " + typeStr(astnode->type) + (astnode->typeName.empty() ? "" : " (" + astnode->typeName + ")") + "");
+					throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "found " + parser::typeStr(currentExpressionType) + (currentExpressionTypeName.empty() ? "" : " (" + currentExpressionTypeName + ")") + " in definition of '" + astnode->identifier + "', expected " + parser::typeStr(astnode->type) + (astnode->typeName.empty() ? "" : " (" + astnode->typeName + ")") + "");
 				}
 				strExpr = static_cast<parser::ASTLiteralNode<cp_struct>*>(astnode->expr);
 			}
@@ -91,10 +90,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 			if (strExpr && !isFunctionDefinitionContext) {
 				declareStructureDefinitionVariables(astnode->identifier, currentExpressionTypeName, strExpr->val, strExpr);
 			}
-			//else {
-				declareStructureDefinitionFirstLevelVariables(astnode->identifier, strTypeName);
-			//}
-
+			declareStructureDefinitionFirstLevelVariables(astnode->identifier, strTypeName);
 		}
 		else if (astnode->type == parser::TYPE::T_ARRAY) {
 			currentScope->declare(astnode->identifier, astnode->type, astnode->typeName, astnode->arrayType, astnode->dim, astnode->arrayType == parser::TYPE::T_ANY, astnode->isConst, astnode->row, astnode->col);
@@ -104,7 +100,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 		}
 	}
 	else { // types don't match
-		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "found " + typeStr(currentExpressionType) + " in definition of '" + astnode->identifier + "', expected " + typeStr(astnode->type) + ".");
+		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "found " + parser::typeStr(currentExpressionType) + " in definition of '" + astnode->identifier + "', expected " + parser::typeStr(astnode->type) + ".");
 	}
 }
 
@@ -140,7 +136,7 @@ void SemanticAnalyser::declareStructureDefinitionVariables(std::string identifie
 		if (!found) throw std::runtime_error(msgHeader(expr->row, expr->col) + "'" + strValue.first + "' is not a member of '" + typeName + "'");
 
 		if (strValue.second->actualType != parser::TYPE::T_NULL && strValue.second->actualType != varTypeStruct->type && !varTypeStruct->isAny) {
-			throw std::runtime_error(msgHeader(expr->row, expr->col) + "invalid type " + typeStr(strValue.second->actualType) + " trying to assign '" + currentIdentifier + "'");
+			throw std::runtime_error(msgHeader(expr->row, expr->col) + "invalid type " + parser::typeStr(strValue.second->actualType) + " trying to assign '" + currentIdentifier + "'");
 		}
 
 		if (strValue.second->actualType == parser::TYPE::T_STRUCT) {
@@ -197,7 +193,7 @@ parser::VariableDefinition_t SemanticAnalyser::findDeclaredVariable(std::string 
 
 		while (identifiers.size() > 1) {
 			typeName = "";
-			
+
 			for (auto variable : strDef.variables) {
 				if (variable.identifier == identifiers.front()) {
 					typeName = variable.typeName;
@@ -328,7 +324,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 	}
 	// otherwise throw error
 	else if (currentExpressionType != type) {
-		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "mismatched type for '" + actualIdentifier + "'. Expected " + typeStr(type) + ", found " + typeStr(currentExpressionType) + "");
+		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "mismatched type for '" + actualIdentifier + "'. Expected " + parser::typeStr(type) + ", found " + parser::typeStr(currentExpressionType) + "");
 	}
 }
 
@@ -360,7 +356,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionCallNode* astnode) {
 			bool hasParams = false;
 			for (auto param : signature) {
 				hasParams = true;
-				funcName += typeStr(param) + ", ";
+				funcName += parser::typeStr(param) + ", ";
 			}
 			funcName.pop_back();   // remove last whitespace
 			funcName.pop_back();   // remove last comma
@@ -380,7 +376,7 @@ void SemanticAnalyser::visit(parser::ASTReturnNode* ret) {
 
 	// if we are not global, check that we return current function return type
 	if (!functions.empty() && currentExpressionType != functions.top()) {
-		throw std::runtime_error(msgHeader(ret->row, ret->col) + "invalid return type. Expected " + typeStr(functions.top()) + ", found " + typeStr(currentExpressionType) + ".");
+		throw std::runtime_error(msgHeader(ret->row, ret->col) + "invalid return type. Expected " + parser::typeStr(functions.top()) + ", found " + parser::typeStr(currentExpressionType) + ".");
 	}
 }
 
@@ -452,7 +448,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* astnode) {
 			bool has_params = false;
 			for (auto param : astnode->signature) {
 				has_params = true;
-				signature += typeStr(param) + ", ";
+				signature += parser::typeStr(param) + ", ";
 			}
 			if (astnode->signature.size() > 0) {
 				signature.pop_back();   // remove last whitespace
@@ -570,7 +566,7 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* astnode) {
 		}
 
 		if (op == "%" && (l_type == parser::TYPE::T_FLOAT || r_type == parser::TYPE::T_FLOAT)) {
-			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid operands to binary expression ('" + typeStr(l_type) + " and '" + typeStr(r_type) + "').");
+			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid operands to binary expression ('" + parser::typeStr(l_type) + " and '" + parser::typeStr(r_type) + "').");
 		}
 
 		// if both int, then expression is int, otherwise float
@@ -585,7 +581,7 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* astnode) {
 			currentExpressionType = (l_type == parser::TYPE::T_CHAR && r_type == parser::TYPE::T_CHAR) ? parser::TYPE::T_CHAR : parser::TYPE::T_STRING;
 		}
 		else if ((l_type == parser::TYPE::T_STRING || l_type == parser::TYPE::T_CHAR) || (r_type == parser::TYPE::T_STRING || r_type == parser::TYPE::T_CHAR)) { // only one is string, error
-			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "mismatched operands for '+' operator, found " + typeStr(l_type) + " on the left, but " + typeStr(r_type) + " on the right.");
+			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "mismatched operands for '+' operator, found " + parser::typeStr(l_type) + " on the left, but " + parser::typeStr(r_type) + " on the right.");
 		}
 		else { // real/int possibilities remain. If both int, then result is int, otherwise result is real
 			currentExpressionType = (l_type == parser::TYPE::T_INT && r_type == parser::TYPE::T_INT) ? parser::TYPE::T_INT : parser::TYPE::T_FLOAT;
@@ -688,7 +684,7 @@ void SemanticAnalyser::visit(parser::ASTExprFunctionCallNode* astnode) {
 			bool has_params = false;
 			for (auto param : signature) {
 				has_params = true;
-				func_name += typeStr(param) + ", ";
+				func_name += parser::typeStr(param) + ", ";
 			}
 			func_name.pop_back();   // remove last whitespace
 			func_name.pop_back();   // remove last comma
@@ -719,33 +715,6 @@ void SemanticAnalyser::visit(parser::ASTNullNode* astnode) {
 
 void SemanticAnalyser::visit(parser::ASTThisNode* astnode) {
 	currentExpressionType = parser::TYPE::T_STRING;
-}
-
-std::string typeStr(parser::TYPE t) {
-	switch (t) {
-	case parser::TYPE::T_VOID:
-		return "void";
-	case parser::TYPE::T_NULL:
-		return "null";
-	case parser::TYPE::T_BOOL:
-		return "bool";
-	case parser::TYPE::T_INT:
-		return "int";
-	case parser::TYPE::T_FLOAT:
-		return "real";
-	case parser::TYPE::T_CHAR:
-		return "char";
-	case parser::TYPE::T_STRING:
-		return "string";
-	case parser::TYPE::T_ANY:
-		return "any";
-	case parser::TYPE::T_ARRAY:
-		return "array";
-	case parser::TYPE::T_STRUCT:
-		return "struct";
-	default:
-		throw std::runtime_error("SERR: Invalid type encountered.");
-	}
 }
 
 std::string SemanticAnalyser::msgHeader(unsigned int row, unsigned int col) {
@@ -779,7 +748,8 @@ bool SemanticAnalyser::returns(parser::ASTStatementNode* stmt) {
 	if (auto whilestmt = dynamic_cast<parser::ASTWhileNode*>(stmt)) {
 		return returns(whilestmt->block);
 	}
-
 	// other statements do not return
-	else return false;
+	else {
+		return false;
+	}
 }

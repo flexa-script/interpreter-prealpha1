@@ -272,13 +272,13 @@ std::vector<std::pair<std::string, std::string>> SemanticScope::functionList() {
 		bool has_params = false;
 		for (auto param : fun.signature) {
 			has_params = true;
-			func_name += typeStr(param) + ", ";
+			func_name += parser::typeStr(param) + ", ";
 		}
 		func_name.pop_back();   // remove last whitespace
 		func_name.pop_back();   // remove last comma
 		func_name += ")";
 
-		list.emplace_back(std::make_pair(func_name, typeStr(fun.type)));
+		list.emplace_back(std::make_pair(func_name, parser::typeStr(fun.type)));
 	}
 
 	return list;
