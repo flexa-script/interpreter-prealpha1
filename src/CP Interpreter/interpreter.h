@@ -73,8 +73,6 @@ namespace visitor {
 
 		std::pair<parser::TYPE, Value_t*> currentExpr();
 	};
-
-	std::string typeStr(parser::TYPE);
 }
 
 #endif //INTERPRETER_H

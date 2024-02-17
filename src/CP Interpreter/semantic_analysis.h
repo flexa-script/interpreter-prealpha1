@@ -69,8 +69,6 @@ namespace visitor {
 		void visit(parser::ASTNullNode*) override;
 		void visit(parser::ASTThisNode*) override;
 	};
-
-	std::string typeStr(parser::TYPE);
 }
 
 #endif //SEMANTIC_ANALYSIS_H

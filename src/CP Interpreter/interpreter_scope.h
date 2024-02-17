@@ -51,8 +51,6 @@ namespace visitor {
 
 		std::string getName();
 	};
-
-	std::string typeStr(parser::TYPE);
 }
 
 #endif //INTERPRETER_SCOPE_H

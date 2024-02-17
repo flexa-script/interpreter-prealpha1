@@ -44,8 +44,6 @@ namespace visitor {
 		std::vector<std::pair<std::string, std::string>> functionList();
 
 	};
-
-	std::string typeStr(parser::TYPE);
 }
 
 #endif //SEMANTIC_SCOPE_H
