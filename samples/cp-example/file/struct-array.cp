@@ -7,11 +7,11 @@ struct Element {
 
 var element : Element = Element {
   //arr = null, // IERR: invalid type encountered.
-  arr = { 1, 2, 3 },
+  //arr = { 1, 2, 3 },
   value = 10
 };
 
-//element.arr = { 1, 2, 3 }; // (SERR) main[14:1]: identifier 'element.arr' being reassigned was never declared globally.
+element.arr = { 1, 2, 3};
 //element.value = 10;
 
 print(element.arr[0]);

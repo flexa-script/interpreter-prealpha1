@@ -101,7 +101,7 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 				auto identifierVector = std::vector<std::string>();
 				identifierVector.push_back(astnode->identifier);
 				if (currentExpressionValue.actualType == parser::TYPE::T_NULL) {
-					currentExpressionValue.setType(astnode->type);
+					currentExpressionValue.forceType(astnode->type);
 					currentExpressionValue.str.first = astnode->typeName;
 				}
 				declareStructureVariable(identifierVector, currentExpressionValue, std::vector<unsigned int>());
@@ -115,7 +115,7 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 			auto identifierVector = std::vector<std::string>();
 			identifierVector.push_back(astnode->identifier);
 			if (currentExpressionValue.actualType == parser::TYPE::T_NULL) {
-				currentExpressionValue.setType(astnode->type);
+				currentExpressionValue.forceType(astnode->type);
 				currentExpressionValue.str.first = astnode->typeName;
 			}
 			declareStructureVariable(identifierVector, currentExpressionValue, std::vector<unsigned int>());
@@ -151,6 +151,7 @@ void Interpreter::declareStructureVariable(std::vector<std::string> identifierVe
 				break;
 			}
 		}
+		// if already declared
 		if (declScopeIdx >= 0) {
 			if (!newValue.hasValue || newValue.actualType == parser::TYPE::T_NULL) {
 				value = scopes[declScopeIdx]->valueof(identifierVector[0], accessVector);
@@ -160,6 +161,7 @@ void Interpreter::declareStructureVariable(std::vector<std::string> identifierVe
 				value = scopes[declScopeIdx]->declare(identifierVector[0], newValue.str, accessVector);
 			}
 		}
+		// else declare new
 		else {
 			value = scopes.back()->declare(identifierVector[0], newValue.str, accessVector);
 			for (declScopeIdx = scopes.size() - 1; !scopes[declScopeIdx]->alreadyDeclaredVariable(identifierVector[0]); --declScopeIdx);
@@ -173,6 +175,7 @@ void Interpreter::declareStructureVariable(std::vector<std::string> identifierVe
 			for (size_t k = 0; k < value->str.second.size(); ++k) {
 				if (value->str.second[k].first == typeStruct.variables[j].identifier) {
 					found = true;
+					value->str.second[k].second->setType(typeStruct.variables[j].type);
 					break;
 				}
 			}
@@ -195,36 +198,36 @@ void Interpreter::declareStructureVariable(std::vector<std::string> identifierVe
 			}
 		}
 		if (declScopeIdx >= 0) {
-			value = scopes[declScopeIdx]->valueof(identifierVector[0], accessVector);
+			value = scopes[declScopeIdx]->valueof(axe::join(identifierVector, "."), accessVector);
 		}
 
-		typeName = scopes[declScopeIdx]->typenameof(identifierVector[0], accessVector);
-		for (strDefScopeIdx = scopes.size() - 1; strDefScopeIdx >= 0 && !scopes[strDefScopeIdx]->alreadyDeclaredStructureDefinition(typeName); --strDefScopeIdx);
+		//typeName = scopes[declScopeIdx]->typenameof(identifierVector[0], accessVector);
+		//for (strDefScopeIdx = scopes.size() - 1; strDefScopeIdx >= 0 && !scopes[strDefScopeIdx]->alreadyDeclaredStructureDefinition(typeName); --strDefScopeIdx);
 
-		typeStruct = scopes[strDefScopeIdx]->findDeclaredStructureDefinition(typeName);
+		//typeStruct = scopes[strDefScopeIdx]->findDeclaredStructureDefinition(typeName);
 		currValue = value;
-		if (!currValue) throw std::runtime_error("error");
+		//if (!currValue) throw std::runtime_error("error");
 
-		for (size_t i = 1; i < identifierVector.size(); ++i) {
-			for (size_t j = 0; j < typeStruct.variables.size(); ++j) {
-				if (identifierVector[i] == typeStruct.variables[j].identifier) {
-					bool found = false;
-					for (size_t k = 0; k < currValue->str.second.size(); ++k) {
-						if (currValue->str.second[k].first == typeStruct.variables[j].identifier) {
-							found = true;
-							currValue = currValue->str.second[k].second;
-							break;
-						}
-					}
-					if (typeStruct.variables[j].type == parser::TYPE::T_STRUCT) {
-						for (strDefScopeIdx = scopes.size() - 1; strDefScopeIdx >= 0 && !scopes[strDefScopeIdx]->alreadyDeclaredStructureDefinition(typeStruct.variables[j].typeName); --strDefScopeIdx);
-						typeStruct = scopes[strDefScopeIdx]->findDeclaredStructureDefinition(typeStruct.variables[j].typeName);
-					}
+		//for (size_t i = 1; i < identifierVector.size(); ++i) {
+		//	for (size_t j = 0; j < typeStruct.variables.size(); ++j) {
+		//		if (identifierVector[i] == typeStruct.variables[j].identifier) {
+		//			bool found = false;
+		//			for (size_t k = 0; k < currValue->str.second.size(); ++k) {
+		//				if (currValue->str.second[k].first == typeStruct.variables[j].identifier) {
+		//					found = true;
+		//					currValue = currValue->str.second[k].second;
+		//					break;
+		//				}
+		//			}
+		//			if (typeStruct.variables[j].type == parser::TYPE::T_STRUCT) {
+		//				for (strDefScopeIdx = scopes.size() - 1; strDefScopeIdx >= 0 && !scopes[strDefScopeIdx]->alreadyDeclaredStructureDefinition(typeStruct.variables[j].typeName); --strDefScopeIdx);
+		//				typeStruct = scopes[strDefScopeIdx]->findDeclaredStructureDefinition(typeStruct.variables[j].typeName);
+		//			}
 
-					break;
-				}
-			}
-		}
+		//			break;
+		//		}
+		//	}
+		//}
 
 		if (!currValue) throw std::runtime_error("error");
 

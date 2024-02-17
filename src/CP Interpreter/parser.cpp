@@ -737,7 +737,7 @@ VariableDefinition_t* Parser::parseFormalParam() {
 		typeName = currentToken.value;
 	}
 
-	return new VariableDefinition_t(identifier, type, typeName, currentArrayType, type == TYPE::T_ANY, false, currentToken.row, currentToken.col);
+	return new VariableDefinition_t(identifier, type, typeName, currentArrayType, dim, type == TYPE::T_ANY, false, currentToken.row, currentToken.col);
 
 };
 
@@ -949,36 +949,36 @@ cp_array Parser::parseArrayLiteral() {
 			auto type = parseType("array");
 			switch (type) {
 			case parser::TYPE::T_NULL:
-				val->setType(parser::TYPE::T_NULL);
+				val->forceType(parser::TYPE::T_NULL);
 				val->setNull();
 				break;
 			case parser::TYPE::T_BOOL:
 				checkArrayType(TYPE::T_BOOL);
-				val->setType(parser::TYPE::T_BOOL);
+				val->forceType(parser::TYPE::T_BOOL);
 				val->set(parseBoolLiteral());
 				break;
 			case parser::TYPE::T_INT:
 				checkArrayType(TYPE::T_INT);
-				val->setType(parser::TYPE::T_INT);
+				val->forceType(parser::TYPE::T_INT);
 				val->set(parseIntLiteral());
 				break;
 			case parser::TYPE::T_FLOAT:
 				checkArrayType(TYPE::T_FLOAT);
-				val->setType(parser::TYPE::T_FLOAT);
+				val->forceType(parser::TYPE::T_FLOAT);
 				val->set(parseFloatLiteral());
 				break;
 			case parser::TYPE::T_CHAR:
 				checkArrayType(TYPE::T_CHAR);
-				val->setType(parser::TYPE::T_CHAR);
+				val->forceType(parser::TYPE::T_CHAR);
 				val->set(parseCharLiteral());
 				break;
 			case parser::TYPE::T_STRING:
 				checkArrayType(TYPE::T_STRING);
-				val->setType(parser::TYPE::T_STRING);
+				val->forceType(parser::TYPE::T_STRING);
 				val->set(parseStringLiteral());
 				break;
 			case parser::TYPE::T_STRUCT:
-				val->setType(parser::TYPE::T_STRUCT);
+				val->forceType(parser::TYPE::T_STRUCT);
 				val->set(parseStructConstructor());
 				break;
 			}
@@ -1029,35 +1029,35 @@ cp_struct Parser::parseStructConstructor() {
 		auto type = parseType("struct");
 		switch (type) {
 		case parser::TYPE::T_NULL:
-			val->setType(parser::TYPE::T_NULL);
+			val->forceType(parser::TYPE::T_NULL);
 			val->setNull();
 			break;
 		case parser::TYPE::T_BOOL:
-			val->setType(parser::TYPE::T_BOOL);
+			val->forceType(parser::TYPE::T_BOOL);
 			val->set(parseBoolLiteral());
 			break;
 		case parser::TYPE::T_INT:
-			val->setType(parser::TYPE::T_INT);
+			val->forceType(parser::TYPE::T_INT);
 			val->set(parseIntLiteral());
 			break;
 		case parser::TYPE::T_FLOAT:
-			val->setType(parser::TYPE::T_FLOAT);
+			val->forceType(parser::TYPE::T_FLOAT);
 			val->set(parseFloatLiteral());
 			break;
 		case parser::TYPE::T_CHAR:
-			val->setType(parser::TYPE::T_CHAR);
+			val->forceType(parser::TYPE::T_CHAR);
 			val->set(parseCharLiteral());
 			break;
 		case parser::TYPE::T_STRING:
-			val->setType(parser::TYPE::T_STRING);
+			val->forceType(parser::TYPE::T_STRING);
 			val->set(parseStringLiteral());
 			break;
 		case parser::TYPE::T_ARRAY:
-			val->setType(parser::TYPE::T_ARRAY);
+			val->forceType(parser::TYPE::T_ARRAY);
 			val->set(parseArrayLiteral());
 			break;
 		case parser::TYPE::T_STRUCT:
-			val->setType(parser::TYPE::T_STRUCT);
+			val->forceType(parser::TYPE::T_STRUCT);
 			val->set(parseStructConstructor());
 			break;
 		}

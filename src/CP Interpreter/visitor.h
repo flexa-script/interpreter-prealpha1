@@ -78,6 +78,9 @@ typedef struct Value {
 		hasValue = true;
 	}
 	void setType(parser::TYPE type) {
+		actualType = type;
+	}
+	void forceType(parser::TYPE type) {
 		currentType = type;
 		actualType = type;
 	}

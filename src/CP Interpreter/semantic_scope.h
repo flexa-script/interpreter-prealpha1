@@ -24,7 +24,7 @@ namespace visitor {
 		bool alreadyDeclaredVariable(std::string);
 		bool alreadyDeclaredFunction(std::string, std::vector<parser::TYPE>);
 		void declareStructureDefinition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
-		void declare(std::string, parser::TYPE, std::string, parser::TYPE, bool, bool, unsigned int, unsigned int);
+		void declare(std::string, parser::TYPE, std::string, parser::TYPE, std::vector<int>, bool, bool, unsigned int, unsigned int);
 		void declare(std::string, parser::TYPE, std::string, std::vector<parser::TYPE>, bool, unsigned int, unsigned int);
 		void changeVarType(std::string, parser::TYPE);
 		void changeVarTypeName(std::string, std::string);
