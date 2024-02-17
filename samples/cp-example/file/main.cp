@@ -1,39 +1,74 @@
-// struct-array.cp
+// list.cp
 
-struct Element {
-  var arr[3] : int;
+struct Node {
   var value : any;
+  var next : Node;
 };
 
-var element : Element = Element {
-  arr = null, // IERR: invalid type encountered.
-  //arr = { 1, 2, 3 },
-  value = 10
+struct List {
+  var first : Node;
 };
 
-element.arr = { 1, 2, 3};
-//element.value = 10;
+def list_add(list : List, value : any) {
+  if (not list.first) {
+    var newNode : Node;
+    newNode.value = value;
+    newNode.next = null;
+    list.first = newNode;
+  } else {
+    var prevNode : Node;
+    var currNode = list.first;
 
-print(element.arr[0]);
-print("\n");
-print(element.arr[1]);
-print("\n");
-print(element.arr[2]);
-print("\n");
-print(element.value);
-print("\n");
-print("\n");
+    while (currNode) {
+      prevNode = currNode;
+      currNode = currNode.next;
+    }
 
-element.arr[0] = 10;
-element.arr[1] = 12;
-element.arr[2] = element.arr[0] + element.arr[1];
+    var newNode : Node;
+    newNode.value = value;
 
-print(element.arr[0]);
-print("\n");
-print(element.arr[1]);
-print("\n");
-print(element.arr[2]);
-print("\n");
-print(element.value);
-print("\n");
-print("\n");
+    currNode.next = newNode;
+  }
+}
+
+def list_print(list : List) {
+  if (not list.first) {
+    print("[]");
+  } else {
+    var node = list.first;
+    print("[");
+    while (node) {
+      print(string(node.value));
+      if (node.next) {
+        print(",");
+      }
+      node = node.next;
+    }
+    print("]");
+  }
+}
+
+//var list : List = List {
+//  first = Node {
+//    value = 1,
+//    next = Node {
+//      value = 2,
+//      next = Node {
+//        value = 3,
+//        next = null
+//      }
+//    }
+//  }
+//};
+
+var list : List;
+
+list_add(list, 10);
+list_add(list, 9);
+list_add(list, 8);
+list_add(list, 7);
+
+print(list);
+print('\n');
+list_print(list);
+print('\n');

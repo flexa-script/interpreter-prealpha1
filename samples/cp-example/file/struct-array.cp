@@ -6,7 +6,7 @@ struct Element {
 };
 
 var element : Element = Element {
-  //arr = null, // IERR: invalid type encountered.
+  arr = null,
   //arr = { 1, 2, 3 },
   value = 10
 };

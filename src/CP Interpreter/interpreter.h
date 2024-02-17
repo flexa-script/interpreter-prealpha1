@@ -30,6 +30,9 @@ namespace visitor {
 	private:
 		void determineArrayType(cp_array);
 		void declareStructureVariable(std::vector<std::string>, Value_t, std::vector<unsigned int>);
+		void printValue(Value_t*);
+		void printArray(cp_array);
+		void printStruct(cp_struct);
 
 		std::string msgHeader(unsigned int, unsigned int);
 
