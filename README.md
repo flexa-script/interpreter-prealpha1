@@ -40,3 +40,9 @@
 - [ ] Add CP library:
     - [ ] Math
     - [ ] Util
+
+## Rules
+
+### Arrays
+- If an array don't have your size defined, it can be assigned and reassigned of all sizes. Altought must respect the dimension
+- If an array has your size defined indeclaration, it can just assigned and reassigned with a same size and dimension array expression
