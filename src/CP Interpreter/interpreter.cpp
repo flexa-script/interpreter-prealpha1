@@ -411,50 +411,6 @@ void visitor::Interpreter::visit(parser::ASTPrintNode* astnode) {
 	}
 }
 
-void visitor::Interpreter::visit(parser::ASTReadNode* astnode) {
-	std::string line;
-	std::getline(std::cin, line);
-}
-
-void visitor::Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
-	// determine the signature of the function
-	std::vector<parser::TYPE> signature;
-	std::vector<std::pair<parser::TYPE, Value_t*>> currentFunctionArguments;
-
-	// for each parameter,
-	for (auto param : astnode->parameters) {
-		// visit to update current expr type
-		param->accept(this);
-
-		// add the type of current expr to signature
-		signature.push_back(currentExpressionType);
-
-		// add the current expr to the local vector of function arguments, to be
-		// used in the creation of the function scope
-		Value_t* value = new Value_t(currentExpressionType);
-		value->copyFrom(&currentExpressionValue);
-		currentFunctionArguments.emplace_back(currentExpressionType, value);
-	}
-
-	// update the global vector current_function_arguments
-	for (auto arg : currentFunctionArguments) {
-		this->currentFunctionArguments.push_back(arg);
-	}
-
-	// determine in which scope the function is declared
-	size_t i;
-	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredFunction(astnode->identifier, signature); --i);
-
-	// populate the global vector of function parameter names, to be used in creation of
-	// function scope
-	currentFunctionParameters = scopes[i]->variablenamesof(astnode->identifier, signature);
-
-	currentFunctionName = astnode->identifier;
-
-	// visit the corresponding function block
-	scopes[i]->blockof(astnode->identifier, signature)->accept(this);
-}
-
 void visitor::Interpreter::visit(parser::ASTReturnNode* astnode) {
 	// update current expression
 	astnode->expr->accept(this);

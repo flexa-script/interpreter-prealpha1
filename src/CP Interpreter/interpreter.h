@@ -48,8 +48,6 @@ namespace visitor {
 		void visit(parser::ASTDeclarationNode*) override;
 		void visit(parser::ASTAssignmentNode*) override;
 		void visit(parser::ASTPrintNode*) override;
-		void visit(parser::ASTReadNode*) override;
-		void visit(parser::ASTFunctionCallNode*) override;
 		void visit(parser::ASTReturnNode*) override;
 		void visit(parser::ASTBlockNode*) override;
 		void visit(parser::ASTIfNode*) override;

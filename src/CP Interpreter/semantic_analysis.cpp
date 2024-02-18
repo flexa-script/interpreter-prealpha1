@@ -339,43 +339,6 @@ void SemanticAnalyser::visit(parser::ASTPrintNode* astnode) {
 	astnode->expr->accept(this);
 }
 
-void SemanticAnalyser::visit(parser::ASTReadNode* astnode) { }
-
-void SemanticAnalyser::visit(parser::ASTFunctionCallNode* astnode) {
-	// determine the signature of the function
-	std::vector<parser::TYPE> signature;
-
-	// for each parameter,
-	for (auto param : astnode->parameters) {
-		// visit to update current expr type
-		param->accept(this);
-
-		// add the type of current expr to signature
-		signature.push_back(currentExpressionType);
-	}
-
-	// make sure the function exists in some scope i
-	size_t i;
-	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredFunction(astnode->identifier, signature); i--) {
-		if (i <= 0) {
-			std::string funcName = astnode->identifier + "(";
-			bool hasParams = false;
-			for (auto param : signature) {
-				hasParams = true;
-				funcName += parser::typeStr(param) + ", ";
-			}
-			funcName.pop_back();   // remove last whitespace
-			funcName.pop_back();   // remove last comma
-			funcName += ")";
-			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "function '" + funcName + "' was never declared " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
-		}
-	}
-
-	// set current expression type to the return value of the function
-	currentExpressionType = scopes[i]->type(astnode->identifier, signature);
-	currentExpressionTypeName = scopes[i]->typeName(astnode->identifier, std::move(signature));
-}
-
 void SemanticAnalyser::visit(parser::ASTReturnNode* ret) {
 	// update current expression
 	ret->expr->accept(this);
@@ -733,7 +696,7 @@ std::string SemanticAnalyser::msgHeader(unsigned int row, unsigned int col) {
 }
 
 // determines whether a statement definitely returns or not
-bool SemanticAnalyser::returns(parser::ASTStatementNode* astnode) {
+bool SemanticAnalyser::returns(parser::ASTNode* astnode) {
 	// base case: if the statement is a return statement, then it definitely returns
 	if (dynamic_cast<parser::ASTReturnNode*>(astnode)) {
 		return true;

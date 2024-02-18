@@ -29,21 +29,17 @@ namespace parser {
 		void consumeToken();
 
 		// statement Nodes
-		ASTStatementNode* parseProgramStatement();
+		ASTNode* parseProgramStatement();
 
 		ASTUsingNode* parseUsingStatement();
 
-		ASTStatementNode* parseBlockStatement();
+		ASTNode* parseBlockStatement();
 
 		ASTDeclarationNode* parseDeclarationStatement();
 
 		ASTAssignmentNode* parseAssignmentStatement();
 
 		ASTPrintNode* parsePrintStatement();
-
-		ASTReadNode* parseReadStatement();
-
-		ASTFunctionCallNode* parseFunctionCall();
 
 		ASTReturnNode* parseReturnStatement();
 
@@ -61,7 +57,7 @@ namespace parser {
 
 		ASTStructDefinitionNode* parseStructDefinition();
 
-		ASTStatementNode* parseIdentifier();
+		ASTNode* parseIdentifier();
 
 		// expression nodes
 		ASTExprNode* parseExpressionTail(ASTExprNode*);

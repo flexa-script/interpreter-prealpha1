@@ -32,16 +32,10 @@ ASTTypeParseNode::ASTTypeParseNode(TYPE type, ASTExprNode* expr, unsigned int ro
 ASTPrintNode::ASTPrintNode(ASTExprNode* expr, unsigned int row, unsigned int col)
 	: expr(expr), row(row), col(col) {}
 
-ASTReadNode::ASTReadNode(unsigned int row, unsigned int col)
-	: row(row), col(col) {}
-
-ASTFunctionCallNode::ASTFunctionCallNode(std::string identifier, std::vector<ASTExprNode*> parameters, unsigned int row, unsigned int col)
-	: identifier(std::move(identifier)), parameters(std::move(parameters)), row(row), col(col) {}
-
 ASTReturnNode::ASTReturnNode(ASTExprNode* expr, unsigned int row, unsigned int col)
 	: expr(expr), row(row), col(col) {}
 
-ASTBlockNode::ASTBlockNode(std::vector<ASTStatementNode*> statements, unsigned int row, unsigned int col)
+ASTBlockNode::ASTBlockNode(std::vector<ASTNode*> statements, unsigned int row, unsigned int col)
 	: statements(std::move(statements)), row(row), col(col) {}
 
 ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* ifBlock, unsigned int row, unsigned int col, ASTBlockNode* elseBlock)
@@ -156,19 +150,11 @@ void ASTPrintNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-void ASTReadNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
 void ASTNullNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
 void ASTThisNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-void ASTFunctionCallNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 

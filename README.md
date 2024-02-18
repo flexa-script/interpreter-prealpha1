@@ -27,6 +27,7 @@
 - [X] Remove mandatory variable type definition
 - [X] Fix cp dependencies/libs loader
 - [X] Add string array-like accessor
+- [ ] Improve error system
 - [ ] Add statements:
     - [ ] for
     - [ ] else if
@@ -47,6 +48,8 @@
     - [ ] Time
     - [ ] Web/API
     - [ ] Util
+- [ ] General otimizations:
+    - [ ] Remove duplicate codes
 - [ ] Add CP library:
     - [ ] String
     - [ ] Math

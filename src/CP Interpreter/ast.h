@@ -131,28 +131,6 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
-	class ASTReadNode : public ASTStatementNode {
-	public:
-		ASTReadNode(unsigned int, unsigned int);
-
-		unsigned int row;
-		unsigned int col;
-
-		void accept(visitor::Visitor*) override;
-	};
-
-	class ASTFunctionCallNode : public ASTStatementNode {
-	public:
-		ASTFunctionCallNode(std::string, std::vector<ASTExprNode*>, unsigned int, unsigned int);
-
-		std::string identifier;
-		std::vector<ASTExprNode*> parameters;
-		unsigned int row;
-		unsigned int col;
-
-		void accept(visitor::Visitor*) override;
-	};
-
 	class ASTReturnNode : public ASTStatementNode {
 	public:
 		ASTReturnNode(ASTExprNode*, unsigned int, unsigned int);
@@ -166,9 +144,9 @@ namespace parser {
 
 	class ASTBlockNode : public ASTStatementNode {
 	public:
-		ASTBlockNode(std::vector<ASTStatementNode*>, unsigned int, unsigned int);
+		ASTBlockNode(std::vector<ASTNode*>, unsigned int, unsigned int);
 
-		std::vector<ASTStatementNode*> statements;
+		std::vector<ASTNode*> statements;
 		unsigned int row;
 		unsigned int col;
 

@@ -25,7 +25,7 @@ namespace visitor {
 		std::vector<parser::VariableDefinition_t> currentFunctionParameters;
 
 	private:
-		bool returns(parser::ASTStatementNode*);
+		bool returns(parser::ASTNode*);
 		void declareStructureDefinitionVariables(std::string, std::string, cp_struct, parser::ASTLiteralNode<cp_struct>*);
 		void declareStructureDefinitionFirstLevelVariables(std::string, std::string);
 		parser::VariableDefinition_t findDeclaredVariable(std::string);
@@ -45,8 +45,6 @@ namespace visitor {
 		void visit(parser::ASTDeclarationNode*) override;
 		void visit(parser::ASTAssignmentNode*) override;
 		void visit(parser::ASTPrintNode*) override;
-		void visit(parser::ASTReadNode*) override;
-		void visit(parser::ASTFunctionCallNode*) override;
 		void visit(parser::ASTReturnNode*) override;
 		void visit(parser::ASTBlockNode*) override;
 		void visit(parser::ASTIfNode*) override;
