@@ -20,15 +20,6 @@ ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string typeName, std::str
 ASTAssignmentNode::ASTAssignmentNode(std::string identifier, std::vector<std::string> identifierVector, ASTExprNode* expr, std::vector<unsigned int> accessVector, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), identifierVector(identifierVector), expr(expr), accessVector(accessVector), row(row), col(col) {}
 
-ASTNullNode::ASTNullNode(unsigned int row, unsigned int col)
-	: row(row), col(col) {}
-
-ASTThisNode::ASTThisNode(unsigned int row, unsigned int col)
-	: row(row), col(col) {}
-
-ASTTypeParseNode::ASTTypeParseNode(TYPE type, ASTExprNode* expr, unsigned int row, unsigned int col)
-	: type(type), expr(expr), row(row), col(col) {}
-
 ASTPrintNode::ASTPrintNode(ASTExprNode* expr, unsigned int row, unsigned int col)
 	: expr(expr), row(row), col(col) {}
 
@@ -60,6 +51,12 @@ ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::ve
 
 
 // Expression Nodes
+ASTNullNode::ASTNullNode(unsigned int row, unsigned int col)
+	: row(row), col(col) {}
+
+ASTThisNode::ASTThisNode(unsigned int row, unsigned int col)
+	: row(row), col(col) {}
+
 ASTBinaryExprNode::ASTBinaryExprNode(std::string op, ASTExprNode* left, ASTExprNode* right, unsigned int row, unsigned int col)
 	: op(std::move(op)), left(left), right(right), row(row), col(col) {}
 
@@ -69,10 +66,22 @@ ASTIdentifierNode::ASTIdentifierNode(std::string identifier, std::vector<std::st
 ASTUnaryExprNode::ASTUnaryExprNode(std::string unaryOp, ASTExprNode* expr, unsigned int row, unsigned int col)
 	: unaryOp(std::move(unaryOp)), expr(expr), row(row), col(col) {}
 
-ASTExprFunctionCallNode::ASTExprFunctionCallNode(std::string identifier, std::vector<ASTExprNode*> parameters, unsigned int row, unsigned int col)
+ASTFunctionCallNode::ASTFunctionCallNode(std::string identifier, std::vector<ASTExprNode*> parameters, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), parameters(std::move(parameters)), row(row), col(col) {}
 
-ASTExprReadNode::ASTExprReadNode(unsigned int row, unsigned int col)
+ASTTypeParseNode::ASTTypeParseNode(TYPE type, ASTExprNode* expr, unsigned int row, unsigned int col)
+	: type(type), expr(expr), row(row), col(col) {}
+
+ASTRoundNode::ASTRoundNode(ASTExprNode* expr, unsigned int ndigits, unsigned int row, unsigned int col)
+	: expr(expr), ndigits(ndigits), row(row), col(col) {}
+
+ASTLenNode::ASTLenNode(ASTExprNode* expr, unsigned int row, unsigned int col)
+	: expr(expr), row(row), col(col) {}
+
+ASTTypeNode::ASTTypeNode(ASTExprNode* expr, unsigned int row, unsigned int col)
+	: expr(expr), row(row), col(col) {}
+
+ASTReadNode::ASTReadNode(unsigned int row, unsigned int col)
 	: row(row), col(col) {}
 
 
@@ -118,11 +127,23 @@ namespace parser {
 	}
 }
 
-void ASTExprFunctionCallNode::accept(visitor::Visitor* v) {
+void ASTFunctionCallNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-void ASTExprReadNode::accept(visitor::Visitor* v) {
+void ASTTypeNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+void ASTRoundNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+void ASTLenNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+void ASTReadNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 

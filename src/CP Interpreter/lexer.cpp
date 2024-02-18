@@ -179,6 +179,12 @@ Token Lexer::processIdentifier() {
 		type = TOK_PRINT;
 	else if (identifier == "read")
 		type = TOK_READ;
+	else if (identifier == "len")
+		type = TOK_LEN;
+	else if (identifier == "type")
+		type = TOK_TYPE;
+	else if (identifier == "round")
+		type = TOK_ROUND;
 	else if (identifier == "void")
 		type = TOK_VOID_TYPE;
 	else if (identifier == "bool")

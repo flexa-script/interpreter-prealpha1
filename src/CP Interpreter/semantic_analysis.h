@@ -61,9 +61,12 @@ namespace visitor {
 		void visit(parser::ASTBinaryExprNode*) override;
 		void visit(parser::ASTIdentifierNode*) override;
 		void visit(parser::ASTUnaryExprNode*) override;
-		void visit(parser::ASTExprFunctionCallNode*) override;
+		void visit(parser::ASTFunctionCallNode*) override;
 		void visit(parser::ASTTypeParseNode*) override;
-		void visit(parser::ASTExprReadNode*) override;
+		void visit(parser::ASTTypeNode*) override;
+		void visit(parser::ASTLenNode*) override;
+		void visit(parser::ASTRoundNode*) override;
+		void visit(parser::ASTReadNode*) override;
 		void visit(parser::ASTNullNode*) override;
 		void visit(parser::ASTThisNode*) override;
 	};

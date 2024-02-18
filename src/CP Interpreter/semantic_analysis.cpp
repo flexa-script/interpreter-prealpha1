@@ -54,14 +54,20 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 	if (astnode->expr) {
 		astnode->expr->accept(this);
 	}
+	else {
+		isCurrentExpressionArray = false;
+		currentExpressionType = parser::TYPE::T_NULL;
+	}
+
+	if (astnode->type != parser::TYPE::T_ARRAY && isCurrentExpressionArray) {
+		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "trying to assign array expression to '" + astnode->identifier + "' variable");
+	}
 
 	// allow mismatched type in the case of declaration of int to float and char to string
 	if (astnode->type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT
-		|| astnode->type == parser::TYPE::T_STRING && currentExpressionType == parser::TYPE::T_CHAR) {
-		currentScope->declare(astnode->identifier, astnode->type, astnode->typeName, astnode->arrayType, astnode->dim, false, astnode->isConst, astnode->row, astnode->col);
-	}
-	if (astnode->type != parser::TYPE::T_ARRAY && isCurrentExpressionArray) {
-		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "trying to assign array expression to '" + astnode->identifier + "' variable");
+		|| astnode->type == parser::TYPE::T_STRING && currentExpressionType == parser::TYPE::T_CHAR
+		|| currentExpressionType == parser::TYPE::T_NULL) {
+		currentScope->declare(astnode->identifier, astnode->type, astnode->typeName, astnode->arrayType, astnode->dim, astnode->type == parser::TYPE::T_ANY, astnode->isConst, astnode->row, astnode->col);
 	}
 	// handle equal types and special types (any, struct and array)
 	else if (astnode->type == currentExpressionType || astnode->type == parser::TYPE::T_ANY || astnode->type == parser::TYPE::T_STRUCT || astnode->type == parser::TYPE::T_ARRAY) { // types match
@@ -637,7 +643,7 @@ void SemanticAnalyser::visit(parser::ASTUnaryExprNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(parser::ASTExprFunctionCallNode* astnode) {
+void SemanticAnalyser::visit(parser::ASTFunctionCallNode* astnode) {
 	// determine the signature of the function
 	std::vector<parser::TYPE> signature;
 
@@ -677,10 +683,25 @@ void SemanticAnalyser::visit(parser::ASTTypeParseNode* astnode) {
 	currentExpressionType = astnode->type;
 }
 
-void SemanticAnalyser::visit(parser::ASTExprReadNode* astnode) {
+void SemanticAnalyser::visit(parser::ASTReadNode* astnode) {
 	if (currentExpressionType != parser::TYPE::T_STRING) {
 		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "function 'read()' is trying to assing an invalid type.");
 	}
+}
+
+void SemanticAnalyser::visit(parser::ASTTypeNode* astnode) {
+	astnode->expr->accept(this);
+	currentExpressionType = parser::TYPE::T_STRING;
+}
+
+void SemanticAnalyser::visit(parser::ASTLenNode* astnode) {
+	astnode->expr->accept(this);
+	currentExpressionType = parser::TYPE::T_INT;
+}
+
+void SemanticAnalyser::visit(parser::ASTRoundNode* astnode) {
+	astnode->expr->accept(this);
+	currentExpressionType = parser::TYPE::T_FLOAT;
 }
 
 void SemanticAnalyser::visit(parser::ASTNullNode* astnode) {

@@ -219,6 +219,26 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
+	class ASTNullNode : public ASTExprNode {
+	public:
+		ASTNullNode(unsigned int, unsigned int);
+
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
+	class ASTThisNode : public ASTExprNode {
+	public:
+		ASTThisNode(unsigned int, unsigned int);
+
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
 	class ASTBinaryExprNode : public ASTExprNode {
 	public:
 		ASTBinaryExprNode(std::string, ASTExprNode*, ASTExprNode*, unsigned int, unsigned int);
@@ -257,32 +277,12 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
-	class ASTExprFunctionCallNode : public ASTExprNode {
+	class ASTFunctionCallNode : public ASTExprNode {
 	public:
-		ASTExprFunctionCallNode(std::string, std::vector<ASTExprNode*>, unsigned int, unsigned int);
+		ASTFunctionCallNode(std::string, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 
 		std::string identifier;
 		std::vector<ASTExprNode*> parameters;
-		unsigned int row;
-		unsigned int col;
-
-		void accept(visitor::Visitor*) override;
-	};
-
-	class ASTNullNode : public ASTExprNode {
-	public:
-		ASTNullNode(unsigned int, unsigned int);
-
-		unsigned int row;
-		unsigned int col;
-
-		void accept(visitor::Visitor*) override;
-	};
-
-	class ASTThisNode : public ASTExprNode {
-	public:
-		ASTThisNode(unsigned int, unsigned int);
-
 		unsigned int row;
 		unsigned int col;
 
@@ -301,9 +301,43 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
-	class ASTExprReadNode : public ASTExprNode {
+	class ASTRoundNode : public ASTExprNode {
 	public:
-		ASTExprReadNode(unsigned int, unsigned int);
+		ASTRoundNode(ASTExprNode*, unsigned int, unsigned int, unsigned int);
+
+		ASTExprNode* expr;
+		unsigned int ndigits;
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
+	class ASTLenNode : public ASTExprNode {
+	public:
+		ASTLenNode(ASTExprNode*, unsigned int, unsigned int);
+
+		ASTExprNode* expr;
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
+	class ASTTypeNode : public ASTExprNode {
+	public:
+		ASTTypeNode(ASTExprNode*, unsigned int, unsigned int);
+
+		ASTExprNode* expr;
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
+	class ASTReadNode : public ASTExprNode {
+	public:
+		ASTReadNode(unsigned int, unsigned int);
 
 		unsigned int row;
 		unsigned int col;

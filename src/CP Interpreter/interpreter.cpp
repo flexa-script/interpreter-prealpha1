@@ -791,7 +791,7 @@ void visitor::Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
 	}
 }
 
-void visitor::Interpreter::visit(parser::ASTExprFunctionCallNode* astnode) {
+void visitor::Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 	// determine the signature of the function
 	std::vector<parser::TYPE> signature;
 	std::vector<std::pair<parser::TYPE, Value_t*>> currentFunctionArguments;
@@ -950,6 +950,39 @@ void visitor::Interpreter::visit(parser::ASTTypeParseNode* astnode) {
 	currentExpressionType = astnode->type;
 }
 
+
+void visitor::Interpreter::visit(parser::ASTTypeNode* astnode) {
+	astnode->expr->accept(this);
+
+	auto type = currentExpressionValue.actualType == parser::TYPE::T_ANY ? currentExpressionValue.currentType : currentExpressionValue.actualType;
+
+	auto strT = parser::typeStr(type);
+
+	if (type == parser::TYPE::T_ARRAY) {
+		//determineArrayType(currentExpressionValue.arr);
+		//strT += "<" + parser::typeStr(cur) + ">";
+	}
+	else if (type == parser::TYPE::T_STRUCT) {
+		strT += "<" + currentExpressionValue.str.first + ">";
+	}
+
+	Value_t value = Value_t(parser::TYPE::T_STRING);
+	value.set(cp_string(strT));
+	currentExpressionValue = value;
+	currentExpressionType = parser::TYPE::T_STRING;
+}
+
+void visitor::Interpreter::visit(parser::ASTLenNode* astnode) {
+	astnode->expr->accept(this);
+	currentExpressionType = parser::TYPE::T_INT;
+}
+
+void visitor::Interpreter::visit(parser::ASTRoundNode* astnode) {
+	astnode->expr->accept(this);
+	currentExpressionType = parser::TYPE::T_FLOAT;
+}
+
+
 void visitor::Interpreter::visit(parser::ASTNullNode* astnode) {
 	Value_t value = Value_t(parser::TYPE::T_NULL);
 	value.setNull();
@@ -964,7 +997,7 @@ void visitor::Interpreter::visit(parser::ASTThisNode* astnode) {
 	currentExpressionValue = value;
 }
 
-void visitor::Interpreter::visit(parser::ASTExprReadNode* astnode) {
+void visitor::Interpreter::visit(parser::ASTReadNode* astnode) {
 	std::string line;
 	std::getline(std::cin, line);
 

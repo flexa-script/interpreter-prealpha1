@@ -80,17 +80,25 @@ namespace parser {
 
 		ASTExprNode* parseFactor();
 
-		ASTExprFunctionCallNode* parseExprFunctionCall();
+		ASTFunctionCallNode* parseExprFunctionCall();
 
-		ASTExprReadNode* parseExprRead();
+		ASTReadNode* parseExprRead();
 
 		ASTTypeParseNode* parseExprTypeParse();
 
 		ASTThisNode* parseExprThis();
 
+		ASTTypeNode* parseTypeNode();
+
+		ASTLenNode* parseLenNode();
+
+		ASTRoundNode* parseRoundNode();
+
 		std::vector<ASTExprNode*>* parseActualParams();
 
 		VariableDefinition_t* parseFormalParam();
+
+		ASTIdentifierNode* parseIdentifierNode();
 
 		cp_bool parseBoolLiteral();
 

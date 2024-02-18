@@ -99,7 +99,7 @@ ASTNode* Parser::parseBlockStatement() {
 
 ASTNode* Parser::parseIdentifier() {
 	if (nextToken.value == "(") {
-		ASTExprFunctionCallNode* expr = parseExprFunctionCall();
+		ASTFunctionCallNode* expr = parseExprFunctionCall();
 		consumeToken();
 		if (currentToken.type != lexer::TOK_SEMICOLON) {
 			throw std::runtime_error(msgHeader() + "expected ';' to close expression");
@@ -217,7 +217,7 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	else {
 		expr = nullptr;
 
-		if (currentArrayType == parser::TYPE::T_ND) {
+		if (dim.size() > 0 && currentArrayType == parser::TYPE::T_ND) {
 			currentArrayType = parser::TYPE::T_ANY;
 		}
 	}
@@ -798,6 +798,15 @@ ASTExprNode* Parser::parseFactor() {
 	case lexer::TOK_STRING_TYPE:
 		return parseExprTypeParse();
 
+	case lexer::TOK_TYPE:
+		return parseTypeNode();
+
+	case lexer::TOK_LEN:
+		return parseLenNode();
+
+	case lexer::TOK_ROUND:
+		return parseRoundNode();
+
 	case lexer::TOK_NULL:
 		return new ASTNullNode(row, col);
 
@@ -811,40 +820,8 @@ ASTExprNode* Parser::parseFactor() {
 			return parseExprFunctionCall();
 		case lexer::TOK_LEFT_CURLY:
 			return new ASTLiteralNode<cp_struct>(parseStructConstructor(), row, col);
-		default: {
-			auto identifierVector = std::vector<std::string>();
-			auto accessVector = std::vector<unsigned int>();
-			if (axe::contains(currentToken.value, ".")) {
-				identifierVector = axe::split(currentToken.value, '.');
-			}
-			else {
-				identifierVector.push_back(currentToken.value);
-			}
-
-			if (nextToken.type == lexer::TOK_LEFT_BRACE) {
-				consumeToken();
-				do {
-					auto pos = 0;
-					consumeToken();
-					if (currentToken.type != lexer::TOK_INT_LITERAL) {
-						throw std::runtime_error(msgHeader() + "expected int literal");
-					}
-					pos = stoi(currentToken.value);
-					consumeToken();
-					if (currentToken.type != lexer::TOK_RIGHT_BRACE) {
-						throw std::runtime_error(msgHeader() + "expected ']' after array position constant");
-					}
-					accessVector.push_back(pos);
-
-					if (nextToken.type == lexer::TOK_LEFT_BRACE) {
-						consumeToken();
-					}
-					
-				} while (currentToken.type == lexer::TOK_LEFT_BRACE);
-			}
-
-			return new ASTIdentifierNode(identifierVector[0], identifierVector, accessVector, row, col);
-		}
+		default:
+			return parseIdentifierNode();
 		}
 
 	case lexer::TOK_READ: // read case
@@ -868,6 +845,95 @@ ASTExprNode* Parser::parseFactor() {
 	default:
 		throw std::runtime_error(msgHeader() + "expected expression.");
 	}
+}
+
+ASTTypeNode* Parser::parseTypeNode() {
+	unsigned int row = currentToken.row;
+	unsigned int col = currentToken.col;
+	ASTExprNode* expr = nullptr;
+
+	consumeToken();
+	if (currentToken.type != lexer::TOK_LEFT_BRACKET) {
+		throw std::runtime_error(msgHeader() + "expected '('.");
+	}
+
+	expr = parseExpression();
+	consumeToken();
+
+	// ensure right close bracket after fetching parameters
+	if (currentToken.type != lexer::TOK_RIGHT_BRACKET) {
+		throw std::runtime_error(msgHeader() + "expected ')' after function parameters");
+	}
+
+	return new ASTTypeNode(expr, row, col);
+}
+
+ASTLenNode* Parser::parseLenNode() {
+	unsigned int row = currentToken.row;
+	unsigned int col = currentToken.col;
+	ASTExprNode* expr = nullptr;
+
+	consumeToken();
+	if (currentToken.type != lexer::TOK_LEFT_BRACKET) {
+		throw std::runtime_error(msgHeader() + "expected '('.");
+	}
+
+	expr = parseExpression();
+	consumeToken();
+
+	// ensure right close bracket after fetching parameters
+	if (currentToken.type != lexer::TOK_RIGHT_BRACKET) {
+		throw std::runtime_error(msgHeader() + "expected ')' after function parameters");
+	}
+
+	return new ASTLenNode(expr, row, col);
+}
+
+ASTRoundNode* Parser::parseRoundNode() {
+	unsigned int row = currentToken.row;
+	unsigned int col = currentToken.col;
+	unsigned int ndigits = currentToken.col;
+	ASTExprNode* expr = nullptr;
+
+	return new ASTRoundNode(expr, ndigits, row, col);
+}
+
+ASTIdentifierNode* Parser::parseIdentifierNode() {
+	unsigned int row = currentToken.row;
+	unsigned int col = currentToken.col;
+
+	auto identifierVector = std::vector<std::string>();
+	auto accessVector = std::vector<unsigned int>();
+	if (axe::contains(currentToken.value, ".")) {
+		identifierVector = axe::split(currentToken.value, '.');
+	}
+	else {
+		identifierVector.push_back(currentToken.value);
+	}
+
+	if (nextToken.type == lexer::TOK_LEFT_BRACE) {
+		consumeToken();
+		do {
+			auto pos = 0;
+			consumeToken();
+			if (currentToken.type != lexer::TOK_INT_LITERAL) {
+				throw std::runtime_error(msgHeader() + "expected int literal");
+			}
+			pos = stoi(currentToken.value);
+			consumeToken();
+			if (currentToken.type != lexer::TOK_RIGHT_BRACE) {
+				throw std::runtime_error(msgHeader() + "expected ']' after array position constant");
+			}
+			accessVector.push_back(pos);
+
+			if (nextToken.type == lexer::TOK_LEFT_BRACE) {
+				consumeToken();
+			}
+
+		} while (currentToken.type == lexer::TOK_LEFT_BRACE);
+	}
+
+	return new ASTIdentifierNode(identifierVector[0], identifierVector, accessVector, row, col);
 }
 
 cp_array Parser::parseArrayLiteral() {
@@ -1111,7 +1177,7 @@ cp_string Parser::parseStringLiteral() {
 	return str;
 }
 
-ASTExprFunctionCallNode* Parser::parseExprFunctionCall() {
+ASTFunctionCallNode* Parser::parseExprFunctionCall() {
 	// current token is the function identifier
 	std::string identifier = currentToken.value;
 	auto* parameters = new std::vector<ASTExprNode*>;
@@ -1137,7 +1203,7 @@ ASTExprFunctionCallNode* Parser::parseExprFunctionCall() {
 		throw std::runtime_error(msgHeader() + "expected ')' after function parameters.");
 	}
 
-	return new ASTExprFunctionCallNode(identifier, *parameters, row, col);
+	return new ASTFunctionCallNode(identifier, *parameters, row, col);
 }
 
 ASTTypeParseNode* Parser::parseExprTypeParse() {
@@ -1171,7 +1237,7 @@ ASTThisNode* Parser::parseExprThis() {
 	return new ASTThisNode(row, col);
 }
 
-ASTExprReadNode* Parser::parseExprRead() {
+ASTReadNode* Parser::parseExprRead() {
 	// determine line number
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
@@ -1188,7 +1254,7 @@ ASTExprReadNode* Parser::parseExprRead() {
 		throw std::runtime_error(msgHeader() + "expected ')' after function parameters.");
 	}
 
-	return new ASTExprReadNode(row, col);
+	return new ASTReadNode(row, col);
 }
 
 std::vector<ASTExprNode*>* Parser::parseActualParams() {
