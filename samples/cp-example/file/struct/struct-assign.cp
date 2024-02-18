@@ -35,8 +35,8 @@ element22 = element2;
 element33 = element3;
 
 element_print(element1);
-element_print(element2);
 element_print(element11);
+element_print(element2);
 element_print(element22);
 element_print(element3);
 element_print(element33);

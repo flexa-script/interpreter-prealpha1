@@ -36,7 +36,7 @@ parser::StructureDefinition_t InterpreterScope::findDeclaredStructureDefinition(
 		}
 	}
 
-	throw std::runtime_error("IERR: can't found '" + identifier + "'");
+	throw std::runtime_error("ISERR: can't found '" + identifier + "'");
 }
 
 bool InterpreterScope::alreadyDeclaredVariable(std::string identifier) {
@@ -212,13 +212,22 @@ parser::TYPE InterpreterScope::typeof(std::string identifier, std::vector<unsign
 Value_t* InterpreterScope::accessvalueofarray(Value_t* arr, std::vector<unsigned int> accessVector) {
 	cp_array* currentVal = &arr->arr;
 	size_t s = 0;
+
 	for (s = 0; s < accessVector.size() - 1; ++s) {
+		if (accessVector.at(s) >= currentVal->size()) {
+			throw std::runtime_error("ISERR: tryed to access a invalid position in a string");
+		}
 		if (currentVal->at(accessVector.at(s))->currentType != parser::TYPE::T_ARRAY) {
 			hasStringAccess = true;
 			break;
 		}
 		currentVal = &currentVal->at(accessVector.at(s))->arr;
 	}
+
+	if (accessVector.at(s) >= currentVal->size()) {
+		throw std::runtime_error("ISERR: tryed to access a invalid position in a string");
+	}
+
 	return currentVal->at(accessVector.at(s));
 }
 
@@ -246,6 +255,9 @@ Value_t* InterpreterScope::valueof(std::string identifier, std::vector<unsigned 
 		hasStringAccess = false;
 		return accessvalueofarray(value, accessVector);
 	}
+	else {
+		hasStringAccess = true;
+	}
 
 	return value;
 }
@@ -271,7 +283,7 @@ std::vector<std::string> InterpreterScope::variablenamesof(std::string identifie
 		if (found) return std::get<1>(fun.second);
 	}
 
-	throw std::runtime_error("IERR: something went wrong when determining the typename of '" + identifier + "' variable");
+	throw std::runtime_error("ISERR: something went wrong when determining the typename of '" + identifier + "' variable");
 }
 
 parser::ASTBlockNode* InterpreterScope::blockof(std::string identifier, std::vector<parser::TYPE> signature) {

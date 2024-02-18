@@ -797,9 +797,15 @@ void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 	currentExpressionTypeName = currentExpressionType == parser::TYPE::T_STRUCT ? currentExpressionValue.str.first : "";
 
 	if (currentExpressionType == parser::TYPE::T_STRING && astnode->accessVector.size() > 0 && scopes[i]->hasStringAccess) {
+		auto pos = astnode->accessVector[astnode->accessVector.size() - 1];
+
+		if (pos >= currentExpressionValue.s.size()) {
+			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "tryed to access a invalid position in a string");
+		}
+
 		currentExpressionType = parser::TYPE::T_CHAR;
 		auto charValue = Value_t(currentExpressionType);
-		charValue.set(cp_char(currentExpressionValue.s[astnode->accessVector[astnode->accessVector.size() - 1]]));
+		charValue.set(cp_char(currentExpressionValue.s[pos]));
 		currentExpressionValue = charValue;
 		currentExpressionTypeName = "";
 	}

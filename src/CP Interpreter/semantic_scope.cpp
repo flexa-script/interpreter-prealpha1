@@ -17,7 +17,7 @@ parser::StructureDefinition_t SemanticScope::findDeclaredStructureDefinition(std
 		}
 	}
 
-	throw std::runtime_error("SERR: can't found '" + identifier + "' type.");
+	throw std::runtime_error("SSERR: can't found '" + identifier + "' type");
 }
 
 bool SemanticScope::alreadyDeclaredStructureDefinition(std::string identifier) {
@@ -142,7 +142,7 @@ parser::TYPE SemanticScope::arrayType(std::string identifier) {
 		}
 	}
 
-	throw std::runtime_error("SERR: something went wrong when determining the type of '" + identifier + "' array");
+	throw std::runtime_error("SSERR: something went wrong when determining the type of '" + identifier + "' array");
 }
 
 parser::VariableDefinition_t SemanticScope::var(std::string identifier) {
@@ -172,7 +172,7 @@ std::string SemanticScope::typeName(std::string identifier, std::vector<parser::
 
 	// if key is not present in functionSymbolTable
 	if (funcs.empty()) {
-		throw std::runtime_error("SERR: something went wrong when determining the type of '" + identifier + "' function");
+		throw std::runtime_error("SSERR: something went wrong when determining the type of '" + identifier + "' function");
 	}
 
 	// check signature for each function in functionSymbolTable
@@ -188,7 +188,7 @@ std::string SemanticScope::typeName(std::string identifier, std::vector<parser::
 		if (found) return fun.typeName;
 	}
 
-	throw std::runtime_error("SERR: something went wrong when determining the type of '" + identifier + "' function");
+	throw std::runtime_error("SSERR: something went wrong when determining the type of '" + identifier + "' function");
 }
 
 parser::TYPE SemanticScope::type(std::string identifier, std::vector<parser::TYPE> signature) {
@@ -202,7 +202,7 @@ parser::TYPE SemanticScope::type(std::string identifier, std::vector<parser::TYP
 
 	// if key is not present in functionSymbolTable
 	if (funcs.empty()) {
-		throw std::runtime_error("SERR: something went wrong when determining the type of '" + identifier + "' function");
+		throw std::runtime_error("SSERR: something went wrong when determining the type of '" + identifier + "' function");
 	}
 
 	// check signature for each function in functionSymbolTable
@@ -218,7 +218,7 @@ parser::TYPE SemanticScope::type(std::string identifier, std::vector<parser::TYP
 		if (found) return fun.type;
 	}
 
-	throw std::runtime_error("SERR: something went wrong when determining the type of '" + identifier + "' function");
+	throw std::runtime_error("SSERR: something went wrong when determining the type of '" + identifier + "' function");
 }
 
 unsigned int SemanticScope::declarationLine(std::string identifier) {
@@ -228,7 +228,7 @@ unsigned int SemanticScope::declarationLine(std::string identifier) {
 		}
 	}
 
-	throw std::runtime_error("SERR: something went wrong when determining the line number of '" + identifier + "'");
+	throw std::runtime_error("SSERR: something went wrong when determining the line number of '" + identifier + "'");
 }
 
 unsigned int SemanticScope::declarationLine(std::string identifier, std::vector<parser::TYPE> signature) {
@@ -242,7 +242,7 @@ unsigned int SemanticScope::declarationLine(std::string identifier, std::vector<
 
 	// if key is not present in functionSymbolTable
 	if (funcs.empty()) {
-		throw std::runtime_error("SERR: something went wrong when determining the line number of '" + identifier + "'");
+		throw std::runtime_error("SSERR: something went wrong when determining the line number of '" + identifier + "'");
 	}
 
 	// check signature for each function in functionSymbolTable
@@ -259,7 +259,7 @@ unsigned int SemanticScope::declarationLine(std::string identifier, std::vector<
 	}
 
 	// function with matching signature not found
-	throw std::runtime_error("SERR: something went wrong when determining the line number of '" + identifier + "'");
+	throw std::runtime_error("SSERR: something went wrong when determining the line number of '" + identifier + "'");
 }
 
 
