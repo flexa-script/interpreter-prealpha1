@@ -73,7 +73,7 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 			break;
 		case parser::TYPE::T_STRING:
 			if (currentExpressionType == parser::TYPE::T_CHAR)
-				scopes.back()->declare(astnode->identifier, std::to_string(currentExpressionValue.c), std::vector<unsigned int>());
+				scopes.back()->declare(astnode->identifier, std::string{ currentExpressionValue.c }, std::vector<unsigned int>());
 			else
 				scopes.back()->declare(astnode->identifier, currentExpressionValue.s, std::vector<unsigned int>());
 			break;
@@ -135,6 +135,10 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 			scopes.back()->declareNull(astnode->identifier, astnode->type, std::vector<unsigned int>());
 		}
 	}
+
+	Value_t* val = scopes.back()->valueof(astnode->identifier, std::vector<unsigned int>());
+	val->dim = astnode->dim;
+	val->arrType = astnode->arrayType;
 }
 
 void Interpreter::declareStructureVariable(std::vector<std::string> identifierVector, Value_t newValue, std::vector<unsigned int> accessVector) {
@@ -273,9 +277,9 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	astnode->expr->accept(this);
 
 	auto type = scopes[i]->typeof(actualIdentifier, astnode->accessVector);
-	if (type != parser::TYPE::T_ARRAY && type != parser::TYPE::T_STRUCT) {
-		type = currentExpressionType;
-	}
+	//if (type != parser::TYPE::T_ARRAY && type != parser::TYPE::T_STRUCT) {
+	//	type = currentExpressionType;
+	//}
 
 	if (currentExpressionType != parser::TYPE::T_NULL && currentExpressionValue.hasValue) {
 		if (astnode->identifierVector.size() > 1) {
@@ -524,6 +528,7 @@ void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_bool>* lit) {
 	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_BOOL;
 	currentExpressionValue = *value;
+	currentExpressionTypeName = "";
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_int>* lit) {
@@ -531,6 +536,7 @@ void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_int>* lit) {
 	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_INT;
 	currentExpressionValue = *value;
+	currentExpressionTypeName = "";
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_float>* lit) {
@@ -538,6 +544,7 @@ void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_float>* lit) {
 	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_FLOAT;
 	currentExpressionValue = *value;
+	currentExpressionTypeName = "";
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_char>* lit) {
@@ -545,6 +552,7 @@ void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_char>* lit) {
 	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_CHAR;
 	currentExpressionValue = *value;
+	currentExpressionTypeName = "";
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_string>* lit) {
@@ -552,13 +560,16 @@ void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_string>* lit) {
 	value->set(lit->val);
 	currentExpressionType = parser::TYPE::T_STRING;
 	currentExpressionValue = *value;
+	currentExpressionTypeName = "";
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_array>* lit) {
 	Value_t* value = new Value_t(parser::TYPE::T_ARRAY);
 	value->set(lit->val);
-	determineArrayType(lit->val);
+	//determineArrayType(lit->val);
+	currentExpressionType = parser::TYPE::T_ARRAY;
 	currentExpressionValue = *value;
+	currentExpressionTypeName = "";
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_struct>* lit) {
@@ -567,18 +578,6 @@ void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_struct>* lit) {
 	currentExpressionType = parser::TYPE::T_STRUCT;
 	currentExpressionValue = *value;
 	currentExpressionTypeName = lit->val.first;
-}
-
-void Interpreter::determineArrayType(cp_array arr) {
-	if (arr.size() > 0) {
-		Value_t* val = arr.at(0);
-		if (val->currentType == parser::TYPE::T_ARRAY) {
-			determineArrayType(val->arr);
-		}
-		else {
-			currentExpressionType = val->currentType;
-		}
-	}
 }
 
 void visitor::Interpreter::visit(parser::ASTBinaryExprNode* astnode) {
@@ -950,7 +949,6 @@ void visitor::Interpreter::visit(parser::ASTTypeParseNode* astnode) {
 	currentExpressionType = astnode->type;
 }
 
-
 void visitor::Interpreter::visit(parser::ASTTypeNode* astnode) {
 	astnode->expr->accept(this);
 
@@ -959,8 +957,10 @@ void visitor::Interpreter::visit(parser::ASTTypeNode* astnode) {
 	auto strT = parser::typeStr(type);
 
 	if (type == parser::TYPE::T_ARRAY) {
-		//determineArrayType(currentExpressionValue.arr);
-		//strT += "<" + parser::typeStr(cur) + ">";
+		strT = parser::typeStr(currentExpressionValue.arrType);
+		for (size_t i = 0; i < currentExpressionValue.dim.size(); ++i) {
+			strT += "[" + std::to_string(currentExpressionValue.dim[i]) + "]";
+		}
 	}
 	else if (type == parser::TYPE::T_STRUCT) {
 		strT += "<" + currentExpressionValue.str.first + ">";

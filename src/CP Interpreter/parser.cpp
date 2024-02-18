@@ -112,19 +112,6 @@ ASTNode* Parser::parseIdentifier() {
 	throw std::runtime_error(msgHeader() + "expected '[' or '=' after identifier");
 }
 
-std::vector<int> Parser::calcArrayDimSize(cp_array value) {
-	auto dim = std::vector<int>();
-	Value_t* val = value.at(0);
-
-	dim.push_back(value.size());
-	if (val->currentType == TYPE::T_ARRAY) {
-		auto dim2 = calcArrayDimSize(val->arr);
-		dim.insert(dim.end(), dim2.begin(), dim2.end());
-	}
-
-	return dim;
-}
-
 ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	TYPE type = TYPE::T_ND;
 	currentArrayType = TYPE::T_ND;
@@ -170,6 +157,10 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 		}
 		else if (type == TYPE::T_ARRAY) {
 			currentArrayType = parseType(identifier);
+
+			if (currentArrayType == parser::TYPE::T_ND || currentArrayType == parser::TYPE::T_NULL || currentArrayType == parser::TYPE::T_ARRAY) {
+				currentArrayType = parser::TYPE::T_ANY;
+			}
 		}
 
 		if (currentToken.type == lexer::TOK_IDENTIFIER) {
@@ -190,25 +181,6 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 			type = TYPE::T_ANY;
 		}
 
-		// validate array size
-		if (type == TYPE::T_ARRAY) {
-			auto val = dynamic_cast<ASTLiteralNode<cp_array>*>(expr)->val;
-			if (typeid(val) != typeid(cp_array)) {
-				throw std::runtime_error(msgHeader() + "expected array definition expression assigning '" + identifier + "' array");
-			}
-			auto exprDim = calcArrayDimSize(std::any_cast<cp_array>(val));
-
-			if (dim.size() != exprDim.size()) {
-				throw std::runtime_error(msgHeader() + "invalid expression dimension assigning '" + identifier + "' array");
-			}
-
-			for (size_t dc = 0; dc < dim.size(); ++dc) {
-				if (dim.at(dc) != -1 && dim.at(dc) != exprDim.at(dc)) {
-					throw std::runtime_error(msgHeader() + "invalid expression size assigning '" + identifier + "' array");
-				}
-			}
-		}
-
 		consumeToken();
 		if (currentToken.type != lexer::TOK_SEMICOLON) {
 			throw std::runtime_error(msgHeader() + "expected ';' after assignment of " + identifier + ".");
@@ -216,10 +188,6 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	}
 	else {
 		expr = nullptr;
-
-		if (dim.size() > 0 && currentArrayType == parser::TYPE::T_ND) {
-			currentArrayType = parser::TYPE::T_ANY;
-		}
 	}
 
 	return new ASTDeclarationNode(type, typeName, identifier, expr, isConst, currentArrayType, dim, row, col);
@@ -953,32 +921,26 @@ cp_array Parser::parseArrayLiteral() {
 				val->setNull();
 				break;
 			case parser::TYPE::T_BOOL:
-				checkArrayType(TYPE::T_BOOL);
 				val->forceType(parser::TYPE::T_BOOL);
 				val->set(parseBoolLiteral());
 				break;
 			case parser::TYPE::T_INT:
-				checkArrayType(TYPE::T_INT);
 				val->forceType(parser::TYPE::T_INT);
 				val->set(parseIntLiteral());
 				break;
 			case parser::TYPE::T_FLOAT:
-				checkArrayType(TYPE::T_FLOAT);
 				val->forceType(parser::TYPE::T_FLOAT);
 				val->set(parseFloatLiteral());
 				break;
 			case parser::TYPE::T_CHAR:
-				checkArrayType(TYPE::T_CHAR);
 				val->forceType(parser::TYPE::T_CHAR);
 				val->set(parseCharLiteral());
 				break;
 			case parser::TYPE::T_STRING:
-				checkArrayType(TYPE::T_STRING);
 				val->forceType(parser::TYPE::T_STRING);
 				val->set(parseStringLiteral());
 				break;
 			case parser::TYPE::T_STRUCT:
-				checkArrayType(TYPE::T_STRUCT);
 				val->forceType(parser::TYPE::T_STRUCT);
 				val->set(parseStructConstructor());
 				break;
@@ -1075,16 +1037,6 @@ cp_struct Parser::parseStructConstructor() {
 	}
 
 	return str;
-}
-
-void Parser::checkArrayType(TYPE type) {
-	if (currentArrayType == TYPE::T_ND || currentArrayType == TYPE::T_ANY) {
-		currentArrayType = type;
-		return;
-	}
-	if (currentArrayType != type) {
-		throw std::runtime_error(msgHeader() + "invalid " + typeStr(type) + " type value encontered on " + typeStr(currentArrayType) + " array");
-	}
 }
 
 cp_bool Parser::parseBoolLiteral() {

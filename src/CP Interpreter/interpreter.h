@@ -17,19 +17,20 @@ namespace visitor {
 	private:
 		std::vector<parser::ASTProgramNode*> programs;
 		parser::ASTProgramNode* currentProgram;
+
 		std::vector<InterpreterScope*> scopes;
+
 		parser::TYPE currentExpressionType;
 		std::string currentExpressionTypeName;
 		Value_t currentExpressionValue;
+
 		std::vector<std::string> currentFunctionParameters;
 		std::vector<std::pair<parser::TYPE, Value_t*>> currentFunctionArguments;
-
 		std::string currentFunctionName;
 		std::string returnFromFunctionName;
 		bool returnFromFunction = false;
 
 	private:
-		void determineArrayType(cp_array);
 		void declareStructureVariable(std::vector<std::string>, Value_t, std::vector<unsigned int>);
 		void printValue(Value_t*);
 		void printArray(cp_array);

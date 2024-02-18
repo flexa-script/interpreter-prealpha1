@@ -114,12 +114,8 @@ namespace parser {
 
 		cp_struct parseStructConstructor();
 
-		std::vector<int> calcArrayDimSize(cp_array);
-
 		// parse types and parameters
 		TYPE parseType(std::string);
-
-		void checkArrayType(TYPE);
 
 		std::string msgHeader();
 	};

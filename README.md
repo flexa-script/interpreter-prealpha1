@@ -32,6 +32,7 @@
     - [ ] for
     - [ ] else if
     - [ ] switch
+    - [ ] try catch
     - [ ] enum
     - [ ] immediate if?
 - [ ] Add built in funcs:
@@ -50,6 +51,8 @@
     - [ ] Util
 - [ ] General otimizations:
     - [ ] Remove duplicate codes
+    - [ ] Move some verifications to semantic analisys:
+        - [ ] Array size check from interpreter
 - [ ] Add CP library:
     - [ ] String
     - [ ] Math

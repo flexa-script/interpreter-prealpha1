@@ -31,11 +31,14 @@ typedef std::vector<cp_struct_value>             cp_struct_values;
 typedef std::pair<std::string, cp_struct_values> cp_struct;
 
 typedef struct Value {
-	Value(parser::TYPE type) : b(0), i(0), f(0), c(0), s(""), str(cp_struct()), arr(cp_array()), hasValue(false), actualType(type), currentType(type) {};
+	Value(parser::TYPE type) : b(0), i(0), f(0), c(0), s(""), str(cp_struct()), arr(cp_array()), hasValue(false), actualType(type), currentType(type), dim(dim) {};
 
 	bool hasValue;
+	
 	parser::TYPE actualType;
 	parser::TYPE currentType;
+	std::vector<int> dim;
+	parser::TYPE arrType;
 	cp_bool b;
 	cp_int i;
 	cp_float f;

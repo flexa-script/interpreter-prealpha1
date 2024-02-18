@@ -19,20 +19,22 @@ namespace visitor {
 		std::vector<SemanticScope*> scopes;
 		std::stack<parser::TYPE> functions;
 		parser::TYPE currentExpressionType;
+		parser::TYPE currentExpressionArrayType;
 		std::string currentExpressionTypeName;
-		bool isCurrentExpressionArray;
 		bool isFunctionDefinitionContext;
 		std::vector<parser::VariableDefinition_t> currentFunctionParameters;
 
 	private:
 		bool returns(parser::ASTNode*);
+		std::vector<int> calcArrayDimSize(cp_array);
 		void declareStructureDefinitionVariables(std::string, std::string, cp_struct, parser::ASTLiteralNode<cp_struct>*);
 		void declareStructureDefinitionFirstLevelVariables(std::string, std::string);
 		parser::VariableDefinition_t findDeclaredVariable(std::string);
 		std::string findTypeName(std::string);
 		parser::TYPE findType(std::string);
 		bool findAnyVar(std::string);
-		void determineArrayType(cp_array);
+		void determineArrayType(cp_array, unsigned int, unsigned int);
+		void checkArrayType(parser::TYPE, unsigned int, unsigned int);
 		std::string msgHeader(unsigned int, unsigned int);
 
 	public:
