@@ -974,12 +974,31 @@ void visitor::Interpreter::visit(parser::ASTTypeNode* astnode) {
 
 void visitor::Interpreter::visit(parser::ASTLenNode* astnode) {
 	astnode->expr->accept(this);
+	Value_t val = Value_t(parser::TYPE::T_INT);
+
+	if (currentExpressionType == parser::TYPE::T_ARRAY) {
+		val.set(cp_int(currentExpressionValue.arr.size()));
+	}
+	else if (currentExpressionType == parser::TYPE::T_STRING) {
+		val.set(cp_int(currentExpressionValue.s.size()));
+	}
+
 	currentExpressionType = parser::TYPE::T_INT;
+	currentExpressionValue = val;
+	currentExpressionTypeName = "";
 }
 
 void visitor::Interpreter::visit(parser::ASTRoundNode* astnode) {
 	astnode->expr->accept(this);
+
+	Value_t val = Value_t(parser::TYPE::T_FLOAT);
+
+	val.set(cp_float(roundl(currentExpressionValue.f)));
+
 	currentExpressionType = parser::TYPE::T_FLOAT;
+	currentExpressionValue = val;
+	currentExpressionTypeName = "";
+	
 }
 
 

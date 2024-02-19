@@ -755,7 +755,7 @@ void SemanticAnalyser::visit(parser::ASTTypeParseNode* astnode) {
 
 void SemanticAnalyser::visit(parser::ASTReadNode* astnode) {
 	if (currentExpressionType != parser::TYPE::T_STRING) {
-		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "function 'read()' is trying to assing an invalid type.");
+		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "function 'read()' is trying to assing an invalid type");
 	}
 }
 
@@ -766,11 +766,21 @@ void SemanticAnalyser::visit(parser::ASTTypeNode* astnode) {
 
 void SemanticAnalyser::visit(parser::ASTLenNode* astnode) {
 	astnode->expr->accept(this);
+
+	if (currentExpressionType != parser::TYPE::T_ARRAY && currentExpressionType != parser::TYPE::T_STRING) {
+		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "can't read len of type " + parser::typeStr(currentExpressionType));
+	}
+
 	currentExpressionType = parser::TYPE::T_INT;
 }
 
 void SemanticAnalyser::visit(parser::ASTRoundNode* astnode) {
 	astnode->expr->accept(this);
+
+	if (currentExpressionType != parser::TYPE::T_FLOAT) {
+		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "can't round type " + parser::typeStr(currentExpressionType));
+	}
+
 	currentExpressionType = parser::TYPE::T_FLOAT;
 }
 

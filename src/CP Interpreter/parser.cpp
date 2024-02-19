@@ -860,8 +860,21 @@ ASTLenNode* Parser::parseLenNode() {
 ASTRoundNode* Parser::parseRoundNode() {
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
-	unsigned int ndigits = currentToken.col;
+	unsigned int ndigits = 0;
 	ASTExprNode* expr = nullptr;
+
+	consumeToken();
+	if (currentToken.type != lexer::TOK_LEFT_BRACKET) {
+		throw std::runtime_error(msgHeader() + "expected '('.");
+	}
+
+	expr = parseExpression();
+	consumeToken();
+
+	// ensure right close bracket after fetching parameters
+	if (currentToken.type != lexer::TOK_RIGHT_BRACKET) {
+		throw std::runtime_error(msgHeader() + "expected ')' after function parameters");
+	}
 
 	return new ASTRoundNode(expr, ndigits, row, col);
 }
