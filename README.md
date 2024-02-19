@@ -36,9 +36,9 @@
     - [ ] enum
     - [ ] immediate if?
 - [ ] Add built in funcs:
-    - [ ] len: returns size of array/string
-    - [ ] round: round a float number
-    - [ ] type: returns type of object
+    - [X] len: returns size of array/string
+    - [X] round: round a float number
+    - [X] type: returns type of object
 - [ ] Add a default interface to implements core libs
 - [ ] Add core library:
     - [ ] File I/O
