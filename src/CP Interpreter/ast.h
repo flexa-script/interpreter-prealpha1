@@ -108,12 +108,12 @@ namespace parser {
 
 	class ASTAssignmentNode : public ASTStatementNode {
 	public:
-		ASTAssignmentNode(std::string, std::vector<std::string>, ASTExprNode*, std::vector<unsigned int>, unsigned int, unsigned int);
+		ASTAssignmentNode(std::string, std::vector<std::string>, ASTExprNode*, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 
 		std::string identifier;
 		std::vector<std::string> identifierVector;
 		ASTExprNode* expr;
-		std::vector<unsigned int> accessVector;
+		std::vector<ASTExprNode*> accessVector;
 		unsigned int row;
 		unsigned int col;
 

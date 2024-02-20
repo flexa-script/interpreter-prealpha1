@@ -91,7 +91,7 @@ ASTNode* Parser::parseBlockStatement() {
 		ASTExprNode* expr = parseExpression();
 		consumeToken();
 		if (currentToken.type != lexer::TOK_SEMICOLON) {
-			throw std::runtime_error(msgHeader() + "expected ';' to close expression");
+			throw std::runtime_error(msgHeader() + "expected ';'");
 		}
 		return expr;
 	}
@@ -102,7 +102,7 @@ ASTNode* Parser::parseIdentifier() {
 		ASTFunctionCallNode* expr = parseExprFunctionCall();
 		consumeToken();
 		if (currentToken.type != lexer::TOK_SEMICOLON) {
-			throw std::runtime_error(msgHeader() + "expected ';' to close expression");
+			throw std::runtime_error(msgHeader() + "expected ';'");
 		}
 		return expr;
 	}
@@ -196,8 +196,9 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 ASTAssignmentNode* Parser::parseAssignmentStatement() {
 	std::string identifier;
 	ASTExprNode* expr;
+	ASTExprNode* exprSize;
 	auto identifierVector = std::vector<std::string>();
-	auto accessVector = std::vector<unsigned int>();
+	auto accessVector = std::vector<ASTExprNode*>();
 
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
@@ -215,18 +216,13 @@ ASTAssignmentNode* Parser::parseAssignmentStatement() {
 
 	if (currentToken.type == lexer::TOK_LEFT_BRACE) {
 		do {
-			auto pos = 0;
-			consumeToken();
-			if (currentToken.type != lexer::TOK_INT_LITERAL) {
-				throw std::runtime_error(msgHeader() + "expected int literal");
-			}
-			pos = stoi(currentToken.value);
+			exprSize = parseExpression();
 			consumeToken();
 			if (currentToken.type != lexer::TOK_RIGHT_BRACE) {
-				throw std::runtime_error(msgHeader() + "expected ']' after array position constant");
+				throw std::runtime_error(msgHeader() + "expected ']' after array position expression");
 			}
 			consumeToken();
-			accessVector.push_back(pos);
+			accessVector.push_back(exprSize);
 
 		} while (currentToken.type == lexer::TOK_LEFT_BRACE);
 	}
@@ -361,7 +357,7 @@ ASTStatementNode* Parser::parseStructBlockStatement() {
 		return parseDeclarationStatement();
 
 	default:
-		throw std::runtime_error(msgHeader() + "invalid declaration starting with '" + currentToken.value + "' encountered.");
+		throw std::runtime_error(msgHeader() + "invalid declaration starting with '" + currentToken.value + "' encountered");
 	}
 }
 

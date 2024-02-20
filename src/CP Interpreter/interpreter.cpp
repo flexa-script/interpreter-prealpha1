@@ -263,11 +263,22 @@ void Interpreter::declareStructureVariable(std::vector<std::string> identifierVe
 
 }
 
+std::vector<unsigned int> Interpreter::evalueateAccessVector(std::vector<parser::ASTExprNode*> exprAcessVector) {
+	auto accessVector = std::vector<unsigned int>();
+	for (auto expr : exprAcessVector) {
+		expr->accept(this);
+		accessVector.push_back(currentExpressionValue.i);
+	}
+	return accessVector;
+}
+
 void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	std::string actualIdentifier = astnode->identifier;
 	if (astnode->identifierVector.size() > 1) {
 		actualIdentifier = axe::join(astnode->identifierVector, ".");
 	}
+
+	auto accessVector = evalueateAccessVector(astnode->accessVector);
 
 	// determine innermost scope in which variable is declared
 	size_t i;
@@ -276,38 +287,38 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
 
-	auto type = scopes[i]->typeof(actualIdentifier, astnode->accessVector);
+	auto type = scopes[i]->typeof(actualIdentifier, accessVector);
 	//if (type != parser::TYPE::T_ARRAY && type != parser::TYPE::T_STRUCT) {
 	//	type = currentExpressionType;
 	//}
 
 	if (currentExpressionType != parser::TYPE::T_NULL && currentExpressionValue.hasValue) {
 		if (astnode->identifierVector.size() > 1) {
-			declareStructureVariable(astnode->identifierVector, currentExpressionValue, astnode->accessVector);
+			declareStructureVariable(astnode->identifierVector, currentExpressionValue, accessVector);
 		}
 		else {
 			// redeclare variable, depending on type
 			switch (type) {
 			case parser::TYPE::T_BOOL:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.b, astnode->accessVector);
+				scopes[i]->declare(astnode->identifier, currentExpressionValue.b, accessVector);
 				break;
 			case parser::TYPE::T_INT:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.i, astnode->accessVector);
+				scopes[i]->declare(astnode->identifier, currentExpressionValue.i, accessVector);
 				break;
 			case parser::TYPE::T_FLOAT:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.f, astnode->accessVector);
+				scopes[i]->declare(astnode->identifier, currentExpressionValue.f, accessVector);
 				break;
 			case parser::TYPE::T_CHAR:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.c, astnode->accessVector);
+				scopes[i]->declare(astnode->identifier, currentExpressionValue.c, accessVector);
 				break;
 			case parser::TYPE::T_STRING:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.s, astnode->accessVector);
+				scopes[i]->declare(astnode->identifier, currentExpressionValue.s, accessVector);
 				break;
 			case parser::TYPE::T_STRUCT:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.str, astnode->accessVector);
+				scopes[i]->declare(astnode->identifier, currentExpressionValue.str, accessVector);
 				break;
 			case parser::TYPE::T_ARRAY:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.arr, astnode->accessVector);
+				scopes[i]->declare(astnode->identifier, currentExpressionValue.arr, accessVector);
 				break;
 			}
 
@@ -315,10 +326,10 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	}
 	else {
 		if (type == parser::TYPE::T_STRUCT) {
-			declareStructureVariable(astnode->identifierVector, currentExpressionValue, astnode->accessVector);
+			declareStructureVariable(astnode->identifierVector, currentExpressionValue, accessVector);
 		}
 		else {
-			scopes.back()->declareNull(astnode->identifier, type, astnode->accessVector);
+			scopes.back()->declareNull(astnode->identifier, type, accessVector);
 		}
 	}
 }

@@ -277,6 +277,15 @@ bool SemanticAnalyser::findAnyVar(std::string identifier) {
 	return findDeclaredVariable(identifier).isAny;
 }
 
+void SemanticAnalyser::evalueateAccessVector(std::vector<parser::ASTExprNode*> exprAcessVector) {
+	for (auto expr : exprAcessVector) {
+		expr->accept(this);
+		if (currentExpressionType != parser::TYPE::T_INT) {
+			throw std::runtime_error(msgHeader(0, 0) + "array index access must be a integer value");
+		}
+	}
+}
+
 void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 	std::string actualIdentifier = astnode->identifier;
 	if (astnode->identifierVector.size() > 1) {
@@ -294,6 +303,8 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 	if (scopes[i]->isConst(actualIdentifier)) {
 		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "'" + actualIdentifier + "' constant being reassigned " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
 	}
+
+	evalueateAccessVector(astnode->accessVector);
 
 	parser::TYPE type;
 	parser::TYPE arrtype;

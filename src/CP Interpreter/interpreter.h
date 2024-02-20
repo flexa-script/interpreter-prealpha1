@@ -31,6 +31,7 @@ namespace visitor {
 		bool returnFromFunction = false;
 
 	private:
+		std::vector<unsigned int> evalueateAccessVector(std::vector<parser::ASTExprNode*>);
 		void declareStructureVariable(std::vector<std::string>, Value_t, std::vector<unsigned int>);
 		void printValue(Value_t*);
 		void printArray(cp_array);

@@ -17,7 +17,7 @@ ASTUsingNode::ASTUsingNode(std::string library, unsigned int row, unsigned int c
 ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string typeName, std::string identifier, ASTExprNode* expr, bool isConst, TYPE arrayType, std::vector<int> dim, unsigned int row, unsigned int col)
 	: type(type), typeName(std::move(typeName)), identifier(std::move(identifier)), expr(expr), isConst(isConst), arrayType(arrayType), dim(dim), row(row), col(col) {}
 
-ASTAssignmentNode::ASTAssignmentNode(std::string identifier, std::vector<std::string> identifierVector, ASTExprNode* expr, std::vector<unsigned int> accessVector, unsigned int row, unsigned int col)
+ASTAssignmentNode::ASTAssignmentNode(std::string identifier, std::vector<std::string> identifierVector, ASTExprNode* expr, std::vector<ASTExprNode*> accessVector, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), identifierVector(identifierVector), expr(expr), accessVector(accessVector), row(row), col(col) {}
 
 ASTPrintNode::ASTPrintNode(ASTExprNode* expr, unsigned int row, unsigned int col)

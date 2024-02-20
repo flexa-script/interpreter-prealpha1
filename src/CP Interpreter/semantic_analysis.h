@@ -26,6 +26,7 @@ namespace visitor {
 
 	private:
 		bool returns(parser::ASTNode*);
+		void evalueateAccessVector(std::vector<parser::ASTExprNode*>);
 		std::vector<int> calcArrayDimSize(cp_array);
 		void declareStructureDefinitionVariables(std::string, std::string, cp_struct, parser::ASTLiteralNode<cp_struct>*);
 		void declareStructureDefinitionFirstLevelVariables(std::string, std::string);
