@@ -12,6 +12,8 @@ Lexer::Lexer(std::string& source, std::string name)
 	tokenize();
 }
 
+Lexer::~Lexer() = default;
+
 void Lexer::tokenize() {
 	currentRow = 1;
 	currentCol = 1;
@@ -52,7 +54,7 @@ void Lexer::tokenize() {
 		}
 	}
 
-	tokens.push_back(Token(TOKEN_TYPE::TOK_EOF, "", 0, 0));
+	tokens.push_back(Token(TOKEN_TYPE::TOK_EOF, "EOF", currentCol, currentRow));
 }
 
 char Lexer::getNextChar() {
@@ -113,7 +115,6 @@ Token Lexer::processComment() {
 
 Token Lexer::processString() {
 	std::string str;
-	TOKEN_TYPE type;
 
 	do {
 		str += currentChar;
@@ -127,7 +128,6 @@ Token Lexer::processString() {
 
 Token Lexer::processChar() {
 	std::string chr;
-	TOKEN_TYPE type;
 
 	chr += currentChar;
 	advance();
@@ -222,7 +222,7 @@ Token Lexer::processNumber() {
 	while (hasNext() && (std::isdigit(currentChar) || currentChar == '.')) {
 		if (currentChar == '.') {
 			if (hasDot){
-				throw std::runtime_error(msgHeader() + "lexical error: found a double dot float.");
+				throw std::runtime_error(msgHeader() + "found '" + currentChar + "' defining float");
 			}
 			hasDot = true;
 		}
@@ -349,5 +349,3 @@ Token Lexer::nextToken() {
 std::string Lexer::msgHeader() {
 	return "(LERR) " + name + '[' + std::to_string(currentRow) + ':' + std::to_string(currentCol) + "]: ";
 }
-
-Lexer::~Lexer() = default;

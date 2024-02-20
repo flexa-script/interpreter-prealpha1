@@ -61,12 +61,12 @@ namespace lexer {
 	public:
 		Token();
 
-		Token(TOKEN_TYPE, std::string, unsigned int row = 0, unsigned int col = 0);
+		Token(TOKEN_TYPE, std::string, unsigned long long row = 0, unsigned long long col = 0);
 
 		TOKEN_TYPE type;
 		std::string value;
-		unsigned int row;
-		unsigned int col;
+		unsigned long long row;
+		unsigned long long col;
 
 	};
 };

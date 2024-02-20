@@ -13,5 +13,5 @@ int main(int argc, const char* argv[]) {
 	result = interpreter.execute(argc, argv);
 
 	system("pause");
-	return 0;
+	return result;
 }
