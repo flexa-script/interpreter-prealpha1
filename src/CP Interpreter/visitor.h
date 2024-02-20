@@ -6,9 +6,6 @@
 #include <any>
 #include <stdexcept>
 
-#if defined(_WIN32) || defined(WIN32)
-typedef __int64 __int64_t;
-#endif
 
 struct Value;
 
@@ -20,7 +17,7 @@ namespace parser {
 }
 
 typedef bool                  cp_bool;
-typedef __int64_t             cp_int;
+typedef int64_t               cp_int;
 typedef long double           cp_float;
 typedef char                  cp_char;
 typedef std::string           cp_string;

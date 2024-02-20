@@ -20,11 +20,11 @@ namespace lexer {
     private:
         char beforeChar;
         char currentChar;
-        unsigned long long currentToken = 0;
-        unsigned long long currentIndex = 0;
-        unsigned long long currentRow = 0;
-        unsigned long long startCol = 0;
-        unsigned long long currentCol = 0;
+        unsigned int currentToken = 0;
+        unsigned int currentIndex = 0;
+        unsigned int currentRow = 0;
+        unsigned int startCol = 0;
+        unsigned int currentCol = 0;
         std::string source;
         std::string name;
         std::vector<Token> tokens;
