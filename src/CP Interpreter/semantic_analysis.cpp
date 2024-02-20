@@ -67,7 +67,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 	// allow mismatched type in the case of declaration of int to float and char to string
 	if (astnode->type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT
 		|| astnode->type == parser::TYPE::T_STRING && currentExpressionType == parser::TYPE::T_CHAR) {
-		currentScope->declare(astnode->identifier, astnode->type, astnode->typeName, astnode->arrayType, astnode->dim, astnode->arrayType == parser::TYPE::T_ANY, astnode->isConst, astnode->row, astnode->col);
+		currentScope->declareVariable(astnode->identifier, astnode->type, astnode->typeName, astnode->arrayType, astnode->dim, astnode->arrayType == parser::TYPE::T_ANY, astnode->isConst, astnode->row, astnode->col);
 	}
 	// handle equal types and special types (any, struct and array)
 	else if (astnode->type == currentExpressionType || astnode->type == parser::TYPE::T_ANY || astnode->type == parser::TYPE::T_STRUCT || astnode->type == parser::TYPE::T_ARRAY) { // types match
@@ -95,7 +95,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 				strTypeName = currentExpressionTypeName;
 			}
 
-			currentScope->declare(astnode->identifier, strType, strTypeName, astnode->arrayType, astnode->dim, astnode->type == parser::TYPE::T_ANY, astnode->isConst, astnode->row, astnode->col);
+			currentScope->declareVariable(astnode->identifier, strType, strTypeName, astnode->arrayType, astnode->dim, astnode->type == parser::TYPE::T_ANY, astnode->isConst, astnode->row, astnode->col);
 			if (strExpr && !isFunctionDefinitionContext) {
 				declareStructureDefinitionVariables(astnode->identifier, currentExpressionTypeName, strExpr->val, strExpr);
 			}
@@ -120,18 +120,15 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 					}
 				}
 			}
-			else {
 
-			}
-
-			currentScope->declare(astnode->identifier, astnode->type, astnode->typeName, currentExpressionArrayType, astnode->dim, astnode->arrayType == parser::TYPE::T_ANY, astnode->isConst, astnode->row, astnode->col);
+			currentScope->declareVariable(astnode->identifier, astnode->type, astnode->typeName, currentExpressionArrayType, astnode->dim, astnode->arrayType == parser::TYPE::T_ANY, astnode->isConst, astnode->row, astnode->col);
 		}
 		else {
-			currentScope->declare(astnode->identifier, currentExpressionType, astnode->typeName, astnode->arrayType, astnode->dim, astnode->type == parser::TYPE::T_ANY, astnode->isConst, astnode->row, astnode->col);
+			currentScope->declareVariable(astnode->identifier, currentExpressionType, astnode->typeName, astnode->arrayType, astnode->dim, astnode->type == parser::TYPE::T_ANY, astnode->isConst, astnode->row, astnode->col);
 		}
 	}
 	else if (currentExpressionType == parser::TYPE::T_NULL) {
-		currentScope->declare(astnode->identifier, astnode->type, astnode->typeName, astnode->arrayType, astnode->dim, astnode->arrayType == parser::TYPE::T_ANY, astnode->isConst, astnode->row, astnode->col);
+		currentScope->declareVariable(astnode->identifier, astnode->type, astnode->typeName, astnode->arrayType, astnode->dim, astnode->arrayType == parser::TYPE::T_ANY, astnode->isConst, astnode->row, astnode->col);
 	}
 	else { // types don't match
 		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "found " + parser::typeStr(currentExpressionType) + " in definition of '" + astnode->identifier + "', expected " + parser::typeStr(astnode->type) + ".");
@@ -158,7 +155,7 @@ void SemanticAnalyser::declareStructureDefinitionFirstLevelVariables(std::string
 
 	for (auto varTypeStruct : typeStruct.variables) {
 		auto currentIdentifier = identifier + '.' + varTypeStruct.identifier;
-		scopes.back()->declare(currentIdentifier, varTypeStruct.type, varTypeStruct.typeName, varTypeStruct.arrayType, varTypeStruct.dim, varTypeStruct.isAny, varTypeStruct.isConst, varTypeStruct.row, varTypeStruct.col);
+		scopes.back()->declareVariable(currentIdentifier, varTypeStruct.type, varTypeStruct.typeName, varTypeStruct.arrayType, varTypeStruct.dim, varTypeStruct.isAny, varTypeStruct.isConst, varTypeStruct.row, varTypeStruct.col);
 	}
 }
 
@@ -187,29 +184,25 @@ void SemanticAnalyser::declareStructureDefinitionVariables(std::string identifie
 		}
 
 		if (strValue.second->actualType == parser::TYPE::T_STRUCT) {
-			scopes.back()->declare(currentIdentifier, strValue.second->actualType, strValue.second->str.first, parser::TYPE::T_ND, varTypeStruct->dim, false, false, expr->row, expr->col);
+			scopes.back()->declareVariable(currentIdentifier, strValue.second->actualType, strValue.second->str.first, parser::TYPE::T_ND, varTypeStruct->dim, false, false, expr->row, expr->col);
 			declareStructureDefinitionVariables(currentIdentifier, strValue.second->str.first, strValue.second->str, expr);
 		}
 		else {
-			scopes.back()->declare(currentIdentifier, varTypeStruct->type, varTypeStruct->typeName, varTypeStruct->arrayType, varTypeStruct->dim, false, false, expr->row, expr->col);
+			scopes.back()->declareVariable(currentIdentifier, varTypeStruct->type, varTypeStruct->typeName, varTypeStruct->arrayType, varTypeStruct->dim, false, false, expr->row, expr->col);
 		}
 	}
 }
 
-parser::VariableDefinition_t SemanticAnalyser::findDeclaredVariable(std::string identifier) {
+parser::VariableDefinition_t SemanticAnalyser::findDeclaredVariableRecursively(std::string identifier) {
 	int i;
-	for (i = scopes.size() - 1; i >= 0 && !scopes[i]->alreadyDeclaredVariable(identifier); --i) {
+	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredVariable(identifier); --i) {
 		if (i <= 0) {
 			i = -1;
 			break;
 		}
 	}
 	if (i >= 0) {
-		for (auto variable : scopes.at(i)->getVariableSymbolTable()) {
-			if (variable.identifier == identifier) {
-				return variable;
-			}
-		}
+		return scopes[i]->findDeclaredVariable(identifier);
 	}
 
 	if (axe::contains(identifier, ".")) {
@@ -217,19 +210,14 @@ parser::VariableDefinition_t SemanticAnalyser::findDeclaredVariable(std::string 
 		parser::StructureDefinition_t strDef;
 		std::string typeName = "";
 
-		for (i = scopes.size() - 1; i >= 0 && !scopes[i]->alreadyDeclaredVariable(identifiers.front()); --i) {
+		for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredVariable(identifiers.front()); --i) {
 			if (i <= 0) {
 				i = -1;
 				break;
 			}
 		}
 		if (i >= 0) {
-			for (auto variable : scopes.at(i)->getVariableSymbolTable()) {
-				if (variable.identifier == identifiers.front()) {
-					typeName = variable.typeName;
-					break;
-				}
-			}
+			typeName = scopes[i]->findDeclaredVariable(identifiers.front()).typeName;
 		}
 
 		size_t i;
@@ -265,19 +253,7 @@ parser::VariableDefinition_t SemanticAnalyser::findDeclaredVariable(std::string 
 	throw std::runtime_error("SERR: error: '" + identifier + "' variable not found");
 }
 
-std::string SemanticAnalyser::findTypeName(std::string identifier) {
-	return findDeclaredVariable(identifier).typeName;
-}
-
-parser::TYPE SemanticAnalyser::findType(std::string identifier) {
-	return findDeclaredVariable(identifier).type;
-}
-
-bool SemanticAnalyser::findAnyVar(std::string identifier) {
-	return findDeclaredVariable(identifier).isAny;
-}
-
-void SemanticAnalyser::evalueateAccessVector(std::vector<parser::ASTExprNode*> exprAcessVector) {
+void SemanticAnalyser::evaluateAccessVector(std::vector<parser::ASTExprNode*> exprAcessVector) {
 	for (auto expr : exprAcessVector) {
 		expr->accept(this);
 		if (currentExpressionType != parser::TYPE::T_INT) {
@@ -293,39 +269,37 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 	}
 
 	// determine the inner-most scope in which the value is declared
-	size_t i;
+	int i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredVariable(isFunctionDefinitionContext ? astnode->identifier : actualIdentifier); i--) {
 		if (i <= 0) {
 			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "identifier '" + actualIdentifier + "' being reassigned was never declared " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
 		}
 	}
 
-	if (scopes[i]->isConst(actualIdentifier)) {
-		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "'" + actualIdentifier + "' constant being reassigned " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
-	}
+	evaluateAccessVector(astnode->accessVector);
 
-	evalueateAccessVector(astnode->accessVector);
-
+	parser::VariableDefinition_t declaredVariable;
 	parser::TYPE type;
-	parser::TYPE arrtype;
-	bool isAnyVariable;
 
 	// get the type of the originally declared variable
 	if (isFunctionDefinitionContext) {
-		type = findType(actualIdentifier);
-		isAnyVariable = findAnyVar(actualIdentifier);
+		declaredVariable = findDeclaredVariableRecursively(actualIdentifier);
 	}
 	else {
-		type = scopes[i]->type(actualIdentifier);
-		isAnyVariable = scopes[i]->findAnyVar(actualIdentifier);
+		declaredVariable = scopes[i]->findDeclaredVariable(actualIdentifier);
 	}
+
+	if (declaredVariable.isConst) {
+		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "'" + actualIdentifier + "' constant being reassigned " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
+	}
+
+	type = declaredVariable.type;
 
 	// visit the expression to update current type
 	astnode->expr->accept(this);
 
 	if (type == parser::TYPE::T_ARRAY) {
 		if (currentExpressionType == parser::TYPE::T_ARRAY) {
-			parser::VariableDefinition_t var = scopes[i]->var(actualIdentifier);
 			parser::ASTLiteralNode<cp_array>* strExpr = static_cast<parser::ASTLiteralNode<cp_array>*>(astnode->expr);
 			try {
 				cp_array arr = strExpr->val;
@@ -339,11 +313,11 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 						break;
 					}
 				}
-				if (var.dim.size() != newDim.size()) {
+				if (declaredVariable.dim.size() != newDim.size()) {
 					throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid dimension trying assign '" + actualIdentifier + "' array");
 				}
-				for (size_t i = 0; i < var.dim.size(); ++i) {
-					if (var.dim[i] != -1 && var.dim[i] != newDim[i]) {
+				for (size_t i = 0; i < declaredVariable.dim.size(); ++i) {
+					if (declaredVariable.dim[i] != -1 && declaredVariable.dim[i] != newDim[i]) {
 						throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid size trying assign '" + actualIdentifier + "' array");
 					}
 				}
@@ -351,35 +325,27 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 			catch (...) {
 				throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid assignment of '" + actualIdentifier + "' array");
 			}
-			//throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "'" + actualIdentifier + "' array being reassigned " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
 		}
-		arrtype = scopes[i]->arrayType(actualIdentifier);
 
-		if (astnode->accessVector.size() == 0 && arrtype != parser::TYPE::T_ANY && arrtype != currentExpressionArrayType) {
-			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "mismatched type for '" + actualIdentifier + "'. expected '" + parser::typeStr(arrtype) + "' array, found '" + parser::typeStr(currentExpressionArrayType) + "' array");
+		if (astnode->accessVector.size() == 0 && declaredVariable.arrayType != parser::TYPE::T_ANY && declaredVariable.arrayType != currentExpressionArrayType) {
+			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "mismatched type for '" + actualIdentifier + "'. expected '" + parser::typeStr(declaredVariable.arrayType) + "' array, found '" + parser::typeStr(currentExpressionArrayType) + "' array");
 		}
 	}
 
 	if (astnode->accessVector.size() > 0) {
-		type = arrtype;
+		type = declaredVariable.arrayType;
 	}
 
 	// allow mismatched type in the case of declaration of int to real
 	if (type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT ||
 		type == parser::TYPE::T_INT && currentExpressionType == parser::TYPE::T_FLOAT) {
 	}
-	else if (isAnyVariable) {
-		scopes[i]->changeVarType(actualIdentifier, currentExpressionType);
-		scopes[i]->changeVarTypeName(actualIdentifier, currentExpressionTypeName);
+	else if (declaredVariable.isAny) {
+		scopes[i]->changeVariableType(actualIdentifier, currentExpressionType);
+		scopes[i]->changeVariableTypeName(actualIdentifier, currentExpressionTypeName);
 	}
 	else if (type == parser::TYPE::T_STRUCT && (currentExpressionType == parser::TYPE::T_STRUCT || currentExpressionType == parser::TYPE::T_NULL)) {
-		std::string typeName;
-		if (isFunctionDefinitionContext) {
-			typeName = findTypeName(actualIdentifier);
-		}
-		else {
-			typeName = scopes[i]->typeName(actualIdentifier);
-		}
+		std::string typeName = declaredVariable.typeName;
 		if (currentExpressionTypeName != typeName && currentExpressionType != parser::TYPE::T_NULL) {
 			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "mismatched type for '" + actualIdentifier + "' struct. Expected '" + typeName + "', found '" + currentExpressionTypeName + "'");
 		}
@@ -425,12 +391,7 @@ void SemanticAnalyser::visit(parser::ASTBlockNode* astnode) {
 
 	// check whether this is a function block by seeing if we have any current function parameters. If we do, then add them to the current scope.
 	for (auto param : currentFunctionParameters) {
-		if (param.type == parser::TYPE::T_STRUCT) {
-			scopes.back()->declare(param.identifier, param.type, param.typeName, param.arrayType, param.dim, param.isAny, param.isConst, param.row, param.col);
-		}
-		else {
-			scopes.back()->declare(param.identifier, param.type, param.typeName, param.arrayType, param.dim, param.isAny, param.isConst, param.row, param.col);
-		}
+		scopes.back()->declareVariable(param.identifier, param.type, param.typeName, param.arrayType, param.dim, param.isAny, param.isConst, param.row, param.col);
 	}
 
 	// clear the global function parameters vector
@@ -481,12 +442,8 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* astnode) {
 	// first check that all enclosing scopes have not already defined the function
 	for (auto& scope : scopes) {
 		if (scope->alreadyDeclaredFunction(astnode->identifier, astnode->signature)) {
-			// determine line number of error and the corresponding function signature
-			int line = scope->declarationLine(astnode->identifier, astnode->signature);
 			std::string signature = "(";
-			bool has_params = false;
 			for (auto param : astnode->signature) {
-				has_params = true;
 				signature += parser::typeStr(param) + ", ";
 			}
 			if (astnode->signature.size() > 0) {
@@ -501,7 +458,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* astnode) {
 	}
 
 	// add function to symbol table
-	scopes.back()->declare(astnode->identifier, astnode->type, astnode->typeName, astnode->signature, astnode->type == parser::TYPE::T_ANY, astnode->row, astnode->row);
+	scopes.back()->declareFunction(astnode->identifier, astnode->type, astnode->typeName, astnode->signature, astnode->type == parser::TYPE::T_ANY, astnode->row, astnode->row);
 
 	// push current function type into function stack
 	functions.push(astnode->type);
@@ -685,16 +642,18 @@ void SemanticAnalyser::visit(parser::ASTIdentifierNode* astnode) {
 		}
 	}
 
+	parser::VariableDefinition_t declaredVariable;
 
 	// update current expression type
 	if (isFunctionDefinitionContext) {
-		currentExpressionType = findType(actualIdentifier);
-		currentExpressionTypeName = findTypeName(actualIdentifier);
+		declaredVariable = findDeclaredVariableRecursively(actualIdentifier);
 	}
 	else {
-		currentExpressionType = scopes[i]->type(actualIdentifier);
-		currentExpressionTypeName = scopes[i]->typeName(actualIdentifier);
+		declaredVariable = scopes[i]->findDeclaredVariable(actualIdentifier);
 	}
+
+	currentExpressionType = declaredVariable.type;
+	currentExpressionTypeName = declaredVariable.typeName;
 
 	if (astnode->accessVector.size() > 0 && currentExpressionType != parser::TYPE::T_ARRAY && currentExpressionType != parser::TYPE::T_STRING) {
 		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "'" + actualIdentifier + "' is not an array or string");
@@ -742,21 +701,23 @@ void SemanticAnalyser::visit(parser::ASTFunctionCallNode* astnode) {
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredFunction(astnode->identifier, signature); i--) {
 		if (i <= 0) {
 			std::string func_name = astnode->identifier + "(";
-			bool has_params = false;
 			for (auto param : signature) {
-				has_params = true;
 				func_name += parser::typeStr(param) + ", ";
 			}
-			func_name.pop_back();   // remove last whitespace
-			func_name.pop_back();   // remove last comma
+			if (signature.size() > 0) {
+				func_name.pop_back();   // remove last whitespace
+				func_name.pop_back();   // remove last comma
+			}
 			func_name += ")";
 			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "function '" + func_name + "' was never declared " + ((scopes.size() == 1) ? "globally" : "in this scope") + '.');
 		}
 	}
 
+	auto declaredFunction = scopes[i]->findDeclaredFunction(astnode->identifier, signature);
+
 	// set current expression type to the return value of the function
-	currentExpressionType = scopes[i]->type(astnode->identifier, signature);
-	currentExpressionTypeName = scopes[i]->typeName(astnode->identifier, std::move(signature));
+	currentExpressionType = declaredFunction.type;
+	currentExpressionTypeName = declaredFunction.typeName;
 }
 
 void SemanticAnalyser::visit(parser::ASTTypeParseNode* astnode) {

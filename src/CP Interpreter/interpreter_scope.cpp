@@ -91,7 +91,7 @@ Value_t* InterpreterScope::declareNullStruct(std::string identifier, parser::TYP
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_bool boolValue, std::vector<unsigned int> accessVector) {
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_bool boolValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
 		value = valueof(identifier, accessVector);
@@ -104,7 +104,7 @@ Value_t* InterpreterScope::declare(std::string identifier, cp_bool boolValue, st
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_int intValue, std::vector<unsigned int> accessVector) {
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_int intValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
 		value = valueof(identifier, accessVector);
@@ -117,7 +117,7 @@ Value_t* InterpreterScope::declare(std::string identifier, cp_int intValue, std:
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_float realValue, std::vector<unsigned int> accessVector) {
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_float realValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
 		value = valueof(identifier, accessVector);
@@ -130,7 +130,7 @@ Value_t* InterpreterScope::declare(std::string identifier, cp_float realValue, s
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_char charValue, std::vector<unsigned int> accessVector) {
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_char charValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
 		value = valueof(identifier, accessVector);
@@ -143,7 +143,7 @@ Value_t* InterpreterScope::declare(std::string identifier, cp_char charValue, st
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_string stringValue, std::vector<unsigned int> accessVector) {
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_string stringValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
 		value = valueof(identifier, accessVector);
@@ -156,7 +156,7 @@ Value_t* InterpreterScope::declare(std::string identifier, cp_string stringValue
 	return value;
 }
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_array arrValue, std::vector<unsigned int> accessVector) {
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_array arrValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
 		value = valueof(identifier, accessVector);
@@ -170,7 +170,7 @@ Value_t* InterpreterScope::declare(std::string identifier, cp_array arrValue, st
 }
 
 
-Value_t* InterpreterScope::declare(std::string identifier, cp_struct strValue, std::vector<unsigned int> accessVector) {
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_struct strValue, std::vector<unsigned int> accessVector) {
 	Value_t* value;
 	if (alreadyDeclaredVariable(identifier)) {
 		value = valueof(identifier, accessVector);
@@ -195,7 +195,7 @@ void InterpreterScope::declareStructureDefinition(std::string name, std::vector<
 	structureSymbolTable.push_back(type);
 }
 
-void InterpreterScope::declare(std::string identifier, std::vector<parser::TYPE> signature, std::vector<std::string> variableNames, parser::ASTBlockNode* block) {
+void InterpreterScope::declareVariable(std::string identifier, std::vector<parser::TYPE> signature, std::vector<std::string> variableNames, parser::ASTBlockNode* block) {
 	functionSymbolTable.insert(std::make_pair(identifier, std::make_tuple(signature, variableNames, block)));
 }
 
@@ -314,22 +314,22 @@ parser::ASTBlockNode* InterpreterScope::blockof(std::string identifier, std::vec
 std::vector<std::tuple<std::string, std::string, std::string>> InterpreterScope::variableList() {
 	std::vector<std::tuple<std::string, std::string, std::string>> list;
 
-	for (auto const& var : variableSymbolTable) {
-		switch (var.second->actualType) {
+	for (auto const& findDeclaredVariable : variableSymbolTable) {
+		switch (findDeclaredVariable.second->actualType) {
 		case parser::TYPE::T_BOOL:
-			list.emplace_back(std::make_tuple(var.first, "bool", (var.second->b) ? "true" : "false"));
+			list.emplace_back(std::make_tuple(findDeclaredVariable.first, "bool", (findDeclaredVariable.second->b) ? "true" : "false"));
 			break;
 		case parser::TYPE::T_INT:
-			list.emplace_back(std::make_tuple(var.first, "int", std::to_string(var.second->i)));
+			list.emplace_back(std::make_tuple(findDeclaredVariable.first, "int", std::to_string(findDeclaredVariable.second->i)));
 			break;
 		case parser::TYPE::T_FLOAT:
-			list.emplace_back(std::make_tuple(var.first, "float", std::to_string(var.second->f)));
+			list.emplace_back(std::make_tuple(findDeclaredVariable.first, "float", std::to_string(findDeclaredVariable.second->f)));
 			break;
 		case parser::TYPE::T_CHAR:
-			list.emplace_back(std::make_tuple(var.first, "char", std::to_string(var.second->c)));
+			list.emplace_back(std::make_tuple(findDeclaredVariable.first, "char", std::to_string(findDeclaredVariable.second->c)));
 			break;
 		case parser::TYPE::T_STRING:
-			list.emplace_back(std::make_tuple(var.first, "string", var.second->s));
+			list.emplace_back(std::make_tuple(findDeclaredVariable.first, "string", findDeclaredVariable.second->s));
 			break;
 		}
 	}

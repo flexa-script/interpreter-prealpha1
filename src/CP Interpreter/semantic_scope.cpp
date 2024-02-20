@@ -11,275 +11,84 @@ using namespace visitor;
 SemanticScope::SemanticScope() {}
 
 parser::StructureDefinition_t SemanticScope::findDeclaredStructureDefinition(std::string identifier) {
-	for (auto structure : structureSymbolTable) {
-		if (structure.identifier == identifier) {
-			return structure;
+	return structureSymbolTable[identifier];
+}
+
+parser::VariableDefinition_t SemanticScope::findDeclaredVariable(std::string identifier) {
+	return variableSymbolTable[identifier];
+}
+
+parser::FunctionDefinition_t SemanticScope::findDeclaredFunction(std::string identifier, std::vector<parser::TYPE> signature) {
+	auto funcs = functionSymbolTable.equal_range(identifier);
+
+	// if key is not present in multimap
+	if (std::distance(funcs.first, funcs.second) == 0) {
+		throw std::runtime_error("something went wrong when determining the type of '" + identifier + "'.");
+	}
+
+	// check original signature (without any)
+	for (auto i = funcs.first; i != funcs.second; ++i) {
+		if (i->second.signature == signature) {
+			return i->second;
 		}
 	}
 
-	throw std::runtime_error("SSERR: can't found '" + identifier + "' type");
+	// check signature for each function in functionSymbolTable
+	for (auto i = funcs.first; i != funcs.second; ++i) {
+		auto funcSig = i->second.signature;
+		auto found = true;
+		for (size_t it = 0; it < funcSig.size(); ++it) {
+			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::TYPE::T_ANY) {
+				found = false;
+				break;
+			}
+		}
+		if (found) return i->second;
+	}
+
+	throw std::runtime_error("SSERR: definition of '" + identifier + "' function not found");
 }
 
 bool SemanticScope::alreadyDeclaredStructureDefinition(std::string identifier) {
+	return structureSymbolTable.find(identifier) != structureSymbolTable.end();
+}
+
+bool SemanticScope::alreadyDeclaredVariable(std::string identifier) {
+	return variableSymbolTable.find(identifier) != variableSymbolTable.end();
+}
+
+bool SemanticScope::alreadyDeclaredFunction(std::string identifier, std::vector<parser::TYPE> signature) {
 	try {
-		findDeclaredStructureDefinition(identifier);
-		return true;
+		findDeclaredFunction(identifier, signature);
 	}
 	catch (...) {
 		return false;
 	}
-	return false;
 }
 
-
-std::vector<parser::VariableDefinition_t> SemanticScope::getVariableSymbolTable() {
-	return variableSymbolTable;
+void SemanticScope::changeVariableTypeName(std::string identifier, std::string typeName) {
+	auto var = variableSymbolTable[identifier];
+	var.typeName = typeName;
+	variableSymbolTable[identifier] = var;
 }
 
-bool SemanticScope::alreadyDeclaredVariable(std::string identifier) {
-	for (auto variable : variableSymbolTable) {
-		if (variable.identifier == identifier) {
-			return true;
-		}
-	}
-	return false;
-}
-
-void SemanticScope::changeVarTypeName(std::string identifier, std::string typeName) {
-	std::vector<parser::VariableDefinition_t> newVariableSymbolTable;
-	for (size_t i = 0; i < variableSymbolTable.size(); ++i) {
-		parser::VariableDefinition_t variable = variableSymbolTable[i];
-		if (variable.identifier == identifier) {
-			variable.typeName = typeName;
-		}
-		newVariableSymbolTable.push_back(variable);
-	}
-	variableSymbolTable = newVariableSymbolTable;
-}
-
-void SemanticScope::changeVarType(std::string identifier, parser::TYPE type) {
-	std::vector<parser::VariableDefinition_t> newVariableSymbolTable;
-	for (size_t i = 0; i < variableSymbolTable.size(); ++i) {
-		parser::VariableDefinition_t variable = variableSymbolTable[i];
-		if (variable.identifier == identifier) {
-			variable.type = type;
-		}
-		newVariableSymbolTable.push_back(variable);
-	}
-	variableSymbolTable = newVariableSymbolTable;
-}
-
-bool SemanticScope::alreadyDeclaredFunction(std::string identifier, std::vector<parser::TYPE> signature) {
-	std::vector<parser::FunctionDefinition_t> funcs = std::vector<parser::FunctionDefinition_t>();
-
-	for (auto fun : functionSymbolTable) {
-		if (fun.identifier == identifier) {
-			funcs.push_back(fun);
-		}
-	}
-
-	// if key is not present in functionSymbolTable
-	if (funcs.empty()) {
-		return false;
-	}
-
-	// check signature for each function in functionSymbolTable
-	for (auto fun : funcs) {
-		auto funcSig = fun.signature;
-		if (funcSig.size() == 0 && signature.size() == 0) {
-			return true;
-		}
-		auto found = true;
-		for (size_t it = 0; it < funcSig.size(); ++it) {
-			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::TYPE::T_ANY) {
-				found = false;
-				break;
-			}
-		}
-		if (found) return true;
-	}
-
-	return false;
-}
-
-bool SemanticScope::findAnyVar(std::string identifier) {
-	for (auto variable : variableSymbolTable) {
-		if (variable.identifier == identifier) {
-			return variable.isAny;
-		}
-	}
-	return false;
-}
-
-bool SemanticScope::isConst(std::string identifier) {
-	for (auto variable : variableSymbolTable) {
-		if (variable.identifier == identifier) {
-			return variable.isConst;
-		}
-	}
-	return false;
+void SemanticScope::changeVariableType(std::string identifier, parser::TYPE type) {
+	auto var = variableSymbolTable[identifier];
+	var.type = type;
+	variableSymbolTable[identifier] = var;
 }
 
 void SemanticScope::declareStructureDefinition(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
-	parser::StructureDefinition_t type(name, variables, row, col);
-	structureSymbolTable.push_back(type);
+	parser::StructureDefinition_t strDef(name, variables, row, col);
+	structureSymbolTable[name] = strDef;
 }
 
-void SemanticScope::declare(std::string identifier, parser::TYPE type, std::string typeName, parser::TYPE arrayType, std::vector<int> dim, bool isAny, bool isConst, unsigned int row, unsigned int col) {
+void SemanticScope::declareVariable(std::string identifier, parser::TYPE type, std::string typeName, parser::TYPE arrayType, std::vector<int> dim, bool isAny, bool isConst, unsigned int row, unsigned int col) {
 	parser::VariableDefinition_t var(identifier, type, typeName, arrayType, dim, isAny, isConst, row, col);
-	variableSymbolTable.push_back(var);
+	variableSymbolTable[identifier] = var;
 }
 
-void SemanticScope::declare(std::string identifier, parser::TYPE type, std::string typeName, std::vector<parser::TYPE> signature, bool isAny, unsigned int row, unsigned int col) {
+void SemanticScope::declareFunction(std::string identifier, parser::TYPE type, std::string typeName, std::vector<parser::TYPE> signature, bool isAny, unsigned int row, unsigned int col) {
 	parser::FunctionDefinition_t fun(identifier, type, typeName, signature, isAny, row, col);
-	functionSymbolTable.push_back(fun);
-}
-
-parser::TYPE SemanticScope::arrayType(std::string identifier) {
-	for (auto variable : variableSymbolTable) {
-		if (variable.identifier == identifier) {
-			return variable.arrayType;
-		}
-	}
-
-	throw std::runtime_error("SSERR: something went wrong when determining the type of '" + identifier + "' array");
-}
-
-parser::VariableDefinition_t SemanticScope::var(std::string identifier) {
-	for (auto variable : variableSymbolTable) {
-		if (variable.identifier == identifier) {
-			return variable;
-		}
-	}
-}
-
-std::string SemanticScope::typeName(std::string identifier) {
-	return var(identifier).typeName;
-}
-
-parser::TYPE SemanticScope::type(std::string identifier) {
-	return var(identifier).type;
-}
-
-std::string SemanticScope::typeName(std::string identifier, std::vector<parser::TYPE> signature) {
-	std::vector<parser::FunctionDefinition_t> funcs = std::vector<parser::FunctionDefinition_t>();
-
-	for (auto fun : functionSymbolTable) {
-		if (fun.identifier == identifier) {
-			funcs.push_back(fun);
-		}
-	}
-
-	// if key is not present in functionSymbolTable
-	if (funcs.empty()) {
-		throw std::runtime_error("SSERR: something went wrong when determining the type of '" + identifier + "' function");
-	}
-
-	// check signature for each function in functionSymbolTable
-	for (auto fun : funcs) {
-		auto funcSig = fun.signature;
-		auto found = true;
-		for (size_t it = 0; it < funcSig.size(); ++it) {
-			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::TYPE::T_ANY) {
-				found = false;
-				break;
-			}
-		}
-		if (found) return fun.typeName;
-	}
-
-	throw std::runtime_error("SSERR: something went wrong when determining the type of '" + identifier + "' function");
-}
-
-parser::TYPE SemanticScope::type(std::string identifier, std::vector<parser::TYPE> signature) {
-	std::vector<parser::FunctionDefinition_t> funcs = std::vector<parser::FunctionDefinition_t>();
-
-	for (auto fun : functionSymbolTable) {
-		if (fun.identifier == identifier) {
-			funcs.push_back(fun);
-		}
-	}
-
-	// if key is not present in functionSymbolTable
-	if (funcs.empty()) {
-		throw std::runtime_error("SSERR: something went wrong when determining the type of '" + identifier + "' function");
-	}
-
-	// check signature for each function in functionSymbolTable
-	for (auto fun : funcs) {
-		auto funcSig = fun.signature;
-		auto found = true;
-		for (size_t it = 0; it < funcSig.size(); ++it) {
-			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::TYPE::T_ANY) {
-				found = false;
-				break;
-			}
-		}
-		if (found) return fun.type;
-	}
-
-	throw std::runtime_error("SSERR: something went wrong when determining the type of '" + identifier + "' function");
-}
-
-unsigned int SemanticScope::declarationLine(std::string identifier) {
-	for (auto variable : variableSymbolTable) {
-		if (variable.identifier == identifier) {
-			return variable.row;
-		}
-	}
-
-	throw std::runtime_error("SSERR: something went wrong when determining the line number of '" + identifier + "'");
-}
-
-unsigned int SemanticScope::declarationLine(std::string identifier, std::vector<parser::TYPE> signature) {
-	std::vector<parser::FunctionDefinition_t> funcs = std::vector<parser::FunctionDefinition_t>();
-
-	for (auto fun : functionSymbolTable) {
-		if (fun.identifier == identifier) {
-			funcs.push_back(fun);
-		}
-	}
-
-	// if key is not present in functionSymbolTable
-	if (funcs.empty()) {
-		throw std::runtime_error("SSERR: something went wrong when determining the line number of '" + identifier + "'");
-	}
-
-	// check signature for each function in functionSymbolTable
-	for (auto fun : funcs) {
-		auto funcSig = fun.signature;
-		auto found = true;
-		for (size_t it = 0; it < funcSig.size(); ++it) {
-			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::TYPE::T_ANY) {
-				found = false;
-				break;
-			}
-		}
-		if (found) return fun.row;
-	}
-
-	// function with matching signature not found
-	throw std::runtime_error("SSERR: something went wrong when determining the line number of '" + identifier + "'");
-}
-
-
-std::vector<std::pair<std::string, std::string>> SemanticScope::functionList() {
-	std::vector<std::pair<std::string, std::string>> list;
-
-	// check signature for each function in functionSymbolTable
-	for (auto fun : functionSymbolTable) {
-		std::string func_name = fun.identifier + "(";
-		bool has_params = false;
-		for (auto param : fun.signature) {
-			has_params = true;
-			func_name += parser::typeStr(param) + ", ";
-		}
-		func_name.pop_back();   // remove last whitespace
-		func_name.pop_back();   // remove last comma
-		func_name += ")";
-
-		list.emplace_back(std::make_pair(func_name, parser::typeStr(fun.type)));
-	}
-
-	return list;
+	functionSymbolTable.insert(std::make_pair(identifier, fun));
 }

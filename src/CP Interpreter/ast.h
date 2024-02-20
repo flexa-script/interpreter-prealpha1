@@ -12,6 +12,7 @@ namespace parser {
 	typedef struct VariableDefinition {
 		VariableDefinition(std::string identifier, TYPE type, std::string typeName, TYPE arrayType, std::vector<int> dim, bool isAny, bool isConst, unsigned int row, unsigned int col)
 			: identifier(identifier), type(type), typeName(typeName), arrayType(arrayType), dim(dim), isAny(isAny), isConst(isConst), row(row), col(col) {};
+		VariableDefinition() {};
 		std::string identifier;
 		std::string typeName;
 		parser::TYPE type;
@@ -26,12 +27,7 @@ namespace parser {
 	typedef struct StructureDefinition {
 		StructureDefinition(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
 			: identifier(identifier), variables(variables), row(row), col(col) {};
-		StructureDefinition() {
-			identifier = "";
-			variables = std::vector<VariableDefinition_t>();
-			row = 0;
-			col = 0;
-		};
+		StructureDefinition() {};
 		std::string identifier;
 		std::vector<VariableDefinition_t> variables;
 		unsigned int row;
@@ -41,6 +37,7 @@ namespace parser {
 	typedef struct FunctionDefinition {
 		FunctionDefinition(std::string identifier, TYPE type, std::string typeName, std::vector<parser::TYPE> signature, bool isAny, unsigned int row, unsigned int col)
 			: identifier(identifier), type(type), typeName(typeName), signature(signature), isAny(isAny), row(row), col(col) {};
+		FunctionDefinition() {};
 		std::string identifier;
 		parser::TYPE type;
 		std::string typeName;

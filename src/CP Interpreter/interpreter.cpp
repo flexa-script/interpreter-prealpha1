@@ -57,45 +57,45 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 		// declare variable, depending on type
 		switch (astnode->type) {
 		case parser::TYPE::T_BOOL:
-			scopes.back()->declare(astnode->identifier, currentExpressionValue.b, std::vector<unsigned int>());
+			scopes.back()->declareVariable(astnode->identifier, currentExpressionValue.b, std::vector<unsigned int>());
 			break;
 		case parser::TYPE::T_INT:
-			scopes.back()->declare(astnode->identifier, currentExpressionValue.i, std::vector<unsigned int>());
+			scopes.back()->declareVariable(astnode->identifier, currentExpressionValue.i, std::vector<unsigned int>());
 			break;
 		case parser::TYPE::T_FLOAT:
 			if (currentExpressionType == parser::TYPE::T_INT)
-				scopes.back()->declare(astnode->identifier, (cp_float)currentExpressionValue.i, std::vector<unsigned int>());
+				scopes.back()->declareVariable(astnode->identifier, (cp_float)currentExpressionValue.i, std::vector<unsigned int>());
 			else
-				scopes.back()->declare(astnode->identifier, currentExpressionValue.f, std::vector<unsigned int>());
+				scopes.back()->declareVariable(astnode->identifier, currentExpressionValue.f, std::vector<unsigned int>());
 			break;
 		case parser::TYPE::T_CHAR:
-			scopes.back()->declare(astnode->identifier, currentExpressionValue.c, std::vector<unsigned int>());
+			scopes.back()->declareVariable(astnode->identifier, currentExpressionValue.c, std::vector<unsigned int>());
 			break;
 		case parser::TYPE::T_STRING:
 			if (currentExpressionType == parser::TYPE::T_CHAR)
-				scopes.back()->declare(astnode->identifier, std::string{ currentExpressionValue.c }, std::vector<unsigned int>());
+				scopes.back()->declareVariable(astnode->identifier, std::string{ currentExpressionValue.c }, std::vector<unsigned int>());
 			else
-				scopes.back()->declare(astnode->identifier, currentExpressionValue.s, std::vector<unsigned int>());
+				scopes.back()->declareVariable(astnode->identifier, currentExpressionValue.s, std::vector<unsigned int>());
 			break;
 		case parser::TYPE::T_ANY:
 			switch (currentExpressionType) {
 			case parser::TYPE::T_BOOL:
-				scopes.back()->declare(astnode->identifier, currentExpressionValue.b, std::vector<unsigned int>());
+				scopes.back()->declareVariable(astnode->identifier, currentExpressionValue.b, std::vector<unsigned int>());
 				break;
 			case parser::TYPE::T_INT:
-				scopes.back()->declare(astnode->identifier, currentExpressionValue.i, std::vector<unsigned int>());
+				scopes.back()->declareVariable(astnode->identifier, currentExpressionValue.i, std::vector<unsigned int>());
 				break;
 			case parser::TYPE::T_FLOAT:
-				scopes.back()->declare(astnode->identifier, currentExpressionValue.f, std::vector<unsigned int>());
+				scopes.back()->declareVariable(astnode->identifier, currentExpressionValue.f, std::vector<unsigned int>());
 				break;
 			case parser::TYPE::T_CHAR:
-				scopes.back()->declare(astnode->identifier, currentExpressionValue.c, std::vector<unsigned int>());
+				scopes.back()->declareVariable(astnode->identifier, currentExpressionValue.c, std::vector<unsigned int>());
 				break;
 			case parser::TYPE::T_STRING:
-				scopes.back()->declare(astnode->identifier, currentExpressionValue.s, std::vector<unsigned int>());
+				scopes.back()->declareVariable(astnode->identifier, currentExpressionValue.s, std::vector<unsigned int>());
 				break;
 			case parser::TYPE::T_ARRAY:
-				scopes.back()->declare(astnode->identifier, currentExpressionValue.arr, std::vector<unsigned int>());
+				scopes.back()->declareVariable(astnode->identifier, currentExpressionValue.arr, std::vector<unsigned int>());
 				break;
 			case parser::TYPE::T_STRUCT:
 				auto identifierVector = std::vector<std::string>();
@@ -109,7 +109,7 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 			}
 			break;
 		case parser::TYPE::T_ARRAY:
-			scopes.back()->declare(astnode->identifier, currentExpressionValue.arr, std::vector<unsigned int>());
+			scopes.back()->declareVariable(astnode->identifier, currentExpressionValue.arr, std::vector<unsigned int>());
 			break;
 		case parser::TYPE::T_STRUCT:
 			auto identifierVector = std::vector<std::string>();
@@ -162,12 +162,12 @@ void Interpreter::declareStructureVariable(std::vector<std::string> identifierVe
 				scopes[declScopeIdx]->declareNullStruct(identifierVector[0], value->actualType, value->str.first, accessVector);
 			}
 			else {
-				value = scopes[declScopeIdx]->declare(identifierVector[0], newValue.str, accessVector);
+				value = scopes[declScopeIdx]->declareVariable(identifierVector[0], newValue.str, accessVector);
 			}
 		}
 		// else declare new
 		else {
-			value = scopes.back()->declare(identifierVector[0], newValue.str, accessVector);
+			value = scopes.back()->declareVariable(identifierVector[0], newValue.str, accessVector);
 			for (declScopeIdx = scopes.size() - 1; !scopes[declScopeIdx]->alreadyDeclaredVariable(identifierVector[0]); --declScopeIdx);
 		}
 
@@ -263,7 +263,7 @@ void Interpreter::declareStructureVariable(std::vector<std::string> identifierVe
 
 }
 
-std::vector<unsigned int> Interpreter::evalueateAccessVector(std::vector<parser::ASTExprNode*> exprAcessVector) {
+std::vector<unsigned int> Interpreter::evaluateAccessVector(std::vector<parser::ASTExprNode*> exprAcessVector) {
 	auto accessVector = std::vector<unsigned int>();
 	for (auto expr : exprAcessVector) {
 		expr->accept(this);
@@ -278,7 +278,7 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 		actualIdentifier = axe::join(astnode->identifierVector, ".");
 	}
 
-	auto accessVector = evalueateAccessVector(astnode->accessVector);
+	auto accessVector = evaluateAccessVector(astnode->accessVector);
 
 	// determine innermost scope in which variable is declared
 	size_t i;
@@ -300,25 +300,25 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 			// redeclare variable, depending on type
 			switch (type) {
 			case parser::TYPE::T_BOOL:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.b, accessVector);
+				scopes[i]->declareVariable(astnode->identifier, currentExpressionValue.b, accessVector);
 				break;
 			case parser::TYPE::T_INT:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.i, accessVector);
+				scopes[i]->declareVariable(astnode->identifier, currentExpressionValue.i, accessVector);
 				break;
 			case parser::TYPE::T_FLOAT:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.f, accessVector);
+				scopes[i]->declareVariable(astnode->identifier, currentExpressionValue.f, accessVector);
 				break;
 			case parser::TYPE::T_CHAR:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.c, accessVector);
+				scopes[i]->declareVariable(astnode->identifier, currentExpressionValue.c, accessVector);
 				break;
 			case parser::TYPE::T_STRING:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.s, accessVector);
+				scopes[i]->declareVariable(astnode->identifier, currentExpressionValue.s, accessVector);
 				break;
 			case parser::TYPE::T_STRUCT:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.str, accessVector);
+				scopes[i]->declareVariable(astnode->identifier, currentExpressionValue.str, accessVector);
 				break;
 			case parser::TYPE::T_ARRAY:
-				scopes[i]->declare(astnode->identifier, currentExpressionValue.arr, accessVector);
+				scopes[i]->declareVariable(astnode->identifier, currentExpressionValue.arr, accessVector);
 				break;
 			}
 
@@ -447,25 +447,25 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	for (unsigned int i = 0; i < currentFunctionArguments.size(); i++) {
 		switch (currentFunctionArguments[i].first) {
 		case parser::TYPE::T_BOOL:
-			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second->b, std::vector<unsigned int>());
+			scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->b, std::vector<unsigned int>());
 			break;
 		case parser::TYPE::T_INT:
-			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second->i, std::vector<unsigned int>());
+			scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->i, std::vector<unsigned int>());
 			break;
 		case parser::TYPE::T_FLOAT:
-			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second->f, std::vector<unsigned int>());
+			scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->f, std::vector<unsigned int>());
 			break;
 		case parser::TYPE::T_CHAR:
-			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second->c, std::vector<unsigned int>());
+			scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->c, std::vector<unsigned int>());
 			break;
 		case parser::TYPE::T_STRING:
-			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second->s, std::vector<unsigned int>());
+			scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->s, std::vector<unsigned int>());
 			break;
 		case parser::TYPE::T_STRUCT:
-			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second->str, std::vector<unsigned int>());
+			scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->str, std::vector<unsigned int>());
 			break;
 		case parser::TYPE::T_ARRAY:
-			scopes.back()->declare(currentFunctionParameters[i], currentFunctionArguments[i].second->arr, std::vector<unsigned int>());
+			scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->arr, std::vector<unsigned int>());
 			break;
 		}
 	}
@@ -527,7 +527,7 @@ void visitor::Interpreter::visit(parser::ASTWhileNode* astnode) {
 
 void visitor::Interpreter::visit(parser::ASTFunctionDefinitionNode* astnode) {
 	// add function to symbol table
-	scopes.back()->declare(astnode->identifier, astnode->signature, astnode->variableNames, astnode->block);
+	scopes.back()->declareVariable(astnode->identifier, astnode->signature, astnode->variableNames, astnode->block);
 }
 
 void visitor::Interpreter::visit(parser::ASTStructDefinitionNode* astnode) {

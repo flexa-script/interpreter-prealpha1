@@ -26,16 +26,18 @@ namespace visitor {
 
 	private:
 		bool returns(parser::ASTNode*);
-		void evalueateAccessVector(std::vector<parser::ASTExprNode*>);
+		void evaluateAccessVector(std::vector<parser::ASTExprNode*>);
+
 		std::vector<int> calcArrayDimSize(cp_array);
+
 		void declareStructureDefinitionVariables(std::string, std::string, cp_struct, parser::ASTLiteralNode<cp_struct>*);
 		void declareStructureDefinitionFirstLevelVariables(std::string, std::string);
-		parser::VariableDefinition_t findDeclaredVariable(std::string);
-		std::string findTypeName(std::string);
-		parser::TYPE findType(std::string);
-		bool findAnyVar(std::string);
+
+		parser::VariableDefinition_t findDeclaredVariableRecursively(std::string);
+
 		void determineArrayType(cp_array, unsigned int, unsigned int);
 		void checkArrayType(parser::TYPE, unsigned int, unsigned int);
+
 		std::string msgHeader(unsigned int, unsigned int);
 
 	public:
