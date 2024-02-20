@@ -22,7 +22,6 @@ namespace parser {
 		Parser(lexer::Lexer*, std::string, unsigned int);
 
 		ASTProgramNode* parseProgram();
-
 		ASTExprNode* parseExpression();  // public for repl
 
 	private:
@@ -47,7 +46,7 @@ namespace parser {
 
 		ASTBlockNode* parseStructBlock();
 
-		ASTStatementNode* parseStructBlockStatement();
+		ASTStatementNode* parseStructBlockVariables();
 
 		ASTIfNode* parseIfStatement();
 
