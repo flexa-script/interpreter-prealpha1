@@ -21,13 +21,7 @@ std::string InterpreterScope::getName() {
 }
 
 bool InterpreterScope::alreadyDeclaredStructureDefinition(std::string identifier) {
-	try {
-		findDeclaredStructureDefinition(identifier);
-		return true;
-	}
-	catch (...) {
-		return false;
-	}
+	return structureSymbolTable.find(identifier) != structureSymbolTable.end();
 }
 
 parser::StructureDefinition_t InterpreterScope::findDeclaredStructureDefinition(std::string identifier) {
@@ -67,121 +61,66 @@ bool InterpreterScope::alreadyDeclaredFunction(std::string identifier, std::vect
 	return false;
 }
 
-Value_t* InterpreterScope::declareNullVariable(std::string identifier, parser::TYPE type, std::vector<unsigned int> accessVector) {
-	Value_t* value;
-	if (alreadyDeclaredVariable(identifier)) {
-		value = accessValue(std::vector<std::string> { identifier }, accessVector);
-	}
-	else {
-		value = new Value_t(type);
-		variableSymbolTable[identifier] = value;
-	}
+Value_t* InterpreterScope::declareNullVariable(std::string identifier, parser::TYPE type) {
+	Value_t* value = new Value_t(type);
 	value->setNull();
+	variableSymbolTable[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declareNullStructVariable(std::string identifier, parser::TYPE type, std::string typeName, std::vector<unsigned int> accessVector) {
-	Value_t* value = declareNullVariable(identifier, type, accessVector);
+Value_t* InterpreterScope::declareNullStructVariable(std::string identifier, std::string typeName) {
+	Value_t* value = declareNullVariable(identifier, parser::TYPE::T_STRUCT);
 	value->str.first = typeName;
 	return value;
 }
 
-Value_t* InterpreterScope::declareVariable(std::string identifier, cp_bool boolValue, std::vector<unsigned int> accessVector) {
-	Value_t* value;
-	if (alreadyDeclaredVariable(identifier)) {
-		value = accessValue(std::vector<std::string> { identifier }, accessVector);
-	}
-	else {
-		value = new Value_t(parser::TYPE::T_BOOL);
-		variableSymbolTable[identifier] = value;
-	}
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_bool boolValue) {
+	Value_t* value = new Value_t(parser::TYPE::T_BOOL);
 	value->set(boolValue);
+	variableSymbolTable[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declareVariable(std::string identifier, cp_int intValue, std::vector<unsigned int> accessVector) {
-	Value_t* value;
-	if (alreadyDeclaredVariable(identifier)) {
-		value = accessValue(std::vector<std::string> { identifier }, accessVector);
-	}
-	else {
-		value = new Value_t(parser::TYPE::T_INT);
-		variableSymbolTable[identifier] = value;
-	}
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_int intValue) {
+	Value_t* value = new Value_t(parser::TYPE::T_INT);
 	value->set(intValue);
+	variableSymbolTable[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declareVariable(std::string identifier, cp_float realValue, std::vector<unsigned int> accessVector) {
-	Value_t* value;
-	if (alreadyDeclaredVariable(identifier)) {
-		value = accessValue(std::vector<std::string> { identifier }, accessVector);
-	}
-	else {
-		value = new Value_t(parser::TYPE::T_FLOAT);
-		variableSymbolTable[identifier] = value;
-	}
-	value->set(realValue);
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_float floatValue) {
+	Value_t* value = new Value_t(parser::TYPE::T_FLOAT);
+	value->set(floatValue);
+	variableSymbolTable[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declareVariable(std::string identifier, cp_char charValue, std::vector<unsigned int> accessVector) {
-	Value_t* value;
-	if (alreadyDeclaredVariable(identifier)) {
-		value = accessValue(std::vector<std::string> { identifier }, accessVector);
-	}
-	else {
-		value = new Value_t(parser::TYPE::T_CHAR);
-		variableSymbolTable[identifier] = value;
-	}
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_char charValue) {
+	Value_t* value = new Value_t(parser::TYPE::T_CHAR);
 	value->set(charValue);
+	variableSymbolTable[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declareVariable(std::string identifier, cp_string stringValue, std::vector<unsigned int> accessVector) {
-	Value_t* value;
-	if (alreadyDeclaredVariable(identifier)) {
-		value = accessValue(std::vector<std::string> { identifier }, accessVector);
-	}
-	else {
-		value = new Value_t(parser::TYPE::T_STRING);
-		variableSymbolTable[identifier] = value;
-	}
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_string stringValue) {
+	Value_t* value = new Value_t(parser::TYPE::T_STRING);
 	value->set(stringValue);
+	variableSymbolTable[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declareVariable(std::string identifier, cp_array arrValue, std::vector<unsigned int> accessVector) {
-	Value_t* value;
-	if (alreadyDeclaredVariable(identifier)) {
-		value = accessValue(std::vector<std::string> { identifier }, accessVector);
-	}
-	else {
-		value = new Value_t(parser::TYPE::T_ARRAY);
-		variableSymbolTable[identifier] = value;
-	}
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_array arrValue) {
+	Value_t* value = new Value_t(parser::TYPE::T_ARRAY);
 	value->set(arrValue);
+	variableSymbolTable[identifier] = value;
 	return value;
 }
 
 
-Value_t* InterpreterScope::declareVariable(std::string identifier, cp_struct strValue, std::vector<unsigned int> accessVector) {
-	Value_t* value;
-	if (alreadyDeclaredVariable(identifier)) {
-		value = accessValue(std::vector<std::string> { identifier }, accessVector);
-	}
-	else {
-		value = new Value_t(parser::TYPE::T_STRUCT);
-		variableSymbolTable[identifier] = value;
-	}
+Value_t* InterpreterScope::declareVariable(std::string identifier, cp_struct strValue) {
+	Value_t* value = new Value_t(parser::TYPE::T_STRUCT);
 	value->set(strValue);
-
-	auto currTypeName = value->str.first;
-
-	if (currTypeName.empty()) {
-		currTypeName = strValue.first;
-	}
-
+	variableSymbolTable[identifier] = value;
 	return value;
 }
 

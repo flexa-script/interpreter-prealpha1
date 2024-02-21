@@ -6,8 +6,14 @@ struct Element {
 };
 
 def element_create(value : any) : Element {
-  var newElement : Element;
-  newElement.has_value = true;
+  //var newElement : Element;
+  //newElement.has_value = true; // deveria gerar erro na analise semantica pois newElement é nulo
+  //newElement.value = value;
+  var newElement : Element = Element {
+    has_value = true,
+    //value = value // erro pois não aceita expressão
+    value = 0
+  };
   newElement.value = value;
   return newElement;
 }

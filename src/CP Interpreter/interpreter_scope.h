@@ -29,15 +29,15 @@ namespace visitor {
 		bool alreadyDeclaredVariable(std::string);
 		bool alreadyDeclaredFunction(std::string, std::vector<parser::TYPE>);
 
-		Value_t* declareNullVariable(std::string, parser::TYPE, std::vector<unsigned int>);
-		Value_t* declareNullStructVariable(std::string, parser::TYPE, std::string, std::vector<unsigned int>);
-		Value_t* declareVariable(std::string, cp_bool, std::vector<unsigned int>);
-		Value_t* declareVariable(std::string, cp_int, std::vector<unsigned int>);
-		Value_t* declareVariable(std::string, cp_float, std::vector<unsigned int>);
-		Value_t* declareVariable(std::string, cp_char, std::vector<unsigned int>);
-		Value_t* declareVariable(std::string, cp_string, std::vector<unsigned int>);
-		Value_t* declareVariable(std::string, cp_struct, std::vector<unsigned int>);
-		Value_t* declareVariable(std::string, cp_array, std::vector<unsigned int>);
+		Value_t* declareNullVariable(std::string, parser::TYPE);
+		Value_t* declareNullStructVariable(std::string, std::string);
+		Value_t* declareVariable(std::string, cp_bool);
+		Value_t* declareVariable(std::string, cp_int);
+		Value_t* declareVariable(std::string, cp_float);
+		Value_t* declareVariable(std::string, cp_char);
+		Value_t* declareVariable(std::string, cp_string);
+		Value_t* declareVariable(std::string, cp_struct);
+		Value_t* declareVariable(std::string, cp_array);
 
 		void declareFunction(std::string, std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*);
 		void declareStructureDefinition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
