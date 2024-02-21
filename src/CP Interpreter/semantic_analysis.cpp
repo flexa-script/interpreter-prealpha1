@@ -60,7 +60,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 		currentExpressionTypeName = "";
 	}
 
-	if (astnode->type != parser::TYPE::T_ARRAY && currentExpressionType == parser::TYPE::T_ARRAY) {
+	if (astnode->type != parser::TYPE::T_ANY && astnode->type != parser::TYPE::T_ARRAY && currentExpressionType == parser::TYPE::T_ARRAY) {
 		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "trying to assign array expression to '" + astnode->identifier + "' " + parser::typeStr(astnode->type) + " variable");
 	}
 

@@ -132,11 +132,11 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 			declareStructureVariable(identifierVector, nllVal, std::vector<unsigned int>());
 		}
 		else {
-			scopes.back()->declareNull(astnode->identifier, astnode->type, std::vector<unsigned int>());
+			scopes.back()->declareNullVariable(astnode->identifier, astnode->type, std::vector<unsigned int>());
 		}
 	}
 
-	Value_t* val = scopes.back()->valueof(astnode->identifier, std::vector<unsigned int>());
+	Value_t* val = scopes.back()->accessValue(std::vector<std::string> {astnode->identifier}, std::vector<unsigned int>());
 	val->dim = astnode->dim;
 	val->arrType = astnode->arrayType;
 }
@@ -158,8 +158,8 @@ void Interpreter::declareStructureVariable(std::vector<std::string> identifierVe
 		// if already declared
 		if (declScopeIdx >= 0) {
 			if (!newValue.hasValue || newValue.actualType == parser::TYPE::T_NULL) {
-				value = scopes[declScopeIdx]->valueof(identifierVector[0], accessVector);
-				scopes[declScopeIdx]->declareNullStruct(identifierVector[0], value->actualType, value->str.first, accessVector);
+				value = scopes[declScopeIdx]->accessValue(identifierVector, accessVector);
+				scopes[declScopeIdx]->declareNullStructVariable(identifierVector[0], value->actualType, value->str.first, accessVector);
 			}
 			else {
 				value = scopes[declScopeIdx]->declareVariable(identifierVector[0], newValue.str, accessVector);
@@ -171,7 +171,7 @@ void Interpreter::declareStructureVariable(std::vector<std::string> identifierVe
 			for (declScopeIdx = scopes.size() - 1; !scopes[declScopeIdx]->alreadyDeclaredVariable(identifierVector[0]); --declScopeIdx);
 		}
 
-		typeName = scopes[declScopeIdx]->typenameof(identifierVector[0], accessVector);
+		typeName = scopes[declScopeIdx]->accessValue(identifierVector, accessVector)->str.first;
 		typeStruct = scopes[strDefScopeIdx]->findDeclaredStructureDefinition(typeName);
 
 		for (size_t j = 0; j < typeStruct.variables.size(); ++j) {
@@ -200,7 +200,7 @@ void Interpreter::declareStructureVariable(std::vector<std::string> identifierVe
 			}
 		}
 		if (declScopeIdx >= 0) {
-			value = scopes[declScopeIdx]->valueof(axe::join(identifierVector, "."), accessVector);
+			value = scopes[declScopeIdx]->accessValue(identifierVector, accessVector);
 		}
 
 		if (!value) throw std::runtime_error("error");
@@ -287,7 +287,7 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
 
-	auto type = scopes[i]->typeof(actualIdentifier, accessVector);
+	auto type = scopes[i]->accessValue(astnode->identifierVector, accessVector)->currentType;
 	//if (type != parser::TYPE::T_ARRAY && type != parser::TYPE::T_STRUCT) {
 	//	type = currentExpressionType;
 	//}
@@ -329,7 +329,7 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 			declareStructureVariable(astnode->identifierVector, currentExpressionValue, accessVector);
 		}
 		else {
-			scopes.back()->declareNull(astnode->identifier, type, accessVector);
+			scopes.back()->declareNullVariable(astnode->identifier, type, accessVector);
 		}
 	}
 }
@@ -527,7 +527,7 @@ void visitor::Interpreter::visit(parser::ASTWhileNode* astnode) {
 
 void visitor::Interpreter::visit(parser::ASTFunctionDefinitionNode* astnode) {
 	// add function to symbol table
-	scopes.back()->declareVariable(astnode->identifier, astnode->signature, astnode->variableNames, astnode->block);
+	scopes.back()->declareFunction(astnode->identifier, astnode->signature, astnode->variableNames, astnode->block);
 }
 
 void visitor::Interpreter::visit(parser::ASTStructDefinitionNode* astnode) {
@@ -758,7 +758,7 @@ void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredVariable(astnode->identifier); i--);
 
-	currentExpressionValue = *scopes[i]->valueof(actualIdentifier, astnode->accessVector);
+	currentExpressionValue = *scopes[i]->accessValue(astnode->identifierVector, astnode->accessVector);
 	currentExpressionType = currentExpressionValue.currentType;
 	currentExpressionTypeName = currentExpressionType == parser::TYPE::T_STRUCT ? currentExpressionValue.str.first : "";
 

@@ -60,6 +60,7 @@ bool SemanticScope::alreadyDeclaredVariable(std::string identifier) {
 bool SemanticScope::alreadyDeclaredFunction(std::string identifier, std::vector<parser::TYPE> signature) {
 	try {
 		findDeclaredFunction(identifier, signature);
+		return true;
 	}
 	catch (...) {
 		return false;
