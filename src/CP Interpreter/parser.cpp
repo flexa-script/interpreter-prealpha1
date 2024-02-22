@@ -629,8 +629,7 @@ VariableDefinition_t* Parser::parseFormalParam() {
 		typeName = currentToken.value;
 	}
 
-	return new VariableDefinition_t(identifier, type, typeName, currentArrayType, dim, type == TYPE::T_ANY, false, currentToken.row, currentToken.col);
-
+	return new VariableDefinition_t(identifier, type, typeName, currentArrayType, dim, type == TYPE::T_ANY, false, false, currentToken.row, currentToken.col, true);
 };
 
 ASTExprNode* Parser::parseExpression() {
@@ -978,14 +977,10 @@ cp_struct Parser::parseStructConstructor() {
 	str.second = cp_struct_values();
 
 	consumeToken();
+	consumeToken();
 
-	do {
+	while (currentToken.type == lexer::TOK_IDENTIFIER) {
 		auto strValue = cp_struct_value();
-
-		consumeToken();
-		if (currentToken.type != lexer::TOK_IDENTIFIER) {
-			throw std::runtime_error(msgHeader() + "expected identifier");
-		}
 
 		strValue.first = currentToken.value;
 
@@ -1037,8 +1032,10 @@ cp_struct Parser::parseStructConstructor() {
 
 		consumeToken();
 
-	} while (nextToken.type == lexer::TOK_IDENTIFIER);
-
+		if (nextToken.type == lexer::TOK_IDENTIFIER) {
+			consumeToken();
+		}
+	}
 
 	if (currentToken.type != lexer::TOK_RIGHT_CURLY) {
 		throw std::runtime_error(msgHeader() + "expected '}'");

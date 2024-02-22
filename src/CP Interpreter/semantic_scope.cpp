@@ -67,6 +67,27 @@ bool SemanticScope::alreadyDeclaredFunction(std::string identifier, std::vector<
 	}
 }
 
+void SemanticScope::declareStructureDefinition(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
+	parser::StructureDefinition_t strDef(name, variables, row, col);
+	structureSymbolTable[name] = strDef;
+}
+
+void SemanticScope::declareVariable(std::string identifier, parser::TYPE type, std::string typeName, parser::TYPE arrayType, std::vector<int> dim, bool isAny, bool isConst, bool hasValue, unsigned int row, unsigned int col, bool isParameter) {
+	parser::VariableDefinition_t var(identifier, type, typeName, arrayType, dim, isAny, isConst, hasValue, row, col, isParameter);
+	variableSymbolTable[identifier] = var;
+}
+
+void SemanticScope::declareFunction(std::string identifier, parser::TYPE type, std::string typeName, std::vector<parser::TYPE> signature, bool isAny, unsigned int row, unsigned int col) {
+	parser::FunctionDefinition_t fun(identifier, type, typeName, signature, isAny, row, col);
+	functionSymbolTable.insert(std::make_pair(identifier, fun));
+}
+
+void SemanticScope::assignVariable(std::string identifier, bool hasValue) {
+	auto var = variableSymbolTable[identifier];
+	var.hasValue = hasValue;
+	variableSymbolTable[identifier] = var;
+}
+
 void SemanticScope::changeVariableTypeName(std::string identifier, std::string typeName) {
 	auto var = variableSymbolTable[identifier];
 	var.typeName = typeName;
@@ -77,19 +98,4 @@ void SemanticScope::changeVariableType(std::string identifier, parser::TYPE type
 	auto var = variableSymbolTable[identifier];
 	var.type = type;
 	variableSymbolTable[identifier] = var;
-}
-
-void SemanticScope::declareStructureDefinition(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
-	parser::StructureDefinition_t strDef(name, variables, row, col);
-	structureSymbolTable[name] = strDef;
-}
-
-void SemanticScope::declareVariable(std::string identifier, parser::TYPE type, std::string typeName, parser::TYPE arrayType, std::vector<int> dim, bool isAny, bool isConst, unsigned int row, unsigned int col) {
-	parser::VariableDefinition_t var(identifier, type, typeName, arrayType, dim, isAny, isConst, row, col);
-	variableSymbolTable[identifier] = var;
-}
-
-void SemanticScope::declareFunction(std::string identifier, parser::TYPE type, std::string typeName, std::vector<parser::TYPE> signature, bool isAny, unsigned int row, unsigned int col) {
-	parser::FunctionDefinition_t fun(identifier, type, typeName, signature, isAny, row, col);
-	functionSymbolTable.insert(std::make_pair(identifier, fun));
 }
