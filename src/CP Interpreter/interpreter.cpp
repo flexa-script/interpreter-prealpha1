@@ -464,7 +464,6 @@ void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_string>* lit) {
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_array>* lit) {
 	Value_t* value = new Value_t(parser::TYPE::T_ARRAY);
 	value->set(lit->val);
-	//determineArrayType(lit->val);
 	currentExpressionType = parser::TYPE::T_ARRAY;
 	currentExpressionValue = *value;
 	currentExpressionTypeName = "";
@@ -713,12 +712,12 @@ void visitor::Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredFunction(astnode->identifier, signature); i--);
 
 	// populate the global vector of function parameter names, to be used in creation of function scope
-	currentFunctionParameters = scopes[i]->variablenamesof(astnode->identifier, signature);
+	currentFunctionParameters = std::get<1>(scopes[i]->findDeclaredFunction(astnode->identifier, signature));
 
 	currentFunctionName = astnode->identifier;
 
 	// visit the corresponding function block
-	scopes[i]->blockof(astnode->identifier, signature)->accept(this);
+	std::get<2>(scopes[i]->findDeclaredFunction(astnode->identifier, signature))->accept(this);
 }
 
 void visitor::Interpreter::visit(parser::ASTTypeParseNode* astnode) {

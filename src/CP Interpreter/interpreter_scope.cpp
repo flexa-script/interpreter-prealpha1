@@ -20,45 +20,22 @@ std::string InterpreterScope::getName() {
 	return name;
 }
 
-bool InterpreterScope::alreadyDeclaredStructureDefinition(std::string identifier) {
-	return structureSymbolTable.find(identifier) != structureSymbolTable.end();
-}
-
-parser::StructureDefinition_t InterpreterScope::findDeclaredStructureDefinition(std::string identifier) {
-	return structureSymbolTable[identifier];
-}
-
 bool InterpreterScope::alreadyDeclaredVariable(std::string identifier) {
 	return variableSymbolTable.find(identifier) != variableSymbolTable.end();
 }
 
+bool InterpreterScope::alreadyDeclaredStructureDefinition(std::string identifier) {
+	return structureSymbolTable.find(identifier) != structureSymbolTable.end();
+}
+
 bool InterpreterScope::alreadyDeclaredFunction(std::string identifier, std::vector<parser::TYPE> signature) {
-	auto funcs = std::vector<std::pair<std::string, std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*>>>();
-
-	for (auto fun : functionSymbolTable) {
-		if (fun.first == identifier) {
-			funcs.push_back(fun);
-		}
+	try {
+		findDeclaredFunction(identifier, signature);
+		return true;
 	}
-
-	// if key is not present in functionSymbolTable
-	if (funcs.empty()) {
+	catch (...) {
 		return false;
 	}
-
-	// check signature for each function in multimap
-	for (auto fun : funcs) {
-		auto funcSig = std::get<0>(fun.second);
-		auto found = true;
-		for (size_t it = 0; it < funcSig.size(); ++it) {
-			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::TYPE::T_ANY) {
-				found = false;
-			}
-		}
-		if (found) return true;
-	}
-
-	return false;
 }
 
 Value_t* InterpreterScope::declareNullVariable(std::string identifier, parser::TYPE type) {
@@ -133,6 +110,10 @@ void InterpreterScope::declareFunction(std::string identifier, std::vector<parse
 	functionSymbolTable.insert(std::make_pair(identifier, std::make_tuple(signature, variableNames, block)));
 }
 
+parser::StructureDefinition_t InterpreterScope::findDeclaredStructureDefinition(std::string identifier) {
+	return structureSymbolTable[identifier];
+}
+
 Value_t* InterpreterScope::accessValueOfArray(Value_t* arr, std::vector<unsigned int> accessVector) {
 	cp_array* currentVal = &arr->arr;
 	size_t s = 0;
@@ -188,50 +169,26 @@ Value_t* InterpreterScope::accessValue(std::vector<std::string> identifierVector
 	return value;
 }
 
-std::vector<std::string> InterpreterScope::variablenamesof(std::string identifier, std::vector<parser::TYPE> signature) {
-	auto funcs = std::vector<std::pair<std::string, std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*>>>();
+std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*> InterpreterScope::findDeclaredFunction(std::string identifier, std::vector<parser::TYPE> signature) {
+	auto funcs = functionSymbolTable.equal_range(identifier);
 
-	for (auto fun : functionSymbolTable) {
-		if (fun.first == identifier) {
-			funcs.push_back(fun);
-		}
+	// if key is not present in multimap
+	if (std::distance(funcs.first, funcs.second) == 0) {
+		throw std::runtime_error("something went wrong searching '" + identifier + "'");
 	}
 
 	// check signature for each function in multimap
-	for (auto const& fun : funcs) {
-		auto const& funcSig = std::get<0>(fun.second);
+	for (auto& i = funcs.first; i != funcs.second; ++i) {
+		auto& funcSig = std::get<0>(i->second);
 		auto found = true;
 		for (size_t it = 0; it < funcSig.size(); ++it) {
 			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::TYPE::T_ANY) {
 				found = false;
+				break;
 			}
 		}
-		if (found) return std::get<1>(fun.second);
+		if (found) return i->second;
 	}
 
-	throw std::runtime_error("ISERR: something went wrong when determining the typename of '" + identifier + "' variable");
-}
-
-parser::ASTBlockNode* InterpreterScope::blockof(std::string identifier, std::vector<parser::TYPE> signature) {
-	auto funcs = std::vector<std::pair<std::string, std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*>>>();
-
-	for (auto const& fun : functionSymbolTable) {
-		if (fun.first == identifier) {
-			funcs.push_back(fun);
-		}
-	}
-
-	// check signature for each function in multimap
-	for (auto const& fun : funcs) {
-		auto const& funcSig = std::get<0>(fun.second);
-		auto found = true;
-		for (size_t it = 0; it < funcSig.size(); ++it) {
-			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::TYPE::T_ANY) {
-				found = false;
-			}
-		}
-		if (found) return std::get<2>(fun.second);
-	}
-
-	return nullptr;
+	throw std::runtime_error("something went wrong searching '" + identifier + "'");
 }

@@ -26,16 +26,9 @@ parser::FunctionDefinition_t SemanticScope::findDeclaredFunction(std::string ide
 		throw std::runtime_error("something went wrong when determining the type of '" + identifier + "'.");
 	}
 
-	// check original signature (without any)
-	for (auto i = funcs.first; i != funcs.second; ++i) {
-		if (i->second.signature == signature) {
-			return i->second;
-		}
-	}
-
 	// check signature for each function in functionSymbolTable
-	for (auto i = funcs.first; i != funcs.second; ++i) {
-		auto funcSig = i->second.signature;
+	for (auto& i = funcs.first; i != funcs.second; ++i) {
+		auto& funcSig = i->second.signature;
 		auto found = true;
 		for (size_t it = 0; it < funcSig.size(); ++it) {
 			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::TYPE::T_ANY) {

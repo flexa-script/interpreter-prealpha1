@@ -46,9 +46,7 @@ namespace visitor {
 		Value_t* accessValue(std::vector<std::string>, std::vector<unsigned int>);
 		Value_t* accessValueOfArray(Value_t*, std::vector<unsigned int>);
 		Value_t* accessValueOfStructure(Value_t*, std::vector<std::string>);
-
-		std::vector<std::string> variablenamesof(std::string, std::vector<parser::TYPE>);
-		parser::ASTBlockNode* blockof(std::string, std::vector<parser::TYPE>);
+		std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*> findDeclaredFunction(std::string, std::vector<parser::TYPE>);
 
 		std::string getName();
 	};
