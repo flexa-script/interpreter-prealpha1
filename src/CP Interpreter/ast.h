@@ -219,6 +219,17 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
+	class ASTArrayConstructorNode : public ASTExprNode {
+	public:
+		ASTArrayConstructorNode(std::vector<ASTExprNode*>, unsigned int, unsigned int);
+
+		std::vector<ASTExprNode*> values;
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
 	class ASTStructConstructorNode : public ASTExprNode {
 	public:
 		ASTStructConstructorNode(std::string, std::map<std::string, ASTExprNode*>, unsigned int, unsigned int);

@@ -51,6 +51,9 @@ ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::ve
 
 
 // Expression Nodes
+ASTArrayConstructorNode::ASTArrayConstructorNode(std::vector<ASTExprNode*> values, unsigned int row, unsigned int col)
+	: values(values), row(row), col(col) {}
+
 ASTStructConstructorNode::ASTStructConstructorNode(std::string typeName, std::map<std::string, ASTExprNode*> values, unsigned int row, unsigned int col)
 	: typeName(typeName), values(values), row(row), col(col) {}
 
@@ -118,11 +121,10 @@ namespace parser {
 	void ASTLiteralNode<cp_string>::accept(visitor::Visitor* v) {
 		v->visit(this);
 	}
+}
 
-	template<>
-	void ASTLiteralNode<cp_array>::accept(visitor::Visitor* v) {
-		v->visit(this);
-	}
+void ASTArrayConstructorNode::accept(visitor::Visitor* v) {
+	v->visit(this);
 }
 
 void ASTStructConstructorNode::accept(visitor::Visitor* v) {

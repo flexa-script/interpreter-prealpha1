@@ -6,15 +6,17 @@ struct Element {
 };
 
 def element_create(value : any) : Element {
-  //var newElement : Element;
+  //var newElement : Element = Element { };
   //newElement.has_value = true; // deveria gerar erro na analise semantica pois newElement é nulo
-  //newElement.value = value;
+  //newElement.value = value; // preciso saber se a variável é parametro ou do escopo
+  
   var newElement : Element = Element {
     has_value = true,
-    //value = value // erro pois não aceita expressão
-    value = 0
+    value = value // OK - erro pois não aceita expressão
+    //value = 0
   };
-  newElement.value = value;
+  //newElement.value = value;
+  
   return newElement;
 }
 

@@ -111,19 +111,19 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 				if (currentExpressionType != parser::TYPE::T_ARRAY && currentExpressionType != parser::TYPE::T_NULL) {
 					throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "expected array expression assigning '" + astnode->identifier + "'");
 				}
-				auto val = dynamic_cast<parser::ASTLiteralNode<cp_array>*>(astnode->expr)->val;
+				//auto val = dynamic_cast<parser::ASTLiteralNode<cp_array>*>(astnode->expr)->val;
 
-				auto exprDim = calcArrayDimSize(std::any_cast<cp_array>(val));
+				//auto exprDim = calcArrayDimSize(std::any_cast<cp_array>(val));
 
-				if (astnode->dim.size() != exprDim.size()) {
-					throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier + "'");
-				}
+				//if (astnode->dim.size() != exprDim.size()) {
+				//	throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier + "'");
+				//}
 
-				for (size_t dc = 0; dc < astnode->dim.size(); ++dc) {
-					if (astnode->dim.at(dc) != -1 && astnode->dim.at(dc) != exprDim.at(dc)) {
-						throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array size assigning '" + astnode->identifier + "'");
-					}
-				}
+				//for (size_t dc = 0; dc < astnode->dim.size(); ++dc) {
+				//	if (astnode->dim.at(dc) != -1 && astnode->dim.at(dc) != exprDim.at(dc)) {
+				//		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array size assigning '" + astnode->identifier + "'");
+				//	}
+				//}
 			}
 
 			currentScope->declareVariable(astnode->identifier, astnode->type, astnode->typeName, currentExpressionArrayType, astnode->dim, astnode->arrayType == parser::TYPE::T_ANY, astnode->isConst, hasValue, astnode->row, astnode->col, false);
@@ -524,11 +524,14 @@ void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_string>*) {
 	currentExpressionTypeName = "";
 }
 
-void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_array>* astnode) {
-	currentExpressionArrayType = parser::TYPE::T_ND;
+void SemanticAnalyser::visit(parser::ASTArrayConstructorNode* astnode) {
+	for (auto& exrp : astnode->values) {
+		exrp->accept(this);
+		currentExpressionArrayType = currentExpressionType == parser::TYPE::T_ARRAY ? currentExpressionArrayType : currentExpressionType;
+	}
 	currentExpressionType = parser::TYPE::T_ARRAY;
 	currentExpressionTypeName = "";
-	determineArrayType(astnode->val, astnode->col, astnode->row);
+	//determineArrayType(astnode->values, astnode->col, astnode->row);
 }
 
 void SemanticAnalyser::determineArrayType(cp_array arr, unsigned int row, unsigned int col) {

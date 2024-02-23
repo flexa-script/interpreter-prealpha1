@@ -461,9 +461,19 @@ void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_string>* lit) {
 	currentExpressionTypeName = "";
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_array>* lit) {
+void visitor::Interpreter::visit(parser::ASTArrayConstructorNode* astnode) {
 	Value_t* value = new Value_t(parser::TYPE::T_ARRAY);
-	value->set(lit->val);
+	cp_array arr = cp_array();
+
+	for (auto& exrp : astnode->values) {
+		exrp->accept(this);
+		Value_t* arrValue = new Value_t(currentExpressionType);
+		arrValue->copyFrom(&currentExpressionValue);
+		arr.push_back(arrValue);
+	}
+
+	value->set(arr);
+
 	currentExpressionType = parser::TYPE::T_ARRAY;
 	currentExpressionValue = *value;
 	currentExpressionTypeName = "";
