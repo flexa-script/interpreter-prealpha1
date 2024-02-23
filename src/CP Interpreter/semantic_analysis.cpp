@@ -556,10 +556,12 @@ void SemanticAnalyser::checkArrayType(parser::TYPE type, unsigned int row, unsig
 	}
 }
 
-void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_struct>* astnode) {
-	currentExpressionArrayType = parser::TYPE::T_ND;
+void SemanticAnalyser::visit(parser::ASTStructConstructorNode* astnode) {
+	for (auto& expr : astnode->values) {
+		expr.second->accept(this);
+	}
 	currentExpressionType = parser::TYPE::T_STRUCT;
-	currentExpressionTypeName = astnode->val.first;
+	currentExpressionTypeName = astnode->typeName;
 }
 
 void SemanticAnalyser::visit(parser::ASTBinaryExprNode* astnode) {

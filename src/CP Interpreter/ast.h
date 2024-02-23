@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include "visitor.h"
 
@@ -212,6 +213,18 @@ namespace parser {
 	public:
 		ASTLiteralNode(T val, unsigned int row, unsigned int col) : val(val), row(row), col(col) {};
 		T val;
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
+	class ASTStructConstructorNode : public ASTExprNode {
+	public:
+		ASTStructConstructorNode(std::string, std::map<std::string, ASTExprNode*>, unsigned int, unsigned int);
+
+		std::string typeName;
+		std::map<std::string, ASTExprNode*> values;
 		unsigned int row;
 		unsigned int col;
 

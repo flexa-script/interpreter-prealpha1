@@ -79,6 +79,8 @@ namespace parser {
 
 		ASTExprNode* parseFactor();
 
+		ASTStructConstructorNode* parseStructConstructorNode();
+
 		ASTFunctionCallNode* parseExprFunctionCall();
 
 		ASTReadNode* parseExprRead();
@@ -110,8 +112,6 @@ namespace parser {
 		cp_string parseStringLiteral();
 
 		cp_array parseArrayLiteral();
-
-		cp_struct parseStructConstructor();
 
 		// parse types and parameters
 		TYPE parseType(std::string);

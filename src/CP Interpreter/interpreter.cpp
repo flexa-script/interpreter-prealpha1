@@ -469,12 +469,27 @@ void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_array>* lit) {
 	currentExpressionTypeName = "";
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_struct>* lit) {
+void visitor::Interpreter::visit(parser::ASTStructConstructorNode* astnode) {
 	Value_t* value = new Value_t(parser::TYPE::T_STRUCT);
-	value->set(lit->val);
+
+	auto str = cp_struct();
+	str.first = astnode->typeName;
+	str.second = cp_struct_values();
+
+	for (auto& expr : astnode->values) {
+		expr.second->accept(this);
+		Value_t* calcValue = new Value_t(currentExpressionType);
+		calcValue->copyFrom(&currentExpressionValue);
+		auto strValue = cp_struct_value();
+		strValue.first = expr.first;
+		strValue.second = calcValue;
+		str.second.push_back(strValue);
+	}
+
+	value->set(str);
 	currentExpressionType = parser::TYPE::T_STRUCT;
 	currentExpressionValue = *value;
-	currentExpressionTypeName = lit->val.first;
+	currentExpressionTypeName = astnode->typeName;
 }
 
 void visitor::Interpreter::visit(parser::ASTBinaryExprNode* astnode) {

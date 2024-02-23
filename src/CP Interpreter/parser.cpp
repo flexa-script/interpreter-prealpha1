@@ -781,7 +781,7 @@ ASTExprNode* Parser::parseFactor() {
 		case lexer::TOK_LEFT_BRACKET:
 			return parseExprFunctionCall();
 		case lexer::TOK_LEFT_CURLY:
-			return new ASTLiteralNode<cp_struct>(parseStructConstructor(), row, col);
+			return parseStructConstructorNode();
 		default:
 			return parseIdentifierNode();
 		}
@@ -949,7 +949,7 @@ cp_array Parser::parseArrayLiteral() {
 				break;
 			case parser::TYPE::T_STRUCT:
 				val->forceType(parser::TYPE::T_STRUCT);
-				val->set(parseStructConstructor());
+				val->set(parseStructConstructorNode());
 				break;
 			}
 		}
@@ -971,64 +971,24 @@ cp_array Parser::parseArrayLiteral() {
 	return arr;
 }
 
-cp_struct Parser::parseStructConstructor() {
-	auto str = cp_struct();
-	str.first = currentToken.value;
-	str.second = cp_struct_values();
+ASTStructConstructorNode* Parser::parseStructConstructorNode() {
+	unsigned int row = currentToken.row;
+	unsigned int col = currentToken.col;
+	std::map<std::string, ASTExprNode*> values = std::map<std::string, ASTExprNode*>();
+	std::string typeName = currentToken.value;
 
 	consumeToken();
 	consumeToken();
 
 	while (currentToken.type == lexer::TOK_IDENTIFIER) {
-		auto strValue = cp_struct_value();
-
-		strValue.first = currentToken.value;
+		auto varIdentifier = currentToken.value;
 
 		consumeToken();
 		if (currentToken.type != lexer::TOK_EQUALS) {
 			throw std::runtime_error(msgHeader() + "expected '='");
 		}
 
-		consumeToken();
-
-		Value_t* val = new Value_t(TYPE::T_ND);
-		auto type = parseType("struct");
-		switch (type) {
-		case parser::TYPE::T_NULL:
-			val->forceType(parser::TYPE::T_NULL);
-			val->setNull();
-			break;
-		case parser::TYPE::T_BOOL:
-			val->forceType(parser::TYPE::T_BOOL);
-			val->set(parseBoolLiteral());
-			break;
-		case parser::TYPE::T_INT:
-			val->forceType(parser::TYPE::T_INT);
-			val->set(parseIntLiteral());
-			break;
-		case parser::TYPE::T_FLOAT:
-			val->forceType(parser::TYPE::T_FLOAT);
-			val->set(parseFloatLiteral());
-			break;
-		case parser::TYPE::T_CHAR:
-			val->forceType(parser::TYPE::T_CHAR);
-			val->set(parseCharLiteral());
-			break;
-		case parser::TYPE::T_STRING:
-			val->forceType(parser::TYPE::T_STRING);
-			val->set(parseStringLiteral());
-			break;
-		case parser::TYPE::T_ARRAY:
-			val->forceType(parser::TYPE::T_ARRAY);
-			val->set(parseArrayLiteral());
-			break;
-		case parser::TYPE::T_STRUCT:
-			val->forceType(parser::TYPE::T_STRUCT);
-			val->set(parseStructConstructor());
-			break;
-		}
-		strValue.second = val;
-		str.second.push_back(strValue);
+		values[varIdentifier] = parseExpression();
 
 		consumeToken();
 
@@ -1041,7 +1001,7 @@ cp_struct Parser::parseStructConstructor() {
 		throw std::runtime_error(msgHeader() + "expected '}'");
 	}
 
-	return str;
+	return new ASTStructConstructorNode(typeName, values, row, col);
 }
 
 cp_bool Parser::parseBoolLiteral() {
