@@ -31,7 +31,7 @@ namespace visitor {
 
 		std::vector<int> calcArrayDimSize(parser::ASTArrayConstructorNode*);
 
-		void declareStructureDefinitionVariables(std::string, std::string, cp_struct, parser::ASTLiteralNode<cp_struct>*);
+		void declareStructureDefinitionVariables(std::string, parser::ASTStructConstructorNode*);
 		void declareStructureDefinitionFirstLevelVariables(std::string, std::string);
 
 		parser::VariableDefinition_t findDeclaredVariableRecursively(std::string);
