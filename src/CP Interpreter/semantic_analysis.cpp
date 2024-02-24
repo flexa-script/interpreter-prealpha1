@@ -525,32 +525,17 @@ void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_string>*) {
 }
 
 void SemanticAnalyser::visit(parser::ASTArrayConstructorNode* astnode) {
+	currentExpressionArrayType = parser::TYPE::T_ND;
 	for (auto& exrp : astnode->values) {
 		exrp->accept(this);
-		currentExpressionArrayType = currentExpressionType == parser::TYPE::T_ARRAY ? currentExpressionArrayType : currentExpressionType;
+		checkArrayType(currentExpressionType, astnode->row, astnode->col);
 	}
 	currentExpressionType = parser::TYPE::T_ARRAY;
 	currentExpressionTypeName = "";
-	//determineArrayType(astnode->values, astnode->col, astnode->row);
-}
-
-void SemanticAnalyser::determineArrayType(cp_array arr, unsigned int row, unsigned int col) {
-	for (int i = 0; i < arr.size(); ++i) {
-		Value_t* val = arr.at(i);
-		if (val->currentType == parser::TYPE::T_ARRAY) {
-			determineArrayType(val->arr, row, col);
-		}
-		else {
-			checkArrayType(val->currentType, row, col);
-			if (currentExpressionArrayType == parser::TYPE::T_STRUCT) {
-				currentExpressionTypeName = val->str.first;
-			}
-		}
-	}
 }
 
 void SemanticAnalyser::checkArrayType(parser::TYPE type, unsigned int row, unsigned int col) {
-	if (currentExpressionArrayType == parser::TYPE::T_ND || currentExpressionArrayType == parser::TYPE::T_ANY || currentExpressionArrayType == parser::TYPE::T_NULL) {
+	if (currentExpressionType == parser::TYPE::T_ARRAY || currentExpressionArrayType == parser::TYPE::T_ND || currentExpressionArrayType == parser::TYPE::T_ANY || currentExpressionArrayType == parser::TYPE::T_NULL) {
 		currentExpressionArrayType = type;
 		return;
 	}

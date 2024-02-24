@@ -916,14 +916,10 @@ ASTArrayConstructorNode* Parser::parseArrayConstructorNode() {
 	unsigned int col = currentToken.col;
 	std::vector<ASTExprNode*> values = std::vector<ASTExprNode*>();
 
-	//consumeToken();
 	do {
 		values.push_back(parseExpression());
 
 		consumeToken();
-		//if (currentToken.type == lexer::TOK_COMMA) {
-		//	consumeToken();
-		//}
 
 	} while (nextToken.type == lexer::TOK_LEFT_CURLY || nextToken.type == lexer::TOK_BOOL_LITERAL
 		|| nextToken.type == lexer::TOK_INT_LITERAL || nextToken.type == lexer::TOK_IDENTIFIER
