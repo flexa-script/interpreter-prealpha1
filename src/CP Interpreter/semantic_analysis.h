@@ -22,13 +22,14 @@ namespace visitor {
 		parser::TYPE currentExpressionArrayType;
 		std::string currentExpressionTypeName;
 		bool isFunctionDefinitionContext;
+		int arrayLevel = 0;
 		std::vector<parser::VariableDefinition_t> currentFunctionParameters;
 
 	private:
 		bool returns(parser::ASTNode*);
 		void evaluateAccessVector(std::vector<parser::ASTExprNode*>);
 
-		std::vector<int> calcArrayDimSize(cp_array);
+		std::vector<int> calcArrayDimSize(parser::ASTArrayConstructorNode*);
 
 		void declareStructureDefinitionVariables(std::string, std::string, cp_struct, parser::ASTLiteralNode<cp_struct>*);
 		void declareStructureDefinitionFirstLevelVariables(std::string, std::string);

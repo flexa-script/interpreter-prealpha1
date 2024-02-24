@@ -111,19 +111,19 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 				if (currentExpressionType != parser::TYPE::T_ARRAY && currentExpressionType != parser::TYPE::T_NULL) {
 					throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "expected array expression assigning '" + astnode->identifier + "'");
 				}
-				//auto val = dynamic_cast<parser::ASTLiteralNode<cp_array>*>(astnode->expr)->val;
+				auto arr = dynamic_cast<parser::ASTArrayConstructorNode*>(astnode->expr);
 
-				//auto exprDim = calcArrayDimSize(std::any_cast<cp_array>(val));
+				auto exprDim = calcArrayDimSize(arr);
 
-				//if (astnode->dim.size() != exprDim.size()) {
-				//	throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier + "'");
-				//}
+				if (astnode->dim.size() != exprDim.size()) {
+					throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier + "'");
+				}
 
-				//for (size_t dc = 0; dc < astnode->dim.size(); ++dc) {
-				//	if (astnode->dim.at(dc) != -1 && astnode->dim.at(dc) != exprDim.at(dc)) {
-				//		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array size assigning '" + astnode->identifier + "'");
-				//	}
-				//}
+				for (size_t dc = 0; dc < astnode->dim.size(); ++dc) {
+					if (astnode->dim.at(dc) != -1 && astnode->dim.at(dc) != exprDim.at(dc)) {
+						throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array size assigning '" + astnode->identifier + "'");
+					}
+				}
 			}
 
 			currentScope->declareVariable(astnode->identifier, astnode->type, astnode->typeName, currentExpressionArrayType, astnode->dim, astnode->arrayType == parser::TYPE::T_ANY, astnode->isConst, hasValue, astnode->row, astnode->col, false);
@@ -140,13 +140,14 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 	}
 }
 
-std::vector<int> SemanticAnalyser::calcArrayDimSize(cp_array value) {
+std::vector<int> SemanticAnalyser::calcArrayDimSize(parser::ASTArrayConstructorNode* arr) {
 	auto dim = std::vector<int>();
-	Value_t* val = value.at(0);
 
-	dim.push_back(value.size());
-	if (val->currentType == parser::TYPE::T_ARRAY) {
-		auto dim2 = calcArrayDimSize(val->arr);
+	dim.push_back(arr->values.size());
+
+	auto subArr = dynamic_cast<parser::ASTArrayConstructorNode*>(arr->values.at(0));
+	if (subArr) {
+		auto dim2 = calcArrayDimSize(subArr);
 		dim.insert(dim.end(), dim2.begin(), dim2.end());
 	}
 
@@ -525,21 +526,29 @@ void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_string>*) {
 }
 
 void SemanticAnalyser::visit(parser::ASTArrayConstructorNode* astnode) {
-	currentExpressionArrayType = parser::TYPE::T_ND;
+	if (arrayLevel == 0) {
+		currentExpressionArrayType = parser::TYPE::T_ND;
+	}
+	++arrayLevel;
 	for (auto& exrp : astnode->values) {
 		exrp->accept(this);
-		checkArrayType(currentExpressionType, astnode->row, astnode->col);
+		if (currentExpressionType != parser::TYPE::T_ARRAY) {
+			checkArrayType(currentExpressionType, astnode->row, astnode->col);
+		}
 	}
-	currentExpressionType = parser::TYPE::T_ARRAY;
+	--arrayLevel;
+	if (arrayLevel == 0) {
+		currentExpressionType = parser::TYPE::T_ARRAY;
+	}
 	currentExpressionTypeName = "";
 }
 
 void SemanticAnalyser::checkArrayType(parser::TYPE type, unsigned int row, unsigned int col) {
-	if (currentExpressionType == parser::TYPE::T_ARRAY || currentExpressionArrayType == parser::TYPE::T_ND || currentExpressionArrayType == parser::TYPE::T_ANY || currentExpressionArrayType == parser::TYPE::T_NULL) {
+	if (currentExpressionArrayType == parser::TYPE::T_ND || currentExpressionArrayType == parser::TYPE::T_NULL) {
 		currentExpressionArrayType = type;
 		return;
 	}
-	if (currentExpressionArrayType != type) {
+	if (currentExpressionArrayType != type && type != parser::TYPE::T_NULL) {
 		throw std::runtime_error(msgHeader(row, col) + "invalid " + typeStr(type) + " type value encontered on " + parser::typeStr(currentExpressionArrayType) + " array");
 	}
 }

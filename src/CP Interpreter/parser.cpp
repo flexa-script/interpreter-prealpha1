@@ -921,10 +921,10 @@ ASTArrayConstructorNode* Parser::parseArrayConstructorNode() {
 
 		consumeToken();
 
-	} while (nextToken.type == lexer::TOK_LEFT_CURLY || nextToken.type == lexer::TOK_BOOL_LITERAL
-		|| nextToken.type == lexer::TOK_INT_LITERAL || nextToken.type == lexer::TOK_IDENTIFIER
-		|| nextToken.type == lexer::TOK_FLOAT_LITERAL || nextToken.type == lexer::TOK_CHAR_LITERAL
-		|| nextToken.type == lexer::TOK_STRING_LITERAL);
+	} while (nextToken.type == lexer::TOK_LEFT_CURLY || nextToken.type == lexer::TOK_NULL
+		|| nextToken.type == lexer::TOK_BOOL_LITERAL || nextToken.type == lexer::TOK_INT_LITERAL 
+		|| nextToken.type == lexer::TOK_IDENTIFIER   || nextToken.type == lexer::TOK_FLOAT_LITERAL 
+		|| nextToken.type == lexer::TOK_CHAR_LITERAL || nextToken.type == lexer::TOK_STRING_LITERAL);
 
 
 	if (currentToken.type != lexer::TOK_RIGHT_CURLY) {
