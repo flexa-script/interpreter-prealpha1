@@ -78,14 +78,14 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 				throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "cannot initialize '" + astnode->identifier + "(" + astnode->typeName + ")' with type '" + currentExpressionTypeName + "'");
 			}
 
-			parser::ASTLiteralNode<cp_struct>* strExpr = nullptr;
+			parser::ASTStructConstructorNode* strExpr = nullptr;
 
 			// has expression to declare
 			if (astnode->expr) {
 				if (currentExpressionType != parser::TYPE::T_STRUCT && currentExpressionType != parser::TYPE::T_NULL) {
 					throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "found " + parser::typeStr(currentExpressionType) + (currentExpressionTypeName.empty() ? "" : " (" + currentExpressionTypeName + ")") + " in definition of '" + astnode->identifier + "', expected " + parser::typeStr(astnode->type) + (astnode->typeName.empty() ? "" : " (" + astnode->typeName + ")") + "");
 				}
-				strExpr = static_cast<parser::ASTLiteralNode<cp_struct>*>(astnode->expr);
+				strExpr = static_cast<parser::ASTStructConstructorNode*>(astnode->expr);
 			}
 
 			auto strType = astnode->type;
@@ -98,7 +98,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 
 			currentScope->declareVariable(astnode->identifier, strType, strTypeName, astnode->arrayType, astnode->dim, astnode->type == parser::TYPE::T_ANY, astnode->isConst, hasValue, astnode->row, astnode->col, false);
 			if (strExpr && !isFunctionDefinitionContext) {
-				declareStructureDefinitionVariables(astnode->identifier, currentExpressionTypeName, strExpr->val, strExpr);
+				declareStructureDefinitionVariables(astnode->identifier, strExpr);
 			}
 			declareStructureDefinitionFirstLevelVariables(astnode->identifier, strTypeName);
 		}
@@ -255,9 +255,9 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 }
 
 void SemanticAnalyser::checkArrayType(parser::TYPE type, unsigned int row, unsigned int col) {
-	for (size_t i = 0; i < astnode->values.size(); ++i) {
-		astnode->values.at(i)->accept(this);
-	}
+	//for (size_t i = 0; i < astnode->values.size(); ++i) {
+	//	astnode->values.at(i)->accept(this);
+	//}
 }
 
 std::vector<int> SemanticAnalyser::calcArrayDimSize(parser::ASTArrayConstructorNode* arr) {
