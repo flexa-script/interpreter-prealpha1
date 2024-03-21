@@ -36,7 +36,8 @@ namespace visitor {
 
 		parser::VariableDefinition_t findDeclaredVariableRecursively(std::string);
 
-		void checkArrayType(parser::TYPE, unsigned int, unsigned int);
+		void calculateArrayType(parser::ASTArrayConstructorNode*);
+		void checkArrayType(parser::ASTExprNode*, unsigned int, unsigned int);
 
 		std::string msgHeader(unsigned int, unsigned int);
 
