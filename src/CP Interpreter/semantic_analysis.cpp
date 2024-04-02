@@ -163,7 +163,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 	parser::TYPE type;
 
 
-	if (!declaredVariable.hasValue && astnode->identifierVector.size() > 1) {
+	if (!declaredVariable.hasValue && !declaredVariable.isParameter && astnode->identifierVector.size() > 1) {
 		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "trying assign '" + actualIdentifier + "' but '" + astnode->identifier + "' is null");
 	}
 
@@ -232,6 +232,15 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 		if (currentExpressionTypeName != typeName && currentExpressionType != parser::TYPE::T_NULL) {
 			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "mismatched type for '" + actualIdentifier + "' struct. Expected '" + typeName + "', found '" + currentExpressionTypeName + "'");
 		}
+
+		//astnode->expr->accept(this);
+
+		//if (currentExpressionType == parser::TYPE::T_STRUCT) {
+		//	declareStructureDefinitionVariables(actualIdentifier, astnode->expr);
+		//}
+		//else {
+		//	declareStructureDefinitionFirstLevelVariables(actualIdentifier, typeName);
+		//}
 
 		try {
 			parser::ASTStructConstructorNode* strExpr = static_cast<parser::ASTStructConstructorNode*>(astnode->expr);
