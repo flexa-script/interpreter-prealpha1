@@ -242,19 +242,30 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 		//	declareStructureDefinitionFirstLevelVariables(actualIdentifier, typeName);
 		//}
 
-		try {
+		if (typeid(astnode->expr) == typeid(parser::ASTStructConstructorNode*)) {
 			parser::ASTStructConstructorNode* strExpr = static_cast<parser::ASTStructConstructorNode*>(astnode->expr);
 
 			if (strExpr) {
 				declareStructureDefinitionVariables(actualIdentifier, strExpr);
 			}
-			else {
-				declareStructureDefinitionFirstLevelVariables(actualIdentifier, typeName);
-			}
 		}
-		catch (...) {
+		else {
 			declareStructureDefinitionFirstLevelVariables(actualIdentifier, typeName);
 		}
+
+		//try {
+		//	parser::ASTStructConstructorNode* strExpr = static_cast<parser::ASTStructConstructorNode*>(astnode->expr);
+
+		//	if (strExpr) {
+		//		declareStructureDefinitionVariables(actualIdentifier, strExpr);
+		//	}
+		//	else {
+		//		declareStructureDefinitionFirstLevelVariables(actualIdentifier, typeName);
+		//	}
+		//}
+		//catch (...) {
+		//	declareStructureDefinitionFirstLevelVariables(actualIdentifier, typeName);
+		//}
 	}
 	// otherwise throw error
 	else if (currentExpressionType != type) {
