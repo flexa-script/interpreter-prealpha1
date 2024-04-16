@@ -237,15 +237,6 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "mismatched type for '" + actualIdentifier + "' struct. Expected '" + typeName + "', found '" + currentExpressionTypeName + "'");
 		}
 
-		//astnode->expr->accept(this);
-
-		//if (currentExpressionType == parser::TYPE::T_STRUCT) {
-		//	declareStructureDefinitionVariables(actualIdentifier, astnode->expr);
-		//}
-		//else {
-		//	declareStructureDefinitionFirstLevelVariables(actualIdentifier, typeName);
-		//}
-
 		if (typeid(astnode->expr) == typeid(parser::ASTStructConstructorNode*)) {
 			parser::ASTStructConstructorNode* strExpr = static_cast<parser::ASTStructConstructorNode*>(astnode->expr);
 
@@ -257,19 +248,6 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 			declareStructureDefinitionFirstLevelVariables(actualIdentifier, typeName);
 		}
 
-		//try {
-		//	parser::ASTStructConstructorNode* strExpr = static_cast<parser::ASTStructConstructorNode*>(astnode->expr);
-
-		//	if (strExpr) {
-		//		declareStructureDefinitionVariables(actualIdentifier, strExpr);
-		//	}
-		//	else {
-		//		declareStructureDefinitionFirstLevelVariables(actualIdentifier, typeName);
-		//	}
-		//}
-		//catch (...) {
-		//	declareStructureDefinitionFirstLevelVariables(actualIdentifier, typeName);
-		//}
 	}
 	// otherwise throw error
 	else if (currentExpressionType != type) {
@@ -278,6 +256,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 }
 
 void SemanticAnalyser::calculateArrayType(parser::ASTArrayConstructorNode* astnode) {
+	auto auxCurrType = currentExpressionType;
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
 		astnode->values.at(i)->accept(this);
 
@@ -288,9 +267,11 @@ void SemanticAnalyser::calculateArrayType(parser::ASTArrayConstructorNode* astno
 			checkArrayType(astnode->values.at(i), astnode->row, astnode->col);
 		}
 	}
+	currentExpressionType = auxCurrType;
 }
 
 void SemanticAnalyser::checkArrayType(parser::ASTExprNode* astnode, unsigned int row, unsigned int col) {
+	auto auxCurrType = currentExpressionType;
 	astnode->accept(this);
 
 	if (currentExpressionArrayType == parser::TYPE::T_ANY || currentExpressionArrayType == parser::TYPE::T_ND || currentExpressionArrayType == parser::TYPE::T_NULL || currentExpressionArrayType == parser::TYPE::T_VOID) {
@@ -299,6 +280,7 @@ void SemanticAnalyser::checkArrayType(parser::ASTExprNode* astnode, unsigned int
 	if (currentExpressionArrayType != currentExpressionType) {
 		throw std::runtime_error(msgHeader(row, col) + "mismatched type in array definition ");
 	}
+	currentExpressionType = auxCurrType;
 }
 
 std::vector<int> SemanticAnalyser::calcArrayDimSize(parser::ASTArrayConstructorNode* arr) {
@@ -327,7 +309,6 @@ void SemanticAnalyser::declareStructureDefinitionFirstLevelVariables(std::string
 }
 
 void SemanticAnalyser::declareStructureDefinitionVariables(std::string identifier, parser::ASTStructConstructorNode* expr) {
-	//cp_struct_values values = str.second;
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredStructureDefinition(expr->typeName); --i);
 	auto typeStruct = scopes[i]->findDeclaredStructureDefinition(expr->typeName);
