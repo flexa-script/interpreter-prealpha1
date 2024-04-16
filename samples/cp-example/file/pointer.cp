@@ -1,3 +1,5 @@
+// pointer
+
 var arr[3] = {1,2,3};
 var arr2 = arr;
 arr[0] = 20;

@@ -112,21 +112,25 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 				if (currentExpressionType != parser::TYPE::T_ARRAY && currentExpressionType != parser::TYPE::T_NULL) {
 					throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "expected array expression assigning '" + astnode->identifier + "'");
 				}
-				auto arr = dynamic_cast<parser::ASTArrayConstructorNode*>(astnode->expr);
 
-				calculateArrayType(arr);
+				if (typeid(astnode->expr) == typeid(parser::ASTArrayConstructorNode*)) {
+					auto arr = dynamic_cast<parser::ASTArrayConstructorNode*>(astnode->expr);
 
-				auto exprDim = calcArrayDimSize(arr);
+					calculateArrayType(arr);
 
-				if (astnode->dim.size() != exprDim.size()) {
-					throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier + "'");
-				}
+					auto exprDim = calcArrayDimSize(arr);
 
-				for (size_t dc = 0; dc < astnode->dim.size(); ++dc) {
-					if (astnode->dim.at(dc) != -1 && astnode->dim.at(dc) != exprDim.at(dc)) {
-						throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array size assigning '" + astnode->identifier + "'");
+					if (astnode->dim.size() != exprDim.size()) {
+						throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier + "'");
+					}
+
+					for (size_t dc = 0; dc < astnode->dim.size(); ++dc) {
+						if (astnode->dim.at(dc) != -1 && astnode->dim.at(dc) != exprDim.at(dc)) {
+							throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array size assigning '" + astnode->identifier + "'");
+						}
 					}
 				}
+
 			}
 
 			currentScope->declareVariable(astnode->identifier, astnode->type, astnode->typeName, currentExpressionArrayType, astnode->dim, astnode->arrayType == parser::TYPE::T_ANY, astnode->isConst, hasValue, astnode->row, astnode->col, false);
