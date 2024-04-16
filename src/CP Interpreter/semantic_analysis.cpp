@@ -61,7 +61,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 	}
 
 	bool hasValue = currentExpressionType != parser::TYPE::T_NULL;
-	currentExpressionArrayType = astnode->arrayType;
+	currentExpressionArrayType = currentExpressionArrayType;
 
 	// similar types
 	if (astnode->type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT
@@ -576,6 +576,7 @@ void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_string>*) {
 void SemanticAnalyser::visit(parser::ASTArrayConstructorNode* astnode) {
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
 		astnode->values.at(i)->accept(this);
+		currentExpressionArrayType = currentExpressionType;
 	}
 	currentExpressionType = parser::TYPE::T_ARRAY;
 	currentExpressionTypeName = "";
