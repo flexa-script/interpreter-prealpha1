@@ -496,10 +496,34 @@ void visitor::Interpreter::visit(parser::ASTStructConstructorNode* astnode) {
 		str.second.push_back(strValue);
 	}
 
+	declareStructureDefinitionFirstLevelVariables(&str);
+
 	value->set(str);
 	currentExpressionType = parser::TYPE::T_STRUCT;
 	currentExpressionValue = *value;
 	currentExpressionTypeName = astnode->typeName;
+}
+
+void visitor::Interpreter::declareStructureDefinitionFirstLevelVariables(cp_struct* str) {
+	size_t i;
+	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredStructureDefinition(str->first); --i);
+	auto typeStruct = scopes[i]->findDeclaredStructureDefinition(str->first);
+
+	for (auto& varTypeStruct : typeStruct.variables) {
+		auto found = false;
+		for (size_t i = 0; i < str->second.size(); ++i) {
+			if (str->second.at(i).first == varTypeStruct.identifier) {
+				found = true;
+			}
+		}
+		if (!found) {
+			auto strValue = cp_struct_value();
+			strValue.first = varTypeStruct.identifier;
+			strValue.second = new Value_t(varTypeStruct.type);
+			strValue.second->setNull();
+			str->second.push_back(strValue);
+		}
+	}
 }
 
 void visitor::Interpreter::visit(parser::ASTBinaryExprNode* astnode) {

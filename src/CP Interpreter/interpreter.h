@@ -33,6 +33,7 @@ namespace visitor {
 	private:
 		std::vector<unsigned int> evaluateAccessVector(std::vector<parser::ASTExprNode*>);
 		void declareStructureVariable(std::string, Value_t);
+		void declareStructureDefinitionFirstLevelVariables(cp_struct*);
 		void printValue(Value_t*);
 		void printArray(cp_array);
 		void printStruct(cp_struct);
