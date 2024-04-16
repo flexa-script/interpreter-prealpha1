@@ -48,19 +48,6 @@ def list_print(list : List) {
   }
 }
 
-//var list : List = List {
-//  first = Node {
-//    value = 1,
-//    next = Node {
-//      value = 2,
-//      next = Node {
-//        value = 3,
-//        next = null
-//      }
-//    }
-//  }
-//};
-
 var list : List = List {};
 
 list_add(list, 10);
@@ -71,4 +58,23 @@ list_add(list, 7);
 print(list);
 print('\n');
 list_print(list);
+print("\n\n");
+
+
+var list2 : List = List {
+ first = Node {
+   value = 1,
+   next = Node {
+     value = 2,
+     next = Node {
+       value = 3,
+       next = null
+     }
+   }
+ }
+};
+
+print(list2);
 print('\n');
+list_print(list2);
+print("\n\n");
