@@ -354,8 +354,14 @@ void SemanticAnalyser::declareStructureDefinitionVariables(std::string identifie
 		bool hasValue = currentExpressionType != parser::TYPE::T_NULL;
 
 		if (varTypeStruct->type == parser::TYPE::T_STRUCT) {
-			parser::ASTStructConstructorNode* strExpr = static_cast<parser::ASTStructConstructorNode*>(strValue.second);
 			scopes.back()->declareVariable(currentIdentifier, varTypeStruct->type, varTypeStruct->identifier, parser::TYPE::T_ND, varTypeStruct->dim, false, false, hasValue, expr->row, expr->col, false);
+
+			parser::ASTStructConstructorNode* strExpr = nullptr;
+			
+			if (typeid(parser::ASTStructConstructorNode*) == typeid(strValue.second)) {
+				strExpr = static_cast<parser::ASTStructConstructorNode*>(strValue.second);
+			}
+
 			if (strExpr) {
 				declareStructureDefinitionVariables(currentIdentifier, strExpr);
 			}
