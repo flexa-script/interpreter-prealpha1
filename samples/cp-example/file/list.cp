@@ -11,12 +11,12 @@ struct List {
 
 def list_add(list : List, value : any) {
   if (not list.first) {
-    var newNode : Node;
+    var newNode : Node = Node {};
     newNode.value = value;
     newNode.next = null;
     list.first = newNode;
   } else {
-    var prevNode : Node;
+    var prevNode : Node;// = Node {};
     var currNode = list.first;
 
     while (currNode) {
@@ -24,7 +24,7 @@ def list_add(list : List, value : any) {
       currNode = currNode.next;
     }
 
-    var newNode : Node;
+    var newNode : Node = Node {};
     newNode.value = value;
 
     currNode.next = newNode;
@@ -61,7 +61,7 @@ def list_print(list : List) {
 //  }
 //};
 
-var list : List;
+var list : List = List {};
 
 list_add(list, 10);
 list_add(list, 9);

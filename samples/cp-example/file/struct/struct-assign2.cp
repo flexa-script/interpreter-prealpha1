@@ -10,13 +10,6 @@ def element_create(value : any) : Element {
   return newElement;
 }
 
-def element_print(element : Element) {
-  print("Element {\n");
-  print("  has_value: " + string(element.has_value));
-  print(",\n  value: " + string(element.value));
-  print("\n}\n");
-}
-
 var element1 : Element;
 var element2 : Element;
 var element3 : Element;
@@ -25,18 +18,38 @@ var element11 : Element;
 var element22 : Element;
 var element33 : Element;
 
-element1 = element_create(10);
+element1 = element_create(9);
 
+element2 = Element {};
 element2.has_value = true;
-element2.value = 55;
+element2.value = 99;
+
+element3 = Element {
+  has_value = true,
+  value = 999
+};
 
 element11 = element1;
 element22 = element2;
 element33 = element3;
 
-element_print(element1);
-element_print(element11);
-element_print(element2);
-element_print(element22);
-element_print(element3);
-element_print(element33);
+print(element1);
+print('\n');
+print(element11);
+
+print('\n');
+print('\n');
+
+print(element2);
+print('\n');
+print(element22);
+
+print('\n');
+print('\n');
+
+print(element3);
+print('\n');
+print(element33);
+
+print('\n');
+print('\n');
