@@ -122,7 +122,7 @@ Value_t* InterpreterScope::accessValueOfArray(Value_t* arr, std::vector<unsigned
 		if (accessVector.at(s) >= currentVal->size()) {
 			throw std::runtime_error("ISERR: tryed to access a invalid position");
 		}
-		if (currentVal->at(accessVector.at(s))->currentType != parser::TYPE::T_ARRAY) {
+		if (currentVal->at(accessVector.at(s))->currType != parser::TYPE::T_ARRAY) {
 			hasStringAccess = true;
 			break;
 		}
@@ -158,7 +158,7 @@ Value_t* InterpreterScope::accessValue(std::vector<std::string> identifierVector
 		value = accessValueOfStructure(value, identifierVector);
 	}
 
-	if (accessVector.size() > 0 && value->actualType == parser::TYPE::T_ARRAY) {
+	if (accessVector.size() > 0 && value->currType == parser::TYPE::T_ARRAY) {
 		hasStringAccess = false;
 		value = accessValueOfArray(value, accessVector);
 	}

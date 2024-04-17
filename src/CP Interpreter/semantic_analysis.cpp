@@ -56,12 +56,11 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 	}
 	else {
 		currentExpressionType = parser::TYPE::T_NULL;
-		currentExpressionArrayType = parser::TYPE::T_ND;
+		currentExpressionArrayType = parser::TYPE::T_NULL;
 		currentExpressionTypeName = "";
 	}
 
 	bool hasValue = currentExpressionType != parser::TYPE::T_NULL;
-	currentExpressionArrayType = currentExpressionArrayType;
 
 	// similar types
 	if (astnode->type == parser::TYPE::T_FLOAT && currentExpressionType == parser::TYPE::T_INT
@@ -86,7 +85,9 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 				if (currentExpressionType != parser::TYPE::T_STRUCT && currentExpressionType != parser::TYPE::T_NULL) {
 					throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "found " + parser::typeStr(currentExpressionType) + (currentExpressionTypeName.empty() ? "" : " (" + currentExpressionTypeName + ")") + " in definition of '" + astnode->identifier + "', expected " + parser::typeStr(astnode->type) + (astnode->typeName.empty() ? "" : " (" + astnode->typeName + ")") + "");
 				}
-				strExpr = static_cast<parser::ASTStructConstructorNode*>(astnode->expr);
+				if (typeid(astnode->expr) == typeid(parser::ASTStructConstructorNode*)) {
+					strExpr = static_cast<parser::ASTStructConstructorNode*>(astnode->expr);
+				}
 			}
 
 			auto strType = astnode->type;
@@ -135,15 +136,18 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 
 			currentScope->declareVariable(astnode->identifier, astnode->type, astnode->typeName, currentExpressionArrayType, astnode->dim, astnode->arrayType == parser::TYPE::T_ANY, astnode->isConst, hasValue, astnode->row, astnode->col, false);
 		}
-		else {
+		else if (astnode->type == currentExpressionType || astnode->type == parser::TYPE::T_ANY) {
 			currentScope->declareVariable(astnode->identifier, currentExpressionType, astnode->typeName, astnode->arrayType, astnode->dim, astnode->type == parser::TYPE::T_ANY, astnode->isConst, hasValue, astnode->row, astnode->col, false);
+		}
+		else {
+			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "found " + parser::typeStr(currentExpressionType) + " defining '" + astnode->identifier + "', expected " + parser::typeStr(astnode->type) + "");
 		}
 	}
 	else if (currentExpressionType == parser::TYPE::T_NULL) {
 		currentScope->declareVariable(astnode->identifier, astnode->type, astnode->typeName, astnode->arrayType, astnode->dim, astnode->arrayType == parser::TYPE::T_ANY, astnode->isConst, hasValue, astnode->row, astnode->col, false);
 	}
 	else { // types don't match
-		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "found " + parser::typeStr(currentExpressionType) + " in definition of '" + astnode->identifier + "', expected " + parser::typeStr(astnode->type) + ".");
+		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "found " + parser::typeStr(currentExpressionType) + " in definition of '" + astnode->identifier + "', expected " + parser::typeStr(astnode->type) + "");
 	}
 }
 
@@ -161,23 +165,33 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 		}
 	}
 
-	evaluateAccessVector(astnode->accessVector);
-
+	// get base variable
 	parser::VariableDefinition_t declaredVariable = scopes[i]->findDeclaredVariable(astnode->identifier);
 	parser::TYPE type;
 
-
-	if (!declaredVariable.hasValue && !declaredVariable.isParameter && astnode->identifierVector.size() > 1) {
-		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "trying assign '" + actualIdentifier + "' but '" + astnode->identifier + "' is null");
+	// check if the base variable is not null
+	if (!declaredVariable.hasValue && !declaredVariable.isParameter) {
+		// struct
+		if (astnode->identifierVector.size() > 1) {
+			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "trying assign '" + actualIdentifier + "' but '" + astnode->identifier + "' is null");
+		}
+		// array
+		if (astnode->accessVector.size() > 0) {
+			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "trying assign '" + actualIdentifier + "' array position but it's null");
+		}
 	}
 
 	// visit the expression to update current type
 	astnode->expr->accept(this);
 
+	// evaluate array access vector
+	evaluateAccessVector(astnode->accessVector);
+	
 	// get the type of the originally declared variable
 	if (declaredVariable.isParameter) {
 		declaredVariable = findDeclaredVariableRecursively(actualIdentifier);
 	}
+	// assign if it has or not a value
 	else {
 		scopes[i]->assignVariable(actualIdentifier, currentExpressionType != parser::TYPE::T_NULL);
 		declaredVariable = scopes[i]->findDeclaredVariable(actualIdentifier);
@@ -250,7 +264,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 
 	}
 	// otherwise throw error
-	else if (currentExpressionType != type) {
+	else if (currentExpressionType != type && type != parser::TYPE::T_ANY && type != parser::TYPE::T_NULL) {
 		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "mismatched type for '" + actualIdentifier + "'. Expected " + parser::typeStr(type) + ", found " + parser::typeStr(currentExpressionType) + "");
 	}
 }
@@ -563,7 +577,6 @@ void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_string>*) {
 void SemanticAnalyser::visit(parser::ASTArrayConstructorNode* astnode) {
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
 		astnode->values.at(i)->accept(this);
-		currentExpressionArrayType = currentExpressionType;
 	}
 	currentExpressionType = parser::TYPE::T_ARRAY;
 	currentExpressionTypeName = "";

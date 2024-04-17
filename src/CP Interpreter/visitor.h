@@ -28,14 +28,14 @@ typedef std::vector<cp_struct_value>             cp_struct_values;
 typedef std::pair<std::string, cp_struct_values> cp_struct;
 
 typedef struct Value {
-	Value(parser::TYPE type) : b(0), i(0), f(0), c(0), s(""), str(cp_struct()), arr(cp_array()), hasValue(false), actualType(type), currentType(type), dim(dim) {};
+	Value(parser::TYPE type) : b(0), i(0), f(0), c(0), s(""), str(cp_struct()), arr(cp_array()), hasValue(false), type(type), currType(type) {};
 
 	bool hasValue;
 	
-	parser::TYPE actualType;
-	parser::TYPE currentType;
-	std::vector<int> dim;
+	parser::TYPE type;
+	parser::TYPE currType;
 	parser::TYPE arrType;
+	std::vector<int> dim;
 	cp_bool b;
 	cp_int i;
 	cp_float f;
@@ -46,53 +46,54 @@ typedef struct Value {
 
 	void set(cp_bool b) {
 		this->b = b;
-		currentType = parser::TYPE::T_BOOL;
 		hasValue = true;
+		setCurrType(parser::TYPE::T_BOOL);
 	}
 	void set(cp_int i) {
 		this->i = i;
-		currentType = parser::TYPE::T_INT;
 		hasValue = true;
+		setCurrType(parser::TYPE::T_INT);
 	}
 	void set(cp_float f) {
 		this->f = f;
-		currentType = parser::TYPE::T_FLOAT;
 		hasValue = true;
+		setCurrType(parser::TYPE::T_FLOAT);
 	}
 	void set(cp_char c) {
 		this->c = c;
-		currentType = parser::TYPE::T_CHAR;
 		hasValue = true;
+		setCurrType(parser::TYPE::T_CHAR);
 	}
 	void set(cp_string s) {
 		this->s = s;
-		currentType = parser::TYPE::T_STRING;
 		hasValue = true;
+		setCurrType(parser::TYPE::T_STRING);
 	}
 	void set(cp_array arr) {
 		this->arr = arr;
-		currentType = parser::TYPE::T_ARRAY;
 		hasValue = true;
+		setCurrType(parser::TYPE::T_ARRAY);
 	}
 	void set(cp_struct str) {
 		this->str = str;
-		currentType = parser::TYPE::T_STRUCT;
 		hasValue = true;
+		setCurrType(parser::TYPE::T_STRUCT);
 	}
 	void setType(parser::TYPE type) {
-		actualType = type;
+		this->type = type;
 	}
-	void forceType(parser::TYPE type) {
-		currentType = type;
-		actualType = type;
+	void setCurrType(parser::TYPE currType) {
+		this->currType = currType;
 	}
 	void setNull() {
 		hasValue = false;
 	}
 	void copyFrom(Value* value) {
 		hasValue = value->hasValue;
-		actualType = value->actualType;
-		currentType = value->currentType;
+		currType = value->currType;
+		arrType = value->arrType;
+		dim = value->dim;
+		type = value->type;
 		b = value->b;
 		i = value->i;
 		f = value->f;

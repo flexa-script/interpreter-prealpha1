@@ -29,13 +29,12 @@ namespace visitor {
 		bool returns(parser::ASTNode*);
 		void evaluateAccessVector(std::vector<parser::ASTExprNode*>);
 
-		std::vector<int> calcArrayDimSize(parser::ASTArrayConstructorNode*);
-
 		void declareStructureDefinitionVariables(std::string, parser::ASTStructConstructorNode*);
 		void declareStructureDefinitionFirstLevelVariables(std::string, std::string);
 
 		parser::VariableDefinition_t findDeclaredVariableRecursively(std::string);
 
+		std::vector<int> calcArrayDimSize(parser::ASTArrayConstructorNode*);
 		void calculateArrayType(parser::ASTArrayConstructorNode*);
 		void checkArrayType(parser::ASTExprNode*, unsigned int, unsigned int);
 
