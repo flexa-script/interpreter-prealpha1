@@ -677,8 +677,9 @@ void visitor::Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
 	astnode->expr->accept(this);
 	switch (currentExpressionType) {
 	case parser::TYPE::T_INT:
-		if (astnode->unaryOp == "-")
+		if (astnode->unaryOp == "-") {
 			currentExpressionValue.set(cp_int(currentExpressionValue.i * -1));
+		}
 		break;
 	case parser::TYPE::T_FLOAT:
 		if (astnode->unaryOp == "-")

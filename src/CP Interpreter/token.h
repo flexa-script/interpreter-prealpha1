@@ -34,6 +34,7 @@ namespace lexer {
 		TOK_NULL,
 		TOK_THIS,
 		TOK_RETURN,
+		TOK_SWITCH,
 		TOK_IF,
 		TOK_ELSE,
 		TOK_WHILE,

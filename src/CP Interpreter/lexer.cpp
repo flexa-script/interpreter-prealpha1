@@ -169,6 +169,8 @@ Token Lexer::processIdentifier() {
 		type = TOK_THIS;
 	else if (identifier == "return")
 		type = TOK_RETURN;
+	else if (identifier == "switch")
+		type = TOK_SWITCH;
 	else if (identifier == "if")
 		type = TOK_IF;
 	else if (identifier == "else")
