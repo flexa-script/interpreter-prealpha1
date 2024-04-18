@@ -29,8 +29,11 @@ ASTReturnNode::ASTReturnNode(ASTExprNode* expr, unsigned int row, unsigned int c
 ASTBlockNode::ASTBlockNode(std::vector<ASTNode*> statements, unsigned int row, unsigned int col)
 	: statements(std::move(statements)), row(row), col(col) {}
 
-ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* ifBlock, unsigned int row, unsigned int col, ASTBlockNode* elseBlock)
-	: condition(condition), ifBlock(ifBlock), row(row), col(col), elseBlock(elseBlock) {}
+ASTElseIfNode::ASTElseIfNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
+	: condition(condition), block(block), row(row), col(col) {}
+
+ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* ifBlock, unsigned int row, unsigned int col, std::vector<ASTElseIfNode*> elseIf, ASTBlockNode* elseBlock)
+	: condition(condition), ifBlock(ifBlock), row(row), col(col), elseIf(elseIf), elseBlock(elseBlock) {}
 
 ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: condition(condition), block(block), row(row), col(col) {}
@@ -188,6 +191,10 @@ void ASTReturnNode::accept(visitor::Visitor* v) {
 }
 
 void ASTBlockNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+void ASTElseIfNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 

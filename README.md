@@ -35,7 +35,7 @@
     - [ ] try catch
     - [ ] enum
     - [ ] immediate if?
-- [ ] Add built in funcs:
+- [X] Add built in funcs:
     - [X] len: returns size of array/string
     - [X] round: round a float number
     - [X] type: returns type of object
@@ -51,8 +51,8 @@
     - [ ] Util
 - [ ] General otimizations:
     - [ ] Remove duplicate codes
-    - [ ] Move some verifications to semantic analisys:
-        - [ ] Array size check from interpreter
+    - [X] Move some verifications to semantic analisys:
+        - [X] Array size check from interpreter
 - [ ] Add CP library:
     - [ ] String
     - [ ] Math

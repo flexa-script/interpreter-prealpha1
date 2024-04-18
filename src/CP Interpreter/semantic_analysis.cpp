@@ -483,12 +483,24 @@ void SemanticAnalyser::visit(parser::ASTBlockNode* astnode) {
 	scopes.pop_back();
 }
 
+void SemanticAnalyser::visit(parser::ASTElseIfNode* astnode) {
+	// set current type to while expression
+	astnode->condition->accept(this);
+
+	// check the if block
+	astnode->block->accept(this);
+}
+
 void SemanticAnalyser::visit(parser::ASTIfNode* astnode) {
 	// set current type to while expression
 	astnode->condition->accept(this);
 
 	// check the if block
 	astnode->ifBlock->accept(this);
+
+	for (auto& elif : astnode->elseIf) {
+		elif->accept(this);
+	}
 
 	// if there is an else block, check it too
 	if (astnode->elseBlock) {

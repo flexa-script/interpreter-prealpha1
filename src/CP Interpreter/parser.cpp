@@ -399,6 +399,10 @@ ASTIfNode* Parser::parseIfStatement() {
 	// otherwise, consume the else
 	consumeToken();
 
+	if (nextToken.type == lexer::TOK_IF) {
+		//
+	}
+
 	// consume '{' after else
 	consumeToken();
 	if (currentToken.type != lexer::TOK_LEFT_CURLY) {
@@ -409,7 +413,7 @@ ASTIfNode* Parser::parseIfStatement() {
 	ASTBlockNode* elseBlock = parseBlock();
 
 	// return if node
-	return new ASTIfNode(condition, ifBlock, row, col, elseBlock);
+	return new ASTIfNode(condition, ifBlock, row, col, std::vector<ASTElseIfNode*>(), elseBlock);
 }
 
 ASTWhileNode* Parser::parseWhileStatement() {

@@ -152,12 +152,25 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
+	class ASTElseIfNode : public ASTStatementNode {
+	public:
+		ASTElseIfNode(ASTExprNode*, ASTBlockNode*, unsigned int, unsigned int);
+
+		ASTExprNode* condition;
+		ASTBlockNode* block;
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
 	class ASTIfNode : public ASTStatementNode {
 	public:
-		ASTIfNode(ASTExprNode*, ASTBlockNode*, unsigned int, unsigned int, ASTBlockNode* = nullptr);
+		ASTIfNode(ASTExprNode*, ASTBlockNode*, unsigned int, unsigned int, std::vector<ASTElseIfNode*> = std::vector<ASTElseIfNode*>(), ASTBlockNode* = nullptr);
 
 		ASTExprNode* condition;
 		ASTBlockNode* ifBlock;
+		std::vector<ASTElseIfNode*> elseIf;
 		ASTBlockNode* elseBlock;
 		unsigned int row;
 		unsigned int col;

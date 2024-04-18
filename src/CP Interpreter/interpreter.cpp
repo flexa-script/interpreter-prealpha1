@@ -322,6 +322,18 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	scopes.pop_back();
 }
 
+void visitor::Interpreter::visit(parser::ASTElseIfNode* astnode) {
+	// evaluate if condition
+	astnode->condition->accept(this);
+
+	bool result = currentExpressionType == parser::TYPE::T_BOOL ? currentExpressionValue.b : currentExpressionValue.hasValue;
+
+	// execute appropriate blocks
+	if (result) {
+		astnode->block->accept(this);
+	}
+}
+
 void visitor::Interpreter::visit(parser::ASTIfNode* astnode) {
 	// evaluate if condition
 	astnode->condition->accept(this);

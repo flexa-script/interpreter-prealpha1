@@ -115,11 +115,11 @@ namespace parser {
 	class ASTFunctionCallNode;
 	class ASTReturnNode;
 	class ASTBlockNode;
+	class ASTElseIfNode;
 	class ASTIfNode;
 	class ASTWhileNode;
 	class ASTFunctionDefinitionNode;
 	class ASTStructDefinitionNode;
-
 	template <typename T> class ASTLiteralNode;
 	class ASTArrayConstructorNode;
 	class ASTStructConstructorNode;
@@ -146,6 +146,7 @@ namespace visitor {
 		virtual void visit(parser::ASTPrintNode*) = 0;
 		virtual void visit(parser::ASTReturnNode*) = 0;
 		virtual void visit(parser::ASTBlockNode*) = 0;
+		virtual void visit(parser::ASTElseIfNode*) = 0;
 		virtual void visit(parser::ASTIfNode*) = 0;
 		virtual void visit(parser::ASTWhileNode*) = 0;
 		virtual void visit(parser::ASTFunctionDefinitionNode*) = 0;
