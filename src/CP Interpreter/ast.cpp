@@ -32,8 +32,8 @@ ASTBlockNode::ASTBlockNode(std::vector<ASTNode*> statements, unsigned int row, u
 ASTElseIfNode::ASTElseIfNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: condition(condition), block(block), row(row), col(col) {}
 
-ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* ifBlock, unsigned int row, unsigned int col, std::vector<ASTElseIfNode*> elseIf, ASTBlockNode* elseBlock)
-	: condition(condition), ifBlock(ifBlock), row(row), col(col), elseIf(elseIf), elseBlock(elseBlock) {}
+ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* ifBlock, std::vector<ASTElseIfNode*> elseIf, unsigned int row, unsigned int col, ASTBlockNode* elseBlock)
+	: condition(condition), ifBlock(ifBlock), elseIf(elseIf), row(row), col(col), elseBlock(elseBlock) {}
 
 ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: condition(condition), block(block), row(row), col(col) {}

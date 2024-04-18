@@ -360,10 +360,51 @@ ASTStatementNode* Parser::parseStructBlockVariables() {
 	}
 }
 
+ASTElseIfNode* Parser::parseElseIfStatement() {
+	// node attributes
+	ASTExprNode* condition;
+	ASTBlockNode* ifBlock;
+	unsigned int row = currentToken.row;
+	unsigned int col = currentToken.col;
+
+	// consume 'if'
+	consumeToken();
+
+	// consume '('
+	consumeToken();
+	if (currentToken.type != lexer::TOK_LEFT_BRACKET) {
+		throw std::runtime_error(msgHeader() + "expected '(' after 'if'");
+	}
+
+	// parse the expression
+	condition = parseExpression();
+
+	// consume ')'
+	consumeToken();
+	if (currentToken.type != lexer::TOK_RIGHT_BRACKET) {
+		throw std::runtime_error(msgHeader() + "expected ')' after if-condition");
+	}
+
+	// consume '{'
+	consumeToken();
+	if (currentToken.type != lexer::TOK_LEFT_CURLY) {
+		throw std::runtime_error(msgHeader() + "expected '{' after if-condition");
+	}
+
+	// consume if-block and '}'
+	ifBlock = parseBlock();
+
+	consumeToken();
+
+	// return elif node
+	return new ASTElseIfNode(condition, ifBlock, row, col);
+}
+
 ASTIfNode* Parser::parseIfStatement() {
 	// node attributes
 	ASTExprNode* condition;
 	ASTBlockNode* ifBlock;
+	std::vector<ASTElseIfNode*> elseIfs = std::vector<ASTElseIfNode*>();
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
 
@@ -393,14 +434,16 @@ ASTIfNode* Parser::parseIfStatement() {
 
 	// lookahead whether there is an else
 	if (nextToken.type != lexer::TOK_ELSE) {
-		return new ASTIfNode(condition, ifBlock, row, col);
+		return new ASTIfNode(condition, ifBlock, elseIfs, row, col);
 	}
 
 	// otherwise, consume the else
 	consumeToken();
 
 	if (nextToken.type == lexer::TOK_IF) {
-		//
+		while (nextToken.type == lexer::TOK_IF) {
+			elseIfs.push_back(parseElseIfStatement());
+		}
 	}
 
 	// consume '{' after else
@@ -413,7 +456,7 @@ ASTIfNode* Parser::parseIfStatement() {
 	ASTBlockNode* elseBlock = parseBlock();
 
 	// return if node
-	return new ASTIfNode(condition, ifBlock, row, col, std::vector<ASTElseIfNode*>(), elseBlock);
+	return new ASTIfNode(condition, ifBlock, elseIfs, row, col, elseBlock);
 }
 
 ASTWhileNode* Parser::parseWhileStatement() {

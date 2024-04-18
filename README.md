@@ -30,7 +30,7 @@
 - [ ] Improve error system
 - [ ] Add statements:
     - [ ] for
-    - [ ] else if
+    - [X] else if
     - [ ] switch
     - [ ] try catch
     - [ ] enum

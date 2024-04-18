@@ -166,7 +166,7 @@ namespace parser {
 
 	class ASTIfNode : public ASTStatementNode {
 	public:
-		ASTIfNode(ASTExprNode*, ASTBlockNode*, unsigned int, unsigned int, std::vector<ASTElseIfNode*> = std::vector<ASTElseIfNode*>(), ASTBlockNode* = nullptr);
+		ASTIfNode(ASTExprNode*, ASTBlockNode*, std::vector<ASTElseIfNode*>, unsigned int, unsigned int, ASTBlockNode* = nullptr);
 
 		ASTExprNode* condition;
 		ASTBlockNode* ifBlock;

@@ -323,6 +323,8 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 }
 
 void visitor::Interpreter::visit(parser::ASTElseIfNode* astnode) {
+	executedElif = false;
+
 	// evaluate if condition
 	astnode->condition->accept(this);
 
@@ -331,6 +333,7 @@ void visitor::Interpreter::visit(parser::ASTElseIfNode* astnode) {
 	// execute appropriate blocks
 	if (result) {
 		astnode->block->accept(this);
+		executedElif = true;
 	}
 }
 
@@ -345,7 +348,13 @@ void visitor::Interpreter::visit(parser::ASTIfNode* astnode) {
 		astnode->ifBlock->accept(this);
 	}
 	else {
-		if (astnode->elseBlock) {
+		for (auto& elif : astnode->elseIf) {
+			elif->accept(this);
+			if (executedElif) {
+				break;
+			}
+		}
+		if (astnode->elseBlock && !executedElif) {
 			astnode->elseBlock->accept(this);
 		}
 	}

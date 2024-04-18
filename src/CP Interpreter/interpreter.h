@@ -29,6 +29,7 @@ namespace visitor {
 		std::string currentFunctionName;
 		std::string returnFromFunctionName;
 		bool returnFromFunction = false;
+		bool executedElif = false;
 
 	private:
 		std::vector<unsigned int> evaluateAccessVector(std::vector<parser::ASTExprNode*>);
