@@ -11,8 +11,8 @@
 namespace parser {
 
 	typedef struct VariableDefinition {
-		VariableDefinition(std::string identifier, TYPE type, std::string typeName, TYPE arrayType, std::vector<int> dim, bool isAny, bool isConst, bool hasValue, unsigned int row, unsigned int col, bool isParameter)
-			: identifier(identifier), type(type), typeName(typeName), arrayType(arrayType), dim(dim), isAny(isAny), isConst(isConst), hasValue(hasValue), row(row), col(col), isParameter(isParameter) {};
+		VariableDefinition(std::string identifier, TYPE type, std::string typeName, TYPE arrayType, std::vector<int> dim, bool isConst, bool hasValue, unsigned int row, unsigned int col, bool isParameter)
+			: identifier(identifier), type(type), typeName(typeName), arrayType(arrayType), dim(dim), isConst(isConst), hasValue(hasValue), row(row), col(col), isParameter(isParameter) {};
 		VariableDefinition() {};
 		std::string identifier;
 		std::string typeName;
@@ -21,7 +21,6 @@ namespace parser {
 		std::vector<int> dim;
 		bool hasValue;
 		bool isParameter;
-		bool isAny;
 		bool isConst;
 		unsigned int row;
 		unsigned int col;

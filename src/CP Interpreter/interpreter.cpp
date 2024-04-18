@@ -82,12 +82,12 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 			scopes.back()->declareVariable(astnode->identifier, currentExpressionValue.arr);
 			break;
 		case parser::TYPE::T_STRUCT:
-			if (currentExpressionValue.type == parser::TYPE::T_NULL) {
-				currentExpressionValue.setType(astnode->type);
-				currentExpressionValue.setCurrType(astnode->type);
-				currentExpressionValue.setNull();
-				currentExpressionValue.str.first = astnode->typeName;
-			}
+			//if (currentExpressionValue.type == parser::TYPE::T_NULL) {
+			//	currentExpressionValue.setType(astnode->type);
+			//	currentExpressionValue.setCurrType(astnode->type);
+			//	currentExpressionValue.setNull();
+			//	currentExpressionValue.str.first = astnode->typeName;
+			//}
 			declareStructureVariable(astnode->identifier, currentExpressionValue);
 			break;
 		}
@@ -197,7 +197,7 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 
 void Interpreter::printValue(Value_t value) {
 	if (value.hasValue) {
-		switch (value.type) {
+		switch (value.currType) {
 		case parser::TYPE::T_BOOL:
 			std::cout << ((value.b) ? "true" : "false");
 			break;

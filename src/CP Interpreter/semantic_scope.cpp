@@ -65,8 +65,8 @@ void SemanticScope::declareStructureDefinition(std::string name, std::vector<par
 	structureSymbolTable[name] = strDef;
 }
 
-void SemanticScope::declareVariable(std::string identifier, parser::TYPE type, std::string typeName, parser::TYPE arrayType, std::vector<int> dim, bool isAny, bool isConst, bool hasValue, unsigned int row, unsigned int col, bool isParameter) {
-	parser::VariableDefinition_t var(identifier, type, typeName, arrayType, dim, isAny, isConst, hasValue, row, col, isParameter);
+void SemanticScope::declareVariable(std::string identifier, parser::TYPE type, std::string typeName, parser::TYPE arrayType, std::vector<int> dim, bool isConst, bool hasValue, unsigned int row, unsigned int col, bool isParameter) {
+	parser::VariableDefinition_t var(identifier, type, typeName, arrayType, dim, isConst, hasValue, row, col, isParameter);
 	variableSymbolTable[identifier] = var;
 }
 

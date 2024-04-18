@@ -34,8 +34,8 @@ namespace visitor {
 
 		parser::VariableDefinition_t findDeclaredVariableRecursively(std::string);
 
-		std::vector<int> calcArrayDimSize(parser::ASTArrayConstructorNode*);
-		void calculateArrayType(parser::ASTArrayConstructorNode*);
+		std::vector<int> calculateArrayDimSize(parser::ASTArrayConstructorNode*);
+		void determineArrayType(parser::ASTArrayConstructorNode*);
 		void checkArrayType(parser::ASTExprNode*, unsigned int, unsigned int);
 
 		std::string msgHeader(unsigned int, unsigned int);

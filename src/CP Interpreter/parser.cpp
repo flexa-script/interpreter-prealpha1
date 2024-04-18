@@ -629,7 +629,7 @@ VariableDefinition_t* Parser::parseFormalParam() {
 		typeName = currentToken.value;
 	}
 
-	return new VariableDefinition_t(identifier, type, typeName, currentArrayType, dim, type == TYPE::T_ANY, false, false, currentToken.row, currentToken.col, true);
+	return new VariableDefinition_t(identifier, type, typeName, currentArrayType, dim, false, false, currentToken.row, currentToken.col, true);
 };
 
 ASTExprNode* Parser::parseExpression() {
