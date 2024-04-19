@@ -115,6 +115,8 @@ namespace parser {
 	class ASTFunctionCallNode;
 	class ASTReturnNode;
 	class ASTBlockNode;
+	class ASTBreakNode;
+	class ASTSwitchNode;
 	class ASTElseIfNode;
 	class ASTIfNode;
 	class ASTWhileNode;
@@ -146,6 +148,8 @@ namespace visitor {
 		virtual void visit(parser::ASTPrintNode*) = 0;
 		virtual void visit(parser::ASTReturnNode*) = 0;
 		virtual void visit(parser::ASTBlockNode*) = 0;
+		virtual void visit(parser::ASTBreakNode*) = 0;
+		virtual void visit(parser::ASTSwitchNode*) = 0;
 		virtual void visit(parser::ASTElseIfNode*) = 0;
 		virtual void visit(parser::ASTIfNode*) = 0;
 		virtual void visit(parser::ASTWhileNode*) = 0;

@@ -452,13 +452,13 @@ void SemanticAnalyser::visit(parser::ASTPrintNode* astnode) {
 	astnode->expr->accept(this);
 }
 
-void SemanticAnalyser::visit(parser::ASTReturnNode* ret) {
+void SemanticAnalyser::visit(parser::ASTReturnNode* astnode) {
 	// update current expression
-	ret->expr->accept(this);
+	astnode->expr->accept(this);
 
 	// if we are not global, check that we return current function return type
 	if (!functions.empty() && currentExpressionType != functions.top()) {
-		throw std::runtime_error(msgHeader(ret->row, ret->col) + "invalid return type. Expected " + parser::typeStr(functions.top()) + ", found " + parser::typeStr(currentExpressionType) + ".");
+		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid return type. Expected " + parser::typeStr(functions.top()) + ", found " + parser::typeStr(currentExpressionType) + ".");
 	}
 }
 
@@ -481,6 +481,31 @@ void SemanticAnalyser::visit(parser::ASTBlockNode* astnode) {
 
 	// close scope
 	scopes.pop_back();
+}
+
+void SemanticAnalyser::visit(parser::ASTBreakNode* astnode) {
+
+}
+
+void SemanticAnalyser::visit(parser::ASTSwitchNode* astnode) {
+	//// create new scope
+	//scopes.push_back(new SemanticScope());
+
+	//// check whether this is a function block by seeing if we have any current function parameters. If we do, then add them to the current scope.
+	//for (auto param : currentFunctionParameters) {
+	//	scopes.back()->declareVariable(param.identifier, param.type, param.typeName, param.arrayType, param.dim, param.isConst, param.hasValue, param.row, param.col, true);
+	//}
+
+	//// clear the global function parameters vector
+	//currentFunctionParameters.clear();
+
+	//// visit each statement in the block
+	//for (auto& stmt : astnode->statements) {
+	//	stmt->accept(this);
+	//}
+
+	//// close scope
+	//scopes.pop_back();
 }
 
 void SemanticAnalyser::visit(parser::ASTElseIfNode* astnode) {

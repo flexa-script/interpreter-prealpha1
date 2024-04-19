@@ -78,10 +78,14 @@ ASTNode* Parser::parseBlockStatement() {
 		return parseStructDefinition();
 	case lexer::TOK_PRINT:
 		return parsePrintStatement();
+	case lexer::TOK_SWITCH:
+		return parseIfStatement();
 	case lexer::TOK_IF:
 		return parseIfStatement();
 	case lexer::TOK_WHILE:
 		return parseWhileStatement();
+	case lexer::TOK_BREAK:
+		return parseBreakStatement();
 	case lexer::TOK_RETURN:
 		return parseReturnStatement();
 	case lexer::TOK_IDENTIFIER:
@@ -358,6 +362,58 @@ ASTStatementNode* Parser::parseStructBlockVariables() {
 	default:
 		throw std::runtime_error(msgHeader() + "invalid declaration starting with '" + currentToken.value + "' encountered");
 	}
+}
+
+ASTBreakNode* Parser::parseBreakStatement() {
+	// determine line number
+	unsigned int row = currentToken.row;
+	unsigned int col = currentToken.col;
+
+	// consume ';' token
+	consumeToken();
+
+	// make sure it's a ';'
+	if (currentToken.type != lexer::TOK_SEMICOLON) {
+		throw std::runtime_error(msgHeader() + "expected ';' after return statement");
+	}
+
+	// return return node
+	return new ASTBreakNode(row, col);
+}
+
+ASTSwitchNode* Parser::parseSwitchStatement() {
+	// node attributes
+	ASTExprNode* condition;
+	std::map<ASTExprNode*, unsigned int> caseBlocks;
+	unsigned int defaultBlock;
+	std::vector<ASTNode*> statements;
+	unsigned int row = currentToken.row;
+	unsigned int col = currentToken.col;
+
+	// consume '('
+	consumeToken();
+	if (currentToken.type != lexer::TOK_LEFT_BRACKET) {
+		throw std::runtime_error(msgHeader() + "expected '(' after 'if'");
+	}
+
+	// parse the expression
+	condition = parseExpression();
+
+	// consume ')'
+	consumeToken();
+	if (currentToken.type != lexer::TOK_RIGHT_BRACKET) {
+		throw std::runtime_error(msgHeader() + "expected ')' after if-condition");
+	}
+
+	// consume '{'
+	consumeToken();
+	if (currentToken.type != lexer::TOK_LEFT_CURLY) {
+		throw std::runtime_error(msgHeader() + "expected '{' after if-condition");
+	}
+
+	// CASES
+
+	return new ASTSwitchNode(condition, statements, caseBlocks, defaultBlock, row, col);
 }
 
 ASTElseIfNode* Parser::parseElseIfStatement() {

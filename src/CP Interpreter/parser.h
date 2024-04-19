@@ -48,6 +48,10 @@ namespace parser {
 
 		ASTStatementNode* parseStructBlockVariables();
 
+		ASTBreakNode* parseBreakStatement();
+
+		ASTSwitchNode* parseSwitchStatement();
+
 		ASTElseIfNode* parseElseIfStatement();
 
 		ASTIfNode* parseIfStatement();

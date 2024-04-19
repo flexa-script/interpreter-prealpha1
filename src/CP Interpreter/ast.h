@@ -152,6 +152,33 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
+	class ASTBreakNode : public ASTStatementNode {
+	public:
+		ASTBreakNode(unsigned int, unsigned int);
+
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+	
+	// at hashtable it's stored the correspondent case statement start
+	// it'll execute until find a break
+	// at vector it's stored switch statements
+	class ASTSwitchNode : public ASTStatementNode {
+	public:
+		ASTSwitchNode(ASTExprNode*, std::vector<ASTNode*>, std::map<ASTExprNode*, unsigned int>, unsigned int, unsigned int, unsigned int);
+
+		ASTExprNode* condition;
+		std::map<ASTExprNode*, unsigned int> caseBlocks;
+		unsigned int defaultBlock;
+		std::vector<ASTNode*> statements;
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
 	class ASTElseIfNode : public ASTStatementNode {
 	public:
 		ASTElseIfNode(ASTExprNode*, ASTBlockNode*, unsigned int, unsigned int);

@@ -322,6 +322,69 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	scopes.pop_back();
 }
 
+void visitor::Interpreter::visit(parser::ASTBreakNode* astnode) {
+	//for (int i = scopes.size() - 1; i >= 0; --i) {
+	//	if (!scopes[i]->getName().empty()) {
+	//		returnFromFunctionName = scopes[i]->getName();
+	//		returnFromFunction = true;
+	//		break;
+	//	}
+	//}
+}
+
+void visitor::Interpreter::visit(parser::ASTSwitchNode* astnode) {
+	//// create new scope
+	//scopes.push_back(new InterpreterScope(currentFunctionName));
+
+	//// check whether this is a function block by seeing if we have any current function
+	//// parameters. If we do, then add them to the current scope.
+	//for (unsigned int i = 0; i < currentFunctionArguments.size(); i++) {
+	//	switch (currentFunctionArguments[i].first) {
+	//	case parser::TYPE::T_BOOL:
+	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->b);
+	//		break;
+	//	case parser::TYPE::T_INT:
+	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->i);
+	//		break;
+	//	case parser::TYPE::T_FLOAT:
+	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->f);
+	//		break;
+	//	case parser::TYPE::T_CHAR:
+	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->c);
+	//		break;
+	//	case parser::TYPE::T_STRING:
+	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->s);
+	//		break;
+	//	case parser::TYPE::T_STRUCT:
+	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->str);
+	//		break;
+	//	case parser::TYPE::T_ARRAY:
+	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->arr);
+	//		break;
+	//	}
+	//}
+
+	//// clear the global function parameter/argument vectors
+	//currentFunctionParameters.clear();
+	//currentFunctionArguments.clear();
+	//currentFunctionName = "";
+
+	//// visit each statement in the block
+	//for (auto& stmt : astnode->statements) {
+	//	stmt->accept(this);
+	//	if (returnFromFunction) {
+	//		if (!returnFromFunctionName.empty() && returnFromFunctionName == scopes.back()->getName()) {
+	//			returnFromFunctionName = "";
+	//			returnFromFunction = false;
+	//		}
+	//		break;
+	//	}
+	//}
+
+	//// close scope
+	//scopes.pop_back();
+}
+
 void visitor::Interpreter::visit(parser::ASTElseIfNode* astnode) {
 	executedElif = false;
 
