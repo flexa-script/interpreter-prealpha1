@@ -32,11 +32,8 @@ ASTBlockNode::ASTBlockNode(std::vector<ASTNode*> statements, unsigned int row, u
 ASTBreakNode::ASTBreakNode(unsigned int row, unsigned int col)
 	: row(row), col(col) {}
 
-ASTSwitchNode::ASTSwitchNode(ASTExprNode* condition, std::vector<ASTNode*> statements, std::map<ASTExprNode*, unsigned int> caseBlocks, unsigned int defaultBlock, unsigned int row, unsigned int col)
+ASTSwitchNode::ASTSwitchNode(ASTExprNode* condition, std::vector<ASTNode*>* statements, std::map<ASTExprNode*, unsigned int>* caseBlocks, int defaultBlock, unsigned int row, unsigned int col)
 	: condition(condition), statements(statements), caseBlocks(caseBlocks), defaultBlock(defaultBlock), row(row), col(col) {}
-
-ASTElseIfNode::ASTElseIfNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
-	: condition(condition), block(block), row(row), col(col) {}
 
 ASTElseIfNode::ASTElseIfNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: condition(condition), block(block), row(row), col(col) {}

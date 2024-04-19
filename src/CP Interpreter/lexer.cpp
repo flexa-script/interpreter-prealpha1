@@ -173,6 +173,8 @@ Token Lexer::processIdentifier() {
 		type = TOK_BREAK;
 	else if (identifier == "switch")
 		type = TOK_SWITCH;
+	else if (identifier == "default")
+		type = TOK_DEFAULT;
 	else if (identifier == "case")
 		type = TOK_CASE;
 	else if (identifier == "if")

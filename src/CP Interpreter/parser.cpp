@@ -79,7 +79,7 @@ ASTNode* Parser::parseBlockStatement() {
 	case lexer::TOK_PRINT:
 		return parsePrintStatement();
 	case lexer::TOK_SWITCH:
-		return parseIfStatement();
+		return parseSwitchStatement();
 	case lexer::TOK_IF:
 		return parseIfStatement();
 	case lexer::TOK_WHILE:
@@ -384,16 +384,16 @@ ASTBreakNode* Parser::parseBreakStatement() {
 ASTSwitchNode* Parser::parseSwitchStatement() {
 	// node attributes
 	ASTExprNode* condition;
-	std::map<ASTExprNode*, unsigned int> caseBlocks;
-	unsigned int defaultBlock;
-	std::vector<ASTNode*> statements;
+	std::map<ASTExprNode*, unsigned int>* caseBlocks = new std::map<ASTExprNode*, unsigned int>();
+	int defaultBlock = -1;
+	std::vector<ASTNode*>* statements = new std::vector<ASTNode*>();
 	unsigned int row = currentToken.row;
 	unsigned int col = currentToken.col;
 
 	// consume '('
 	consumeToken();
 	if (currentToken.type != lexer::TOK_LEFT_BRACKET) {
-		throw std::runtime_error(msgHeader() + "expected '(' after 'if'");
+		throw std::runtime_error(msgHeader() + "expected '(' after switch");
 	}
 
 	// parse the expression
@@ -402,16 +402,60 @@ ASTSwitchNode* Parser::parseSwitchStatement() {
 	// consume ')'
 	consumeToken();
 	if (currentToken.type != lexer::TOK_RIGHT_BRACKET) {
-		throw std::runtime_error(msgHeader() + "expected ')' after if-condition");
+		throw std::runtime_error(msgHeader() + "expected ')' after switch");
 	}
 
 	// consume '{'
 	consumeToken();
 	if (currentToken.type != lexer::TOK_LEFT_CURLY) {
-		throw std::runtime_error(msgHeader() + "expected '{' after if-condition");
+		throw std::runtime_error(msgHeader() + "expected '{' after switch");
 	}
 
-	// CASES
+	// consume case/default
+	consumeToken();
+
+	while (currentToken.type == lexer::TOK_CASE) {
+		bool isBlock = false;
+		ASTExprNode* caseExrp = parseExpression();
+		int startPosition = statements->size();
+
+		// consume :
+		consumeToken();
+
+		// consume first token of next statement
+		consumeToken();
+
+		if (currentToken.type == lexer::TOK_LEFT_CURLY) {
+			consumeToken();
+			isBlock = true;
+		}
+
+		// while not reached end of block or end of file
+		while (currentToken.type != lexer::TOK_CASE && currentToken.type != lexer::TOK_DEFAULT && currentToken.type != lexer::TOK_RIGHT_CURLY && currentToken.type != lexer::TOK_ERROR && currentToken.type != lexer::TOK_EOF) {
+			// parse the statement
+			statements->push_back(parseBlockStatement());
+
+			// consume first token of next statement
+			consumeToken();
+		}
+
+		caseBlocks->emplace(caseExrp, startPosition);
+		
+		if (isBlock && currentToken.type != lexer::TOK_RIGHT_CURLY) {
+			throw std::runtime_error(msgHeader() + "expected '}' to close block");
+		}
+
+		if (currentToken.type == lexer::TOK_RIGHT_CURLY) {
+			if (!isBlock) {
+				throw std::runtime_error(msgHeader() + "token '}' unexpected");
+			}
+			consumeToken();
+		}
+	}
+
+	if (currentToken.type == lexer::TOK_DEFAULT) {
+
+	}
 
 	return new ASTSwitchNode(condition, statements, caseBlocks, defaultBlock, row, col);
 }
@@ -1025,8 +1069,8 @@ ASTArrayConstructorNode* Parser::parseArrayConstructorNode() {
 		consumeToken();
 
 	} while (nextToken.type == lexer::TOK_LEFT_CURLY || nextToken.type == lexer::TOK_NULL
-		|| nextToken.type == lexer::TOK_BOOL_LITERAL || nextToken.type == lexer::TOK_INT_LITERAL 
-		|| nextToken.type == lexer::TOK_IDENTIFIER   || nextToken.type == lexer::TOK_FLOAT_LITERAL 
+		|| nextToken.type == lexer::TOK_BOOL_LITERAL || nextToken.type == lexer::TOK_INT_LITERAL
+		|| nextToken.type == lexer::TOK_IDENTIFIER || nextToken.type == lexer::TOK_FLOAT_LITERAL
 		|| nextToken.type == lexer::TOK_CHAR_LITERAL || nextToken.type == lexer::TOK_STRING_LITERAL);
 
 

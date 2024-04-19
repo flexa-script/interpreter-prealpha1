@@ -167,12 +167,12 @@ namespace parser {
 	// at vector it's stored switch statements
 	class ASTSwitchNode : public ASTStatementNode {
 	public:
-		ASTSwitchNode(ASTExprNode*, std::vector<ASTNode*>, std::map<ASTExprNode*, unsigned int>, unsigned int, unsigned int, unsigned int);
+		ASTSwitchNode(ASTExprNode*, std::vector<ASTNode*>*, std::map<ASTExprNode*, unsigned int>*, int, unsigned int, unsigned int);
 
 		ASTExprNode* condition;
-		std::map<ASTExprNode*, unsigned int> caseBlocks;
-		unsigned int defaultBlock;
-		std::vector<ASTNode*> statements;
+		std::map<ASTExprNode*, unsigned int>* caseBlocks;
+		int defaultBlock;
+		std::vector<ASTNode*>* statements;
 		unsigned int row;
 		unsigned int col;
 
