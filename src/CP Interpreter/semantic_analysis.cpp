@@ -538,6 +538,21 @@ void SemanticAnalyser::visit(parser::ASTIfNode* astnode) {
 	}
 }
 
+void SemanticAnalyser::visit(parser::ASTForNode* astnode) {
+	// set current type to while expression
+	astnode->dci[0]->accept(this);
+	astnode->dci[1]->accept(this);
+	astnode->dci[2]->accept(this);
+
+	// check the while block
+	astnode->block->accept(this);
+}
+
+void SemanticAnalyser::visit(parser::ASTForEachNode* astnode) {
+	// check the while block
+	astnode->block->accept(this);
+}
+
 void SemanticAnalyser::visit(parser::ASTWhileNode* astnode) {
 	// set current type to while expression
 	astnode->condition->accept(this);
@@ -822,7 +837,7 @@ void SemanticAnalyser::visit(parser::ASTTypeParseNode* astnode) {
 
 void SemanticAnalyser::visit(parser::ASTReadNode* astnode) {
 	if (currentExpressionType != parser::TYPE::T_STRING) {
-		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "function 'read()' is trying to assing an invalid type");
+		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "trying to assing an invalid type");
 	}
 }
 

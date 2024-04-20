@@ -1,27 +1,17 @@
 //print("Hello World!\n");
-// switchcase
+// for
 
-switch(2) {
-case 0:
-case 1:
-    print(1);
-    break;
-case 2: {
-    print(2);
-    break;
-    print(99);
-}   
-case 3:
-    print(3);
-case 4:
-    print(4);
-    break;
-case 5:
-    print(5);
-    break;
-default:
-    print("default");
-    break;
+var arr : int = { 1, 2, 3 };
+
+for (var i : int = 0; i <= len(arr); i = i + 1) {
+  print(arr[i]);
 }
 
-print("\n\n");
+for (;;) {
+  print("loop");´
+  break;
+}
+
+// foreach (int val : arr) {
+//     print(arr);
+// }

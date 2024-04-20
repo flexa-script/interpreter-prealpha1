@@ -56,6 +56,10 @@ namespace parser {
 
 		ASTIfNode* parseIfStatement();
 
+		ASTForNode* parseForStatement();
+
+		ASTForEachNode* parseForEachStatement();
+
 		ASTWhileNode* parseWhileStatement();
 
 		ASTFunctionDefinitionNode* parseFunctionDefinition();

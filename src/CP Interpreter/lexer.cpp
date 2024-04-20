@@ -181,6 +181,10 @@ Token Lexer::processIdentifier() {
 		type = TOK_IF;
 	else if (identifier == "else")
 		type = TOK_ELSE;
+	else if (identifier == "for")
+		type = TOK_FOR;
+	else if (identifier == "foreach")
+		type = TOK_FOREACH;
 	else if (identifier == "while")
 		type = TOK_WHILE;
 	else if (identifier == "print")

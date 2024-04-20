@@ -84,6 +84,10 @@ ASTNode* Parser::parseBlockStatement() {
 		return parseIfStatement();
 	case lexer::TOK_WHILE:
 		return parseWhileStatement();
+	case lexer::TOK_FOR:
+		return parseForStatement();
+	case lexer::TOK_FOREACH:
+		return parseForEachStatement();
 	case lexer::TOK_BREAK:
 		return parseBreakStatement();
 	case lexer::TOK_RETURN:
@@ -573,6 +577,87 @@ ASTIfNode* Parser::parseIfStatement() {
 
 	// return if node
 	return new ASTIfNode(condition, ifBlock, elseIfs, row, col, elseBlock);
+}
+
+ASTForNode* Parser::parseForStatement() {
+	// node attributes
+	std::array<ASTNode*, 3> dci = std::array<ASTNode*, 3>({0});
+	ASTBlockNode* block;
+	unsigned int row = currentToken.row;
+	unsigned int col = currentToken.col;
+
+	// consume '('
+	consumeToken();
+	if (currentToken.type != lexer::TOK_LEFT_BRACKET) {
+		throw std::runtime_error(msgHeader() + "expected '(' after 'for'");
+	}
+
+	for (int i = 0; i < 3; i++) {
+		if (nextToken.type != lexer::TOK_SEMICOLON) {
+			// consume first statement/expr
+			consumeToken();
+			if (currentToken.type != lexer::TOK_VAR && currentToken.type != lexer::TOK_IDENTIFIER) {
+				throw std::runtime_error(msgHeader() + "expected identifier or declaration");
+			}
+
+			// i, i = 0, int i, int i = 0
+			dci[i] = parseBlockStatement();
+
+			if (currentToken.type != lexer::TOK_SEMICOLON) {
+				throw std::runtime_error(msgHeader() + "expected ';'");
+			}
+		}
+		else {
+			// consume ;
+			consumeToken();
+		}
+	}
+
+	// consume while-block and '}'
+	block = parseBlock();
+
+	// return for node
+	return new ASTForNode(dci, block, row, col);
+}
+
+ASTForEachNode* Parser::parseForEachStatement() {
+	// node attributes
+	ASTNode* itdecl; // decl or assign node
+	ASTExprNode* collection = nullptr;
+	ASTBlockNode* block;
+	unsigned int row = currentToken.row;
+	unsigned int col = currentToken.col;
+
+	// consume '('
+	consumeToken();
+	if (currentToken.type != lexer::TOK_LEFT_BRACKET) {
+		throw std::runtime_error(msgHeader() + "expected '(' after 'for'");
+	}
+
+	if (!currentToken.isType() && currentToken.type != lexer::TOK_IDENTIFIER) {
+		throw std::runtime_error(msgHeader() + "expected identifier or declaration");
+	}
+
+	// i, i = 0, int i, int i = 0
+	itdecl = parseBlockStatement();
+
+	// consume ')'
+	consumeToken();
+	if (currentToken.type != lexer::TOK_RIGHT_BRACKET) {
+		throw std::runtime_error(msgHeader() + "expected ')' after for-condition");
+	}
+
+	// consume '{'
+	consumeToken();
+	if (currentToken.type != lexer::TOK_LEFT_CURLY) {
+		throw std::runtime_error(msgHeader() + "expected '{' after for-condition");
+	}
+
+	// consume while-block and '}'
+	block = parseBlock();
+
+	// return for node
+	return new ASTForEachNode(itdecl, collection, block, row, col);
 }
 
 ASTWhileNode* Parser::parseWhileStatement() {

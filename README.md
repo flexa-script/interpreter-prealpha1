@@ -27,7 +27,7 @@
 - [X] Remove mandatory variable type definition
 - [X] Fix cp dependencies/libs loader
 - [X] Add string array-like accessor
-- [ ] Improve error system
+- [ ] Improve error system (based on C)
 - [ ] Add statements:
     - [ ] for
     - [ ] foreach

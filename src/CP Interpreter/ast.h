@@ -2,6 +2,7 @@
 #define AST_H
 
 #include <string>
+#include <array>
 #include <vector>
 #include <map>
 
@@ -201,6 +202,31 @@ namespace parser {
 		ASTBlockNode* ifBlock;
 		std::vector<ASTElseIfNode*> elseIf;
 		ASTBlockNode* elseBlock;
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
+	class ASTForNode : public ASTStatementNode {
+	public:
+		ASTForNode(std::array<ASTNode*, 3>, ASTBlockNode*, unsigned int, unsigned int);
+
+		std::array<ASTNode*, 3> dci;
+		ASTBlockNode* block;
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
+	class ASTForEachNode : public ASTStatementNode {
+	public:
+		ASTForEachNode(ASTNode*, ASTExprNode*, ASTBlockNode*, unsigned int, unsigned int);
+
+		ASTNode* itdecl; // decl or assign node
+		ASTExprNode* collection;
+		ASTBlockNode* block;
 		unsigned int row;
 		unsigned int col;
 

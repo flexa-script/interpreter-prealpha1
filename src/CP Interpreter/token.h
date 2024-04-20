@@ -40,6 +40,8 @@ namespace lexer {
 		TOK_DEFAULT,
 		TOK_IF,
 		TOK_ELSE,
+		TOK_FOR,
+		TOK_FOREACH,
 		TOK_WHILE,
 		TOK_PRINT,
 		TOK_READ,
@@ -61,17 +63,27 @@ namespace lexer {
 		TOK_ERROR
 	};
 
+	const TOKEN_TYPE TYPE_TOKENS[7] = {
+		TOK_VOID_TYPE,
+		TOK_BOOL_TYPE,
+		TOK_INT_TYPE,
+		TOK_FLOAT_TYPE,
+		TOK_CHAR_TYPE,
+		TOK_STRING_TYPE,
+		TOK_ANY_TYPE
+	};
+
 	class Token {
 	public:
-		Token();
-
-		Token(TOKEN_TYPE, std::string, unsigned int row = 0, unsigned int col = 0);
-
 		TOKEN_TYPE type;
 		std::string value;
 		unsigned int row;
 		unsigned int col;
 
+		Token();
+		Token(TOKEN_TYPE, std::string, unsigned int row = 0, unsigned int col = 0);
+
+		bool isType();
 	};
 };
 

@@ -11,6 +11,8 @@ namespace axe {
 	std::vector<std::string> split(std::string, char);
 	std::list<std::string> splitList(std::string, char);
 	bool contains(std::string, std::string);
+	template<typename C, typename T>
+	bool ccontains(C&&, T);
 	std::string join(std::vector<std::string>, const char* const);
 	int hashcode(const std::string&);
 }
