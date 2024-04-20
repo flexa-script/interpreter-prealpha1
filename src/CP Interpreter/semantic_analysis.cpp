@@ -665,7 +665,7 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* astnode) {
 	parser::TYPE r_type = currentExpressionType;
 
 	// these only work for int/float
-	if (op == "*" || op == "/" || op == "-" || op == "%") {
+	if (op == "-" || op == "/" || op == "*" || op == "%") {
 		if ((l_type != parser::TYPE::T_INT && l_type != parser::TYPE::T_FLOAT) || (r_type != parser::TYPE::T_INT && r_type != parser::TYPE::T_FLOAT)) {
 			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "expected numerical operands for '" + op + "' operator.");
 		}

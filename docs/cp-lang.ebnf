@@ -13,8 +13,12 @@ statement         = struct_decl ";"
                   | variable_decl ";"
                   | constant_decl ";"
                   | assignment ";"
+                  | switch_statement
                   | if_statement
                   | while_statement
+                  | for_statement
+                  | foreach_statement
+                  | break_statement ";"
                   | return_statement ";"
                   | function_decl
                   | block
@@ -31,7 +35,11 @@ formal_param      = var_identifier ":" type
 
 while_statement   = "while" "(" expression ")" block
 
-if_statement      = "if" "(" expression ")" block [ "else" block ]
+if_statement      = "if" "(" expression ")" block { elif_statement } [ else_statement ]
+
+elif_statement    = "else" if_statement
+
+else_statement    = "else" block
 
 return_statement  = "return" [ expression ]
 

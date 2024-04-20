@@ -30,11 +30,15 @@
 - [ ] Improve error system
 - [ ] Add statements:
     - [ ] for
+    - [ ] foreach
     - [X] else if
-    - [ ] switch
+    - [X] switch
     - [ ] try catch
     - [ ] enum
-    - [ ] immediate if?
+- [ ] Add expression operators:
+    - [ ] ++,--
+    - [ ] +=,-=,*=,/=,%=
+    - [ ] immediate if
 - [X] Add built in funcs:
     - [X] len: returns size of array/string
     - [X] round: round a float number

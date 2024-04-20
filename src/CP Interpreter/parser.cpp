@@ -443,33 +443,6 @@ ASTSwitchNode* Parser::parseSwitchStatement() {
 		}
 
 		caseBlocks->emplace(caseExrp, startPosition);
-
-		//if (currentToken.type == lexer::TOK_LEFT_CURLY) {
-		//	consumeToken();
-		//	isBlock = true;
-		//}
-
-		//// while not reached end of block or end of file
-		//while (currentToken.type != lexer::TOK_CASE && currentToken.type != lexer::TOK_DEFAULT && currentToken.type != lexer::TOK_RIGHT_CURLY && currentToken.type != lexer::TOK_ERROR && currentToken.type != lexer::TOK_EOF) {
-		//	// parse the statement
-		//	statements->push_back(parseBlockStatement());
-
-		//	// consume first token of next statement
-		//	consumeToken();
-		//}
-
-		//caseBlocks->emplace(caseExrp, startPosition);
-		//
-		//if (isBlock && currentToken.type != lexer::TOK_RIGHT_CURLY) {
-		//	throw std::runtime_error(msgHeader() + "expected '}' to close block");
-		//}
-
-		//if (currentToken.type == lexer::TOK_RIGHT_CURLY) {
-		//	if (!isBlock) {
-		//		throw std::runtime_error(msgHeader() + "token '}' unexpected");
-		//	}
-		//	consumeToken();
-		//}
 	}
 
 	if (currentToken.type == lexer::TOK_DEFAULT) {
@@ -498,33 +471,6 @@ ASTSwitchNode* Parser::parseSwitchStatement() {
 				consumeToken();
 			}
 		}
-
-		//if (currentToken.type == lexer::TOK_LEFT_CURLY) {
-		//	consumeToken();
-		//	isBlock = true;
-		//}
-
-		//// while not reached end of block or end of file
-		//while (currentToken.type != lexer::TOK_RIGHT_CURLY && currentToken.type != lexer::TOK_ERROR && currentToken.type != lexer::TOK_EOF) {
-		//	// parse the statement
-		//	statements->push_back(parseBlockStatement());
-
-		//	// consume first token of next statement
-		//	consumeToken();
-		//}
-
-		////consumeToken();
-
-		//if (isBlock && nextToken.type != lexer::TOK_RIGHT_CURLY) {
-		//	throw std::runtime_error(msgHeader() + "expected '}' to close block");
-		//}
-
-		//if (nextToken.type == lexer::TOK_RIGHT_CURLY) {
-		//	if (!isBlock) {
-		//		throw std::runtime_error(msgHeader() + "token '}' unexpected");
-		//	}
-		//	consumeToken();
-		//}
 	}
 
 	return new ASTSwitchNode(condition, statements, caseBlocks, defaultBlock, row, col);
