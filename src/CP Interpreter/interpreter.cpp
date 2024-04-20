@@ -309,6 +309,9 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	// visit each statement in the block
 	for (auto& stmt : astnode->statements) {
 		stmt->accept(this);
+		if (breakBlock && (isLoop || isSwitch)) {
+			break;
+		}
 		if (returnFromFunction) {
 			if (!returnFromFunctionName.empty() && returnFromFunctionName == scopes.back()->getName()) {
 				returnFromFunctionName = "";
@@ -323,66 +326,47 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 }
 
 void visitor::Interpreter::visit(parser::ASTBreakNode* astnode) {
-	//for (int i = scopes.size() - 1; i >= 0; --i) {
-	//	if (!scopes[i]->getName().empty()) {
-	//		returnFromFunctionName = scopes[i]->getName();
-	//		returnFromFunction = true;
-	//		break;
-	//	}
-	//}
+	breakBlock = true;
 }
 
 void visitor::Interpreter::visit(parser::ASTSwitchNode* astnode) {
-	//// create new scope
-	//scopes.push_back(new InterpreterScope(currentFunctionName));
+	isSwitch = true;
 
-	//// check whether this is a function block by seeing if we have any current function
-	//// parameters. If we do, then add them to the current scope.
-	//for (unsigned int i = 0; i < currentFunctionArguments.size(); i++) {
-	//	switch (currentFunctionArguments[i].first) {
-	//	case parser::TYPE::T_BOOL:
-	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->b);
-	//		break;
-	//	case parser::TYPE::T_INT:
-	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->i);
-	//		break;
-	//	case parser::TYPE::T_FLOAT:
-	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->f);
-	//		break;
-	//	case parser::TYPE::T_CHAR:
-	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->c);
-	//		break;
-	//	case parser::TYPE::T_STRING:
-	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->s);
-	//		break;
-	//	case parser::TYPE::T_STRUCT:
-	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->str);
-	//		break;
-	//	case parser::TYPE::T_ARRAY:
-	//		scopes.back()->declareVariable(currentFunctionParameters[i], currentFunctionArguments[i].second->arr);
-	//		break;
-	//	}
-	//}
+	// create new scope
+	scopes.push_back(new InterpreterScope());
 
-	//// clear the global function parameter/argument vectors
-	//currentFunctionParameters.clear();
-	//currentFunctionArguments.clear();
-	//currentFunctionName = "";
+	int pos = -1;
 
-	//// visit each statement in the block
-	//for (auto& stmt : astnode->statements) {
-	//	stmt->accept(this);
-	//	if (returnFromFunction) {
-	//		if (!returnFromFunctionName.empty() && returnFromFunctionName == scopes.back()->getName()) {
-	//			returnFromFunctionName = "";
-	//			returnFromFunction = false;
-	//		}
-	//		break;
-	//	}
-	//}
+	astnode->condition->accept(this);
 
-	//// close scope
-	//scopes.pop_back();
+	try {
+		pos = astnode->parsedCaseBlocks->at(astnode->condition->hash());
+	}
+	catch (...) {
+		pos = astnode->defaultBlock;
+	}
+
+	// visit each statement in the block
+	for (int i = pos; i < astnode->statements->size(); ++i) {
+		astnode->statements->at(i)->accept(this);
+
+		if (breakBlock) {
+			breakBlock = false;
+			break;
+		}
+
+		if (returnFromFunction) {
+			if (!returnFromFunctionName.empty() && returnFromFunctionName == scopes.back()->getName()) {
+				returnFromFunctionName = "";
+				returnFromFunction = false;
+			}
+			break;
+		}
+	}
+
+	// close scope
+	scopes.pop_back();
+	isSwitch = false;
 }
 
 void visitor::Interpreter::visit(parser::ASTElseIfNode* astnode) {
@@ -424,6 +408,8 @@ void visitor::Interpreter::visit(parser::ASTIfNode* astnode) {
 }
 
 void visitor::Interpreter::visit(parser::ASTWhileNode* astnode) {
+	isLoop = true;
+
 	// evaluate while condition
 	astnode->condition->accept(this);
 
@@ -433,11 +419,18 @@ void visitor::Interpreter::visit(parser::ASTWhileNode* astnode) {
 		// execute block
 		astnode->block->accept(this);
 
+		if (breakBlock) {
+			breakBlock = false;
+			break;
+		}
+
 		// re-evaluate while condition
 		astnode->condition->accept(this);
 
 		result = currentExpressionType == parser::TYPE::T_BOOL ? currentExpressionValue.b : currentExpressionValue.hasValue;
 	}
+
+	isLoop = false;
 }
 
 void visitor::Interpreter::visit(parser::ASTFunctionDefinitionNode* astnode) {

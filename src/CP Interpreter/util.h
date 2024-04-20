@@ -12,6 +12,7 @@ namespace axe {
 	std::list<std::string> splitList(std::string, char);
 	bool contains(std::string, std::string);
 	std::string join(std::vector<std::string>, const char* const);
+	int hashcode(const std::string&);
 }
 
 #endif //UTIL_H

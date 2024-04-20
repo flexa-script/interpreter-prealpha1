@@ -488,24 +488,29 @@ void SemanticAnalyser::visit(parser::ASTBreakNode* astnode) {
 }
 
 void SemanticAnalyser::visit(parser::ASTSwitchNode* astnode) {
-	//// create new scope
-	//scopes.push_back(new SemanticScope());
+	// create new scope
+	scopes.push_back(new SemanticScope());
 
-	//// check whether this is a function block by seeing if we have any current function parameters. If we do, then add them to the current scope.
-	//for (auto param : currentFunctionParameters) {
-	//	scopes.back()->declareVariable(param.identifier, param.type, param.typeName, param.arrayType, param.dim, param.isConst, param.hasValue, param.row, param.col, true);
-	//}
+	astnode->parsedCaseBlocks = new std::map<int, unsigned int>();
 
-	//// clear the global function parameters vector
-	//currentFunctionParameters.clear();
+	astnode->condition->accept(this);
 
-	//// visit each statement in the block
-	//for (auto& stmt : astnode->statements) {
-	//	stmt->accept(this);
-	//}
+	// visit each case expresion in the block
+	for (auto& expr : *astnode->caseBlocks) {
+		expr.first->accept(this);
+		astnode->parsedCaseBlocks->emplace(expr.first->hash(), expr.second);
+		if (!isConstant) {
+			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "error: expression is not an constant expression");
+		}
+	}
 
-	//// close scope
-	//scopes.pop_back();
+	// visit each statement in the block
+	for (auto& stmt : *astnode->statements) {
+		stmt->accept(this);
+	}
+
+	// close scope
+	scopes.pop_back();
 }
 
 void SemanticAnalyser::visit(parser::ASTElseIfNode* astnode) {
@@ -600,26 +605,31 @@ void SemanticAnalyser::visit(parser::ASTStructDefinitionNode* astnode) {
 void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_bool>*) {
 	currentExpressionType = parser::TYPE::T_BOOL;
 	currentExpressionTypeName = "";
+	isConstant = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_int>*) {
 	currentExpressionType = parser::TYPE::T_INT;
 	currentExpressionTypeName = "";
+	isConstant = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_float>*) {
 	currentExpressionType = parser::TYPE::T_FLOAT;
 	currentExpressionTypeName = "";
+	isConstant = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_char>*) {
 	currentExpressionType = parser::TYPE::T_CHAR;
 	currentExpressionTypeName = "";
+	isConstant = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_string>*) {
 	currentExpressionType = parser::TYPE::T_STRING;
 	currentExpressionTypeName = "";
+	isConstant = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTArrayConstructorNode* astnode) {
@@ -628,6 +638,7 @@ void SemanticAnalyser::visit(parser::ASTArrayConstructorNode* astnode) {
 	}
 	currentExpressionType = parser::TYPE::T_ARRAY;
 	currentExpressionTypeName = "";
+	isConstant = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTStructConstructorNode* astnode) {
@@ -636,9 +647,12 @@ void SemanticAnalyser::visit(parser::ASTStructConstructorNode* astnode) {
 	}
 	currentExpressionType = parser::TYPE::T_STRUCT;
 	currentExpressionTypeName = astnode->typeName;
+	isConstant = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTBinaryExprNode* astnode) {
+	isConstant = false;
+
 	// operator
 	std::string op = astnode->op;
 
@@ -732,6 +746,7 @@ void SemanticAnalyser::visit(parser::ASTIdentifierNode* astnode) {
 
 	currentExpressionType = declaredVariable.type;
 	currentExpressionTypeName = declaredVariable.typeName;
+	isConstant = declaredVariable.isConst;
 
 	if (astnode->accessVector.size() > 0 && currentExpressionType != parser::TYPE::T_ARRAY && currentExpressionType != parser::TYPE::T_STRING) {
 		throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "'" + actualIdentifier + "' is not an array or string");
@@ -739,6 +754,8 @@ void SemanticAnalyser::visit(parser::ASTIdentifierNode* astnode) {
 }
 
 void SemanticAnalyser::visit(parser::ASTUnaryExprNode* astnode) {
+	isConstant = false;
+
 	// determine expression type
 	astnode->expr->accept(this);
 

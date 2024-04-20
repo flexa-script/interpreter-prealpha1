@@ -22,6 +22,7 @@ namespace visitor {
 		parser::TYPE currentExpressionArrayType;
 		std::string currentExpressionTypeName;
 		bool isFunctionDefinitionContext;
+		bool isConstant;
 		int arrayLevel = 0;
 		std::vector<parser::VariableDefinition_t> currentFunctionParameters;
 

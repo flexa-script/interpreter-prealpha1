@@ -29,6 +29,9 @@ namespace visitor {
 		std::string currentFunctionName;
 		std::string returnFromFunctionName;
 		bool returnFromFunction = false;
+		bool isSwitch = false;
+		bool isLoop = false;
+		bool breakBlock = false;
 		bool executedElif = false;
 
 	private:

@@ -1,6 +1,8 @@
 #include <utility>
+#include <numeric>
 
 #include "ast.h"
+#include "util.h"
 
 
 using namespace parser;
@@ -105,10 +107,18 @@ void ASTBinaryExprNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
+int ASTBinaryExprNode::hash() {
+	return left->hash() + axe::hashcode(op) + right->hash();
+}
+
 namespace parser {
 	template<>
 	void ASTLiteralNode<cp_bool>::accept(visitor::Visitor* v) {
 		v->visit(this);
+	}
+
+	int ASTLiteralNode<cp_bool>::hash() {
+		return val;
 	}
 
 	template<>
@@ -116,9 +126,17 @@ namespace parser {
 		v->visit(this);
 	}
 
+	int ASTLiteralNode<cp_int>::hash() {
+		return val;
+	}
+
 	template<>
 	void ASTLiteralNode<cp_float>::accept(visitor::Visitor* v) {
 		v->visit(this);
+	}
+
+	int ASTLiteralNode<cp_float>::hash() {
+		return val;
 	}
 
 	template<>
@@ -126,9 +144,17 @@ namespace parser {
 		v->visit(this);
 	}
 
+	int ASTLiteralNode<cp_char>::hash() {
+		return val;
+	}
+
 	template<>
 	void ASTLiteralNode<cp_string>::accept(visitor::Visitor* v) {
 		v->visit(this);
+	}
+
+	int ASTLiteralNode<cp_string>::hash() {
+		return axe::hashcode(val);
 	}
 }
 
@@ -136,36 +162,108 @@ void ASTArrayConstructorNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
+int ASTArrayConstructorNode::hash() {
+	int h = 0;
+	for (auto& expr : values) {
+		h += expr->hash();
+	}
+	return h;
+}
+
 void ASTStructConstructorNode::accept(visitor::Visitor* v) {
 	v->visit(this);
+}
+
+int ASTStructConstructorNode::hash() {
+	int h = 0;
+	for (auto& expr : values) {
+		h += axe::hashcode(expr.first) + expr.second->hash();
+	}
+	return axe::hashcode(typeName) + h;
 }
 
 void ASTFunctionCallNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
+int ASTFunctionCallNode::hash() {
+	int h = 0;
+	for (auto& expr : parameters) {
+		h += expr->hash();
+	}
+	return h;
+}
+
 void ASTTypeNode::accept(visitor::Visitor* v) {
 	v->visit(this);
+}
+
+int ASTTypeNode::hash() {
+	return expr->hash();
 }
 
 void ASTRoundNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
+int ASTRoundNode::hash() {
+	return expr->hash() + ndigits;
+}
+
 void ASTLenNode::accept(visitor::Visitor* v) {
 	v->visit(this);
+}
+
+int ASTLenNode::hash() {
+	return expr->hash();
 }
 
 void ASTReadNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
+int ASTReadNode::hash() {
+	return axe::hashcode("read");
+}
+
 void ASTIdentifierNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
+int ASTIdentifierNode::hash() {
+	return std::accumulate(accessVector.begin(), accessVector.end(), 0) + axe::hashcode(axe::join(identifierVector, ""));
+}
+
 void ASTUnaryExprNode::accept(visitor::Visitor* v) {
 	v->visit(this);
+}
+
+int ASTUnaryExprNode::hash() {
+	return axe::hashcode(unaryOp) + expr->hash();
+}
+
+void ASTTypeParseNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+int ASTTypeParseNode::hash() {
+	return axe::hashcode(typeStr(type)) + expr->hash();
+}
+
+void ASTNullNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+int ASTNullNode::hash() {
+	return axe::hashcode("null");
+}
+
+void ASTThisNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+int ASTThisNode::hash() {
+	return axe::hashcode("this");
 }
 
 void ASTDeclarationNode::accept(visitor::Visitor* v) {
@@ -176,19 +274,7 @@ void ASTAssignmentNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-void ASTTypeParseNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
 void ASTPrintNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-void ASTNullNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-void ASTThisNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 

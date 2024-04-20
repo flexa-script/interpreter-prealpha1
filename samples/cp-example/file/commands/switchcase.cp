@@ -1,16 +1,15 @@
 // switchcase
 
-//https://stackoverflow.com/questions/20031147/using-in-a-case-statement-why
-
-switch(5) {
+switch(2) {
 case 0:
 case 1:
     print(1);
     break;
 case 2: {
     print(2);
-}   
     break;
+    print(99);
+}   
 case 3:
     print(3);
 case 4:
@@ -23,3 +22,5 @@ default:
     print("default");
     break;
 }
+
+print("\n\n");

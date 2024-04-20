@@ -47,4 +47,12 @@ namespace axe {
         return string;
     }
 
+    int hashcode(const std::string& str) {
+        int h = 0;
+        for (size_t i = 0; i < str.size(); ++i){
+            h = h * 31 + static_cast<int>(str[i]);
+        }
+        return h;
+    }
+
 }
