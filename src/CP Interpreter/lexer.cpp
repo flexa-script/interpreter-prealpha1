@@ -1,7 +1,7 @@
 #include <stack>
 #include <stdexcept>
 
-#include "lexer.h"
+#include "lexer.hpp"
 
 
 using namespace lexer;

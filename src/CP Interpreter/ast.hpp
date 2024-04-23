@@ -6,20 +6,20 @@
 #include <vector>
 #include <map>
 
-#include "visitor.h"
+#include "visitor.hpp"
 
 
 namespace parser {
 
 	typedef struct VariableDefinition {
-		VariableDefinition(std::string identifier, TYPE type, std::string typeName, TYPE arrayType, std::vector<int> dim, bool isConst, bool hasValue, unsigned int row, unsigned int col, bool isParameter)
+		VariableDefinition(std::string identifier, TYPE type, std::string typeName, TYPE arrayType, std::vector<ASTExprNode*> dim, bool isConst, bool hasValue, unsigned int row, unsigned int col, bool isParameter)
 			: identifier(identifier), type(type), typeName(typeName), arrayType(arrayType), dim(dim), isConst(isConst), hasValue(hasValue), row(row), col(col), isParameter(isParameter) {};
 		VariableDefinition() {};
 		std::string identifier;
 		std::string typeName;
 		parser::TYPE type;
 		parser::TYPE arrayType;
-		std::vector<int> dim;
+		std::vector<ASTExprNode*> dim;
 		bool hasValue;
 		bool isParameter;
 		bool isConst;
@@ -92,7 +92,7 @@ namespace parser {
 
 	class ASTDeclarationNode : public ASTStatementNode {
 	public:
-		ASTDeclarationNode(TYPE, std::string, std::string, ASTExprNode*, bool, TYPE, std::vector<int>, unsigned int, unsigned int);
+		ASTDeclarationNode(TYPE, std::string, std::string, ASTExprNode*, bool, TYPE, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 
 		TYPE type;
 		std::string identifier;
@@ -100,7 +100,7 @@ namespace parser {
 		ASTExprNode* expr;
 		bool isConst;
 		TYPE arrayType;
-		std::vector<int> dim;
+		std::vector<ASTExprNode*> dim;
 		unsigned int row;
 		unsigned int col;
 
@@ -169,12 +169,12 @@ namespace parser {
 	// at vector it's stored switch statements
 	class ASTSwitchNode : public ASTStatementNode {
 	public:
-		ASTSwitchNode(ASTExprNode*, std::vector<ASTNode*>*, std::map<ASTExprNode*, unsigned int>*, int, unsigned int, unsigned int);
+		ASTSwitchNode(ASTExprNode*, std::vector<ASTNode*>*, std::map<ASTExprNode*, unsigned int>*, unsigned int, unsigned int, unsigned int);
 
 		ASTExprNode* condition;
 		std::map<ASTExprNode*, unsigned int>* caseBlocks;
-		std::map<int, unsigned int>* parsedCaseBlocks;
-		int defaultBlock;
+		std::map<unsigned int, unsigned int>* parsedCaseBlocks;
+		unsigned int defaultBlock;
 		std::vector<ASTNode*>* statements;
 		unsigned int row;
 		unsigned int col;
@@ -350,11 +350,11 @@ namespace parser {
 
 	class ASTIdentifierNode : public ASTExprNode {
 	public:
-		explicit ASTIdentifierNode(std::string, std::vector<std::string>, std::vector<unsigned int>, unsigned int, unsigned int);
+		explicit ASTIdentifierNode(std::string, std::vector<std::string>, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 
 		std::string identifier;
 		std::vector<std::string> identifierVector;
-		std::vector<unsigned int> accessVector;
+		std::vector<ASTExprNode*> accessVector;
 		unsigned int row;
 		unsigned int col;
 

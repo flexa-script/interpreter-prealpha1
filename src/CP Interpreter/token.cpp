@@ -1,6 +1,5 @@
-#include "token.h"
-
-#include "util.h"
+#include "token.hpp"
+//#include "util.hpp"
 
 
 using namespace lexer;
@@ -13,4 +12,8 @@ Token::Token(TOKEN_TYPE type, std::string value, unsigned int row, unsigned int 
 
 bool Token::isType() {
 	return std::find(std::begin(TYPE_TOKENS), std::end(TYPE_TOKENS), type) != std::end(TYPE_TOKENS);// axe::ccontains(TYPE_TOKENS, type);
+}
+
+std::string Token::tokenImage(const TOKEN_TYPE type) {
+	return TOKEN_IMAGE[type];
 }

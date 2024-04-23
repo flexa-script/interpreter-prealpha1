@@ -63,7 +63,64 @@ namespace lexer {
 		TOK_ERROR
 	};
 
-	const TOKEN_TYPE TYPE_TOKENS[7] = {
+	const std::string TOKEN_IMAGE[] = {
+		"bool literal",
+		"int literal",
+		"float literal",
+		"char literal",
+		"string literal",
+		"additive operator",
+		"multiplicative operator",
+		"relational operator",
+		"=",
+		"and",
+		"or",
+		"not",
+		"void",
+		"bool",
+		"int",
+		"float",
+		"char",
+		"string",
+		"any",
+		"using",
+		"const",
+		"var",
+		"sruct",
+		"def",
+		"null",
+		"this",
+		"return",
+		"break",
+		"switch",
+		"case",
+		"default",
+		"if",
+		"else",
+		"for",
+		"foreach",
+		"while",
+		"print",
+		"read",
+		"len",
+		"type",
+		"round",
+		"identifier",
+		"",
+		"{",
+		"}",
+		"(",
+		")",
+		"[",
+		"]",
+		",",
+		";",
+		":",
+		"error token",
+		"EOF token"
+	};
+
+	const TOKEN_TYPE TYPE_TOKENS[] = {
 		TOK_VOID_TYPE,
 		TOK_BOOL_TYPE,
 		TOK_INT_TYPE,
@@ -84,6 +141,7 @@ namespace lexer {
 		Token(TOKEN_TYPE, std::string, unsigned int row = 0, unsigned int col = 0);
 
 		bool isType();
+		static std::string tokenImage(const TOKEN_TYPE);
 	};
 };
 

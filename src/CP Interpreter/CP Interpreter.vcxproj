@@ -51,19 +51,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ast.h" />
-    <ClInclude Include="cpinterpreter.h" />
-    <ClInclude Include="cprepl.h" />
-    <ClInclude Include="cputil.h" />
-    <ClInclude Include="interpreter.h" />
-    <ClInclude Include="interpreter_scope.h" />
-    <ClInclude Include="lexer.h" />
-    <ClInclude Include="parser.h" />
-    <ClInclude Include="semantic_analysis.h" />
-    <ClInclude Include="semantic_scope.h" />
-    <ClInclude Include="token.h" />
-    <ClInclude Include="util.h" />
-    <ClInclude Include="visitor.h" />
+    <ClInclude Include="ast.hpp" />
+    <ClInclude Include="cpinterpreter.hpp" />
+    <ClInclude Include="cprepl.hpp" />
+    <ClInclude Include="cputil.hpp" />
+    <ClInclude Include="interpreter.hpp" />
+    <ClInclude Include="interpreter_scope.hpp" />
+    <ClInclude Include="lexer.hpp" />
+    <ClInclude Include="parser.hpp" />
+    <ClInclude Include="semantic_analysis.hpp" />
+    <ClInclude Include="semantic_scope.hpp" />
+    <ClInclude Include="token.hpp" />
+    <ClInclude Include="util.hpp" />
+    <ClInclude Include="visitor.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ast.cpp" />

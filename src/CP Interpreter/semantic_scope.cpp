@@ -1,8 +1,8 @@
 #include <utility>
 #include <iostream>
 
-#include "semantic_scope.h"
-#include "util.h"
+#include "semantic_scope.hpp"
+#include "util.hpp"
 
 
 using namespace visitor;
@@ -65,7 +65,7 @@ void SemanticScope::declareStructureDefinition(std::string name, std::vector<par
 	structureSymbolTable[name] = strDef;
 }
 
-void SemanticScope::declareVariable(std::string identifier, parser::TYPE type, std::string typeName, parser::TYPE arrayType, std::vector<int> dim, bool isConst, bool hasValue, unsigned int row, unsigned int col, bool isParameter) {
+void SemanticScope::declareVariable(std::string identifier, parser::TYPE type, std::string typeName, parser::TYPE arrayType, std::vector<parser::ASTExprNode*> dim, bool isConst, bool hasValue, unsigned int row, unsigned int col, bool isParameter) {
 	parser::VariableDefinition_t var(identifier, type, typeName, arrayType, dim, isConst, hasValue, row, col, isParameter);
 	variableSymbolTable[identifier] = var;
 }

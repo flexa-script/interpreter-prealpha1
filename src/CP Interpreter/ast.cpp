@@ -1,8 +1,8 @@
 #include <utility>
 #include <numeric>
 
-#include "ast.h"
-#include "util.h"
+#include "ast.hpp"
+#include "util.hpp"
 
 
 using namespace parser;
@@ -16,7 +16,7 @@ ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string nam
 ASTUsingNode::ASTUsingNode(std::string library, unsigned int row, unsigned int col)
 	: library(std::move(library)), row(row), col(col) {}
 
-ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string typeName, std::string identifier, ASTExprNode* expr, bool isConst, TYPE arrayType, std::vector<int> dim, unsigned int row, unsigned int col)
+ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string typeName, std::string identifier, ASTExprNode* expr, bool isConst, TYPE arrayType, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col)
 	: type(type), typeName(std::move(typeName)), identifier(std::move(identifier)), expr(expr), isConst(isConst), arrayType(arrayType), dim(dim), row(row), col(col) {}
 
 ASTAssignmentNode::ASTAssignmentNode(std::string identifier, std::vector<std::string> identifierVector, ASTExprNode* expr, std::vector<ASTExprNode*> accessVector, unsigned int row, unsigned int col)
@@ -34,8 +34,8 @@ ASTBlockNode::ASTBlockNode(std::vector<ASTNode*> statements, unsigned int row, u
 ASTBreakNode::ASTBreakNode(unsigned int row, unsigned int col)
 	: row(row), col(col) {}
 
-ASTSwitchNode::ASTSwitchNode(ASTExprNode* condition, std::vector<ASTNode*>* statements, std::map<ASTExprNode*, unsigned int>* caseBlocks, int defaultBlock, unsigned int row, unsigned int col)
-	: condition(condition), statements(statements), caseBlocks(caseBlocks), defaultBlock(defaultBlock), parsedCaseBlocks(new std::map<int, unsigned int>()), row(row), col(col) {}
+ASTSwitchNode::ASTSwitchNode(ASTExprNode* condition, std::vector<ASTNode*>* statements, std::map<ASTExprNode*, unsigned int>* caseBlocks, unsigned int defaultBlock, unsigned int row, unsigned int col)
+	: condition(condition), statements(statements), caseBlocks(caseBlocks), defaultBlock(defaultBlock), parsedCaseBlocks(new std::map<unsigned int, unsigned int>()), row(row), col(col) {}
 
 ASTElseIfNode::ASTElseIfNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: condition(condition), block(block), row(row), col(col) {}
@@ -83,7 +83,7 @@ ASTThisNode::ASTThisNode(unsigned int row, unsigned int col)
 ASTBinaryExprNode::ASTBinaryExprNode(std::string op, ASTExprNode* left, ASTExprNode* right, unsigned int row, unsigned int col)
 	: op(std::move(op)), left(left), right(right), row(row), col(col) {}
 
-ASTIdentifierNode::ASTIdentifierNode(std::string identifier, std::vector<std::string> identifierVector, std::vector<unsigned int> accessVector, unsigned int row, unsigned int col)
+ASTIdentifierNode::ASTIdentifierNode(std::string identifier, std::vector<std::string> identifierVector, std::vector<ASTExprNode*> accessVector, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), identifierVector(identifierVector), accessVector(accessVector), row(row), col(col) {}
 
 ASTUnaryExprNode::ASTUnaryExprNode(std::string unaryOp, ASTExprNode* expr, unsigned int row, unsigned int col)
@@ -237,7 +237,7 @@ void ASTIdentifierNode::accept(visitor::Visitor* v) {
 }
 
 int ASTIdentifierNode::hash() {
-	return std::accumulate(accessVector.begin(), accessVector.end(), 0) + axe::hashcode(axe::join(identifierVector, ""));
+	return 0;
 }
 
 void ASTUnaryExprNode::accept(visitor::Visitor* v) {

@@ -1,4 +1,4 @@
-#include "cpinterpreter.h"
+#include "cpinterpreter.hpp"
 
 
 int CPInterpreter::execute(int argc, const char* argv[]) {

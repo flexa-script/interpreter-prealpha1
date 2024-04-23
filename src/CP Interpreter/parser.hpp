@@ -1,8 +1,8 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "ast.h"
-#include "lexer.h"
+#include "ast.hpp"
+#include "lexer.hpp"
 
 
 namespace parser {
@@ -13,6 +13,7 @@ namespace parser {
 		lexer::Token currentToken;
 		lexer::Token nextToken;
 		TYPE currentArrayType = TYPE::T_ND;
+		bool consumeSemicolon = false;
 
 	public:
 		std::string name;
@@ -23,9 +24,13 @@ namespace parser {
 
 		ASTProgramNode* parseProgram();
 		ASTExprNode* parseExpression();  // public for repl
+		ASTExprNode* parseStatementExpression();  // public for repl
 
 	private:
 		void consumeToken();
+		void consumeToken(lexer::TOKEN_TYPE);
+		bool isBlockStatement(lexer::TOKEN_TYPE);
+		bool isExclusiveBlockStatement(lexer::TOKEN_TYPE);
 
 		// statement Nodes
 		ASTNode* parseProgramStatement();

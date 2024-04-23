@@ -6,7 +6,7 @@
 #include <stack>
 #include <xutility>
 
-#include "ast.h"
+#include "ast.hpp"
 
 
 namespace visitor {
@@ -25,7 +25,7 @@ namespace visitor {
 		bool alreadyDeclaredFunction(std::string, std::vector<parser::TYPE>);
 
 		void declareStructureDefinition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
-		void declareVariable(std::string, parser::TYPE, std::string, parser::TYPE, std::vector<int>, bool, bool, unsigned int, unsigned int, bool);
+		void declareVariable(std::string, parser::TYPE, std::string, parser::TYPE, std::vector<parser::ASTExprNode*>, bool, bool, unsigned int, unsigned int, bool);
 		void declareFunction(std::string, parser::TYPE, std::string, std::vector<parser::TYPE>, bool, unsigned int, unsigned int);
 
 		void assignVariable(std::string, bool);

@@ -33,43 +33,43 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="util.h">
+    <ClInclude Include="util.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="lexer.h">
+    <ClInclude Include="lexer.hpp">
       <Filter>Header Files\lexer</Filter>
     </ClInclude>
-    <ClInclude Include="token.h">
+    <ClInclude Include="token.hpp">
       <Filter>Header Files\lexer</Filter>
     </ClInclude>
-    <ClInclude Include="ast.h">
+    <ClInclude Include="ast.hpp">
       <Filter>Header Files\parser</Filter>
     </ClInclude>
-    <ClInclude Include="parser.h">
+    <ClInclude Include="parser.hpp">
       <Filter>Header Files\parser</Filter>
     </ClInclude>
-    <ClInclude Include="interpreter.h">
+    <ClInclude Include="interpreter.hpp">
       <Filter>Header Files\visitor</Filter>
     </ClInclude>
-    <ClInclude Include="semantic_analysis.h">
+    <ClInclude Include="semantic_analysis.hpp">
       <Filter>Header Files\visitor</Filter>
     </ClInclude>
-    <ClInclude Include="visitor.h">
+    <ClInclude Include="visitor.hpp">
       <Filter>Header Files\visitor</Filter>
     </ClInclude>
-    <ClInclude Include="cpinterpreter.h">
+    <ClInclude Include="cpinterpreter.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cprepl.h">
+    <ClInclude Include="cprepl.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cputil.h">
+    <ClInclude Include="cputil.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="semantic_scope.h">
+    <ClInclude Include="semantic_scope.hpp">
       <Filter>Header Files\visitor</Filter>
     </ClInclude>
-    <ClInclude Include="interpreter_scope.h">
+    <ClInclude Include="interpreter_scope.hpp">
       <Filter>Header Files\visitor</Filter>
     </ClInclude>
   </ItemGroup>

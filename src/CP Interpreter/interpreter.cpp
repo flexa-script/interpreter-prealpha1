@@ -1,8 +1,8 @@
 #include <iostream>
 #include <cmath>
 
-#include "interpreter.h"
-#include "util.h"
+#include "interpreter.hpp"
+#include "util.hpp"
 
 
 using namespace visitor;
@@ -96,7 +96,7 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 		}
 	}
 
-	Value_t* val = scopes.back()->accessValue(std::vector<std::string> {astnode->identifier}, std::vector<unsigned int>());
+	Value_t* val = scopes.back()->accessValue(std::vector<std::string> {astnode->identifier}, std::vector<parser::ASTExprNode*>());
 	val->dim = astnode->dim;
 	val->arrType = astnode->arrayType;
 }
@@ -146,8 +146,6 @@ std::vector<unsigned int> Interpreter::evaluateAccessVector(std::vector<parser::
 }
 
 void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
-	auto accessVector = evaluateAccessVector(astnode->accessVector);
-
 	// determine innermost scope in which variable is declared
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredVariable(astnode->identifier); i--);
@@ -155,7 +153,7 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
 
-	Value_t* value = scopes[i]->accessValue(astnode->identifierVector, accessVector);
+	Value_t* value = scopes[i]->accessValue(astnode->identifierVector, astnode->accessVector);
 
 	if (currentExpressionValue.currType != parser::TYPE::T_NULL && currentExpressionValue.hasValue) {
 		switch (currentExpressionValue.currType) {
@@ -263,7 +261,7 @@ void visitor::Interpreter::visit(parser::ASTReturnNode* astnode) {
 
 void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	// create new scope
-	scopes.push_back(new InterpreterScope(currentFunctionName));
+	scopes.push_back(new InterpreterScope(this, currentFunctionName));
 
 	// check whether this is a function block by seeing if we have any current function
 	// parameters. If we do, then add them to the current scope.
@@ -736,9 +734,10 @@ void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredVariable(astnode->identifier); i--);
 
 	currentExpressionValue = *scopes[i]->accessValue(astnode->identifierVector, astnode->accessVector);
-
+	
 	if (currentExpressionValue.currType == parser::TYPE::T_STRING && astnode->accessVector.size() > 0 && scopes[i]->hasStringAccess) {
-		auto pos = astnode->accessVector[astnode->accessVector.size() - 1];
+		astnode->accessVector[astnode->accessVector.size() - 1]->accept(this);
+		auto pos = currentExpressionValue.i;
 
 		if (pos >= currentExpressionValue.s.size()) {
 			throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "tryed to access a invalid position in a string");
@@ -936,18 +935,21 @@ void visitor::Interpreter::visit(parser::ASTTypeParseNode* astnode) {
 void visitor::Interpreter::visit(parser::ASTTypeNode* astnode) {
 	astnode->expr->accept(this);
 
-	auto type = currentExpressionValue.currType;
+	auto currentValue = currentExpressionValue;
 
+	auto dim = evaluateAccessVector(currentValue.dim);
+
+	auto type = currentValue.currType;
 	auto strT = parser::typeStr(type);
 
 	if (type == parser::TYPE::T_ARRAY) {
-		strT = parser::typeStr(currentExpressionValue.arrType);
-		for (size_t i = 0; i < currentExpressionValue.dim.size(); ++i) {
-			strT += "[" + std::to_string(currentExpressionValue.dim[i]) + "]";
+		strT = parser::typeStr(currentValue.arrType);
+		for (size_t i = 0; i < dim.size(); ++i) {
+			strT += "[" + std::to_string(dim[i]) + "]";
 		}
 	}
 	else if (type == parser::TYPE::T_STRUCT) {
-		strT += "<" + currentExpressionValue.str.first + ">";
+		strT += "<" + currentValue.str.first + ">";
 	}
 
 	Value_t value = Value_t(parser::TYPE::T_STRING);

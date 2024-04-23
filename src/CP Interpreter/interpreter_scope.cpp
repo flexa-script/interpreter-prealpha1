@@ -1,19 +1,19 @@
-#include "interpreter_scope.h"
-
 #include <iostream>
 #include <cmath>
 
-#include "interpreter.h"
-#include "util.h"
+#include "interpreter_scope.hpp"
+#include "interpreter.hpp"
+#include "util.hpp"
 
 
 using namespace visitor;
 
 
-InterpreterScope::InterpreterScope(std::string name) : name(name) {}
+InterpreterScope::InterpreterScope(Interpreter* parent, std::string name) : parent(parent), name(name) {}
 
 InterpreterScope::InterpreterScope() {
 	name = "";
+	parent = nullptr;
 }
 
 std::string InterpreterScope::getName() {
@@ -114,26 +114,31 @@ parser::StructureDefinition_t InterpreterScope::findDeclaredStructureDefinition(
 	return structureSymbolTable[identifier];
 }
 
-Value_t* InterpreterScope::accessValueOfArray(Value_t* arr, std::vector<unsigned int> accessVector) {
+Value_t* InterpreterScope::accessValueOfArray(Value_t* arr, std::vector<parser::ASTExprNode*> accessVector) {
 	cp_array* currentVal = &arr->arr;
 	size_t s = 0;
+	size_t accessPos = 0;
 
 	for (s = 0; s < accessVector.size() - 1; ++s) {
-		if (accessVector.at(s) >= currentVal->size()) {
+		accessVector.at(s)->accept(parent);
+		accessPos = parent->getCurrentExpressionValue().i;
+		if (accessPos >= currentVal->size()) {
 			throw std::runtime_error("ISERR: tryed to access a invalid position");
 		}
-		if (currentVal->at(accessVector.at(s))->currType != parser::TYPE::T_ARRAY) {
+		if (currentVal->at(accessPos)->currType != parser::TYPE::T_ARRAY) {
 			hasStringAccess = true;
 			break;
 		}
-		currentVal = &currentVal->at(accessVector.at(s))->arr;
+		currentVal = &currentVal->at(accessPos)->arr;
 	}
 
-	if (accessVector.at(s) >= currentVal->size()) {
+	accessVector.at(s)->accept(parent);
+	accessPos = parent->getCurrentExpressionValue().i;
+	if (accessPos >= currentVal->size()) {
 		throw std::runtime_error("ISERR: tryed to access a invalid position");
 	}
 
-	return currentVal->at(accessVector.at(s));
+	return currentVal->at(accessPos);
 }
 
 Value_t* InterpreterScope::accessValueOfStructure(Value_t* value, std::vector<std::string> identifierVector) {
@@ -151,7 +156,7 @@ Value_t* InterpreterScope::accessValueOfStructure(Value_t* value, std::vector<st
 	return strValue;
 }
 
-Value_t* InterpreterScope::accessValue(std::vector<std::string> identifierVector, std::vector<unsigned int> accessVector) {
+Value_t* InterpreterScope::accessValue(std::vector<std::string> identifierVector, std::vector<parser::ASTExprNode*> accessVector) {
 	Value_t* value = variableSymbolTable[identifierVector[0]];
 
 	if (identifierVector.size() > 1) {

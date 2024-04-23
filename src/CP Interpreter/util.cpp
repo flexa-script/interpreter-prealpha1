@@ -3,7 +3,7 @@
 #include <iostream>
 #include <iterator>
 
-#include "util.h"
+#include "util.hpp"
 
 
 namespace axe {
@@ -25,6 +25,13 @@ namespace axe {
     }
 
     std::list<std::string> splitList(std::string string, char sep) {
+        //std::list<std::string> strings;
+        //std::istringstream stringstream(string);
+        //std::string currentString;
+        //while (std::getline(stringstream, currentString, sep)) {
+        //    strings.push_back(currentString);
+        //}
+        //return strings;
         auto v = split(string, sep);
         return std::list<std::string>(v.begin(), v.end());
     }

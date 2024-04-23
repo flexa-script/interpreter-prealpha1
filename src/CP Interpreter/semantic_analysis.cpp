@@ -1,8 +1,8 @@
 #include <utility>
 #include <iostream>
 
-#include "semantic_analysis.h"
-#include "util.h"
+#include "semantic_analysis.hpp"
+#include "util.hpp"
 
 
 using namespace visitor;
@@ -125,12 +125,6 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 					if (astnode->dim.size() != exprDim.size()) {
 						throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier + "'");
 					}
-
-					for (size_t dc = 0; dc < astnode->dim.size(); ++dc) {
-						if (astnode->dim.at(dc) != -1 && astnode->dim.at(dc) != exprDim.at(dc)) {
-							throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array size assigning '" + astnode->identifier + "'");
-						}
-					}
 				}
 
 			}
@@ -211,7 +205,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 
 			try {
 				parser::ASTArrayConstructorNode* arrExpr = dynamic_cast<parser::ASTArrayConstructorNode*>(astnode->expr);
-				std::vector<int> exprDim;
+				std::vector<unsigned int> exprDim;
 
 				if (arrExpr) {
 					determineArrayType(arrExpr);
@@ -220,18 +214,12 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 				else {
 					parser::ASTIdentifierNode* idExpr = dynamic_cast<parser::ASTIdentifierNode*>(astnode->expr);
 					auto exprVariable = findDeclaredVariableRecursively(idExpr->identifier);
-					exprDim = exprVariable.dim;
+					exprDim = evaluateAccessVector(exprVariable.dim);;
 					currentExpressionArrayType = exprVariable.arrayType;
 				}
 
 				if (declaredVariable.dim.size() != exprDim.size()) {
 					throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier + "'");
-				}
-
-				for (size_t dc = 0; dc < declaredVariable.dim.size(); ++dc) {
-					if (declaredVariable.dim[i] != -1 && declaredVariable.dim[i] != exprDim.at(dc)) {
-						throw std::runtime_error(msgHeader(astnode->row, astnode->col) + "invalid array size assigning '" + astnode->identifier + "'");
-					}
 				}
 			}
 			catch (...) {
@@ -308,8 +296,8 @@ void SemanticAnalyser::checkArrayType(parser::ASTExprNode* astnode, unsigned int
 	currentExpressionType = auxCurrType;
 }
 
-std::vector<int> SemanticAnalyser::calculateArrayDimSize(parser::ASTArrayConstructorNode* arr) {
-	auto dim = std::vector<int>();
+std::vector<unsigned int> SemanticAnalyser::calculateArrayDimSize(parser::ASTArrayConstructorNode* arr) {
+	auto dim = std::vector<unsigned int>();
 
 	dim.push_back(arr->values.size());
 
@@ -438,13 +426,16 @@ parser::VariableDefinition_t SemanticAnalyser::findDeclaredVariableRecursively(s
 	throw std::runtime_error(msgHeader(0, 0) + "error: '" + identifier + "' variable not found");
 }
 
-void SemanticAnalyser::evaluateAccessVector(std::vector<parser::ASTExprNode*> exprAcessVector) {
+std::vector<unsigned int> SemanticAnalyser::evaluateAccessVector(std::vector<parser::ASTExprNode*> exprAcessVector) {
+	auto accessVector = std::vector<unsigned int>();
 	for (auto expr : exprAcessVector) {
 		expr->accept(this);
+		accessVector.push_back(0);
 		if (currentExpressionType != parser::TYPE::T_INT) {
 			throw std::runtime_error(msgHeader(0, 0) + "array index access must be a integer value");
 		}
 	}
+	return accessVector;
 }
 
 void SemanticAnalyser::visit(parser::ASTPrintNode* astnode) {
@@ -491,7 +482,7 @@ void SemanticAnalyser::visit(parser::ASTSwitchNode* astnode) {
 	// create new scope
 	scopes.push_back(new SemanticScope());
 
-	astnode->parsedCaseBlocks = new std::map<int, unsigned int>();
+	astnode->parsedCaseBlocks = new std::map<unsigned int, unsigned int>();
 
 	astnode->condition->accept(this);
 

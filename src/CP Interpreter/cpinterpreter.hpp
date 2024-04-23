@@ -6,12 +6,12 @@
 #include <regex>
 #include <iomanip>
 
-#include "lexer.h"
-#include "parser.h"
-#include "semantic_analysis.h"
-#include "interpreter.h"
-#include "util.h"
-#include "cputil.h"
+#include "lexer.hpp"
+#include "parser.hpp"
+#include "semantic_analysis.hpp"
+#include "interpreter.hpp"
+#include "util.hpp"
+#include "cputil.hpp"
 
 
 typedef struct Program {

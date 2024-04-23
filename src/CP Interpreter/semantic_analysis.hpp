@@ -1,51 +1,49 @@
-
-#ifndef INTERPRETER_H
-#define INTERPRETER_H
+#ifndef SEMANTIC_ANALYSIS_H
+#define SEMANTIC_ANALYSIS_H
 
 #include <map>
+#include <vector>
 #include <stack>
-#include <any>
+#include <xutility>
 
-#include "visitor.h"
-#include "ast.h"
-#include "interpreter_scope.h"
+#include "ast.hpp"
+#include "semantic_scope.hpp"
 
 
 namespace visitor {
 
-	class Interpreter : public Visitor {
+	class SemanticAnalyser : Visitor {
 	private:
 		std::vector<parser::ASTProgramNode*> programs;
 		parser::ASTProgramNode* currentProgram;
-
-		std::vector<InterpreterScope*> scopes;
-
-		Value_t currentExpressionValue;
-
-		std::vector<std::string> currentFunctionParameters;
-		std::vector<std::pair<parser::TYPE, Value_t*>> currentFunctionArguments;
-		std::string currentFunctionName;
-		std::string returnFromFunctionName;
-		bool returnFromFunction = false;
-		bool isSwitch = false;
-		bool isLoop = false;
-		bool breakBlock = false;
-		bool executedElif = false;
+		std::vector<SemanticScope*> scopes;
+		std::stack<parser::TYPE> functions;
+		parser::TYPE currentExpressionType;
+		parser::TYPE currentExpressionArrayType;
+		std::string currentExpressionTypeName;
+		bool isFunctionDefinitionContext;
+		bool isConstant;
+		int arrayLevel = 0;
+		std::vector<parser::VariableDefinition_t> currentFunctionParameters;
 
 	private:
+		bool returns(parser::ASTNode*);
 		std::vector<unsigned int> evaluateAccessVector(std::vector<parser::ASTExprNode*>);
-		void declareStructureVariable(std::string, Value_t);
-		void declareStructureDefinitionFirstLevelVariables(cp_struct*);
-		void printValue(Value_t);
-		void printArray(cp_array);
-		void printStruct(cp_struct);
+
+		void declareStructureDefinitionVariables(std::string, parser::ASTStructConstructorNode*);
+		void declareStructureDefinitionFirstLevelVariables(std::string, std::string);
+
+		parser::VariableDefinition_t findDeclaredVariableRecursively(std::string);
+
+		std::vector<unsigned int> calculateArrayDimSize(parser::ASTArrayConstructorNode*);
+		void determineArrayType(parser::ASTArrayConstructorNode*);
+		void checkArrayType(parser::ASTExprNode*, unsigned int, unsigned int);
 
 		std::string msgHeader(unsigned int, unsigned int);
 
 	public:
-		Interpreter();
-		Interpreter(InterpreterScope*, std::vector<parser::ASTProgramNode*>);
-		~Interpreter();
+		SemanticAnalyser(SemanticScope*, std::vector<parser::ASTProgramNode*>);
+		~SemanticAnalyser();
 
 		void start();
 		void visit(parser::ASTProgramNode*) override;
@@ -82,9 +80,7 @@ namespace visitor {
 		void visit(parser::ASTReadNode*) override;
 		void visit(parser::ASTNullNode*) override;
 		void visit(parser::ASTThisNode*) override;
-
-		std::pair<parser::TYPE, Value_t*> currentExpr();
 	};
 }
 
-#endif //INTERPRETER_H
+#endif //SEMANTIC_ANALYSIS_H

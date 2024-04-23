@@ -14,6 +14,41 @@ namespace parser {
 		T_ND, T_VOID, T_NULL, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ANY, T_ARRAY, T_STRUCT
 	};
 	std::string typeStr(TYPE t);
+
+	class ASTProgramNode;
+
+	class ASTUsingNode;
+	class ASTDeclarationNode;
+	class ASTAssignmentNode;
+	class ASTPrintNode;
+	class ASTReadNode;
+	class ASTFunctionCallNode;
+	class ASTReturnNode;
+	class ASTBlockNode;
+	class ASTBreakNode;
+	class ASTSwitchNode;
+	class ASTElseIfNode;
+	class ASTIfNode;
+	class ASTForNode;
+	class ASTForEachNode;
+	class ASTWhileNode;
+	class ASTFunctionDefinitionNode;
+	class ASTStructDefinitionNode;
+	template <typename T> class ASTLiteralNode;
+	class ASTExprNode;
+	class ASTArrayConstructorNode;
+	class ASTStructConstructorNode;
+	class ASTBinaryExprNode;
+	class ASTIdentifierNode;
+	class ASTUnaryExprNode;
+	class ASTFunctionCallNode;
+	class ASTTypeParseNode;
+	class ASTReadNode;
+	class ASTNullNode;
+	class ASTThisNode;
+	class ASTTypeNode;
+	class ASTLenNode;
+	class ASTRoundNode;
 }
 
 typedef bool                  cp_bool;
@@ -35,7 +70,7 @@ typedef struct Value {
 	parser::TYPE type;
 	parser::TYPE currType;
 	parser::TYPE arrType;
-	std::vector<int> dim;
+	std::vector<parser::ASTExprNode*> dim;
 	cp_bool b;
 	cp_int i;
 	cp_float f;
@@ -103,42 +138,6 @@ typedef struct Value {
 		str = value->str;
 	}
 } Value_t;
-
-namespace parser {
-	class ASTProgramNode;
-
-	class ASTUsingNode;
-	class ASTDeclarationNode;
-	class ASTAssignmentNode;
-	class ASTPrintNode;
-	class ASTReadNode;
-	class ASTFunctionCallNode;
-	class ASTReturnNode;
-	class ASTBlockNode;
-	class ASTBreakNode;
-	class ASTSwitchNode;
-	class ASTElseIfNode;
-	class ASTIfNode;
-	class ASTForNode;
-	class ASTForEachNode;
-	class ASTWhileNode;
-	class ASTFunctionDefinitionNode;
-	class ASTStructDefinitionNode;
-	template <typename T> class ASTLiteralNode;
-	class ASTArrayConstructorNode;
-	class ASTStructConstructorNode;
-	class ASTBinaryExprNode;
-	class ASTIdentifierNode;
-	class ASTUnaryExprNode;
-	class ASTFunctionCallNode;
-	class ASTTypeParseNode;
-	class ASTReadNode;
-	class ASTNullNode;
-	class ASTThisNode;
-	class ASTTypeNode;
-	class ASTLenNode;
-	class ASTRoundNode;
-}
 
 namespace visitor {
 	class Visitor {
