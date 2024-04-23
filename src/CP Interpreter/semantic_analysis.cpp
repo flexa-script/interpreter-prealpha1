@@ -183,7 +183,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 
 	// evaluate array access vector
 	evaluateAccessVector(astnode->accessVector);
-	
+
 	// get the type of the originally declared variable
 	if (declaredVariable.isParameter) {
 		declaredVariable = findDeclaredVariableRecursively(actualIdentifier);
@@ -351,7 +351,7 @@ void SemanticAnalyser::declareStructureDefinitionVariables(std::string identifie
 			scopes.back()->declareVariable(currentIdentifier, varTypeStruct->type, varTypeStruct->identifier, parser::TYPE::T_ND, varTypeStruct->dim, false, hasValue, expr->row, expr->col, false);
 
 			parser::ASTStructConstructorNode* strExpr = nullptr;
-			
+
 			if (typeid(parser::ASTStructConstructorNode*) == typeid(strValue.second)) {
 				strExpr = static_cast<parser::ASTStructConstructorNode*>(strValue.second);
 			}
@@ -531,9 +531,15 @@ void SemanticAnalyser::visit(parser::ASTIfNode* astnode) {
 
 void SemanticAnalyser::visit(parser::ASTForNode* astnode) {
 	// set current type to while expression
-	astnode->dci[0]->accept(this);
-	astnode->dci[1]->accept(this);
-	astnode->dci[2]->accept(this);
+	if (astnode->dci[0]) {
+		astnode->dci[0]->accept(this);
+	}
+	if (astnode->dci[1]) {
+		astnode->dci[1]->accept(this);
+	}
+	if (astnode->dci[1]) {
+		astnode->dci[2]->accept(this);
+	}
 
 	// check the while block
 	astnode->block->accept(this);

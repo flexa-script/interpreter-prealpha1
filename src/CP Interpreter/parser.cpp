@@ -185,21 +185,18 @@ ASTDeclarationNode* Parser::parseDeclarationStatement() {
 	bool isConst = currentToken.type == lexer::TOK_CONST;
 
 	// consume identifier
-	consumeToken();
-	if (currentToken.type != lexer::TOK_IDENTIFIER) {
-		throw std::runtime_error(msgHeader() + "expected variable name on definition");
-	}
+	consumeToken(lexer::TOK_IDENTIFIER);
 	identifier = currentToken.value;
 
 	consumeToken();
 
 	if (currentToken.type == lexer::TOK_LEFT_BRACE) {
+		type = TYPE::T_ARRAY;
 		do {
 			consumeToken();
-			exprSize = parseExpression();
-			consumeToken();
 			if (currentToken.type != lexer::TOK_RIGHT_BRACE) {
-				throw std::runtime_error(msgHeader() + "expected ']' after array position expression");
+				exprSize = parseExpression();
+				consumeToken(lexer::TOK_RIGHT_BRACE);
 			}
 			consumeToken();
 			dimVector.push_back(exprSize);

@@ -11,13 +11,15 @@ using namespace visitor;
 Interpreter::Interpreter()
 	: currentExpressionValue(Value_t(parser::TYPE::T_ND)) {
 	// add global scope
-	scopes.push_back(new InterpreterScope());
+	scopes.push_back(new InterpreterScope(this, "global"));
 	currentProgram = nullptr;
 }
 
 Interpreter::Interpreter(InterpreterScope* globalScope, std::vector<parser::ASTProgramNode*> programs)
 	: programs(programs), currentProgram(programs[0]), currentExpressionValue(Value_t(parser::TYPE::T_ND)) {
 	// add global scope
+	globalScope->setName(currentProgram->name);
+	globalScope->setParent(this);
 	scopes.push_back(globalScope);
 }
 
@@ -323,7 +325,7 @@ void visitor::Interpreter::visit(parser::ASTSwitchNode* astnode) {
 	isSwitch = true;
 
 	// create new scope
-	scopes.push_back(new InterpreterScope());
+	scopes.push_back(new InterpreterScope(this, ""));
 
 	int pos = -1;
 
@@ -400,8 +402,16 @@ void visitor::Interpreter::visit(parser::ASTIfNode* astnode) {
 void visitor::Interpreter::visit(parser::ASTForNode* astnode) {
 	isLoop = true;
 
-	astnode->dci[0]->accept(this);
-	astnode->dci[1]->accept(this);
+	if (astnode->dci[0]) {
+		astnode->dci[0]->accept(this);
+	}
+	if (astnode->dci[1]) {
+		astnode->dci[1]->accept(this);
+	}
+	else {
+		currentExpressionValue = Value(parser::TYPE::T_BOOL);
+		currentExpressionValue.set(true);
+	}
 
 	bool result = currentExpressionValue.currType == parser::TYPE::T_BOOL ? currentExpressionValue.b : currentExpressionValue.hasValue;
 
@@ -414,10 +424,18 @@ void visitor::Interpreter::visit(parser::ASTForNode* astnode) {
 			break;
 		}
 
-		astnode->dci[2]->accept(this);
+		if (astnode->dci[2]) {
+			astnode->dci[2]->accept(this);
+		}
 
-		// re-evaluate while condition
-		astnode->dci[1]->accept(this);
+		// re-evaluate for condition
+		if (astnode->dci[1]) {
+			astnode->dci[1]->accept(this);
+		}
+		else {
+			currentExpressionValue = Value(parser::TYPE::T_BOOL);
+			currentExpressionValue.set(true);
+		}
 
 		result = currentExpressionValue.currType == parser::TYPE::T_BOOL ? currentExpressionValue.b : currentExpressionValue.hasValue;
 	}
@@ -734,7 +752,7 @@ void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 	for (i = scopes.size() - 1; !scopes[i]->alreadyDeclaredVariable(astnode->identifier); i--);
 
 	currentExpressionValue = *scopes[i]->accessValue(astnode->identifierVector, astnode->accessVector);
-	
+
 	if (currentExpressionValue.currType == parser::TYPE::T_STRING && astnode->accessVector.size() > 0 && scopes[i]->hasStringAccess) {
 		astnode->accessVector[astnode->accessVector.size() - 1]->accept(this);
 		auto pos = currentExpressionValue.i;

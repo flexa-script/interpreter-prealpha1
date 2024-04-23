@@ -52,6 +52,8 @@ namespace visitor {
 		std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*> findDeclaredFunction(std::string, std::vector<parser::TYPE>);
 
 		std::string getName();
+		void setName(std::string);
+		void setParent(Interpreter*);
 	};
 }
 

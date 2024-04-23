@@ -20,6 +20,14 @@ std::string InterpreterScope::getName() {
 	return name;
 }
 
+void InterpreterScope::setName(std::string name) {
+	this->name = name;
+}
+
+void InterpreterScope::setParent(Interpreter* parent) {
+	this->parent = parent;
+}
+
 bool InterpreterScope::alreadyDeclaredVariable(std::string identifier) {
 	return variableSymbolTable.find(identifier) != variableSymbolTable.end();
 }
