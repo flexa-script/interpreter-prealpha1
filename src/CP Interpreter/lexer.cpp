@@ -177,6 +177,8 @@ Token Lexer::process_identifier() {
 		type = TOK_DEFAULT;
 	else if (identifier == "case")
 		type = TOK_CASE;
+	else if (identifier == "in")
+		type = TOK_IN;
 	else if (identifier == "if")
 		type = TOK_IF;
 	else if (identifier == "else")

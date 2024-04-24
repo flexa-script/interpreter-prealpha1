@@ -446,9 +446,11 @@ void visitor::Interpreter::visit(parser::ASTForNode* astnode) {
 void visitor::Interpreter::visit(parser::ASTForEachNode* astnode) {
 	is_loop = true;
 
-	bool result = current_expression_value.curr_type == parser::Type::T_BOOL ? current_expression_value.b : current_expression_value.has_value;
+	astnode->itdecl->accept(this);
 
-	while (result) {
+	while (true) {
+		astnode->collection->accept(this);
+
 		// execute block
 		astnode->block->accept(this);
 
@@ -456,8 +458,6 @@ void visitor::Interpreter::visit(parser::ASTForEachNode* astnode) {
 			break_block = false;
 			break;
 		}
-
-		result = current_expression_value.curr_type == parser::Type::T_BOOL ? current_expression_value.b : current_expression_value.has_value;
 	}
 
 	is_loop = false;

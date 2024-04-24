@@ -621,7 +621,7 @@ ASTForNode* Parser::parse_for_statement() {
 ASTForEachNode* Parser::parse_for_each_statement() {
 	// node attributes
 	ASTNode* itdecl; // decl or assign node
-	ASTExprNode* collection = nullptr;
+	ASTExprNode* collection;
 	ASTBlockNode* block;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
@@ -629,12 +629,19 @@ ASTForEachNode* Parser::parse_for_each_statement() {
 	// consume '('
 	consume_token(lexer::TOK_LEFT_BRACKET);
 
-	if (!current_token.is_type() && current_token.type != lexer::TOK_IDENTIFIER) {
-		throw std::runtime_error(msg_header() + "expected identifier or declaration");
+	// consume expression first token
+	consume_token();
+
+	itdecl = parse_block_statement();
+
+	if (current_token.type != lexer::TOK_IN) {
+		throw std::runtime_error(msg_header() + "expected 'in'");
 	}
 
-	// i, i = 0, int i, int i = 0
-	itdecl = parse_block_statement();
+	// consume expression first token
+	consume_token();
+
+	collection = parse_expression();
 
 	// consume ')'
 	consume_token(lexer::TOK_RIGHT_BRACKET);
@@ -642,7 +649,7 @@ ASTForEachNode* Parser::parse_for_each_statement() {
 	// consume '{'
 	consume_token(lexer::TOK_LEFT_CURLY);
 
-	// consume while-block and '}'
+	// consume block and '}'
 	block = parse_block();
 
 	// return for node

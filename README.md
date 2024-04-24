@@ -28,8 +28,10 @@
 - [X] Fix cp dependencies/libs loader
 - [X] Add string array-like accessor
 - [ ] Improve error system (based on C)
+- [ ] Improve REPL:
+    - [ ] Now expressions can be executed in statements, dont need more to execute expression parser directly
 - [ ] Add statements:
-    - [ ] for
+    - [X] for
     - [ ] foreach
     - [X] else if
     - [X] switch
