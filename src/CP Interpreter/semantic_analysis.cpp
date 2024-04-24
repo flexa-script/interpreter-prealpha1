@@ -51,17 +51,19 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "variable '" + astnode->identifier + "' already declared");
 	}
 
+	bool has_value = false;
+
 	// visit the expression to update current type
 	if (astnode->expr) {
 		astnode->expr->accept(this);
+		has_value = current_expression_has_value;
 	}
 	else {
-		current_expression_type = parser::Type::T_NULL;
-		current_expression_array_type = parser::Type::T_NULL;
-		current_expression_type_name = "";
+		current_expression_type = astnode->type;
+		current_expression_array_type = astnode->array_type;
+		current_expression_type_name = astnode->type_name;
+		current_expression_has_value = has_value;
 	}
-
-	bool has_value = current_expression_type != parser::Type::T_NULL;
 
 	// similar types
 	if (astnode->type == parser::Type::T_FLOAT && current_expression_type == parser::Type::T_INT
@@ -544,8 +546,19 @@ void SemanticAnalyser::visit(parser::ASTForNode* astnode) {
 }
 
 void SemanticAnalyser::visit(parser::ASTForEachNode* astnode) {
+	parser::Type decl_type;
+	parser::Type col_type;
+
 	astnode->itdecl->accept(this);
+	decl_type = current_expression_type;
+
 	astnode->collection->accept(this);
+	col_type = current_expression_array_type;
+
+	if (decl_type != col_type && decl_type != parser::Type::T_ANY) {
+		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "mismatched types");
+	}
+
 	astnode->block->accept(this);
 }
 
@@ -617,30 +630,35 @@ void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_bool>*) {
 	current_expression_type = parser::Type::T_BOOL;
 	current_expression_type_name = "";
 	is_constant = true;
+	current_expression_has_value = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_int>*) {
 	current_expression_type = parser::Type::T_INT;
 	current_expression_type_name = "";
 	is_constant = true;
+	current_expression_has_value = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_float>*) {
 	current_expression_type = parser::Type::T_FLOAT;
 	current_expression_type_name = "";
 	is_constant = true;
+	current_expression_has_value = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_char>*) {
 	current_expression_type = parser::Type::T_CHAR;
 	current_expression_type_name = "";
 	is_constant = true;
+	current_expression_has_value = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTLiteralNode<cp_string>*) {
 	current_expression_type = parser::Type::T_STRING;
 	current_expression_type_name = "";
 	is_constant = true;
+	current_expression_has_value = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTArrayConstructorNode* astnode) {
@@ -650,6 +668,7 @@ void SemanticAnalyser::visit(parser::ASTArrayConstructorNode* astnode) {
 	current_expression_type = parser::Type::T_ARRAY;
 	current_expression_type_name = "";
 	is_constant = true;
+	current_expression_has_value = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTStructConstructorNode* astnode) {
@@ -659,6 +678,7 @@ void SemanticAnalyser::visit(parser::ASTStructConstructorNode* astnode) {
 	current_expression_type = parser::Type::T_STRUCT;
 	current_expression_type_name = astnode->type_name;
 	is_constant = true;
+	current_expression_has_value = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTBinaryExprNode* astnode) {
@@ -757,7 +777,9 @@ void SemanticAnalyser::visit(parser::ASTIdentifierNode* astnode) {
 
 	current_expression_type = declared_variable.type;
 	current_expression_type_name = declared_variable.type_name;
+	current_expression_array_type = declared_variable.array_type;
 	is_constant = declared_variable.is_const;
+	current_expression_has_value = declared_variable.has_value;
 
 	if (astnode->access_vector.size() > 0 && current_expression_type != parser::Type::T_ARRAY && current_expression_type != parser::Type::T_STRING) {
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "'" + actual_identifier + "' is not an array or string");
@@ -823,7 +845,10 @@ void SemanticAnalyser::visit(parser::ASTFunctionCallNode* astnode) {
 
 	// set current expression type to the return value of the function
 	current_expression_type = declared_function.type;
+	//current_expression_array_type = declared_function;
 	current_expression_type_name = declared_function.type_name;
+	current_expression_has_value = returns(astnode); // TODO: fix function return  has value
+	is_constant = false;
 }
 
 void SemanticAnalyser::visit(parser::ASTTypeParseNode* astnode) {
@@ -835,6 +860,7 @@ void SemanticAnalyser::visit(parser::ASTReadNode* astnode) {
 	if (current_expression_type != parser::Type::T_STRING) {
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "trying to assing an invalid type");
 	}
+	current_expression_has_value = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTTypeNode* astnode) {
@@ -863,11 +889,13 @@ void SemanticAnalyser::visit(parser::ASTRoundNode* astnode) {
 }
 
 void SemanticAnalyser::visit(parser::ASTNullNode* astnode) {
-	current_expression_type = parser::Type::T_NULL;
+	current_expression_type = parser::Type::T_ND;
+	current_expression_has_value = false;
 }
 
 void SemanticAnalyser::visit(parser::ASTThisNode* astnode) {
 	current_expression_type = parser::Type::T_STRING;
+	current_expression_has_value = true;
 }
 
 std::string SemanticAnalyser::msg_header(unsigned int row, unsigned int col) {

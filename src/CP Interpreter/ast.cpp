@@ -65,7 +65,7 @@ ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* if_block, std::vector
 ASTForNode::ASTForNode(std::array<ASTNode*, 3> dci, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: dci(dci), block(block), row(row), col(col) {}
 
-ASTForEachNode::ASTForEachNode(ASTNode* itdecl, ASTExprNode* collection, ASTBlockNode* block, unsigned int row, unsigned int col)
+ASTForEachNode::ASTForEachNode(ASTNode* itdecl, ASTNode* collection, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: itdecl(itdecl), collection(collection), block(block), row(row), col(col) {}
 
 ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)

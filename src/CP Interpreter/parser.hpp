@@ -64,7 +64,11 @@ namespace parser {
 
 		ASTForNode* parse_for_statement();
 
-		ASTForEachNode* parse_for_each_statement();
+		ASTNode* parse_foreach_decl();
+
+		ASTNode* parse_foreach_collection();
+
+		ASTForEachNode* parse_foreach_statement();
 
 		ASTWhileNode* parse_while_statement();
 

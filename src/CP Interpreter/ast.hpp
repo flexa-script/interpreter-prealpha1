@@ -219,10 +219,10 @@ namespace parser {
 
 	class ASTForEachNode : public ASTStatementNode {
 	public:
-		ASTForEachNode(ASTNode*, ASTExprNode*, ASTBlockNode*, unsigned int, unsigned int);
+		ASTForEachNode(ASTNode*, ASTNode*, ASTBlockNode*, unsigned int, unsigned int);
 
 		ASTNode* itdecl; // decl or assign node
-		ASTExprNode* collection;
+		ASTNode* collection;
 		ASTBlockNode* block;
 		unsigned int row;
 		unsigned int col;

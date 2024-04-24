@@ -20,6 +20,7 @@ namespace visitor {
 		std::stack<parser::Type> functions;
 		parser::Type current_expression_type;
 		parser::Type current_expression_array_type;
+		bool current_expression_has_value;
 		std::string current_expression_type_name;
 		bool is_function_definition_context;
 		bool is_constant;

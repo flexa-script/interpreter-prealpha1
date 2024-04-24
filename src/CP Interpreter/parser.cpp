@@ -95,7 +95,7 @@ ASTNode* Parser::parse_block_statement() {
 	case lexer::TOK_FOR:
 		return parse_for_statement();
 	case lexer::TOK_FOREACH:
-		return parse_for_each_statement();
+		return parse_foreach_statement();
 	case lexer::TOK_BREAK:
 		return parse_break_statement();
 	case lexer::TOK_RETURN:
@@ -618,10 +618,37 @@ ASTForNode* Parser::parse_for_statement() {
 	return new ASTForNode(dci, block, row, col);
 }
 
-ASTForEachNode* Parser::parse_for_each_statement() {
+
+ASTNode* Parser::parse_foreach_decl() {
+	consume_semicolon = false;
+
+	switch (current_token.type) {
+	case lexer::TOK_VAR:
+		return parse_declaration_statement();
+	case lexer::TOK_IDENTIFIER:
+		return parse_identifier();
+	default:
+		throw std::runtime_error(msg_header() + "expected declaration or variable");
+	}
+}
+
+ASTNode* Parser::parse_foreach_collection() {
+	consume_semicolon = false;
+
+	switch (current_token.type) {
+	case lexer::TOK_LEFT_CURLY:
+		return parse_array_constructor_node();
+	case lexer::TOK_IDENTIFIER:
+		return parse_identifier();
+	default:
+		throw std::runtime_error(msg_header() + "expected array");
+	}
+}
+
+ASTForEachNode* Parser::parse_foreach_statement() {
 	// node attributes
 	ASTNode* itdecl; // decl or assign node
-	ASTExprNode* collection;
+	ASTNode* collection;
 	ASTBlockNode* block;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
@@ -632,7 +659,7 @@ ASTForEachNode* Parser::parse_for_each_statement() {
 	// consume expression first token
 	consume_token();
 
-	itdecl = parse_block_statement();
+	itdecl = parse_foreach_decl();
 
 	if (current_token.type != lexer::TOK_IN) {
 		throw std::runtime_error(msg_header() + "expected 'in'");
@@ -641,7 +668,7 @@ ASTForEachNode* Parser::parse_for_each_statement() {
 	// consume expression first token
 	consume_token();
 
-	collection = parse_expression();
+	collection = parse_foreach_collection();
 
 	// consume ')'
 	consume_token(lexer::TOK_RIGHT_BRACKET);
