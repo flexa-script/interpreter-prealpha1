@@ -3,36 +3,36 @@
 
 int CPRepl::execute() {
 	// REPL greeting
-	std::cout << "CP Lang 1.0.0 [2023]\n";
+	std::cout << "CP Lang 1.0.0 [2024]\n";
 	std::cout << "Type \"#help\" for more information.\n";
 
 	// create Global Scopes
-	visitor::SemanticScope semanticGlobalScope;
-	visitor::InterpreterScope interpreterGlobalScope;
+	visitor::SemanticScope semantic_global_scope;
+	visitor::InterpreterScope interpreter_global_scope;
 
 	// indefinite User input
 	for (;;) {
 
 		// variables for user input
-		std::string inputLine;
+		std::string input_line;
 		std::string program;
 		bool file_load = false;
 		bool expr = false;
 
 		// user prompt
 		std::cout << ">>> ";
-		std::getline(std::cin, inputLine);
+		std::getline(std::cin, input_line);
 
 		// remove leading/trailing whitespaces
-		inputLine = std::regex_replace(inputLine, std::regex("^ +| +$"), "$1");
+		input_line = std::regex_replace(input_line, std::regex("^ +| +$"), "$1");
 
 		// quit
-		if (inputLine == "#quit") {
+		if (input_line == "#quit") {
 			break;
 		}
 
 		// help
-		else if (inputLine == "#help") {
+		else if (input_line == "#help") {
 			std::cout << "\n" << "Welcome to MiniLang 1.0.0! \n";
 			std::cout << "To use this interactive REPL, just type in regular CP commands and hit\n";
 			std::cout << "enter. You can also make use of the following commands: \n\n";
@@ -51,28 +51,28 @@ int CPRepl::execute() {
 		}
 
 		// load File
-		else if (inputLine.substr(0, 5) == "#load") {
-			std::cout << inputLine << std::endl;
+		else if (input_line.substr(0, 5) == "#load") {
+			std::cout << input_line << std::endl;
 
 			// if length <= 6, then the user specified no file
-			if (inputLine.size() <= 6) {
+			if (input_line.size() <= 6) {
 				std::cout << "File path expected after '#load'." << std::endl;
 			}
 
 			else {
 
 				// get file directory
-				std::string fileDir = inputLine.substr(6);
+				std::string file_dir = input_line.substr(6);
 
 				// remove any whitespaces from that
-				fileDir = std::regex_replace(fileDir, std::regex("^ +| +$"), "$1");
+				file_dir = std::regex_replace(file_dir, std::regex("^ +| +$"), "$1");
 
 				// read the file
 				std::ifstream file;
-				file.open(fileDir);
+				file.open(file_dir);
 
 				if (!file) {
-					std::cout << "Could not load file from \"" + fileDir + "\"." << std::endl;
+					std::cout << "Could not load file from \"" + file_dir + "\"." << std::endl;
 				}
 				else {
 					// convert whole program to std::string
@@ -89,7 +89,7 @@ int CPRepl::execute() {
 		}
 
 		// clear Screen
-		else if (inputLine == "#clear") {
+		else if (input_line == "#clear") {
 			clear_screen();
 		}
 
@@ -97,26 +97,26 @@ int CPRepl::execute() {
 		else {
 
 			// add line to program
-			program += inputLine;
+			program += input_line;
 
 			// count number of open scopes
-			unsigned int openScopes = 0;
-			openScopes += std::count(inputLine.begin(), inputLine.end(), '{');
-			openScopes -= std::count(inputLine.begin(), inputLine.end(), '}');
+			unsigned int open_scopes = 0;
+			open_scopes += std::count(input_line.begin(), input_line.end(), '{');
+			open_scopes -= std::count(input_line.begin(), input_line.end(), '}');
 
-			while (openScopes) {
+			while (open_scopes) {
 				std::cout << "... ";
 
 				// read next line
-				inputLine.clear();
-				getline(std::cin, inputLine);
+				input_line.clear();
+				getline(std::cin, input_line);
 
 				// update scope count
-				openScopes += std::count(inputLine.begin(), inputLine.end(), '{');
-				openScopes -= std::count(inputLine.begin(), inputLine.end(), '}');
+				open_scopes += std::count(input_line.begin(), input_line.end(), '{');
+				open_scopes -= std::count(input_line.begin(), input_line.end(), '}');
 
 				// add line to program
-				program += inputLine + "\n";
+				program += input_line + "\n";
 			}
 		}
 
@@ -129,7 +129,7 @@ int CPRepl::execute() {
 
 			// try to parse as program
 			try {
-				prog = parser.parseProgram();
+				prog = parser.parse_program();
 			}
 
 			// catch by trying to parse as expression
@@ -144,7 +144,7 @@ int CPRepl::execute() {
 					// parse again, create program node manually
 					lexer::Lexer expr_lexer(program, "main");
 					parser = parser::Parser(&expr_lexer, 0);  // do not consume first token
-					prog = new parser::ASTProgramNode(std::vector<parser::ASTNode*>({ parser.parseExpression() }), "main");
+					prog = new parser::ASTProgramNode(std::vector<parser::ASTNode*>({ parser.parse_expression() }), "main");
 
 					expr = true;
 				}
@@ -156,16 +156,16 @@ int CPRepl::execute() {
 
 			// try to analyse in a temporary copy of the global scope (just in case the program is invalid)
 			auto programs = std::vector<parser::ASTProgramNode*>({ prog });
-			visitor::SemanticScope temp = semanticGlobalScope;
-			visitor::SemanticAnalyser tempSemanticAnalyser(&temp, programs);
-			tempSemanticAnalyser.start();
+			visitor::SemanticScope temp = semantic_global_scope;
+			visitor::SemanticAnalyser temp_semantic_analyser(&temp, programs);
+			temp_semantic_analyser.start();
 
 			// if this succeeds, perform semantic analysis modifying global scope
-			visitor::SemanticAnalyser semantic_analyser(&semanticGlobalScope, programs);
-			tempSemanticAnalyser.start();
+			visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, programs);
+			temp_semantic_analyser.start();
 
 			// interpreter
-			visitor::Interpreter interpreter(&interpreterGlobalScope, programs);
+			visitor::Interpreter interpreter(&interpreter_global_scope, programs);
 			interpreter.visit(prog);
 
 			// if loading file, show user that everything went well
@@ -174,21 +174,21 @@ int CPRepl::execute() {
 
 			// if expression, show user output
 			else if (expr) {
-				auto current = interpreter.currentExpr();
+				auto current = interpreter.current_expr();
 				switch (current.first) {
-				case parser::TYPE::T_BOOL:
+				case parser::Type::T_BOOL:
 					std::cout << ((current.second->b) ? "true" : "false");
 					break;
-				case parser::TYPE::T_INT:
+				case parser::Type::T_INT:
 					std::cout << current.second->i;
 					break;
-				case parser::TYPE::T_FLOAT:
+				case parser::Type::T_FLOAT:
 					std::cout << current.second->f;
 					break;
-				case parser::TYPE::T_CHAR:
+				case parser::Type::T_CHAR:
 					std::cout << current.second->c;
 					break;
-				case parser::TYPE::T_STRING:
+				case parser::Type::T_STRING:
 					std::cout << current.second->s;
 					break;
 				}

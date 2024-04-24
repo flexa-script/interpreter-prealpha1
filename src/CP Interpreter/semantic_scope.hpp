@@ -1,5 +1,5 @@
-#ifndef SEMANTIC_SCOPE_H
-#define SEMANTIC_SCOPE_H
+#ifndef SEMANTIC_SCOPE_HPP
+#define SEMANTIC_SCOPE_HPP
 
 #include <map>
 #include <vector>
@@ -13,29 +13,29 @@ namespace visitor {
 
 	class SemanticScope {
 	private:
-		std::map<std::string, parser::StructureDefinition_t> structureSymbolTable;
-		std::map<std::string, parser::VariableDefinition_t> variableSymbolTable;
-		std::multimap<std::string, parser::FunctionDefinition_t> functionSymbolTable;
+		std::map<std::string, parser::StructureDefinition_t> structure_symbol_table;
+		std::map<std::string, parser::VariableDefinition_t> variable_symbol_table;
+		std::multimap<std::string, parser::FunctionDefinition_t> function_symbol_table;
 
 	public:
 		SemanticScope();
 
-		bool alreadyDeclaredStructureDefinition(std::string);
-		bool alreadyDeclaredVariable(std::string);
-		bool alreadyDeclaredFunction(std::string, std::vector<parser::TYPE>);
+		bool already_declared_structure_definition(std::string);
+		bool already_declared_variable(std::string);
+		bool already_declared_function(std::string, std::vector<parser::Type>);
 
-		void declareStructureDefinition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
-		void declareVariable(std::string, parser::TYPE, std::string, parser::TYPE, std::vector<parser::ASTExprNode*>, bool, bool, unsigned int, unsigned int, bool);
-		void declareFunction(std::string, parser::TYPE, std::string, std::vector<parser::TYPE>, bool, unsigned int, unsigned int);
+		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
+		void declare_variable(std::string, parser::Type, std::string, parser::Type, std::vector<parser::ASTExprNode*>, bool, bool, unsigned int, unsigned int, bool);
+		void declare_function(std::string, parser::Type, std::string, std::vector<parser::Type>, bool, unsigned int, unsigned int);
 
-		void assignVariable(std::string, bool);
-		void changeVariableType(std::string, parser::TYPE);
-		void changeVariableTypeName(std::string, std::string);
+		void assign_variable(std::string, bool);
+		void change_variable_type(std::string, parser::Type);
+		void change_variable_type_name(std::string, std::string);
 
-		parser::StructureDefinition_t findDeclaredStructureDefinition(std::string);
+		parser::StructureDefinition_t find_declared_structure_definition(std::string);
 		parser::VariableDefinition_t findDeclaredVariable(std::string);
-		parser::FunctionDefinition_t findDeclaredFunction(std::string, std::vector<parser::TYPE>);
+		parser::FunctionDefinition_t find_declared_function(std::string, std::vector<parser::Type>);
 	};
 }
 
-#endif //SEMANTIC_SCOPE_H
+#endif // SEMANTIC_SCOPE_HPP

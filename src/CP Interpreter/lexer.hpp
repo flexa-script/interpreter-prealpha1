@@ -1,5 +1,5 @@
-#ifndef LEXER_H
-#define LEXER_H
+#ifndef LEXER_HPP
+#define LEXER_HPP
 
 #include <string>
 #include <vector>
@@ -15,34 +15,34 @@ namespace lexer {
         Lexer(std::string&, std::string);
         ~Lexer();
 
-        Token nextToken();
+        Token next_token();
 
     private:
-        char beforeChar;
-        char currentChar;
-        unsigned int currentToken = 0;
-        unsigned int currentIndex = 0;
-        unsigned int currentRow = 0;
-        unsigned int startCol = 0;
-        unsigned int currentCol = 0;
+        char before_char;
+        char current_char;
+        unsigned int current_token = 0;
+        unsigned int current_index = 0;
+        unsigned int current_row = 0;
+        unsigned int start_col = 0;
+        unsigned int current_col = 0;
         std::string source;
         std::string name;
         std::vector<Token> tokens;
 
         void tokenize();
-        bool hasNext();
-        char getNextChar();
-        bool isSpace();
+        bool has_next();
+        char get_next_char();
+        bool is_space();
         void advance();
-        Token processIdentifier();
-        Token processNumber();
-        Token processChar();
-        Token processString();
-        Token processSymbol();
-        Token processComment();
+        Token process_identifier();
+        Token process_number();
+        Token process_char();
+        Token process_string();
+        Token process_symbol();
+        Token process_comment();
 
-        std::string msgHeader();
+        std::string msg_header();
     };
 };
 
-#endif //LEXER_H
+#endif // LEXER_HPP

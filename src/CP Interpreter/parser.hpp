@@ -1,5 +1,5 @@
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef PARSER_HPP
+#define PARSER_HPP
 
 #include "ast.hpp"
 #include "lexer.hpp"
@@ -10,10 +10,10 @@ namespace parser {
 	class Parser {
 	private:
 		lexer::Lexer* lex;
-		lexer::Token currentToken;
-		lexer::Token nextToken;
-		TYPE currentArrayType = TYPE::T_ND;
-		bool consumeSemicolon = false;
+		lexer::Token current_token;
+		lexer::Token next_token;
+		Type current_array_type = Type::T_ND;
+		bool consume_semicolon = false;
 
 	public:
 		std::string name;
@@ -22,117 +22,121 @@ namespace parser {
 		explicit Parser(lexer::Lexer*, std::string);
 		Parser(lexer::Lexer*, std::string, unsigned int);
 
-		ASTProgramNode* parseProgram();
-		ASTExprNode* parseExpression();  // public for repl
-		ASTExprNode* parseStatementExpression();  // public for repl
+		ASTProgramNode* parse_program();
+		ASTExprNode* parse_expression();  // public for repl
+		ASTExprNode* parse_statement_expression();  // public for repl
 
 	private:
-		void consumeToken();
-		void consumeToken(lexer::TOKEN_TYPE);
-		bool isBlockStatement(lexer::TOKEN_TYPE);
-		bool isExclusiveBlockStatement(lexer::TOKEN_TYPE);
+		void consume_token();
+		void consume_token(lexer::TokenType);
+		bool is_block_statement(lexer::TokenType);
+		bool is_exclusive_block_statement(lexer::TokenType);
 
-		// statement Nodes
-		ASTNode* parseProgramStatement();
+		// statement nodes
 
-		ASTUsingNode* parseUsingStatement();
+		ASTNode* parse_program_statement();
 
-		ASTNode* parseBlockStatement();
+		ASTUsingNode* parse_using_statement();
 
-		ASTDeclarationNode* parseDeclarationStatement();
+		ASTNode* parse_block_statement();
 
-		ASTAssignmentNode* parseAssignmentStatement();
+		ASTDeclarationNode* parse_declaration_statement();
 
-		ASTPrintNode* parsePrintStatement();
+		ASTAssignmentNode* parse_assignment_statement();
 
-		ASTReturnNode* parseReturnStatement();
+		ASTPrintNode* parse_print_statement();
 
-		ASTBlockNode* parseBlock();
+		ASTReturnNode* parse_return_statement();
 
-		ASTBlockNode* parseStructBlock();
+		ASTBlockNode* parse_block();
 
-		ASTStatementNode* parseStructBlockVariables();
+		ASTBlockNode* parse_struct_block();
 
-		ASTBreakNode* parseBreakStatement();
+		ASTStatementNode* parse_struct_block_variables();
 
-		ASTSwitchNode* parseSwitchStatement();
+		ASTBreakNode* parse_break_statement();
 
-		ASTElseIfNode* parseElseIfStatement();
+		ASTSwitchNode* parse_switch_statement();
 
-		ASTIfNode* parseIfStatement();
+		ASTElseIfNode* parse_else_if_statement();
 
-		ASTForNode* parseForStatement();
+		ASTIfNode* parse_if_statement();
 
-		ASTForEachNode* parseForEachStatement();
+		ASTForNode* parse_for_statement();
 
-		ASTWhileNode* parseWhileStatement();
+		ASTForEachNode* parse_for_each_statement();
 
-		ASTFunctionDefinitionNode* parseFunctionDefinition();
+		ASTWhileNode* parse_while_statement();
 
-		ASTStructDefinitionNode* parseStructDefinition();
+		ASTFunctionDefinitionNode* parse_function_definition();
 
-		ASTNode* parseIdentifier();
+		ASTStructDefinitionNode* parse_struct_definition();
+
+		ASTNode* parse_identifier();
+
+		ASTArrayConstructorNode* parse_array_constructor_node();
+
+		ASTStructConstructorNode* parse_struct_constructor_node();
+
+		ASTFunctionCallNode* parse_function_call_node();
+
+		ASTReadNode* parse_read_node();
+
+		ASTTypeParseNode* parse_type_parse_node();
+
+		ASTThisNode* parse_this_node();
+
+		ASTTypeNode* parse_type_node();
+
+		ASTLenNode* parse_len_node();
+
+		ASTRoundNode* parse_round_node();
 
 		// expression nodes
-		ASTExprNode* parseExpressionTail(ASTExprNode*);
 
-		ASTExprNode* parseLogicalExpression();
+		ASTExprNode* parse_expression_tail(ASTExprNode*);
 
-		ASTExprNode* parseLogicalExpressionTail(ASTExprNode*);
+		ASTExprNode* parse_logical_expression();
 
-		ASTExprNode* parseRelationalExpression();
+		ASTExprNode* parse_logical_expression_tail(ASTExprNode*);
 
-		ASTExprNode* parseRelationalExpressionTail(ASTExprNode*);
+		ASTExprNode* parse_relational_expression();
 
-		ASTExprNode* parseSimpleExpression();
+		ASTExprNode* parse_relational_expression_tail(ASTExprNode*);
 
-		ASTExprNode* parseSimpleExpressionTail(ASTExprNode*);
+		ASTExprNode* parse_simple_expression();
 
-		ASTExprNode* parseTerm();
+		ASTExprNode* parse_simple_expression_tail(ASTExprNode*);
 
-		ASTExprNode* parseTermTail(ASTExprNode*);
+		ASTExprNode* parse_term();
 
-		ASTExprNode* parseFactor();
+		ASTExprNode* parse_term_tail(ASTExprNode*);
 
-		ASTArrayConstructorNode* parseArrayConstructorNode();
+		ASTExprNode* parse_factor();
 
-		ASTStructConstructorNode* parseStructConstructorNode();
+		// special
 
-		ASTFunctionCallNode* parseExprFunctionCall();
+		std::vector<ASTExprNode*>* parse_actual_params();
 
-		ASTReadNode* parseExprRead();
+		VariableDefinition_t* parse_formal_param();
 
-		ASTTypeParseNode* parseExprTypeParse();
+		ASTIdentifierNode* parse_identifier_node();
 
-		ASTThisNode* parseExprThis();
+		cp_bool parse_bool_literal();
 
-		ASTTypeNode* parseTypeNode();
+		cp_int parse_int_literal();
 
-		ASTLenNode* parseLenNode();
+		cp_float parse_float_literal();
 
-		ASTRoundNode* parseRoundNode();
+		cp_char parse_char_literal();
 
-		std::vector<ASTExprNode*>* parseActualParams();
-
-		VariableDefinition_t* parseFormalParam();
-
-		ASTIdentifierNode* parseIdentifierNode();
-
-		cp_bool parseBoolLiteral();
-
-		cp_int parseIntLiteral();
-
-		cp_float parseFloatLiteral();
-
-		cp_char parseCharLiteral();
-
-		cp_string parseStringLiteral();
+		cp_string parse_string_literal();
 
 		// parse types and parameters
-		TYPE parseType(std::string);
+		Type parse_type(std::string);
 
-		std::string msgHeader();
+		std::string msg_header();
 	};
 }
 
-#endif //PARSER_H
+#endif // PARSER_HPP

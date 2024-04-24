@@ -1,6 +1,5 @@
-
-#ifndef INTERPRETER_SCOPE_H
-#define INTERPRETER_SCOPE_H
+#ifndef INTERPRETER_SCOPE_HPP
+#define INTERPRETER_SCOPE_HPP
 
 #include <map>
 #include <stack>
@@ -15,46 +14,46 @@ namespace visitor {
 
 	class InterpreterScope {
 	public:
-		bool hasStringAccess = false;
+		bool has_string_access = false;
 
 	private:
 		std::string name;
 		Interpreter* parent;
-		std::map<std::string, parser::StructureDefinition_t> structureSymbolTable;
-		std::map<std::string, Value_t*> variableSymbolTable;
-		std::multimap<std::string, std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*>> functionSymbolTable;
+		std::map<std::string, parser::StructureDefinition_t> structure_symbol_table;
+		std::map<std::string, Value_t*> variable_symbol_table;
+		std::multimap<std::string, std::tuple<std::vector<parser::Type>, std::vector<std::string>, parser::ASTBlockNode*>> function_symbol_table;
 
 	public:
 		InterpreterScope();
 		InterpreterScope(Interpreter*, std::string);
 
-		bool alreadyDeclaredStructureDefinition(std::string);
-		bool alreadyDeclaredVariable(std::string);
-		bool alreadyDeclaredFunction(std::string, std::vector<parser::TYPE>);
+		bool already_declared_structure_definition(std::string);
+		bool already_declared_variable(std::string);
+		bool already_declared_function(std::string, std::vector<parser::Type>);
 
-		Value_t* declareNullVariable(std::string, parser::TYPE);
-		Value_t* declareNullStructVariable(std::string, std::string);
-		Value_t* declareVariable(std::string, cp_bool);
-		Value_t* declareVariable(std::string, cp_int);
-		Value_t* declareVariable(std::string, cp_float);
-		Value_t* declareVariable(std::string, cp_char);
-		Value_t* declareVariable(std::string, cp_string);
-		Value_t* declareVariable(std::string, cp_struct);
-		Value_t* declareVariable(std::string, cp_array);
+		Value_t* declare_null_variable(std::string, parser::Type);
+		Value_t* declare_null_struct_variable(std::string, std::string);
+		Value_t* declare_variable(std::string, cp_bool);
+		Value_t* declare_variable(std::string, cp_int);
+		Value_t* declare_variable(std::string, cp_float);
+		Value_t* declare_variable(std::string, cp_char);
+		Value_t* declare_variable(std::string, cp_string);
+		Value_t* declare_variable(std::string, cp_struct);
+		Value_t* declare_variable(std::string, cp_array);
 
-		void declareFunction(std::string, std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*);
-		void declareStructureDefinition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
+		void declare_function(std::string, std::vector<parser::Type>, std::vector<std::string>, parser::ASTBlockNode*);
+		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
 
-		parser::StructureDefinition_t findDeclaredStructureDefinition(std::string);
-		Value_t* accessValue(std::vector<std::string>, std::vector<parser::ASTExprNode*>);
-		Value_t* accessValueOfArray(Value_t*, std::vector<parser::ASTExprNode*>);
-		Value_t* accessValueOfStructure(Value_t*, std::vector<std::string>);
-		std::tuple<std::vector<parser::TYPE>, std::vector<std::string>, parser::ASTBlockNode*> findDeclaredFunction(std::string, std::vector<parser::TYPE>);
+		parser::StructureDefinition_t find_declared_structure_definition(std::string);
+		Value_t* access_value(std::vector<std::string>, std::vector<parser::ASTExprNode*>);
+		Value_t* access_value_of_array(Value_t*, std::vector<parser::ASTExprNode*>);
+		Value_t* access_value_of_structure(Value_t*, std::vector<std::string>);
+		std::tuple<std::vector<parser::Type>, std::vector<std::string>, parser::ASTBlockNode*> find_declared_function(std::string, std::vector<parser::Type>);
 
-		std::string getName();
-		void setName(std::string);
-		void setParent(Interpreter*);
+		std::string get_name();
+		void set_name(std::string);
+		void set_parent(Interpreter*);
 	};
 }
 
-#endif //INTERPRETER_SCOPE_H
+#endif // INTERPRETER_SCOPE_HPP

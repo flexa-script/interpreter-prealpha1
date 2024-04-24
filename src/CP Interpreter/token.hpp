@@ -1,12 +1,12 @@
-#ifndef TOKEN_H
-#define TOKEN_H
+#ifndef TOKEN_HPP
+#define TOKEN_HPP
 
 #include <string>
 
 
 namespace lexer {
 
-	enum TOKEN_TYPE {
+	enum TokenType {
 		TOK_BOOL_LITERAL,
 		TOK_INT_LITERAL,
 		TOK_FLOAT_LITERAL,
@@ -120,7 +120,7 @@ namespace lexer {
 		"EOF token"
 	};
 
-	const TOKEN_TYPE TYPE_TOKENS[] = {
+	const TokenType TYPE_TOKENS[] = {
 		TOK_VOID_TYPE,
 		TOK_BOOL_TYPE,
 		TOK_INT_TYPE,
@@ -132,17 +132,17 @@ namespace lexer {
 
 	class Token {
 	public:
-		TOKEN_TYPE type;
+		TokenType type;
 		std::string value;
 		unsigned int row;
 		unsigned int col;
 
 		Token();
-		Token(TOKEN_TYPE, std::string, unsigned int row = 0, unsigned int col = 0);
+		Token(TokenType, std::string, unsigned int row = 0, unsigned int col = 0);
 
-		bool isType();
-		static std::string tokenImage(const TOKEN_TYPE);
+		bool is_type();
+		static std::string token_image(const TokenType);
 	};
 };
 
-#endif //TOKEN_H
+#endif // TOKEN_HPP

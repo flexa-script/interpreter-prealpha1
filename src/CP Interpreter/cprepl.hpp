@@ -1,5 +1,5 @@
-#ifndef CPREPL_H
-#define CPREPL_H
+#ifndef CPREPL_HPP
+#define CPREPL_HPP
 
 #include <iostream>
 #include <fstream>
@@ -23,4 +23,4 @@ public:
 	static int execute();
 };
 
-#endif //CPREPL_H
+#endif // CPREPL_HPP

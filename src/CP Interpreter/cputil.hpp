@@ -9,7 +9,7 @@
 
 class CPUtil {
 public:
-	static std::string loadSource(std::string);
+	static std::string load_source(std::string);
 	static std::string getLibName(size_t, std::string);
 };
 

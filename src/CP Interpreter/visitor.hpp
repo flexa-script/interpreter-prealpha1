@@ -1,5 +1,5 @@
-#ifndef VISITOR_H
-#define VISITOR_H
+#ifndef VISITOR_HPP
+#define VISITOR_HPP
 
 #include <string>
 #include <vector>
@@ -10,10 +10,10 @@
 struct Value;
 
 namespace parser {
-	enum class TYPE {
+	enum class Type {
 		T_ND, T_VOID, T_NULL, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ANY, T_ARRAY, T_STRUCT
 	};
-	std::string typeStr(TYPE t);
+	std::string type_str(Type t);
 
 	class ASTProgramNode;
 
@@ -63,14 +63,15 @@ typedef std::vector<cp_struct_value>             cp_struct_values;
 typedef std::pair<std::string, cp_struct_values> cp_struct;
 
 typedef struct Value {
-	Value(parser::TYPE type) : b(0), i(0), f(0), c(0), s(""), str(cp_struct()), arr(cp_array()), hasValue(false), type(type), currType(type) {};
+	Value(parser::Type);
 
-	bool hasValue;
+	bool has_value;
 	
-	parser::TYPE type;
-	parser::TYPE currType;
-	parser::TYPE arrType;
+	parser::Type type;
+	parser::Type curr_type;
+	parser::Type arr_type;
 	std::vector<parser::ASTExprNode*> dim;
+
 	cp_bool b;
 	cp_int i;
 	cp_float f;
@@ -79,64 +80,19 @@ typedef struct Value {
 	cp_array arr;
 	cp_struct str;
 
-	void set(cp_bool b) {
-		this->b = b;
-		hasValue = true;
-		setCurrType(parser::TYPE::T_BOOL);
-	}
-	void set(cp_int i) {
-		this->i = i;
-		hasValue = true;
-		setCurrType(parser::TYPE::T_INT);
-	}
-	void set(cp_float f) {
-		this->f = f;
-		hasValue = true;
-		setCurrType(parser::TYPE::T_FLOAT);
-	}
-	void set(cp_char c) {
-		this->c = c;
-		hasValue = true;
-		setCurrType(parser::TYPE::T_CHAR);
-	}
-	void set(cp_string s) {
-		this->s = s;
-		hasValue = true;
-		setCurrType(parser::TYPE::T_STRING);
-	}
-	void set(cp_array arr) {
-		this->arr = arr;
-		hasValue = true;
-		setCurrType(parser::TYPE::T_ARRAY);
-	}
-	void set(cp_struct str) {
-		this->str = str;
-		hasValue = true;
-		setCurrType(parser::TYPE::T_STRUCT);
-	}
-	void setType(parser::TYPE type) {
-		this->type = type;
-	}
-	void setCurrType(parser::TYPE currType) {
-		this->currType = currType;
-	}
-	void setNull() {
-		hasValue = false;
-	}
-	void copyFrom(Value* value) {
-		hasValue = value->hasValue;
-		currType = value->currType;
-		arrType = value->arrType;
-		dim = value->dim;
-		type = value->type;
-		b = value->b;
-		i = value->i;
-		f = value->f;
-		c = value->c;
-		s = value->s;
-		arr = value->arr;
-		str = value->str;
-	}
+	void set(cp_bool);
+	void set(cp_int);
+	void set(cp_float);
+	void set(cp_char);
+	void set(cp_string);
+	void set(cp_array);
+	void set(cp_struct);
+	void set_null();
+
+	void set_type(parser::Type);
+	void set_curr_type(parser::Type);
+
+	void copy_from(Value*);
 } Value_t;
 
 namespace visitor {
@@ -179,4 +135,4 @@ namespace visitor {
 	};
 }
 
-#endif //VISITOR_H
+#endif // VISITOR_HPP

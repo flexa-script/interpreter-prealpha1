@@ -15,143 +15,143 @@ Lexer::Lexer(std::string& source, std::string name)
 Lexer::~Lexer() = default;
 
 void Lexer::tokenize() {
-	currentRow = 1;
-	currentCol = 1;
+	current_row = 1;
+	current_col = 1;
 
-	while (hasNext()) {
-		currentChar = source[currentIndex];
+	while (has_next()) {
+		current_char = source[current_index];
 
-		if (currentChar == '\n') {
-			++currentRow;
+		if (current_char == '\n') {
+			++current_row;
 		}
 
-		if (isSpace()) {
+		if (is_space()) {
 			// ignore white spaces
 			advance();
 		}
-		else if (currentChar == '/' && (getNextChar() == '/' || getNextChar() == '*')) {
-			processComment();
+		else if (current_char == '/' && (get_next_char() == '/' || get_next_char() == '*')) {
+			process_comment();
 		}
-		else if (currentChar == '\'') {
-			startCol = currentCol;
-			tokens.push_back(processChar());
+		else if (current_char == '\'') {
+			start_col = current_col;
+			tokens.push_back(process_char());
 		}
-		else if (currentChar == '"') {
-			startCol = currentCol;
-			tokens.push_back(processString());
+		else if (current_char == '"') {
+			start_col = current_col;
+			tokens.push_back(process_string());
 		}
-		else if (std::isalpha(currentChar) || currentChar == '_') {
-			startCol = currentCol;
-			tokens.push_back(processIdentifier());
+		else if (std::isalpha(current_char) || current_char == '_') {
+			start_col = current_col;
+			tokens.push_back(process_identifier());
 		}
-		else if (std::isdigit(currentChar) || currentChar == '.') {
-			startCol = currentCol;
-			tokens.push_back(processNumber());
+		else if (std::isdigit(current_char) || current_char == '.') {
+			start_col = current_col;
+			tokens.push_back(process_number());
 		}
 		else {
-			startCol = currentCol;
-			tokens.push_back(processSymbol());
+			start_col = current_col;
+			tokens.push_back(process_symbol());
 		}
 	}
 
-	tokens.push_back(Token(TOKEN_TYPE::TOK_EOF, "EOF", currentCol, currentRow));
+	tokens.push_back(Token(TokenType::TOK_EOF, "EOF", current_col, current_row));
 }
 
-char Lexer::getNextChar() {
-	return currentIndex + 1 < source.length() ? source[currentIndex + 1] : -1;
+char Lexer::get_next_char() {
+	return current_index + 1 < source.length() ? source[current_index + 1] : -1;
 }
 
-bool Lexer::hasNext() {
-	return currentIndex < source.length();
+bool Lexer::has_next() {
+	return current_index < source.length();
 }
 
-bool Lexer::isSpace() {
-	return std::isspace(currentChar) || currentChar == '\t' || currentChar == '\r' || currentChar == '\n';
+bool Lexer::is_space() {
+	return std::isspace(current_char) || current_char == '\t' || current_char == '\r' || current_char == '\n';
 }
 
 void Lexer::advance() {
-	if (currentChar == '\n') {
-		currentCol = 1;
+	if (current_char == '\n') {
+		current_col = 1;
 	}
 	else {
-		++currentCol;
+		++current_col;
 	}
-	beforeChar = currentChar;
-	currentChar = source[++currentIndex];
+	before_char = current_char;
+	current_char = source[++current_index];
 }
 
-Token Lexer::processComment() {
+Token Lexer::process_comment() {
 	std::string comment;
-	bool isBlock = false;
-	int row = currentRow;
-	int col = currentCol;
+	bool is_block = false;
+	int row = current_row;
+	int col = current_col;
 
-	comment += currentChar;
+	comment += current_char;
 	advance();
 
-	if (currentChar == '*') {
-		isBlock = true;
+	if (current_char == '*') {
+		is_block = true;
 	}
 
 	do {
-		if (currentChar == '\n') {
-			++currentRow;
+		if (current_char == '\n') {
+			++current_row;
 		}
 
-		comment += currentChar;
+		comment += current_char;
 		advance();
-	} while (hasNext() && (isBlock && (currentChar != '/' || beforeChar != '*') || !isBlock && currentChar != '\n'));
+	} while (has_next() && (is_block && (current_char != '/' || before_char != '*') || !is_block && current_char != '\n'));
 
 
-	if (currentChar == '\n') {
-		++currentRow;
+	if (current_char == '\n') {
+		++current_row;
 	}
 
-	comment += currentChar;
+	comment += current_char;
 	advance();
 
-	return Token(TOKEN_TYPE::TOK_COMMENT, comment, row, col);
+	return Token(TokenType::TOK_COMMENT, comment, row, col);
 }
 
-Token Lexer::processString() {
+Token Lexer::process_string() {
 	std::string str;
 
 	do {
-		str += currentChar;
+		str += current_char;
 		advance();
-	} while (hasNext() && (currentChar != '"' || beforeChar == '\\'));
-	str += currentChar;
+	} while (has_next() && (current_char != '"' || before_char == '\\'));
+	str += current_char;
 	advance();
 
-	return Token(TOKEN_TYPE::TOK_STRING_LITERAL, str, currentRow, startCol);
+	return Token(TokenType::TOK_STRING_LITERAL, str, current_row, start_col);
 }
 
-Token Lexer::processChar() {
+Token Lexer::process_char() {
 	std::string chr;
 
-	chr += currentChar;
+	chr += current_char;
 	advance();
-	if (hasNext() && currentChar == '\\') {
-		chr += currentChar;
+	if (has_next() && current_char == '\\') {
+		chr += current_char;
 		advance();
 	}
-	chr += currentChar;
+	chr += current_char;
 	advance();
-	if (hasNext() && currentChar != '\'') {
-		throw std::runtime_error(msgHeader() + "lexical error: expected \"'\" to close character constant.");
+	if (has_next() && current_char != '\'') {
+		throw std::runtime_error(msg_header() + "lexical error: expected \"'\" to close character constant.");
 	}
-	chr += currentChar;
+	chr += current_char;
 	advance();
 
-	return Token(TOKEN_TYPE::TOK_CHAR_LITERAL, chr, currentRow, startCol);
+	return Token(TokenType::TOK_CHAR_LITERAL, chr, current_row, start_col);
 }
 
-Token Lexer::processIdentifier() {
+Token Lexer::process_identifier() {
 	std::string identifier;
-	TOKEN_TYPE type;
+	TokenType type;
 
-	while (hasNext() && (std::isalnum(currentChar) || currentChar == '_' || currentChar == '.')) {
-		identifier += currentChar;
+	while (has_next() && (std::isalnum(current_char) || current_char == '_' || current_char == '.')) {
+		identifier += current_char;
 		advance();
 	}
 
@@ -223,29 +223,29 @@ Token Lexer::processIdentifier() {
 		type = TOK_NOT;
 	else type = TOK_IDENTIFIER;
 
-	return Token(type, identifier, currentRow, startCol);
+	return Token(type, identifier, current_row, start_col);
 }
 
-Token Lexer::processNumber() {
+Token Lexer::process_number() {
 	std::string number;
-	TOKEN_TYPE type;
-	bool hasDot = false;
+	TokenType type;
+	bool has_dot = false;
 
-	while (hasNext() && (std::isdigit(currentChar) || currentChar == '.')) {
-		if (currentChar == '.') {
-			if (hasDot){
-				throw std::runtime_error(msgHeader() + "found '" + currentChar + "' defining float");
+	while (has_next() && (std::isdigit(current_char) || current_char == '.')) {
+		if (current_char == '.') {
+			if (has_dot){
+				throw std::runtime_error(msg_header() + "found '" + current_char + "' defining float");
 			}
-			hasDot = true;
+			has_dot = true;
 		}
-		number += currentChar;
+		number += current_char;
 		advance();
 	}
 
-	if (hasDot) {
+	if (has_dot) {
 		type = TOK_FLOAT_LITERAL;
 	}
-	else if (currentChar == 'f') {
+	else if (current_char == 'f') {
 		type = TOK_FLOAT_LITERAL;
 		advance();
 	}
@@ -253,15 +253,15 @@ Token Lexer::processNumber() {
 		type = TOK_INT_LITERAL;
 	}
 
-	return Token(type, number, currentRow, startCol);
+	return Token(type, number, current_row, start_col);
 }
 
-Token Lexer::processSymbol() {
+Token Lexer::process_symbol() {
 	char symbol;
-	std::string strSymbol;
-	TOKEN_TYPE type;
-	symbol = currentChar;
-	strSymbol = currentChar;
+	std::string str_symbol;
+	TokenType type;
+	symbol = current_char;
+	str_symbol = current_char;
 	advance();
 
 	switch (symbol) {
@@ -278,16 +278,16 @@ Token Lexer::processSymbol() {
 
 	case '<':
 	case '>':
-		if (currentChar == '=') {
-			strSymbol += currentChar;
+		if (current_char == '=') {
+			str_symbol += current_char;
 			advance();
 		}
 		type = TOK_RELATIONAL_OP;
 		break;
 
 	case '=':
-		if (currentChar == '=') {
-			strSymbol += currentChar;
+		if (current_char == '=') {
+			str_symbol += current_char;
 			advance();
 			type = TOK_RELATIONAL_OP;
 		}
@@ -297,10 +297,10 @@ Token Lexer::processSymbol() {
 		break;
 
 	case '!':
-		if (currentChar != '=') {
-			throw std::runtime_error(msgHeader() + "lexical error: expected '!'.");
+		if (current_char != '=') {
+			throw std::runtime_error(msg_header() + "lexical error: expected '!'.");
 		}
-		strSymbol += currentChar;
+		str_symbol += current_char;
 		advance();
 		type = TOK_RELATIONAL_OP;
 		break;
@@ -345,12 +345,12 @@ Token Lexer::processSymbol() {
 		type = TOK_ERROR;
 	}
 
-	return Token(type, strSymbol, currentRow, startCol);
+	return Token(type, str_symbol, current_row, start_col);
 }
 
-Token Lexer::nextToken() {
-	if (currentToken < tokens.size()) {
-		return tokens[currentToken++];
+Token Lexer::next_token() {
+	if (current_token < tokens.size()) {
+		return tokens[current_token++];
 	}
 	else {
 		std::string error = "Final token surpassed.";
@@ -358,6 +358,6 @@ Token Lexer::nextToken() {
 	}
 }
 
-std::string Lexer::msgHeader() {
-	return "(LERR) " + name + '[' + std::to_string(currentRow) + ':' + std::to_string(currentCol) + "]: ";
+std::string Lexer::msg_header() {
+	return "(LERR) " + name + '[' + std::to_string(current_row) + ':' + std::to_string(current_col) + "]: ";
 }

@@ -1,6 +1,5 @@
-
-#ifndef INTERPRETER_H
-#define INTERPRETER_H
+#ifndef INTERPRETER_HPP
+#define INTERPRETER_HPP
 
 #include <map>
 #include <stack>
@@ -16,31 +15,31 @@ namespace visitor {
 	class Interpreter : public Visitor {
 	private:
 		std::vector<parser::ASTProgramNode*> programs;
-		parser::ASTProgramNode* currentProgram;
+		parser::ASTProgramNode* current_program;
 
 		std::vector<InterpreterScope*> scopes;
 
-		Value_t currentExpressionValue;
+		Value_t current_expression_value;
 
-		std::vector<std::string> currentFunctionParameters;
-		std::vector<std::pair<parser::TYPE, Value_t*>> currentFunctionArguments;
-		std::string currentFunctionName;
-		std::string returnFromFunctionName;
-		bool returnFromFunction = false;
-		bool isSwitch = false;
-		bool isLoop = false;
-		bool breakBlock = false;
-		bool executedElif = false;
+		std::vector<std::string> current_function_parameters;
+		std::vector<std::pair<parser::Type, Value_t*>> current_function_arguments;
+		std::string current_function_name;
+		std::string return_from_function_name;
+		bool return_from_function = false;
+		bool is_switch = false;
+		bool is_loop = false;
+		bool break_block = false;
+		bool executed_elif = false;
 
 	private:
-		std::vector<unsigned int> evaluateAccessVector(std::vector<parser::ASTExprNode*>);
-		void declareStructureVariable(std::string, Value_t);
-		void declareStructureDefinitionFirstLevelVariables(cp_struct*);
-		void printValue(Value_t);
-		void printArray(cp_array);
-		void printStruct(cp_struct);
+		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
+		void declare_structure_variable(std::string, Value_t);
+		void declare_structure_definition_first_level_variables(cp_struct*);
+		void print_value(Value_t);
+		void print_array(cp_array);
+		void print_struct(cp_struct);
 
-		std::string msgHeader(unsigned int, unsigned int);
+		std::string msg_header(unsigned int, unsigned int);
 
 	public:
 		Interpreter();
@@ -83,11 +82,11 @@ namespace visitor {
 		void visit(parser::ASTNullNode*) override;
 		void visit(parser::ASTThisNode*) override;
 
-		std::pair<parser::TYPE, Value_t*> currentExpr();
-		Value_t getCurrentExpressionValue() {
-			return currentExpressionValue;
+		std::pair<parser::Type, Value_t*> current_expr();
+		Value_t get_current_expression_value() {
+			return current_expression_value;
 		}
 	};
 }
 
-#endif //INTERPRETER_H
+#endif // INTERPRETER_HPP

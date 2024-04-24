@@ -14,7 +14,7 @@ namespace axe {
 		return lowerStr;
 	}
 
-    std::vector<std::string> split(std::string string, char sep) {
+    std::vector<std::string> split_vector(std::string string, char sep) {
         std::vector<std::string> strings;
         std::istringstream stringstream(string);
         std::string currentString;
@@ -24,25 +24,13 @@ namespace axe {
         return strings;
     }
 
-    std::list<std::string> splitList(std::string string, char sep) {
-        //std::list<std::string> strings;
-        //std::istringstream stringstream(string);
-        //std::string currentString;
-        //while (std::getline(stringstream, currentString, sep)) {
-        //    strings.push_back(currentString);
-        //}
-        //return strings;
-        auto v = split(string, sep);
+    std::list<std::string> split_list(std::string string, char sep) {
+        auto v = split_vector(string, sep);
         return std::list<std::string>(v.begin(), v.end());
     }
 
     bool contains(std::string string, std::string cont) {
         return string.find(cont) != std::string::npos;
-    }
-
-    template<typename C, typename T>
-    bool ccontains(C&& c, T e) {
-        return std::find(std::begin(c), std::end(c), e) != std::end(c);
     }
 
     std::string join(std::vector<std::string> strings, const char* const delim) {
@@ -54,10 +42,10 @@ namespace axe {
         return string;
     }
 
-    int hashcode(const std::string& str) {
+    unsigned int hashcode(const std::string& str) {
         int h = 0;
         for (size_t i = 0; i < str.size(); ++i){
-            h = h * 31 + static_cast<int>(str[i]);
+            h = h * 31 + static_cast<unsigned int>(str[i]);
         }
         return h;
     }

@@ -1,5 +1,5 @@
-#ifndef AST_H
-#define AST_H
+#ifndef AST_HPP
+#define AST_HPP
 
 #include <string>
 #include <array>
@@ -12,25 +12,23 @@
 namespace parser {
 
 	typedef struct VariableDefinition {
-		VariableDefinition(std::string identifier, TYPE type, std::string typeName, TYPE arrayType, std::vector<ASTExprNode*> dim, bool isConst, bool hasValue, unsigned int row, unsigned int col, bool isParameter)
-			: identifier(identifier), type(type), typeName(typeName), arrayType(arrayType), dim(dim), isConst(isConst), hasValue(hasValue), row(row), col(col), isParameter(isParameter) {};
-		VariableDefinition() {};
+		VariableDefinition(std::string, Type, std::string, Type, std::vector<ASTExprNode*>, bool, bool, unsigned int, unsigned int, bool);
+		VariableDefinition();
 		std::string identifier;
-		std::string typeName;
-		parser::TYPE type;
-		parser::TYPE arrayType;
+		std::string type_name;
+		parser::Type type;
+		parser::Type array_type;
 		std::vector<ASTExprNode*> dim;
-		bool hasValue;
-		bool isParameter;
-		bool isConst;
+		bool has_value;
+		bool is_parameter;
+		bool is_const;
 		unsigned int row;
 		unsigned int col;
 	} VariableDefinition_t;
 
 	typedef struct StructureDefinition {
-		StructureDefinition(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
-			: identifier(identifier), variables(variables), row(row), col(col) {};
-		StructureDefinition() {};
+		StructureDefinition(std::string, std::vector<VariableDefinition_t>, unsigned int, unsigned int);
+		StructureDefinition() ;
 		std::string identifier;
 		std::vector<VariableDefinition_t> variables;
 		unsigned int row;
@@ -38,14 +36,13 @@ namespace parser {
 	} StructureDefinition_t;
 
 	typedef struct FunctionDefinition {
-		FunctionDefinition(std::string identifier, TYPE type, std::string typeName, std::vector<parser::TYPE> signature, bool isAny, unsigned int row, unsigned int col)
-			: identifier(identifier), type(type), typeName(typeName), signature(signature), isAny(isAny), row(row), col(col) {};
-		FunctionDefinition() {};
+		FunctionDefinition(std::string identifier, Type type, std::string type_name, std::vector<parser::Type> signature, bool is_any, unsigned int row, unsigned int col);
+		FunctionDefinition();
 		std::string identifier;
-		parser::TYPE type;
-		std::string typeName;
-		std::vector<parser::TYPE> signature;
-		bool isAny;
+		parser::Type type;
+		std::string type_name;
+		std::vector<parser::Type> signature;
+		bool is_any;
 		unsigned int row;
 		unsigned int col;
 	} FunctionDefinition_t;
@@ -64,7 +61,7 @@ namespace parser {
 	class ASTExprNode : public ASTNode {
 	public:
 		void accept(visitor::Visitor*) override = 0;
-		virtual int hash() = 0;
+		virtual unsigned int hash(visitor::Visitor*) = 0;
 	};
 
 	// Statement Nodes
@@ -92,14 +89,14 @@ namespace parser {
 
 	class ASTDeclarationNode : public ASTStatementNode {
 	public:
-		ASTDeclarationNode(TYPE, std::string, std::string, ASTExprNode*, bool, TYPE, std::vector<ASTExprNode*>, unsigned int, unsigned int);
+		ASTDeclarationNode(Type, std::string, std::string, ASTExprNode*, bool, Type, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 
-		TYPE type;
+		Type type;
 		std::string identifier;
-		std::string typeName;
+		std::string type_name;
 		ASTExprNode* expr;
-		bool isConst;
-		TYPE arrayType;
+		bool is_const;
+		Type array_type;
 		std::vector<ASTExprNode*> dim;
 		unsigned int row;
 		unsigned int col;
@@ -112,9 +109,9 @@ namespace parser {
 		ASTAssignmentNode(std::string, std::vector<std::string>, ASTExprNode*, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 
 		std::string identifier;
-		std::vector<std::string> identifierVector;
+		std::vector<std::string> identifier_vector;
 		ASTExprNode* expr;
-		std::vector<ASTExprNode*> accessVector;
+		std::vector<ASTExprNode*> access_vector;
 		unsigned int row;
 		unsigned int col;
 
@@ -172,9 +169,9 @@ namespace parser {
 		ASTSwitchNode(ASTExprNode*, std::vector<ASTNode*>*, std::map<ASTExprNode*, unsigned int>*, unsigned int, unsigned int, unsigned int);
 
 		ASTExprNode* condition;
-		std::map<ASTExprNode*, unsigned int>* caseBlocks;
-		std::map<unsigned int, unsigned int>* parsedCaseBlocks;
-		unsigned int defaultBlock;
+		std::map<ASTExprNode*, unsigned int>* case_blocks;
+		std::map<unsigned int, unsigned int>* parsed_case_blocks;
+		unsigned int default_block;
 		std::vector<ASTNode*>* statements;
 		unsigned int row;
 		unsigned int col;
@@ -199,9 +196,9 @@ namespace parser {
 		ASTIfNode(ASTExprNode*, ASTBlockNode*, std::vector<ASTElseIfNode*>, unsigned int, unsigned int, ASTBlockNode* = nullptr);
 
 		ASTExprNode* condition;
-		ASTBlockNode* ifBlock;
-		std::vector<ASTElseIfNode*> elseIf;
-		ASTBlockNode* elseBlock;
+		ASTBlockNode* if_block;
+		std::vector<ASTElseIfNode*> else_ifs;
+		ASTBlockNode* else_block;
 		unsigned int row;
 		unsigned int col;
 
@@ -247,14 +244,14 @@ namespace parser {
 
 	class ASTFunctionDefinitionNode : public ASTStatementNode {
 	public:
-		ASTFunctionDefinitionNode(std::string, std::vector<VariableDefinition_t>, TYPE, std::string, ASTBlockNode*, unsigned int, unsigned int);
+		ASTFunctionDefinitionNode(std::string, std::vector<VariableDefinition_t>, Type, std::string, ASTBlockNode*, unsigned int, unsigned int);
 
 		std::string identifier;
 		std::vector<VariableDefinition_t> parameters;
-		std::vector<std::string> variableNames;
-		std::vector<TYPE> signature;
-		TYPE type;
-		std::string typeName;
+		std::vector<std::string> variable_names;
+		std::vector<Type> signature;
+		Type type;
+		std::string type_name;
 		ASTBlockNode* block;
 		unsigned int row;
 		unsigned int col;
@@ -279,12 +276,13 @@ namespace parser {
 	class ASTLiteralNode : public ASTExprNode {
 	public:
 		ASTLiteralNode(T val, unsigned int row, unsigned int col) : val(val), row(row), col(col) {};
+
 		T val;
 		unsigned int row;
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTArrayConstructorNode : public ASTExprNode {
@@ -296,20 +294,20 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTStructConstructorNode : public ASTExprNode {
 	public:
 		ASTStructConstructorNode(std::string, std::map<std::string, ASTExprNode*>, unsigned int, unsigned int);
 
-		std::string typeName;
+		std::string type_name;
 		std::map<std::string, ASTExprNode*> values;
 		unsigned int row;
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTNullNode : public ASTExprNode {
@@ -320,7 +318,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTThisNode : public ASTExprNode {
@@ -331,7 +329,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTBinaryExprNode : public ASTExprNode {
@@ -345,7 +343,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTIdentifierNode : public ASTExprNode {
@@ -353,26 +351,26 @@ namespace parser {
 		explicit ASTIdentifierNode(std::string, std::vector<std::string>, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 
 		std::string identifier;
-		std::vector<std::string> identifierVector;
-		std::vector<ASTExprNode*> accessVector;
+		std::vector<std::string> identifier_vector;
+		std::vector<ASTExprNode*> access_vector;
 		unsigned int row;
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTUnaryExprNode : public ASTExprNode {
 	public:
 		ASTUnaryExprNode(std::string, ASTExprNode*, unsigned int, unsigned int);
 
-		std::string unaryOp;
+		std::string unary_op;
 		ASTExprNode* expr;
 		unsigned int row;
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTFunctionCallNode : public ASTExprNode {
@@ -385,20 +383,20 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTTypeParseNode : public ASTExprNode {
 	public:
-		ASTTypeParseNode(TYPE, ASTExprNode*, unsigned int, unsigned int);
+		ASTTypeParseNode(Type, ASTExprNode*, unsigned int, unsigned int);
 
-		TYPE type;
+		Type type;
 		ASTExprNode* expr;
 		unsigned int row;
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTRoundNode : public ASTExprNode {
@@ -411,7 +409,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTLenNode : public ASTExprNode {
@@ -423,7 +421,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTTypeNode : public ASTExprNode {
@@ -435,7 +433,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTReadNode : public ASTExprNode {
@@ -446,8 +444,8 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 }
 
-#endif //AST_H
+#endif // AST_HPP

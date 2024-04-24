@@ -1,5 +1,5 @@
-#ifndef CPINTERPRETER_H
-#define CPINTERPRETER_H
+#ifndef CPINTERPRETER_HPP
+#define CPINTERPRETER_HPP
 
 #include <iostream>
 #include <fstream>
@@ -25,11 +25,11 @@ class CPInterpreter {
 public:
 	int execute(int, const char*[]);
 
-	std::vector<Program> loadPrograms(std::vector<std::string>);
+	std::vector<Program> load_programs(std::vector<std::string>);
 
 	int interpreter(std::vector<Program>);
 
-	std::vector<Program> debugPrograms();
+	std::vector<Program> debug_programs();
 };
 
-#endif //CPINTERPRETER_H
+#endif //CPINTERPRETER_HPP

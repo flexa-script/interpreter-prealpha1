@@ -8,6 +8,25 @@
 using namespace parser;
 
 
+VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name, Type array_type, std::vector<ASTExprNode*> dim, bool is_const, bool has_value, unsigned int row, unsigned int col, bool is_parameter)
+	: identifier(identifier), type(type), type_name(type_name), array_type(array_type), dim(dim), is_const(is_const), has_value(has_value), row(row), col(col), is_parameter(is_parameter) {};
+
+VariableDefinition::VariableDefinition()
+	: identifier(""), type(Type::T_ND), type_name(""), array_type(Type::T_ND), dim(std::vector<ASTExprNode*>()), is_const(false), has_value(false), row(0), col(0), is_parameter(false) {};
+
+StructureDefinition::StructureDefinition(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
+	: identifier(identifier), variables(variables), row(row), col(col) {};
+
+StructureDefinition::StructureDefinition()
+	: identifier(""), variables(std::vector<VariableDefinition_t>()), row(0), col(0) {};
+
+FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, std::vector<parser::Type> signature, bool is_any, unsigned int row, unsigned int col)
+	: identifier(identifier), type(type), type_name(type_name), signature(signature), is_any(is_any), row(row), col(col) {};
+
+FunctionDefinition::FunctionDefinition()
+	: identifier(""), type(Type::T_ND), type_name(""), signature(std::vector<parser::Type>()), is_any(false), row(0), col(0) {};
+
+
 // Program Node
 ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string name)
 	: statements(std::move(statements)), name(name) {}
@@ -16,11 +35,11 @@ ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string nam
 ASTUsingNode::ASTUsingNode(std::string library, unsigned int row, unsigned int col)
 	: library(std::move(library)), row(row), col(col) {}
 
-ASTDeclarationNode::ASTDeclarationNode(TYPE type, std::string typeName, std::string identifier, ASTExprNode* expr, bool isConst, TYPE arrayType, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col)
-	: type(type), typeName(std::move(typeName)), identifier(std::move(identifier)), expr(expr), isConst(isConst), arrayType(arrayType), dim(dim), row(row), col(col) {}
+ASTDeclarationNode::ASTDeclarationNode(Type type, std::string type_name, std::string identifier, ASTExprNode* expr, bool is_const, Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col)
+	: type(type), type_name(std::move(type_name)), identifier(std::move(identifier)), expr(expr), is_const(is_const), array_type(array_type), dim(dim), row(row), col(col) {}
 
-ASTAssignmentNode::ASTAssignmentNode(std::string identifier, std::vector<std::string> identifierVector, ASTExprNode* expr, std::vector<ASTExprNode*> accessVector, unsigned int row, unsigned int col)
-	: identifier(std::move(identifier)), identifierVector(identifierVector), expr(expr), accessVector(accessVector), row(row), col(col) {}
+ASTAssignmentNode::ASTAssignmentNode(std::string identifier, std::vector<std::string> identifier_vector, ASTExprNode* expr, std::vector<ASTExprNode*> access_vector, unsigned int row, unsigned int col)
+	: identifier(std::move(identifier)), identifier_vector(identifier_vector), expr(expr), access_vector(access_vector), row(row), col(col) {}
 
 ASTPrintNode::ASTPrintNode(ASTExprNode* expr, unsigned int row, unsigned int col)
 	: expr(expr), row(row), col(col) {}
@@ -34,14 +53,14 @@ ASTBlockNode::ASTBlockNode(std::vector<ASTNode*> statements, unsigned int row, u
 ASTBreakNode::ASTBreakNode(unsigned int row, unsigned int col)
 	: row(row), col(col) {}
 
-ASTSwitchNode::ASTSwitchNode(ASTExprNode* condition, std::vector<ASTNode*>* statements, std::map<ASTExprNode*, unsigned int>* caseBlocks, unsigned int defaultBlock, unsigned int row, unsigned int col)
-	: condition(condition), statements(statements), caseBlocks(caseBlocks), defaultBlock(defaultBlock), parsedCaseBlocks(new std::map<unsigned int, unsigned int>()), row(row), col(col) {}
+ASTSwitchNode::ASTSwitchNode(ASTExprNode* condition, std::vector<ASTNode*>* statements, std::map<ASTExprNode*, unsigned int>* case_blocks, unsigned int default_block, unsigned int row, unsigned int col)
+	: condition(condition), statements(statements), case_blocks(case_blocks), default_block(default_block), parsed_case_blocks(new std::map<unsigned int, unsigned int>()), row(row), col(col) {}
 
 ASTElseIfNode::ASTElseIfNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: condition(condition), block(block), row(row), col(col) {}
 
-ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* ifBlock, std::vector<ASTElseIfNode*> elseIf, unsigned int row, unsigned int col, ASTBlockNode* elseBlock)
-	: condition(condition), ifBlock(ifBlock), elseIf(elseIf), row(row), col(col), elseBlock(elseBlock) {}
+ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* if_block, std::vector<ASTElseIfNode*> else_ifs, unsigned int row, unsigned int col, ASTBlockNode* else_block)
+	: condition(condition), if_block(if_block), else_ifs(else_ifs), row(row), col(col), else_block(else_block) {}
 
 ASTForNode::ASTForNode(std::array<ASTNode*, 3> dci, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: dci(dci), block(block), row(row), col(col) {}
@@ -52,13 +71,13 @@ ASTForEachNode::ASTForEachNode(ASTNode* itdecl, ASTExprNode* collection, ASTBloc
 ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: condition(condition), block(block), row(row), col(col) {}
 
-ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<VariableDefinition_t> parameters, TYPE type, std::string typeName, ASTBlockNode* block, unsigned int row, unsigned int col)
-	: identifier(std::move(identifier)), parameters(std::move(parameters)), type(type), typeName(typeName), block(block), row(row), col(col) {
+ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<VariableDefinition_t> parameters, Type type, std::string type_name, ASTBlockNode* block, unsigned int row, unsigned int col)
+	: identifier(std::move(identifier)), parameters(std::move(parameters)), type(type), type_name(type_name), block(block), row(row), col(col) {
 	// generate signature
-	this->signature = std::vector<TYPE>();
+	this->signature = std::vector<Type>();
 
 	for (auto param : this->parameters) {
-		variableNames.push_back(param.identifier);
+		variable_names.push_back(param.identifier);
 		signature.push_back(param.type);
 	}
 }
@@ -71,8 +90,8 @@ ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::ve
 ASTArrayConstructorNode::ASTArrayConstructorNode(std::vector<ASTExprNode*> values, unsigned int row, unsigned int col)
 	: values(values), row(row), col(col) {}
 
-ASTStructConstructorNode::ASTStructConstructorNode(std::string typeName, std::map<std::string, ASTExprNode*> values, unsigned int row, unsigned int col)
-	: typeName(typeName), values(values), row(row), col(col) {}
+ASTStructConstructorNode::ASTStructConstructorNode(std::string type_name, std::map<std::string, ASTExprNode*> values, unsigned int row, unsigned int col)
+	: type_name(type_name), values(values), row(row), col(col) {}
 
 ASTNullNode::ASTNullNode(unsigned int row, unsigned int col)
 	: row(row), col(col) {}
@@ -83,16 +102,16 @@ ASTThisNode::ASTThisNode(unsigned int row, unsigned int col)
 ASTBinaryExprNode::ASTBinaryExprNode(std::string op, ASTExprNode* left, ASTExprNode* right, unsigned int row, unsigned int col)
 	: op(std::move(op)), left(left), right(right), row(row), col(col) {}
 
-ASTIdentifierNode::ASTIdentifierNode(std::string identifier, std::vector<std::string> identifierVector, std::vector<ASTExprNode*> accessVector, unsigned int row, unsigned int col)
-	: identifier(std::move(identifier)), identifierVector(identifierVector), accessVector(accessVector), row(row), col(col) {}
+ASTIdentifierNode::ASTIdentifierNode(std::string identifier, std::vector<std::string> identifier_vector, std::vector<ASTExprNode*> access_vector, unsigned int row, unsigned int col)
+	: identifier(std::move(identifier)), identifier_vector(identifier_vector), access_vector(access_vector), row(row), col(col) {}
 
-ASTUnaryExprNode::ASTUnaryExprNode(std::string unaryOp, ASTExprNode* expr, unsigned int row, unsigned int col)
-	: unaryOp(std::move(unaryOp)), expr(expr), row(row), col(col) {}
+ASTUnaryExprNode::ASTUnaryExprNode(std::string unary_op, ASTExprNode* expr, unsigned int row, unsigned int col)
+	: unary_op(std::move(unary_op)), expr(expr), row(row), col(col) {}
 
 ASTFunctionCallNode::ASTFunctionCallNode(std::string identifier, std::vector<ASTExprNode*> parameters, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), parameters(std::move(parameters)), row(row), col(col) {}
 
-ASTTypeParseNode::ASTTypeParseNode(TYPE type, ASTExprNode* expr, unsigned int row, unsigned int col)
+ASTTypeParseNode::ASTTypeParseNode(Type type, ASTExprNode* expr, unsigned int row, unsigned int col)
 	: type(type), expr(expr), row(row), col(col) {}
 
 ASTRoundNode::ASTRoundNode(ASTExprNode* expr, unsigned int ndigits, unsigned int row, unsigned int col)
@@ -113,8 +132,8 @@ void ASTBinaryExprNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-int ASTBinaryExprNode::hash() {
-	return left->hash() + axe::hashcode(op) + right->hash();
+unsigned int ASTBinaryExprNode::hash(visitor::Visitor* v) {
+	return left->hash(v) + axe::hashcode(op) + right->hash(v);
 }
 
 namespace parser {
@@ -123,8 +142,8 @@ namespace parser {
 		v->visit(this);
 	}
 
-	int ASTLiteralNode<cp_bool>::hash() {
-		return val;
+	unsigned int ASTLiteralNode<cp_bool>::hash(visitor::Visitor* v) {
+		return static_cast<unsigned int>(val);
 	}
 
 	template<>
@@ -132,8 +151,8 @@ namespace parser {
 		v->visit(this);
 	}
 
-	int ASTLiteralNode<cp_int>::hash() {
-		return val;
+	unsigned int ASTLiteralNode<cp_int>::hash(visitor::Visitor* v) {
+		return static_cast<unsigned int>(val);
 	}
 
 	template<>
@@ -141,8 +160,8 @@ namespace parser {
 		v->visit(this);
 	}
 
-	int ASTLiteralNode<cp_float>::hash() {
-		return val;
+	unsigned int ASTLiteralNode<cp_float>::hash(visitor::Visitor* v) {
+		return static_cast<unsigned int>(val);
 	}
 
 	template<>
@@ -150,8 +169,8 @@ namespace parser {
 		v->visit(this);
 	}
 
-	int ASTLiteralNode<cp_char>::hash() {
-		return val;
+	unsigned int ASTLiteralNode<cp_char>::hash(visitor::Visitor* v) {
+		return static_cast<unsigned int>(val);
 	}
 
 	template<>
@@ -159,7 +178,7 @@ namespace parser {
 		v->visit(this);
 	}
 
-	int ASTLiteralNode<cp_string>::hash() {
+	unsigned int ASTLiteralNode<cp_string>::hash(visitor::Visitor* v) {
 		return axe::hashcode(val);
 	}
 }
@@ -168,10 +187,10 @@ void ASTArrayConstructorNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-int ASTArrayConstructorNode::hash() {
-	int h = 0;
+unsigned int ASTArrayConstructorNode::hash(visitor::Visitor* v) {
+	unsigned int h = 0;
 	for (auto& expr : values) {
-		h += expr->hash();
+		h = h * 31 + expr->hash(v);
 	}
 	return h;
 }
@@ -180,22 +199,22 @@ void ASTStructConstructorNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-int ASTStructConstructorNode::hash() {
-	int h = 0;
+unsigned int ASTStructConstructorNode::hash(visitor::Visitor* v) {
+	unsigned int h = 0;
 	for (auto& expr : values) {
-		h += axe::hashcode(expr.first) + expr.second->hash();
+		h = h * 31 + axe::hashcode(expr.first) + expr.second->hash(v);
 	}
-	return axe::hashcode(typeName) + h;
+	return axe::hashcode(type_name) + h;
 }
 
 void ASTFunctionCallNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-int ASTFunctionCallNode::hash() {
-	int h = 0;
+unsigned int ASTFunctionCallNode::hash(visitor::Visitor* v) {
+	unsigned int h = 0;
 	for (auto& expr : parameters) {
-		h += expr->hash();
+		h += h * 31 + expr->hash(v);
 	}
 	return h;
 }
@@ -204,31 +223,31 @@ void ASTTypeNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-int ASTTypeNode::hash() {
-	return expr->hash();
+unsigned int ASTTypeNode::hash(visitor::Visitor* v) {
+	return expr->hash(v);
 }
 
 void ASTRoundNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-int ASTRoundNode::hash() {
-	return expr->hash() + ndigits;
+unsigned int ASTRoundNode::hash(visitor::Visitor* v) {
+	return expr->hash(v) + ndigits;
 }
 
 void ASTLenNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-int ASTLenNode::hash() {
-	return expr->hash();
+unsigned int ASTLenNode::hash(visitor::Visitor* v) {
+	return expr->hash(v);
 }
 
 void ASTReadNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-int ASTReadNode::hash() {
+unsigned int ASTReadNode::hash(visitor::Visitor* v) {
 	return axe::hashcode("read");
 }
 
@@ -236,7 +255,7 @@ void ASTIdentifierNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-int ASTIdentifierNode::hash() {
+unsigned int ASTIdentifierNode::hash(visitor::Visitor* v) {
 	return 0;
 }
 
@@ -244,23 +263,23 @@ void ASTUnaryExprNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-int ASTUnaryExprNode::hash() {
-	return axe::hashcode(unaryOp) + expr->hash();
+unsigned int ASTUnaryExprNode::hash(visitor::Visitor* v) {
+	return axe::hashcode(unary_op) + expr->hash(v);
 }
 
 void ASTTypeParseNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-int ASTTypeParseNode::hash() {
-	return axe::hashcode(typeStr(type)) + expr->hash();
+unsigned int ASTTypeParseNode::hash(visitor::Visitor* v) {
+	return axe::hashcode(type_str(type)) + expr->hash(v);
 }
 
 void ASTNullNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-int ASTNullNode::hash() {
+unsigned int ASTNullNode::hash(visitor::Visitor* v) {
 	return axe::hashcode("null");
 }
 
@@ -268,7 +287,7 @@ void ASTThisNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-int ASTThisNode::hash() {
+unsigned int ASTThisNode::hash(visitor::Visitor* v) {
 	return axe::hashcode("this");
 }
 

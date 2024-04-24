@@ -1,5 +1,5 @@
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef UTIL_HPP
+#define UTIL_HPP
 
 #include <string>
 #include <vector>
@@ -8,13 +8,11 @@
 
 namespace axe {
 	std::string tolower(std::string);
-	std::vector<std::string> split(std::string, char);
-	std::list<std::string> splitList(std::string, char);
+	std::vector<std::string> split_vector(std::string, char);
+	std::list<std::string> split_list(std::string, char);
 	bool contains(std::string, std::string);
-	template<typename C, typename T>
-	bool ccontains(C&&, T);
 	std::string join(std::vector<std::string>, const char* const);
-	int hashcode(const std::string&);
+	unsigned int hashcode(const std::string&);
 }
 
-#endif //UTIL_H
+#endif // UTIL_HPP

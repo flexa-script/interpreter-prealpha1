@@ -8,132 +8,132 @@ using namespace parser;
 
 
 Parser::Parser(lexer::Lexer* lex, std::string name) : lex(lex), name(name) {
-	currentToken = lex->nextToken();
-	nextToken = lex->nextToken();
+	current_token = lex->next_token();
+	next_token = lex->next_token();
 }
 
 Parser::Parser(lexer::Lexer* lex, std::string name, unsigned int tokens) : lex(lex), name(name) {
-	nextToken = lex->nextToken();
+	next_token = lex->next_token();
 
 	for (unsigned int i = 0; i < tokens; i++) {
-		consumeToken();
+		consume_token();
 	}
 }
 
-void Parser::consumeToken() {
-	currentToken = nextToken;
-	nextToken = lex->nextToken();
+void Parser::consume_token() {
+	current_token = next_token;
+	next_token = lex->next_token();
 }
 
-void Parser::consumeToken(lexer::TOKEN_TYPE type) {
-	consumeToken();
-	if (currentToken.type != type) {
-		throw std::runtime_error(msgHeader() + "expected '" + lexer::Token::tokenImage(type) + "'");
+void Parser::consume_token(lexer::TokenType type) {
+	consume_token();
+	if (current_token.type != type) {
+		throw std::runtime_error(msg_header() + "expected '" + lexer::Token::token_image(type) + "'");
 	}
 }
 
-ASTProgramNode* Parser::parseProgram() {
+ASTProgramNode* Parser::parse_program() {
 	auto statements = new std::vector<ASTNode*>;
 
-	while (currentToken.type == lexer::TOK_USING && currentToken.type != lexer::TOK_EOF) {
-		statements->push_back(parseUsingStatement());
-		consumeToken();
+	while (current_token.type == lexer::TOK_USING && current_token.type != lexer::TOK_EOF) {
+		statements->push_back(parse_using_statement());
+		consume_token();
 	}
 
-	while (currentToken.type != lexer::TOK_EOF) {
-		statements->push_back(parseProgramStatement());
-		consumeToken();
+	while (current_token.type != lexer::TOK_EOF) {
+		statements->push_back(parse_program_statement());
+		consume_token();
 	}
 
 	return new ASTProgramNode(*statements, name);
 }
 
-ASTUsingNode* Parser::parseUsingStatement() {
+ASTUsingNode* Parser::parse_using_statement() {
 	// node attributes
 	std::string library;
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// consume using
-	consumeToken();
+	consume_token();
 
-	library = currentToken.value;
+	library = current_token.value;
 
-	if (consumeSemicolon) {
-		consumeSemicolon = false;
-		consumeToken(lexer::TOK_SEMICOLON);
+	if (consume_semicolon) {
+		consume_semicolon = false;
+		consume_token(lexer::TOK_SEMICOLON);
 	}
 
 	return new ASTUsingNode(library, row, col);
 }
 
-ASTNode* Parser::parseProgramStatement() {
-	switch (currentToken.type) {
+ASTNode* Parser::parse_program_statement() {
+	switch (current_token.type) {
 	case lexer::TOK_DEF:
-		return parseFunctionDefinition();
+		return parse_function_definition();
 	default:
-		consumeSemicolon = true;
-		parseBlockStatement();
+		consume_semicolon = true;
+		parse_block_statement();
 	}
 }
 
-ASTNode* Parser::parseBlockStatement() {
-	switch (currentToken.type) {
+ASTNode* Parser::parse_block_statement() {
+	switch (current_token.type) {
 	case lexer::TOK_VAR:
 	case lexer::TOK_CONST:
-		return parseDeclarationStatement();
+		return parse_declaration_statement();
 	case lexer::TOK_STRUCT:
-		return parseStructDefinition();
+		return parse_struct_definition();
 	case lexer::TOK_PRINT:
-		return parsePrintStatement();
+		return parse_print_statement();
 	case lexer::TOK_SWITCH:
-		return parseSwitchStatement();
+		return parse_switch_statement();
 	case lexer::TOK_IF:
-		return parseIfStatement();
+		return parse_if_statement();
 	case lexer::TOK_WHILE:
-		return parseWhileStatement();
+		return parse_while_statement();
 	case lexer::TOK_FOR:
-		return parseForStatement();
+		return parse_for_statement();
 	case lexer::TOK_FOREACH:
-		return parseForEachStatement();
+		return parse_for_each_statement();
 	case lexer::TOK_BREAK:
-		return parseBreakStatement();
+		return parse_break_statement();
 	case lexer::TOK_RETURN:
-		return parseReturnStatement();
+		return parse_return_statement();
 	case lexer::TOK_IDENTIFIER:
-		return parseIdentifier();
+		return parse_identifier();
 	default:
-		parseStatementExpression();
+		parse_statement_expression();
 	}
 }
 
-ASTExprNode* Parser::parseStatementExpression() {
-	ASTExprNode* expr = parseExpression();
-	if (consumeSemicolon) {
-		consumeSemicolon = false;
-		consumeToken(lexer::TOK_SEMICOLON);
+ASTExprNode* Parser::parse_statement_expression() {
+	ASTExprNode* expr = parse_expression();
+	if (consume_semicolon) {
+		consume_semicolon = false;
+		consume_token(lexer::TOK_SEMICOLON);
 	}
 	return expr;
 }
 
-ASTNode* Parser::parseIdentifier() {
-	if (nextToken.value == "(") {
-		ASTFunctionCallNode* expr = parseExprFunctionCall();
-		if (consumeSemicolon) {
-			consumeSemicolon = false;
-			consumeToken(lexer::TOK_SEMICOLON);
+ASTNode* Parser::parse_identifier() {
+	if (next_token.value == "(") {
+		ASTFunctionCallNode* expr = parse_function_call_node();
+		if (consume_semicolon) {
+			consume_semicolon = false;
+			consume_token(lexer::TOK_SEMICOLON);
 		}
 		return expr;
 	}
-	else if (nextToken.value == "[" || nextToken.value == "=") {
-		return parseAssignmentStatement();
+	else if (next_token.value == "[" || next_token.value == "=") {
+		return parse_assignment_statement();
 	}
 	else {
-		parseStatementExpression();
+		parse_statement_expression();
 	}
 }
 
-bool Parser::isBlockStatement(lexer::TOKEN_TYPE type) {
+bool Parser::is_block_statement(lexer::TokenType type) {
 	switch (type) {
 	case lexer::TOK_VAR:
 	case lexer::TOK_CONST:
@@ -153,7 +153,7 @@ bool Parser::isBlockStatement(lexer::TOKEN_TYPE type) {
 	}
 }
 
-bool Parser::isExclusiveBlockStatement(lexer::TOKEN_TYPE type) {
+bool Parser::is_exclusive_block_statement(lexer::TokenType type) {
 	switch (type) {
 	case lexer::TOK_VAR:
 	case lexer::TOK_CONST:
@@ -172,191 +172,188 @@ bool Parser::isExclusiveBlockStatement(lexer::TOKEN_TYPE type) {
 	}
 }
 
-ASTDeclarationNode* Parser::parseDeclarationStatement() {
-	TYPE type = TYPE::T_ND;
-	currentArrayType = TYPE::T_ND;
+ASTDeclarationNode* Parser::parse_declaration_statement() {
+	Type type = Type::T_ND;
+	current_array_type = Type::T_ND;
 	std::string identifier;
-	std::string typeName = "";
+	std::string type_name = "";
 	ASTExprNode* expr;
-	ASTExprNode* exprSize;
-	auto dimVector = std::vector<ASTExprNode*>();
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
-	bool isConst = currentToken.type == lexer::TOK_CONST;
+	ASTExprNode* expr_size;
+	auto dim_vector = std::vector<ASTExprNode*>();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+	bool is_const = current_token.type == lexer::TOK_CONST;
 
 	// consume identifier
-	consumeToken(lexer::TOK_IDENTIFIER);
-	identifier = currentToken.value;
+	consume_token(lexer::TOK_IDENTIFIER);
+	identifier = current_token.value;
 
-	consumeToken();
+	consume_token();
 
-	if (currentToken.type == lexer::TOK_LEFT_BRACE) {
-		type = TYPE::T_ARRAY;
+	if (current_token.type == lexer::TOK_LEFT_BRACE) {
+		type = Type::T_ARRAY;
 		do {
-			consumeToken();
-			if (currentToken.type != lexer::TOK_RIGHT_BRACE) {
-				exprSize = parseExpression();
-				consumeToken(lexer::TOK_RIGHT_BRACE);
+			consume_token();
+			if (current_token.type != lexer::TOK_RIGHT_BRACE) {
+				expr_size = parse_expression();
+				consume_token(lexer::TOK_RIGHT_BRACE);
 			}
-			consumeToken();
-			dimVector.push_back(exprSize);
+			consume_token();
+			dim_vector.push_back(expr_size);
 
-		} while (currentToken.type == lexer::TOK_LEFT_BRACE);
+		} while (current_token.type == lexer::TOK_LEFT_BRACE);
 	}
 
-	if (currentToken.type == lexer::TOK_COLON) {
-		consumeToken();
-		if (type == TYPE::T_ND) {
-			type = parseType(identifier);
+	if (current_token.type == lexer::TOK_COLON) {
+		consume_token();
+		if (type == Type::T_ND) {
+			type = parse_type(identifier);
 		}
-		else if (type == TYPE::T_ARRAY) {
-			currentArrayType = parseType(identifier);
+		else if (type == Type::T_ARRAY) {
+			current_array_type = parse_type(identifier);
 
-			if (currentArrayType == parser::TYPE::T_ND || currentArrayType == parser::TYPE::T_NULL || currentArrayType == parser::TYPE::T_ARRAY) {
-				currentArrayType = parser::TYPE::T_ANY;
+			if (current_array_type == parser::Type::T_ND || current_array_type == parser::Type::T_NULL || current_array_type == parser::Type::T_ARRAY) {
+				current_array_type = parser::Type::T_ANY;
 			}
 		}
 
-		if (currentToken.type == lexer::TOK_IDENTIFIER) {
-			typeName = currentToken.value;
+		if (current_token.type == lexer::TOK_IDENTIFIER) {
+			type_name = current_token.value;
 		}
 
-		consumeToken();
+		consume_token();
 	}
 
-	if (currentToken.type == lexer::TOK_EQUALS) {
-		consumeToken();
-		expr = parseExpression();
+	if (current_token.type == lexer::TOK_EQUALS) {
+		consume_token();
+		expr = parse_expression();
 
-		if (type == TYPE::T_ND) {
-			type = TYPE::T_ANY;
+		if (type == Type::T_ND) {
+			type = Type::T_ANY;
 		}
 
-		if (consumeSemicolon) {
-			consumeSemicolon = false;
-			consumeToken(lexer::TOK_SEMICOLON);
+		if (consume_semicolon) {
+			consume_semicolon = false;
+			consume_token(lexer::TOK_SEMICOLON);
 		}
 	}
 	else {
 		expr = nullptr;
 	}
 
-	return new ASTDeclarationNode(type, typeName, identifier, expr, isConst, currentArrayType, dimVector, row, col);
+	return new ASTDeclarationNode(type, type_name, identifier, expr, is_const, current_array_type, dim_vector, row, col);
 }
 
-ASTAssignmentNode* Parser::parseAssignmentStatement() {
+ASTAssignmentNode* Parser::parse_assignment_statement() {
 	std::string identifier;
 	ASTExprNode* expr;
-	ASTExprNode* exprSize;
-	auto identifierVector = std::vector<std::string>();
-	auto accessVector = std::vector<ASTExprNode*>();
+	ASTExprNode* expr_size;
+	auto identifier_vector = std::vector<std::string>();
+	auto access_vector = std::vector<ASTExprNode*>();
 
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
-	identifier = currentToken.value;
+	identifier = current_token.value;
 
 	if (axe::contains(identifier, ".")) {
-		identifierVector = axe::split(identifier, '.');
+		identifier_vector = axe::split_vector(identifier, '.');
 	}
 	else {
-		identifierVector.push_back(identifier);
+		identifier_vector.push_back(identifier);
 	}
 
-	consumeToken();
+	consume_token();
 
-	if (currentToken.type == lexer::TOK_LEFT_BRACE) {
+	if (current_token.type == lexer::TOK_LEFT_BRACE) {
 		do {
-			consumeToken();
-			exprSize = parseExpression();
-			consumeToken(lexer::TOK_RIGHT_BRACE);
-			consumeToken();
-			accessVector.push_back(exprSize);
+			consume_token();
+			expr_size = parse_expression();
+			consume_token(lexer::TOK_RIGHT_BRACE);
+			consume_token();
+			access_vector.push_back(expr_size);
 
-		} while (currentToken.type == lexer::TOK_LEFT_BRACE);
+		} while (current_token.type == lexer::TOK_LEFT_BRACE);
 	}
 
-	if (currentToken.type != lexer::TOK_EQUALS) {
-		throw std::runtime_error(msgHeader() + "expected assignment operator '=' after " + identifier + "");
+	if (current_token.type != lexer::TOK_EQUALS) {
+		throw std::runtime_error(msg_header() + "expected assignment operator '=' after " + identifier + "");
 	}
 
 	// parse the right hand side
-	consumeToken();
-	expr = parseExpression();
+	consume_token();
+	expr = parse_expression();
 
-	if (consumeSemicolon) {
-		consumeSemicolon = false;
-		consumeToken(lexer::TOK_SEMICOLON);
+	if (consume_semicolon) {
+		consume_semicolon = false;
+		consume_token(lexer::TOK_SEMICOLON);
 	}
 
-	return new ASTAssignmentNode(identifierVector[0], identifierVector, expr, accessVector, row, col);
+	return new ASTAssignmentNode(identifier_vector[0], identifier_vector, expr, access_vector, row, col);
 }
 
-ASTPrintNode* Parser::parsePrintStatement() {
+ASTPrintNode* Parser::parse_print_statement() {
 	// determine line number
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
 	// get expression to print
-	consumeToken();
-	ASTExprNode* expr = parseExpression();
+	consume_token();
+	ASTExprNode* expr = parse_expression();
 
 	// ensure right close bracket after fetching parameters
-	consumeToken(lexer::TOK_RIGHT_BRACKET);
+	consume_token(lexer::TOK_RIGHT_BRACKET);
 
-	if (consumeSemicolon) {
-		consumeSemicolon = false;
-		consumeToken(lexer::TOK_SEMICOLON);
+	if (consume_semicolon) {
+		consume_semicolon = false;
+		consume_token(lexer::TOK_SEMICOLON);
 	}
 
 	return new ASTPrintNode(expr, row, col);
 }
 
-ASTReturnNode* Parser::parseReturnStatement() {
+ASTReturnNode* Parser::parse_return_statement() {
 	// determine line number
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// get expression to return
-	consumeToken();
-	ASTExprNode* expr = parseExpression();
+	consume_token();
+	ASTExprNode* expr = parse_expression();
 
-	// consume ';' token
-	consumeToken();
-
-	if (consumeSemicolon) {
-		consumeSemicolon = false;
-		consumeToken(lexer::TOK_SEMICOLON);
+	if (consume_semicolon) {
+		consume_semicolon = false;
+		consume_token(lexer::TOK_SEMICOLON);
 	}
 
 	// return return node
 	return new ASTReturnNode(expr, row, col);
 }
 
-ASTBlockNode* Parser::parseBlock() {
+ASTBlockNode* Parser::parse_block() {
 	auto statements = new std::vector<ASTNode*>();
 
 	// determine line number
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// current token is '{', consume first token of statement
-	consumeToken();
+	consume_token();
 
 	// while not reached end of block or end of file
-	while (currentToken.type != lexer::TOK_RIGHT_CURLY && currentToken.type != lexer::TOK_ERROR && currentToken.type != lexer::TOK_EOF) {
-		consumeSemicolon = true;
+	while (current_token.type != lexer::TOK_RIGHT_CURLY && current_token.type != lexer::TOK_ERROR && current_token.type != lexer::TOK_EOF) {
+		consume_semicolon = true;
 		// parse the statement
-		statements->push_back(parseBlockStatement());
+		statements->push_back(parse_block_statement());
 
 		// consume first token of next statement
-		consumeToken();
+		consume_token();
 	}
 
 	// if block ended by '}', return block
-	if (currentToken.type == lexer::TOK_RIGHT_CURLY) {
+	if (current_token.type == lexer::TOK_RIGHT_CURLY) {
 		return new ASTBlockNode(*statements, row, col);
 	}
 	// otherwise the user left the block open
@@ -365,827 +362,829 @@ ASTBlockNode* Parser::parseBlock() {
 	}
 }
 
-ASTBlockNode* Parser::parseStructBlock() {
+ASTBlockNode* Parser::parse_struct_block() {
 	auto statements = new std::vector<ASTNode*>;
 
 	// determine line number
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// current token is '{', consume first token of statement
-	consumeToken();
+	consume_token();
 
 	// while not reached end of block or end of file
-	while (currentToken.type != lexer::TOK_RIGHT_CURLY && currentToken.type != lexer::TOK_ERROR && currentToken.type != lexer::TOK_EOF) {
+	while (current_token.type != lexer::TOK_RIGHT_CURLY && current_token.type != lexer::TOK_ERROR && current_token.type != lexer::TOK_EOF) {
 		// parse the statement
-		statements->push_back(parseStructBlockVariables());
+		statements->push_back(parse_struct_block_variables());
 
 		// consume first token of next statement
-		consumeToken();
+		consume_token();
 	}
 
 	// if block ended by '}', return block
-	if (currentToken.type == lexer::TOK_RIGHT_CURLY) {
+	if (current_token.type == lexer::TOK_RIGHT_CURLY) {
 		return new ASTBlockNode(*statements, row, col);
 	}
 	// otherwise the user left the block open
 	else {
-		throw std::runtime_error(name + ": Reached end of file while parsing. Mismatched scopes");
+		throw std::runtime_error(msg_header() + "mismatched scopes: reached end of file while parsing");
 	}
 }
 
-ASTStatementNode* Parser::parseStructBlockVariables() {
-	switch (currentToken.type) {
+ASTStatementNode* Parser::parse_struct_block_variables() {
+	switch (current_token.type) {
 	case lexer::TOK_VAR:
-		return parseDeclarationStatement();
+		return parse_declaration_statement();
 
 	default:
-		throw std::runtime_error(msgHeader() + "invalid declaration starting with '" + currentToken.value + "' encountered");
+		throw std::runtime_error(msg_header() + "invalid declaration starting with '" + current_token.value + "' encountered");
 	}
 }
 
-ASTBreakNode* Parser::parseBreakStatement() {
+ASTBreakNode* Parser::parse_break_statement() {
 	// determine line number
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
-	if (consumeSemicolon) {
-		consumeSemicolon = false;
-		consumeToken(lexer::TOK_SEMICOLON);
+	if (consume_semicolon) {
+		consume_semicolon = false;
+		consume_token(lexer::TOK_SEMICOLON);
 	}
 
 	// return return node
 	return new ASTBreakNode(row, col);
 }
 
-ASTSwitchNode* Parser::parseSwitchStatement() {
+ASTSwitchNode* Parser::parse_switch_statement() {
 	// node attributes
 	ASTExprNode* condition;
-	std::map<ASTExprNode*, unsigned int>* caseBlocks = new std::map<ASTExprNode*, unsigned int>();
-	int defaultBlock = -1;
+	std::map<ASTExprNode*, unsigned int>* case_blocks = new std::map<ASTExprNode*, unsigned int>();
+	int default_block = -1;
 	std::vector<ASTNode*>* statements = new std::vector<ASTNode*>();
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// consume '('
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
 	// parse the expression
-	consumeToken();
-	condition = parseExpression();
+	consume_token();
+	condition = parse_expression();
 
 	// consume ')'
-	consumeToken(lexer::TOK_RIGHT_BRACKET);
+	consume_token(lexer::TOK_RIGHT_BRACKET);
 
 	// consume '{'
-	consumeToken(lexer::TOK_LEFT_CURLY);
+	consume_token(lexer::TOK_LEFT_CURLY);
 
 	// consume case/default
-	consumeToken();
+	consume_token();
 
-	while (currentToken.type == lexer::TOK_CASE) {
-		bool isBlock = false;
-		consumeToken();
-		ASTExprNode* caseExrp = parseExpression();
-		int startPosition = statements->size();
+	while (current_token.type == lexer::TOK_CASE) {
+		bool is_block = false;
+		consume_token();
+		ASTExprNode* case_exrp = parse_expression();
+		int start_position = statements->size();
 
 		// consume :
-		consumeToken();
+		consume_token();
 
 		// consume first token of next statement
-		consumeToken();
+		consume_token();
 
-		if (currentToken.type == lexer::TOK_LEFT_CURLY) {
-			statements->push_back(parseBlock());
+		if (current_token.type == lexer::TOK_LEFT_CURLY) {
+			statements->push_back(parse_block());
 
 			// consume first token of next statement
-			consumeToken();
+			consume_token();
 		}
 		else {
 			// while not reached end of block or end of file
-			while (currentToken.type != lexer::TOK_CASE && currentToken.type != lexer::TOK_DEFAULT && currentToken.type != lexer::TOK_RIGHT_CURLY && currentToken.type != lexer::TOK_ERROR && currentToken.type != lexer::TOK_EOF) {
-				consumeSemicolon = true;
+			while (current_token.type != lexer::TOK_CASE && current_token.type != lexer::TOK_DEFAULT && current_token.type != lexer::TOK_RIGHT_CURLY && current_token.type != lexer::TOK_ERROR && current_token.type != lexer::TOK_EOF) {
+				consume_semicolon = true;
 				// parse the statement
-				statements->push_back(parseBlockStatement());
+				statements->push_back(parse_block_statement());
 
 				// consume first token of next statement
-				consumeToken();
+				consume_token();
 			}
 		}
 
-		caseBlocks->emplace(caseExrp, startPosition);
+		case_blocks->emplace(case_exrp, start_position);
 	}
 
-	if (currentToken.type == lexer::TOK_DEFAULT) {
-		bool isBlock = false;
-		defaultBlock = statements->size();
+	if (current_token.type == lexer::TOK_DEFAULT) {
+		bool is_block = false;
+		default_block = statements->size();
 
 		// consume :
-		consumeToken();
+		consume_token();
 
 		// consume first token of next statement
-		consumeToken();
+		consume_token();
 
-		if (currentToken.type == lexer::TOK_LEFT_CURLY) {
-			statements->push_back(parseBlock());
+		if (current_token.type == lexer::TOK_LEFT_CURLY) {
+			statements->push_back(parse_block());
 
 			// consume first token of next statement
-			consumeToken();
+			consume_token();
 		}
 		else {
 			// while not reached end of block or end of file
-			while (currentToken.type != lexer::TOK_RIGHT_CURLY && currentToken.type != lexer::TOK_ERROR && currentToken.type != lexer::TOK_EOF) {
-				consumeSemicolon = true;
+			while (current_token.type != lexer::TOK_RIGHT_CURLY && current_token.type != lexer::TOK_ERROR && current_token.type != lexer::TOK_EOF) {
+				consume_semicolon = true;
 				// parse the statement
-				statements->push_back(parseBlockStatement());
+				statements->push_back(parse_block_statement());
 
 				// consume first token of next statement
-				consumeToken();
+				consume_token();
 			}
 		}
 	}
 
-	return new ASTSwitchNode(condition, statements, caseBlocks, defaultBlock, row, col);
+	return new ASTSwitchNode(condition, statements, case_blocks, default_block, row, col);
 }
 
-ASTElseIfNode* Parser::parseElseIfStatement() {
+ASTElseIfNode* Parser::parse_else_if_statement() {
 	// node attributes
 	ASTExprNode* condition;
-	ASTBlockNode* ifBlock;
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	ASTBlockNode* if_block;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// consume 'if'
-	consumeToken();
+	consume_token();
 
 	// consume '('
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
 	// parse the expression
-	consumeToken();
-	condition = parseExpression();
+	consume_token();
+	condition = parse_expression();
 
 	// consume ')'
-	consumeToken(lexer::TOK_RIGHT_BRACKET);
+	consume_token(lexer::TOK_RIGHT_BRACKET);
 
 	// consume '{'
-	consumeToken(lexer::TOK_LEFT_CURLY);
+	consume_token(lexer::TOK_LEFT_CURLY);
 
 	// consume if-block and '}'
-	ifBlock = parseBlock();
+	if_block = parse_block();
 
-	consumeToken();
+	consume_token();
 
 	// return elif node
-	return new ASTElseIfNode(condition, ifBlock, row, col);
+	return new ASTElseIfNode(condition, if_block, row, col);
 }
 
-ASTIfNode* Parser::parseIfStatement() {
+ASTIfNode* Parser::parse_if_statement() {
 	// node attributes
 	ASTExprNode* condition;
-	ASTBlockNode* ifBlock;
-	std::vector<ASTElseIfNode*> elseIfs = std::vector<ASTElseIfNode*>();
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	ASTBlockNode* if_block;
+	std::vector<ASTElseIfNode*> else_ifs = std::vector<ASTElseIfNode*>();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// consume '('
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
 	// parse the expression
-	consumeToken();
-	condition = parseExpression();
+	consume_token();
+	condition = parse_expression();
 
 	// consume ')'
-	consumeToken(lexer::TOK_RIGHT_BRACKET);
+	consume_token(lexer::TOK_RIGHT_BRACKET);
 	
 	// consume '{'
-	consumeToken(lexer::TOK_LEFT_CURLY);
+	consume_token(lexer::TOK_LEFT_CURLY);
 
 	// consume if-block and '}'
-	ifBlock = parseBlock();
+	if_block = parse_block();
 
 	// lookahead whether there is an else
-	if (nextToken.type != lexer::TOK_ELSE) {
-		return new ASTIfNode(condition, ifBlock, elseIfs, row, col);
+	if (next_token.type != lexer::TOK_ELSE) {
+		return new ASTIfNode(condition, if_block, else_ifs, row, col);
 	}
 
 	// otherwise, consume the else
-	consumeToken();
+	consume_token();
 
-	if (nextToken.type == lexer::TOK_IF) {
-		while (nextToken.type == lexer::TOK_IF) {
-			elseIfs.push_back(parseElseIfStatement());
+	if (next_token.type == lexer::TOK_IF) {
+		while (next_token.type == lexer::TOK_IF) {
+			else_ifs.push_back(parse_else_if_statement());
 		}
 	}
 
 	// consume '{' after else
-	consumeToken(lexer::TOK_LEFT_CURLY);
+	consume_token(lexer::TOK_LEFT_CURLY);
 
 	// parse else-block and '}'
-	ASTBlockNode* elseBlock = parseBlock();
+	ASTBlockNode* else_block = parse_block();
 
 	// return if node
-	return new ASTIfNode(condition, ifBlock, elseIfs, row, col, elseBlock);
+	return new ASTIfNode(condition, if_block, else_ifs, row, col, else_block);
 }
 
-ASTForNode* Parser::parseForStatement() {
+ASTForNode* Parser::parse_for_statement() {
 	// node attributes
 	std::array<ASTNode*, 3> dci = { nullptr };
 	ASTBlockNode* block;
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// consume '('
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
 	for (int i = 0; i < 3; ++i) {
-		if (nextToken.type != lexer::TOK_SEMICOLON && nextToken.type != lexer::TOK_RIGHT_BRACKET) {
-			consumeToken();
-			consumeSemicolon = i < 2;
-			dci[i] = parseBlockStatement();
+		if (next_token.type != lexer::TOK_SEMICOLON && next_token.type != lexer::TOK_RIGHT_BRACKET) {
+			consume_token();
+			consume_semicolon = i < 2;
+			dci[i] = parse_block_statement();
 
 		}
 		else {
 			if (i < 2) {
-				consumeToken();
+				consume_token();
 			}
 		}
 	}
 
-	consumeToken(lexer::TOK_RIGHT_BRACKET);
-	consumeToken(lexer::TOK_LEFT_CURLY);
+	consume_token(lexer::TOK_RIGHT_BRACKET);
+	consume_token(lexer::TOK_LEFT_CURLY);
 
-	block = parseBlock();
+	block = parse_block();
 
 	// return for node
 	return new ASTForNode(dci, block, row, col);
 }
 
-ASTForEachNode* Parser::parseForEachStatement() {
+ASTForEachNode* Parser::parse_for_each_statement() {
 	// node attributes
 	ASTNode* itdecl; // decl or assign node
 	ASTExprNode* collection = nullptr;
 	ASTBlockNode* block;
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// consume '('
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
-	if (!currentToken.isType() && currentToken.type != lexer::TOK_IDENTIFIER) {
-		throw std::runtime_error(msgHeader() + "expected identifier or declaration");
+	if (!current_token.is_type() && current_token.type != lexer::TOK_IDENTIFIER) {
+		throw std::runtime_error(msg_header() + "expected identifier or declaration");
 	}
 
 	// i, i = 0, int i, int i = 0
-	itdecl = parseBlockStatement();
+	itdecl = parse_block_statement();
 
 	// consume ')'
-	consumeToken(lexer::TOK_RIGHT_BRACKET);
+	consume_token(lexer::TOK_RIGHT_BRACKET);
 
 	// consume '{'
-	consumeToken(lexer::TOK_LEFT_CURLY);
+	consume_token(lexer::TOK_LEFT_CURLY);
 
 	// consume while-block and '}'
-	block = parseBlock();
+	block = parse_block();
 
 	// return for node
 	return new ASTForEachNode(itdecl, collection, block, row, col);
 }
 
-ASTWhileNode* Parser::parseWhileStatement() {
+ASTWhileNode* Parser::parse_while_statement() {
 	// node attributes
 	ASTExprNode* condition;
 	ASTBlockNode* block;
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// consume '('
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
 	// parse the expression
-	consumeToken();
-	condition = parseExpression();
+	consume_token();
+	condition = parse_expression();
 
 	// consume ')'
-	consumeToken(lexer::TOK_RIGHT_BRACKET);
+	consume_token(lexer::TOK_RIGHT_BRACKET);
 
 	// consume '{'
-	consumeToken(lexer::TOK_LEFT_CURLY);
+	consume_token(lexer::TOK_LEFT_CURLY);
 
 	// consume while-block and '}'
-	block = parseBlock();
+	block = parse_block();
 
 	// return while node
 	return new ASTWhileNode(condition, block, row, col);
 }
 
-ASTFunctionDefinitionNode* Parser::parseFunctionDefinition() {
+ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	// node attributes
 	std::string identifier;
 	std::vector<VariableDefinition_t> parameters;
-	TYPE type;
-	std::string typeName = "";
+	Type type;
+	std::string type_name = "";
 	ASTBlockNode* block;
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// consume identifier
-	consumeToken(lexer::TOK_IDENTIFIER);
+	consume_token(lexer::TOK_IDENTIFIER);
 
-	identifier = currentToken.value;
+	identifier = current_token.value;
 
 	// consume '('
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
 	// consume ')' or parameters
-	consumeToken();
+	consume_token();
 
-	if (currentToken.type != lexer::TOK_RIGHT_BRACKET) {
+	if (current_token.type != lexer::TOK_RIGHT_BRACKET) {
 		// parse first parameter
-		parameters.push_back(*parseFormalParam());
+		parameters.push_back(*parse_formal_param());
 
 		// consume ',' or ')'
-		consumeToken();
+		consume_token();
 
-		while (currentToken.type == lexer::TOK_COMMA) {
+		while (current_token.type == lexer::TOK_COMMA) {
 			// consume identifier
-			consumeToken();
+			consume_token();
 
 			// parse parameter
-			parameters.push_back(*parseFormalParam());
+			parameters.push_back(*parse_formal_param());
 
 			// consume ',' or ')'
-			consumeToken();
+			consume_token();
 		}
 
 		// exited while-loop, so token must be ')'
-		if (currentToken.type != lexer::TOK_RIGHT_BRACKET) {
-			throw std::runtime_error(msgHeader() + "expected ')' or more parameters");
+		if (current_token.type != lexer::TOK_RIGHT_BRACKET) {
+			throw std::runtime_error(msg_header() + "expected ')' or more parameters");
 		}
 	}
 
 	// consume ':' or '{'
-	consumeToken();
+	consume_token();
 
-	if (currentToken.type == lexer::TOK_COLON) {
+	if (current_token.type == lexer::TOK_COLON) {
 		// consume type
-		consumeToken();
+		consume_token();
 
-		if (currentToken.type == lexer::TOK_IDENTIFIER) {
-			typeName = currentToken.value;
+		if (current_token.type == lexer::TOK_IDENTIFIER) {
+			type_name = current_token.value;
 		}
 
-		type = parseType(identifier);
+		type = parse_type(identifier);
 
 		// consume '{'
-		consumeToken();
+		consume_token();
 	}
 	else {
-		type = TYPE::T_VOID;
+		type = Type::T_VOID;
 	}
 
-	if (currentToken.type != lexer::TOK_LEFT_CURLY) {
-		throw std::runtime_error(msgHeader() + "expected '{' after function '" + identifier + "' definition");
+	if (current_token.type != lexer::TOK_LEFT_CURLY) {
+		throw std::runtime_error(msg_header() + "expected '{' after function '" + identifier + "' definition");
 	}
 
 	// parse block
-	block = parseBlock();
+	block = parse_block();
 
-	return new ASTFunctionDefinitionNode(identifier, parameters, type, typeName, block, row, col);
+	return new ASTFunctionDefinitionNode(identifier, parameters, type, type_name, block, row, col);
 }
 
-ASTStructDefinitionNode* Parser::parseStructDefinition() {
+ASTStructDefinitionNode* Parser::parse_struct_definition() {
 	// node attributes
 	std::string identifier;
 	std::vector<VariableDefinition_t> variables;
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// consume identifier
-	consumeToken(lexer::TOK_IDENTIFIER);
+	consume_token(lexer::TOK_IDENTIFIER);
 
-	identifier = currentToken.value;
+	identifier = current_token.value;
 
 	// consume {
-	consumeToken(lexer::TOK_LEFT_CURLY);
+	consume_token(lexer::TOK_LEFT_CURLY);
 
 	do {
 		// consume var
-		consumeToken();
+		consume_token();
 		// consume identifier
-		consumeToken();
+		consume_token();
 
 		// parse parameter
-		variables.push_back(*parseFormalParam());
+		variables.push_back(*parse_formal_param());
 
 		// consume ';'
-		consumeToken();
+		consume_token();
 
-	} while (currentToken.type == lexer::TOK_SEMICOLON && nextToken.type != lexer::TOK_RIGHT_CURLY);
+	} while (current_token.type == lexer::TOK_SEMICOLON && next_token.type != lexer::TOK_RIGHT_CURLY);
 
 	// consume }
-	consumeToken(lexer::TOK_RIGHT_CURLY);
+	consume_token(lexer::TOK_RIGHT_CURLY);
 
-	if (consumeSemicolon) {
-		consumeSemicolon = false;
-		consumeToken(lexer::TOK_SEMICOLON);
+	if (consume_semicolon) {
+		consume_semicolon = false;
+		consume_token(lexer::TOK_SEMICOLON);
 	}
 
 	return new ASTStructDefinitionNode(identifier, variables, row, col);
 }
 
-VariableDefinition_t* Parser::parseFormalParam() {
+VariableDefinition_t* Parser::parse_formal_param() {
 	std::string identifier;
-	std::string typeName;
-	TYPE type = TYPE::T_ND;
-	ASTExprNode* exprSize;
-	auto accessVector = std::vector<ASTExprNode*>();
+	std::string type_name;
+	Type type = Type::T_ND;
+	ASTExprNode* expr_size;
+	auto access_vector = std::vector<ASTExprNode*>();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// make sure current token is identifier
-	if (currentToken.type != lexer::TOK_IDENTIFIER) {
-		throw std::runtime_error(msgHeader() + "expected variable name in function definition");
+	if (current_token.type != lexer::TOK_IDENTIFIER) {
+		throw std::runtime_error(msg_header() + "expected variable name in function definition");
 	}
-	identifier = currentToken.value;
+	identifier = current_token.value;
 
-	consumeToken();
+	consume_token();
 
-	if (currentToken.type == lexer::TOK_LEFT_BRACE) {
+	if (current_token.type == lexer::TOK_LEFT_BRACE) {
 		do {
-			consumeToken();
-			exprSize = parseExpression();
-			consumeToken(lexer::TOK_RIGHT_BRACE);
-			consumeToken();
-			accessVector.push_back(exprSize);
+			consume_token();
+			expr_size = parse_expression();
+			consume_token(lexer::TOK_RIGHT_BRACE);
+			consume_token();
+			access_vector.push_back(expr_size);
 
-		} while (currentToken.type == lexer::TOK_LEFT_BRACE);
+		} while (current_token.type == lexer::TOK_LEFT_BRACE);
 	}
 
-	if (currentToken.type != lexer::TOK_COLON) {
-		throw std::runtime_error(msgHeader() + "expected ':'");
+	if (current_token.type != lexer::TOK_COLON) {
+		throw std::runtime_error(msg_header() + "expected ':'");
 	}
 
 	// consume type
-	consumeToken();
+	consume_token();
 
-	if (type == TYPE::T_ARRAY) {
-		currentArrayType = parseType(identifier);
+	if (type == Type::T_ARRAY) {
+		current_array_type = parse_type(identifier);
 	}
 	else {
-		type = parseType(identifier);
+		type = parse_type(identifier);
 	}
-	if (currentToken.type == lexer::TOK_IDENTIFIER) {
-		typeName = currentToken.value;
+	if (current_token.type == lexer::TOK_IDENTIFIER) {
+		type_name = current_token.value;
 	}
 
-	return new VariableDefinition_t(identifier, type, typeName, currentArrayType, accessVector, false, false, currentToken.row, currentToken.col, true);
+	return new VariableDefinition_t(identifier, type, type_name, current_array_type, access_vector, false, false, row, col, true);
 };
 
-ASTExprNode* Parser::parseExpression() {
-	ASTExprNode* simpleExpression = parseLogicalExpression();
-	return parseExpressionTail(simpleExpression);
+ASTExprNode* Parser::parse_expression() {
+	ASTExprNode* simple_expression = parse_logical_expression();
+	return parse_expression_tail(simple_expression);
 }
 
-ASTExprNode* Parser::parseExpressionTail(ASTExprNode* lhs) {
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+ASTExprNode* Parser::parse_expression_tail(ASTExprNode* lhs) {
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
-	if (nextToken.type == lexer::TOK_LOGICAL_OR_OP) {
-		consumeToken();
-		std::string currentTokenValue = currentToken.value;
-		consumeToken();
-		return new ASTBinaryExprNode(currentTokenValue, lhs, parseExpression(), row, col);
+	if (next_token.type == lexer::TOK_LOGICAL_OR_OP) {
+		consume_token();
+		std::string current_token_value = current_token.value;
+		consume_token();
+		return new ASTBinaryExprNode(current_token_value, lhs, parse_expression(), row, col);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parseLogicalExpression() {
-	ASTExprNode* relationalExpression = parseRelationalExpression();
-	return parseLogicalExpressionTail(relationalExpression);
+ASTExprNode* Parser::parse_logical_expression() {
+	ASTExprNode* relational_expression = parse_relational_expression();
+	return parse_logical_expression_tail(relational_expression);
 }
 
-ASTExprNode* Parser::parseLogicalExpressionTail(ASTExprNode* lhs) {
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+ASTExprNode* Parser::parse_logical_expression_tail(ASTExprNode* lhs) {
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
-	while (nextToken.type == lexer::TOK_LOGICAL_AND_OP) {
-		consumeToken();
-		std::string currentTokenValue = currentToken.value;
-		consumeToken();
-		ASTExprNode* binExpr = new ASTBinaryExprNode(currentTokenValue, lhs, parseRelationalExpression(), row, col);
-		return parseLogicalExpressionTail(binExpr);
+	while (next_token.type == lexer::TOK_LOGICAL_AND_OP) {
+		consume_token();
+		std::string current_token_value = current_token.value;
+		consume_token();
+		ASTExprNode* bin_expr = new ASTBinaryExprNode(current_token_value, lhs, parse_relational_expression(), row, col);
+		return parse_logical_expression_tail(bin_expr);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parseRelationalExpression() {
-	ASTExprNode* relationalExpr = parseSimpleExpression();
-	return parseRelationalExpressionTail(relationalExpr);
+ASTExprNode* Parser::parse_relational_expression() {
+	ASTExprNode* relational_expr = parse_simple_expression();
+	return parse_relational_expression_tail(relational_expr);
 }
 
-ASTExprNode* Parser::parseRelationalExpressionTail(ASTExprNode* lhs) {
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+ASTExprNode* Parser::parse_relational_expression_tail(ASTExprNode* lhs) {
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
-	while (nextToken.type == lexer::TOK_RELATIONAL_OP) {
-		consumeToken();
-		std::string currentTokenValue = currentToken.value;
-		consumeToken();
-		ASTExprNode* binExpr = new ASTBinaryExprNode(currentTokenValue, lhs, parseSimpleExpression(), row, col);
-		return parseRelationalExpressionTail(binExpr);
+	while (next_token.type == lexer::TOK_RELATIONAL_OP) {
+		consume_token();
+		std::string current_token_value = current_token.value;
+		consume_token();
+		ASTExprNode* bin_expr = new ASTBinaryExprNode(current_token_value, lhs, parse_simple_expression(), row, col);
+		return parse_relational_expression_tail(bin_expr);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parseSimpleExpression() {
-	ASTExprNode* term = parseTerm();
-	return parseSimpleExpressionTail(term);
+ASTExprNode* Parser::parse_simple_expression() {
+	ASTExprNode* term = parse_term();
+	return parse_simple_expression_tail(term);
 }
 
-ASTExprNode* Parser::parseSimpleExpressionTail(ASTExprNode* lhs) {
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+ASTExprNode* Parser::parse_simple_expression_tail(ASTExprNode* lhs) {
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
-	if (nextToken.type == lexer::TOK_ADDITIVE_OP) {
-		consumeToken();
-		std::string currentTokenValue = currentToken.value;
-		consumeToken();
-		ASTExprNode* binExpr = new ASTBinaryExprNode(currentTokenValue, lhs, parseTerm(), row, col);
-		return parseSimpleExpressionTail(binExpr);
+	if (next_token.type == lexer::TOK_ADDITIVE_OP) {
+		consume_token();
+		std::string current_token_value = current_token.value;
+		consume_token();
+		ASTExprNode* bin_expr = new ASTBinaryExprNode(current_token_value, lhs, parse_term(), row, col);
+		return parse_simple_expression_tail(bin_expr);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parseTerm() {
-	ASTExprNode* factor = parseFactor();
-	return parseTermTail(factor);
+ASTExprNode* Parser::parse_term() {
+	ASTExprNode* factor = parse_factor();
+	return parse_term_tail(factor);
 }
 
-ASTExprNode* Parser::parseTermTail(ASTExprNode* lhs) {
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+ASTExprNode* Parser::parse_term_tail(ASTExprNode* lhs) {
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
-	if (nextToken.type == lexer::TOK_MULTIPLICATIVE_OP) {
-		consumeToken();
-		std::string currentTokenValue = currentToken.value;
-		consumeToken();
-		ASTExprNode* binExpr = new ASTBinaryExprNode(currentTokenValue, lhs, parseFactor(), row, col);
-		return parseTermTail(binExpr);
+	if (next_token.type == lexer::TOK_MULTIPLICATIVE_OP) {
+		consume_token();
+		std::string current_token_value = current_token.value;
+		consume_token();
+		ASTExprNode* bin_expr = new ASTBinaryExprNode(current_token_value, lhs, parse_factor(), row, col);
+		return parse_term_tail(bin_expr);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parseFactor() {
+ASTExprNode* Parser::parse_factor() {
 	// determine line number
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
-	switch (currentToken.type) {
+	switch (current_token.type) {
 		// literal cases
 	case lexer::TOK_BOOL_LITERAL:
-		return new ASTLiteralNode<cp_bool>(parseBoolLiteral(), row, col);
+		return new ASTLiteralNode<cp_bool>(parse_bool_literal(), row, col);
 
 	case lexer::TOK_INT_LITERAL:
-		return new ASTLiteralNode<cp_int>(parseIntLiteral(), row, col);
+		return new ASTLiteralNode<cp_int>(parse_int_literal(), row, col);
 
 	case lexer::TOK_FLOAT_LITERAL:
-		return new ASTLiteralNode<cp_float>(parseFloatLiteral(), row, col);
+		return new ASTLiteralNode<cp_float>(parse_float_literal(), row, col);
 
 	case lexer::TOK_CHAR_LITERAL:
-		return new ASTLiteralNode<cp_char>(parseCharLiteral(), row, col);
+		return new ASTLiteralNode<cp_char>(parse_char_literal(), row, col);
 
 	case lexer::TOK_STRING_LITERAL:
-		return new ASTLiteralNode<cp_string>(parseStringLiteral(), row, col);
+		return new ASTLiteralNode<cp_string>(parse_string_literal(), row, col);
 
 	case lexer::TOK_LEFT_CURLY:
-		return parseArrayConstructorNode();
+		return parse_array_constructor_node();
 
 	case lexer::TOK_BOOL_TYPE:
 	case lexer::TOK_INT_TYPE:
 	case lexer::TOK_FLOAT_TYPE:
 	case lexer::TOK_CHAR_TYPE:
 	case lexer::TOK_STRING_TYPE:
-		return parseExprTypeParse();
+		return parse_type_parse_node();
 
 	case lexer::TOK_TYPE:
-		return parseTypeNode();
+		return parse_type_node();
 
 	case lexer::TOK_LEN:
-		return parseLenNode();
+		return parse_len_node();
 
 	case lexer::TOK_ROUND:
-		return parseRoundNode();
+		return parse_round_node();
 
 	case lexer::TOK_NULL:
 		return new ASTNullNode(row, col);
 
 	case lexer::TOK_THIS:
-		return parseExprThis();
+		return parse_this_node();
 
 	case lexer::TOK_IDENTIFIER: // identifier or function call case
-		switch (nextToken.type)
+		switch (next_token.type)
 		{
 		case lexer::TOK_LEFT_BRACKET:
-			return parseExprFunctionCall();
+			return parse_function_call_node();
 		case lexer::TOK_LEFT_CURLY:
-			return parseStructConstructorNode();
+			return parse_struct_constructor_node();
 		default:
-			return parseIdentifierNode();
+			return parse_identifier_node();
 		}
 
 	case lexer::TOK_READ: // read case
-		return parseExprRead();
+		return parse_read_node();
 
 	case lexer::TOK_LEFT_BRACKET: { // subexpression case
-		consumeToken();
-		ASTExprNode* subExpr = parseExpression();
-		consumeToken(lexer::TOK_RIGHT_BRACKET);
-		return subExpr;
+		consume_token();
+		ASTExprNode* sub_expr = parse_expression();
+		consume_token(lexer::TOK_RIGHT_BRACKET);
+		return sub_expr;
 	}
 
 	case lexer::TOK_ADDITIVE_OP: // unary expression case
 	case lexer::TOK_NOT: {
-		std::string currentTokenValue = currentToken.value;
-		consumeToken();
-		return new ASTUnaryExprNode(currentTokenValue, parseExpression(), row, col);
+		std::string current_token_value = current_token.value;
+		consume_token();
+		return new ASTUnaryExprNode(current_token_value, parse_expression(), row, col);
 	}
 
 	default:
-		throw std::runtime_error(msgHeader() + "expected expression");
+		throw std::runtime_error(msg_header() + "expected expression");
 	}
 }
 
-ASTTypeNode* Parser::parseTypeNode() {
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+ASTTypeNode* Parser::parse_type_node() {
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 	ASTExprNode* expr = nullptr;
 
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
-	consumeToken();
-	expr = parseExpression();
-	consumeToken(lexer::TOK_RIGHT_BRACKET);
+	consume_token();
+	expr = parse_expression();
+	consume_token(lexer::TOK_RIGHT_BRACKET);
 
 	return new ASTTypeNode(expr, row, col);
 }
 
-ASTLenNode* Parser::parseLenNode() {
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+ASTLenNode* Parser::parse_len_node() {
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 	ASTExprNode* expr = nullptr;
 
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
-	consumeToken();
-	expr = parseExpression();
-	consumeToken(lexer::TOK_RIGHT_BRACKET);
+	consume_token();
+	expr = parse_expression();
+	consume_token(lexer::TOK_RIGHT_BRACKET);
 
 	return new ASTLenNode(expr, row, col);
 }
 
-ASTRoundNode* Parser::parseRoundNode() {
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+ASTRoundNode* Parser::parse_round_node() {
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 	unsigned int ndigits = 0;
 	ASTExprNode* expr = nullptr;
 
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
-	consumeToken();
-	expr = parseExpression();
-	consumeToken(lexer::TOK_RIGHT_BRACKET);
+	consume_token();
+	expr = parse_expression();
+	consume_token(lexer::TOK_RIGHT_BRACKET);
 
 	return new ASTRoundNode(expr, ndigits, row, col);
 }
 
-ASTIdentifierNode* Parser::parseIdentifierNode() {
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
-	auto identifierVector = std::vector<std::string>();
-	ASTExprNode* exprSize;
-	auto accessVector = std::vector<ASTExprNode*>();
+ASTIdentifierNode* Parser::parse_identifier_node() {
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+	auto identifier_vector = std::vector<std::string>();
+	ASTExprNode* expr_size;
+	auto access_vector = std::vector<ASTExprNode*>();
 
-	if (axe::contains(currentToken.value, ".")) {
-		identifierVector = axe::split(currentToken.value, '.');
+	if (axe::contains(current_token.value, ".")) {
+		identifier_vector = axe::split_vector(current_token.value, '.');
 	}
 	else {
-		identifierVector.push_back(currentToken.value);
+		identifier_vector.push_back(current_token.value);
 	}
 
-	if (nextToken.type == lexer::TOK_LEFT_BRACE) {
-		consumeToken();
+	if (next_token.type == lexer::TOK_LEFT_BRACE) {
+		consume_token();
 		do {
-			consumeToken();
-			exprSize = parseExpression();
-			consumeToken(lexer::TOK_RIGHT_BRACE);
-			accessVector.push_back(exprSize);
+			consume_token();
+			expr_size = parse_expression();
+			consume_token(lexer::TOK_RIGHT_BRACE);
+			access_vector.push_back(expr_size);
 
-		} while (nextToken.type == lexer::TOK_LEFT_BRACE);
+		} while (next_token.type == lexer::TOK_LEFT_BRACE);
 	}
 
-	return new ASTIdentifierNode(identifierVector[0], identifierVector, accessVector, row, col);
+	return new ASTIdentifierNode(identifier_vector[0], identifier_vector, access_vector, row, col);
 }
 
-ASTArrayConstructorNode* Parser::parseArrayConstructorNode() {
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+ASTArrayConstructorNode* Parser::parse_array_constructor_node() {
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 	std::vector<ASTExprNode*> values = std::vector<ASTExprNode*>();
 
 	do {
-		consumeToken();
-		values.push_back(parseExpression());
+		consume_token();
+		values.push_back(parse_expression());
 
-		consumeToken();
+		consume_token();
 
-	} while (nextToken.type == lexer::TOK_LEFT_CURLY || nextToken.type == lexer::TOK_NULL
-		|| nextToken.type == lexer::TOK_BOOL_LITERAL || nextToken.type == lexer::TOK_INT_LITERAL
-		|| nextToken.type == lexer::TOK_IDENTIFIER || nextToken.type == lexer::TOK_FLOAT_LITERAL
-		|| nextToken.type == lexer::TOK_CHAR_LITERAL || nextToken.type == lexer::TOK_STRING_LITERAL);
+	} while (next_token.type == lexer::TOK_LEFT_CURLY || next_token.type == lexer::TOK_NULL
+		|| next_token.type == lexer::TOK_BOOL_LITERAL || next_token.type == lexer::TOK_INT_LITERAL
+		|| next_token.type == lexer::TOK_IDENTIFIER || next_token.type == lexer::TOK_FLOAT_LITERAL
+		|| next_token.type == lexer::TOK_CHAR_LITERAL || next_token.type == lexer::TOK_STRING_LITERAL);
 
 
-	if (currentToken.type != lexer::TOK_RIGHT_CURLY) {
-		throw std::runtime_error(msgHeader() + "expected '}'");
+	if (current_token.type != lexer::TOK_RIGHT_CURLY) {
+		throw std::runtime_error(msg_header() + "expected '}'");
 	}
 
 	return new ASTArrayConstructorNode(values, row, col);
 }
 
-ASTStructConstructorNode* Parser::parseStructConstructorNode() {
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+ASTStructConstructorNode* Parser::parse_struct_constructor_node() {
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 	std::map<std::string, ASTExprNode*> values = std::map<std::string, ASTExprNode*>();
-	std::string typeName = currentToken.value;
+	std::string type_name = current_token.value;
 
-	consumeToken();
-	consumeToken();
+	consume_token();
+	consume_token();
 
-	while (currentToken.type == lexer::TOK_IDENTIFIER) {
-		auto varIdentifier = currentToken.value;
+	while (current_token.type == lexer::TOK_IDENTIFIER) {
+		auto var_identifier = current_token.value;
 
-		consumeToken(lexer::TOK_EQUALS);
+		consume_token(lexer::TOK_EQUALS);
 
-		consumeToken();
-		values[varIdentifier] = parseExpression();
+		consume_token();
+		values[var_identifier] = parse_expression();
 
-		consumeToken();
+		consume_token();
 
-		if (nextToken.type == lexer::TOK_IDENTIFIER) {
-			consumeToken();
+		if (next_token.type == lexer::TOK_IDENTIFIER) {
+			consume_token();
 		}
 	}
 
-	if (currentToken.type != lexer::TOK_RIGHT_CURLY) {
-		throw std::runtime_error(msgHeader() + "expected '}'");
+	if (current_token.type != lexer::TOK_RIGHT_CURLY) {
+		throw std::runtime_error(msg_header() + "expected '}'");
 	}
 
-	return new ASTStructConstructorNode(typeName, values, row, col);
+	return new ASTStructConstructorNode(type_name, values, row, col);
 }
 
-cp_bool Parser::parseBoolLiteral() {
-	return currentToken.value == "true";
+cp_bool Parser::parse_bool_literal() {
+	return current_token.value == "true";
 }
 
-cp_int Parser::parseIntLiteral() {
-	return std::stoll(currentToken.value);
+cp_int Parser::parse_int_literal() {
+	return std::stoll(current_token.value);
 }
 
-cp_float Parser::parseFloatLiteral() {
-	return std::stold(currentToken.value);
+cp_float Parser::parse_float_literal() {
+	return std::stold(current_token.value);
 }
 
-cp_char Parser::parseCharLiteral() {
+cp_char Parser::parse_char_literal() {
 	char chr = 0;
-	if (currentToken.value == "'\\\\'") {
+	if (current_token.value == "'\\\\'") {
 		chr = '\\';
 	}
-	else if (currentToken.value == "'\\n'") {
+	else if (current_token.value == "'\\n'") {
 		chr = '\n';
 	}
-	else if (currentToken.value == "'\\''") {
+	else if (current_token.value == "'\\''") {
 		chr = '\'';
 	}
-	else if (currentToken.value == "'\\t'") {
+	else if (current_token.value == "'\\t'") {
 		chr = '\t';
 	}
-	else if (currentToken.value == "'\\b'") {
+	else if (current_token.value == "'\\b'") {
 		chr = '\b';
 	}
-	else if (currentToken.value == "'\\0'") {
+	else if (current_token.value == "'\\0'") {
 		chr = '\0';
 	}
 	else {
-		chr = currentToken.value.c_str()[1];
+		chr = current_token.value.c_str()[1];
 	}
 	return chr;
 }
 
-cp_string Parser::parseStringLiteral() {
+cp_string Parser::parse_string_literal() {
 	// remove " character from front and end of lexeme
-	std::string str = currentToken.value.substr(1, currentToken.value.size() - 2);
+	std::string str = current_token.value.substr(1, current_token.value.size() - 2);
 
 	// replace \" with quote
 	size_t pos = str.find("\\\"");
@@ -1235,131 +1234,131 @@ cp_string Parser::parseStringLiteral() {
 	return str;
 }
 
-ASTFunctionCallNode* Parser::parseExprFunctionCall() {
+ASTFunctionCallNode* Parser::parse_function_call_node() {
 	// current token is the function identifier
-	std::string identifier = currentToken.value;
+	std::string identifier = current_token.value;
 	auto* parameters = new std::vector<ASTExprNode*>;
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
 	// if next token is not right bracket, we have parameters
-	if (nextToken.type != lexer::TOK_RIGHT_BRACKET) {
-		parameters = parseActualParams();
+	if (next_token.type != lexer::TOK_RIGHT_BRACKET) {
+		parameters = parse_actual_params();
 	}
 	else {
 		// consume ')'
-		consumeToken();
+		consume_token();
 	}
 
 	// ensure right close bracket after fetching parameters
-	if (currentToken.type != lexer::TOK_RIGHT_BRACKET) {
-		throw std::runtime_error(msgHeader() + "expected ')' after function parameters");
+	if (current_token.type != lexer::TOK_RIGHT_BRACKET) {
+		throw std::runtime_error(msg_header() + "expected ')' after function parameters");
 	}
 
 	return new ASTFunctionCallNode(identifier, *parameters, row, col);
 }
 
-ASTTypeParseNode* Parser::parseExprTypeParse() {
+ASTTypeParseNode* Parser::parse_type_parse_node() {
 	// determine line number
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
-	TYPE type = parseType("type");
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+	Type type = parse_type("type");
 
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
 	// get expression to print
-	consumeToken();
-	ASTExprNode* expr = parseExpression();
+	consume_token();
+	ASTExprNode* expr = parse_expression();
 
 	// ensure right close bracket after fetching parameters
-	consumeToken(lexer::TOK_RIGHT_BRACKET);
+	consume_token(lexer::TOK_RIGHT_BRACKET);
 
 	return new ASTTypeParseNode(type, expr, row, col);
 }
 
-ASTThisNode* Parser::parseExprThis() {
+ASTThisNode* Parser::parse_this_node() {
 	// determine line number
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	return new ASTThisNode(row, col);
 }
 
-ASTReadNode* Parser::parseExprRead() {
+ASTReadNode* Parser::parse_read_node() {
 	// determine line number
-	unsigned int row = currentToken.row;
-	unsigned int col = currentToken.col;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	// left open bracket
-	consumeToken(lexer::TOK_LEFT_BRACKET);
+	consume_token(lexer::TOK_LEFT_BRACKET);
 
 	// ensure right close bracket after fetching parameters
-	consumeToken(lexer::TOK_RIGHT_BRACKET);
+	consume_token(lexer::TOK_RIGHT_BRACKET);
 
 	return new ASTReadNode(row, col);
 }
 
-std::vector<ASTExprNode*>* Parser::parseActualParams() {
+std::vector<ASTExprNode*>* Parser::parse_actual_params() {
 	auto parameters = new std::vector<ASTExprNode*>;
 
-	consumeToken();
-	parameters->push_back(parseExpression());
-	consumeToken();
+	consume_token();
+	parameters->push_back(parse_expression());
+	consume_token();
 
 	// if there are more
-	while (currentToken.type == lexer::TOK_COMMA) {
-		consumeToken();
-		parameters->push_back(parseExpression());
-		consumeToken();
+	while (current_token.type == lexer::TOK_COMMA) {
+		consume_token();
+		parameters->push_back(parse_expression());
+		consume_token();
 	}
 
 	return parameters;
 }
 
-std::string Parser::msgHeader() {
-	return "(PERR) " + name + '[' + std::to_string(currentToken.row) + ':' + std::to_string(currentToken.col) + "]: ";
+std::string Parser::msg_header() {
+	return "(PERR) " + name + '[' + std::to_string(current_token.row) + ':' + std::to_string(current_token.col) + "]: ";
 }
 
-TYPE Parser::parseType(std::string identifier) {
-	switch (currentToken.type) {
+Type Parser::parse_type(std::string identifier) {
+	switch (current_token.type) {
 	case lexer::TOK_VOID_TYPE:
-		return TYPE::T_VOID;
+		return Type::T_VOID;
 
 	case lexer::TOK_NULL:
-		return TYPE::T_NULL;
+		return Type::T_NULL;
 
 	case lexer::TOK_BOOL_TYPE:
 	case lexer::TOK_BOOL_LITERAL:
-		return TYPE::T_BOOL;
+		return Type::T_BOOL;
 
 	case lexer::TOK_INT_TYPE:
 	case lexer::TOK_INT_LITERAL:
-		return TYPE::T_INT;
+		return Type::T_INT;
 
 	case lexer::TOK_FLOAT_TYPE:
 	case lexer::TOK_FLOAT_LITERAL:
-		return TYPE::T_FLOAT;
+		return Type::T_FLOAT;
 
 	case lexer::TOK_CHAR_TYPE:
 	case lexer::TOK_CHAR_LITERAL:
-		return TYPE::T_CHAR;
+		return Type::T_CHAR;
 
 	case lexer::TOK_STRING_TYPE:
 	case lexer::TOK_STRING_LITERAL:
-		return TYPE::T_STRING;
+		return Type::T_STRING;
 
 	case lexer::TOK_ANY_TYPE:
-		return TYPE::T_ANY;
+		return Type::T_ANY;
 
 	case lexer::TOK_IDENTIFIER:
-		return TYPE::T_STRUCT;
+		return Type::T_STRUCT;
 
 	case lexer::TOK_LEFT_CURLY:
-		return TYPE::T_ARRAY;
+		return Type::T_ARRAY;
 
 	default:
-		throw std::runtime_error(msgHeader() + "invalid type");
+		throw std::runtime_error(msg_header() + "invalid type");
 	}
 }

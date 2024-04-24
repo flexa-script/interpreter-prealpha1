@@ -1,5 +1,5 @@
-#ifndef SEMANTIC_ANALYSIS_H
-#define SEMANTIC_ANALYSIS_H
+#ifndef SEMANTIC_ANALYSIS_HPP
+#define SEMANTIC_ANALYSIS_HPP
 
 #include <map>
 #include <vector>
@@ -15,31 +15,31 @@ namespace visitor {
 	class SemanticAnalyser : Visitor {
 	private:
 		std::vector<parser::ASTProgramNode*> programs;
-		parser::ASTProgramNode* currentProgram;
+		parser::ASTProgramNode* current_program;
 		std::vector<SemanticScope*> scopes;
-		std::stack<parser::TYPE> functions;
-		parser::TYPE currentExpressionType;
-		parser::TYPE currentExpressionArrayType;
-		std::string currentExpressionTypeName;
-		bool isFunctionDefinitionContext;
-		bool isConstant;
-		int arrayLevel = 0;
-		std::vector<parser::VariableDefinition_t> currentFunctionParameters;
+		std::stack<parser::Type> functions;
+		parser::Type current_expression_type;
+		parser::Type current_expression_array_type;
+		std::string current_expression_type_name;
+		bool is_function_definition_context;
+		bool is_constant;
+		int array_level = 0;
+		std::vector<parser::VariableDefinition_t> current_function_parameters;
 
 	private:
 		bool returns(parser::ASTNode*);
-		std::vector<unsigned int> evaluateAccessVector(std::vector<parser::ASTExprNode*>);
+		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 
 		void declareStructureDefinitionVariables(std::string, parser::ASTStructConstructorNode*);
-		void declareStructureDefinitionFirstLevelVariables(std::string, std::string);
+		void declare_structure_definition_first_level_variables(std::string, std::string);
 
-		parser::VariableDefinition_t findDeclaredVariableRecursively(std::string);
+		parser::VariableDefinition_t find_declared_variable_recursively(std::string);
 
-		std::vector<unsigned int> calculateArrayDimSize(parser::ASTArrayConstructorNode*);
-		void determineArrayType(parser::ASTArrayConstructorNode*);
-		void checkArrayType(parser::ASTExprNode*, unsigned int, unsigned int);
+		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);
+		void determine_array_type(parser::ASTArrayConstructorNode*);
+		void check_array_type(parser::ASTExprNode*, unsigned int, unsigned int);
 
-		std::string msgHeader(unsigned int, unsigned int);
+		std::string msg_header(unsigned int, unsigned int);
 
 	public:
 		SemanticAnalyser(SemanticScope*, std::vector<parser::ASTProgramNode*>);
@@ -83,4 +83,4 @@ namespace visitor {
 	};
 }
 
-#endif //SEMANTIC_ANALYSIS_H
+#endif // SEMANTIC_ANALYSIS_HPP
