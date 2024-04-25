@@ -128,13 +128,6 @@ ASTReadNode::ASTReadNode(unsigned int row, unsigned int col)
 
 
 // Accept functions for visitors
-void ASTBinaryExprNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-unsigned int ASTBinaryExprNode::hash(visitor::Visitor* v) {
-	return left->hash(v) + axe::hashcode(op) + right->hash(v);
-}
 
 namespace parser {
 	template<>
@@ -142,7 +135,7 @@ namespace parser {
 		v->visit(this);
 	}
 
-	unsigned int ASTLiteralNode<cp_bool>::hash(visitor::Visitor* v) {
+	unsigned int ASTLiteralNode<cp_bool>::hash() {
 		return static_cast<unsigned int>(val);
 	}
 
@@ -151,7 +144,7 @@ namespace parser {
 		v->visit(this);
 	}
 
-	unsigned int ASTLiteralNode<cp_int>::hash(visitor::Visitor* v) {
+	unsigned int ASTLiteralNode<cp_int>::hash() {
 		return static_cast<unsigned int>(val);
 	}
 
@@ -160,7 +153,7 @@ namespace parser {
 		v->visit(this);
 	}
 
-	unsigned int ASTLiteralNode<cp_float>::hash(visitor::Visitor* v) {
+	unsigned int ASTLiteralNode<cp_float>::hash() {
 		return static_cast<unsigned int>(val);
 	}
 
@@ -169,7 +162,7 @@ namespace parser {
 		v->visit(this);
 	}
 
-	unsigned int ASTLiteralNode<cp_char>::hash(visitor::Visitor* v) {
+	unsigned int ASTLiteralNode<cp_char>::hash() {
 		return static_cast<unsigned int>(val);
 	}
 
@@ -178,7 +171,7 @@ namespace parser {
 		v->visit(this);
 	}
 
-	unsigned int ASTLiteralNode<cp_string>::hash(visitor::Visitor* v) {
+	unsigned int ASTLiteralNode<cp_string>::hash() {
 		return axe::hashcode(val);
 	}
 }
@@ -187,10 +180,10 @@ void ASTArrayConstructorNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTArrayConstructorNode::hash(visitor::Visitor* v) {
+unsigned int ASTArrayConstructorNode::hash() {
 	unsigned int h = 0;
 	for (auto& expr : values) {
-		h = h * 31 + expr->hash(v);
+		h = h * 31 + expr->hash();
 	}
 	return h;
 }
@@ -199,97 +192,81 @@ void ASTStructConstructorNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTStructConstructorNode::hash(visitor::Visitor* v) {
+unsigned int ASTStructConstructorNode::hash() {
 	unsigned int h = 0;
 	for (auto& expr : values) {
-		h = h * 31 + axe::hashcode(expr.first) + expr.second->hash(v);
+		h = h * 31 + axe::hashcode(expr.first) + expr.second->hash();
 	}
 	return axe::hashcode(type_name) + h;
 }
+
+void ASTBinaryExprNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+unsigned int ASTBinaryExprNode::hash() { return 0; }
 
 void ASTFunctionCallNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTFunctionCallNode::hash(visitor::Visitor* v) {
-	unsigned int h = 0;
-	for (auto& expr : parameters) {
-		h += h * 31 + expr->hash(v);
-	}
-	return h;
-}
+unsigned int ASTFunctionCallNode::hash() { return 0; }
 
 void ASTTypeNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTTypeNode::hash(visitor::Visitor* v) {
-	return expr->hash(v);
-}
+unsigned int ASTTypeNode::hash() { return 0; }
 
 void ASTRoundNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTRoundNode::hash(visitor::Visitor* v) {
-	return expr->hash(v) + ndigits;
-}
+unsigned int ASTRoundNode::hash() { return 0; }
 
 void ASTLenNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTLenNode::hash(visitor::Visitor* v) {
-	return expr->hash(v);
-}
+unsigned int ASTLenNode::hash() { return 0; }
 
 void ASTReadNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTReadNode::hash(visitor::Visitor* v) {
-	return axe::hashcode("read");
-}
+unsigned int ASTReadNode::hash() { return 0; }
 
 void ASTIdentifierNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTIdentifierNode::hash(visitor::Visitor* v) {
-	return 0;
+unsigned int ASTIdentifierNode::hash() {
+	return -1;
 }
 
 void ASTUnaryExprNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTUnaryExprNode::hash(visitor::Visitor* v) {
-	return axe::hashcode(unary_op) + expr->hash(v);
-}
+unsigned int ASTUnaryExprNode::hash() { return 0; }
 
 void ASTTypeParseNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTTypeParseNode::hash(visitor::Visitor* v) {
-	return axe::hashcode(type_str(type)) + expr->hash(v);
-}
+unsigned int ASTTypeParseNode::hash() { return 0; }
 
 void ASTNullNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTNullNode::hash(visitor::Visitor* v) {
-	return axe::hashcode("null");
-}
+unsigned int ASTNullNode::hash() { return 0; }
 
 void ASTThisNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTThisNode::hash(visitor::Visitor* v) {
-	return axe::hashcode("this");
-}
+unsigned int ASTThisNode::hash() { return 0; }
 
 void ASTDeclarationNode::accept(visitor::Visitor* v) {
 	v->visit(this);

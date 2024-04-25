@@ -11,14 +11,14 @@ using namespace visitor;
 Interpreter::Interpreter()
 	: current_expression_value(Value_t(parser::Type::T_ND)) {
 	// add global scope
-	scopes.push_back(new InterpreterScope(this, "global"));
+	scopes.push_back(new InterpreterScope(this, ""));
 	current_program = nullptr;
 }
 
 Interpreter::Interpreter(InterpreterScope* globalScope, std::vector<parser::ASTProgramNode*> programs)
 	: programs(programs), current_program(programs[0]), current_expression_value(Value_t(parser::Type::T_ND)) {
 	// add global scope
-	globalScope->set_name(current_program->name);
+	current_name = current_program->name;
 	globalScope->set_parent(this);
 	scopes.push_back(globalScope);
 }
@@ -263,7 +263,7 @@ void visitor::Interpreter::visit(parser::ASTReturnNode* astnode) {
 
 void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	// create new scope
-	scopes.push_back(new InterpreterScope(this, current_function_name));
+	scopes.push_back(new InterpreterScope(this, current_name));
 
 	// check whether this is a function block by seeing if we have any current function
 	// parameters. If we do, then add them to the current scope.
@@ -296,7 +296,7 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	// clear the global function parameter/argument vectors
 	current_function_parameters.clear();
 	current_function_arguments.clear();
-	current_function_name = "";
+	current_name = "";
 
 	// visit each statement in the block
 	for (auto& stmt : astnode->statements) {
@@ -332,7 +332,7 @@ void visitor::Interpreter::visit(parser::ASTSwitchNode* astnode) {
 	astnode->condition->accept(this);
 
 	try {
-		pos = astnode->parsed_case_blocks->at(astnode->condition->hash(this));
+		pos = astnode->parsed_case_blocks->at(astnode->condition->hash());
 	}
 	catch (...) {
 		pos = astnode->default_block;
@@ -855,10 +855,12 @@ void visitor::Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 	// populate the global vector of function parameter names, to be used in creation of function scope
 	current_function_parameters = std::get<1>(scopes[i]->find_declared_function(astnode->identifier, signature));
 
-	current_function_name = astnode->identifier;
+	current_name = astnode->identifier;
 
 	// visit the corresponding function block
 	std::get<2>(scopes[i]->find_declared_function(astnode->identifier, signature))->accept(this);
+
+	current_name = current_program->name;
 }
 
 void visitor::Interpreter::visit(parser::ASTTypeParseNode* astnode) {
@@ -1026,7 +1028,6 @@ void visitor::Interpreter::visit(parser::ASTRoundNode* astnode) {
 	Value_t val = Value_t(parser::Type::T_FLOAT);
 	val.set(cp_float(roundl(current_expression_value.f)));
 	current_expression_value = val;
-
 }
 
 
@@ -1038,7 +1039,7 @@ void visitor::Interpreter::visit(parser::ASTNullNode* astnode) {
 
 void visitor::Interpreter::visit(parser::ASTThisNode* astnode) {
 	Value_t value = Value_t(parser::Type::T_STRING);
-	value.set(cp_string(scopes.back()->get_name()));
+	value.set(cp_string(current_name));
 	current_expression_value = value;
 }
 

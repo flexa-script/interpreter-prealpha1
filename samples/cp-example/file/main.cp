@@ -1,7 +1,7 @@
 //print("Hello World!\n");
 
-// TODO: fix hash
-// TODO: fix function return has value
+// TODO: fix identifier hash
+// TODO: fix function return has value in semantic analysis
 // TODO: implements function array return
 // TODO: fix array and struct in foreach interpreter
 

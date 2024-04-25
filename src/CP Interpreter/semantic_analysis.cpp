@@ -104,7 +104,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 
 			current_scope->declare_variable(astnode->identifier, str_type, str_type_name, astnode->array_type, astnode->dim, astnode->is_const, has_value, astnode->row, astnode->col, false);
 			if (str_expr && !is_function_definition_context) {
-				declareStructureDefinitionVariables(astnode->identifier, str_expr);
+				declare_structure_definition_variables(astnode->identifier, str_expr);
 			}
 			declare_structure_definition_first_level_variables(astnode->identifier, str_type_name);
 		}
@@ -166,7 +166,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 	}
 
 	// get base variable
-	parser::VariableDefinition_t declared_variable = scopes[i]->findDeclaredVariable(astnode->identifier);
+	parser::VariableDefinition_t declared_variable = scopes[i]->find_declared_variable(astnode->identifier);
 	parser::Type type;
 
 	// check if the base variable is not null
@@ -194,7 +194,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 	// assign if it has or not a value
 	else {
 		scopes[i]->assign_variable(actual_identifier, current_expression_type != parser::Type::T_NULL);
-		declared_variable = scopes[i]->findDeclaredVariable(actual_identifier);
+		declared_variable = scopes[i]->find_declared_variable(actual_identifier);
 	}
 
 	if (declared_variable.is_const) {
@@ -257,7 +257,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 			parser::ASTStructConstructorNode* str_expr = static_cast<parser::ASTStructConstructorNode*>(astnode->expr);
 
 			if (str_expr) {
-				declareStructureDefinitionVariables(actual_identifier, str_expr);
+				declare_structure_definition_variables(actual_identifier, str_expr);
 			}
 		}
 		else {
@@ -324,7 +324,7 @@ void SemanticAnalyser::declare_structure_definition_first_level_variables(std::s
 	}
 }
 
-void SemanticAnalyser::declareStructureDefinitionVariables(std::string identifier, parser::ASTStructConstructorNode* expr) {
+void SemanticAnalyser::declare_structure_definition_variables(std::string identifier, parser::ASTStructConstructorNode* expr) {
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->already_declared_structure_definition(expr->type_name); --i);
 	auto type_struct = scopes[i]->find_declared_structure_definition(expr->type_name);
@@ -360,7 +360,7 @@ void SemanticAnalyser::declareStructureDefinitionVariables(std::string identifie
 			}
 
 			if (str_expr) {
-				declareStructureDefinitionVariables(current_identifier, str_expr);
+				declare_structure_definition_variables(current_identifier, str_expr);
 			}
 		}
 		else {
@@ -378,7 +378,7 @@ parser::VariableDefinition_t SemanticAnalyser::find_declared_variable_recursivel
 		}
 	}
 	if (i >= 0) {
-		return scopes[i]->findDeclaredVariable(identifier);
+		return scopes[i]->find_declared_variable(identifier);
 	}
 
 	if (axe::contains(identifier, ".")) {
@@ -393,7 +393,7 @@ parser::VariableDefinition_t SemanticAnalyser::find_declared_variable_recursivel
 			}
 		}
 		if (i >= 0) {
-			type_name = scopes[i]->findDeclaredVariable(identifiers.front()).type_name;
+			type_name = scopes[i]->find_declared_variable(identifiers.front()).type_name;
 		}
 
 		size_t i;
@@ -492,7 +492,7 @@ void SemanticAnalyser::visit(parser::ASTSwitchNode* astnode) {
 	// visit each case expresion in the block
 	for (auto& expr : *astnode->case_blocks) {
 		expr.first->accept(this);
-		astnode->parsed_case_blocks->emplace(expr.first->hash(this), expr.second);
+		astnode->parsed_case_blocks->emplace(expr.first->hash(), expr.second);
 		if (!is_constant) {
 			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "error: expression is not an constant expression");
 		}
@@ -696,8 +696,6 @@ void SemanticAnalyser::visit(parser::ASTStructConstructorNode* astnode) {
 }
 
 void SemanticAnalyser::visit(parser::ASTBinaryExprNode* astnode) {
-	is_constant = false;
-
 	// operator
 	std::string op = astnode->op;
 
@@ -763,6 +761,7 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* astnode) {
 	else {
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "unhandled semantic error in binary operator.");
 	}
+	is_constant = false;
 }
 
 void SemanticAnalyser::visit(parser::ASTIdentifierNode* astnode) {
@@ -786,7 +785,7 @@ void SemanticAnalyser::visit(parser::ASTIdentifierNode* astnode) {
 		declared_variable = find_declared_variable_recursively(actual_identifier);
 	}
 	else {
-		declared_variable = scopes[i]->findDeclaredVariable(actual_identifier);
+		declared_variable = scopes[i]->find_declared_variable(actual_identifier);
 	}
 
 	current_expression_type = declared_variable.type;
@@ -823,6 +822,7 @@ void SemanticAnalyser::visit(parser::ASTUnaryExprNode* astnode) {
 	default:
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "incompatible unary operator '" + astnode->unary_op + "' in front of expression.");
 	}
+	is_constant = false;
 }
 
 void SemanticAnalyser::visit(parser::ASTFunctionCallNode* astnode) {
@@ -868,6 +868,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionCallNode* astnode) {
 void SemanticAnalyser::visit(parser::ASTTypeParseNode* astnode) {
 	astnode->expr->accept(this);
 	current_expression_type = astnode->type;
+	is_constant = false;
 }
 
 void SemanticAnalyser::visit(parser::ASTReadNode* astnode) {
@@ -875,11 +876,13 @@ void SemanticAnalyser::visit(parser::ASTReadNode* astnode) {
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "trying to assing an invalid type");
 	}
 	current_expression_has_value = true;
+	is_constant = false;
 }
 
 void SemanticAnalyser::visit(parser::ASTTypeNode* astnode) {
 	astnode->expr->accept(this);
 	current_expression_type = parser::Type::T_STRING;
+	is_constant = false;
 }
 
 void SemanticAnalyser::visit(parser::ASTLenNode* astnode) {
@@ -890,6 +893,7 @@ void SemanticAnalyser::visit(parser::ASTLenNode* astnode) {
 	}
 
 	current_expression_type = parser::Type::T_INT;
+	is_constant = false;
 }
 
 void SemanticAnalyser::visit(parser::ASTRoundNode* astnode) {
@@ -900,16 +904,19 @@ void SemanticAnalyser::visit(parser::ASTRoundNode* astnode) {
 	}
 
 	current_expression_type = parser::Type::T_FLOAT;
+	is_constant = false;
 }
 
 void SemanticAnalyser::visit(parser::ASTNullNode* astnode) {
 	current_expression_type = parser::Type::T_ND;
 	current_expression_has_value = false;
+	is_constant = true;
 }
 
 void SemanticAnalyser::visit(parser::ASTThisNode* astnode) {
 	current_expression_type = parser::Type::T_STRING;
 	current_expression_has_value = true;
+	is_constant = false;
 }
 
 std::string SemanticAnalyser::msg_header(unsigned int row, unsigned int col) {

@@ -33,7 +33,7 @@ namespace visitor {
 		void change_variable_type_name(std::string, std::string);
 
 		parser::StructureDefinition_t find_declared_structure_definition(std::string);
-		parser::VariableDefinition_t findDeclaredVariable(std::string);
+		parser::VariableDefinition_t find_declared_variable(std::string);
 		parser::FunctionDefinition_t find_declared_function(std::string, std::vector<parser::Type>);
 	};
 }

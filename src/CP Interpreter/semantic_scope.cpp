@@ -14,7 +14,7 @@ parser::StructureDefinition_t SemanticScope::find_declared_structure_definition(
 	return structure_symbol_table[identifier];
 }
 
-parser::VariableDefinition_t SemanticScope::findDeclaredVariable(std::string identifier) {
+parser::VariableDefinition_t SemanticScope::find_declared_variable(std::string identifier) {
 	return variable_symbol_table[identifier];
 }
 

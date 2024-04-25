@@ -31,7 +31,7 @@ namespace visitor {
 		bool returns(parser::ASTNode*);
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 
-		void declareStructureDefinitionVariables(std::string, parser::ASTStructConstructorNode*);
+		void declare_structure_definition_variables(std::string, parser::ASTStructConstructorNode*);
 		void declare_structure_definition_first_level_variables(std::string, std::string);
 
 		parser::VariableDefinition_t find_declared_variable_recursively(std::string);

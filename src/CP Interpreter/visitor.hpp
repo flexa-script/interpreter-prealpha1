@@ -98,6 +98,7 @@ typedef struct Value {
 namespace visitor {
 	class Visitor {
 	public:
+		std::string current_name;
 		virtual void visit(parser::ASTProgramNode*) = 0;
 		virtual void visit(parser::ASTUsingNode*) = 0;
 		virtual void visit(parser::ASTDeclarationNode*) = 0;
