@@ -27,6 +27,10 @@ void Parser::consume_token() {
 
 void Parser::consume_token(lexer::TokenType type) {
 	consume_token();
+	check_current_token(type);
+}
+
+void Parser::check_current_token(lexer::TokenType type) {
 	if (current_token.type != type) {
 		throw std::runtime_error(msg_header() + "expected '" + lexer::Token::token_image(type) + "'");
 	}
@@ -133,45 +137,6 @@ ASTNode* Parser::parse_identifier() {
 	}
 }
 
-bool Parser::is_block_statement(lexer::TokenType type) {
-	switch (type) {
-	case lexer::TOK_VAR:
-	case lexer::TOK_CONST:
-	case lexer::TOK_STRUCT:
-	case lexer::TOK_PRINT:
-	case lexer::TOK_SWITCH:
-	case lexer::TOK_IF:
-	case lexer::TOK_WHILE:
-	case lexer::TOK_FOR:
-	case lexer::TOK_FOREACH:
-	case lexer::TOK_BREAK:
-	case lexer::TOK_RETURN:
-	case lexer::TOK_IDENTIFIER:
-		return true;
-	default:
-		return false;
-	}
-}
-
-bool Parser::is_exclusive_block_statement(lexer::TokenType type) {
-	switch (type) {
-	case lexer::TOK_VAR:
-	case lexer::TOK_CONST:
-	case lexer::TOK_STRUCT:
-	case lexer::TOK_PRINT:
-	case lexer::TOK_SWITCH:
-	case lexer::TOK_IF:
-	case lexer::TOK_WHILE:
-	case lexer::TOK_FOR:
-	case lexer::TOK_FOREACH:
-	case lexer::TOK_BREAK:
-	case lexer::TOK_RETURN:
-		return true;
-	default:
-		return false;
-	}
-}
-
 ASTDeclarationNode* Parser::parse_declaration_statement() {
 	Type type = Type::T_ND;
 	current_array_type = Type::T_ND;
@@ -207,10 +172,10 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 	if (current_token.type == lexer::TOK_COLON) {
 		consume_token();
 		if (type == Type::T_ND) {
-			type = parse_type(identifier);
+			type = parse_type();
 		}
 		else if (type == Type::T_ARRAY) {
-			current_array_type = parse_type(identifier);
+			current_array_type = parse_type();
 
 			if (current_array_type == parser::Type::T_ND || current_array_type == parser::Type::T_NULL || current_array_type == parser::Type::T_ARRAY) {
 				current_array_type = parser::Type::T_ANY;
@@ -228,10 +193,6 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 		consume_token();
 		expr = parse_expression();
 
-		if (type == Type::T_ND) {
-			type = Type::T_ANY;
-		}
-
 		if (consume_semicolon) {
 			consume_semicolon = false;
 			consume_token(lexer::TOK_SEMICOLON);
@@ -239,6 +200,10 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 	}
 	else {
 		expr = nullptr;
+	}
+
+	if (type == Type::T_ND) {
+		type = Type::T_ANY;
 	}
 
 	return new ASTDeclarationNode(type, type_name, identifier, expr, is_const, current_array_type, dim_vector, row, col);
@@ -276,9 +241,7 @@ ASTAssignmentNode* Parser::parse_assignment_statement() {
 		} while (current_token.type == lexer::TOK_LEFT_BRACE);
 	}
 
-	if (current_token.type != lexer::TOK_EQUALS) {
-		throw std::runtime_error(msg_header() + "expected assignment operator '=' after " + identifier + "");
-	}
+	check_current_token(lexer::TOK_EQUALS);
 
 	// parse the right hand side
 	consume_token();
@@ -358,7 +321,7 @@ ASTBlockNode* Parser::parse_block() {
 	}
 	// otherwise the user left the block open
 	else {
-		throw std::runtime_error(name + ": reached end of file while parsing");
+		throw std::runtime_error(msg_header() + "reached end of file while parsing");
 	}
 }
 
@@ -618,20 +581,6 @@ ASTForNode* Parser::parse_for_statement() {
 	return new ASTForNode(dci, block, row, col);
 }
 
-
-ASTNode* Parser::parse_foreach_decl() {
-	consume_semicolon = false;
-
-	switch (current_token.type) {
-	case lexer::TOK_VAR:
-		return parse_declaration_statement();
-	case lexer::TOK_IDENTIFIER:
-		return parse_identifier();
-	default:
-		throw std::runtime_error(msg_header() + "expected declaration or variable");
-	}
-}
-
 ASTNode* Parser::parse_foreach_collection() {
 	consume_semicolon = false;
 
@@ -647,7 +596,7 @@ ASTNode* Parser::parse_foreach_collection() {
 
 ASTForEachNode* Parser::parse_foreach_statement() {
 	// node attributes
-	ASTNode* itdecl; // decl or assign node
+	ASTNode* itdecl;
 	ASTNode* collection;
 	ASTBlockNode* block;
 	unsigned int row = current_token.row;
@@ -656,14 +605,12 @@ ASTForEachNode* Parser::parse_foreach_statement() {
 	// consume '('
 	consume_token(lexer::TOK_LEFT_BRACKET);
 
-	// consume expression first token
+	// consume decl first token
 	consume_token();
 
-	itdecl = parse_foreach_decl();
+	itdecl = parse_declaration_statement();
 
-	if (current_token.type != lexer::TOK_IN) {
-		throw std::runtime_error(msg_header() + "expected 'in'");
-	}
+	check_current_token(lexer::TOK_IN);
 
 	// consume expression first token
 	consume_token();
@@ -749,10 +696,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 			consume_token();
 		}
 
-		// exited while-loop, so token must be ')'
-		if (current_token.type != lexer::TOK_RIGHT_BRACKET) {
-			throw std::runtime_error(msg_header() + "expected ')' or more parameters");
-		}
+		check_current_token(lexer::TOK_RIGHT_BRACKET);
 	}
 
 	// consume ':' or '{'
@@ -766,7 +710,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 			type_name = current_token.value;
 		}
 
-		type = parse_type(identifier);
+		type = parse_type();
 
 		// consume '{'
 		consume_token();
@@ -775,9 +719,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 		type = Type::T_VOID;
 	}
 
-	if (current_token.type != lexer::TOK_LEFT_CURLY) {
-		throw std::runtime_error(msg_header() + "expected '{' after function '" + identifier + "' definition");
-	}
+	check_current_token(lexer::TOK_LEFT_CURLY);
 
 	// parse block
 	block = parse_block();
@@ -835,9 +777,7 @@ VariableDefinition_t* Parser::parse_formal_param() {
 	unsigned int col = current_token.col;
 
 	// make sure current token is identifier
-	if (current_token.type != lexer::TOK_IDENTIFIER) {
-		throw std::runtime_error(msg_header() + "expected variable name in function definition");
-	}
+	check_current_token(lexer::TOK_IDENTIFIER);
 	identifier = current_token.value;
 
 	consume_token();
@@ -853,18 +793,16 @@ VariableDefinition_t* Parser::parse_formal_param() {
 		} while (current_token.type == lexer::TOK_LEFT_BRACE);
 	}
 
-	if (current_token.type != lexer::TOK_COLON) {
-		throw std::runtime_error(msg_header() + "expected ':'");
-	}
+	check_current_token(lexer::TOK_COLON);
 
 	// consume type
 	consume_token();
 
 	if (type == Type::T_ARRAY) {
-		current_array_type = parse_type(identifier);
+		current_array_type = parse_type();
 	}
 	else {
-		type = parse_type(identifier);
+		type = parse_type();
 	}
 	if (current_token.type == lexer::TOK_IDENTIFIER) {
 		type_name = current_token.value;
@@ -1139,10 +1077,7 @@ ASTArrayConstructorNode* Parser::parse_array_constructor_node() {
 		|| next_token.type == lexer::TOK_IDENTIFIER || next_token.type == lexer::TOK_FLOAT_LITERAL
 		|| next_token.type == lexer::TOK_CHAR_LITERAL || next_token.type == lexer::TOK_STRING_LITERAL);
 
-
-	if (current_token.type != lexer::TOK_RIGHT_CURLY) {
-		throw std::runtime_error(msg_header() + "expected '}'");
-	}
+	check_current_token(lexer::TOK_RIGHT_CURLY);
 
 	return new ASTArrayConstructorNode(values, row, col);
 }
@@ -1171,9 +1106,7 @@ ASTStructConstructorNode* Parser::parse_struct_constructor_node() {
 		}
 	}
 
-	if (current_token.type != lexer::TOK_RIGHT_CURLY) {
-		throw std::runtime_error(msg_header() + "expected '}'");
-	}
+	check_current_token(lexer::TOK_RIGHT_CURLY);
 
 	return new ASTStructConstructorNode(type_name, values, row, col);
 }
@@ -1287,9 +1220,7 @@ ASTFunctionCallNode* Parser::parse_function_call_node() {
 	}
 
 	// ensure right close bracket after fetching parameters
-	if (current_token.type != lexer::TOK_RIGHT_BRACKET) {
-		throw std::runtime_error(msg_header() + "expected ')' after function parameters");
-	}
+	check_current_token(lexer::TOK_RIGHT_BRACKET);
 
 	return new ASTFunctionCallNode(identifier, *parameters, row, col);
 }
@@ -1298,7 +1229,7 @@ ASTTypeParseNode* Parser::parse_type_parse_node() {
 	// determine line number
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
-	Type type = parse_type("type");
+	Type type = parse_type();
 
 	consume_token(lexer::TOK_LEFT_BRACKET);
 
@@ -1355,7 +1286,7 @@ std::string Parser::msg_header() {
 	return "(PERR) " + name + '[' + std::to_string(current_token.row) + ':' + std::to_string(current_token.col) + "]: ";
 }
 
-Type Parser::parse_type(std::string identifier) {
+Type Parser::parse_type() {
 	switch (current_token.type) {
 	case lexer::TOK_VOID_TYPE:
 		return Type::T_VOID;

@@ -29,8 +29,12 @@ namespace parser {
 	private:
 		void consume_token();
 		void consume_token(lexer::TokenType);
-		bool is_block_statement(lexer::TokenType);
-		bool is_exclusive_block_statement(lexer::TokenType);
+		void check_current_token(lexer::TokenType);
+
+		// parse types and parameters
+		Type parse_type();
+
+		std::string msg_header();
 
 		// statement nodes
 
@@ -63,8 +67,6 @@ namespace parser {
 		ASTIfNode* parse_if_statement();
 
 		ASTForNode* parse_for_statement();
-
-		ASTNode* parse_foreach_decl();
 
 		ASTNode* parse_foreach_collection();
 
@@ -135,11 +137,6 @@ namespace parser {
 		cp_char parse_char_literal();
 
 		cp_string parse_string_literal();
-
-		// parse types and parameters
-		Type parse_type(std::string);
-
-		std::string msg_header();
 	};
 }
 

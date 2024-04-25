@@ -32,7 +32,7 @@
     - [ ] Now expressions can be executed in statements, dont need more to execute expression parser directly
 - [ ] Add statements:
     - [X] for
-    - [ ] foreach
+    - [X] foreach
     - [X] else if
     - [X] switch
     - [ ] try catch

@@ -1,12 +1,34 @@
 //print("Hello World!\n");
 
 // TODO: fix hash
-// TODO: fix function return  has value
+// TODO: fix function return has value
 // TODO: implements function array return
-// TODO: create generic function to check current and next token type
+// TODO: fix array and struct in foreach interpreter
 
-var arr[] : int = { 1, 2, 3 };
+// switchcase
 
-foreach (var val : int in arr) {
-    print(val);
+switch(2) {
+case 0:
+case 1:
+    print(1);
+    break;
+case 2: {
+    print(2);
+    break;
+    print(99);
+}   
+case 3:
+    print(3);
+case 4:
+    print(4);
+    break;
+case 5:
+    print(5);
+    break;
+default:
+    print("default");
+    break;
 }
+
+print("\n\n");
+

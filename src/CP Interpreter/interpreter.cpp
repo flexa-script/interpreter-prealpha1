@@ -401,6 +401,7 @@ void visitor::Interpreter::visit(parser::ASTIfNode* astnode) {
 
 void visitor::Interpreter::visit(parser::ASTForNode* astnode) {
 	is_loop = true;
+	scopes.push_back(new InterpreterScope(this, ""));
 
 	if (astnode->dci[0]) {
 		astnode->dci[0]->accept(this);
@@ -440,19 +441,50 @@ void visitor::Interpreter::visit(parser::ASTForNode* astnode) {
 		result = current_expression_value.curr_type == parser::Type::T_BOOL ? current_expression_value.b : current_expression_value.has_value;
 	}
 
+	scopes.pop_back();
 	is_loop = false;
 }
 
 void visitor::Interpreter::visit(parser::ASTForEachNode* astnode) {
 	is_loop = true;
 
-	astnode->itdecl->accept(this);
+	astnode->collection->accept(this);
+	auto colletion = current_expression_value.arr;
 
-	while (true) {
-		astnode->collection->accept(this);
+	for (auto val : colletion) {
+		scopes.push_back(new InterpreterScope(this, ""));
+		auto itdecl = static_cast<parser::ASTDeclarationNode*>(astnode->itdecl);
+
+		switch (val->curr_type) {
+		case parser::Type::T_BOOL:
+			itdecl->expr = new parser::ASTLiteralNode<cp_bool>(val->b, astnode->col, astnode->row);
+			break;
+		case parser::Type::T_INT:
+			itdecl->expr = new parser::ASTLiteralNode<cp_int>(val->i, astnode->col, astnode->row);
+			break;
+		case parser::Type::T_FLOAT:
+			itdecl->expr = new parser::ASTLiteralNode<cp_float>(val->f, astnode->col, astnode->row);
+			break;
+		case parser::Type::T_CHAR:
+			itdecl->expr = new parser::ASTLiteralNode<cp_char>(val->c, astnode->col, astnode->row);
+			break;
+		case parser::Type::T_STRING:
+			itdecl->expr = new parser::ASTLiteralNode<cp_string>(val->s, astnode->col, astnode->row);
+			break;
+		case parser::Type::T_ARRAY:
+			//itdecl->expr = new parser::ASTArrayConstructorNode(val->arr, astnode->col, astnode->row);
+			break;
+		case parser::Type::T_STRUCT:
+			//itdecl->expr = new parser::ASTStructDefinitionNode(val->str.first, val->str, astnode->col, astnode->row);
+			break;
+		}
+
+		itdecl->accept(this);
 
 		// execute block
 		astnode->block->accept(this);
+
+		scopes.pop_back();
 
 		if (break_block) {
 			break_block = false;

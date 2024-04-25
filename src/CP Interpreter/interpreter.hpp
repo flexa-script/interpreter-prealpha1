@@ -20,7 +20,6 @@ namespace visitor {
 		std::vector<InterpreterScope*> scopes;
 
 		Value_t current_expression_value;
-
 		std::vector<std::string> current_function_parameters;
 		std::vector<std::pair<parser::Type, Value_t*>> current_function_arguments;
 		std::string current_function_name;

@@ -533,6 +533,8 @@ void SemanticAnalyser::visit(parser::ASTIfNode* astnode) {
 }
 
 void SemanticAnalyser::visit(parser::ASTForNode* astnode) {
+	scopes.push_back(new SemanticScope());
+
 	if (astnode->dci[0]) {
 		astnode->dci[0]->accept(this);
 	}
@@ -543,11 +545,16 @@ void SemanticAnalyser::visit(parser::ASTForNode* astnode) {
 		astnode->dci[2]->accept(this);
 	}
 	astnode->block->accept(this);
+
+	// close scope
+	scopes.pop_back();
 }
 
 void SemanticAnalyser::visit(parser::ASTForEachNode* astnode) {
 	parser::Type decl_type;
 	parser::Type col_type;
+
+	scopes.push_back(new SemanticScope());
 
 	astnode->itdecl->accept(this);
 	decl_type = current_expression_type;
@@ -555,11 +562,18 @@ void SemanticAnalyser::visit(parser::ASTForEachNode* astnode) {
 	astnode->collection->accept(this);
 	col_type = current_expression_array_type;
 
+	if (current_expression_type != parser::Type::T_ARRAY) {
+		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "expected array in foreach");
+	}
+
 	if (decl_type != col_type && decl_type != parser::Type::T_ANY) {
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "mismatched types");
 	}
 
 	astnode->block->accept(this);
+
+	// close scope
+	scopes.pop_back();
 }
 
 void SemanticAnalyser::visit(parser::ASTWhileNode* astnode) {
