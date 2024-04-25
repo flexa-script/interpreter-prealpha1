@@ -41,7 +41,7 @@ int CPRepl::execute() {
 			std::cout << std::setw(20);
 			std::cout << "" << "file into memory, e.g.\n";
 			std::cout << std::setw(20);
-			std::cout << "" << ">>> #load ~/hello_world.prog\n\n";
+			std::cout << "" << ">>> #load .\\main.cp\n\n";
 
 			std::cout << " #quit              Exits the MiniLang REPL.\n";
 			std::cout << std::setw(20);
