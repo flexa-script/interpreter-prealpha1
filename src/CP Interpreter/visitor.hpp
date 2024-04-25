@@ -133,6 +133,14 @@ namespace visitor {
 		virtual void visit(parser::ASTReadNode*) = 0;
 		virtual void visit(parser::ASTNullNode*) = 0;
 		virtual void visit(parser::ASTThisNode*) = 0;
+
+		virtual unsigned int hash(parser::ASTIdentifierNode*) = 0;
+		virtual unsigned int hash(parser::ASTLiteralNode<cp_bool>*) = 0;
+		virtual unsigned int hash(parser::ASTLiteralNode<cp_int>*) = 0;
+		virtual unsigned int hash(parser::ASTLiteralNode<cp_float>*) = 0;
+		virtual unsigned int hash(parser::ASTLiteralNode<cp_char>*) = 0;
+		virtual unsigned int hash(parser::ASTLiteralNode<cp_string>*) = 0;
+		virtual unsigned int hash(parser::ASTNullNode*) = 0;
 	};
 }
 

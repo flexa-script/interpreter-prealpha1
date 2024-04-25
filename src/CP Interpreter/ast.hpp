@@ -61,7 +61,7 @@ namespace parser {
 	class ASTExprNode : public ASTNode {
 	public:
 		void accept(visitor::Visitor*) override = 0;
-		virtual unsigned int hash() = 0;
+		virtual unsigned int hash(visitor::Visitor*) = 0;
 	};
 
 	// Statement Nodes
@@ -282,7 +282,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTArrayConstructorNode : public ASTExprNode {
@@ -294,7 +294,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTStructConstructorNode : public ASTExprNode {
@@ -307,7 +307,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTNullNode : public ASTExprNode {
@@ -318,7 +318,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTThisNode : public ASTExprNode {
@@ -329,7 +329,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTBinaryExprNode : public ASTExprNode {
@@ -343,7 +343,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTIdentifierNode : public ASTExprNode {
@@ -357,7 +357,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTUnaryExprNode : public ASTExprNode {
@@ -370,7 +370,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTFunctionCallNode : public ASTExprNode {
@@ -383,7 +383,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTTypeParseNode : public ASTExprNode {
@@ -396,7 +396,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTRoundNode : public ASTExprNode {
@@ -409,7 +409,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTLenNode : public ASTExprNode {
@@ -421,7 +421,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTTypeNode : public ASTExprNode {
@@ -433,7 +433,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
 	class ASTReadNode : public ASTExprNode {
@@ -444,7 +444,7 @@ namespace parser {
 		unsigned int col;
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash() override;
+		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 }
 

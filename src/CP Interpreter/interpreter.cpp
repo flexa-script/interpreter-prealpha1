@@ -332,7 +332,8 @@ void visitor::Interpreter::visit(parser::ASTSwitchNode* astnode) {
 	astnode->condition->accept(this);
 
 	try {
-		pos = astnode->parsed_case_blocks->at(astnode->condition->hash());
+		auto hash = astnode->condition->hash(this);
+		pos = astnode->parsed_case_blocks->at(hash);
 	}
 	catch (...) {
 		pos = astnode->default_block;
@@ -1057,3 +1058,33 @@ std::pair<parser::Type, Value_t*> Interpreter::current_expr() {
 std::string Interpreter::msg_header(unsigned int row, unsigned int col) {
 	return "(IERR) " + current_program->name + '[' + std::to_string(row) + ':' + std::to_string(col) + "]: ";
 }
+
+unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_bool>* astnode) {
+	return static_cast<unsigned int>(astnode->val);
+}
+
+unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_int>* astnode) {
+	return static_cast<unsigned int>(astnode->val);
+}
+
+unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_float>* astnode) {
+	return static_cast<unsigned int>(astnode->val);
+}
+
+unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_char>* astnode) {
+	return static_cast<unsigned int>(astnode->val);
+}
+
+unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_string>* astnode) {
+	return axe::hashcode(astnode->val);
+}
+
+unsigned int visitor::Interpreter::hash(parser::ASTIdentifierNode* astnode) {
+	
+	return static_cast<unsigned int>(0);
+}
+
+unsigned int visitor::Interpreter::hash(parser::ASTNullNode* astnode) {
+	return static_cast<unsigned int>(0);
+}
+
