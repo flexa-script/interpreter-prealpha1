@@ -1188,13 +1188,22 @@ cp_string Parser::parse_string_literal() {
 		pos = str.find("\\b", pos + 1);
 	}
 
-	// replace \b with backslash
+	// replace \0 with null
 	pos = str.find("\\0");
+	while (pos != std::string::npos) {
+		// replace
+		str.replace(pos, 2, "\0");
+		// get next occurrence from current position
+		pos = str.find("\\0", pos + 1);
+	}
+
+	// replace \\ with quote
+	pos = str.find("\\\\");
 	while (pos != std::string::npos) {
 		// replace
 		str.replace(pos, 2, "\\");
 		// get next occurrence from current position
-		pos = str.find("\\0", pos + 1);
+		pos = str.find("\\\\", pos + 1);
 	}
 
 	return str;

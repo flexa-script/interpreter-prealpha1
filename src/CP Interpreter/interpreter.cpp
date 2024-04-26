@@ -454,33 +454,40 @@ void visitor::Interpreter::visit(parser::ASTForEachNode* astnode) {
 
 	for (auto val : colletion) {
 		scopes.push_back(new InterpreterScope(this, ""));
+
+		astnode->itdecl->accept(this);
+
 		auto itdecl = static_cast<parser::ASTDeclarationNode*>(astnode->itdecl);
+
+		// determine innermost scope in which variable is declared
+		size_t i;
+		for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(itdecl->identifier); --i);
+
+		Value_t* value = scopes[i]->access_value(std::vector<std::string>{ itdecl->identifier }, std::vector<parser::ASTExprNode*>());
 
 		switch (val->curr_type) {
 		case parser::Type::T_BOOL:
-			itdecl->expr = new parser::ASTLiteralNode<cp_bool>(val->b, astnode->col, astnode->row);
+			value->set(val->b);
 			break;
 		case parser::Type::T_INT:
-			itdecl->expr = new parser::ASTLiteralNode<cp_int>(val->i, astnode->col, astnode->row);
+			value->set(val->i);
 			break;
 		case parser::Type::T_FLOAT:
-			itdecl->expr = new parser::ASTLiteralNode<cp_float>(val->f, astnode->col, astnode->row);
+			value->set(val->f);
 			break;
 		case parser::Type::T_CHAR:
-			itdecl->expr = new parser::ASTLiteralNode<cp_char>(val->c, astnode->col, astnode->row);
+			value->set(val->c);
 			break;
 		case parser::Type::T_STRING:
-			itdecl->expr = new parser::ASTLiteralNode<cp_string>(val->s, astnode->col, astnode->row);
+			value->set(val->s);
 			break;
 		case parser::Type::T_ARRAY:
-			//itdecl->expr = new parser::ASTArrayConstructorNode(val->arr, astnode->col, astnode->row);
+			value->set(val->arr);
 			break;
 		case parser::Type::T_STRUCT:
-			//itdecl->expr = new parser::ASTStructDefinitionNode(val->str.first, val->str, astnode->col, astnode->row);
+			value->set(val->str);
 			break;
 		}
-
-		itdecl->accept(this);
 
 		// execute block
 		astnode->block->accept(this);
