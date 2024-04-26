@@ -944,21 +944,54 @@ bool SemanticAnalyser::returns(parser::ASTNode* astnode) {
 		}
 	}
 
-	// an if-(else) block returns only if both the if and the else statement return.
+	// an if-elif-else block returns only if both the if and the else statement return
 	if (auto ifstmt = dynamic_cast<parser::ASTIfNode*>(astnode)) {
-		if (ifstmt->else_block) {
-			return (returns(ifstmt->if_block) && returns(ifstmt->else_block));
+		auto ifreturn = returns(ifstmt->if_block);
+		auto elifreturn = true;
+		auto elsereturn = true;
+		for (auto& elif : ifstmt->else_ifs) {
+			if (!returns(elif->block)) {
+				elifreturn = false;
+				break;
+			}
 		}
+		if (ifstmt->else_block) {
+			elsereturn = returns(ifstmt->else_block);
+		}
+		return ifreturn && elifreturn && elsereturn;
 	}
 
-	// a while block returns if its block returns
+	// for block returns if its block returns
+	if (auto forstmt = dynamic_cast<parser::ASTForNode*>(astnode)) {
+		return returns(forstmt->block);
+	}
+
+	// foreach block returns if its block returns
+	if (auto forstmt = dynamic_cast<parser::ASTForEachNode*>(astnode)) {
+		return returns(forstmt->block);
+	}
+
+	// foreach block returns if its block returns
+	if (auto forstmt = dynamic_cast<parser::ASTForEachNode*>(astnode)) {
+		return returns(forstmt->block);
+	}
+
+	// while block returns if its block returns
 	if (auto whilestmt = dynamic_cast<parser::ASTWhileNode*>(astnode)) {
 		return returns(whilestmt->block);
 	}
-	// other statements do not return
-	else {
-		return false;
+
+	// while block returns if its block returns
+	if (auto switchstmt = dynamic_cast<parser::ASTSwitchNode*>(astnode)) {
+		for (auto& blk_stmt : *switchstmt->statements) {
+			if (returns(blk_stmt)) {
+				return true;
+			}
+		}
 	}
+
+	// other statements do not return
+	return false;
 }
 
 unsigned int SemanticAnalyser::hash(parser::ASTLiteralNode<cp_bool>* astnode) {

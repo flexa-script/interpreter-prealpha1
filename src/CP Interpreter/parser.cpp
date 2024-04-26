@@ -475,9 +475,6 @@ ASTElseIfNode* Parser::parse_else_if_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	// consume 'if'
-	consume_token();
-
 	// consume '('
 	consume_token(lexer::TOK_LEFT_BRACKET);
 
@@ -494,7 +491,7 @@ ASTElseIfNode* Parser::parse_else_if_statement() {
 	// consume if-block and '}'
 	if_block = parse_block();
 
-	consume_token();
+	//consume_token();
 
 	// return elif node
 	return new ASTElseIfNode(condition, if_block, row, col);
@@ -505,6 +502,7 @@ ASTIfNode* Parser::parse_if_statement() {
 	ASTExprNode* condition;
 	ASTBlockNode* if_block;
 	std::vector<ASTElseIfNode*> else_ifs = std::vector<ASTElseIfNode*>();
+	ASTBlockNode* else_block = nullptr;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -524,30 +522,26 @@ ASTIfNode* Parser::parse_if_statement() {
 	// consume if-block and '}'
 	if_block = parse_block();
 
-	// lookahead whether there is an else
-	if (next_token.type != lexer::TOK_ELSE) {
-		return new ASTIfNode(condition, if_block, else_ifs, row, col);
-	}
-
-	// otherwise, consume the if or else
+	// consume the if or else
 	consume_token();
 
 	if (next_token.type == lexer::TOK_IF) {
-		while (next_token.type == lexer::TOK_IF) {
+		do {
+			consume_token(lexer::TOK_IF);
 			else_ifs.push_back(parse_else_if_statement());
-		}
+			if (next_token.type == lexer::TOK_ELSE) {
+				consume_token(lexer::TOK_ELSE);
+			}
+		} while (next_token.type == lexer::TOK_IF);
 	}
 
-	// lookahead whether there is an else
-	if (next_token.type != lexer::TOK_ELSE) {
-		return new ASTIfNode(condition, if_block, else_ifs, row, col);
+	if (current_token.type == lexer::TOK_ELSE) {
+		// consume '{' after else
+		consume_token(lexer::TOK_LEFT_CURLY);
+
+		// parse else-block and '}'
+		else_block = parse_block();
 	}
-
-	// consume '{' after else
-	consume_token(lexer::TOK_LEFT_CURLY);
-
-	// parse else-block and '}'
-	ASTBlockNode* else_block = parse_block();
 
 	// return if node
 	return new ASTIfNode(condition, if_block, else_ifs, row, col, else_block);
