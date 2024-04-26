@@ -1,14 +1,18 @@
 //print("Hello World!\n");
 
-// TODO: fix identifier hash
 // TODO: fix function return has value in semantic analysis
 // TODO: implements function array return
 // TODO: fix array and struct in foreach interpreter
 
 // switchcase
 
-switch(2) {
-case 0:
+var test = 0;
+const F0 = 0;
+
+switch(test) {
+case F0:
+    print(0);
+    break;
 case 1:
     print(1);
     break;

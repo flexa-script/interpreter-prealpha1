@@ -140,7 +140,6 @@ namespace visitor {
 		virtual unsigned int hash(parser::ASTLiteralNode<cp_float>*) = 0;
 		virtual unsigned int hash(parser::ASTLiteralNode<cp_char>*) = 0;
 		virtual unsigned int hash(parser::ASTLiteralNode<cp_string>*) = 0;
-		virtual unsigned int hash(parser::ASTNullNode*) = 0;
 	};
 }
 

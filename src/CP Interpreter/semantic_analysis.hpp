@@ -23,7 +23,7 @@ namespace visitor {
 		bool current_expression_has_value;
 		std::string current_expression_type_name;
 		bool is_function_definition_context;
-		bool is_constant;
+		bool current_expression_is_constant;
 		int array_level = 0;
 		std::vector<parser::VariableDefinition_t> current_function_parameters;
 
@@ -88,7 +88,6 @@ namespace visitor {
 		unsigned int hash(parser::ASTLiteralNode<cp_float>*) override;
 		unsigned int hash(parser::ASTLiteralNode<cp_char>*) override;
 		unsigned int hash(parser::ASTLiteralNode<cp_string>*) override;
-		unsigned int hash(parser::ASTNullNode*) override;
 	};
 }
 

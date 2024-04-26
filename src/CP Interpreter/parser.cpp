@@ -808,7 +808,7 @@ VariableDefinition_t* Parser::parse_formal_param() {
 		type_name = current_token.value;
 	}
 
-	return new VariableDefinition_t(identifier, type, type_name, current_array_type, access_vector, false, false, row, col, true);
+	return new VariableDefinition_t(identifier, type, type_name, current_array_type, access_vector, row, col);
 };
 
 ASTExprNode* Parser::parse_expression() {

@@ -12,12 +12,14 @@
 namespace parser {
 
 	typedef struct VariableDefinition {
-		VariableDefinition(std::string, Type, std::string, Type, std::vector<ASTExprNode*>, bool, bool, unsigned int, unsigned int, bool);
+		VariableDefinition(std::string, Type, std::string, Type, std::vector<ASTExprNode*>, ASTExprNode*, bool, bool, unsigned int, unsigned int, bool);
+		VariableDefinition(std::string, Type, std::string, Type, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 		VariableDefinition();
 		std::string identifier;
 		std::string type_name;
 		parser::Type type;
 		parser::Type array_type;
+		ASTExprNode* expr;
 		std::vector<ASTExprNode*> dim;
 		bool has_value;
 		bool is_parameter;

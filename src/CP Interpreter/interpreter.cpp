@@ -1080,11 +1080,22 @@ unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_string>* astno
 }
 
 unsigned int visitor::Interpreter::hash(parser::ASTIdentifierNode* astnode) {
-	
-	return static_cast<unsigned int>(0);
-}
+	// determine innermost scope in which variable is declared
+	size_t i;
+	for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(astnode->identifier); i--);
 
-unsigned int visitor::Interpreter::hash(parser::ASTNullNode* astnode) {
-	return static_cast<unsigned int>(0);
-}
+	Value_t* value = scopes[i]->access_value(astnode->identifier_vector, astnode->access_vector);
 
+	switch (value->curr_type) {
+	case parser::Type::T_BOOL:
+		return static_cast<unsigned int>(value->b);
+	case parser::Type::T_INT:
+		return static_cast<unsigned int>(value->i);
+	case parser::Type::T_FLOAT:
+		return static_cast<unsigned int>(value->f);
+	case parser::Type::T_CHAR:
+		return static_cast<unsigned int>(value->c);
+	case parser::Type::T_STRING:
+		return axe::hashcode(value->s);
+	}
+}
