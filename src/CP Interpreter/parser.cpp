@@ -529,13 +529,18 @@ ASTIfNode* Parser::parse_if_statement() {
 		return new ASTIfNode(condition, if_block, else_ifs, row, col);
 	}
 
-	// otherwise, consume the else
+	// otherwise, consume the if or else
 	consume_token();
 
 	if (next_token.type == lexer::TOK_IF) {
 		while (next_token.type == lexer::TOK_IF) {
 			else_ifs.push_back(parse_else_if_statement());
 		}
+	}
+
+	// lookahead whether there is an else
+	if (next_token.type != lexer::TOK_ELSE) {
+		return new ASTIfNode(condition, if_block, else_ifs, row, col);
 	}
 
 	// consume '{' after else

@@ -6,33 +6,13 @@
 
 // switchcase
 
-var test = 0;
-const F0 = 0;
-
-switch(test) {
-case F0:
-    print(0);
-    break;
-case 1:
-    print(1);
-    break;
-case 2: {
-    print(2);
-    break;
-    print(99);
-}   
-case 3:
-    print(3);
-case 4:
-    print(4);
-    break;
-case 5:
-    print(5);
-    break;
-default:
-    print("default");
-    break;
+def foo() : int {
+    if (1==10){
+        return 10;
+    }else if(1==1){
+        return 5;
+    }
+    return 0;
 }
 
-print("\n\n");
-
+print(foo());
