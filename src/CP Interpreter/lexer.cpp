@@ -137,7 +137,6 @@ Token Lexer::process_string() {
 			str += current_char;
 			spec = false;
 		}
-
 		advance();
 	} while (has_next());
 

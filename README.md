@@ -35,12 +35,16 @@
     - [X] foreach
     - [X] else if
     - [X] switch
+    - [X] break
+    - [ ] continue
     - [ ] try catch
     - [ ] enum
 - [ ] Add expression operators:
     - [ ] ++,--
     - [ ] +=,-=,*=,/=,%=
     - [ ] immediate if
+- [ ] Let functions return array
+- [ ] Add lib scope lib.(method|properties)
 - [X] Add built in funcs:
     - [X] len: returns size of array/string
     - [X] round: round a float number
