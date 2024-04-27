@@ -12,7 +12,7 @@
 namespace parser {
 
 	typedef struct VariableDefinition {
-		VariableDefinition(std::string, Type, std::string, Type, std::vector<ASTExprNode*>, ASTExprNode*, bool, bool, unsigned int, unsigned int, bool);
+		VariableDefinition(std::string, Type, std::string, Type, std::vector<ASTExprNode*>, ASTExprNode*, bool, unsigned int, unsigned int, bool = false);
 		VariableDefinition(std::string, Type, std::string, Type, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 		VariableDefinition();
 		std::string identifier;
@@ -21,7 +21,6 @@ namespace parser {
 		std::vector<ASTExprNode*> dim;
 		std::string type_name;
 		ASTExprNode* expr;
-		bool has_value;
 		bool is_parameter;
 		bool is_const;
 		unsigned int row;

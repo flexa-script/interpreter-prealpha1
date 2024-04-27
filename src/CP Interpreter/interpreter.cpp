@@ -232,15 +232,15 @@ void Interpreter::print_array(cp_array value) {
 }
 
 void Interpreter::print_struct(cp_struct value) {
-	std::cout << value.first << " { ";
+	std::cout << value.first << "{";
 	for (auto i = 0; i < value.second.size(); ++i) {
-		std::cout << value.second.at(i).first << ": ";
+		std::cout << value.second.at(i).first << ":";
 		print_value(*value.second.at(i).second);
 		if (i < value.second.size() - 1) {
-			std::cout << ", ";
+			std::cout << ",";
 		}
 	}
-	std::cout << " }";
+	std::cout << "}";
 }
 
 void visitor::Interpreter::visit(parser::ASTPrintNode* astnode) {
@@ -265,9 +265,9 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	// create new scope
 	scopes.push_back(new InterpreterScope(this, current_name));
 
-	// check whether this is a function block by seeing if we have any current function
-	// parameters. If we do, then add them to the current scope.
-	for (unsigned int i = 0; i < current_function_arguments.size(); i++) {
+	// check whether this is a function block by seeing if we have any current function parameters
+	// if we do, then add them to the current scope
+	for (unsigned int i = 0; i < current_function_arguments.size(); ++i) {
 		switch (current_function_arguments[i].first) {
 		case parser::Type::T_BOOL:
 			scopes.back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->b);

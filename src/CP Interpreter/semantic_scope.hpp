@@ -25,10 +25,10 @@ namespace visitor {
 		bool already_declared_function(std::string, std::vector<parser::Type>);
 
 		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
-		void declare_variable(std::string, parser::Type, std::string, parser::Type, std::vector<parser::ASTExprNode*>, parser::ASTExprNode*, bool, bool, unsigned int, unsigned int, bool);
+		void declare_variable(std::string, parser::Type, std::string, parser::Type, std::vector<parser::ASTExprNode*>, parser::ASTExprNode*, bool, unsigned int, unsigned int, bool = false);
 		void declare_function(std::string, parser::Type, std::string, parser::Type, std::vector<parser::ASTExprNode*>, std::vector<parser::Type>, unsigned int, unsigned int);
 
-		void assign_variable(std::string, bool);
+		void assign_variable(std::string);
 		void change_variable_type(std::string, parser::Type);
 		void change_variable_type_name(std::string, std::string);
 

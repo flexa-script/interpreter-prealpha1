@@ -24,6 +24,7 @@
     - [X] Add Java class behavior
 - [X] Add null support
 - [X] Add type convert support
+    - [ ] Add array and struct support (based on print)
 - [X] Remove mandatory variable type definition
 - [X] Fix cp dependencies/libs loader
 - [X] Add string array-like accessor

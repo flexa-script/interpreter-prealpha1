@@ -8,14 +8,14 @@
 using namespace parser;
 
 
-VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name, Type array_type, std::vector<ASTExprNode*> dim, ASTExprNode* expr, bool is_const, bool has_value, unsigned int row, unsigned int col, bool is_parameter)
-	: identifier(identifier), type(type), type_name(type_name), array_type(array_type), dim(dim), expr(expr), is_const(is_const), has_value(has_value), row(row), col(col), is_parameter(is_parameter) {};
+VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name, Type array_type, std::vector<ASTExprNode*> dim, ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col, bool is_parameter)
+	: identifier(identifier), type(type), type_name(type_name), array_type(array_type), dim(dim), expr(expr), is_const(is_const), row(row), col(col), is_parameter(is_parameter) {};
 
 VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name, Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col)
-	: identifier(identifier), type(type), type_name(type_name), array_type(array_type), dim(dim), expr(nullptr), is_const(false), has_value(false), row(row), col(col), is_parameter(false) {};
+	: identifier(identifier), type(type), type_name(type_name), array_type(array_type), dim(dim), expr(nullptr), is_const(false), row(row), col(col), is_parameter(false) {};
 
 VariableDefinition::VariableDefinition()
-	: identifier(""), type(Type::T_ND), type_name(""), array_type(Type::T_ND), dim(std::vector<ASTExprNode*>()), expr(nullptr), is_const(false), has_value(false), row(0), col(0), is_parameter(false) {};
+	: identifier(""), type(Type::T_ND), type_name(""), array_type(Type::T_ND), dim(std::vector<ASTExprNode*>()), expr(nullptr), is_const(false), row(0), col(0), is_parameter(false) {};
 
 StructureDefinition::StructureDefinition(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
 	: identifier(identifier), variables(variables), row(row), col(col) {};

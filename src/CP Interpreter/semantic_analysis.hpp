@@ -20,7 +20,6 @@ namespace visitor {
 		std::stack<parser::Type> functions;
 		parser::Type current_expression_type;
 		parser::Type current_expression_array_type;
-		bool current_expression_has_value;
 		std::string current_expression_type_name;
 		bool is_function_definition_context;
 		bool current_expression_is_constant;
@@ -28,14 +27,16 @@ namespace visitor {
 		std::vector<parser::VariableDefinition_t> current_function_parameters;
 
 	private:
-		bool returns(parser::ASTNode*);
-		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
+		bool is_any(parser::Type);
 
-		void declare_structure_definition_variables(std::string, parser::ASTStructConstructorNode*);
-		void declare_structure_definition_first_level_variables(std::string, std::string);
+		bool returns(parser::ASTNode*);
+
+		void assign_structure(std::string, parser::ASTStructConstructorNode*);
+		void declare_structure(std::string, std::string);
 
 		parser::VariableDefinition_t find_declared_variable_recursively(std::string);
 
+		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);
 		void determine_array_type(parser::ASTArrayConstructorNode*);
 		void check_array_type(parser::ASTExprNode*, unsigned int, unsigned int);

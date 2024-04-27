@@ -158,6 +158,7 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 	if (current_token.type == lexer::TOK_LEFT_BRACE) {
 		type = Type::T_ARRAY;
 		do {
+			expr_size = nullptr;
 			consume_token();
 			if (current_token.type != lexer::TOK_RIGHT_BRACE) {
 				expr_size = parse_expression();
@@ -382,7 +383,7 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 	// node attributes
 	ASTExprNode* condition;
 	std::map<ASTExprNode*, unsigned int>* case_blocks = new std::map<ASTExprNode*, unsigned int>();
-	int default_block = -1;
+	long default_block = -1;
 	std::vector<ASTNode*>* statements = new std::vector<ASTNode*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
@@ -722,6 +723,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 			array_type = type;
 			type = Type::T_ARRAY;
 			do {
+				expr_size = nullptr;
 				consume_token();
 				if (current_token.type != lexer::TOK_RIGHT_BRACE) {
 					expr_size = parse_expression();
@@ -802,6 +804,7 @@ VariableDefinition_t* Parser::parse_formal_param() {
 
 	if (current_token.type == lexer::TOK_LEFT_BRACE) {
 		do {
+			expr_size = nullptr;
 			consume_token();
 			expr_size = parse_expression();
 			consume_token(lexer::TOK_RIGHT_BRACE);
@@ -1068,6 +1071,7 @@ ASTIdentifierNode* Parser::parse_identifier_node() {
 	if (next_token.type == lexer::TOK_LEFT_BRACE) {
 		consume_token();
 		do {
+			expr_size = nullptr;
 			consume_token();
 			expr_size = parse_expression();
 			consume_token(lexer::TOK_RIGHT_BRACE);
