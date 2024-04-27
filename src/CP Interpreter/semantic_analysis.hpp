@@ -19,6 +19,7 @@ namespace visitor {
 		std::vector<SemanticScope*> scopes;
 		std::stack<parser::Type> functions;
 		parser::Type current_expression_type;
+		//parser::Type current_expression_any_type;
 		parser::Type current_expression_array_type;
 		std::string current_expression_type_name;
 		bool is_function_definition_context;
@@ -55,6 +56,7 @@ namespace visitor {
 		void visit(parser::ASTPrintNode*) override;
 		void visit(parser::ASTReturnNode*) override;
 		void visit(parser::ASTBlockNode*) override;
+		void visit(parser::ASTContinueNode*) override;
 		void visit(parser::ASTBreakNode*) override;
 		void visit(parser::ASTSwitchNode*) override;
 		void visit(parser::ASTElseIfNode*) override;

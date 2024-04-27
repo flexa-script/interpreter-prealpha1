@@ -100,6 +100,8 @@ ASTNode* Parser::parse_block_statement() {
 		return parse_for_statement();
 	case lexer::TOK_FOREACH:
 		return parse_foreach_statement();
+	case lexer::TOK_CONTINUE:
+		return parse_continue_statement();
 	case lexer::TOK_BREAK:
 		return parse_break_statement();
 	case lexer::TOK_RETURN:
@@ -361,6 +363,20 @@ ASTStatementNode* Parser::parse_struct_block_variables() {
 	}
 }
 
+ASTContinueNode* Parser::parse_continue_statement() {
+	// determine line number
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+
+	if (consume_semicolon) {
+		consume_semicolon = false;
+		consume_token(lexer::TOK_SEMICOLON);
+	}
+
+	// return return node
+	return new ASTContinueNode(row, col);
+}
+
 ASTBreakNode* Parser::parse_break_statement() {
 	// determine line number
 	unsigned int row = current_token.row;
@@ -519,29 +535,31 @@ ASTIfNode* Parser::parse_if_statement() {
 	// consume if-block and '}'
 	if_block = parse_block();
 
-	// consume the if or else
-	consume_token();
+	if (next_token.type == lexer::TOK_ELSE) {
+		// consume the if or else
+		consume_token();
 
-	if (next_token.type == lexer::TOK_IF) {
-		do {
-			consume_token(lexer::TOK_IF);
-			else_ifs.push_back(parse_else_if_statement());
-			if (next_token.type == lexer::TOK_ELSE) {
-				consume_token(lexer::TOK_ELSE);
-			}
-		} while (next_token.type == lexer::TOK_IF);
-	}
+		if (next_token.type == lexer::TOK_IF) {
+			do {
+				consume_token(lexer::TOK_IF);
+				else_ifs.push_back(parse_else_if_statement());
+				if (next_token.type == lexer::TOK_ELSE) {
+					consume_token(lexer::TOK_ELSE);
+				}
+			} while (next_token.type == lexer::TOK_IF);
+		}
 
-	if (current_token.type == lexer::TOK_ELSE) {
-		// consume '{' after else
-		consume_token(lexer::TOK_LEFT_CURLY);
+		if (current_token.type == lexer::TOK_ELSE) {
+			// consume '{' after else
+			consume_token(lexer::TOK_LEFT_CURLY);
 
-		// parse else-block and '}'
-		else_block = parse_block();
+			// parse else-block and '}'
+			else_block = parse_block();
+		}
 	}
 
 	// return if node
-	return new ASTIfNode(condition, if_block, else_ifs, row, col, else_block);
+	return new ASTIfNode(condition, if_block, else_ifs, else_block, row, col);
 }
 
 ASTForNode* Parser::parse_for_statement() {
@@ -825,7 +843,7 @@ VariableDefinition_t* Parser::parse_formal_param() {
 		type_name = current_token.value;
 	}
 
-	return new VariableDefinition_t(identifier, type, type_name, current_array_type, access_vector, row, col);
+	return new VariableDefinition_t(identifier, type, type_name, type, current_array_type, access_vector, row, col);
 };
 
 ASTExprNode* Parser::parse_expression() {

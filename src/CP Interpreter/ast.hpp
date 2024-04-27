@@ -12,11 +12,12 @@
 namespace parser {
 
 	typedef struct VariableDefinition {
-		VariableDefinition(std::string, Type, std::string, Type, std::vector<ASTExprNode*>, ASTExprNode*, bool, unsigned int, unsigned int, bool = false);
-		VariableDefinition(std::string, Type, std::string, Type, std::vector<ASTExprNode*>, unsigned int, unsigned int);
+		VariableDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, ASTExprNode*, bool, unsigned int, unsigned int, bool = false);
+		VariableDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 		VariableDefinition();
 		std::string identifier;
 		parser::Type type;
+		parser::Type any_type;
 		parser::Type array_type;
 		std::vector<ASTExprNode*> dim;
 		std::string type_name;
@@ -28,10 +29,11 @@ namespace parser {
 	} VariableDefinition_t;
 
 	typedef struct FunctionDefinition {
-		FunctionDefinition(std::string, Type, std::string, Type, std::vector<ASTExprNode*>, std::vector<parser::Type>,unsigned int, unsigned int);
+		FunctionDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, std::vector<parser::Type>,unsigned int, unsigned int);
 		FunctionDefinition();
 		std::string identifier;
 		parser::Type type;
+		parser::Type any_type;
 		parser::Type array_type;
 		std::vector<ASTExprNode*> dim;
 		std::string type_name;
@@ -153,6 +155,16 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
+	class ASTContinueNode : public ASTStatementNode {
+	public:
+		ASTContinueNode(unsigned int, unsigned int);
+
+		unsigned int row;
+		unsigned int col;
+
+		void accept(visitor::Visitor*) override;
+	};
+
 	class ASTBreakNode : public ASTStatementNode {
 	public:
 		ASTBreakNode(unsigned int, unsigned int);
@@ -195,7 +207,7 @@ namespace parser {
 
 	class ASTIfNode : public ASTStatementNode {
 	public:
-		ASTIfNode(ASTExprNode*, ASTBlockNode*, std::vector<ASTElseIfNode*>, unsigned int, unsigned int, ASTBlockNode* = nullptr);
+		ASTIfNode(ASTExprNode*, ASTBlockNode*, std::vector<ASTElseIfNode*>, ASTBlockNode*, unsigned int, unsigned int);
 
 		ASTExprNode* condition;
 		ASTBlockNode* if_block;

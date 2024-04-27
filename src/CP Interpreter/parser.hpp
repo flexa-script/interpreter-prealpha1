@@ -58,6 +58,8 @@ namespace parser {
 
 		ASTStatementNode* parse_struct_block_variables();
 
+		ASTContinueNode* parse_continue_statement();
+
 		ASTBreakNode* parse_break_statement();
 
 		ASTSwitchNode* parse_switch_statement();

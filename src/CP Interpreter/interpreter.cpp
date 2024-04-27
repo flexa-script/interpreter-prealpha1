@@ -301,9 +301,15 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	// visit each statement in the block
 	for (auto& stmt : astnode->statements) {
 		stmt->accept(this);
+
+		if (continue_block && (is_loop || is_switch)) {
+			break;
+		}
+
 		if (break_block && (is_loop || is_switch)) {
 			break;
 		}
+
 		if (return_from_function) {
 			if (!return_from_function_name.empty() && return_from_function_name == scopes.back()->get_name()) {
 				return_from_function_name = "";
@@ -315,6 +321,10 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 
 	// close scope
 	scopes.pop_back();
+}
+
+void visitor::Interpreter::visit(parser::ASTContinueNode* astnode) {
+	continue_block = true;
 }
 
 void visitor::Interpreter::visit(parser::ASTBreakNode* astnode) {
@@ -342,6 +352,11 @@ void visitor::Interpreter::visit(parser::ASTSwitchNode* astnode) {
 	// visit each statement in the block
 	for (int i = pos; i < astnode->statements->size(); ++i) {
 		astnode->statements->at(i)->accept(this);
+
+		if (continue_block) {
+			continue_block = false;
+			continue;
+		}
 
 		if (break_block) {
 			break_block = false;
@@ -421,6 +436,10 @@ void visitor::Interpreter::visit(parser::ASTForNode* astnode) {
 		// execute block
 		astnode->block->accept(this);
 
+		if (continue_block) {
+			continue_block = false;
+		}
+
 		if (break_block) {
 			break_block = false;
 			break;
@@ -494,6 +513,11 @@ void visitor::Interpreter::visit(parser::ASTForEachNode* astnode) {
 
 		scopes.pop_back();
 
+		if (continue_block) {
+			continue_block = false;
+			continue;
+		}
+
 		if (break_block) {
 			break_block = false;
 			break;
@@ -514,6 +538,11 @@ void visitor::Interpreter::visit(parser::ASTWhileNode* astnode) {
 	while (result) {
 		// execute block
 		astnode->block->accept(this);
+
+		if (continue_block) {
+			continue_block = false;
+			continue;
+		}
 
 		if (break_block) {
 			break_block = false;

@@ -65,13 +65,13 @@ void SemanticScope::declare_structure_definition(std::string name, std::vector<p
 	structure_symbol_table[name] = str_def;
 }
 
-void SemanticScope::declare_variable(std::string identifier, parser::Type type, std::string type_name, parser::Type array_type, std::vector<parser::ASTExprNode*> dim, parser::ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col, bool is_parameter) {
-	parser::VariableDefinition_t var(identifier, type, type_name, array_type, dim, expr, is_const, row, col, is_parameter);
+void SemanticScope::declare_variable(std::string identifier, parser::Type type, std::string type_name, parser::Type any_type, parser::Type array_type, std::vector<parser::ASTExprNode*> dim, parser::ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col, bool is_parameter) {
+	parser::VariableDefinition_t var(identifier, type, type_name, any_type, array_type, dim, expr, is_const, row, col, is_parameter);
 	variable_symbol_table[identifier] = var;
 }
 
-void SemanticScope::declare_function(std::string identifier, parser::Type type, std::string type_name, parser::Type array_type, std::vector<parser::ASTExprNode*> dim, std::vector<parser::Type> signature, unsigned int row, unsigned int col) {
-	parser::FunctionDefinition_t fun(identifier, type, type_name, array_type, dim, signature, row, col);
+void SemanticScope::declare_function(std::string identifier, parser::Type type, std::string type_name, parser::Type any_type, parser::Type array_type, std::vector<parser::ASTExprNode*> dim, std::vector<parser::Type> signature, unsigned int row, unsigned int col) {
+	parser::FunctionDefinition_t fun(identifier, type, type_name, any_type, array_type, dim, signature, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
 }
 
@@ -86,8 +86,8 @@ void SemanticScope::change_variable_type_name(std::string identifier, std::strin
 	variable_symbol_table[identifier] = var;
 }
 
-void SemanticScope::change_variable_type(std::string identifier, parser::Type type) {
+void SemanticScope::change_any_variable_type(std::string identifier, parser::Type type) {
 	auto var = variable_symbol_table[identifier];
-	var.type = type;
+	var.any_type = type;
 	variable_symbol_table[identifier] = var;
 }

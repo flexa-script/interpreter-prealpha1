@@ -189,6 +189,8 @@ Token Lexer::process_identifier() {
 		type = TOK_THIS;
 	else if (identifier == "return")
 		type = TOK_RETURN;
+	else if (identifier == "continue")
+		type = TOK_CONTINUE;
 	else if (identifier == "break")
 		type = TOK_BREAK;
 	else if (identifier == "switch")
