@@ -37,6 +37,10 @@ namespace visitor {
 		void print_array(cp_array);
 		void print_struct(cp_struct);
 
+		std::string parse_value_to_string(Value_t);
+		std::string parse_array_to_string(cp_array);
+		std::string parse_struct_to_string(cp_struct);
+
 		std::string msg_header(unsigned int, unsigned int);
 
 	public:

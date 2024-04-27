@@ -968,28 +968,62 @@ void visitor::Interpreter::visit(parser::ASTTypeParseNode* astnode) {
 		break;
 
 	case parser::Type::T_STRING:
-		switch (current_expression_value.curr_type) {
-		case parser::Type::T_BOOL:
-			current_expression_value.set(cp_string(current_expression_value.b ? "true" : "false"));
-			break;
-		case parser::Type::T_INT:
-			current_expression_value.set(cp_string(std::to_string(current_expression_value.i)));
-			break;
-		case parser::Type::T_FLOAT:
-			current_expression_value.set(cp_string(std::to_string(current_expression_value.f)));
-			break;
-		case parser::Type::T_CHAR:
-			current_expression_value.set(cp_string(std::string{ current_expression_value.c }));
-			break;
-		case parser::Type::T_STRING:
-			break;
-		}
-		break;
+		current_expression_value.set(cp_string(parse_value_to_string(current_expression_value)));
 
 	}
 
 	current_expression_value.set_type(astnode->type);
 	current_expression_value.set_curr_type(astnode->type);
+}
+
+
+std::string Interpreter::parse_value_to_string(Value_t value) {
+	if (value.has_value) {
+		switch (value.curr_type) {
+		case parser::Type::T_BOOL:
+			return ((value.b) ? "true" : "false");
+		case parser::Type::T_INT:
+			return std::to_string(value.i);
+		case parser::Type::T_FLOAT:
+			return std::to_string(value.f);
+		case parser::Type::T_CHAR:
+			return cp_string(std::string{ value.c });
+		case parser::Type::T_STRING:
+			return value.s;
+		case parser::Type::T_STRUCT:
+			return parse_struct_to_string(value.str);
+		case parser::Type::T_ARRAY:
+			return parse_array_to_string(value.arr);
+		default:
+			throw std::runtime_error("IERR: can't determine value type on printing");
+		}
+	}
+	return "null";
+}
+
+std::string Interpreter::parse_array_to_string(cp_array value) {
+	std::string s = "[";
+	for (auto i = 0; i < value.size(); ++i) {
+		s += parse_value_to_string(*value.at(i));
+		if (i < value.size() - 1) {
+			s += ",";
+		}
+	}
+	s += "]";
+	return s;
+}
+
+std::string Interpreter::parse_struct_to_string(cp_struct value) {
+	std::string s = value.first + "{";
+	for (auto i = 0; i < value.second.size(); ++i) {
+		s += value.second.at(i).first + ":";
+		s += parse_value_to_string(*value.second.at(i).second);
+		if (i < value.second.size() - 1) {
+			s += ",";
+		}
+	}
+	s += "}";
+	return s;
 }
 
 void visitor::Interpreter::visit(parser::ASTTypeNode* astnode) {

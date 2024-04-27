@@ -40,7 +40,7 @@ void SemanticAnalyser::visit(parser::ASTUsingNode* astnode) {
 }
 
 bool SemanticAnalyser::is_any(parser::Type type) {
-	return type != parser::Type::T_ANY && type != parser::Type::T_NULL;
+	return type == parser::Type::T_ANY || type == parser::Type::T_NULL;
 }
 
 void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
@@ -1010,6 +1010,13 @@ void SemanticAnalyser::visit(parser::ASTUnaryExprNode* astnode) {
 
 void SemanticAnalyser::visit(parser::ASTTypeParseNode* astnode) {
 	astnode->expr->accept(this);
+
+	if ((current_expression_type == parser::Type::T_ARRAY || current_expression_type == parser::Type::T_STRUCT)
+		&& astnode->type != parser::Type::T_STRING) {
+		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid type conversion from "
+			+ parser::type_str(current_expression_type) + " to " + parser::type_str(astnode->type));
+	}
+
 	current_expression_type = astnode->type;
 	current_expression_is_constant = false;
 }

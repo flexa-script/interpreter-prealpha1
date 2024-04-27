@@ -133,7 +133,7 @@ ASTNode* Parser::parse_identifier() {
 		return parse_assignment_statement();
 	}
 	else {
-		parse_statement_expression();
+		return parse_statement_expression();
 	}
 }
 
@@ -321,9 +321,7 @@ ASTBlockNode* Parser::parse_block() {
 		return new ASTBlockNode(*statements, row, col);
 	}
 	// otherwise the user left the block open
-	else {
-		throw std::runtime_error(msg_header() + "reached end of file while parsing");
-	}
+	throw std::runtime_error(msg_header() + "reached end of file while parsing");
 }
 
 ASTBlockNode* Parser::parse_struct_block() {
@@ -350,9 +348,7 @@ ASTBlockNode* Parser::parse_struct_block() {
 		return new ASTBlockNode(*statements, row, col);
 	}
 	// otherwise the user left the block open
-	else {
-		throw std::runtime_error(msg_header() + "mismatched scopes: reached end of file while parsing");
-	}
+	throw std::runtime_error(msg_header() + "mismatched scopes: reached end of file while parsing");
 }
 
 ASTStatementNode* Parser::parse_struct_block_variables() {
@@ -764,9 +760,9 @@ ASTStructDefinitionNode* Parser::parse_struct_definition() {
 
 	do {
 		// consume var
-		consume_token();
+		consume_token(lexer::TOK_VAR);
 		// consume identifier
-		consume_token();
+		consume_token(lexer::TOK_IDENTIFIER);
 
 		// parse parameter
 		variables.push_back(*parse_formal_param());
