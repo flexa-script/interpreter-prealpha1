@@ -70,8 +70,8 @@ void SemanticScope::declare_variable(std::string identifier, parser::Type type, 
 	variable_symbol_table[identifier] = var;
 }
 
-void SemanticScope::declare_function(std::string identifier, parser::Type type, std::string type_name, std::vector<parser::Type> signature, bool is_any, unsigned int row, unsigned int col) {
-	parser::FunctionDefinition_t fun(identifier, type, type_name, signature, is_any, row, col);
+void SemanticScope::declare_function(std::string identifier, parser::Type type, std::string type_name, parser::Type array_type, std::vector<parser::ASTExprNode*> dim, std::vector<parser::Type> signature, unsigned int row, unsigned int col) {
+	parser::FunctionDefinition_t fun(identifier, type, type_name, array_type, dim, signature, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
 }
 

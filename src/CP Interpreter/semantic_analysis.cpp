@@ -611,7 +611,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* astnode) {
 	}
 
 	// add function to symbol table
-	scopes.back()->declare_function(astnode->identifier, astnode->type, astnode->type_name, astnode->signature, astnode->type == parser::Type::T_ANY, astnode->row, astnode->row);
+	scopes.back()->declare_function(astnode->identifier, astnode->type, astnode->type_name, astnode->array_type, astnode->dim, astnode->signature, astnode->row, astnode->row);
 
 	// push current function type into function stack
 	functions.push(astnode->type);

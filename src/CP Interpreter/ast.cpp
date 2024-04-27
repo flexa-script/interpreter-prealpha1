@@ -23,11 +23,11 @@ StructureDefinition::StructureDefinition(std::string identifier, std::vector<Var
 StructureDefinition::StructureDefinition()
 	: identifier(""), variables(std::vector<VariableDefinition_t>()), row(0), col(0) {};
 
-FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, std::vector<parser::Type> signature, bool is_any, unsigned int row, unsigned int col)
-	: identifier(identifier), type(type), type_name(type_name), signature(signature), is_any(is_any), row(row), col(col) {};
+FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, Type array_type, std::vector<ASTExprNode*> dim, std::vector<parser::Type> signature, unsigned int row, unsigned int col)
+	: identifier(identifier), type(type), type_name(type_name), array_type(array_type), dim(dim), signature(signature), row(row), col(col) {};
 
 FunctionDefinition::FunctionDefinition()
-	: identifier(""), type(Type::T_ND), type_name(""), signature(std::vector<parser::Type>()), is_any(false), row(0), col(0) {};
+	: identifier(""), type(Type::T_ND), type_name(""), array_type(Type::T_ND), dim(std::vector<ASTExprNode*>()), signature(std::vector<parser::Type>()), row(0), col(0) {};
 
 
 // Program Node
@@ -74,8 +74,8 @@ ASTForEachNode::ASTForEachNode(ASTNode* itdecl, ASTNode* collection, ASTBlockNod
 ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: condition(condition), block(block), row(row), col(col) {}
 
-ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<VariableDefinition_t> parameters, Type type, std::string type_name, ASTBlockNode* block, unsigned int row, unsigned int col)
-	: identifier(std::move(identifier)), parameters(std::move(parameters)), type(type), type_name(type_name), block(block), row(row), col(col) {
+ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<VariableDefinition_t> parameters, Type type, std::string type_name, Type array_type, std::vector<ASTExprNode*> dim, ASTBlockNode* block, unsigned int row, unsigned int col)
+	: identifier(std::move(identifier)), parameters(std::move(parameters)), type(type), type_name(type_name), array_type(array_type), dim(dim), block(block), row(row), col(col) {
 	// generate signature
 	this->signature = std::vector<Type>();
 

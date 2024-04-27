@@ -661,8 +661,12 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	std::string identifier;
 	std::vector<VariableDefinition_t> parameters;
 	Type type;
+	Type array_type = parser::Type::T_ND;
 	std::string type_name = "";
 	ASTBlockNode* block;
+	ASTExprNode* expr;
+	ASTExprNode* expr_size;
+	auto dim_vector = std::vector<ASTExprNode*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -713,6 +717,21 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 
 		// consume '{'
 		consume_token();
+
+		if (current_token.type == lexer::TOK_LEFT_BRACE) {
+			array_type = type;
+			type = Type::T_ARRAY;
+			do {
+				consume_token();
+				if (current_token.type != lexer::TOK_RIGHT_BRACE) {
+					expr_size = parse_expression();
+					consume_token(lexer::TOK_RIGHT_BRACE);
+				}
+				consume_token();
+				dim_vector.push_back(expr_size);
+
+			} while (current_token.type == lexer::TOK_LEFT_BRACE);
+		}
 	}
 	else {
 		type = Type::T_VOID;
@@ -723,7 +742,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	// parse block
 	block = parse_block();
 
-	return new ASTFunctionDefinitionNode(identifier, parameters, type, type_name, block, row, col);
+	return new ASTFunctionDefinitionNode(identifier, parameters, type, type_name, array_type, dim_vector, block, row, col);
 }
 
 ASTStructDefinitionNode* Parser::parse_struct_definition() {

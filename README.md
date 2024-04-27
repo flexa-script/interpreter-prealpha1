@@ -43,7 +43,7 @@
     - [ ] ++,--
     - [ ] +=,-=,*=,/=,%=
     - [ ] immediate if
-- [ ] Let functions return array
+- [X] Let functions return array
 - [ ] Add lib scope lib.(method|properties)
 - [X] Add built in funcs:
     - [X] len: returns size of array/string

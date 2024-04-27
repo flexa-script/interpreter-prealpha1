@@ -16,17 +16,30 @@ namespace parser {
 		VariableDefinition(std::string, Type, std::string, Type, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 		VariableDefinition();
 		std::string identifier;
-		std::string type_name;
 		parser::Type type;
 		parser::Type array_type;
-		ASTExprNode* expr;
 		std::vector<ASTExprNode*> dim;
+		std::string type_name;
+		ASTExprNode* expr;
 		bool has_value;
 		bool is_parameter;
 		bool is_const;
 		unsigned int row;
 		unsigned int col;
 	} VariableDefinition_t;
+
+	typedef struct FunctionDefinition {
+		FunctionDefinition(std::string, Type, std::string, Type, std::vector<ASTExprNode*>, std::vector<parser::Type>,unsigned int, unsigned int);
+		FunctionDefinition();
+		std::string identifier;
+		parser::Type type;
+		parser::Type array_type;
+		std::vector<ASTExprNode*> dim;
+		std::string type_name;
+		std::vector<parser::Type> signature;
+		unsigned int row;
+		unsigned int col;
+	} FunctionDefinition_t;
 
 	typedef struct StructureDefinition {
 		StructureDefinition(std::string, std::vector<VariableDefinition_t>, unsigned int, unsigned int);
@@ -36,18 +49,6 @@ namespace parser {
 		unsigned int row;
 		unsigned int col;
 	} StructureDefinition_t;
-
-	typedef struct FunctionDefinition {
-		FunctionDefinition(std::string identifier, Type type, std::string type_name, std::vector<parser::Type> signature, bool is_any, unsigned int row, unsigned int col);
-		FunctionDefinition();
-		std::string identifier;
-		parser::Type type;
-		std::string type_name;
-		std::vector<parser::Type> signature;
-		bool is_any;
-		unsigned int row;
-		unsigned int col;
-	} FunctionDefinition_t;
 
 	// Abstract Nodes
 	class ASTNode {
@@ -246,13 +247,15 @@ namespace parser {
 
 	class ASTFunctionDefinitionNode : public ASTStatementNode {
 	public:
-		ASTFunctionDefinitionNode(std::string, std::vector<VariableDefinition_t>, Type, std::string, ASTBlockNode*, unsigned int, unsigned int);
+		ASTFunctionDefinitionNode(std::string, std::vector<VariableDefinition_t>, Type, std::string, Type, std::vector<ASTExprNode*>, ASTBlockNode*, unsigned int, unsigned int);
 
 		std::string identifier;
 		std::vector<VariableDefinition_t> parameters;
 		std::vector<std::string> variable_names;
 		std::vector<Type> signature;
 		Type type;
+		Type array_type;
+		std::vector<ASTExprNode*> dim;
 		std::string type_name;
 		ASTBlockNode* block;
 		unsigned int row;
