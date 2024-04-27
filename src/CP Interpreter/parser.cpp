@@ -1130,6 +1130,9 @@ cp_char Parser::parse_char_literal() {
 	else if (current_token.value == "'\\n'") {
 		chr = '\n';
 	}
+	else if (current_token.value == "'\\r'") {
+		chr = '\r';
+	}
 	else if (current_token.value == "'\\''") {
 		chr = '\'';
 	}
@@ -1149,61 +1152,55 @@ cp_char Parser::parse_char_literal() {
 }
 
 cp_string Parser::parse_string_literal() {
-	// remove " character from front and end of lexeme
 	std::string str = current_token.value.substr(1, current_token.value.size() - 2);
 
-	// replace \" with quote
-	size_t pos = str.find("\\\"");
-	while (pos != std::string::npos) {
-		// replace
-		str.replace(pos, 2, "\"");
-		// get next occurrence from current position
-		pos = str.find("\\\"", pos + 1);
-	}
+	size_t pos = 0;
+	while (pos < str.size()) {
+		auto sc = str.substr(pos, 2);
 
-	// replace \n with newline
-	pos = str.find("\\n");
-	while (pos != std::string::npos) {
-		// replace
-		str.replace(pos, 2, "\n");
-		// get next occurrence from current position
-		pos = str.find("\\n", pos + 1);
-	}
+		if (sc == "\\\"") {
+			str.replace(pos, 2, "\"");
+			++pos;
+			continue;
+		}
 
-	// replace \t with tab
-	pos = str.find("\\t");
-	while (pos != std::string::npos) {
-		// replace
-		str.replace(pos, 2, "\t");
-		// get next occurrence from current position
-		pos = str.find("\\t", pos + 1);
-	}
+		if (sc == "\\n") {
+			str.replace(pos, 2, "\n");
+			++pos;
+			continue;
+		}
 
-	// replace \b with backslash
-	pos = str.find("\\b");
-	while (pos != std::string::npos) {
-		// replace
-		str.replace(pos, 2, "\\");
-		// get next occurrence from current position
-		pos = str.find("\\b", pos + 1);
-	}
+		if (sc == "\\r") {
+			str.replace(pos, 2, "\r");
+			++pos;
+			continue;
+		}
 
-	// replace \0 with null
-	pos = str.find("\\0");
-	while (pos != std::string::npos) {
-		// replace
-		str.replace(pos, 2, "\0");
-		// get next occurrence from current position
-		pos = str.find("\\0", pos + 1);
-	}
+		if (sc == "\\t") {
+			str.replace(pos, 2, "\t");
+			++pos;
+			continue;
+		}
 
-	// replace \\ with quote
-	pos = str.find("\\\\");
-	while (pos != std::string::npos) {
-		// replace
-		str.replace(pos, 2, "\\");
-		// get next occurrence from current position
-		pos = str.find("\\\\", pos + 1);
+		if (sc == "\\b") {
+			str.replace(pos, 2, "\b");
+			++pos;
+			continue;
+		}
+
+		if (sc == "\\0") {
+			str.replace(pos, 2, "\0");
+			++pos;
+			continue;
+		}
+
+		if (sc == "\\\\") {
+			str.replace(pos, 2, "\\");
+			++pos;
+			continue;
+		}
+
+		++pos;
 	}
 
 	return str;

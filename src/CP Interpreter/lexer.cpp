@@ -115,11 +115,32 @@ Token Lexer::process_comment() {
 
 Token Lexer::process_string() {
 	std::string str;
+	bool spec = false;
+
+	str += current_char;
+	advance();
 
 	do {
-		str += current_char;
+		if (!spec) {
+			if (current_char == '\\') {
+				spec = true;
+				str += current_char;
+			}
+			else if (current_char == '"') {
+				break;
+			}
+			else {
+				str += current_char;
+			}
+		}
+		else {
+			str += current_char;
+			spec = false;
+		}
+
 		advance();
-	} while (has_next() && (current_char != '"' || before_char == '\\'));
+	} while (has_next());
+
 	str += current_char;
 	advance();
 
