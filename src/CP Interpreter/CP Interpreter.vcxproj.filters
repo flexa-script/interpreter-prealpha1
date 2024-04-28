@@ -13,64 +13,82 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\lexer">
-      <UniqueIdentifier>{4fd0c68f-cea0-4cec-ba1a-9966220fa79d}</UniqueIdentifier>
+    <Filter Include="Header Files\core">
+      <UniqueIdentifier>{1330c9a2-17b6-4f61-bdad-745bf20da1ee}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\parser">
+    <Filter Include="Header Files\core\parser">
       <UniqueIdentifier>{479fe6ee-5f18-452a-9987-761901e96c55}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\visitor">
+    <Filter Include="Header Files\core\visitor">
       <UniqueIdentifier>{a394461a-7bf4-40db-8978-e0f264b92101}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\lexer">
+    <Filter Include="Header Files\core\lexer">
+      <UniqueIdentifier>{4fd0c68f-cea0-4cec-ba1a-9966220fa79d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules">
+      <UniqueIdentifier>{7530e65e-0216-4307-87d9-55883f91daca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\graphics">
+      <UniqueIdentifier>{aa9f5271-3bd5-48a7-8554-1e4accf32dc0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core">
+      <UniqueIdentifier>{f0a1e035-dea8-4051-9d2f-04bf6e738d5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\lexer">
       <UniqueIdentifier>{12ff1234-e339-4ac5-948c-5f89127f7037}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\visitor">
+    <Filter Include="Source Files\core\parser">
+      <UniqueIdentifier>{db3abfde-2526-4c5b-8ecd-ce54495005b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\visitor">
       <UniqueIdentifier>{d72aab2d-eaf8-4f6d-9540-388b7dc27f84}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\parser">
-      <UniqueIdentifier>{db3abfde-2526-4c5b-8ecd-ce54495005b3}</UniqueIdentifier>
+    <Filter Include="Header Files\modules\graphics\vendor">
+      <UniqueIdentifier>{0930bc6b-48fe-4484-91df-150b5e6a16d2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="util.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="lexer.hpp">
-      <Filter>Header Files\lexer</Filter>
+      <Filter>Header Files\core\lexer</Filter>
     </ClInclude>
     <ClInclude Include="token.hpp">
-      <Filter>Header Files\lexer</Filter>
+      <Filter>Header Files\core\lexer</Filter>
     </ClInclude>
     <ClInclude Include="ast.hpp">
-      <Filter>Header Files\parser</Filter>
+      <Filter>Header Files\core\parser</Filter>
     </ClInclude>
     <ClInclude Include="parser.hpp">
-      <Filter>Header Files\parser</Filter>
+      <Filter>Header Files\core\parser</Filter>
     </ClInclude>
     <ClInclude Include="interpreter.hpp">
-      <Filter>Header Files\visitor</Filter>
+      <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
     <ClInclude Include="semantic_analysis.hpp">
-      <Filter>Header Files\visitor</Filter>
+      <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
     <ClInclude Include="visitor.hpp">
-      <Filter>Header Files\visitor</Filter>
-    </ClInclude>
-    <ClInclude Include="cpinterpreter.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cprepl.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cputil.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
     <ClInclude Include="semantic_scope.hpp">
-      <Filter>Header Files\visitor</Filter>
+      <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
     <ClInclude Include="interpreter_scope.hpp">
-      <Filter>Header Files\visitor</Filter>
+      <Filter>Header Files\core\visitor</Filter>
+    </ClInclude>
+    <ClInclude Include="cpinterpreter.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="cprepl.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="cputil.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="util.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics_core.hpp">
+      <Filter>Header Files\modules\graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -78,43 +96,43 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="lexer.cpp">
-      <Filter>Source Files\lexer</Filter>
+      <Filter>Source Files\core\lexer</Filter>
     </ClCompile>
     <ClCompile Include="token.cpp">
-      <Filter>Source Files\lexer</Filter>
+      <Filter>Source Files\core\lexer</Filter>
     </ClCompile>
     <ClCompile Include="ast.cpp">
-      <Filter>Source Files\parser</Filter>
+      <Filter>Source Files\core\parser</Filter>
     </ClCompile>
     <ClCompile Include="parser.cpp">
-      <Filter>Source Files\parser</Filter>
+      <Filter>Source Files\core\parser</Filter>
     </ClCompile>
     <ClCompile Include="interpreter.cpp">
-      <Filter>Source Files\visitor</Filter>
+      <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
     <ClCompile Include="semantic_analysis.cpp">
-      <Filter>Source Files\visitor</Filter>
-    </ClCompile>
-    <ClCompile Include="cpinterpreter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cprepl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cputil.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
     <ClCompile Include="semantic_scope.cpp">
-      <Filter>Source Files\visitor</Filter>
+      <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
     <ClCompile Include="interpreter_scope.cpp">
-      <Filter>Source Files\visitor</Filter>
+      <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
     <ClCompile Include="visitor.cpp">
-      <Filter>Source Files\visitor</Filter>
+      <Filter>Source Files\core\visitor</Filter>
+    </ClCompile>
+    <ClCompile Include="cpinterpreter.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="cprepl.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="cputil.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="util.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

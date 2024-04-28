@@ -48,8 +48,8 @@ ASTDeclarationNode::ASTDeclarationNode(Type type, std::string type_name, std::st
 	Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col)
 	: type(type), type_name(std::move(type_name)), identifier(std::move(identifier)), expr(expr), is_const(is_const), array_type(array_type), dim(dim), row(row), col(col) {}
 
-ASTAssignmentNode::ASTAssignmentNode(std::string identifier, std::vector<std::string> identifier_vector, ASTExprNode* expr, std::vector<ASTExprNode*> access_vector, unsigned int row, unsigned int col)
-	: identifier(std::move(identifier)), identifier_vector(identifier_vector), expr(expr), access_vector(access_vector), row(row), col(col) {}
+ASTAssignmentNode::ASTAssignmentNode(std::vector<std::string> identifier_vector, std::string op, ASTExprNode* expr, std::vector<ASTExprNode*> access_vector, unsigned int row, unsigned int col)
+	: identifier_vector(identifier_vector), expr(expr), op(std::move(op)), access_vector(access_vector), row(row), col(col) {}
 
 ASTPrintNode::ASTPrintNode(ASTExprNode* expr, unsigned int row, unsigned int col)
 	: expr(expr), row(row), col(col) {}

@@ -38,6 +38,8 @@ namespace visitor {
 		void print_array(cp_array);
 		void print_struct(cp_struct);
 
+		cp_int do_operation(cp_int, cp_int, std::string);
+		cp_float do_operation(cp_float, cp_float, std::string);
 		std::string parse_value_to_string(Value_t);
 		std::string parse_array_to_string(cp_array);
 		std::string parse_struct_to_string(cp_struct);

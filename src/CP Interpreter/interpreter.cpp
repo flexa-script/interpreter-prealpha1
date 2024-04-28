@@ -147,10 +147,43 @@ std::vector<unsigned int> Interpreter::evaluate_access_vector(std::vector<parser
 	return access_vector;
 }
 
+cp_int visitor::Interpreter::do_operation(cp_int lval, cp_int rval, std::string op) {
+	if (op == "+=") {
+		return lval + rval;
+	}
+	else if (op == "-=") {
+		return lval - rval;
+	}
+	else if (op == "*=") {
+		return lval * rval;
+	}
+	else if (op == "/=") {
+		return lval / rval;
+	}
+	else if (op == "%=") {
+		return lval % rval;
+	}
+}
+
+cp_float visitor::Interpreter::do_operation(cp_float lval, cp_float rval, std::string op) {
+	if (op == "+=") {
+		return lval + rval;
+	}
+	else if (op == "-=") {
+		return lval - rval;
+	}
+	else if (op == "*=") {
+		return lval * rval;
+	}
+	else if (op == "/=") {
+		return lval / rval;
+	}
+}
+
 void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	// determine innermost scope in which variable is declared
 	size_t i;
-	for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(astnode->identifier); i--);
+	for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(astnode->identifier_vector[0]); i--);
 
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
@@ -163,10 +196,10 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 			value->set(current_expression_value.b);
 			break;
 		case parser::Type::T_INT:
-			value->set(current_expression_value.i);
+			value->set(do_operation(value->i, current_expression_value.i, astnode->op));
 			break;
 		case parser::Type::T_FLOAT:
-			value->set(current_expression_value.f);
+			value->set(do_operation(value->f, current_expression_value.f, astnode->op));
 			break;
 		case parser::Type::T_CHAR:
 			value->set(current_expression_value.c);
@@ -296,7 +329,6 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	// clear the global function parameter/argument vectors
 	current_function_parameters.clear();
 	current_function_arguments.clear();
-	current_name = "";
 
 	// visit each statement in the block
 	for (auto& stmt : astnode->statements) {

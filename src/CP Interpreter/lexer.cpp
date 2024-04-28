@@ -158,7 +158,7 @@ Token Lexer::process_char() {
 	chr += current_char;
 	advance();
 	if (has_next() && current_char != '\'') {
-		throw std::runtime_error(msg_header() + "lexical error: expected \"'\" to close character constant.");
+		throw std::runtime_error(msg_header() + "expected \"'\" closing character constant");
 	}
 	chr += current_char;
 	advance();
@@ -299,12 +299,20 @@ Token Lexer::process_symbol() {
 			str_symbol += current_char;
 			advance();
 		}
+		if (current_char == '=') {
+			str_symbol += current_char;
+			advance();
+		}
 		type = TOK_ADDITIVE_OP;
 		break;
 
 	case '*':
 	case '/':
 	case '%':
+		if (current_char == '=') {
+			str_symbol += current_char;
+			advance();
+		}
 		type = TOK_MULTIPLICATIVE_OP;
 		break;
 
@@ -330,7 +338,7 @@ Token Lexer::process_symbol() {
 
 	case '!':
 		if (current_char != '=') {
-			throw std::runtime_error(msg_header() + "lexical error: expected '!'.");
+			throw std::runtime_error(msg_header() + "expected '='");
 		}
 		str_symbol += current_char;
 		advance();
@@ -385,7 +393,7 @@ Token Lexer::next_token() {
 		return tokens[current_token++];
 	}
 	else {
-		std::string error = "Final token surpassed.";
+		std::string error = "final token surpassed";
 		return Token(TOK_ERROR, error);
 	}
 }

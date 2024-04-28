@@ -63,10 +63,7 @@ ASTUsingNode* Parser::parse_using_statement() {
 
 	library = current_token.value;
 
-	if (consume_semicolon) {
-		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
-	}
+	consume_token(lexer::TOK_SEMICOLON);
 
 	return new ASTUsingNode(library, row, col);
 }
@@ -131,7 +128,9 @@ ASTNode* Parser::parse_identifier() {
 		}
 		return expr;
 	}
-	else if (next_token.value == "[" || next_token.value == "=") {
+	else if (next_token.value == "[" || next_token.value == "=" || next_token.value == "+="
+		|| next_token.value == "-=" || next_token.value == "*=" || next_token.value == "/="
+		|| next_token.value == "%=") {
 		return parse_assignment_statement();
 	}
 	else {
@@ -213,9 +212,10 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 }
 
 ASTAssignmentNode* Parser::parse_assignment_statement() {
-	std::string identifier;
-	ASTExprNode* expr;
-	ASTExprNode* expr_size;
+	std::string identifier = std::string();
+	std::string op = std::string();
+	ASTExprNode* expr = nullptr;
+	ASTExprNode* expr_size = nullptr;
 	auto identifier_vector = std::vector<std::string>();
 	auto access_vector = std::vector<ASTExprNode*>();
 
@@ -244,7 +244,11 @@ ASTAssignmentNode* Parser::parse_assignment_statement() {
 		} while (current_token.type == lexer::TOK_LEFT_BRACE);
 	}
 
-	check_current_token(lexer::TOK_EQUALS);
+	if (current_token.type != lexer::TOK_ADDITIVE_OP && current_token.type != lexer::TOK_MULTIPLICATIVE_OP && current_token.type != lexer::TOK_EQUALS) {
+		throw std::runtime_error(msg_header() + "invalid assignment operator '" + current_token.value + "'");
+	}
+
+	op = current_token.value;
 
 	// parse the right hand side
 	consume_token();
@@ -255,7 +259,7 @@ ASTAssignmentNode* Parser::parse_assignment_statement() {
 		consume_token(lexer::TOK_SEMICOLON);
 	}
 
-	return new ASTAssignmentNode(identifier_vector[0], identifier_vector, expr, access_vector, row, col);
+	return new ASTAssignmentNode(identifier_vector, op, expr, access_vector, row, col);
 }
 
 ASTPrintNode* Parser::parse_print_statement() {

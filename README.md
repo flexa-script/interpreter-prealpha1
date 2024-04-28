@@ -28,9 +28,6 @@
 - [X] Remove mandatory variable type definition
 - [X] Fix cp dependencies/libs loader
 - [X] Add string array-like accessor
-- [ ] Improve error system (based on C)
-- [ ] Improve REPL:
-    - [ ] Now expressions can be executed in statements, dont need more to execute expression parser directly
 - [ ] Add statements:
     - [X] for
     - [X] foreach
@@ -38,18 +35,22 @@
     - [X] switch
     - [X] break
     - [X] continue
+    - [X] +=,-=,*=,/=,%= assignment
     - [ ] enum
     - [ ] try catch
 - [ ] Add expression operators:
-    - [ ] ++,--
-    - [ ] +=,-=,*=,/=,%=
+    - [X] ++,--
+    - [ ] Add 'in' operator to check if anything is in array/string
     - [ ] immediate if
-- [X] Let functions return array
-- [ ] Add lib scope lib.(method|properties)
 - [X] Add built in funcs:
     - [X] len: returns size of array/string
     - [X] round: round a float number
     - [X] type: returns type of object
+- [X] Let functions return array
+<!-- - [ ] Add lib scope lib.(method|properties) -->
+- [ ] Improve error system (based on C)
+- [ ] Improve REPL:
+    - [ ] Now expressions can be executed in statements, dont need more to execute expression parser directly
 - [ ] Add a default interface to implements core libs
 - [ ] Add core library:
     - [ ] File I/O
