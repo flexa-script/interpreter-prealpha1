@@ -47,7 +47,8 @@
     - [X] round: round a float number
     - [X] type: returns type of object
 - [X] Let functions return array
-<!-- - [ ] Add lib scope lib.(method|properties) -->
+- [X] Add lib scope lib.(method|properties|struct)
+- [ ] Flex function return (currently it's mandatory specificate the return type)
 - [ ] Improve error system (based on C)
 - [ ] Improve REPL:
     - [ ] Now expressions can be executed in statements, dont need more to execute expression parser directly

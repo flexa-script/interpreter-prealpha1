@@ -1,5 +1,13 @@
-const TEST2 = "bar";
+struct Node {
+    var value : any;
+    var next : Node;
+};
 
-def bar() : int {
-    return 10;
+struct List {
+    var value : Node;
+};
+
+def add(list : List, value : any) : List {
+    print("added " + string(value) + " to list\n");
+    return list;
 }

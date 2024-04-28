@@ -14,17 +14,14 @@ namespace visitor {
 
 	class SemanticAnalyser : Visitor {
 	private:
-		std::vector<parser::ASTProgramNode*> programs;
-		parser::ASTProgramNode* current_program;
 		std::vector<SemanticScope*> scopes;
 		std::stack<parser::Type> functions;
 		parser::Type current_expression_type;
 		parser::Type current_expression_array_type;
+		parser::FunctionDefinition_t current_function;
 		std::string current_expression_type_name;
 		bool is_function_definition_context;
 		bool current_expression_is_constant;
-		int array_level = 0;
-		std::vector<parser::VariableDefinition_t> current_function_parameters;
 
 	private:
 		bool is_any(parser::Type);
@@ -48,6 +45,9 @@ namespace visitor {
 		~SemanticAnalyser();
 
 		void start();
+
+		std::string get_namespace() override;
+
 		void visit(parser::ASTProgramNode*) override;
 		void visit(parser::ASTUsingNode*) override;
 		void visit(parser::ASTDeclarationNode*) override;

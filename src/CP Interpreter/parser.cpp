@@ -55,17 +55,25 @@ ASTProgramNode* Parser::parse_program() {
 ASTUsingNode* Parser::parse_using_statement() {
 	// node attributes
 	std::string library;
+	std::string alias;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	// consume using
+	// consume library identifier
 	consume_token();
 
 	library = current_token.value;
 
+	if (next_token.type == lexer::TOK_AS) {
+		consume_token();
+		consume_token();
+	}
+
+	alias = current_token.value;
+
 	consume_token(lexer::TOK_SEMICOLON);
 
-	return new ASTUsingNode(library, row, col);
+	return new ASTUsingNode(library, alias, row, col);
 }
 
 ASTNode* Parser::parse_program_statement() {
@@ -1003,7 +1011,7 @@ ASTExprNode* Parser::parse_factor() {
 			return parse_function_call_node();
 		case lexer::TOK_LEFT_CURLY:
 			return parse_struct_constructor_node();
-		case lexer::TOK_ADDITIVE_OP: { // unary expression case
+		case lexer::TOK_ADDITIVE_UN_OP: { // unary expression case
 			auto id = parse_identifier_node();
 			consume_token();
 			std::string current_token_value = current_token.value;
@@ -1104,7 +1112,7 @@ ASTIdentifierNode* Parser::parse_identifier_node() {
 		} while (next_token.type == lexer::TOK_LEFT_BRACE);
 	}
 
-	return new ASTIdentifierNode(identifier_vector[0], identifier_vector, access_vector, row, col);
+	return new ASTIdentifierNode(identifier_vector, access_vector, row, col);
 }
 
 ASTArrayConstructorNode* Parser::parse_array_constructor_node() {

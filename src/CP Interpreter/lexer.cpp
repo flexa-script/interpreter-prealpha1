@@ -199,6 +199,8 @@ Token Lexer::process_identifier() {
 		type = TOK_DEFAULT;
 	else if (identifier == "case")
 		type = TOK_CASE;
+	else if (identifier == "as")
+		type = TOK_AS;
 	else if (identifier == "in")
 		type = TOK_IN;
 	else if (identifier == "if")
@@ -284,6 +286,8 @@ Token Lexer::process_symbol() {
 	char symbol;
 	std::string str_symbol;
 	TokenType type;
+	bool is_unary = false;
+
 	symbol = current_char;
 	str_symbol = current_char;
 	advance();
@@ -291,11 +295,13 @@ Token Lexer::process_symbol() {
 	switch (symbol) {
 	case '-':
 		if (current_char == '-') {
+			is_unary = true;
 			str_symbol += current_char;
 			advance();
 		}
 	case '+':
 		if (current_char == '+') {
+			is_unary = true;
 			str_symbol += current_char;
 			advance();
 		}
@@ -303,7 +309,7 @@ Token Lexer::process_symbol() {
 			str_symbol += current_char;
 			advance();
 		}
-		type = TOK_ADDITIVE_OP;
+		type = is_unary ? TOK_ADDITIVE_UN_OP : TOK_ADDITIVE_OP;
 		break;
 
 	case '*':

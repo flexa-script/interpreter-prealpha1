@@ -14,9 +14,6 @@ namespace visitor {
 
 	class Interpreter : public Visitor {
 	private:
-		std::vector<parser::ASTProgramNode*> programs;
-		parser::ASTProgramNode* current_program;
-
 		std::vector<InterpreterScope*> scopes;
 
 		Value_t current_expression_value;
@@ -31,6 +28,8 @@ namespace visitor {
 		bool executed_elif = false;
 
 	private:
+		bool is_namespace(std::string);
+
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 		void declare_structure_variable(std::string, Value_t);
 		void declare_structure_definition_first_level_variables(cp_struct*);
@@ -52,6 +51,9 @@ namespace visitor {
 		~Interpreter();
 
 		void start();
+
+		std::string get_namespace() override;
+
 		void visit(parser::ASTProgramNode*) override;
 		void visit(parser::ASTUsingNode*) override;
 		void visit(parser::ASTDeclarationNode*) override;

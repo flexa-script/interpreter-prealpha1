@@ -18,31 +18,22 @@ VariableDefinition::VariableDefinition(std::string identifier, Type type, std::s
 	: identifier(identifier), type(type), type_name(type_name), any_type(any_type),
 	array_type(array_type), dim(dim), expr(nullptr), is_const(false), row(row), col(col), is_parameter(false) {};
 
-VariableDefinition::VariableDefinition()
-	: identifier(""), type(Type::T_ND), type_name(""), any_type(Type::T_ND), array_type(Type::T_ND),
-	dim(std::vector<ASTExprNode*>()), expr(nullptr), is_const(false), row(0), col(0), is_parameter(false) {};
-
 StructureDefinition::StructureDefinition(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
 	: identifier(identifier), variables(variables), row(row), col(col) {};
 
-StructureDefinition::StructureDefinition()
-	: identifier(""), variables(std::vector<VariableDefinition_t>()), row(0), col(0) {};
-
 FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, Type any_type, Type array_type,
-	std::vector<ASTExprNode*> dim, std::vector<parser::Type> signature, unsigned int row, unsigned int col)
-	: identifier(identifier), type(type), type_name(type_name), any_type(any_type), array_type(array_type), dim(dim), signature(signature), row(row), col(col) {};
-
-FunctionDefinition::FunctionDefinition()
-	: identifier(""), type(Type::T_ND), type_name(""), any_type(Type::T_ND), array_type(Type::T_ND), dim(std::vector<ASTExprNode*>()), signature(std::vector<parser::Type>()), row(0), col(0) {};
+	std::vector<ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition_t> parameters, unsigned int row, unsigned int col)
+	: identifier(identifier), type(type), type_name(type_name), any_type(any_type), array_type(array_type),
+	dim(dim), signature(signature), parameters(parameters), row(row), col(col) {};
 
 
 // Program Node
 ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string name)
-	: statements(std::move(statements)), name(name) {}
+	: statements(std::move(statements)), name(name), alias(name) {}
 
 // Statement Nodes
-ASTUsingNode::ASTUsingNode(std::string library, unsigned int row, unsigned int col)
-	: library(std::move(library)), row(row), col(col) {}
+ASTUsingNode::ASTUsingNode(std::string library, std::string alias, unsigned int row, unsigned int col)
+	: library(std::move(library)), alias(std::move(alias)), row(row), col(col) {}
 
 ASTDeclarationNode::ASTDeclarationNode(Type type, std::string type_name, std::string identifier, ASTExprNode* expr, bool is_const,
 	Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col)
@@ -115,8 +106,8 @@ ASTThisNode::ASTThisNode(unsigned int row, unsigned int col)
 ASTBinaryExprNode::ASTBinaryExprNode(std::string op, ASTExprNode* left, ASTExprNode* right, unsigned int row, unsigned int col)
 	: op(std::move(op)), left(left), right(right), row(row), col(col) {}
 
-ASTIdentifierNode::ASTIdentifierNode(std::string identifier, std::vector<std::string> identifier_vector, std::vector<ASTExprNode*> access_vector, unsigned int row, unsigned int col)
-	: identifier(std::move(identifier)), identifier_vector(identifier_vector), access_vector(access_vector), row(row), col(col) {}
+ASTIdentifierNode::ASTIdentifierNode(std::vector<std::string> identifier_vector, std::vector<ASTExprNode*> access_vector, unsigned int row, unsigned int col)
+	: identifier_vector(identifier_vector), access_vector(access_vector), row(row), col(col) {}
 
 ASTUnaryExprNode::ASTUnaryExprNode(std::string unary_op, ASTExprNode* expr, unsigned int row, unsigned int col)
 	: unary_op(std::move(unary_op)), expr(expr), row(row), col(col) {}

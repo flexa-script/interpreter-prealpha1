@@ -99,7 +99,16 @@ typedef struct Value {
 namespace visitor {
 	class Visitor {
 	public:
+		Visitor(std::vector<parser::ASTProgramNode*> programs, parser::ASTProgramNode* main_program, parser::ASTProgramNode* current_program)
+			: programs(programs), main_program(main_program), current_program(current_program) {};
+
+		std::vector<parser::ASTProgramNode*> programs;
+		parser::ASTProgramNode* main_program;
+		parser::ASTProgramNode* current_program;
 		std::string current_name;
+
+		virtual std::string get_namespace() = 0;
+
 		virtual void visit(parser::ASTProgramNode*) = 0;
 		virtual void visit(parser::ASTUsingNode*) = 0;
 		virtual void visit(parser::ASTDeclarationNode*) = 0;

@@ -58,6 +58,7 @@
     <ClInclude Include="interpreter.hpp" />
     <ClInclude Include="interpreter_scope.hpp" />
     <ClInclude Include="lexer.hpp" />
+    <ClInclude Include="modules.hpp" />
     <ClInclude Include="parser.hpp" />
     <ClInclude Include="semantic_analysis.hpp" />
     <ClInclude Include="semantic_scope.hpp" />

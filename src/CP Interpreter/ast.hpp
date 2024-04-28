@@ -14,7 +14,7 @@ namespace parser {
 	typedef struct VariableDefinition {
 		VariableDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, ASTExprNode*, bool, unsigned int, unsigned int, bool = false);
 		VariableDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, unsigned int, unsigned int);
-		VariableDefinition();
+		VariableDefinition() = default;
 		std::string identifier;
 		parser::Type type;
 		parser::Type any_type;
@@ -29,8 +29,9 @@ namespace parser {
 	} VariableDefinition_t;
 
 	typedef struct FunctionDefinition {
-		FunctionDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, std::vector<parser::Type>,unsigned int, unsigned int);
-		FunctionDefinition();
+		FunctionDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, std::vector<parser::Type>,
+			std::vector<parser::VariableDefinition_t>,unsigned int, unsigned int);
+		FunctionDefinition() = default;
 		std::string identifier;
 		parser::Type type;
 		parser::Type any_type;
@@ -38,13 +39,14 @@ namespace parser {
 		std::vector<ASTExprNode*> dim;
 		std::string type_name;
 		std::vector<parser::Type> signature;
+		std::vector<parser::VariableDefinition_t> parameters;
 		unsigned int row;
 		unsigned int col;
 	} FunctionDefinition_t;
 
 	typedef struct StructureDefinition {
 		StructureDefinition(std::string, std::vector<VariableDefinition_t>, unsigned int, unsigned int);
-		StructureDefinition() ;
+		StructureDefinition() = default;
 		std::string identifier;
 		std::vector<VariableDefinition_t> variables;
 		unsigned int row;
@@ -72,6 +74,7 @@ namespace parser {
 	class ASTProgramNode : public ASTNode {
 	public:
 		std::string name;
+		std::string alias;
 
 		explicit ASTProgramNode(std::vector<ASTNode*>, std::string);
 
@@ -82,9 +85,10 @@ namespace parser {
 
 	class ASTUsingNode : public ASTStatementNode {
 	public:
-		ASTUsingNode(std::string, unsigned int, unsigned int);
+		ASTUsingNode(std::string, std::string, unsigned int, unsigned int);
 
 		std::string library;
+		std::string alias;
 		unsigned int row;
 		unsigned int col;
 
@@ -364,9 +368,8 @@ namespace parser {
 
 	class ASTIdentifierNode : public ASTExprNode {
 	public:
-		explicit ASTIdentifierNode(std::string, std::vector<std::string>, std::vector<ASTExprNode*>, unsigned int, unsigned int);
+		explicit ASTIdentifierNode(std::vector<std::string>, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 
-		std::string identifier;
 		std::vector<std::string> identifier_vector;
 		std::vector<ASTExprNode*> access_vector;
 		unsigned int row;
