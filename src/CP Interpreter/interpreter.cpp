@@ -837,6 +837,8 @@ void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 }
 
 void visitor::Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
+	bool has_assign = false;
+
 	// update current expression
 	astnode->expr->accept(this);
 	switch (current_expression_value.curr_type) {
@@ -844,19 +846,67 @@ void visitor::Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
 		if (astnode->unary_op == "-") {
 			current_expression_value.set(cp_int(current_expression_value.i * -1));
 		}
-		break;
-	case parser::Type::T_FLOAT:
-		if (astnode->unary_op == "-")
-			current_expression_value.set(cp_float(current_expression_value.f * -1));
-		break;
-	case parser::Type::T_BOOL:
-		current_expression_value.set(cp_bool(current_expression_value.b ^ 1));
-		break;
-	case parser::Type::T_STRUCT:
-		if (astnode->unary_op == "not") {
-			current_expression_value.set(cp_bool(!current_expression_value.has_value));
+		else if (astnode->unary_op == "--") {
+			current_expression_value.set(cp_int(--current_expression_value.i));
+			has_assign = true;
+		}
+		else if (astnode->unary_op == "++") {
+			current_expression_value.set(cp_int(++current_expression_value.i));
+			has_assign = true;
 		}
 		break;
+	case parser::Type::T_FLOAT:
+		if (astnode->unary_op == "-") {
+			current_expression_value.set(cp_float(current_expression_value.f * -1));
+		}
+		else if (astnode->unary_op == "--") {
+			current_expression_value.set(cp_int(--current_expression_value.f));
+			has_assign = true;
+		}
+		else if (astnode->unary_op == "++") {
+			current_expression_value.set(cp_int(++current_expression_value.f));
+			has_assign = true;
+		}
+		break;
+	case parser::Type::T_BOOL:
+		current_expression_value.set(cp_bool(!current_expression_value.b));
+		break;
+	case parser::Type::T_STRUCT:
+		current_expression_value.set(cp_bool(!current_expression_value.has_value));
+		break;
+	}
+
+	if (has_assign) {
+		auto id = static_cast<parser::ASTIdentifierNode*>(astnode->expr);
+
+		size_t i;
+		for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(id->identifier); i--);
+
+		Value_t* value = scopes[i]->access_value(id->identifier_vector, id->access_vector);
+
+		switch (value->curr_type) {
+		case parser::Type::T_BOOL:
+			value->set(current_expression_value.b);
+			break;
+		case parser::Type::T_INT:
+			value->set(current_expression_value.i);
+			break;
+		case parser::Type::T_FLOAT:
+			value->set(current_expression_value.f);
+			break;
+		case parser::Type::T_CHAR:
+			value->set(current_expression_value.c);
+			break;
+		case parser::Type::T_STRING:
+			value->set(current_expression_value.s);
+			break;
+		case parser::Type::T_ARRAY:
+			value->set(current_expression_value.arr);
+			break;
+		case parser::Type::T_STRUCT:
+			value->set(current_expression_value.str);
+			break;
+		}
 	}
 }
 

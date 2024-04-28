@@ -38,8 +38,8 @@
     - [X] switch
     - [X] break
     - [X] continue
-    - [ ] try catch
     - [ ] enum
+    - [ ] try catch
 - [ ] Add expression operators:
     - [ ] ++,--
     - [ ] +=,-=,*=,/=,%=

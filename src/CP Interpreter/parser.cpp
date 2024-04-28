@@ -999,6 +999,12 @@ ASTExprNode* Parser::parse_factor() {
 			return parse_function_call_node();
 		case lexer::TOK_LEFT_CURLY:
 			return parse_struct_constructor_node();
+		case lexer::TOK_ADDITIVE_OP: { // unary expression case
+			auto id = parse_identifier_node();
+			consume_token();
+			std::string current_token_value = current_token.value;
+			return new ASTUnaryExprNode(current_token_value, id, row, col);
+		}
 		default:
 			return parse_identifier_node();
 		}

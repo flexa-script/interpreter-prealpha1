@@ -1038,18 +1038,18 @@ void SemanticAnalyser::visit(parser::ASTUnaryExprNode* astnode) {
 	switch (current_expression_type) {
 	case parser::Type::T_INT:
 	case parser::Type::T_FLOAT:
-		if (astnode->unary_op != "+" && astnode->unary_op != "-") {
-			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "operator '" + astnode->unary_op + "' in front of numerical expression.");
+		if (astnode->unary_op != "+" && astnode->unary_op != "-" && astnode->unary_op != "--" && astnode->unary_op != "++") {
+			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "operator '" + astnode->unary_op + "' in front of numerical expression");
 		}
 		break;
 	case parser::Type::T_BOOL:
 	case parser::Type::T_STRUCT:
 		if (astnode->unary_op != "not") {
-			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "operator '" + astnode->unary_op + "' in front of boolean expression.");
+			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "operator '" + astnode->unary_op + "' in front of boolean expression");
 		}
 		break;
 	default:
-		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "incompatible unary operator '" + astnode->unary_op + "' in front of expression.");
+		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "incompatible unary operator '" + astnode->unary_op + "' in front of expression");
 	}
 	current_expression_is_constant = false;
 }

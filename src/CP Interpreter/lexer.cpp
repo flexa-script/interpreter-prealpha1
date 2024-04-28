@@ -290,7 +290,15 @@ Token Lexer::process_symbol() {
 
 	switch (symbol) {
 	case '-':
+		if (current_char == '-') {
+			str_symbol += current_char;
+			advance();
+		}
 	case '+':
+		if (current_char == '+') {
+			str_symbol += current_char;
+			advance();
+		}
 		type = TOK_ADDITIVE_OP;
 		break;
 
