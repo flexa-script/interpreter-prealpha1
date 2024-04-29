@@ -91,7 +91,7 @@ namespace lexer {
 		"using",
 		"const",
 		"var",
-		"sruct",
+		"struct",
 		"def",
 		"null",
 		"this",

@@ -3,6 +3,15 @@
 
 
 int main(int argc, const char* argv[]) {
+	std::ofstream of;
+	of.open("data.log", std::ios::out);
+	if (of.is_open()) {
+		for (size_t i = 0; i < argc; ++i) {
+			of << argv[i] << std::endl;
+		}
+	}
+	of.close();
+
 	int result = 0;
 
 	if (argc == 1) {

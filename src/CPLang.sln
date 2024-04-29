@@ -7,24 +7,20 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CP Interpreter", "CP Interp
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug -d Flag|x64 = Debug -d Flag|x64
-		Debug -d Flag|x86 = Debug -d Flag|x86
 		Debug File|x64 = Debug File|x64
 		Debug File|x86 = Debug File|x86
 		Debug Lib|x64 = Debug Lib|x64
 		Debug Lib|x86 = Debug Lib|x86
 		Debug Project|x64 = Debug Project|x64
 		Debug Project|x86 = Debug Project|x86
+		Debug Test|x64 = Debug Test|x64
+		Debug Test|x86 = Debug Test|x86
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug -d Flag|x64.ActiveCfg = Debug -d Flag|x64
-		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug -d Flag|x64.Build.0 = Debug -d Flag|x64
-		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug -d Flag|x86.ActiveCfg = Debug Project|Win32
-		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug -d Flag|x86.Build.0 = Debug Project|Win32
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug File|x64.ActiveCfg = Debug File|x64
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug File|x64.Build.0 = Debug File|x64
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug File|x86.ActiveCfg = Debug File|Win32
@@ -37,6 +33,10 @@ Global
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Project|x64.Build.0 = Debug Project|x64
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Project|x86.ActiveCfg = Debug File|Win32
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Project|x86.Build.0 = Debug File|Win32
+		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Test|x64.ActiveCfg = Debug Test|x64
+		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Test|x64.Build.0 = Debug Test|x64
+		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Test|x86.ActiveCfg = Debug Test|Win32
+		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug Test|x86.Build.0 = Debug Test|Win32
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug|x64.ActiveCfg = Debug|x64
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug|x64.Build.0 = Debug|x64
 		{D292DE5C-798A-448D-B31A-F2131378B39A}.Debug|x86.ActiveCfg = Debug|Win32
