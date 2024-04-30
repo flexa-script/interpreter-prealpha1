@@ -18,14 +18,14 @@ Interpreter::Interpreter(InterpreterScope* globalScope, std::vector<parser::ASTP
 }
 
 Interpreter::Interpreter()
-	: current_expression_value(Value_t(parser::Type::T_ND)),
+	: current_expression_value(Value_t(parser::Type::T_ND)), is_function_context(false),
 	Visitor(std::vector<parser::ASTProgramNode*>(), nullptr, nullptr) {
 	// add global scope
 	scopes.push_back(new InterpreterScope(this, ""));
 }
 
 std::string visitor::Interpreter::get_namespace() {
-	if (current_program->alias != main_program->alias) {
+	if (!current_program->alias.empty() && !is_function_context && current_program->alias != main_program->name) {
 		return current_program->alias + ".";
 	}
 	return "";
@@ -1002,8 +1002,10 @@ void visitor::Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 
 	current_name = astnode->identifier;
 
+	is_function_context = true;
 	// visit the corresponding function block
 	std::get<2>(scopes[i]->find_declared_function(astnode->identifier, signature))->accept(this);
+	is_function_context = false;
 
 	current_name = current_program->name;
 }

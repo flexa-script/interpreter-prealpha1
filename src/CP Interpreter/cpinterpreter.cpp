@@ -3,11 +3,11 @@
 
 int CPInterpreter::execute(int argc, const char* argv[]) {
 	if (argc == 2) {
-		std::string arg = argv[1];
-		if (axe::tolower(arg) == "-d" || axe::tolower(arg) == "--debug") {
-			std::vector<Program> programs = debug_programs();
-			return interpreter(programs);
-		}
+		//std::string arg = argv[1];
+		//if (axe::tolower(arg) == "-d" || axe::tolower(arg) == "--debug") {
+		//	std::vector<Program> programs = debug_programs();
+		//	return interpreter(programs);
+		//}
 	}
 
 	std::vector<std::string> files;
@@ -72,35 +72,35 @@ int CPInterpreter::interpreter(std::vector<Program> source_programs) {
 	return EXIT_SUCCESS;
 }
 
-std::vector<Program> CPInterpreter::debug_programs() {
-	std::vector<Program> source_programs;
-
-	std::string source =
-		"using math;"
-		"def main() {"
-		"  print(\"Type a number: \");"
-		"  var number : float = float(read());"
-		"  print(\"Type the min number: \");"
-		"  var min : float = float(read());"
-		"  print(\"Type the max number: \");"
-		"  var max : float = float(read());"
-		"  var res : float = clamp(number, min, max);"
-		"  print(\"The clamped number is: \" + string(res) + \"\\n\");"
-		"}"
-		"main();";
-	source_programs.push_back(Program("main", source));
-
-	source =
-		"def clamp(val : float, min : float, max : float) : float {"
-		"  if (val > max) {"
-		"    return max;"
-		"  }"
-		"  if (val < min) {"
-		"    return min;"
-		"  }"
-		"  return val;"
-		"}";
-	source_programs.push_back(Program("math", source));
-
-	return source_programs;
-}
+//std::vector<Program> CPInterpreter::debug_programs() {
+//	std::vector<Program> source_programs;
+//
+//	std::string source =
+//		"using math;"
+//		"def main() {"
+//		"  print(\"Type a number: \");"
+//		"  var number : float = float(read());"
+//		"  print(\"Type the min number: \");"
+//		"  var min : float = float(read());"
+//		"  print(\"Type the max number: \");"
+//		"  var max : float = float(read());"
+//		"  var res : float = clamp(number, min, max);"
+//		"  print(\"The clamped number is: \" + string(res) + \"\\n\");"
+//		"}"
+//		"main();";
+//	source_programs.push_back(Program("main", source));
+//
+//	source =
+//		"def clamp(val : float, min : float, max : float) : float {"
+//		"  if (val > max) {"
+//		"    return max;"
+//		"  }"
+//		"  if (val < min) {"
+//		"    return min;"
+//		"  }"
+//		"  return val;"
+//		"}";
+//	source_programs.push_back(Program("math", source));
+//
+//	return source_programs;
+//}

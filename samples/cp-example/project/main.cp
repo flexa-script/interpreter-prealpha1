@@ -1,9 +1,35 @@
-using core.person as p;
-using list as l;
-using util.println as pl;
+using core.person;
+using list;
+using util.println;
 
-var persons : l.List = l.List{};
 
 if (this == "main") {
-  list.add(persons, p.Person{name="Carlos", age=29});
+    				var numbers: List = List{};
+
+    list_add(numbers, 10);
+    list_add(numbers, 20);
+    list_add(numbers, 40);
+    list_add(numbers, 50);
+    
+    list_print(numbers);
+    print("\n\n\n");
+    
+    print(string(list_at(numbers, 0)) + "\n\n");
+    print(string(list_at(numbers, 1)) + "\n\n");
+    print(string(list_at(numbers, 2)) + "\n\n");
+    print(string(list_at(numbers, 3)) + "\n\n");
+    print("\n\n");
+    
+    list_remove(numbers, 1);
+    list_print(numbers);
+    print("\n\n");
+    list_remove(numbers, 2);
+    list_print(numbers);
+    print("\n\n");
+    list_remove(numbers, 0);
+    list_print(numbers);
+    print("\n\n");
+    list_remove(numbers, 1);
+    list_print(numbers);
+    print("\n\n");
 }

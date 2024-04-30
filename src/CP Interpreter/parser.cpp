@@ -55,7 +55,7 @@ ASTProgramNode* Parser::parse_program() {
 ASTUsingNode* Parser::parse_using_statement() {
 	// node attributes
 	std::string library;
-	std::string alias;
+	std::string alias = "";
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -67,9 +67,9 @@ ASTUsingNode* Parser::parse_using_statement() {
 	if (next_token.type == lexer::TOK_AS) {
 		consume_token();
 		consume_token();
-	}
 
-	alias = current_token.value;
+		alias = current_token.value;
+	}
 
 	consume_token(lexer::TOK_SEMICOLON);
 

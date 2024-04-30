@@ -78,11 +78,6 @@ parser::FunctionDefinition_t SemanticScope::declare_function(std::string identif
 	return fun;
 }
 
-void SemanticScope::assign_variable(std::string identifier) {
-	auto var = variable_symbol_table[identifier];
-	variable_symbol_table[identifier] = var;
-}
-
 void SemanticScope::change_variable_type_name(std::string identifier, std::string type_name) {
 	auto var = variable_symbol_table[identifier];
 	var.type_name = type_name;

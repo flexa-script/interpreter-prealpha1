@@ -1,3 +1,4 @@
 def println(value: any) {
-  print(string(value) + '\n');
+  var lnc = '\n';
+  print(string(value) + lnc);
 }

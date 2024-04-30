@@ -29,7 +29,7 @@ FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::s
 
 // Program Node
 ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string name)
-	: statements(std::move(statements)), name(name), alias(name) {}
+	: statements(std::move(statements)), name(name), alias("") {}
 
 // Statement Nodes
 ASTUsingNode::ASTUsingNode(std::string library, std::string alias, unsigned int row, unsigned int col)
