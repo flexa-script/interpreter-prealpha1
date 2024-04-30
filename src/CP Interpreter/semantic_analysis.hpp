@@ -14,7 +14,7 @@ namespace visitor {
 
 	class SemanticAnalyser : Visitor {
 	private:
-		std::vector<SemanticScope*> scopes;
+		std::map<std::string, std::vector<SemanticScope*>> scopes;
 		std::stack<parser::Type> functions;
 		parser::Type current_expression_type;
 		parser::Type current_expression_array_type;
@@ -45,6 +45,7 @@ namespace visitor {
 
 		void start();
 
+		std::string get_libname() override;
 		std::string get_namespace() override;
 
 		void visit(parser::ASTProgramNode*) override;
