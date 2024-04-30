@@ -33,7 +33,7 @@ int CPRepl::execute() {
 
 		// help
 		else if (input_line == "#help") {
-			std::cout << "\n" << "Welcome to MiniLang 1.0.0! \n";
+			std::cout << "\n" << "Welcome to CPLang 1.0.0! \n";
 			std::cout << "To use this interactive REPL, just type in regular CP commands and hit\n";
 			std::cout << "enter. You can also make use of the following commands: \n\n";
 
@@ -43,7 +43,7 @@ int CPRepl::execute() {
 			std::cout << std::setw(20);
 			std::cout << "" << ">>> #load .\\main.cp\n\n";
 
-			std::cout << " #quit              Exits the MiniLang REPL.\n";
+			std::cout << " #quit              Exits the CPLang REPL.\n";
 			std::cout << std::setw(20);
 			std::cout << "" << "functions and variables in the global scope.\n\n";
 

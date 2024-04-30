@@ -9,7 +9,8 @@ using namespace visitor;
 
 
 SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, std::vector<parser::ASTProgramNode*> programs)
-	: current_expression_type(parser::Type::T_ND), current_expression_array_type(parser::Type::T_ND), current_expression_is_constant(false),
+	: current_expression_type(parser::Type::T_ND), current_expression_array_type(parser::Type::T_ND),
+	current_expression_is_constant(false), current_function(nullptr),
 	Visitor(programs, programs[0], programs[0]) {
 	// add global scope
 	scopes.push_back(global_scope);
@@ -517,14 +518,14 @@ void SemanticAnalyser::visit(parser::ASTReturnNode* astnode) {
 	// if we are not global, check that we return current function return type
 	if (!functions.empty()) {
 
-		if (current_function.any_type != parser::Type::T_ANY && current_expression_type != parser::Type::T_NULL
-			&& current_expression_type != current_function.any_type) {
-			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + current_function.identifier + "' function return type");
+		if (current_function->any_type != parser::Type::T_ANY && current_expression_type != parser::Type::T_NULL
+			&& current_expression_type != current_function->any_type) {
+			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + current_function->identifier + "' function return type");
 		}
-		if (current_function.any_type == parser::Type::T_ARRAY) {
+		if (current_function->any_type == parser::Type::T_ARRAY) {
 
 			std::vector<unsigned int> expr_dim;
-			std::vector<unsigned int> pars_dim = evaluate_access_vector(current_function.dim);
+			std::vector<unsigned int> pars_dim = evaluate_access_vector(current_function->dim);
 
 			if (parser::ASTArrayConstructorNode* arr_expr = dynamic_cast<parser::ASTArrayConstructorNode*>(astnode->expr)) {
 				determine_array_type(arr_expr);
@@ -536,26 +537,26 @@ void SemanticAnalyser::visit(parser::ASTReturnNode* astnode) {
 				current_expression_array_type = expr_variable.array_type;
 			}
 			else {
-				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + current_function.identifier + "' function return expression");
+				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + current_function->identifier + "' function return expression");
 			}
 
-			if (current_function.array_type != parser::Type::T_ANY && current_function.array_type != current_expression_array_type) {
-				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + current_function.identifier + "' function array type return");
+			if (current_function->array_type != parser::Type::T_ANY && current_function->array_type != current_expression_array_type) {
+				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + current_function->identifier + "' function array type return");
 			}
 
-			if (current_function.dim.size() != expr_dim.size()) {
-				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + current_function.identifier + "' array dimension return");
+			if (current_function->dim.size() != expr_dim.size()) {
+				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + current_function->identifier + "' array dimension return");
 			}
 
-			for (size_t dc = 0; dc < current_function.dim.size(); ++dc) {
-				if (current_function.dim.at(dc) && pars_dim.at(dc) != expr_dim.at(dc)) {
-					throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + current_function.identifier + "' array size return");
+			for (size_t dc = 0; dc < current_function->dim.size(); ++dc) {
+				if (current_function->dim.at(dc) && pars_dim.at(dc) != expr_dim.at(dc)) {
+					throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + current_function->identifier + "' array size return");
 				}
 			}
 		}
-		if (current_function.any_type == parser::Type::T_STRUCT) {
-			if (current_function.type_name != current_expression_type_name) {
-				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + current_function.identifier + "' function struct type return");
+		if (current_function->any_type == parser::Type::T_STRUCT) {
+			if (current_function->type_name != current_expression_type_name) {
+				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + current_function->identifier + "' function struct type return");
 			}
 		}
 
@@ -577,7 +578,7 @@ void SemanticAnalyser::visit(parser::ASTFunctionDefinitionNode* astnode) {
 			signature += ")";
 
 
-			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "function " + astnode->identifier + signature + " already defined");
+			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "function '" + astnode->identifier + signature + "' already defined");
 		}
 	}
 
@@ -606,11 +607,9 @@ void SemanticAnalyser::visit(parser::ASTBlockNode* astnode) {
 	// create new scope
 	scopes.push_back(new SemanticScope());
 
-	parser::FunctionDefinition_t func = current_function;
-
 	if (!functions.empty()) {
 		// check whether this is a function block by seeing if we have any current function parameters. If we do, then add them to the current scope.
-		for (auto param : current_function.parameters) {
+		for (auto param : current_function->parameters) {
 			scopes.back()->declare_variable(param.identifier, param.type, param.type_name, param.type, param.array_type,
 				param.dim, nullptr, param.is_const, param.row, param.col, true);
 		}
@@ -619,52 +618,6 @@ void SemanticAnalyser::visit(parser::ASTBlockNode* astnode) {
 	// visit each statement in the block
 	for (auto& stmt : astnode->statements) {
 		stmt->accept(this);
-
-		//if (!functions.empty()) {
-		//	if (auto ret = dynamic_cast<parser::ASTReturnNode*>(stmt)) {
-		//		ret->expr->accept(this);
-		//		if (func.any_type != parser::Type::T_ANY && current_expression_type != func.any_type) {
-		//			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + func.identifier + "' function return type");
-		//		}
-		//		if (func.any_type == parser::Type::T_ARRAY) {
-
-		//			std::vector<unsigned int> expr_dim;
-		//			std::vector<unsigned int> pars_dim = evaluate_access_vector(func.dim);
-
-		//			if (parser::ASTArrayConstructorNode* arr_expr = dynamic_cast<parser::ASTArrayConstructorNode*>(ret->expr)) {
-		//				determine_array_type(arr_expr);
-		//				expr_dim = calculate_array_dim_size(arr_expr);
-		//			}
-		//			else if (parser::ASTIdentifierNode* id_expr = dynamic_cast<parser::ASTIdentifierNode*>(ret->expr)) {
-		//				auto expr_variable = find_declared_variable_recursively(id_expr->identifier_vector[0]);
-		//				expr_dim = evaluate_access_vector(expr_variable.dim);
-		//				current_expression_array_type = expr_variable.array_type;
-		//			}
-		//			else {
-		//				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + func.identifier + "' function return expression");
-		//			}
-
-		//			if (func.array_type != parser::Type::T_ANY && func.array_type != current_expression_array_type) {
-		//				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + func.identifier + "' function array type return");
-		//			}
-
-		//			if (func.dim.size() != expr_dim.size()) {
-		//				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + func.identifier + "' array dimension return");
-		//			}
-
-		//			for (size_t dc = 0; dc < func.dim.size(); ++dc) {
-		//				if (func.dim.at(dc) && pars_dim.at(dc) != expr_dim.at(dc)) {
-		//					throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + func.identifier + "' array size return");
-		//				}
-		//			}
-		//		}
-		//		if (func.any_type == parser::Type::T_STRUCT) {
-		//			if (func.type_name != current_expression_type_name) {
-		//				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + func.identifier + "' function struct type return");
-		//			}
-		//		}
-		//	}
-		//}
 	}
 
 	// close scope
@@ -692,7 +645,7 @@ void SemanticAnalyser::visit(parser::ASTSwitchNode* astnode) {
 		}
 		astnode->parsed_case_blocks->emplace(hash, expr.second);
 		if (!current_expression_is_constant) {
-			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "error: expression is not an constant expression");
+			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "expression is not an constant expression");
 		}
 	}
 
