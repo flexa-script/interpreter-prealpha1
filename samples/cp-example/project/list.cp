@@ -18,6 +18,7 @@ struct List {
 def list_add(list: List, value: any) {
     if (not list.first) { 
         list.first = Node{value=value, next=null};
+        list.size = 0;
     } else {
         var prev_node: Node = Node{};
         var curr_node = list.first;
@@ -28,8 +29,8 @@ def list_add(list: List, value: any) {
         }
 
         curr_node.next = Node{value=value};
+        list.size++;
     }
-    list.size++;
 }
 
 def list_remove(list: List, index: int): bool {

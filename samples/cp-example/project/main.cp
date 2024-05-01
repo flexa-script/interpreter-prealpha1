@@ -4,7 +4,7 @@ using util.println;
 
 
 if (this == "main") {
-    				var numbers: List = List{};
+    var numbers: List = List{};
 
     list_add(numbers, 10);
     list_add(numbers, 20);
@@ -26,10 +26,10 @@ if (this == "main") {
     list_remove(numbers, 2);
     list_print(numbers);
     print("\n\n");
-    list_remove(numbers, 0);
+    list_remove(numbers, 2); // deveria gerar erro
     list_print(numbers);
     print("\n\n");
-    list_remove(numbers, 1);
+    list_remove(numbers, 0);
     list_print(numbers);
     print("\n\n");
 }
