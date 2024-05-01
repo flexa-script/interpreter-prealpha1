@@ -27,8 +27,8 @@ namespace visitor {
 
 		bool returns(parser::ASTNode*);
 
-		void assign_structure(std::string, parser::ASTStructConstructorNode*);
-		void declare_structure(std::string, std::string);
+		void assign_structure(SemanticScope*, std::string, parser::ASTStructConstructorNode*);
+		void declare_structure(SemanticScope*, std::string, std::string);
 
 		parser::VariableDefinition_t find_declared_variable_recursively(std::string);
 

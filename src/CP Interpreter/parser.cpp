@@ -232,8 +232,8 @@ ASTAssignmentNode* Parser::parse_assignment_statement() {
 
 	identifier = current_token.value;
 
-	if (axe::contains(identifier, ".")) {
-		identifier_vector = axe::split_vector(identifier, '.');
+	if (axe::Util::contains(identifier, ".")) {
+		identifier_vector = axe::Util::split_vector(identifier, '.');
 	}
 	else {
 		identifier_vector.push_back(identifier);
@@ -1093,8 +1093,8 @@ ASTIdentifierNode* Parser::parse_identifier_node() {
 	ASTExprNode* expr_size;
 	auto access_vector = std::vector<ASTExprNode*>();
 
-	if (axe::contains(current_token.value, ".")) {
-		identifier_vector = axe::split_vector(current_token.value, '.');
+	if (axe::Util::contains(current_token.value, ".")) {
+		identifier_vector = axe::Util::split_vector(current_token.value, '.');
 	}
 	else {
 		identifier_vector.push_back(current_token.value);

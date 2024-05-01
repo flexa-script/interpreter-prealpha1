@@ -128,9 +128,9 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 
 			parser::ASTStructConstructorNode* str_expr = static_cast<parser::ASTStructConstructorNode*>(astnode->expr);
 			if (str_expr && functions.empty()) {
-				assign_structure(get_namespace() + astnode->identifier, str_expr);
+				assign_structure(current_scope, get_namespace() + astnode->identifier, str_expr);
 			}
-			declare_structure(get_namespace() + astnode->identifier, str_type_name);
+			declare_structure(current_scope, get_namespace() + astnode->identifier, str_type_name);
 
 		}
 		else if (astnode->type == parser::Type::T_ARRAY) {
@@ -190,7 +190,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 	std::string actual_identifier = astnode->identifier_vector[0];
 	if (astnode->identifier_vector.size() > 1) {
-		actual_identifier = axe::join(astnode->identifier_vector, ".");
+		actual_identifier = axe::Util::join(astnode->identifier_vector, ".");
 	}
 
 	if (astnode->op != "=" && astnode->op != "+=" && astnode->op != "-=" && astnode->op != "*=" && astnode->op != "/=" && astnode->op != "%=") {
@@ -314,9 +314,12 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 	if (type == parser::Type::T_FLOAT && current_expression_type == parser::Type::T_INT ||
 		type == parser::Type::T_INT && current_expression_type == parser::Type::T_FLOAT) {
 	}
-	else if (is_any(type) || is_any(any_type)) {
+	else if (is_any(type)) {
 		scopes[i]->change_any_variable_type(actual_identifier, current_expression_type);
 		scopes[i]->change_variable_type_name(actual_identifier, current_expression_type_name);
+		if (!current_expression_type_name.empty()) {
+			declare_structure(scopes[i], actual_identifier, current_expression_type_name);
+		}
 	}
 	else if (type == parser::Type::T_STRUCT && (current_expression_type == parser::Type::T_STRUCT || current_expression_type == parser::Type::T_NULL)) {
 		std::string type_name = declared_variable.type_name;
@@ -328,11 +331,11 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 			parser::ASTStructConstructorNode* str_expr = static_cast<parser::ASTStructConstructorNode*>(astnode->expr);
 
 			if (str_expr) {
-				assign_structure(actual_identifier, str_expr);
+				assign_structure(scopes[i], actual_identifier, str_expr);
 			}
 		}
 		else {
-			declare_structure(actual_identifier, type_name);
+			declare_structure(scopes[i], actual_identifier, type_name);
 		}
 
 	}
@@ -383,19 +386,19 @@ std::vector<unsigned int> SemanticAnalyser::calculate_array_dim_size(parser::AST
 	return dim;
 }
 
-void SemanticAnalyser::declare_structure(std::string identifier, std::string type_name) {
+void SemanticAnalyser::declare_structure(SemanticScope* curr_scope, std::string identifier, std::string type_name) {
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->already_declared_structure_definition(type_name); --i);
 	auto type_struct = scopes[i]->find_declared_structure_definition(type_name);
 
 	for (auto var_type_struct : type_struct.variables) {
 		auto current_identifier = identifier + '.' + var_type_struct.identifier;
-		scopes.back()->declare_variable(current_identifier, var_type_struct.type, var_type_struct.type_name, var_type_struct.type, var_type_struct.array_type,
+		curr_scope->declare_variable(current_identifier, var_type_struct.type, var_type_struct.type_name, var_type_struct.type, var_type_struct.array_type,
 			var_type_struct.dim, nullptr, var_type_struct.is_const, var_type_struct.row, var_type_struct.col);
 	}
 }
 
-void SemanticAnalyser::assign_structure(std::string identifier, parser::ASTStructConstructorNode* expr) {
+void SemanticAnalyser::assign_structure(SemanticScope* curr_scope, std::string identifier, parser::ASTStructConstructorNode* expr) {
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->already_declared_structure_definition(expr->type_name); --i);
 	auto type_struct = scopes[i]->find_declared_structure_definition(expr->type_name);
@@ -414,15 +417,15 @@ void SemanticAnalyser::assign_structure(std::string identifier, parser::ASTStruc
 
 		if (var_type_struct) {
 			if (var_type_struct->type == parser::Type::T_STRUCT) {
-				scopes.back()->declare_variable(current_identifier, var_type_struct->type, var_type_struct->identifier, var_type_struct->type,
+				curr_scope->declare_variable(current_identifier, var_type_struct->type, var_type_struct->identifier, var_type_struct->type,
 					parser::Type::T_ND, var_type_struct->dim, nullptr, false, expr->row, expr->col);
 
 				if (parser::ASTStructConstructorNode* str_expr = static_cast<parser::ASTStructConstructorNode*>(str_value.second)) {
-					assign_structure(current_identifier, str_expr);
+					assign_structure(curr_scope, current_identifier, str_expr);
 				}
 			}
 			else {
-				scopes.back()->declare_variable(current_identifier, var_type_struct->type, var_type_struct->type_name, var_type_struct->type,
+				curr_scope->declare_variable(current_identifier, var_type_struct->type, var_type_struct->type_name, var_type_struct->type,
 					var_type_struct->array_type, var_type_struct->dim, nullptr, false, expr->row, expr->col);
 			}
 		}
@@ -441,8 +444,8 @@ parser::VariableDefinition_t SemanticAnalyser::find_declared_variable_recursivel
 		return scopes[i]->find_declared_variable(identifier);
 	}
 
-	if (axe::contains(identifier, ".")) {
-		std::list<std::string> identifiers = axe::split_list(identifier, '.');
+	if (axe::Util::contains(identifier, ".")) {
+		std::list<std::string> identifiers = axe::Util::split_list(identifier, '.');
 		parser::StructureDefinition_t str_def;
 		std::string type_name = "";
 
@@ -1014,7 +1017,7 @@ void SemanticAnalyser::visit(parser::ASTBinaryExprNode* astnode) {
 void SemanticAnalyser::visit(parser::ASTIdentifierNode* astnode) {
 	std::string actual_identifier = astnode->identifier_vector[0];
 	if (astnode->identifier_vector.size() > 1) {
-		actual_identifier = axe::join(astnode->identifier_vector, ".");
+		actual_identifier = axe::Util::join(astnode->identifier_vector, ".");
 	}
 
 	// determine the inner-most scope in which the value is declared
@@ -1169,13 +1172,13 @@ unsigned int SemanticAnalyser::hash(parser::ASTLiteralNode<cp_char>* astnode) {
 }
 
 unsigned int SemanticAnalyser::hash(parser::ASTLiteralNode<cp_string>* astnode) {
-	return axe::hashcode(astnode->val);
+	return axe::Util::hashcode(astnode->val);
 }
 
 unsigned int SemanticAnalyser::hash(parser::ASTIdentifierNode* astnode) {
 	std::string actual_identifier = astnode->identifier_vector[0];
 	if (astnode->identifier_vector.size() > 1) {
-		actual_identifier = axe::join(astnode->identifier_vector, ".");
+		actual_identifier = axe::Util::join(astnode->identifier_vector, ".");
 	}
 
 	// determine the inner-most scope in which the value is declared

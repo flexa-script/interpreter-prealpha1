@@ -3,6 +3,7 @@
 
 #include "interpreter.hpp"
 #include "util.hpp"
+#include "watch.h"
 
 
 using namespace visitor;
@@ -156,7 +157,10 @@ std::vector<unsigned int> Interpreter::evaluate_access_vector(std::vector<parser
 }
 
 cp_int visitor::Interpreter::do_operation(cp_int lval, cp_int rval, std::string op) {
-	if (op == "+=") {
+	if (op == "=") {
+		return rval;
+	}
+	else if (op == "+=") {
 		return lval + rval;
 	}
 	else if (op == "-=") {
@@ -174,7 +178,10 @@ cp_int visitor::Interpreter::do_operation(cp_int lval, cp_int rval, std::string 
 }
 
 cp_float visitor::Interpreter::do_operation(cp_float lval, cp_float rval, std::string op) {
-	if (op == "+=") {
+	if (op == "=") {
+		return rval;
+	}
+	else if (op == "+=") {
 		return lval + rval;
 	}
 	else if (op == "-=") {
@@ -1256,7 +1263,7 @@ unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_char>* astnode
 }
 
 unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_string>* astnode) {
-	return axe::hashcode(astnode->val);
+	return axe::Util::hashcode(astnode->val);
 }
 
 unsigned int visitor::Interpreter::hash(parser::ASTIdentifierNode* astnode) {
@@ -1276,6 +1283,6 @@ unsigned int visitor::Interpreter::hash(parser::ASTIdentifierNode* astnode) {
 	case parser::Type::T_CHAR:
 		return static_cast<unsigned int>(value->c);
 	case parser::Type::T_STRING:
-		return axe::hashcode(value->s);
+		return axe::Util::hashcode(value->s);
 	}
 }

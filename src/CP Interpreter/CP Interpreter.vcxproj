@@ -66,13 +66,16 @@
     <ClInclude Include="interpreter.hpp" />
     <ClInclude Include="interpreter_scope.hpp" />
     <ClInclude Include="lexer.hpp" />
+    <ClInclude Include="logging.hpp" />
     <ClInclude Include="modules.hpp" />
+    <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="parser.hpp" />
     <ClInclude Include="semantic_analysis.hpp" />
     <ClInclude Include="semantic_scope.hpp" />
     <ClInclude Include="token.hpp" />
     <ClInclude Include="util.hpp" />
     <ClInclude Include="visitor.hpp" />
+    <ClInclude Include="watch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ast.cpp" />
@@ -82,6 +85,7 @@
     <ClCompile Include="interpreter.cpp" />
     <ClCompile Include="interpreter_scope.cpp" />
     <ClCompile Include="lexer.cpp" />
+    <ClCompile Include="logging.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="semantic_analysis.cpp" />

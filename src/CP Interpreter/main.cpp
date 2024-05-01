@@ -1,16 +1,18 @@
 #include "cprepl.hpp"
 #include "cpinterpreter.hpp"
+#include "logging.hpp"
+#include "watch.h"
 
 
 int main(int argc, const char* argv[]) {
-	//std::ofstream of;
-	//of.open("data.log", std::ios::out);
-	//if (of.is_open()) {
-	//	for (size_t i = 0; i < argc; ++i) {
-	//		of << argv[i] << std::endl;
-	//	}
-	//}
-	//of.close();
+	auto log = axe::Logger(axe::DEBUG, ".\\data.log");
+
+	for (int i = 0; i < argc; ++i) {
+		log.debug(argv[i]);
+	}
+
+	auto sw = ChronoStopwatch();
+	sw.start();
 
 	int result = 0;
 
@@ -20,6 +22,9 @@ int main(int argc, const char* argv[]) {
 
 	auto interpreter = CPInterpreter();
 	result = interpreter.execute(argc, argv);
+
+	sw.stop();
+	std::cout << sw.get_elapsed_formatted() << std::endl;
 
 	system("pause");
 	return result;
