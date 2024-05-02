@@ -311,7 +311,8 @@ void visitor::Interpreter::visit(parser::ASTReturnNode* astnode) {
 
 void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	// create new scope
-	scopes.push_back(new InterpreterScope(this, current_name));
+	scopes.push_back(new InterpreterScope(this, current_function_name));
+	current_function_name = "";
 
 	// check whether this is a function block by seeing if we have any current function parameters
 	// if we do, then add them to the current scope
@@ -1008,6 +1009,7 @@ void visitor::Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 	current_function_parameters = std::get<1>(scopes[i]->find_declared_function(astnode->identifier, signature));
 
 	current_name = astnode->identifier;
+	current_function_name = astnode->identifier;
 
 	is_function_context = true;
 	// visit the corresponding function block

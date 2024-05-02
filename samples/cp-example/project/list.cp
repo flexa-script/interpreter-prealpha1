@@ -15,10 +15,19 @@ struct List {
     var size: int;
 };
 
+
+def list_new(): List {
+    return List{first=null, size=0};
+}
+
+def list_init(list: List) {
+    list = list_new();
+}
+
 def list_add(list: List, value: any) {
     if (not list.first) { 
         list.first = Node{value=value, next=null};
-        list.size = 0;
+        list.size = 1;
     } else {
         var prev_node: Node = Node{};
         var curr_node = list.first;
@@ -34,9 +43,12 @@ def list_add(list: List, value: any) {
 }
 
 def list_remove(list: List, index: int): bool {
+    // print("list.size: " + string(list.size) + "\n index: "+string(index));
     if (index >= list.size) {
+        // print("entrou\n");
         return false;
     }
+    // print("continuou\n");
     
     if (index == 0) { 
         list.first = list.first.next;

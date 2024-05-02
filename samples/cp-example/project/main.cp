@@ -6,30 +6,39 @@ using util.println;
 if (this == "main") {
     var numbers: List = List{};
 
+    print("List init: size: " + string(numbers.size) + "\n");
+
     list_add(numbers, 10);
+    print("add 10: size: " + string(numbers.size) + "\n");
     list_add(numbers, 20);
-    list_add(numbers, 40);
-    list_add(numbers, 50);
+    print("add 20: size: " + string(numbers.size) + "\n");
+    // list_add(numbers, 40);
+    // list_add(numbers, 50);
+    print("antes print: size: " + string(numbers.size) + "\n");
     
     list_print(numbers);
     print("\n\n\n");
+
+    print("at: size: " + string(numbers.size) + "\n");
     
     print(string(list_at(numbers, 0)) + "\n\n");
     print(string(list_at(numbers, 1)) + "\n\n");
-    print(string(list_at(numbers, 2)) + "\n\n");
-    print(string(list_at(numbers, 3)) + "\n\n");
-    print("\n\n");
+    // print(string(list_at(numbers, 2)) + "\n\n");
+    // print(string(list_at(numbers, 3)) + "\n\n");
+    print("\n");
     
-    list_remove(numbers, 1);
-    list_print(numbers);
-    print("\n\n");
-    list_remove(numbers, 2);
-    list_print(numbers);
-    print("\n\n");
+    print("remove: size: " + string(numbers.size) + "\n");
+    // list_remove(numbers, 1);
+    // list_print(numbers);
+    // print("\n\n");
+    // list_remove(numbers, 2);
+    // list_print(numbers);
+    // print("\n\n");
     list_remove(numbers, 2); // deveria gerar erro
     list_print(numbers);
     print("\n\n");
-    list_remove(numbers, 0);
-    list_print(numbers);
-    print("\n\n");
+    print("fim: size: " + string(numbers.size) + "\n");
+    // list_remove(numbers, 0);
+    // list_print(numbers);
+    // print("\n\n");
 }

@@ -19,8 +19,9 @@ namespace visitor {
 		Value_t current_expression_value;
 		std::vector<std::string> current_function_parameters;
 		std::vector<std::pair<parser::Type, Value_t*>> current_function_arguments;
-		std::string return_from_function_name;
+		std::string current_function_name;
 		bool is_function_context;
+		std::string return_from_function_name;
 		bool return_from_function = false;
 		bool is_switch = false;
 		bool is_loop = false;
