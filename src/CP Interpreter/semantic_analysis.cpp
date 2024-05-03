@@ -9,7 +9,7 @@ using namespace visitor;
 
 
 SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, std::vector<parser::ASTProgramNode*> programs)
-	: current_expression_type(parser::Type::T_ND), current_expression_array_type(parser::Type::T_ND), current_expression_is_constant(false),
+	: current_expression_type(parser::Type::T_UNDEF), current_expression_array_type(parser::Type::T_UNDEF), current_expression_is_constant(false),
 	Visitor(programs, programs[0], programs[0]) {
 	// add global scope
 	scopes.push_back(global_scope);
@@ -48,7 +48,7 @@ void SemanticAnalyser::visit(parser::ASTUsingNode* astnode) {
 }
 
 bool SemanticAnalyser::is_any(parser::Type type) {
-	return type == parser::Type::T_ANY || type == parser::Type::T_NULL;
+	return type == parser::Type::T_ANY || type == parser::Type::T_VOID;
 }
 
 void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
@@ -68,7 +68,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 	if (astnode->expr) {
 		astnode->expr->accept(this);
 		expr_type = current_expression_type;
-		expr_array_type = current_expression_array_type != parser::Type::T_ND ? current_expression_array_type : expr_array_type;
+		expr_array_type = current_expression_array_type != parser::Type::T_UNDEF ? current_expression_array_type : expr_array_type;
 		expr_type_name = current_expression_type_name;
 	}
 	else {
@@ -89,7 +89,8 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 	}
 	// equal types and special types (any, struct and array)
 	else if (astnode->type == expr_type || is_any(astnode->type)
-		|| astnode->type == parser::Type::T_STRUCT || astnode->type == parser::Type::T_ARRAY) { // types match
+		|| astnode->type == parser::Type::T_STRUCT || astnode->type == parser::Type::T_ARRAY
+		|| !astnode->expr || current_expression_type == parser::Type::T_VOID) { // types match
 
 		// handle struct
 		if (astnode->type == parser::Type::T_STRUCT || expr_type == parser::Type::T_STRUCT) {
@@ -146,7 +147,7 @@ void SemanticAnalyser::visit(parser::ASTDeclarationNode* astnode) {
 			}
 
 			if (astnode->expr) {
-				if (expr_type != parser::Type::T_ARRAY && expr_type != parser::Type::T_NULL) {
+				if (expr_type != parser::Type::T_ARRAY && expr_type != parser::Type::T_VOID) {
 					throw std::runtime_error(msg_header(astnode->row, astnode->col) + "expected array expression assigning '" + astnode->identifier + "'");
 				}
 
@@ -203,7 +204,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 	for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(!functions.empty() ? astnode->identifier_vector[0] : actual_identifier); i--) {
 		if (i <= 0) {
 			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "identifier '" + actual_identifier +
-				"' being reassigned was never declared " + ((scopes.size() == 1) ? "globally" : "in this scope"));
+				"' being reassigned was never declared");
 		}
 	}
 
@@ -213,7 +214,7 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 	parser::Type any_type;
 
 	// check if the base variable is not null
-	if (declared_variable.type == parser::Type::T_NULL && !declared_variable.is_parameter) {
+	if (declared_variable.type == parser::Type::T_VOID && !declared_variable.is_parameter) {
 		// struct
 		if (astnode->identifier_vector.size() > 1) {
 			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "trying assign '" + actual_identifier + "' but '" + astnode->identifier_vector[0] + "' is null");
@@ -322,9 +323,9 @@ void SemanticAnalyser::visit(parser::ASTAssignmentNode* astnode) {
 			declare_structure(scopes[i], actual_identifier, current_expression_type_name);
 		}
 	}
-	else if (type == parser::Type::T_STRUCT && (current_expression_type == parser::Type::T_STRUCT || current_expression_type == parser::Type::T_NULL)) {
+	else if (type == parser::Type::T_STRUCT && (current_expression_type == parser::Type::T_STRUCT || current_expression_type == parser::Type::T_VOID)) {
 		std::string type_name = declared_variable.type_name;
-		if (current_expression_type_name != type_name && current_expression_type != parser::Type::T_NULL) {
+		if (current_expression_type_name != type_name && current_expression_type != parser::Type::T_VOID) {
 			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "mismatched type for '" + actual_identifier + "' struct, expected '" + type_name + "', found '" + current_expression_type_name + "'");
 		}
 
@@ -361,7 +362,8 @@ void SemanticAnalyser::check_array_type(parser::ASTExprNode* astnode, unsigned i
 	auto aux_curr_type = current_expression_type;
 	astnode->accept(this);
 
-	if (current_expression_array_type == parser::Type::T_ANY || current_expression_array_type == parser::Type::T_ND || current_expression_array_type == parser::Type::T_NULL || current_expression_array_type == parser::Type::T_VOID) {
+	if (current_expression_array_type == parser::Type::T_ANY || current_expression_array_type == parser::Type::T_UNDEF
+		|| current_expression_array_type == parser::Type::T_NULL || current_expression_array_type == parser::Type::T_VOID) {
 		current_expression_array_type = current_expression_type;
 	}
 	if (current_expression_array_type != current_expression_type) {
@@ -415,7 +417,7 @@ void SemanticAnalyser::assign_structure(SemanticScope* curr_scope, std::string i
 		if (var_type_struct) {
 			if (var_type_struct->type == parser::Type::T_STRUCT) {
 				curr_scope->declare_variable(current_identifier, var_type_struct->type, var_type_struct->identifier, var_type_struct->type,
-					parser::Type::T_ND, var_type_struct->dim, nullptr, false, expr->row, expr->col);
+					parser::Type::T_UNDEF, var_type_struct->dim, nullptr, false, expr->row, expr->col);
 
 				if (auto str_expr = dynamic_cast<parser::ASTStructConstructorNode*>(str_value.second)) {
 					assign_structure(curr_scope, current_identifier, str_expr);
@@ -519,7 +521,7 @@ void SemanticAnalyser::visit(parser::ASTReturnNode* astnode) {
 
 		auto true_type = current_function.any_type == parser::Type::T_ARRAY ? current_function.array_type : current_function.any_type;
 
-		if (true_type != parser::Type::T_ANY && current_expression_type != parser::Type::T_NULL
+		if (true_type != parser::Type::T_ANY && current_expression_type != parser::Type::T_VOID
 			&& current_expression_type != true_type) {
 			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + current_function.identifier + "' function return type");
 		}
@@ -931,7 +933,7 @@ void SemanticAnalyser::visit(parser::ASTStructConstructorNode* astnode) {
 
 		expr.second->accept(this);
 
-		if (var_type_struct->type != parser::Type::T_ANY && current_expression_type != parser::Type::T_NULL && var_type_struct->type != current_expression_type) {
+		if (var_type_struct->type != parser::Type::T_ANY && current_expression_type != parser::Type::T_VOID && var_type_struct->type != current_expression_type) {
 			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid type " + parser::type_str(var_type_struct->type) + " trying to assign '" + astnode->type_name + "' struct");
 		}
 	}
@@ -1144,7 +1146,7 @@ void SemanticAnalyser::visit(parser::ASTRoundNode* astnode) {
 }
 
 void SemanticAnalyser::visit(parser::ASTNullNode* astnode) {
-	current_expression_type = parser::Type::T_NULL;
+	current_expression_type = parser::Type::T_VOID;
 	current_expression_is_constant = false;
 }
 

@@ -49,6 +49,7 @@
 - [X] Let functions return array
 - [X] Add lib scope lib.(method|properties|struct)
 - [X] Flex function return (currently it's mandatory specificate the return type)
+- [ ] Move function body parser to caller node (as interpreter), to check parameters of each caller
 - [ ] Improve error system (based on C)
 - [ ] Improve REPL:
     - [ ] Now expressions can be executed in statements, dont need more to execute expression parser directly

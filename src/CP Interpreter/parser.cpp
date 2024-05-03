@@ -147,8 +147,8 @@ ASTNode* Parser::parse_identifier() {
 }
 
 ASTDeclarationNode* Parser::parse_declaration_statement() {
-	Type type = Type::T_ND;
-	current_array_type = Type::T_ND;
+	Type type = Type::T_UNDEF;
+	current_array_type = Type::T_UNDEF;
 	std::string identifier;
 	std::string type_name = "";
 	ASTExprNode* expr;
@@ -181,13 +181,13 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 
 	if (current_token.type == lexer::TOK_COLON) {
 		consume_token();
-		if (type == Type::T_ND) {
+		if (type == Type::T_UNDEF) {
 			type = parse_type();
 		}
 		else if (type == Type::T_ARRAY) {
 			current_array_type = parse_type();
 
-			if (current_array_type == parser::Type::T_ND || current_array_type == parser::Type::T_NULL || current_array_type == parser::Type::T_ARRAY) {
+			if (current_array_type == parser::Type::T_UNDEF || current_array_type == parser::Type::T_NULL || current_array_type == parser::Type::T_ARRAY) {
 				current_array_type = parser::Type::T_ANY;
 			}
 		}
@@ -212,7 +212,7 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 		expr = nullptr;
 	}
 
-	if (type == Type::T_ND) {
+	if (type == Type::T_UNDEF) {
 		type = Type::T_ANY;
 	}
 
@@ -688,7 +688,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	std::string identifier;
 	std::vector<VariableDefinition_t> parameters;
 	Type type;
-	Type array_type = parser::Type::T_ND;
+	Type array_type = parser::Type::T_UNDEF;
 	std::string type_name = "";
 	ASTBlockNode* block;
 	ASTExprNode* expr;
@@ -816,7 +816,7 @@ ASTStructDefinitionNode* Parser::parse_struct_definition() {
 VariableDefinition_t* Parser::parse_formal_param() {
 	std::string identifier;
 	std::string type_name;
-	Type type = Type::T_ND;
+	Type type = Type::T_UNDEF;
 	ASTExprNode* expr_size;
 	auto access_vector = std::vector<ASTExprNode*>();
 	unsigned int row = current_token.row;

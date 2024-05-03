@@ -11,7 +11,7 @@ struct Value;
 
 namespace parser {
 	enum class Type {
-		T_ND, T_VOID, T_NULL, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ANY, T_ARRAY, T_STRUCT
+		T_UNDEF, T_VOID, T_NULL, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ANY, T_ARRAY, T_STRUCT
 	};
 	std::string type_str(Type t);
 

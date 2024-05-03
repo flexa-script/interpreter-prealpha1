@@ -10,7 +10,7 @@ using namespace visitor;
 
 
 Interpreter::Interpreter(InterpreterScope* globalScope, std::vector<parser::ASTProgramNode*> programs)
-	: current_expression_value(Value_t(parser::Type::T_ND)),
+	: current_expression_value(Value_t(parser::Type::T_UNDEF)), is_function_context(false),
 	Visitor(programs, programs[0], programs[0]) {
 	// add global scope
 	current_name = current_program->name;
@@ -19,7 +19,7 @@ Interpreter::Interpreter(InterpreterScope* globalScope, std::vector<parser::ASTP
 }
 
 Interpreter::Interpreter()
-	: current_expression_value(Value_t(parser::Type::T_ND)), is_function_context(false),
+	: current_expression_value(Value_t(parser::Type::T_UNDEF)), is_function_context(false),
 	Visitor(std::vector<parser::ASTProgramNode*>(), nullptr, nullptr) {
 	// add global scope
 	scopes.push_back(new InterpreterScope(this, ""));
@@ -721,7 +721,7 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* astnode) {
 	Value_t r_value = current_expression_value;
 
 	// expression struct
-	Value_t value = Value_t(parser::Type::T_ND);
+	Value_t value = Value_t(parser::Type::T_UNDEF);
 
 	// arithmetic operators for now
 	if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%") {
@@ -984,7 +984,7 @@ void visitor::Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 	// for each parameter
 	for (auto param : astnode->parameters) {
 		// visit to update current expr type
-		param->accept(this);
+ 		param->accept(this);
 
 		// add the type of current expr to signature
 		signature.push_back(current_expression_value.curr_type);
@@ -997,7 +997,7 @@ void visitor::Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 	}
 
 	// update the global vector current_function_arguments
-	for (auto arg : current_function_arguments) {
+	for (auto& arg : current_function_arguments) {
 		this->current_function_arguments.push_back(arg);
 	}
 

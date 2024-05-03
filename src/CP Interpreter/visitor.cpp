@@ -4,8 +4,8 @@
 namespace parser {
 	std::string type_str(Type t) {
 		switch (t) {
-		case parser::Type::T_ND:
-			return "none";
+		case parser::Type::T_UNDEF:
+			return "undefined";
 		case parser::Type::T_VOID:
 			return "void";
 		case parser::Type::T_NULL:

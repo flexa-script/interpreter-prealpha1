@@ -4,8 +4,12 @@ using util.println;
 
 
 if (this == "main") {
-    var numbers: List = list_create();
+    var numbers: List;
+    list_init(numbers);
+    // var numbers: List = list_create();
     // var numbers: List = List{};
+    
+    print("numbers: " + string(numbers) + "\n");
 
     // print("List init: size: " + string(numbers.size) + "\n");
 
