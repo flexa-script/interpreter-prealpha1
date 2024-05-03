@@ -16,12 +16,12 @@ struct List {
 };
 
 
-def list_new(): List {
+def list_create(): List {
     return List{first=null, size=0};
 }
 
 def list_init(list: List) {
-    list = list_new();
+    list = list_create();
 }
 
 def list_add(list: List, value: any) {
@@ -68,7 +68,7 @@ def list_remove(list: List, index: int): bool {
     return true;
 }
 
-def list_at(list: List, index: int): any {
+def list_get(list: List, index: int): any {
     if (index >= list.size) {
         return null;
     }
@@ -80,6 +80,16 @@ def list_at(list: List, index: int): any {
     }
     
     return node.value;
+}
+
+def list_is_empty(list: List): bool {
+    return list.size == 0;
+}
+
+def list_iterator(list: List): any[] {
+    var arr[]: any;
+    arr[0] = list.first.value;
+    return arr;
 }
 
 def list_print(list : List) {

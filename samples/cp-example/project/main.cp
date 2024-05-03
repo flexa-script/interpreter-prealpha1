@@ -4,7 +4,8 @@ using util.println;
 
 
 if (this == "main") {
-    var numbers: List = List{};
+    var numbers: List = list_create();
+    // var numbers: List = List{};
 
     // print("List init: size: " + string(numbers.size) + "\n");
 
@@ -22,11 +23,11 @@ if (this == "main") {
 
     // print("at: size: " + string(numbers.size) + "\n");
     
-    print(string(list_at(numbers, 0)) + "\n\n");
-    print(string(list_at(numbers, 1)) + "\n\n");
-    print(string(list_at(numbers, 2)) + "\n\n");
-    print(string(list_at(numbers, 3)) + "\n\n");
-    print(string(list_at(numbers, 4)) + "\n\n");
+    print(string(list_get(numbers, 0)) + "\n\n");
+    print(string(list_get(numbers, 1)) + "\n\n");
+    print(string(list_get(numbers, 2)) + "\n\n");
+    print(string(list_get(numbers, 3)) + "\n\n");
+    print(string(list_get(numbers, 4)) + "\n\n");
     print("\n");
     
     // print("remove: size: " + string(numbers.size) + "\n");
@@ -46,4 +47,6 @@ if (this == "main") {
     list_remove(numbers, 0);
     list_print(numbers);
     print("\n\n");
+
+    print(list_iterator(numbers));
 }
