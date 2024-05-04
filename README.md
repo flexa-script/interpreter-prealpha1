@@ -36,6 +36,7 @@
     - [X] break
     - [X] continue
     - [X] +=,-=,*=,/=,%= assignment
+    - [ ] exit
     - [ ] enum
     - [ ] try catch
 - [ ] Add expression operators:
@@ -49,6 +50,7 @@
 - [X] Let functions return array
 - [X] Add lib scope lib.(method|properties|struct)
 - [X] Flex function return (currently it's mandatory specificate the return type)
+- [ ] Remove struct as bool in expression and change this type of verification to void value comparation (eg: var == null)
 - [ ] Move function body parser to caller node (as interpreter), to check parameters of each caller
 - [ ] Improve error system (based on C)
 - [ ] Improve REPL:
@@ -79,10 +81,10 @@
 ## Rules
 
 ### Arrays
-- If an array don't have your size defined, it can be assigned and reassigned of all sizes. Altought must respect the dimension
-- If an array has your size defined in declaration, it can just assigned and reassigned with a same size and dimension array expression
+- If an array don't have your size defined, it can be assigned and reassigned of all sizes. Altought must respect the dimension.
+- If an array has your size defined in declaration, it can just assigned and reassigned with a same size and dimension array expression.
 
 ### Types
-- If an variable is not defined, it's undef, and it can be initialized with null or a value
-- Variable has a type, if it is defined, it is fixed, else it will be any and the type can change
-- If a variable is not an array, it can not be assined, even if it be any
+- If an variable is not defined, it's undef, and it can be initialized with null or a value.
+- Variable has a type, if it is defined, it is fixed, else it will be any and the type can change.
+- If a variable is not an array, it can not be assined, even if it be any.

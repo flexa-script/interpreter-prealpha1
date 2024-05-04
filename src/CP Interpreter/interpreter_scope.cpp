@@ -109,7 +109,7 @@ Value_t* InterpreterScope::declare_variable(std::string identifier, cp_struct st
 	return value;
 }
 
-void InterpreterScope::declare_structure_definition(std::string name, std::vector<parser::VariableDefinition_t*> variables, unsigned int row, unsigned int col) {
+void InterpreterScope::declare_structure_definition(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
 	parser::StructureDefinition_t type(name, variables, row, col);
 	structure_symbol_table[name] = (type);
 }

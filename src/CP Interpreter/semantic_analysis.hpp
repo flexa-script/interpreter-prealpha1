@@ -16,21 +16,17 @@ namespace visitor {
 	private:
 		std::vector<SemanticScope*> scopes;
 		std::stack<parser::Type> functions;
-		parser::Type current_expression_type;
-		parser::Type current_expression_array_type;
+		parser::SemanticVariable_t current_variable_expression;
+		parser::SemanticExpression_t current_expression;
 		parser::FunctionDefinition_t current_function;
-		std::string current_expression_type_name;
-		bool current_expression_is_constant;
 
 	private:
-		bool is_any(parser::Type);
-
 		bool returns(parser::ASTNode*);
 
-		void assign_structure(SemanticScope*, std::string, parser::ASTStructConstructorNode*);
-		void declare_structure(SemanticScope*, std::string, std::string);
+		void assign_structure(SemanticScope*, parser::SemanticExpression_t*, parser::ASTStructConstructorNode*);
+		void declare_structure();
 
-		parser::VariableDefinition_t* find_declared_variable_recursively(std::string);
+		parser::SemanticVariable_t* find_declared_variable_recursively(std::string);
 
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);

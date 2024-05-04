@@ -8,22 +8,37 @@
 using namespace parser;
 
 
-VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name, Type any_type, Type array_type,
-	std::vector<ASTExprNode*> dim, ASTExprNode* expr, std::map<std::string, VariableDefinition*> strvars, bool is_const,
+SemanticExpression::SemanticExpression(parser::Type current_type, parser::Type array_type, std::string type_name,
+	ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
+	:type(current_type), array_type(array_type), dim(std::vector<ASTExprNode*>()), type_name(type_name),
+	struct_vars(std::map<std::string, SemanticExpression*>()), expr(expr), is_const(is_const), row(row), col(col) {}
+
+SemanticExpression::SemanticExpression(parser::Type current_type, parser::Type array_type, std::vector<ASTExprNode*> dim, std::string type_name,
+	std::map<std::string, SemanticExpression*> struct_vars, ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
+	:type(current_type), array_type(array_type), dim(dim), type_name(type_name),
+	struct_vars(struct_vars), expr(expr), is_const(is_const), row(row), col(col) {}
+
+SemanticVariable::SemanticVariable(std::string identifier, Type type, bool is_const, parser::Type current_type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+	std::string type_name, std::map<std::string, SemanticExpression*> struct_vars, ASTExprNode* expr, bool is_expr_const,
 	unsigned int row, unsigned int col, bool is_parameter)
-	: identifier(identifier), type(type), type_name(type_name), any_type(any_type), array_type(array_type), dim(dim), expr(expr),
-	strvars(strvars), is_const(is_const), row(row), col(col), is_parameter(is_parameter) {};
+	: identifier(identifier), type(type), is_const(is_const), row(row), col(col), is_parameter(is_parameter) {
+	this->expr = new SemanticExpression_t(current_type, array_type, dim, type_name, struct_vars, expr, is_expr_const, row, col);
+}
+
+SemanticVariable::SemanticVariable(std::string identifier, Type type, bool is_const, SemanticExpression* expr,
+	unsigned int row, unsigned int col, bool is_parameter)
+	: identifier(identifier), type(type), is_const(is_const), expr(expr), row(row), col(col), is_parameter(is_parameter) { }
 
 VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name,
 	Type any_type, Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col)
-	: identifier(identifier), type(type), type_name(type_name), any_type(any_type),
-	array_type(array_type), dim(dim), expr(nullptr), is_const(false), row(row), col(col), is_parameter(false) {};
+	: identifier(identifier), type(type), type_name(type_name),
+	array_type(array_type), dim(dim), row(row), col(col) {}
 
-StructureDefinition::StructureDefinition(std::string identifier, std::vector<VariableDefinition_t*> variables, unsigned int row, unsigned int col)
-	: identifier(identifier), variables(variables), row(row), col(col) {};
+StructureDefinition::StructureDefinition(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
+	: identifier(identifier), variables(variables), row(row), col(col) {}
 
 FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, Type any_type, Type array_type,
-	std::vector<ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition_t*> parameters,
+	std::vector<ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition_t> parameters,
 	ASTBlockNode* block, unsigned int row, unsigned int col)
 	: identifier(identifier), type(type), type_name(type_name), any_type(any_type), array_type(array_type),
 	dim(dim), signature(signature), parameters(parameters), block(block), row(row), col(col) {};
@@ -77,7 +92,7 @@ ASTForEachNode::ASTForEachNode(ASTNode* itdecl, ASTNode* collection, ASTBlockNod
 ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: condition(condition), block(block), row(row), col(col) {}
 
-ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<VariableDefinition_t*> parameters,
+ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<VariableDefinition_t> parameters,
 	Type type, std::string type_name, Type array_type, std::vector<ASTExprNode*> dim, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), parameters(std::move(parameters)), type(type), type_name(type_name),
 	array_type(array_type), dim(dim), block(block), row(row), col(col) {
@@ -85,12 +100,12 @@ ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std
 	this->signature = std::vector<Type>();
 
 	for (auto param : this->parameters) {
-		variable_names.push_back(param->identifier);
-		signature.push_back(param->type);
+		variable_names.push_back(param.identifier);
+		signature.push_back(param.type);
 	}
 }
 
-ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::vector<VariableDefinition_t*> variables, unsigned int row, unsigned int col)
+ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), variables(std::move(variables)), row(row), col(col) {}
 
 

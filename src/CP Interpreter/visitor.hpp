@@ -11,9 +11,20 @@ struct Value;
 
 namespace parser {
 	enum class Type {
-		T_UNDEF, T_VOID, T_NULL, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ANY, T_ARRAY, T_STRUCT
+		T_UNDEF, T_VOID, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ANY, T_ARRAY, T_STRUCT
 	};
-	std::string type_str(Type t);
+	std::string type_str(Type);
+	bool match_type(parser::Type, parser::Type);
+	bool is_undefined(parser::Type);
+	bool is_void(parser::Type);
+	bool is_bool(parser::Type);
+	bool is_int(parser::Type);
+	bool is_float(parser::Type);
+	bool is_char(parser::Type);
+	bool is_string(parser::Type);
+	bool is_any(parser::Type);
+	bool is_array(parser::Type);
+	bool is_struct(parser::Type);
 
 	class ASTProgramNode;
 
@@ -71,7 +82,7 @@ typedef struct Value {
 	parser::Type type;
 	parser::Type curr_type;
 	parser::Type arr_type;
-	std::vector<parser::ASTExprNode*> dim;
+	std::vector<parser::ASTExprNode*> dim; // just to know array dimension in array type parse, find another solution...
 
 	cp_bool b;
 	cp_int i;

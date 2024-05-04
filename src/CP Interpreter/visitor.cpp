@@ -8,8 +8,6 @@ namespace parser {
 			return "undefined";
 		case parser::Type::T_VOID:
 			return "void";
-		case parser::Type::T_NULL:
-			return "null";
 		case parser::Type::T_BOOL:
 			return "bool";
 		case parser::Type::T_INT:
@@ -29,6 +27,50 @@ namespace parser {
 		default:
 			throw std::runtime_error("invalid type encountered");
 		}
+	}
+
+	bool match_type(parser::Type type1, parser::Type type2) {
+		return type1 == type2;
+	}
+
+	bool is_undefined(parser::Type type) {
+		return match_type(type, parser::Type::T_UNDEF);
+	}
+
+	bool is_void(parser::Type type) {
+		return match_type(type, parser::Type::T_VOID);
+	}
+
+	bool is_bool(parser::Type type) {
+		return match_type(type, parser::Type::T_BOOL);
+	}
+
+	bool is_int(parser::Type type) {
+		return match_type(type, parser::Type::T_INT);
+	}
+
+	bool is_float(parser::Type type) {
+		return match_type(type, parser::Type::T_FLOAT);
+	}
+
+	bool is_char(parser::Type type) {
+		return match_type(type, parser::Type::T_CHAR);
+	}
+
+	bool is_string(parser::Type type) {
+		return match_type(type, parser::Type::T_STRING);
+	}
+
+	bool is_any(parser::Type type) {
+		return match_type(type, parser::Type::T_ANY);
+	}
+
+	bool is_array(parser::Type type) {
+		return match_type(type, parser::Type::T_ARRAY);
+	}
+
+	bool is_struct(parser::Type type) {
+		return match_type(type, parser::Type::T_STRUCT);
 	}
 }
 

@@ -187,7 +187,7 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 		else if (type == Type::T_ARRAY) {
 			current_array_type = parse_type();
 
-			if (current_array_type == parser::Type::T_UNDEF || current_array_type == parser::Type::T_NULL || current_array_type == parser::Type::T_ARRAY) {
+			if (current_array_type == parser::Type::T_UNDEF || current_array_type == parser::Type::T_VOID || current_array_type == parser::Type::T_ARRAY) {
 				current_array_type = parser::Type::T_ANY;
 			}
 		}
@@ -686,7 +686,7 @@ ASTWhileNode* Parser::parse_while_statement() {
 ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	// node attributes
 	std::string identifier;
-	std::vector<VariableDefinition_t*> parameters;
+	std::vector<VariableDefinition_t> parameters;
 	Type type;
 	Type array_type = parser::Type::T_UNDEF;
 	std::string type_name = "";
@@ -710,7 +710,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 
 	if (current_token.type != lexer::TOK_RIGHT_BRACKET) {
 		// parse first parameter
-		parameters.push_back(parse_formal_param());
+		parameters.push_back(*parse_formal_param());
 
 		// consume ',' or ')'
 		consume_token();
@@ -720,7 +720,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 			consume_token();
 
 			// parse parameter
-			parameters.push_back(parse_formal_param());
+			parameters.push_back(*parse_formal_param());
 
 			// consume ',' or ')'
 			consume_token();
@@ -776,7 +776,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 ASTStructDefinitionNode* Parser::parse_struct_definition() {
 	// node attributes
 	std::string identifier;
-	std::vector<VariableDefinition_t*> variables;
+	std::vector<VariableDefinition_t> variables;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -795,7 +795,7 @@ ASTStructDefinitionNode* Parser::parse_struct_definition() {
 		consume_token(lexer::TOK_IDENTIFIER);
 
 		// parse parameter
-		variables.push_back(parse_formal_param());
+		variables.push_back(*parse_formal_param());
 
 		// consume ';'
 		consume_token();
@@ -1349,10 +1349,8 @@ std::string Parser::msg_header() {
 Type Parser::parse_type() {
 	switch (current_token.type) {
 	case lexer::TOK_VOID_TYPE:
-		return Type::T_VOID;
-
 	case lexer::TOK_NULL:
-		return Type::T_NULL;
+		return Type::T_VOID;
 
 	case lexer::TOK_BOOL_TYPE:
 	case lexer::TOK_BOOL_LITERAL:

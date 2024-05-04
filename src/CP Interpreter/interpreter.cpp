@@ -62,7 +62,7 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 		astnode->expr->accept(this);
 	}
 
-	if (astnode->expr && current_expression_value.curr_type != parser::Type::T_NULL && current_expression_value.has_value) {
+	if (astnode->expr && current_expression_value.curr_type != parser::Type::T_VOID && current_expression_value.has_value) {
 		auto type = astnode->type == parser::Type::T_ANY ? current_expression_value.curr_type : astnode->type;
 		// declare variable, depending on type
 		switch (type) {
@@ -91,7 +91,7 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 			scopes.back()->declare_variable(get_namespace() + astnode->identifier, current_expression_value.arr);
 			break;
 		case parser::Type::T_STRUCT:
-			declare_structure_variable(get_namespace() + astnode->identifier, current_expression_value);
+			assign_structure(get_namespace() + astnode->identifier, current_expression_value);
 			break;
 		}
 	}
@@ -100,7 +100,7 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 			auto nllVal = Value_t(parser::Type::T_STRUCT);
 			nllVal.set_null();
 			nllVal.str.first = astnode->type_name;
-			declare_structure_variable(get_namespace() + astnode->identifier, nllVal);
+			assign_structure(get_namespace() + astnode->identifier, nllVal);
 		}
 		else {
 			scopes.back()->declare_null_variable(get_namespace() + astnode->identifier, astnode->type);
@@ -112,37 +112,37 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 	val->arr_type = astnode->array_type;
 }
 
-void Interpreter::declare_structure_variable(std::string identifier_vector, Value_t newValue) {
+void Interpreter::assign_structure(std::string identifier_vector, Value_t new_value) {
 	Value_t* value = nullptr;
-	std::string type_name = newValue.str.first;
-	parser::StructureDefinition_t typeStruct;
-	int strDefScopeIdx = 0;
+	std::string type_name = new_value.str.first;
+	parser::StructureDefinition_t struct_definition;
+	size_t str_def_scope_idx = 0;
 
-	if (newValue.has_value) {
-		value = scopes.back()->declare_variable(identifier_vector, newValue.str);
+	if (new_value.has_value) {
+		value = scopes.back()->declare_variable(identifier_vector, new_value.str);
 	}
 	else {
 		value = scopes.back()->declare_null_struct_variable(identifier_vector, type_name);
 	}
 
-	for (strDefScopeIdx = scopes.size() - 1; !scopes[strDefScopeIdx]->already_declared_structure_definition(type_name); --strDefScopeIdx);
-	typeStruct = scopes[strDefScopeIdx]->find_declared_structure_definition(type_name);
+	for (str_def_scope_idx = scopes.size() - 1; !scopes[str_def_scope_idx]->already_declared_structure_definition(type_name); --str_def_scope_idx);
+	struct_definition = scopes[str_def_scope_idx]->find_declared_structure_definition(type_name);
 
-	for (size_t j = 0; j < typeStruct.variables.size(); ++j) {
+	for (size_t j = 0; j < struct_definition.variables.size(); ++j) {
 		bool found = false;
 		for (size_t k = 0; k < value->str.second.size(); ++k) {
-			if (value->str.second[k].first == typeStruct.variables[j]->identifier) {
+			if (value->str.second[k].first == struct_definition.variables[j].identifier) {
 				found = true;
-				value->str.second[k].second->set_type(typeStruct.variables[j]->type);
+				value->str.second[k].second->set_type(struct_definition.variables[j].type);
 				break;
 			}
 		}
 		if (!found) {
-			cp_struct_value strVal;
-			strVal.first = typeStruct.variables[j]->identifier;
-			strVal.second = new Value_t(typeStruct.variables[j]->type);
-			strVal.second->set_null();
-			value->str.second.push_back(strVal);
+			cp_struct_value str_value;
+			str_value.first = struct_definition.variables[j].identifier;
+			str_value.second = new Value_t(struct_definition.variables[j].type);
+			str_value.second->set_null();
+			value->str.second.push_back(str_value);
 		}
 	}
 }
@@ -205,7 +205,7 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 
 	Value_t* value = scopes[i]->access_value(astnode->identifier_vector, astnode->access_vector);
 
-	if (current_expression_value.curr_type != parser::Type::T_NULL && current_expression_value.has_value) {
+	if (current_expression_value.curr_type != parser::Type::T_VOID && current_expression_value.has_value) {
 		switch (current_expression_value.curr_type) {
 		case parser::Type::T_BOOL:
 			value->set(current_expression_value.b);
@@ -678,13 +678,13 @@ void visitor::Interpreter::visit(parser::ASTStructConstructorNode* astnode) {
 		str.second.push_back(strValue);
 	}
 
-	declare_structure_definition_first_level_variables(&str);
+	declare_structure(&str);
 
 	value->set(str);
 	current_expression_value = *value;
 }
 
-void visitor::Interpreter::declare_structure_definition_first_level_variables(cp_struct* str) {
+void visitor::Interpreter::declare_structure(cp_struct* str) {
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->already_declared_structure_definition(str->first); --i);
 	auto typeStruct = scopes[i]->find_declared_structure_definition(str->first);
@@ -692,14 +692,14 @@ void visitor::Interpreter::declare_structure_definition_first_level_variables(cp
 	for (auto& varTypeStruct : typeStruct.variables) {
 		auto found = false;
 		for (size_t i = 0; i < str->second.size(); ++i) {
-			if (str->second.at(i).first == varTypeStruct->identifier) {
+			if (str->second.at(i).first == varTypeStruct.identifier) {
 				found = true;
 			}
 		}
 		if (!found) {
 			auto strValue = cp_struct_value();
-			strValue.first = varTypeStruct->identifier;
-			strValue.second = new Value_t(varTypeStruct->type);
+			strValue.first = varTypeStruct.identifier;
+			strValue.second = new Value_t(varTypeStruct.type);
 			strValue.second->set_null();
 			str->second.push_back(strValue);
 		}
@@ -1222,7 +1222,7 @@ void visitor::Interpreter::visit(parser::ASTRoundNode* astnode) {
 
 
 void visitor::Interpreter::visit(parser::ASTNullNode* astnode) {
-	Value_t value = Value_t(parser::Type::T_NULL);
+	Value_t value = Value_t(parser::Type::T_VOID);
 	value.set_null();
 	current_expression_value = value;
 }

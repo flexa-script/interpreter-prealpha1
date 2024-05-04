@@ -42,9 +42,10 @@ namespace visitor {
 		Value_t* declare_variable(std::string, cp_array);
 
 		void declare_function(std::string, std::vector<parser::Type>, std::vector<std::string>, parser::ASTBlockNode*);
-		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition_t*>, unsigned int, unsigned int);
+		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
 
 		parser::StructureDefinition_t find_declared_structure_definition(std::string);
+
 		Value_t* access_value(std::vector<std::string>, std::vector<parser::ASTExprNode*>);
 		Value_t* access_value_of_array(Value_t*, std::vector<parser::ASTExprNode*>);
 		Value_t* access_value_of_structure(Value_t*, std::vector<std::string>);
