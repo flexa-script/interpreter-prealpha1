@@ -4,9 +4,9 @@ using util.println;
 
 
 if (this == "main") {
-    var numbers: List;
-    list_init(numbers);
-    // var numbers: List = list_create();
+    var numbers: List; // DEVERIA GERAR ERRO DE ACESSO
+    list_init(numbers); // DEVERIA PREENCHER O VALOR
+    // var numbers: List = list_create(); // A LISTA NÃO É PREENCHIDA
     // var numbers: List = List{};
     
     print("numbers: " + string(numbers) + "\n");

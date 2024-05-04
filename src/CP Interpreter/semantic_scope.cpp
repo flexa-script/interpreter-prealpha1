@@ -31,7 +31,8 @@ parser::FunctionDefinition_t SemanticScope::find_declared_function(std::string i
 		auto& func_sig = i->second.signature;
 		auto found = true;
 		for (size_t it = 0; it < func_sig.size(); ++it) {
-			if (func_sig.at(it) != signature.at(it) && func_sig.at(it) != parser::Type::T_ANY) {
+			if (func_sig.at(it) != signature.at(it) && func_sig.at(it) != parser::Type::T_ANY
+				&& signature.at(it) != parser::Type::T_VOID && signature.at(it) != parser::Type::T_UNDEF) {
 				found = false;
 				break;
 			}
@@ -73,8 +74,8 @@ void SemanticScope::declare_variable(std::string identifier, parser::Type type, 
 
 parser::FunctionDefinition_t SemanticScope::declare_function(std::string identifier, parser::Type type, std::string type_name, parser::Type any_type,
 	parser::Type array_type, std::vector<parser::ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition_t> parameters,
-	unsigned int row, unsigned int col) {
-	parser::FunctionDefinition_t fun(identifier, type, type_name, any_type, array_type, dim, signature, parameters, row, col);
+	parser::ASTBlockNode* block, unsigned int row, unsigned int col) {
+	parser::FunctionDefinition_t fun(identifier, type, type_name, any_type, array_type, dim, signature, parameters, block, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
 	return fun;
 }

@@ -30,7 +30,7 @@ namespace parser {
 
 	typedef struct FunctionDefinition {
 		FunctionDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, std::vector<parser::Type>,
-			std::vector<parser::VariableDefinition_t>,unsigned int, unsigned int);
+			std::vector<parser::VariableDefinition_t>, ASTBlockNode*, unsigned int, unsigned int);
 		FunctionDefinition() = default;
 		std::string identifier;
 		parser::Type type;
@@ -40,6 +40,7 @@ namespace parser {
 		std::string type_name;
 		std::vector<parser::Type> signature;
 		std::vector<parser::VariableDefinition_t> parameters;
+		ASTBlockNode* block;
 		unsigned int row;
 		unsigned int col;
 	} FunctionDefinition_t;

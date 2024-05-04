@@ -28,7 +28,8 @@ namespace visitor {
 		void declare_variable(std::string, parser::Type, std::string, parser::Type, parser::Type, std::vector<parser::ASTExprNode*>,
 			parser::ASTExprNode*, bool, unsigned int, unsigned int, bool = false);
 		parser::FunctionDefinition_t declare_function(std::string, parser::Type, std::string, parser::Type, parser::Type,
-			std::vector<parser::ASTExprNode*>, std::vector<parser::Type>, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
+			std::vector<parser::ASTExprNode*>, std::vector<parser::Type>, std::vector<parser::VariableDefinition_t>,
+			parser::ASTBlockNode*, unsigned int, unsigned int);
 
 		//void assign_variable(std::string);
 		void change_any_variable_type(std::string, parser::Type);

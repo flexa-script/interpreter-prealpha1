@@ -195,7 +195,8 @@ std::tuple<std::vector<parser::Type>, std::vector<std::string>, parser::ASTBlock
 		auto& funcSig = std::get<0>(i->second);
 		auto found = true;
 		for (size_t it = 0; it < funcSig.size(); ++it) {
-			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::Type::T_ANY) {
+			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::Type::T_ANY
+				&& signature.at(it) != parser::Type::T_VOID && signature.at(it) != parser::Type::T_UNDEF) {
 				found = false;
 				break;
 			}

@@ -22,9 +22,10 @@ StructureDefinition::StructureDefinition(std::string identifier, std::vector<Var
 	: identifier(identifier), variables(variables), row(row), col(col) {};
 
 FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, Type any_type, Type array_type,
-	std::vector<ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition_t> parameters, unsigned int row, unsigned int col)
+	std::vector<ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition_t> parameters,
+	ASTBlockNode* block, unsigned int row, unsigned int col)
 	: identifier(identifier), type(type), type_name(type_name), any_type(any_type), array_type(array_type),
-	dim(dim), signature(signature), parameters(parameters), row(row), col(col) {};
+	dim(dim), signature(signature), parameters(parameters), block(block), row(row), col(col) {};
 
 
 // Program Node
