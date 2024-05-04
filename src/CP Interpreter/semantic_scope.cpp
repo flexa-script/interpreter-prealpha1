@@ -14,7 +14,7 @@ parser::StructureDefinition_t SemanticScope::find_declared_structure_definition(
 	return structure_symbol_table[identifier];
 }
 
-parser::VariableDefinition_t SemanticScope::find_declared_variable(std::string identifier) {
+parser::VariableDefinition_t* SemanticScope::find_declared_variable(std::string identifier) {
 	return variable_symbol_table[identifier];
 }
 
@@ -61,33 +61,30 @@ bool SemanticScope::already_declared_function(std::string identifier, std::vecto
 	}
 }
 
-void SemanticScope::declare_structure_definition(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
+void SemanticScope::declare_structure_definition(std::string name, std::vector<parser::VariableDefinition_t*> variables, unsigned int row, unsigned int col) {
 	parser::StructureDefinition_t str_def(name, variables, row, col);
 	structure_symbol_table[name] = str_def;
 }
 
 void SemanticScope::declare_variable(std::string identifier, parser::Type type, std::string type_name, parser::Type any_type,
-	parser::Type array_type, std::vector<parser::ASTExprNode*> dim, parser::ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col, bool is_parameter) {
-	parser::VariableDefinition_t var(identifier, type, type_name, any_type, array_type, dim, expr, is_const, row, col, is_parameter);
+	parser::Type array_type, std::vector<parser::ASTExprNode*> dim, parser::ASTExprNode* expr, std::map<std::string, parser::VariableDefinition_t*> strvars,
+	bool is_const, unsigned int row, unsigned int col, bool is_parameter) {
+	parser::VariableDefinition_t* var = new parser::VariableDefinition_t(identifier, type, type_name, any_type, array_type,
+		dim, expr, strvars, is_const, row, col, is_parameter);
 	variable_symbol_table[identifier] = var;
 }
 
-parser::FunctionDefinition_t SemanticScope::declare_function(std::string identifier, parser::Type type, std::string type_name, parser::Type any_type,
-	parser::Type array_type, std::vector<parser::ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition_t> parameters,
+void SemanticScope::declare_function(std::string identifier, parser::Type type, std::string type_name, parser::Type any_type,
+	parser::Type array_type, std::vector<parser::ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition_t*> parameters,
 	parser::ASTBlockNode* block, unsigned int row, unsigned int col) {
 	parser::FunctionDefinition_t fun(identifier, type, type_name, any_type, array_type, dim, signature, parameters, block, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
-	return fun;
 }
 
 void SemanticScope::change_variable_type_name(std::string identifier, std::string type_name) {
-	auto var = variable_symbol_table[identifier];
-	var.type_name = type_name;
-	variable_symbol_table[identifier] = var;
+	auto var = variable_symbol_table[identifier]->type_name = type_name;
 }
 
 void SemanticScope::change_any_variable_type(std::string identifier, parser::Type type) {
-	auto var = variable_symbol_table[identifier];
-	var.any_type = type;
-	variable_symbol_table[identifier] = var;
+	auto var = variable_symbol_table[identifier]->any_type = type;
 }

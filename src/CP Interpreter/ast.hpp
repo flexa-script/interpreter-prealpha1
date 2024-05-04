@@ -12,7 +12,7 @@
 namespace parser {
 
 	typedef struct VariableDefinition {
-		VariableDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, ASTExprNode*, bool, unsigned int, unsigned int, bool = false);
+		VariableDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, ASTExprNode*, std::map<std::string, VariableDefinition*>, bool, unsigned int, unsigned int, bool = false);
 		VariableDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 		VariableDefinition() = default;
 		std::string identifier;
@@ -20,6 +20,7 @@ namespace parser {
 		parser::Type any_type;
 		parser::Type array_type;
 		std::vector<ASTExprNode*> dim;
+		std::map<std::string, VariableDefinition*> strvars;
 		std::string type_name;
 		ASTExprNode* expr;
 		bool is_parameter;
@@ -30,7 +31,7 @@ namespace parser {
 
 	typedef struct FunctionDefinition {
 		FunctionDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, std::vector<parser::Type>,
-			std::vector<parser::VariableDefinition_t>, ASTBlockNode*, unsigned int, unsigned int);
+			std::vector<parser::VariableDefinition_t*>, ASTBlockNode*, unsigned int, unsigned int);
 		FunctionDefinition() = default;
 		std::string identifier;
 		parser::Type type;
@@ -39,17 +40,17 @@ namespace parser {
 		std::vector<ASTExprNode*> dim;
 		std::string type_name;
 		std::vector<parser::Type> signature;
-		std::vector<parser::VariableDefinition_t> parameters;
+		std::vector<parser::VariableDefinition_t*> parameters;
 		ASTBlockNode* block;
 		unsigned int row;
 		unsigned int col;
 	} FunctionDefinition_t;
 
 	typedef struct StructureDefinition {
-		StructureDefinition(std::string, std::vector<VariableDefinition_t>, unsigned int, unsigned int);
+		StructureDefinition(std::string, std::vector<VariableDefinition_t*>, unsigned int, unsigned int);
 		StructureDefinition() = default;
 		std::string identifier;
-		std::vector<VariableDefinition_t> variables;
+		std::vector<VariableDefinition_t*> variables;
 		unsigned int row;
 		unsigned int col;
 	} StructureDefinition_t;
@@ -263,10 +264,11 @@ namespace parser {
 
 	class ASTFunctionDefinitionNode : public ASTStatementNode {
 	public:
-		ASTFunctionDefinitionNode(std::string, std::vector<VariableDefinition_t>, Type, std::string, Type, std::vector<ASTExprNode*>, ASTBlockNode*, unsigned int, unsigned int);
+		ASTFunctionDefinitionNode(std::string, std::vector<VariableDefinition_t*>, Type, std::string,
+			Type, std::vector<ASTExprNode*>, ASTBlockNode*, unsigned int, unsigned int);
 
 		std::string identifier;
-		std::vector<VariableDefinition_t> parameters;
+		std::vector<VariableDefinition_t*> parameters;
 		std::vector<std::string> variable_names;
 		std::vector<Type> signature;
 		Type type;
@@ -282,10 +284,10 @@ namespace parser {
 
 	class ASTStructDefinitionNode : public ASTStatementNode {
 	public:
-		ASTStructDefinitionNode(std::string, std::vector<VariableDefinition_t>, unsigned int, unsigned int);
+		ASTStructDefinitionNode(std::string, std::vector<VariableDefinition_t*>, unsigned int, unsigned int);
 
 		std::string identifier;
-		std::vector<VariableDefinition_t> variables;
+		std::vector<VariableDefinition_t*> variables;
 		unsigned int row;
 		unsigned int col;
 

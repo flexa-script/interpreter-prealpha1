@@ -9,20 +9,21 @@ using namespace parser;
 
 
 VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name, Type any_type, Type array_type,
-	std::vector<ASTExprNode*> dim, ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col, bool is_parameter)
-	: identifier(identifier), type(type), type_name(type_name), any_type(any_type),
-	array_type(array_type), dim(dim), expr(expr), is_const(is_const), row(row), col(col), is_parameter(is_parameter) {};
+	std::vector<ASTExprNode*> dim, ASTExprNode* expr, std::map<std::string, VariableDefinition*> strvars, bool is_const,
+	unsigned int row, unsigned int col, bool is_parameter)
+	: identifier(identifier), type(type), type_name(type_name), any_type(any_type), array_type(array_type), dim(dim), expr(expr),
+	strvars(strvars), is_const(is_const), row(row), col(col), is_parameter(is_parameter) {};
 
 VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name,
 	Type any_type, Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col)
 	: identifier(identifier), type(type), type_name(type_name), any_type(any_type),
 	array_type(array_type), dim(dim), expr(nullptr), is_const(false), row(row), col(col), is_parameter(false) {};
 
-StructureDefinition::StructureDefinition(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
+StructureDefinition::StructureDefinition(std::string identifier, std::vector<VariableDefinition_t*> variables, unsigned int row, unsigned int col)
 	: identifier(identifier), variables(variables), row(row), col(col) {};
 
 FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, Type any_type, Type array_type,
-	std::vector<ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition_t> parameters,
+	std::vector<ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition_t*> parameters,
 	ASTBlockNode* block, unsigned int row, unsigned int col)
 	: identifier(identifier), type(type), type_name(type_name), any_type(any_type), array_type(array_type),
 	dim(dim), signature(signature), parameters(parameters), block(block), row(row), col(col) {};
@@ -76,18 +77,20 @@ ASTForEachNode::ASTForEachNode(ASTNode* itdecl, ASTNode* collection, ASTBlockNod
 ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: condition(condition), block(block), row(row), col(col) {}
 
-ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<VariableDefinition_t> parameters, Type type, std::string type_name, Type array_type, std::vector<ASTExprNode*> dim, ASTBlockNode* block, unsigned int row, unsigned int col)
-	: identifier(std::move(identifier)), parameters(std::move(parameters)), type(type), type_name(type_name), array_type(array_type), dim(dim), block(block), row(row), col(col) {
+ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<VariableDefinition_t*> parameters,
+	Type type, std::string type_name, Type array_type, std::vector<ASTExprNode*> dim, ASTBlockNode* block, unsigned int row, unsigned int col)
+	: identifier(std::move(identifier)), parameters(std::move(parameters)), type(type), type_name(type_name),
+	array_type(array_type), dim(dim), block(block), row(row), col(col) {
 	// generate signature
 	this->signature = std::vector<Type>();
 
 	for (auto param : this->parameters) {
-		variable_names.push_back(param.identifier);
-		signature.push_back(param.type);
+		variable_names.push_back(param->identifier);
+		signature.push_back(param->type);
 	}
 }
 
-ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
+ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::vector<VariableDefinition_t*> variables, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), variables(std::move(variables)), row(row), col(col) {}
 
 

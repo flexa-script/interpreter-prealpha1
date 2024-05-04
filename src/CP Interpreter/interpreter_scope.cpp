@@ -9,11 +9,11 @@
 using namespace visitor;
 
 
-InterpreterScope::InterpreterScope(Interpreter* parent, std::string name) : parent(parent), name(name) {}
+InterpreterScope::InterpreterScope(Interpreter* parent, std::string name) : intepr(parent), name(name) {}
 
 InterpreterScope::InterpreterScope() {
 	name = "";
-	parent = nullptr;
+	intepr = nullptr;
 }
 
 std::string InterpreterScope::get_name() {
@@ -25,7 +25,7 @@ void InterpreterScope::set_name(std::string name) {
 }
 
 void InterpreterScope::set_parent(Interpreter* parent) {
-	this->parent = parent;
+	this->intepr = parent;
 }
 
 bool InterpreterScope::already_declared_variable(std::string identifier) {
@@ -109,7 +109,7 @@ Value_t* InterpreterScope::declare_variable(std::string identifier, cp_struct st
 	return value;
 }
 
-void InterpreterScope::declare_structure_definition(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
+void InterpreterScope::declare_structure_definition(std::string name, std::vector<parser::VariableDefinition_t*> variables, unsigned int row, unsigned int col) {
 	parser::StructureDefinition_t type(name, variables, row, col);
 	structure_symbol_table[name] = (type);
 }
@@ -128,8 +128,8 @@ Value_t* InterpreterScope::access_value_of_array(Value_t* arr, std::vector<parse
 	size_t accessPos = 0;
 
 	for (s = 0; s < access_vector.size() - 1; ++s) {
-		access_vector.at(s)->accept(parent);
-		accessPos = parent->get_current_expression_value().i;
+		access_vector.at(s)->accept(intepr);
+		accessPos = intepr->get_current_expression_value().i;
 		if (accessPos >= currentVal->size()) {
 			throw std::runtime_error("ISERR: tryed to access a invalid position");
 		}
@@ -140,8 +140,8 @@ Value_t* InterpreterScope::access_value_of_array(Value_t* arr, std::vector<parse
 		currentVal = &currentVal->at(accessPos)->arr;
 	}
 
-	access_vector.at(s)->accept(parent);
-	accessPos = parent->get_current_expression_value().i;
+	access_vector.at(s)->accept(intepr);
+	accessPos = intepr->get_current_expression_value().i;
 	if (accessPos >= currentVal->size()) {
 		throw std::runtime_error("ISERR: tryed to access a invalid position");
 	}

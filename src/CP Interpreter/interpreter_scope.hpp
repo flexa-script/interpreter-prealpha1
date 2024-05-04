@@ -18,7 +18,7 @@ namespace visitor {
 
 	private:
 		std::string name;
-		Interpreter* parent;
+		Interpreter* intepr;
 		std::map<std::string, parser::StructureDefinition_t> structure_symbol_table;
 		std::map<std::string, Value_t*> variable_symbol_table;
 		std::multimap<std::string, std::tuple<std::vector<parser::Type>, std::vector<std::string>, parser::ASTBlockNode*>> function_symbol_table;
@@ -42,7 +42,7 @@ namespace visitor {
 		Value_t* declare_variable(std::string, cp_array);
 
 		void declare_function(std::string, std::vector<parser::Type>, std::vector<std::string>, parser::ASTBlockNode*);
-		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
+		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition_t*>, unsigned int, unsigned int);
 
 		parser::StructureDefinition_t find_declared_structure_definition(std::string);
 		Value_t* access_value(std::vector<std::string>, std::vector<parser::ASTExprNode*>);

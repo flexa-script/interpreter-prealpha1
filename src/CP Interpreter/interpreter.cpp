@@ -131,16 +131,16 @@ void Interpreter::declare_structure_variable(std::string identifier_vector, Valu
 	for (size_t j = 0; j < typeStruct.variables.size(); ++j) {
 		bool found = false;
 		for (size_t k = 0; k < value->str.second.size(); ++k) {
-			if (value->str.second[k].first == typeStruct.variables[j].identifier) {
+			if (value->str.second[k].first == typeStruct.variables[j]->identifier) {
 				found = true;
-				value->str.second[k].second->set_type(typeStruct.variables[j].type);
+				value->str.second[k].second->set_type(typeStruct.variables[j]->type);
 				break;
 			}
 		}
 		if (!found) {
 			cp_struct_value strVal;
-			strVal.first = typeStruct.variables[j].identifier;
-			strVal.second = new Value_t(typeStruct.variables[j].type);
+			strVal.first = typeStruct.variables[j]->identifier;
+			strVal.second = new Value_t(typeStruct.variables[j]->type);
 			strVal.second->set_null();
 			value->str.second.push_back(strVal);
 		}
@@ -692,14 +692,14 @@ void visitor::Interpreter::declare_structure_definition_first_level_variables(cp
 	for (auto& varTypeStruct : typeStruct.variables) {
 		auto found = false;
 		for (size_t i = 0; i < str->second.size(); ++i) {
-			if (str->second.at(i).first == varTypeStruct.identifier) {
+			if (str->second.at(i).first == varTypeStruct->identifier) {
 				found = true;
 			}
 		}
 		if (!found) {
 			auto strValue = cp_struct_value();
-			strValue.first = varTypeStruct.identifier;
-			strValue.second = new Value_t(varTypeStruct.type);
+			strValue.first = varTypeStruct->identifier;
+			strValue.second = new Value_t(varTypeStruct->type);
 			strValue.second->set_null();
 			str->second.push_back(strValue);
 		}

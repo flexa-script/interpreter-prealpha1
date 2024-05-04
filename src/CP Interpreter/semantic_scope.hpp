@@ -14,7 +14,7 @@ namespace visitor {
 	class SemanticScope {
 	private:
 		std::map<std::string, parser::StructureDefinition_t> structure_symbol_table;
-		std::map<std::string, parser::VariableDefinition_t> variable_symbol_table;
+		std::map<std::string, parser::VariableDefinition_t*> variable_symbol_table;
 		std::multimap<std::string, parser::FunctionDefinition_t> function_symbol_table;
 
 	public:
@@ -24,11 +24,11 @@ namespace visitor {
 		bool already_declared_variable(std::string);
 		bool already_declared_function(std::string, std::vector<parser::Type>);
 
-		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
+		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition_t*>, unsigned int, unsigned int);
 		void declare_variable(std::string, parser::Type, std::string, parser::Type, parser::Type, std::vector<parser::ASTExprNode*>,
-			parser::ASTExprNode*, bool, unsigned int, unsigned int, bool = false);
-		parser::FunctionDefinition_t declare_function(std::string, parser::Type, std::string, parser::Type, parser::Type,
-			std::vector<parser::ASTExprNode*>, std::vector<parser::Type>, std::vector<parser::VariableDefinition_t>,
+			parser::ASTExprNode*, std::map<std::string, parser::VariableDefinition_t*>, bool, unsigned int, unsigned int, bool = false);
+		void declare_function(std::string, parser::Type, std::string, parser::Type, parser::Type,
+			std::vector<parser::ASTExprNode*>, std::vector<parser::Type>, std::vector<parser::VariableDefinition_t*>,
 			parser::ASTBlockNode*, unsigned int, unsigned int);
 
 		//void assign_variable(std::string);
@@ -36,7 +36,7 @@ namespace visitor {
 		void change_variable_type_name(std::string, std::string);
 
 		parser::StructureDefinition_t find_declared_structure_definition(std::string);
-		parser::VariableDefinition_t find_declared_variable(std::string);
+		parser::VariableDefinition_t* find_declared_variable(std::string);
 		parser::FunctionDefinition_t find_declared_function(std::string, std::vector<parser::Type>);
 	};
 }
