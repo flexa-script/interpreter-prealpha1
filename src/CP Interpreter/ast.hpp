@@ -11,36 +11,38 @@
 
 namespace parser {
 
-	typedef struct SemanticExpression {
-		SemanticExpression(parser::Type current_type, parser::Type array_type, std::vector<ASTExprNode*> dim,
-			std::string type_name, std::map<std::string, SemanticExpression*> struct_vars, ASTExprNode* expr, bool is_const,
+	typedef struct SemanticValue {
+		SemanticValue(parser::Type current_type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+			std::string type_name, std::map<std::string, SemanticValue*> struct_vars, ASTExprNode* expr, bool is_const,
 			unsigned int row, unsigned int col);
-		SemanticExpression(parser::Type current_type, parser::Type array_type, std::string type_name,
+		SemanticValue(parser::Type current_type, parser::Type array_type, std::string type_name,
 			ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col);
-		SemanticExpression() = default;
+		SemanticValue() = default;
 		parser::Type type;
 		parser::Type array_type;
 		std::vector<ASTExprNode*> dim; // maybe move to var?
 		std::string type_name;
-		std::map<std::string, SemanticExpression*> struct_vars;
+		std::map<std::string, SemanticValue*> struct_vars;
 		ASTExprNode* expr; // store constant hash instead?
 		bool is_const;
 		unsigned int row;
 		unsigned int col;
-	} SemanticExpression_t;
+		void copy_from(SemanticValue*);
+	} SemanticValue_t;
 
 	typedef struct SemanticVariable {
 		SemanticVariable(std::string, Type, bool, parser::Type current_type, parser::Type array_type, std::vector<ASTExprNode*> dim,
-			std::string type_name, std::map<std::string, SemanticExpression*> struct_vars, ASTExprNode* expr, bool is_expr_const, unsigned int, unsigned int, bool = false);
-		SemanticVariable(std::string, Type, bool, SemanticExpression_t*, unsigned int, unsigned int, bool = false);
+			std::string type_name, std::map<std::string, SemanticValue*> struct_vars, ASTExprNode* expr, bool is_expr_const, unsigned int, unsigned int, bool = false);
+		SemanticVariable(std::string, Type, bool, SemanticValue_t*, unsigned int, unsigned int, bool = false);
 		SemanticVariable() = default;
 		std::string identifier;
 		parser::Type type;
 		bool is_parameter;
-		SemanticExpression_t* expr;
+		SemanticValue_t* value;
 		bool is_const;
 		unsigned int row;
 		unsigned int col;
+		void copy_from(SemanticVariable*);
 	} SemanticVariable_t;
 
 	typedef struct VariableDefinition {
@@ -67,6 +69,7 @@ namespace parser {
 		std::string type_name;
 		std::vector<parser::Type> signature;
 		std::vector<parser::VariableDefinition_t> parameters;
+		std::vector<SemanticValue_t*> values;
 		ASTBlockNode* block;
 		unsigned int row;
 		unsigned int col;

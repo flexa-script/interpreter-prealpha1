@@ -15,18 +15,17 @@ namespace visitor {
 	class SemanticAnalyser : Visitor {
 	private:
 		std::vector<SemanticScope*> scopes;
-		std::stack<parser::Type> functions;
+		std::stack<parser::FunctionDefinition_t> functions;
 		parser::SemanticVariable_t current_variable_expression;
-		parser::SemanticExpression_t current_expression;
-		parser::FunctionDefinition_t current_function;
+		parser::SemanticValue_t current_expression;
 
 	private:
 		bool returns(parser::ASTNode*);
 
-		void assign_structure(SemanticScope*, parser::SemanticExpression_t*, parser::ASTStructConstructorNode*);
+		void assign_structure(SemanticScope*, parser::SemanticValue_t*, parser::ASTStructConstructorNode*);
 		void declare_structure();
 
-		parser::SemanticVariable_t* find_declared_variable_recursively(std::string);
+		//parser::SemanticVariable_t* find_declared_variable_recursively(std::string);
 
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);

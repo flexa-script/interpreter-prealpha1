@@ -175,6 +175,7 @@ cp_int visitor::Interpreter::do_operation(cp_int lval, cp_int rval, std::string 
 	else if (op == "%=") {
 		return lval % rval;
 	}
+	return rval;
 }
 
 cp_float visitor::Interpreter::do_operation(cp_float lval, cp_float rval, std::string op) {
@@ -193,6 +194,7 @@ cp_float visitor::Interpreter::do_operation(cp_float lval, cp_float rval, std::s
 	else if (op == "/=") {
 		return lval / rval;
 	}
+	return rval;
 }
 
 void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {

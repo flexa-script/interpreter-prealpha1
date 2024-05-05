@@ -8,26 +8,48 @@
 using namespace parser;
 
 
-SemanticExpression::SemanticExpression(parser::Type current_type, parser::Type array_type, std::string type_name,
+SemanticValue::SemanticValue(parser::Type current_type, parser::Type array_type, std::string type_name,
 	ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
 	:type(current_type), array_type(array_type), dim(std::vector<ASTExprNode*>()), type_name(type_name),
-	struct_vars(std::map<std::string, SemanticExpression*>()), expr(expr), is_const(is_const), row(row), col(col) {}
+	struct_vars(std::map<std::string, SemanticValue*>()), expr(expr), is_const(is_const), row(row), col(col) {}
 
-SemanticExpression::SemanticExpression(parser::Type current_type, parser::Type array_type, std::vector<ASTExprNode*> dim, std::string type_name,
-	std::map<std::string, SemanticExpression*> struct_vars, ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
+SemanticValue::SemanticValue(parser::Type current_type, parser::Type array_type, std::vector<ASTExprNode*> dim, std::string type_name,
+	std::map<std::string, SemanticValue*> struct_vars, ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
 	:type(current_type), array_type(array_type), dim(dim), type_name(type_name),
 	struct_vars(struct_vars), expr(expr), is_const(is_const), row(row), col(col) {}
 
-SemanticVariable::SemanticVariable(std::string identifier, Type type, bool is_const, parser::Type current_type, parser::Type array_type, std::vector<ASTExprNode*> dim,
-	std::string type_name, std::map<std::string, SemanticExpression*> struct_vars, ASTExprNode* expr, bool is_expr_const,
-	unsigned int row, unsigned int col, bool is_parameter)
-	: identifier(identifier), type(type), is_const(is_const), row(row), col(col), is_parameter(is_parameter) {
-	this->expr = new SemanticExpression_t(current_type, array_type, dim, type_name, struct_vars, expr, is_expr_const, row, col);
+void SemanticValue::copy_from(SemanticValue* value) {
+	type = value->type;
+	array_type = value->array_type;
+	dim = value->dim;
+	type_name = value->type_name;
+	struct_vars = value->struct_vars;
+	expr = value->expr;
+	is_const = value->is_const;
+	row = value->row;
+	col = value->col;
 }
 
-SemanticVariable::SemanticVariable(std::string identifier, Type type, bool is_const, SemanticExpression* expr,
+SemanticVariable::SemanticVariable(std::string identifier, Type type, bool is_const, parser::Type current_type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+	std::string type_name, std::map<std::string, SemanticValue*> struct_vars, ASTExprNode* expr, bool is_expr_const,
 	unsigned int row, unsigned int col, bool is_parameter)
-	: identifier(identifier), type(type), is_const(is_const), expr(expr), row(row), col(col), is_parameter(is_parameter) { }
+	: identifier(identifier), type(type), is_const(is_const), row(row), col(col), is_parameter(is_parameter) {
+	this->value = new SemanticValue_t(current_type, array_type, dim, type_name, struct_vars, expr, is_expr_const, row, col);
+}
+
+SemanticVariable::SemanticVariable(std::string identifier, Type type, bool is_const, SemanticValue* expr,
+	unsigned int row, unsigned int col, bool is_parameter)
+	: identifier(identifier), type(type), is_const(is_const), value(expr), row(row), col(col), is_parameter(is_parameter) { }
+
+void SemanticVariable::copy_from(SemanticVariable* var) {
+	identifier = var->identifier;
+	type = var->type;
+	is_parameter = var->is_parameter;
+	value->copy_from(var->value);
+	is_const = value->is_const;
+	row = var->row;
+	col = var->col;
+}
 
 VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name,
 	Type any_type, Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col)
