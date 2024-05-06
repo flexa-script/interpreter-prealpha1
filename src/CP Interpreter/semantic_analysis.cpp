@@ -48,38 +48,38 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	}
 }
 
-SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticValue_t* value, std::vector<Identifier_t> identifier_vector, size_t i, bool check_undef) {
+SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticValue_t* value, std::vector<Identifier_t> identifier_vector, bool check_undef, size_t i) {
 	if (check_undef && is_undefined(value->type)) {
 		throw std::runtime_error("SSERR: variable '" + identifier_vector[i].identifier + "' is not initialized");
 	}
 
 	SemanticValue_t* next_value = value;
 
-	// evaluate array access vector
-	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
-
-	if (access_vector.size() > 0) {
-		size_t s = 0;
-		size_t accessPos = 0;
-
-		for (s = 0; s < access_vector.size() - 1; ++s) {
-			accessPos = access_vector.at(s);
-			if (next_value->array_values.at(accessPos)->type == Type::T_STRING) {
-				break;
-			}
-			if (next_value->array_values.at(accessPos)->type != Type::T_ARRAY) {
-				throw std::runtime_error(msg_header(0, 0) + "it is not an array or string");
-			}
-			if (accessPos >= next_value->array_values.size()) {
-				throw std::runtime_error(msg_header(0, 0) + "trying to access a invalid position");
-			}
-		}
-		next_value = next_value->array_values.at(accessPos);
-	}
-
-	++i;
-
 	if (i < identifier_vector.size()) {
+		// evaluate array access vector
+		auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
+
+		if (access_vector.size() > 0) {
+			size_t s = 0;
+			size_t accessPos = 0;
+
+			for (s = 0; s < access_vector.size() - 1; ++s) {
+				accessPos = access_vector.at(s);
+				if (next_value->array_values.at(accessPos)->type == Type::T_STRING) {
+					break;
+				}
+				if (next_value->array_values.at(accessPos)->type != Type::T_ARRAY) {
+					throw std::runtime_error(msg_header(0, 0) + "it is not an array or string");
+				}
+				if (accessPos >= next_value->array_values.size()) {
+					throw std::runtime_error(msg_header(0, 0) + "trying to access a invalid position");
+				}
+			}
+			next_value = next_value->array_values.at(accessPos);
+		}
+
+		++i;
+
 		next_value = next_value->struct_vars[identifier_vector[i].identifier];
 		return access_value(scope, next_value, identifier_vector, i, check_undef);
 	}

@@ -18,22 +18,6 @@ var id16[3]: int = { 1, 2, 3 };
 var id17[3][3]: int = { { 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } };
 var id18[3][3][3]: int = { { { 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } }, { { 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } }, { { 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } } };
 
-print(id2);
-print("\n");
-print(id3);
-print("\n");
-print(id4);
-print("\n");
-print(id5);
-print("\n");
-print(id6);
-print("\n");
-print(id7);
-print("\n");
-print(id8);
-print("\n");
-print("\n");
-
 print(id12);
 print("\n");
 print(id13);
