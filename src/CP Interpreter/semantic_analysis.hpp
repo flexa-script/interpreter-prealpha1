@@ -15,9 +15,13 @@ namespace visitor {
 	class SemanticAnalyser : Visitor {
 	private:
 		std::vector<SemanticScope*> scopes;
-		std::stack<parser::FunctionDefinition_t> functions;
-		parser::SemanticVariable_t current_variable_expression;
+		//parser::SemanticVariable_t current_variable_expression; // maybe to get the real type?
 		parser::SemanticValue_t current_expression;
+		std::stack<parser::FunctionDefinition_t> current_function;
+		std::string retfun_identifier;
+		parser::SemanticValue_t retfun_expression;
+		bool retfun_has_return;
+		bool retfun_returned;
 
 	private:
 		bool returns(parser::ASTNode*);
@@ -31,6 +35,7 @@ namespace visitor {
 		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);
 		void determine_array_type(parser::ASTArrayConstructorNode*);
 		void check_array_type(parser::ASTExprNode*, unsigned int, unsigned int);
+		parser::SemanticValue_t* access_value(SemanticScope*, parser::SemanticValue_t*, std::vector<parser::Identifier_t>, size_t = 0, bool = false);
 
 		std::string msg_header(unsigned int, unsigned int);
 

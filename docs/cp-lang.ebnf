@@ -3,9 +3,7 @@
  * Ref.: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
  *)
 
-program           = { libs statement }
-
-libs              = lib { lib }
+program           = [ lib ] { statement }
 
 lib               = "using" path_identifier ";"
 
@@ -22,6 +20,7 @@ statement         = struct_decl ";"
                   | return_statement ";"
                   | function_decl
                   | block
+                  | expression ";"
 
 block             = "{" { statement } "}"
 

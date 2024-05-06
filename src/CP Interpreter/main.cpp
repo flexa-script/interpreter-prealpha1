@@ -1,7 +1,7 @@
 #include "cprepl.hpp"
 #include "cpinterpreter.hpp"
 //#include "logging.hpp"
-//#include "watch.h"
+#include "watch.h"
 
 
 int main(int argc, const char* argv[]) {
@@ -11,8 +11,8 @@ int main(int argc, const char* argv[]) {
 	//	log.debug(argv[i]);
 	//}
 
-	//auto sw = ChronoStopwatch();
-	//sw.start();
+	auto sw = ChronoStopwatch();
+	sw.start();
 
 	int result = 0;
 
@@ -23,9 +23,8 @@ int main(int argc, const char* argv[]) {
 	auto interpreter = CPInterpreter();
 	result = interpreter.execute(argc, argv);
 
-	//sw.stop();
-	//std::cout << sw.get_elapsed_formatted() << std::endl;
-
+	sw.stop();
+	std::cout << std::endl << "execution time: " << sw.get_elapsed_formatted() << std::endl;
 	system("pause");
 	return result;
 }

@@ -37,7 +37,6 @@ namespace parser {
 		std::string msg_header();
 
 		// statement nodes
-
 		ASTNode* parse_program_statement();
 
 		ASTUsingNode* parse_using_statement();
@@ -80,7 +79,7 @@ namespace parser {
 
 		ASTStructDefinitionNode* parse_struct_definition();
 
-		ASTNode* parse_identifier();
+		ASTNode* parse_identifier_statement();
 
 		ASTArrayConstructorNode* parse_array_constructor_node();
 
@@ -139,6 +138,13 @@ namespace parser {
 		cp_char parse_char_literal();
 
 		cp_string parse_string_literal();
+
+		std::vector<ASTExprNode*> parse_dimension_vector();
+
+		Identifier_t parse_identifier();
+
+		std::vector<Identifier_t> parse_identifier_vector();
+
 	};
 }
 

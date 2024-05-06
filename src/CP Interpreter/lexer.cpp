@@ -15,21 +15,18 @@ Lexer::Lexer(std::string& source, std::string name)
 Lexer::~Lexer() = default;
 
 void Lexer::tokenize() {
+	current_index = 0;
 	current_row = 1;
-	current_col = 1;
+	current_col = 0;
+
+	advance();
 
 	while (has_next()) {
-		current_char = source[current_index];
-
-		if (current_char == '\n') {
-			++current_row;
-		}
-
 		if (is_space()) {
 			// ignore white spaces
 			advance();
 		}
-		else if (current_char == '/' && (get_next_char() == '/' || get_next_char() == '*')) {
+		else if (current_char == '/' && (next_char == '/' || next_char == '*')) {
 			process_comment();
 		}
 		else if (current_char == '\'') {
@@ -44,7 +41,7 @@ void Lexer::tokenize() {
 			start_col = current_col;
 			tokens.push_back(process_identifier());
 		}
-		else if (std::isdigit(current_char) || current_char == '.') {
+		else if (std::isdigit(current_char) || current_char == '.' && std::isdigit(next_char)) {
 			start_col = current_col;
 			tokens.push_back(process_number());
 		}
@@ -55,29 +52,6 @@ void Lexer::tokenize() {
 	}
 
 	tokens.push_back(Token(TokenType::TOK_EOF, "EOF", current_col, current_row));
-}
-
-char Lexer::get_next_char() {
-	return current_index + 1 < source.length() ? source[current_index + 1] : -1;
-}
-
-bool Lexer::has_next() {
-	return current_index < source.length();
-}
-
-bool Lexer::is_space() {
-	return std::isspace(current_char) || current_char == '\t' || current_char == '\r' || current_char == '\n';
-}
-
-void Lexer::advance() {
-	if (current_char == '\n') {
-		current_col = 1;
-	}
-	else {
-		++current_col;
-	}
-	before_char = current_char;
-	current_char = source[++current_index];
 }
 
 Token Lexer::process_comment() {
@@ -170,7 +144,7 @@ Token Lexer::process_identifier() {
 	std::string identifier;
 	TokenType type;
 
-	while (has_next() && (std::isalnum(current_char) || current_char == '_' || current_char == '.')) {
+	while (has_next() && (std::isalnum(current_char) || current_char == '_')) {
 		identifier += current_char;
 		advance();
 	}
@@ -387,11 +361,38 @@ Token Lexer::process_symbol() {
 		type = TOK_COLON;
 		break;
 
+	case '.':
+		type = TOK_DOT;
+		break;
+
 	default:
 		type = TOK_ERROR;
 	}
 
 	return Token(type, str_symbol, current_row, start_col);
+}
+
+bool Lexer::has_next() {
+	return current_index < source.length();
+}
+
+bool Lexer::is_space() {
+	return std::isspace(current_char) || current_char == '\t' || current_char == '\r' || current_char == '\n';
+}
+
+void Lexer::advance() {
+	if (current_char == '\n') {
+		current_col = 1;
+		++current_row;
+	}
+	else {
+		++current_col;
+	}
+	before_char = current_char;
+	current_char = source[current_index++];
+	if (has_next()) {
+		next_char = source[current_index];
+	}
 }
 
 Token Lexer::next_token() {

@@ -28,6 +28,7 @@ namespace visitor {
 		bool continue_block = false;
 		bool break_block = false;
 		bool executed_elif = false;
+		bool has_string_access = false;
 
 	private:
 		bool is_namespace(std::string);
@@ -44,6 +45,8 @@ namespace visitor {
 		std::string parse_value_to_string(Value_t);
 		std::string parse_array_to_string(cp_array);
 		std::string parse_struct_to_string(cp_struct);
+
+		Value_t* access_value(InterpreterScope*, Value_t*, std::vector<parser::Identifier_t>, size_t i = 0);
 
 		std::string msg_header(unsigned int, unsigned int);
 

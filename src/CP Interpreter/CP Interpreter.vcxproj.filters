@@ -43,8 +43,11 @@
     <Filter Include="Source Files\core\visitor">
       <UniqueIdentifier>{d72aab2d-eaf8-4f6d-9540-388b7dc27f84}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\modules\graphics\vendor">
-      <UniqueIdentifier>{0930bc6b-48fe-4484-91df-150b5e6a16d2}</UniqueIdentifier>
+    <Filter Include="Header Files\vendor">
+      <UniqueIdentifier>{f459730b-c6c4-44a9-9ec2-e87ad5f53784}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vendor">
+      <UniqueIdentifier>{5fa8aaa9-1151-4dea-967e-08b7509fe366}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -87,8 +90,17 @@
     <ClInclude Include="util.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="graphics_core.hpp">
-      <Filter>Header Files\modules\graphics</Filter>
+    <ClInclude Include="olcPixelGameEngine.h">
+      <Filter>Header Files\vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="watch.h">
+      <Filter>Header Files\vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="logging.hpp">
+      <Filter>Header Files\vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="modules.hpp">
+      <Filter>Header Files\vendor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -133,6 +145,9 @@
     </ClCompile>
     <ClCompile Include="util.cpp">
       <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="logging.cpp">
+      <Filter>Source Files\vendor</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

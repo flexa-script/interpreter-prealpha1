@@ -129,6 +129,12 @@ void Value::set_curr_type(parser::Type curr_type) {
 
 void Value::set_null() {
 	has_value = false;
+	set_curr_type(parser::Type::T_VOID);
+}
+
+void Value::set_undefined() {
+	has_value = false;
+	set_curr_type(parser::Type::T_UNDEF);
 }
 
 void Value::copy_from(Value* value) {

@@ -25,14 +25,14 @@ def list_init(list: List) {
 }
 
 def list_add(list: List, value: any) {
-    if (not list.first) { 
+    if (list.first != null) { 
         list.first = Node{value=value, next=null};
         list.size = 1;
     } else {
         var prev_node: Node = Node{};
         var curr_node = list.first;
 
-        while (curr_node) {
+        while (curr_node != null) {
             prev_node = curr_node;
             curr_node = curr_node.next;
         }
@@ -99,7 +99,7 @@ def list_print(list : List) {
     } else {
         var node = list.first;
         print("[");
-        while (node) {
+        while (node != null) {
             print(string(node.value));
             if (node.next) {
                 print(",");

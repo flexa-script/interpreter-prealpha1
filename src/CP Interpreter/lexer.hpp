@@ -20,6 +20,7 @@ namespace lexer {
     private:
         char before_char;
         char current_char;
+        char next_char;
         unsigned int current_token = 0;
         unsigned int current_index = 0;
         unsigned int current_row = 0;
@@ -31,7 +32,6 @@ namespace lexer {
 
         void tokenize();
         bool has_next();
-        char get_next_char();
         bool is_space();
         void advance();
         Token process_identifier();

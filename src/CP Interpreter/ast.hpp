@@ -12,15 +12,16 @@
 namespace parser {
 
 	typedef struct SemanticValue {
-		SemanticValue(parser::Type current_type, parser::Type array_type, std::vector<ASTExprNode*> dim,
-			std::string type_name, std::map<std::string, SemanticValue*> struct_vars, ASTExprNode* expr, bool is_const,
-			unsigned int row, unsigned int col);
-		SemanticValue(parser::Type current_type, parser::Type array_type, std::string type_name,
-			ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col);
+		// complete constructor
+		SemanticValue(parser::Type, parser::Type, std::vector<ASTExprNode*>, std::vector<SemanticValue*>,
+			std::string, std::map<std::string, SemanticValue*>, ASTExprNode*, bool, unsigned int, unsigned int);
+		// simplified constructor
+		SemanticValue(parser::Type current_type, unsigned int row, unsigned int col);
 		SemanticValue() = default;
 		parser::Type type;
 		parser::Type array_type;
-		std::vector<ASTExprNode*> dim; // maybe move to var?
+		std::vector<ASTExprNode*> dim;
+		std::vector<SemanticValue*> array_values;
 		std::string type_name;
 		std::map<std::string, SemanticValue*> struct_vars;
 		ASTExprNode* expr; // store constant hash instead?
@@ -31,15 +32,16 @@ namespace parser {
 	} SemanticValue_t;
 
 	typedef struct SemanticVariable {
-		SemanticVariable(std::string, Type, bool, parser::Type current_type, parser::Type array_type, std::vector<ASTExprNode*> dim,
-			std::string type_name, std::map<std::string, SemanticValue*> struct_vars, ASTExprNode* expr, bool is_expr_const, unsigned int, unsigned int, bool = false);
-		SemanticVariable(std::string, Type, bool, SemanticValue_t*, unsigned int, unsigned int, bool = false);
+		SemanticVariable(std::string, Type, Type, std::vector<ASTExprNode*>, std::string, SemanticValue_t*, bool, unsigned int, unsigned int, bool = false);
 		SemanticVariable() = default;
 		std::string identifier;
 		parser::Type type;
-		bool is_parameter;
+		parser::Type array_type;
+		std::vector<ASTExprNode*> dim;
+		std::string type_name;
 		SemanticValue_t* value;
 		bool is_const;
+		bool is_parameter;
 		unsigned int row;
 		unsigned int col;
 		void copy_from(SemanticVariable*);
@@ -84,6 +86,13 @@ namespace parser {
 		unsigned int col;
 	} StructureDefinition_t;
 
+	typedef struct Identifier {
+		Identifier(std::string, std::vector<ASTExprNode*>);
+		Identifier() = default;
+		std::string identifier;
+		std::vector<ASTExprNode*> access_vector;
+	} Identifier_t;
+
 	// Abstract Nodes
 	class ASTNode {
 	public:
@@ -116,9 +125,9 @@ namespace parser {
 
 	class ASTUsingNode : public ASTStatementNode {
 	public:
-		ASTUsingNode(std::string, std::string, unsigned int, unsigned int);
+		ASTUsingNode(std::vector<std::string>, std::string, unsigned int, unsigned int);
 
-		std::string library;
+		std::vector<std::string> library;
 		std::string alias;
 		unsigned int row;
 		unsigned int col;
@@ -132,11 +141,11 @@ namespace parser {
 
 		Type type;
 		std::string identifier;
+		std::vector<ASTExprNode*> dim;
 		std::string type_name;
 		ASTExprNode* expr;
 		bool is_const;
 		Type array_type;
-		std::vector<ASTExprNode*> dim;
 		unsigned int row;
 		unsigned int col;
 
@@ -145,12 +154,11 @@ namespace parser {
 
 	class ASTAssignmentNode : public ASTStatementNode {
 	public:
-		ASTAssignmentNode(std::vector<std::string>, std::string, ASTExprNode*, std::vector<ASTExprNode*>, unsigned int, unsigned int);
+		ASTAssignmentNode(std::vector<Identifier_t>, std::string, ASTExprNode*, unsigned int, unsigned int);
 
 		std::string op;
-		std::vector<std::string> identifier_vector;
+		std::vector<Identifier_t> identifier_vector;
 		ASTExprNode* expr;
-		std::vector<ASTExprNode*> access_vector;
 		unsigned int row;
 		unsigned int col;
 
@@ -400,10 +408,9 @@ namespace parser {
 
 	class ASTIdentifierNode : public ASTExprNode {
 	public:
-		explicit ASTIdentifierNode(std::vector<std::string>, std::vector<ASTExprNode*>, unsigned int, unsigned int);
+		explicit ASTIdentifierNode(std::vector<Identifier_t>, unsigned int, unsigned int);
 
-		std::vector<std::string> identifier_vector;
-		std::vector<ASTExprNode*> access_vector;
+		std::vector<Identifier_t> identifier_vector;
 		unsigned int row;
 		unsigned int col;
 
@@ -426,9 +433,10 @@ namespace parser {
 
 	class ASTFunctionCallNode : public ASTExprNode {
 	public:
-		ASTFunctionCallNode(std::string, std::vector<ASTExprNode*>, unsigned int, unsigned int);
+		ASTFunctionCallNode(std::string, std::vector<ASTExprNode*>, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 
 		std::string identifier;
+		std::vector<ASTExprNode*> access_vector;
 		std::vector<ASTExprNode*> parameters;
 		unsigned int row;
 		unsigned int col;

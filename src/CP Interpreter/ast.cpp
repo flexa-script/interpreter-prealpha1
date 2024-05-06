@@ -8,14 +8,15 @@
 using namespace parser;
 
 
-SemanticValue::SemanticValue(parser::Type current_type, parser::Type array_type, std::string type_name,
-	ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
-	:type(current_type), array_type(array_type), dim(std::vector<ASTExprNode*>()), type_name(type_name),
-	struct_vars(std::map<std::string, SemanticValue*>()), expr(expr), is_const(is_const), row(row), col(col) {}
+SemanticValue::SemanticValue(parser::Type current_type, unsigned int row, unsigned int col)
+	: type(current_type), array_type(current_type), dim(std::vector<ASTExprNode*>()),
+	array_values(std::vector<SemanticValue*>()), type_name(""),
+	struct_vars(std::map<std::string, SemanticValue*>()), expr(nullptr),
+	is_const(false), row(row), col(col) {}
 
-SemanticValue::SemanticValue(parser::Type current_type, parser::Type array_type, std::vector<ASTExprNode*> dim, std::string type_name,
-	std::map<std::string, SemanticValue*> struct_vars, ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
-	:type(current_type), array_type(array_type), dim(dim), type_name(type_name),
+SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim, std::vector<SemanticValue*> array_values,
+	std::string type_name, std::map<std::string, SemanticValue*> struct_vars, ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
+	: type(type), array_type(array_type), dim(dim), array_values(array_values), type_name(type_name),
 	struct_vars(struct_vars), expr(expr), is_const(is_const), row(row), col(col) {}
 
 void SemanticValue::copy_from(SemanticValue* value) {
@@ -23,32 +24,38 @@ void SemanticValue::copy_from(SemanticValue* value) {
 	array_type = value->array_type;
 	dim = value->dim;
 	type_name = value->type_name;
-	struct_vars = value->struct_vars;
 	expr = value->expr;
 	is_const = value->is_const;
 	row = value->row;
 	col = value->col;
+
+	struct_vars = std::map<std::string, SemanticValue*>();
+	for (auto& var : value->struct_vars) {
+		auto val = new SemanticValue();
+		val->copy_from(var.second);
+		struct_vars.emplace(var.first, val);
+	}
 }
 
-SemanticVariable::SemanticVariable(std::string identifier, Type type, bool is_const, parser::Type current_type, parser::Type array_type, std::vector<ASTExprNode*> dim,
-	std::string type_name, std::map<std::string, SemanticValue*> struct_vars, ASTExprNode* expr, bool is_expr_const,
-	unsigned int row, unsigned int col, bool is_parameter)
-	: identifier(identifier), type(type), is_const(is_const), row(row), col(col), is_parameter(is_parameter) {
-	this->value = new SemanticValue_t(current_type, array_type, dim, type_name, struct_vars, expr, is_expr_const, row, col);
-}
-
-SemanticVariable::SemanticVariable(std::string identifier, Type type, bool is_const, SemanticValue* expr,
-	unsigned int row, unsigned int col, bool is_parameter)
-	: identifier(identifier), type(type), is_const(is_const), value(expr), row(row), col(col), is_parameter(is_parameter) { }
+SemanticVariable::SemanticVariable(std::string identifier, Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+	std::string type_name, SemanticValue* value, bool is_const, unsigned int row, unsigned int col, bool is_parameter)
+	: identifier(identifier), type(type), array_type(array_type), dim(dim), type_name(type_name),
+	value(value), is_const(is_const), row(row), col(col), is_parameter(is_parameter) { }
 
 void SemanticVariable::copy_from(SemanticVariable* var) {
 	identifier = var->identifier;
 	type = var->type;
-	is_parameter = var->is_parameter;
-	value->copy_from(var->value);
+	array_type = var->array_type;
+	dim = var->dim;
+	type_name = var->type_name;
 	is_const = value->is_const;
+	is_parameter = var->is_parameter;
 	row = var->row;
 	col = var->col;
+
+	delete value;
+	value = new SemanticValue_t();
+	value->copy_from(var->value);
 }
 
 VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name,
@@ -65,21 +72,24 @@ FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::s
 	: identifier(identifier), type(type), type_name(type_name), any_type(any_type), array_type(array_type),
 	dim(dim), signature(signature), parameters(parameters), block(block), row(row), col(col) {};
 
+Identifier::Identifier(std::string identifier, std::vector<ASTExprNode*> access_vector)
+	: identifier(identifier), access_vector(access_vector) {}
+
 
 // Program Node
 ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string name)
 	: statements(std::move(statements)), name(name), alias("") {}
 
 // Statement Nodes
-ASTUsingNode::ASTUsingNode(std::string library, std::string alias, unsigned int row, unsigned int col)
+ASTUsingNode::ASTUsingNode(std::vector<std::string> library, std::string alias, unsigned int row, unsigned int col)
 	: library(std::move(library)), alias(std::move(alias)), row(row), col(col) {}
 
 ASTDeclarationNode::ASTDeclarationNode(Type type, std::string type_name, std::string identifier, ASTExprNode* expr, bool is_const,
 	Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col)
 	: type(type), type_name(std::move(type_name)), identifier(std::move(identifier)), expr(expr), is_const(is_const), array_type(array_type), dim(dim), row(row), col(col) {}
 
-ASTAssignmentNode::ASTAssignmentNode(std::vector<std::string> identifier_vector, std::string op, ASTExprNode* expr, std::vector<ASTExprNode*> access_vector, unsigned int row, unsigned int col)
-	: identifier_vector(identifier_vector), expr(expr), op(std::move(op)), access_vector(access_vector), row(row), col(col) {}
+ASTAssignmentNode::ASTAssignmentNode(std::vector<Identifier_t> identifier_vector, std::string op, ASTExprNode* expr, unsigned int row, unsigned int col)
+	: identifier_vector(identifier_vector), expr(expr), op(std::move(op)), row(row), col(col) {}
 
 ASTPrintNode::ASTPrintNode(ASTExprNode* expr, unsigned int row, unsigned int col)
 	: expr(expr), row(row), col(col) {}
@@ -147,13 +157,13 @@ ASTThisNode::ASTThisNode(unsigned int row, unsigned int col)
 ASTBinaryExprNode::ASTBinaryExprNode(std::string op, ASTExprNode* left, ASTExprNode* right, unsigned int row, unsigned int col)
 	: op(std::move(op)), left(left), right(right), row(row), col(col) {}
 
-ASTIdentifierNode::ASTIdentifierNode(std::vector<std::string> identifier_vector, std::vector<ASTExprNode*> access_vector, unsigned int row, unsigned int col)
-	: identifier_vector(identifier_vector), access_vector(access_vector), row(row), col(col) {}
+ASTIdentifierNode::ASTIdentifierNode(std::vector<Identifier_t> identifier_vector, unsigned int row, unsigned int col)
+	: identifier_vector(identifier_vector), row(row), col(col) {}
 
 ASTUnaryExprNode::ASTUnaryExprNode(std::string unary_op, ASTExprNode* expr, unsigned int row, unsigned int col)
 	: unary_op(std::move(unary_op)), expr(expr), row(row), col(col) {}
 
-ASTFunctionCallNode::ASTFunctionCallNode(std::string identifier, std::vector<ASTExprNode*> parameters, unsigned int row, unsigned int col)
+ASTFunctionCallNode::ASTFunctionCallNode(std::string identifier, std::vector<ASTExprNode*> access_vector, std::vector<ASTExprNode*> parameters, unsigned int row, unsigned int col)
 	: identifier(std::move(identifier)), parameters(std::move(parameters)), row(row), col(col) {}
 
 ASTTypeParseNode::ASTTypeParseNode(Type type, ASTExprNode* expr, unsigned int row, unsigned int col)

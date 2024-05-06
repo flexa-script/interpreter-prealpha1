@@ -100,6 +100,7 @@ typedef struct Value {
 	void set(cp_array);
 	void set(cp_struct);
 	void set_null();
+	void set_undefined();
 
 	void set_type(parser::Type);
 	void set_curr_type(parser::Type);

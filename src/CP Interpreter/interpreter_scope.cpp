@@ -9,12 +9,9 @@
 using namespace visitor;
 
 
-InterpreterScope::InterpreterScope(Interpreter* parent, std::string name) : intepr(parent), name(name) {}
+InterpreterScope::InterpreterScope(Interpreter* parent, std::string name) : name(name) {}
 
-InterpreterScope::InterpreterScope() {
-	name = "";
-	intepr = nullptr;
-}
+InterpreterScope::InterpreterScope() : name("") { }
 
 std::string InterpreterScope::get_name() {
 	return name;
@@ -22,10 +19,6 @@ std::string InterpreterScope::get_name() {
 
 void InterpreterScope::set_name(std::string name) {
 	this->name = name;
-}
-
-void InterpreterScope::set_parent(Interpreter* parent) {
-	this->intepr = parent;
 }
 
 bool InterpreterScope::already_declared_variable(std::string identifier) {
@@ -44,6 +37,19 @@ bool InterpreterScope::already_declared_function(std::string identifier, std::ve
 	catch (...) {
 		return false;
 	}
+}
+
+Value_t* InterpreterScope::declare_undef_variable(std::string identifier, parser::Type type) {
+	Value_t* value = new Value_t(type);
+	value->set_undefined();
+	variable_symbol_table[identifier] = value;
+	return value;
+}
+
+Value_t* InterpreterScope::declare_undef_struct_variable(std::string identifier, std::string type_name) {
+	Value_t* value = declare_undef_variable(identifier, parser::Type::T_STRUCT);
+	value->str.first = type_name;
+	return value;
 }
 
 Value_t* InterpreterScope::declare_null_variable(std::string identifier, parser::Type type) {
@@ -122,64 +128,8 @@ parser::StructureDefinition_t InterpreterScope::find_declared_structure_definiti
 	return structure_symbol_table[identifier];
 }
 
-Value_t* InterpreterScope::access_value_of_array(Value_t* arr, std::vector<parser::ASTExprNode*> access_vector) {
-	cp_array* currentVal = &arr->arr;
-	size_t s = 0;
-	size_t accessPos = 0;
-
-	for (s = 0; s < access_vector.size() - 1; ++s) {
-		access_vector.at(s)->accept(intepr);
-		accessPos = intepr->get_current_expression_value().i;
-		if (accessPos >= currentVal->size()) {
-			throw std::runtime_error("ISERR: tryed to access a invalid position");
-		}
-		if (currentVal->at(accessPos)->curr_type != parser::Type::T_ARRAY) {
-			has_string_access = true;
-			break;
-		}
-		currentVal = &currentVal->at(accessPos)->arr;
-	}
-
-	access_vector.at(s)->accept(intepr);
-	accessPos = intepr->get_current_expression_value().i;
-	if (accessPos >= currentVal->size()) {
-		throw std::runtime_error("ISERR: tryed to access a invalid position");
-	}
-
-	return currentVal->at(accessPos);
-}
-
-Value_t* InterpreterScope::access_value_of_structure(Value_t* value, std::vector<std::string> identifier_vector) {
-	Value_t* strValue = value;
-
-	for (size_t i = 1; i < identifier_vector.size(); ++i) {
-		for (size_t j = 0; j < strValue->str.second.size(); ++j) {
-			if (identifier_vector[i] == strValue->str.second[j].first) {
-				strValue = strValue->str.second[j].second;
-				break;
-			}
-		}
-	}
-
-	return strValue;
-}
-
-Value_t* InterpreterScope::access_value(std::vector<std::string> identifier_vector, std::vector<parser::ASTExprNode*> access_vector) {
-	Value_t* value = variable_symbol_table[identifier_vector[0]];
-
-	if (identifier_vector.size() > 1) {
-		value = access_value_of_structure(value, identifier_vector);
-	}
-
-	if (access_vector.size() > 0 && value->curr_type == parser::Type::T_ARRAY) {
-		has_string_access = false;
-		value = access_value_of_array(value, access_vector);
-	}
-	else {
-		has_string_access = true;
-	}
-
-	return value;
+Value_t* InterpreterScope::find_declared_variable(std::string identifier) {
+	return variable_symbol_table[identifier];
 }
 
 std::tuple<std::vector<parser::Type>, std::vector<std::string>, parser::ASTBlockNode*> InterpreterScope::find_declared_function(std::string identifier, std::vector<parser::Type> signature) {

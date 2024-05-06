@@ -42,6 +42,8 @@
 - [ ] Add expression operators:
     - [X] ++,--
     - [ ] Add 'in' operator to check if anything is in array/string
+    - [ ] Add array(size) initializer to build custon sized arrays
+    - [ ] Add { init_value } to initilize all positions with same value
     - [ ] immediate if
 - [X] Add built in funcs:
     - [X] len: returns size of array/string
@@ -49,6 +51,7 @@
     - [X] type: returns type of object
 - [X] Let functions return array
 - [X] Add lib scope lib.(method|properties|struct)
+- [ ] Guanrantee that a lib is loaded once
 - [X] Flex function return (currently it's mandatory specificate the return type)
 - [ ] Remove struct as bool in expression and change this type of verification to void value comparation (eg: var == null)
 - [ ] Move function body parser to caller node (as interpreter), to check parameters of each caller
