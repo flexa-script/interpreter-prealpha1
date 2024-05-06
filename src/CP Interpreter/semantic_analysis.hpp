@@ -29,8 +29,6 @@ namespace visitor {
 		void assign_structure(SemanticScope*, parser::SemanticValue_t*, parser::ASTStructConstructorNode*);
 		void declare_structure();
 
-		//parser::SemanticVariable_t* find_declared_variable_recursively(std::string);
-
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);
 		void determine_array_type(parser::ASTArrayConstructorNode*);

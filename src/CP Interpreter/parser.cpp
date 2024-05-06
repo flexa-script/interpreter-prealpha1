@@ -1340,6 +1340,9 @@ std::vector<Identifier_t> Parser::parse_identifier_vector() {
 			consume_token();
 			consume_token(lexer::TOK_IDENTIFIER);
 		}
+		else {
+			break;
+		}
 	}
 
 	return identifier_vector;

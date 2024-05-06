@@ -58,22 +58,24 @@ SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticVa
 	// evaluate array access vector
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
-	size_t s = 0;
-	size_t accessPos = 0;
+	if (access_vector.size() > 0) {
+		size_t s = 0;
+		size_t accessPos = 0;
 
-	for (s = 0; s < access_vector.size() - 1; ++s) {
-		accessPos = access_vector.at(s);
-		if (next_value->array_values.at(accessPos)->type == Type::T_STRING) {
-			break;
+		for (s = 0; s < access_vector.size() - 1; ++s) {
+			accessPos = access_vector.at(s);
+			if (next_value->array_values.at(accessPos)->type == Type::T_STRING) {
+				break;
+			}
+			if (next_value->array_values.at(accessPos)->type != Type::T_ARRAY) {
+				throw std::runtime_error(msg_header(0, 0) + "it is not an array or string");
+			}
+			if (accessPos >= next_value->array_values.size()) {
+				throw std::runtime_error(msg_header(0, 0) + "trying to access a invalid position");
+			}
 		}
-		if (next_value->array_values.at(accessPos)->type != Type::T_ARRAY) {
-			throw std::runtime_error(msg_header(0, 0) + "it is not an array or string");
-		}
-		if (accessPos >= next_value->array_values.size()) {
-			throw std::runtime_error(msg_header(0, 0) + "trying to access a invalid position");
-		}
+		next_value = next_value->array_values.at(accessPos);
 	}
-	next_value = next_value->array_values.at(accessPos);
 
 	++i;
 
