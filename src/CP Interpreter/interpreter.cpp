@@ -59,35 +59,32 @@ void visitor::Interpreter::visit(parser::ASTUsingNode* astnode) {
 Value_t* Interpreter::access_value(InterpreterScope* scope, Value_t* value, std::vector<parser::Identifier_t> identifier_vector, size_t i) {
 	Value_t* next_value = value;
 
-	if (i < identifier_vector.size()) {
-		auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
+	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
-		if (access_vector.size() > 0) {
-			cp_array* currentVal = &next_value->arr;
-			size_t s = 0;
-			size_t accessPos = 0;
+	if (access_vector.size() > 0) {
+		cp_array* currentVal = &next_value->arr;
+		size_t s = 0;
+		size_t accessPos = 0;
 
-			for (s = 0; s < access_vector.size() - 1; ++s) {
-				accessPos = access_vector.at(i);
-				if (currentVal->at(accessPos)->curr_type != parser::Type::T_ARRAY) {
-					has_string_access = true;
-					break;
-				}
-				currentVal = &currentVal->at(accessPos)->arr;
+		for (s = 0; s < access_vector.size() - 1; ++s) {
+			accessPos = access_vector.at(i);
+			if (currentVal->at(accessPos)->curr_type != parser::Type::T_ARRAY) {
+				has_string_access = true;
+				break;
 			}
-
-			next_value = currentVal->at(accessPos);
+			currentVal = &currentVal->at(accessPos)->arr;
 		}
+		next_value = currentVal->at(accessPos);
+	}
 
-		++i;
+	++i;
 
+	if (i < identifier_vector.size()) {
 		for (size_t j = 0; j < next_value->str.second.size(); ++j) {
 			if (identifier_vector[i].identifier == next_value->str.second[j].first) {
 				next_value = next_value->str.second[j].second;
-				return access_value(scope, next_value, identifier_vector, i);
 			}
 		}
-
 	}
 
 	return next_value;

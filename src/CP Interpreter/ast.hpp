@@ -21,6 +21,7 @@ namespace parser {
 		parser::Type type;
 		parser::Type array_type;
 		std::vector<ASTExprNode*> dim;
+		std::vector<unsigned int> parsed_dim;
 		std::vector<SemanticValue*> array_values;
 		std::string type_name;
 		std::map<std::string, SemanticValue*> struct_vars;
@@ -38,6 +39,7 @@ namespace parser {
 		parser::Type type;
 		parser::Type array_type;
 		std::vector<ASTExprNode*> dim;
+		std::vector<unsigned int> parsed_dim;
 		std::string type_name;
 		SemanticValue_t* value;
 		bool is_const;

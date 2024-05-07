@@ -223,6 +223,9 @@ ASTAssignmentNode* Parser::parse_assignment_statement() {
 
 	identifier_vector = parse_identifier_vector();
 
+	consume_token();
+
+
 	if (current_token.type != lexer::TOK_ADDITIVE_OP && current_token.type != lexer::TOK_MULTIPLICATIVE_OP && current_token.type != lexer::TOK_EQUALS) {
 		throw std::runtime_error(msg_header() + "invalid assignment operator '" + current_token.value + "'");
 	}

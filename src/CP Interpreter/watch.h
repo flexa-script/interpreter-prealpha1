@@ -92,7 +92,21 @@ public:
 		aux_elapsed %= SECOND;
 		mil = aux_elapsed;
 		std::stringstream r;
-		r << d << "d " << h << "h " << m << "m " << s << "s " << mil << "mil";
+		if (d) {
+			r << d << "d ";
+		}
+		if (h) {
+			r << h << "h ";
+		}
+		if (m) {
+			r << m << "m ";
+		}
+		if (s) {
+			r << s << "s ";
+		}
+		if (mil) {
+			r << mil << "mil";
+		}
 		return r.str();
 	}
 };
@@ -137,7 +151,21 @@ public:
 			min++;
 		}
 		std::stringstream r;
-		r << min << "min " << sec << "sec " << mil << "mil " << mic << "mic " << nan << "nan";
+		if (min) {
+			r << min << "min ";
+		}
+		if (sec) {
+			r << sec << "sec ";
+		}
+		if (mil) {
+			r << mil << "mil ";
+		}
+		if (mic) {
+			r << mic << "mic ";
+		}
+		if (nan) {
+			r << nan << "nan ";
+		}
 		return r.str();
 	}
 };

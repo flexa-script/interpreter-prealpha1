@@ -23,6 +23,7 @@ void SemanticValue::copy_from(SemanticValue* value) {
 	type = value->type;
 	array_type = value->array_type;
 	dim = value->dim;
+	parsed_dim = value->parsed_dim;
 	type_name = value->type_name;
 	expr = value->expr;
 	is_const = value->is_const;
@@ -34,6 +35,13 @@ void SemanticValue::copy_from(SemanticValue* value) {
 		auto val = new SemanticValue();
 		val->copy_from(var.second);
 		struct_vars.emplace(var.first, val);
+	}
+
+	array_values = std::vector<SemanticValue*>();
+	for (auto& var : value->array_values) {
+		auto val = new SemanticValue();
+		val->copy_from(var);
+		array_values.emplace_back(val);
 	}
 }
 
@@ -47,6 +55,7 @@ void SemanticVariable::copy_from(SemanticVariable* var) {
 	type = var->type;
 	array_type = var->array_type;
 	dim = var->dim;
+	parsed_dim = value->parsed_dim;
 	type_name = var->type_name;
 	is_const = value->is_const;
 	is_parameter = var->is_parameter;

@@ -31,8 +31,11 @@ namespace visitor {
 
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);
+		std::vector<unsigned int> calculate_array_dim_size(std::vector<parser::SemanticValue_t*>);
+
 		void determine_array_type(parser::ASTArrayConstructorNode*);
 		void check_array_type(parser::ASTExprNode*, unsigned int, unsigned int);
+
 		parser::SemanticValue_t* access_value(SemanticScope*, parser::SemanticValue_t*, std::vector<parser::Identifier_t>, bool = false, size_t = 0);
 
 		std::string msg_header(unsigned int, unsigned int);

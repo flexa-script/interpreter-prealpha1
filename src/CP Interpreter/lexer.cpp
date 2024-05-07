@@ -68,18 +68,18 @@ Token Lexer::process_comment() {
 	}
 
 	do {
-		if (current_char == '\n') {
-			++current_row;
-		}
+		//if (current_char == '\n') {
+		//	++current_row;
+		//}
 
 		comment += current_char;
 		advance();
 	} while (has_next() && (is_block && (current_char != '/' || before_char != '*') || !is_block && current_char != '\n'));
 
 
-	if (current_char == '\n') {
-		++current_row;
-	}
+	//if (current_char == '\n') {
+	//	++current_row;
+	//}
 
 	comment += current_char;
 	advance();
