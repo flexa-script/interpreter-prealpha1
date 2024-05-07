@@ -323,13 +323,17 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		//	throw std::runtime_error(msg_header(astnode->row, astnode->col) + "mismatched type for '" + astnode->identifier_vector[0].identifier +
 		//		"', expected '" + type_str(declared_variable->value->array_type) + "' array, found '" + type_str(assignment_expr.array_type) + "' array");
 		//}
+		delete declared_variable->value;
+		declared_variable->value = new SemanticValue_t();
+		declared_variable->value->copy_from(&assignment_expr);
 	}
 	else if (is_any(declared_variable->type)) {
 		delete declared_variable->value;
 		declared_variable->value = new SemanticValue_t();
 		declared_variable->value->copy_from(&assignment_expr);
 	}
-	else if (match_type(declared_variable->type, assignment_expr.type)) {
+	else if (match_type(declared_variable->type, assignment_expr.type)
+		|| is_array(declared_variable->type) && match_type(variable_expression->type, assignment_expr.type)) {
 		delete declared_variable->value;
 		declared_variable->value = new SemanticValue_t();
 		declared_variable->value->copy_from(&assignment_expr);
