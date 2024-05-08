@@ -73,7 +73,11 @@ SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticVa
 			if (accessPos >= next_value->array_values.size()) {
 				throw std::runtime_error(msg_header(0, 0) + "trying to access a invalid position");
 			}
+			next_value = next_value->array_values.at(accessPos);
 		}
+
+		accessPos = access_vector.at(s);
+		next_value = next_value->array_values.at(accessPos);
 		
 		++i;
 
@@ -81,8 +85,6 @@ SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticVa
 			next_value = next_value->struct_vars[identifier_vector[i].identifier];
 			return access_value(scope, next_value, identifier_vector, i, check_undef);
 		}
-
-		next_value = next_value->array_values.at(accessPos);
 	}
 
 	return next_value;
@@ -302,30 +304,29 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		}
 	}
 	if (is_array(declared_variable->type) && (is_array(assignment_expr.type) || is_void(assignment_expr.type))) {
-		if (is_array(assignment_expr.type)) {
+		//if (is_array(assignment_expr.type)) {
 
-			std::vector<unsigned int> var_dim = evaluate_access_vector(declared_variable->dim);
-			std::vector<unsigned int> expr_dim = assignment_expr.parsed_dim;
+		//	auto var_dim_expr = is_undefined(variable_expression->type) || is_void(variable_expression->type) ? declared_variable->dim : variable_expression->dim;
+		//	std::vector<unsigned int> var_dim = evaluate_access_vector(var_dim_expr);
+		//	std::vector<unsigned int> expr_dim = assignment_expr.parsed_dim;
 
-			if (var_dim.size() != expr_dim.size()) {
-				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier_vector[0].identifier + "'");
-			}
+		//	if (var_dim.size() != expr_dim.size()) {
+		//		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier_vector[0].identifier + "'");
+		//	}
 
-			for (size_t dc = 0; dc < var_dim.size(); ++dc) {
-				if (declared_variable->dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
-					throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid array size assigning '" + astnode->identifier_vector[0].identifier + "'");
-				}
-			}
-		}
+		//	for (size_t dc = 0; dc < var_dim.size(); ++dc) {
+		//		if (declared_variable->dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
+		//			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid array size assigning '" + astnode->identifier_vector[0].identifier + "'");
+		//		}
+		//	}
+		//}
 
 		// TODO: refactor array validation
 		//if (astnode->access_vector.size() == 0 && !is_any(declared_variable->value->array_type) && !match_type(declared_variable->value->array_type, assignment_expr.array_type)) {
 		//	throw std::runtime_error(msg_header(astnode->row, astnode->col) + "mismatched type for '" + astnode->identifier_vector[0].identifier +
 		//		"', expected '" + type_str(declared_variable->value->array_type) + "' array, found '" + type_str(assignment_expr.array_type) + "' array");
 		//}
-		delete declared_variable->value;
-		declared_variable->value = new SemanticValue_t();
-		declared_variable->value->copy_from(&assignment_expr);
+		variable_expression->copy_from(&assignment_expr);
 	}
 	else if (is_any(declared_variable->type)) {
 		delete declared_variable->value;
@@ -334,9 +335,7 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	}
 	else if (match_type(declared_variable->type, assignment_expr.type)
 		|| is_array(declared_variable->type) && match_type(variable_expression->type, assignment_expr.type)) {
-		delete declared_variable->value;
-		declared_variable->value = new SemanticValue_t();
-		declared_variable->value->copy_from(&assignment_expr);
+		variable_expression->copy_from(&assignment_expr);
 	}
 	// otherwise throw error
 	else if (!match_type(declared_variable->type, assignment_expr.type)) {
