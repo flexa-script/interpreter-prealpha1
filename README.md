@@ -81,6 +81,15 @@
         - [ ] Stack
     - [ ] Util
 
+## Errors
+- Errors has CP prefix, eg. CP9999
+- Token errors init with 1
+- Lexer errors init with 2
+- Semantic scope errors init with 3
+- Semantic analyser errors init with 4
+- Interpreter scope errors init with 5
+- Interpreter errors init with 6
+
 ## Rules
 
 ### Arrays

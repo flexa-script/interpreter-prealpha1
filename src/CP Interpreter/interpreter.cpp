@@ -83,6 +83,7 @@ Value_t* Interpreter::access_value(InterpreterScope* scope, Value_t* value, std:
 		for (size_t j = 0; j < next_value->str.second.size(); ++j) {
 			if (identifier_vector[i].identifier == next_value->str.second[j].first) {
 				next_value = next_value->str.second[j].second;
+				return access_value(scope, next_value, identifier_vector, i);
 			}
 		}
 	}
@@ -252,10 +253,10 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
 
+	Value_t* value = access_value(scopes[i], scopes[i]->find_declared_variable(astnode->identifier_vector[0].identifier), astnode->identifier_vector);
+
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
-
-	Value_t* value = access_value(scopes[i], scopes[i]->find_declared_variable(astnode->identifier_vector[0].identifier), astnode->identifier_vector);
 
 	if (current_expression_value.has_value) {
 		switch (current_expression_value.curr_type) {

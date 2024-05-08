@@ -288,12 +288,14 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	}
 
 	// allow mismatched type in the case of declaration of int to real
-	if (is_float(declared_variable->type) && is_int(assignment_expr.type)) {
+	if (is_float(declared_variable->type) && is_int(assignment_expr.type) ||
+		is_string(declared_variable->type) && is_char(assignment_expr.type)) {
 		delete declared_variable->value;
 		declared_variable->value = new SemanticValue_t();
 		declared_variable->value->copy_from(&assignment_expr);
 	}
-	else if (is_struct(declared_variable->type) && (is_struct(assignment_expr.type) || is_void(assignment_expr.type))) {
+	else if (is_struct(declared_variable->type) && (is_struct(assignment_expr.type) || is_void(assignment_expr.type))
+		|| is_any(declared_variable->type) && is_struct(assignment_expr.type)) {
 		if (assignment_expr.type_name != declared_variable->value->type_name && !is_void(assignment_expr.type)) {
 			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "mismatched type for '" + astnode->identifier_vector[0].identifier +
 				"' struct, expected '" + declared_variable->value->type_name + "', found '" + assignment_expr.type_name + "'");
@@ -303,7 +305,8 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 			assign_structure(scopes[i], declared_variable->value, str_expr);
 		}
 	}
-	if (is_array(declared_variable->type) && (is_array(assignment_expr.type) || is_void(assignment_expr.type))) {
+	else if (is_array(declared_variable->type) && (is_array(assignment_expr.type) || is_void(assignment_expr.type))
+		|| is_any(declared_variable->type) && is_array(assignment_expr.type)) {
 		//if (is_array(assignment_expr.type)) {
 
 		//	auto var_dim_expr = is_undefined(variable_expression->type) || is_void(variable_expression->type) ? declared_variable->dim : variable_expression->dim;
@@ -326,16 +329,27 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		//	throw std::runtime_error(msg_header(astnode->row, astnode->col) + "mismatched type for '" + astnode->identifier_vector[0].identifier +
 		//		"', expected '" + type_str(declared_variable->value->array_type) + "' array, found '" + type_str(assignment_expr.array_type) + "' array");
 		//}
+		if (declared_variable->value == variable_expression) {
+			delete declared_variable->value;
+			declared_variable->value = new SemanticValue_t();
+			declared_variable->value->copy_from(&assignment_expr);
+		}
+		else {
+			variable_expression->copy_from(&assignment_expr);
+		}
+	}
+	else if (is_array(declared_variable->type) && match_type(variable_expression->type, assignment_expr.type)) {
 		variable_expression->copy_from(&assignment_expr);
+	}
+	else if (match_type(declared_variable->type, assignment_expr.type)) {
+		delete declared_variable->value;
+		declared_variable->value = new SemanticValue_t();
+		declared_variable->value->copy_from(&assignment_expr);
 	}
 	else if (is_any(declared_variable->type)) {
 		delete declared_variable->value;
 		declared_variable->value = new SemanticValue_t();
 		declared_variable->value->copy_from(&assignment_expr);
-	}
-	else if (match_type(declared_variable->type, assignment_expr.type)
-		|| is_array(declared_variable->type) && match_type(variable_expression->type, assignment_expr.type)) {
-		variable_expression->copy_from(&assignment_expr);
 	}
 	// otherwise throw error
 	else if (!match_type(declared_variable->type, assignment_expr.type)) {
