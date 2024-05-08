@@ -294,6 +294,16 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		declared_variable->value = new SemanticValue_t();
 		declared_variable->value->copy_from(&assignment_expr);
 	}
+	else if (is_any(declared_variable->type)) {
+		if (declared_variable->value == variable_expression) {
+			delete declared_variable->value;
+			declared_variable->value = new SemanticValue_t();
+			declared_variable->value->copy_from(&assignment_expr);
+		}
+		else {
+			variable_expression->copy_from(&assignment_expr);
+		}
+	}
 	else if (is_struct(declared_variable->type) && (is_struct(assignment_expr.type) || is_void(assignment_expr.type))
 		|| is_any(declared_variable->type) && is_struct(assignment_expr.type)) {
 		if (assignment_expr.type_name != declared_variable->value->type_name && !is_void(assignment_expr.type)) {
@@ -305,48 +315,40 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 			assign_structure(scopes[i], declared_variable->value, str_expr);
 		}
 	}
-	else if (is_array(declared_variable->type) && (is_array(assignment_expr.type) || is_void(assignment_expr.type))
-		|| is_any(declared_variable->type) && is_array(assignment_expr.type)) {
-		//if (is_array(assignment_expr.type)) {
+	else if (is_array(declared_variable->type) && (is_array(assignment_expr.type) || is_void(assignment_expr.type)) // array or null assigning array 
+		|| is_array(declared_variable->type) && match_type(variable_expression->type, assignment_expr.type)) { // variable is array, but it is assigning subvalues
+		if (is_array(assignment_expr.type) && is_array(variable_expression->type)) {
 
-		//	auto var_dim_expr = is_undefined(variable_expression->type) || is_void(variable_expression->type) ? declared_variable->dim : variable_expression->dim;
-		//	std::vector<unsigned int> var_dim = evaluate_access_vector(var_dim_expr);
-		//	std::vector<unsigned int> expr_dim = assignment_expr.parsed_dim;
+			//auto var_dim_expr = is_undefined(variable_expression->type) || is_void(variable_expression->type) ? declared_variable->dim : variable_expression->dim;
+			std::vector<unsigned int> var_dim = evaluate_access_vector(variable_expression->dim);
+			std::vector<unsigned int> expr_dim = evaluate_access_vector(assignment_expr.dim);//assignment_expr.parsed_dim;
 
-		//	if (var_dim.size() != expr_dim.size()) {
-		//		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier_vector[0].identifier + "'");
-		//	}
+			if (var_dim.size() != expr_dim.size()) {
+				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier_vector[0].identifier + "'");
+			}
 
-		//	for (size_t dc = 0; dc < var_dim.size(); ++dc) {
-		//		if (declared_variable->dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
-		//			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid array size assigning '" + astnode->identifier_vector[0].identifier + "'");
-		//		}
-		//	}
-		//}
+			for (size_t dc = 0; dc < var_dim.size(); ++dc) {
+				if (declared_variable->dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
+					throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid array size assigning '" + astnode->identifier_vector[0].identifier + "'");
+				}
+			}
+		}
 
 		// TODO: refactor array validation
 		//if (astnode->access_vector.size() == 0 && !is_any(declared_variable->value->array_type) && !match_type(declared_variable->value->array_type, assignment_expr.array_type)) {
 		//	throw std::runtime_error(msg_header(astnode->row, astnode->col) + "mismatched type for '" + astnode->identifier_vector[0].identifier +
 		//		"', expected '" + type_str(declared_variable->value->array_type) + "' array, found '" + type_str(assignment_expr.array_type) + "' array");
 		//}
-		if (declared_variable->value == variable_expression) {
+		if (declared_variable->value == variable_expression) { // is root value, assign a new one
 			delete declared_variable->value;
 			declared_variable->value = new SemanticValue_t();
 			declared_variable->value->copy_from(&assignment_expr);
 		}
-		else {
+		else { // is subvalue, assign specific value
 			variable_expression->copy_from(&assignment_expr);
 		}
 	}
-	else if (is_array(declared_variable->type) && match_type(variable_expression->type, assignment_expr.type)) {
-		variable_expression->copy_from(&assignment_expr);
-	}
 	else if (match_type(declared_variable->type, assignment_expr.type)) {
-		delete declared_variable->value;
-		declared_variable->value = new SemanticValue_t();
-		declared_variable->value->copy_from(&assignment_expr);
-	}
-	else if (is_any(declared_variable->type)) {
 		delete declared_variable->value;
 		declared_variable->value = new SemanticValue_t();
 		declared_variable->value->copy_from(&assignment_expr);
