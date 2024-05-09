@@ -83,8 +83,11 @@ Value_t* Interpreter::access_value(InterpreterScope* scope, Value_t* value, std:
 		for (size_t j = 0; j < next_value->str.second.size(); ++j) {
 			if (identifier_vector[i].identifier == next_value->str.second[j].first) {
 				next_value = next_value->str.second[j].second;
-				return access_value(scope, next_value, identifier_vector, i);
 			}
+		}
+
+		if (identifier_vector[i].access_vector.size() > 0) {
+			return access_value(scope, next_value, identifier_vector, i);
 		}
 	}
 

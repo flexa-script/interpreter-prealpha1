@@ -55,6 +55,15 @@ SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticVa
 
 	SemanticValue_t* next_value = value;
 
+	// check if the base variable is not null
+	if (is_void(next_value->type) || is_undefined(next_value->type)) {
+		auto dectype = is_void(next_value->type) ? "null" : "undefined";
+		// array
+		if (identifier_vector[i].access_vector.size() > 0) {
+			throw std::runtime_error(msg_header(0, 0l) + "trying assign '" + identifier_vector[i].identifier + "' array position but it's " + dectype);
+		}
+	}
+
 	// evaluate array access vector
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
@@ -64,14 +73,14 @@ SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticVa
 
 		for (s = 0; s < access_vector.size() - 1; ++s) {
 			accessPos = access_vector.at(s);
+			if (accessPos >= next_value->array_values.size()) {
+				throw std::runtime_error(msg_header(0, 0) + "trying to access a invalid position");
+			}
 			if (next_value->array_values.at(accessPos)->type == Type::T_STRING) {
 				break;
 			}
 			if (next_value->array_values.at(accessPos)->type != Type::T_ARRAY) {
 				throw std::runtime_error(msg_header(0, 0) + "it is not an array or string");
-			}
-			if (accessPos >= next_value->array_values.size()) {
-				throw std::runtime_error(msg_header(0, 0) + "trying to access a invalid position");
 			}
 			next_value = next_value->array_values.at(accessPos);
 		}
@@ -82,6 +91,16 @@ SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticVa
 		++i;
 
 		if (i < identifier_vector.size()) {
+			auto next_value_aux = next_value->struct_vars[identifier_vector[i].identifier];
+
+			if (is_void(next_value_aux->type)
+				|| is_undefined(next_value_aux->type)) {
+				auto dectype = is_void(next_value->type) ? "null" : "undefined";
+
+				throw std::runtime_error(msg_header(0, 0) + "trying assign '" + identifier_vector[i].identifier +
+					"' but '" + identifier_vector[i-1].identifier + "' is " + dectype);
+			}
+
 			next_value = next_value->struct_vars[identifier_vector[i].identifier];
 			return access_value(scope, next_value, identifier_vector, i, check_undef);
 		}
@@ -241,11 +260,10 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 
 	// get base variable
 	auto declared_variable = scopes[i]->find_declared_variable(astnode->identifier_vector[0].identifier);
-	auto variable_expression = access_value(scopes[i], declared_variable->value, astnode->identifier_vector);
 
 	// check if the base variable is not null
-	if (is_void(variable_expression->type)) {
-		auto dectype = is_void(variable_expression->type) ? "null" : "undefined";
+	if (is_void(declared_variable->value->type) || is_undefined(declared_variable->value->type)) {
+		auto dectype = is_void(declared_variable->value->type) ? "null" : "undefined";
 		// struct
 		if (astnode->identifier_vector.size() > 1) {
 			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "trying assign '" + astnode->identifier_vector[0].identifier +
@@ -253,10 +271,12 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		}
 		// array
 		// TODO: refactor array validation
-		//if (astnode->access_vector.size() > 0) {
-		//	throw std::runtime_error(msg_header(astnode->row, astnode->col) + "trying assign '" + astnode->identifier_vector[0].identifier + "' array position but it's " + dectype);
-		//}
+		if (astnode->identifier_vector[0].access_vector.size() > 0) {
+			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "trying assign '" + astnode->identifier_vector[0].identifier + "' array position but it's " + dectype);
+		}
 	}
+
+	auto variable_expression = access_value(scopes[i], declared_variable->value, astnode->identifier_vector);
 
 	if (declared_variable->is_const) {
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "'" + astnode->identifier_vector[0].identifier + "' constant being reassigned");
