@@ -74,6 +74,10 @@ Value_t* Interpreter::access_value(InterpreterScope* scope, Value_t* value, std:
 			}
 			currentVal = &currentVal->at(accessPos)->arr;
 		}
+		accessPos = access_vector.at(i);
+		if (currentVal->at(accessPos)->curr_type != parser::Type::T_ARRAY) {
+			has_string_access = true;
+		}
 		next_value = currentVal->at(accessPos);
 	}
 

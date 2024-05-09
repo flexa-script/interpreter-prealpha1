@@ -87,21 +87,24 @@ SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticVa
 
 		accessPos = access_vector.at(s);
 		next_value = next_value->array_values.at(accessPos);
+	}
 
-		++i;
+	++i;
 
-		if (i < identifier_vector.size()) {
-			auto next_value_aux = next_value->struct_vars[identifier_vector[i].identifier];
+	if (i < identifier_vector.size()) {
+		auto next_value_aux = next_value->struct_vars[identifier_vector[i].identifier];
 
-			if (is_void(next_value_aux->type)
-				|| is_undefined(next_value_aux->type)) {
-				auto dectype = is_void(next_value->type) ? "null" : "undefined";
+		if (is_void(next_value_aux->type)
+			|| is_undefined(next_value_aux->type)) {
+			auto dectype = is_void(next_value->type) ? "null" : "undefined";
 
-				throw std::runtime_error(msg_header(0, 0) + "trying assign '" + identifier_vector[i].identifier +
-					"' but '" + identifier_vector[i-1].identifier + "' is " + dectype);
-			}
+			throw std::runtime_error(msg_header(0, 0) + "trying assign '" + identifier_vector[i].identifier +
+				"' but '" + identifier_vector[i-1].identifier + "' is " + dectype);
+		}
 
-			next_value = next_value->struct_vars[identifier_vector[i].identifier];
+		next_value = next_value->struct_vars[identifier_vector[i].identifier];
+
+		if (identifier_vector[i].access_vector.size() > 0) {
 			return access_value(scope, next_value, identifier_vector, i, check_undef);
 		}
 	}
