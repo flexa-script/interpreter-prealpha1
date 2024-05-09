@@ -262,19 +262,18 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	auto declared_variable = scopes[i]->find_declared_variable(astnode->identifier_vector[0].identifier);
 
 	// check if the base variable is not null
-	if (is_void(declared_variable->value->type) || is_undefined(declared_variable->value->type)) {
-		auto dectype = is_void(declared_variable->value->type) ? "null" : "undefined";
-		// struct
-		if (astnode->identifier_vector.size() > 1) {
-			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "trying assign '" + astnode->identifier_vector[0].identifier +
-				"' but '" + astnode->identifier_vector[0].identifier + "' is " + dectype);
-		}
-		// array
-		// TODO: refactor array validation
-		if (astnode->identifier_vector[0].access_vector.size() > 0) {
-			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "trying assign '" + astnode->identifier_vector[0].identifier + "' array position but it's " + dectype);
-		}
-	}
+	//if (is_void(declared_variable->value->type) || is_undefined(declared_variable->value->type)) {
+	//	auto dectype = is_void(declared_variable->value->type) ? "null" : "undefined";
+	//	// struct
+	//	if (astnode->identifier_vector.size() > 1) {
+	//		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "trying assign '" + astnode->identifier_vector[0].identifier +
+	//			"' but '" + astnode->identifier_vector[0].identifier + "' is " + dectype);
+	//	}
+	//	// array
+	//	if (astnode->identifier_vector[0].access_vector.size() > 0) {
+	//		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "trying assign '" + astnode->identifier_vector[0].identifier + "' array position but it's " + dectype);
+	//	}
+	//}
 
 	auto variable_expression = access_value(scopes[i], declared_variable->value, astnode->identifier_vector);
 
