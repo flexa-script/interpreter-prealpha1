@@ -62,23 +62,22 @@ Value_t* Interpreter::access_value(InterpreterScope* scope, Value_t* value, std:
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
 	if (access_vector.size() > 0) {
-		cp_array* currentVal = &next_value->arr;
+		cp_array* current_Val = &next_value->arr;
 		size_t s = 0;
-		size_t accessPos = 0;
+		size_t access_Pos = 0;
 
 		for (s = 0; s < access_vector.size() - 1; ++s) {
-			accessPos = access_vector.at(i);
-			if (currentVal->at(accessPos)->curr_type != parser::Type::T_ARRAY) {
+			access_Pos = access_vector.at(s);
+			// break if it is a string, and the string access will be handled in identifier node evaluation
+			// TODO: ckeck if it will handle assign
+			if (current_Val->at(access_Pos)->curr_type == parser::Type::T_STRING) {
 				has_string_access = true;
 				break;
 			}
-			currentVal = &currentVal->at(accessPos)->arr;
+			current_Val = &current_Val->at(access_Pos)->arr;
 		}
-		accessPos = access_vector.at(i);
-		if (currentVal->at(accessPos)->curr_type != parser::Type::T_ARRAY) {
-			has_string_access = true;
-		}
-		next_value = currentVal->at(accessPos);
+		access_Pos = access_vector.at(s);
+		next_value = current_Val->at(access_Pos);
 	}
 
 	++i;
@@ -138,19 +137,7 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 		}
 	}
 	else {
-		switch (current_expression_value.curr_type) {
-		case parser::Type::T_UNDEF:
-			if (astnode->type == parser::Type::T_STRUCT) {
-				auto nllvalue = Value_t(parser::Type::T_STRUCT);
-				nllvalue.set_undefined();
-				nllvalue.str.first = astnode->type_name;
-				assign_structure(get_namespace() + astnode->identifier, nllvalue);
-			}
-			else {
-				scopes.back()->declare_undef_variable(get_namespace() + astnode->identifier, astnode->type);
-			}
-			break;
-		case parser::Type::T_VOID:
+		if (is_void(current_expression_value.curr_type)) {
 			if (astnode->type == parser::Type::T_STRUCT) {
 				auto undefvalue = Value_t(parser::Type::T_STRUCT);
 				undefvalue.set_null();
@@ -160,7 +147,17 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 			else {
 				scopes.back()->declare_null_variable(get_namespace() + astnode->identifier, astnode->type);
 			}
-			break;
+		}
+		else {
+			if (astnode->type == parser::Type::T_STRUCT) {
+				auto nllvalue = Value_t(parser::Type::T_STRUCT);
+				nllvalue.set_undefined();
+				nllvalue.str.first = astnode->type_name;
+				assign_structure(get_namespace() + astnode->identifier, nllvalue);
+			}
+			else {
+				scopes.back()->declare_undef_variable(get_namespace() + astnode->identifier, astnode->type);
+			}
 		}
 	}
 
@@ -260,7 +257,8 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	size_t i;
 	for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
 
-	Value_t* value = access_value(scopes[i], scopes[i]->find_declared_variable(astnode->identifier_vector[0].identifier), astnode->identifier_vector);
+	Value_t* root = scopes[i]->find_declared_variable(astnode->identifier_vector[0].identifier);
+	Value_t* value = access_value(scopes[i], root, astnode->identifier_vector);
 
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);

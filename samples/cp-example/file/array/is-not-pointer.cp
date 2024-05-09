@@ -25,22 +25,3 @@ a = 99;
 
 print(string(a) + "\n");
 print(string(b) + "\n");
-
-print("\n\n");
-
-struct Foo {
-    var bar;
-};
-
-var foo = Foo{bar=10};
-var bar;
-
-bar = foo;
-
-print(string(foo) + "\n");
-print(string(bar) + "\n");
-
-foo.bar = 99;
-
-print(string(foo) + "\n");
-print(string(bar) + "\n");

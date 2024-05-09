@@ -142,7 +142,7 @@ ASTNode* Parser::parse_identifier_statement() {
 	}
 	else if (next_token.value == "[" || next_token.value == "=" || next_token.value == "+="
 		|| next_token.value == "-=" || next_token.value == "*=" || next_token.value == "/="
-		|| next_token.value == "%=") {
+		|| next_token.value == "%=" || next_token.value == ".") {
 		return parse_assignment_statement();
 	}
 	else {
