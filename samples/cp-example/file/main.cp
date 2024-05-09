@@ -9,6 +9,7 @@ var id6[3]: int;
 var id7[3][3]: int;
 var id8[3][3][3]: int;
 
+print("any receiving any value:\n");
 id1 = 10;
 print(id1);
 print("\n");
@@ -32,6 +33,7 @@ id6 = { 1, 2, 3 };
 id7 = { { 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } };
 id8 = { { { 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } }, { { 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } }, { { 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } } };
 
+print("type receiving actual:\n");
 print(id1);
 print("\n");
 print(id2);
@@ -57,6 +59,7 @@ id6[1] = 99;
 id7[1][2] = 99;
 id8[1][0][1] = 99;
 
+print("array assigning positions:\n");
 print(id3);
 print("\n");
 print(id4);
@@ -76,6 +79,7 @@ id5[1][0] = { { 99, 99, 99 }, { 99, 99, 99 }, { 99, 99, 99 } };
 id7[1] = { 99, 99, 99 };
 id8[1][0] = { { 99, 99, 99 }, { 99, 99, 99 }, { 99, 99, 99 } };
 
+print("array assigning subarrays:\n");
 print(id4);
 print("\n");
 print(id5);

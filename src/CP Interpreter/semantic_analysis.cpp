@@ -78,7 +78,7 @@ SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticVa
 
 		accessPos = access_vector.at(s);
 		next_value = next_value->array_values.at(accessPos);
-		
+
 		++i;
 
 		if (i < identifier_vector.size()) {
@@ -317,6 +317,7 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	}
 	else if (is_array(declared_variable->type) && (is_array(assignment_expr.type) || is_void(assignment_expr.type)) // array or null assigning array 
 		|| is_array(declared_variable->type) && match_type(variable_expression->type, assignment_expr.type)) { // variable is array, but it is assigning subvalues
+
 		if (is_array(assignment_expr.type) && is_array(variable_expression->type)) {
 
 			//auto var_dim_expr = is_undefined(variable_expression->type) || is_void(variable_expression->type) ? declared_variable->dim : variable_expression->dim;
@@ -404,7 +405,7 @@ std::vector<unsigned int> SemanticAnalyser::calculate_array_dim_size(ASTArrayCon
 
 std::vector<unsigned int> SemanticAnalyser::calculate_array_dim_size(std::vector<SemanticValue_t*> arr) {
 	auto dim = std::vector<unsigned int>();
-	
+
 	dim.push_back(arr.size());
 
 	if (is_array(arr.at(0)->type)) {
