@@ -1290,6 +1290,10 @@ std::string Interpreter::msg_header(unsigned int row, unsigned int col) {
 	return "(IERR) " + current_program->name + '[' + std::to_string(row) + ':' + std::to_string(col) + "]: ";
 }
 
+unsigned int visitor::Interpreter::hash(parser::ASTExprNode* astnode) {
+	return 0;
+}
+
 unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_bool>* astnode) {
 	return static_cast<unsigned int>(astnode->val);
 }

@@ -14,18 +14,18 @@ namespace parser {
 	typedef struct SemanticValue {
 		// complete constructor
 		SemanticValue(parser::Type, parser::Type, std::vector<ASTExprNode*>, std::vector<SemanticValue*>,
-			std::string, std::map<std::string, SemanticValue*>, ASTExprNode*, bool, unsigned int, unsigned int);
+			std::string, std::map<std::string, SemanticValue*>, unsigned int, bool, unsigned int, unsigned int);
 		// simplified constructor
 		SemanticValue(parser::Type current_type, unsigned int row, unsigned int col);
 		SemanticValue() = default;
 		parser::Type type;
 		parser::Type array_type;
 		std::vector<ASTExprNode*> dim;
-		std::vector<unsigned int> parsed_dim;
+		//std::vector<unsigned int> parsed_dim;
 		std::vector<SemanticValue*> array_values;
 		std::string type_name;
 		std::map<std::string, SemanticValue*> struct_vars;
-		ASTExprNode* expr; // store constant hash instead?
+		unsigned int hash;
 		bool is_const;
 		unsigned int row;
 		unsigned int col;

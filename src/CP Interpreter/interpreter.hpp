@@ -95,6 +95,7 @@ namespace visitor {
 		void visit(parser::ASTNullNode*) override;
 		void visit(parser::ASTThisNode*) override;
 
+		unsigned int hash(parser::ASTExprNode*) override;
 		unsigned int hash(parser::ASTIdentifierNode*) override;
 		unsigned int hash(parser::ASTLiteralNode<cp_bool>*) override;
 		unsigned int hash(parser::ASTLiteralNode<cp_int>*) override;

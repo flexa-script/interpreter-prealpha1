@@ -143,11 +143,15 @@ ASTNode* Parser::parse_identifier_statement() {
 	else if (next_token.value == "[" || next_token.value == "=" || next_token.value == "+="
 		|| next_token.value == "-=" || next_token.value == "*=" || next_token.value == "/="
 		|| next_token.value == "%=" || next_token.value == ".") {
-		return parse_assignment_statement();
+		return parse_assignment_or_increment_node();
 	}
 	else {
 		return parse_statement_expression();
 	}
+}
+
+ASTNode* Parser::parse_assignment_or_increment_node() {
+	return parse_assignment_statement();
 }
 
 ASTDeclarationNode* Parser::parse_declaration_statement() {

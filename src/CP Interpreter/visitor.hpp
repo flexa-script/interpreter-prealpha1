@@ -157,6 +157,7 @@ namespace visitor {
 		virtual void visit(parser::ASTNullNode*) = 0;
 		virtual void visit(parser::ASTThisNode*) = 0;
 
+		virtual unsigned int hash(parser::ASTExprNode*) = 0;
 		virtual unsigned int hash(parser::ASTIdentifierNode*) = 0;
 		virtual unsigned int hash(parser::ASTLiteralNode<cp_bool>*) = 0;
 		virtual unsigned int hash(parser::ASTLiteralNode<cp_int>*) = 0;

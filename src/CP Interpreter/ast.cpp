@@ -11,21 +11,21 @@ using namespace parser;
 SemanticValue::SemanticValue(parser::Type current_type, unsigned int row, unsigned int col)
 	: type(current_type), array_type(current_type), dim(std::vector<ASTExprNode*>()),
 	array_values(std::vector<SemanticValue*>()), type_name(""),
-	struct_vars(std::map<std::string, SemanticValue*>()), expr(nullptr),
+	struct_vars(std::map<std::string, SemanticValue*>()), hash(0),
 	is_const(false), row(row), col(col) {}
 
 SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim, std::vector<SemanticValue*> array_values,
-	std::string type_name, std::map<std::string, SemanticValue*> struct_vars, ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
+	std::string type_name, std::map<std::string, SemanticValue*> struct_vars, unsigned int hash, bool is_const, unsigned int row, unsigned int col)
 	: type(type), array_type(array_type), dim(dim), array_values(array_values), type_name(type_name),
-	struct_vars(struct_vars), expr(expr), is_const(is_const), row(row), col(col) {}
+	struct_vars(struct_vars), hash(hash), is_const(is_const), row(row), col(col) {}
 
 void SemanticValue::copy_from(SemanticValue* value) {
 	type = value->type;
 	array_type = value->array_type;
 	dim = value->dim;
-	parsed_dim = value->parsed_dim;
+	//parsed_dim = value->parsed_dim;
 	type_name = value->type_name;
-	expr = value->expr;
+	hash = value->hash;
 	is_const = value->is_const;
 	row = value->row;
 	col = value->col;
@@ -55,7 +55,7 @@ void SemanticVariable::copy_from(SemanticVariable* var) {
 	type = var->type;
 	array_type = var->array_type;
 	dim = var->dim;
-	parsed_dim = value->parsed_dim;
+	//parsed_dim = value->parsed_dim;
 	type_name = var->type_name;
 	is_const = value->is_const;
 	is_parameter = var->is_parameter;

@@ -48,7 +48,8 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	}
 }
 
-SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticValue_t* value, std::vector<Identifier_t> identifier_vector, bool check_undef, size_t i) {
+SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticValue_t* value, std::vector<Identifier_t> identifier_vector,
+	unsigned int current_row, unsigned int current_col, bool check_undef, size_t i) {
 	if (check_undef && is_undefined(value->type)) {
 		throw std::runtime_error("SSERR: variable '" + identifier_vector[i].identifier + "' is not initialized");
 	}
@@ -60,7 +61,7 @@ SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticVa
 		auto dectype = is_void(next_value->type) ? "null" : "undefined";
 		// array
 		if (identifier_vector[i].access_vector.size() > 0) {
-			throw std::runtime_error(msg_header(0, 0l) + "trying assign '" + identifier_vector[i].identifier + "' array position but it's " + dectype);
+			throw std::runtime_error(msg_header(current_row, current_col) + "trying assign '" + identifier_vector[i].identifier + "' array position but it's " + dectype);
 		}
 	}
 
@@ -71,22 +72,17 @@ SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticVa
 		size_t s = 0;
 		size_t accessPos = 0;
 
-		for (s = 0; s < access_vector.size()/* - 1*/; ++s) {
+		for (s = 0; s < access_vector.size(); ++s) {
 			accessPos = access_vector.at(s);
 			if (accessPos >= next_value->array_values.size()) {
-				throw std::runtime_error(msg_header(0, 0) + "trying to access a invalid position");
+				throw std::runtime_error(msg_header(current_row, current_row) + "trying to access a invalid position");
 			}
 			if (next_value->array_values.at(accessPos)->type == Type::T_STRING) {
 				break;
 			}
-			//if (next_value->array_values.at(accessPos)->type != Type::T_ARRAY) {
-			//	throw std::runtime_error(msg_header(0, 0) + "it is not an array or string");
-			//}
 			next_value = next_value->array_values.at(accessPos);
 		}
 
-		//accessPos = access_vector.at(s);
-		//next_value = next_value->array_values.at(accessPos);
 	}
 
 	++i;
@@ -135,6 +131,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 
 	auto decl_current_expr = new SemanticValue_t();
 	decl_current_expr->copy_from(&current_expression);
+	decl_current_expr->hash = astnode->expr ? astnode->expr->hash(this) : 0;
 
 	if (astnode->is_const && !current_expression.is_const) {
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "initializer of '" + astnode->identifier + "' is not a constant");
@@ -263,22 +260,7 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 
 	// get base variable
 	auto declared_variable = scopes[i]->find_declared_variable(astnode->identifier_vector[0].identifier);
-
-	// check if the base variable is not null
-	//if (is_void(declared_variable->value->type) || is_undefined(declared_variable->value->type)) {
-	//	auto dectype = is_void(declared_variable->value->type) ? "null" : "undefined";
-	//	// struct
-	//	if (astnode->identifier_vector.size() > 1) {
-	//		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "trying assign '" + astnode->identifier_vector[0].identifier +
-	//			"' but '" + astnode->identifier_vector[0].identifier + "' is " + dectype);
-	//	}
-	//	// array
-	//	if (astnode->identifier_vector[0].access_vector.size() > 0) {
-	//		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "trying assign '" + astnode->identifier_vector[0].identifier + "' array position but it's " + dectype);
-	//	}
-	//}
-
-	auto variable_expression = access_value(scopes[i], declared_variable->value, astnode->identifier_vector);
+	auto variable_expression = access_value(scopes[i], declared_variable->value, astnode->identifier_vector, astnode->row, astnode->col);
 
 	if (declared_variable->is_const) {
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "'" + astnode->identifier_vector[0].identifier + "' constant being reassigned");
@@ -357,11 +339,6 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 			}
 		}
 
-		// TODO: refactor array validation
-		//if (astnode->access_vector.size() == 0 && !is_any(declared_variable->value->array_type) && !match_type(declared_variable->value->array_type, assignment_expr.array_type)) {
-		//	throw std::runtime_error(msg_header(astnode->row, astnode->col) + "mismatched type for '" + astnode->identifier_vector[0].identifier +
-		//		"', expected '" + type_str(declared_variable->value->array_type) + "' array, found '" + type_str(assignment_expr.array_type) + "' array");
-		//}
 		if (declared_variable->value == variable_expression) { // is root value, assign a new one
 			delete declared_variable->value;
 			declared_variable->value = new SemanticValue_t();
@@ -460,9 +437,10 @@ void SemanticAnalyser::assign_structure(SemanticScope* curr_scope, SemanticValue
 		}
 
 		expr_value.second->accept(this);
+		auto hash = expr_value.second ? expr_value.second->hash(this) : 0;
 
 		auto new_var = new SemanticValue_t(str_var_def.type, str_var_def.array_type, str_var_def.dim, std::vector<SemanticValue_t*>(),
-			str_var_def.type_name, std::map<std::string, SemanticValue*>(), expr_value.second, false, expr->row, expr->col);
+			str_var_def.type_name, std::map<std::string, SemanticValue*>(), hash, false, expr->row, expr->col);
 
 		if (is_struct(str_var_def.type)) {
 			// TODO: CHECK TYPES
@@ -942,7 +920,7 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	determine_array_type(astnode);
 	auto current_expression_array_type = current_expression.array_type;
 	current_expression = SemanticValue_t();
-	current_expression.parsed_dim = calculate_array_dim_size(array_values);
+	//current_expression.parsed_dim = calculate_array_dim_size(array_values);
 	current_expression.array_type = current_expression_array_type;
 	current_expression.array_values = array_values;
 	current_expression.type = Type::T_ARRAY;
@@ -1009,7 +987,7 @@ void SemanticAnalyser::declare_structure() {
 
 		if (current_expression.struct_vars.find(var_type_struct.identifier) == current_expression.struct_vars.end()) {
 			auto new_val = new SemanticValue_t(var_type_struct.type, var_type_struct.array_type, var_type_struct.dim, std::vector<SemanticValue_t*>(),
-				var_type_struct.type_name, std::map<std::string, SemanticValue*>(), nullptr, false, 0, 0);
+				var_type_struct.type_name, std::map<std::string, SemanticValue*>(), 0, false, 0, 0);
 
 			current_expression.struct_vars[var_type_struct.identifier] = new_val;
 		}
@@ -1100,32 +1078,11 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 	}
 
 	auto declared_variable = scopes[i]->find_declared_variable(astnode->identifier_vector[0].identifier);
-	auto variable_expr = access_value(scopes[i], declared_variable->value, astnode->identifier_vector, true);
+	auto variable_expr = access_value(scopes[i], declared_variable->value, astnode->identifier_vector, astnode->row, astnode->col, true);
 
 	current_expression = *variable_expr;
 	current_expression.type = is_any(declared_variable->type) ? variable_expr->type : declared_variable->type;
 
-	// TODO: refactor array validate
-	//if (astnode->access_vector.size() > 0 && !is_array(current_expression.type) && !is_string(current_expression.type)) {
-	//	throw std::runtime_error(msg_header(astnode->row, astnode->col) + "'" + astnode->identifier_vector[0].identifier + "' is not an array or string");
-	//}
-
-	//if (astnode->access_vector.size() > 0 && is_array(current_expression.type)) {
-	//	std::vector<unsigned int> expr_dim = evaluate_access_vector(variable_expr->dim);
-	//	std::vector<unsigned int> pars_dim = evaluate_access_vector(astnode->access_vector);
-
-	//	current_expression.array_type = variable_expr->array_type;
-
-	//	if (astnode->access_vector.size() != expr_dim.size()) {
-	//		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + astnode->identifier_vector[0].identifier + "' array dimension access");
-	//	}
-
-	//	for (size_t dc = 0; dc < astnode->access_vector.size(); ++dc) {
-	//		if (astnode->access_vector.at(dc) && pars_dim.at(dc) > expr_dim.at(dc)) {
-	//			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid '" + astnode->identifier_vector[0].identifier + "' array size access");
-	//		}
-	//	}
-	//}
 }
 
 void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
@@ -1231,6 +1188,10 @@ std::string SemanticAnalyser::msg_header(unsigned int row, unsigned int col) {
 	return "(SERR) " + current_program->name + '[' + std::to_string(row) + ':' + std::to_string(col) + "]: ";
 }
 
+unsigned int SemanticAnalyser::hash(ASTExprNode* astnode) {
+	return 0;
+}
+
 unsigned int SemanticAnalyser::hash(ASTLiteralNode<cp_bool>* astnode) {
 	return static_cast<unsigned int>(astnode->val);
 }
@@ -1262,19 +1223,21 @@ unsigned int SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 
 	// get base variable
 	auto declared_variable = scopes[i]->find_declared_variable(astnode->identifier_vector[0].identifier);
+	auto variable_expression = access_value(scopes[i], declared_variable->value, astnode->identifier_vector, astnode->row, astnode->col);
 
-	switch (declared_variable->type) {
-	case Type::T_BOOL:
-		return static_cast<ASTLiteralNode<cp_bool>*>(declared_variable->value->expr)->hash(this);
-	case Type::T_INT:
-		return static_cast<ASTLiteralNode<cp_int>*>(declared_variable->value->expr)->hash(this);
-	case Type::T_FLOAT:
-		return static_cast<ASTLiteralNode<cp_float>*>(declared_variable->value->expr)->hash(this);
-	case Type::T_CHAR:
-		return static_cast<ASTLiteralNode<cp_char>*>(declared_variable->value->expr)->hash(this);
-	case Type::T_STRING:
-		return static_cast<ASTLiteralNode<cp_string>*>(declared_variable->value->expr)->hash(this);
-	default:
-		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid type");
-	}
+	//switch (variable_expression->type) {
+	//case Type::T_BOOL:
+	//	return static_cast<ASTLiteralNode<cp_bool>*>(variable_expression->expr)->hash(this);
+	//case Type::T_INT:
+	//	return static_cast<ASTLiteralNode<cp_int>*>(variable_expression->expr)->hash(this);
+	//case Type::T_FLOAT:
+	//	return static_cast<ASTLiteralNode<cp_float>*>(variable_expression->expr)->hash(this);
+	//case Type::T_CHAR:
+	//	return static_cast<ASTLiteralNode<cp_char>*>(variable_expression->expr)->hash(this);
+	//case Type::T_STRING:
+	//	return static_cast<ASTLiteralNode<cp_string>*>(variable_expression->expr)->hash(this);
+	//default:
+	//	throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid type");
+	//}
+	return variable_expression->hash;
 }
