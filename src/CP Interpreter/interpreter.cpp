@@ -972,11 +972,11 @@ void visitor::Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
 			current_expression_value.set(cp_float(current_expression_value.f * -1));
 		}
 		else if (astnode->unary_op == "--") {
-			current_expression_value.set(cp_int(--current_expression_value.f));
+			current_expression_value.set(cp_float(--current_expression_value.f));
 			has_assign = true;
 		}
 		else if (astnode->unary_op == "++") {
-			current_expression_value.set(cp_int(++current_expression_value.f));
+			current_expression_value.set(cp_float(++current_expression_value.f));
 			has_assign = true;
 		}
 		break;

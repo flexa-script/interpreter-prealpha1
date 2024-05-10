@@ -23,7 +23,6 @@ void SemanticValue::copy_from(SemanticValue* value) {
 	type = value->type;
 	array_type = value->array_type;
 	dim = value->dim;
-	//parsed_dim = value->parsed_dim;
 	type_name = value->type_name;
 	hash = value->hash;
 	is_const = value->is_const;
@@ -55,7 +54,6 @@ void SemanticVariable::copy_from(SemanticVariable* var) {
 	type = var->type;
 	array_type = var->array_type;
 	dim = var->dim;
-	//parsed_dim = value->parsed_dim;
 	type_name = var->type_name;
 	is_const = value->is_const;
 	is_parameter = var->is_parameter;

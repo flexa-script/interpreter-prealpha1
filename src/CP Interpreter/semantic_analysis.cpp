@@ -324,9 +324,8 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 
 		if (is_array(assignment_expr.type) && is_array(variable_expression->type)) {
 
-			//auto var_dim_expr = is_undefined(variable_expression->type) || is_void(variable_expression->type) ? declared_variable->dim : variable_expression->dim;
 			std::vector<unsigned int> var_dim = evaluate_access_vector(variable_expression->dim);
-			std::vector<unsigned int> expr_dim = evaluate_access_vector(assignment_expr.dim);//assignment_expr.parsed_dim;
+			std::vector<unsigned int> expr_dim = evaluate_access_vector(assignment_expr.dim);
 
 			if (var_dim.size() != expr_dim.size()) {
 				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier_vector[0].identifier + "'");
@@ -439,12 +438,40 @@ void SemanticAnalyser::assign_structure(SemanticScope* curr_scope, SemanticValue
 		expr_value.second->accept(this);
 		auto hash = expr_value.second ? expr_value.second->hash(this) : 0;
 
-		auto new_var = new SemanticValue_t(str_var_def.type, str_var_def.array_type, str_var_def.dim, std::vector<SemanticValue_t*>(),
+		if (!match_type(current_expression.type, str_var_def.type) && !is_any(str_var_def.type) && !is_void(current_expression.type)) {
+			throw std::runtime_error(msg_header(expr->row, expr->col) + "invalid type assigning " + str_var_def.identifier);
+		}
+
+		if (is_array(str_var_def.type) && !match_type(current_expression.array_type, str_var_def.array_type) && !is_any(str_var_def.array_type) && !is_void(current_expression.type)) {
+			throw std::runtime_error(msg_header(expr->row, expr->col) + "invalid type assigning " + str_var_def.identifier);
+		}
+
+		if (is_array(str_var_def.type)) {
+			std::vector<unsigned int> var_dim = evaluate_access_vector(str_var_def.dim);
+			std::vector<unsigned int> expr_dim = evaluate_access_vector(current_expression.dim);
+
+			if (var_dim.size() != expr_dim.size()) {
+				throw std::runtime_error(msg_header(expr->row, expr->col) + "invalid array dimension assigning '" + str_var_def.identifier + "'");
+			}
+
+			for (size_t dc = 0; dc < var_dim.size(); ++dc) {
+				if (str_var_def.dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
+					throw std::runtime_error(msg_header(expr->row, expr->col) + "invalid array size assigning '" + str_var_def.identifier + "'");
+				}
+			}
+		}
+
+		if (is_struct(str_var_def.type)) {
+			if (str_var_def.type_name != current_expression.type_name && !is_void(current_expression.type)) {
+				throw std::runtime_error(msg_header(expr->row, expr->col) + "mismatched type for '" + str_var_def.identifier +
+					"' struct, expected '" + current_expression.type_name + "', found '" + current_expression.type_name + "'");
+			}
+		}
+
+		auto new_var = new SemanticValue_t(current_expression.type, current_expression.array_type, str_var_def.dim, std::vector<SemanticValue_t*>(),
 			str_var_def.type_name, std::map<std::string, SemanticValue*>(), hash, false, expr->row, expr->col);
 
 		if (is_struct(str_var_def.type)) {
-			// TODO: CHECK TYPES
-
 			if (auto str_expr = dynamic_cast<ASTStructConstructorNode*>(expr_value.second)) {
 				assign_structure(curr_scope, new_var, str_expr);
 			}
@@ -1103,7 +1130,8 @@ void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
 		}
 		break;
 	default:
-		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "incompatible unary operator '" + astnode->unary_op + "' in front of expression");
+		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "incompatible unary operator '" + astnode->unary_op +
+			"' in front of " + type_str(current_expression.type) + " expression");
 	}
 	current_expression.is_const = false;
 }

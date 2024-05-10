@@ -47,7 +47,9 @@ namespace parser {
 
 		ASTNode* parse_assignment_or_increment_node();
 
-		ASTAssignmentNode* parse_assignment_statement();
+		ASTAssignmentNode* parse_assignment_statement(ASTIdentifierNode*);
+
+		ASTUnaryExprNode* parse_increment_expression(ASTIdentifierNode*);
 
 		ASTPrintNode* parse_print_statement();
 

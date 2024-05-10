@@ -70,6 +70,7 @@
     - [ ] Util
 - [ ] General otimizations:
     - [ ] Remove duplicate codes
+        - [ ] Type checks
     - [X] Move some verifications to semantic analisys:
         - [X] Array size check from interpreter
 - [ ] Add CP library:
