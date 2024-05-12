@@ -151,6 +151,8 @@ Token Lexer::process_identifier() {
 
 	if (identifier == "using")
 		type = TOK_USING;
+	else if (identifier == "namespace")
+		type = TOK_NAMESPACE;
 	else if (identifier == "const")
 		type = TOK_CONST;
 	else if (identifier == "var")

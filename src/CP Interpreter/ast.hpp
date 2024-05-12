@@ -116,8 +116,9 @@ namespace parser {
 	public:
 		std::string name;
 		std::string alias;
+		std::vector<std::string> libs;
 
-		explicit ASTProgramNode(std::vector<ASTNode*>, std::string);
+		explicit ASTProgramNode(std::vector<ASTNode*>, std::string, std::string);
 
 		std::vector<ASTNode*> statements;
 
@@ -155,9 +156,10 @@ namespace parser {
 
 	class ASTAssignmentNode : public ASTStatementNode {
 	public:
-		ASTAssignmentNode(std::vector<Identifier_t>, std::string, ASTExprNode*, unsigned int, unsigned int);
+		ASTAssignmentNode(std::vector<Identifier_t>, std::string, std::string, ASTExprNode*, unsigned int, unsigned int);
 
 		std::string op;
+		std::string nmspace;
 		std::vector<Identifier_t> identifier_vector;
 		ASTExprNode* expr;
 		unsigned int row;
@@ -360,9 +362,10 @@ namespace parser {
 
 	class ASTStructConstructorNode : public ASTExprNode {
 	public:
-		ASTStructConstructorNode(std::string, std::map<std::string, ASTExprNode*>, unsigned int, unsigned int);
+		ASTStructConstructorNode(std::string, std::string, std::map<std::string, ASTExprNode*>, unsigned int, unsigned int);
 
 		std::string type_name;
+		std::string nmspace;
 		std::map<std::string, ASTExprNode*> values;
 		unsigned int row;
 		unsigned int col;
@@ -409,9 +412,10 @@ namespace parser {
 
 	class ASTIdentifierNode : public ASTExprNode {
 	public:
-		explicit ASTIdentifierNode(std::vector<Identifier_t>, unsigned int, unsigned int);
+		explicit ASTIdentifierNode(std::vector<Identifier_t>, std::string, unsigned int, unsigned int);
 
 		std::vector<Identifier_t> identifier_vector;
+		std::string nmspace;
 		unsigned int row;
 		unsigned int col;
 
@@ -434,9 +438,10 @@ namespace parser {
 
 	class ASTFunctionCallNode : public ASTExprNode {
 	public:
-		ASTFunctionCallNode(std::string, std::vector<ASTExprNode*>, std::vector<ASTExprNode*>, unsigned int, unsigned int);
+		ASTFunctionCallNode(std::string, std::string, std::vector<ASTExprNode*>, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 
 		std::string identifier;
+		std::string nmspace;
 		std::vector<ASTExprNode*> access_vector;
 		std::vector<ASTExprNode*> parameters;
 		unsigned int row;

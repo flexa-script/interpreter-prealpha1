@@ -36,6 +36,7 @@
     - [X] break
     - [X] continue
     - [X] +=,-=,*=,/=,%= assignment
+    - [ ] namespace
     - [ ] exit
     - [ ] enum
     - [ ] try catch
@@ -53,8 +54,8 @@
 - [X] Add lib scope lib.(method|properties|struct)
 - [ ] Guanrantee that a lib is loaded once
 - [X] Flex function return (currently it's mandatory specificate the return type)
-- [ ] Remove struct as bool in expression and change this type of verification to void value comparation (eg: var == null)
-- [ ] Move function body parser to caller node (as interpreter), to check parameters of each caller
+- [X] Remove struct as bool in expression and change this type of verification to void value comparation (eg: var == null)
+- [X] Move function body parser to caller node (as interpreter), to check parameters of each caller
 - [ ] Improve error system (based on C)
 - [ ] Improve REPL:
     - [ ] Now expressions can be executed in statements, dont need more to execute expression parser directly

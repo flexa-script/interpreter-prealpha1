@@ -45,23 +45,30 @@ int CPInterpreter::interpreter(std::vector<Program> source_programs) {
 	visitor::InterpreterScope interpreter_global_scope;
 
 	try {
-		std::vector<parser::ASTProgramNode*> programs;
+		parser::ASTProgramNode* main_program = nullptr;
+		std::map<std::string, parser::ASTProgramNode*> programs;
 
 		for (auto source : source_programs) {
 			// tokenise and initialise parser
 			lexer::Lexer lexer(source.source, source.name);
 			parser::Parser parser(&lexer, source.name);
 
+			parser::ASTProgramNode* program = parser.parse_program();
+
+			if (!main_program) {
+				main_program = program;
+			}
+
 			// try to parse as program
-			programs.push_back(parser.parse_program());
+			programs[program->name] = program;
 		}
 
 		// if this succeeds, perform semantic analysis modifying global scope
-		visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, programs);
+		visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, main_program, programs);
 		semantic_analyser.start();
 
 		// interpreter
-		visitor::Interpreter interpreter(&interpreter_global_scope, programs);
+		visitor::Interpreter interpreter(&interpreter_global_scope, main_program, programs);
 		interpreter.start();
 	}
 	catch (const std::exception& e) {

@@ -33,6 +33,10 @@ namespace axe {
         return string.find(cont) != std::string::npos;
     }
 
+    bool Util::contains(std::vector<std::string> c, std::string v) {
+        return std::find(c.begin(), c.end(), v) != c.end();
+    }
+
     std::string Util::join(std::vector<std::string> strings, const char* const delim) {
         std::string string;
         std::ostringstream imploded;

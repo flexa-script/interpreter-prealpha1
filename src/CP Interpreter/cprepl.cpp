@@ -144,7 +144,7 @@ int CPRepl::execute() {
 					// parse again, create program node manually
 					lexer::Lexer expr_lexer(program, "main");
 					parser = parser::Parser(&expr_lexer, 0);  // do not consume first token
-					prog = new parser::ASTProgramNode(std::vector<parser::ASTNode*>({ parser.parse_expression() }), "main");
+					//prog = new parser::ASTProgramNode(std::vector<parser::ASTNode*>({ parser.parse_expression() }), "main");
 
 					expr = true;
 				}
@@ -155,43 +155,44 @@ int CPRepl::execute() {
 			}
 
 			// try to analyse in a temporary copy of the global scope (just in case the program is invalid)
-			auto programs = std::vector<parser::ASTProgramNode*>({ prog });
-			visitor::SemanticScope temp = semantic_global_scope;
-			visitor::SemanticAnalyser temp_semantic_analyser(&temp, programs);
-			temp_semantic_analyser.start();
+			//auto programs = std::vector<parser::ASTProgramNode*>({ prog });
+			//visitor::SemanticScope temp = semantic_global_scope;
+			//visitor::SemanticAnalyser temp_semantic_analyser(&temp, programs);
+			//temp_semantic_analyser.start();
 
 			// if this succeeds, perform semantic analysis modifying global scope
-			visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, programs);
-			temp_semantic_analyser.start();
+			//visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, programs);
+			//temp_semantic_analyser.start();
 
 			// interpreter
-			visitor::Interpreter interpreter(&interpreter_global_scope, programs);
-			interpreter.visit(prog);
+			//visitor::Interpreter interpreter(&interpreter_global_scope, programs);
+			//interpreter.visit(prog);
 
 			// if loading file, show user that everything went well
-			if (file_load)
+			if (file_load){
 				std::cout << "File loaded successfully." << std::endl;
 
 			// if expression, show user output
+			}
 			else if (expr) {
-				auto current = interpreter.current_expr();
-				switch (current.first) {
-				case parser::Type::T_BOOL:
-					std::cout << ((current.second->b) ? "true" : "false");
-					break;
-				case parser::Type::T_INT:
-					std::cout << current.second->i;
-					break;
-				case parser::Type::T_FLOAT:
-					std::cout << current.second->f;
-					break;
-				case parser::Type::T_CHAR:
-					std::cout << current.second->c;
-					break;
-				case parser::Type::T_STRING:
-					std::cout << current.second->s;
-					break;
-				}
+				//auto current = interpreter.current_expr();
+				//switch (current.first) {
+				//case parser::Type::T_BOOL:
+				//	std::cout << ((current.second->b) ? "true" : "false");
+				//	break;
+				//case parser::Type::T_INT:
+				//	std::cout << current.second->i;
+				//	break;
+				//case parser::Type::T_FLOAT:
+				//	std::cout << current.second->f;
+				//	break;
+				//case parser::Type::T_CHAR:
+				//	std::cout << current.second->c;
+				//	break;
+				//case parser::Type::T_STRING:
+				//	std::cout << current.second->s;
+				//	break;
+				//}
 			}
 
 			std::cout << std::endl;

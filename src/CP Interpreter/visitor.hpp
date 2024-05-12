@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <any>
 #include <stdexcept>
 
@@ -82,7 +83,7 @@ typedef struct Value {
 	parser::Type type;
 	parser::Type curr_type;
 	parser::Type arr_type;
-	std::vector<parser::ASTExprNode*> dim; // just to know array dimension in array type parse, find another solution...
+	std::vector<parser::ASTExprNode*> dim; // just to know array dimension in array type parse, maybe find another solution...
 
 	cp_bool b;
 	cp_int i;
@@ -111,15 +112,16 @@ typedef struct Value {
 namespace visitor {
 	class Visitor {
 	public:
-		Visitor(std::vector<parser::ASTProgramNode*> programs, parser::ASTProgramNode* main_program, parser::ASTProgramNode* current_program)
-			: programs(programs), main_program(main_program), current_program(current_program) {};
+		Visitor(std::map<std::string, parser::ASTProgramNode*> programs, parser::ASTProgramNode* main_program)
+			: programs(programs), main_program(main_program), current_program(main_program) {};
 
-		std::vector<parser::ASTProgramNode*> programs;
+		std::map<std::string, parser::ASTProgramNode*> programs;
 		parser::ASTProgramNode* main_program;
 		parser::ASTProgramNode* current_program;
 		std::string current_name;
 
 		virtual std::string get_namespace() = 0;
+		virtual std::string get_namespace(parser::ASTProgramNode*) = 0;
 
 		virtual void visit(parser::ASTProgramNode*) = 0;
 		virtual void visit(parser::ASTUsingNode*) = 0;

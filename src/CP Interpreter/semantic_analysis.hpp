@@ -14,7 +14,11 @@ namespace visitor {
 
 	class SemanticAnalyser : Visitor {
 	private:
-		std::vector<SemanticScope*> scopes;
+		std::map<std::string, std::vector<SemanticScope*>> scopes;
+		std::vector<std::string> libs;
+		std::string current_namespace;
+		//std::map<std::string, std::string> libname_nmspace;
+		//std::map<std::string, std::string> nmspace_libname;
 		parser::SemanticValue_t current_expression;
 		std::stack<parser::FunctionDefinition_t> current_function;
 		std::string retfun_identifier;
@@ -32,6 +36,18 @@ namespace visitor {
 		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);
 		std::vector<unsigned int> calculate_array_dim_size(std::vector<parser::SemanticValue_t*>);
 
+		SemanticScope* get_inner_most_variable_scope(std::string, std::string);
+		SemanticScope* get_inner_most_function_scope(std::string nmspace, std::string identifier, std::vector<parser::Type> signature);
+		SemanticScope* get_inner_most_struct_definition_scope(std::string, std::string);
+
+		//bool already_declared_structure_definition(std::string);
+		//bool already_declared_variable(std::string);
+		//bool already_declared_function(std::string, std::vector<parser::Type>);
+
+		//parser::StructureDefinition_t find_declared_structure_definition(std::string);
+		//parser::FunctionDefinition_t find_declared_function(std::string, std::vector<parser::Type>);
+		//parser::SemanticVariable_t* find_declared_variable(std::string);
+
 		void determine_array_type(parser::ASTArrayConstructorNode*);
 		void check_array_type(parser::ASTExprNode*, unsigned int, unsigned int);
 
@@ -41,12 +57,13 @@ namespace visitor {
 		std::string msg_header(unsigned int, unsigned int);
 
 	public:
-		SemanticAnalyser(SemanticScope*, std::vector<parser::ASTProgramNode*>);
-		~SemanticAnalyser();
+		SemanticAnalyser(SemanticScope*, parser::ASTProgramNode*, std::map<std::string, parser::ASTProgramNode*>);
+		~SemanticAnalyser() = default;
 
 		void start();
 
 		std::string get_namespace() override;
+		std::string get_namespace(parser::ASTProgramNode*) override;
 
 		void visit(parser::ASTProgramNode*) override;
 		void visit(parser::ASTUsingNode*) override;

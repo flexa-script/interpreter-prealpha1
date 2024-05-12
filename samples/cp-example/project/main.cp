@@ -4,17 +4,17 @@ using util.println;
 
 
 if (this == "main") {
-    var numbers: List; // DEVERIA GERAR ERRO DE ACESSO
-    list_init(numbers); // DEVERIA PREENCHER O VALOR
+    // var numbers: List;
+    // list_init(numbers); // DEVERIA PREENCHER O VALOR
     // var numbers: List = list_create(); // A LISTA NÃO É PREENCHIDA
-    // var numbers: List = List{};
+    var numbers: List = List{first=null, size=0};
     
     print("numbers: " + string(numbers) + "\n");
 
-    // print("List init: size: " + string(numbers.size) + "\n");
+    print("List init: size: " + string(numbers.size) + "\n");
 
     list_add(numbers, 10);
-    // print("add 10: size: " + string(numbers.size) + "\n");
+    print("add 10: size: " + string(numbers.size) + "\n");
     list_add(numbers, 20);
     // print("add 20: size: " + string(numbers.size) + "\n");
     list_add(numbers, 40);

@@ -14,8 +14,8 @@ namespace visitor {
 
 	class Interpreter : public Visitor {
 	private:
-		std::vector<InterpreterScope*> scopes;
-
+		std::map<std::string, std::vector<InterpreterScope*>> scopes;
+		std::vector<std::string> libs;
 		Value_t current_expression_value;
 		std::vector<std::string> current_function_parameters;
 		std::vector<std::pair<parser::Type, Value_t*>> current_function_arguments;
@@ -31,7 +31,7 @@ namespace visitor {
 		bool has_string_access = false;
 
 	private:
-		bool is_namespace(std::string);
+		//bool is_namespace(std::string);
 
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 		void assign_structure(std::string, Value_t);
@@ -51,13 +51,14 @@ namespace visitor {
 		std::string msg_header(unsigned int, unsigned int);
 
 	public:
-		Interpreter();
-		Interpreter(InterpreterScope*, std::vector<parser::ASTProgramNode*>);
-		~Interpreter();
+		Interpreter() = default;
+		Interpreter(InterpreterScope*, parser::ASTProgramNode*, std::map<std::string, parser::ASTProgramNode*>);
+		~Interpreter() = default;
 
 		void start();
 
 		std::string get_namespace() override;
+		std::string get_namespace(parser::ASTProgramNode*) override;
 
 		void visit(parser::ASTProgramNode*) override;
 		void visit(parser::ASTUsingNode*) override;

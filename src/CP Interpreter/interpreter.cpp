@@ -7,31 +7,22 @@
 
 
 using namespace visitor;
+using namespace parser;
 
 
-Interpreter::Interpreter(InterpreterScope* globalScope, std::vector<parser::ASTProgramNode*> programs)
+Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
 	: current_expression_value(Value_t(parser::Type::T_UNDEF)), is_function_context(false),
-	Visitor(programs, programs[0], programs[0]) {
-	// add global scope
-	current_name = current_program->name;
-	scopes.push_back(globalScope);
+	Visitor(programs, main_program) {
+	scopes["main"].push_back(global_scope);
 }
 
-Interpreter::Interpreter()
-	: current_expression_value(Value_t(parser::Type::T_UNDEF)), is_function_context(false),
-	Visitor(std::vector<parser::ASTProgramNode*>(), nullptr, nullptr) {
-	// add global scope
-	scopes.push_back(new InterpreterScope(this, ""));
+std::string Interpreter::get_namespace() {
+	return get_namespace(current_program);
 }
 
-std::string visitor::Interpreter::get_namespace() {
-	if (!current_program->alias.empty() && !is_function_context && current_program->alias != main_program->name) {
-		return current_program->alias + ".";
-	}
-	return "";
+std::string Interpreter::get_namespace(ASTProgramNode* program) {
+	return program->alias.empty() ? "main" : program->alias;
 }
-
-Interpreter::~Interpreter() = default;
 
 void Interpreter::start() {
 	visit(current_program);
@@ -45,14 +36,30 @@ void visitor::Interpreter::visit(parser::ASTProgramNode* astnode) {
 }
 
 void visitor::Interpreter::visit(parser::ASTUsingNode* astnode) {
-	for (auto program : programs) {
-		if (axe::Util::join(astnode->library, "") == program->name) {
-			auto prev_program = current_program;
-			current_program = program;
-			start();
-			current_program = prev_program;
-		}
+	std::string libname = axe::Util::join(astnode->library, ".");
+
+	auto program = programs[libname];
+
+	// add lib to current program
+	current_program->libs.push_back(libname);
+
+	// if can't parsed yet
+	if (!axe::Util::contains(libs, libname)) {
+		libs.push_back(libname);
+		auto prev_program = current_program;
+		current_program = program;
+		start();
+		current_program = prev_program;
 	}
+
+	//for (auto program : programs) {
+	//	if (axe::Util::join(astnode->library, "") == program->name) {
+	//		auto prev_program = current_program;
+	//		current_program = program;
+	//		start();
+	//		current_program = prev_program;
+	//	}
+	//}
 }
 
 
@@ -69,7 +76,7 @@ Value_t* Interpreter::access_value(InterpreterScope* scope, Value_t* value, std:
 		for (s = 0; s < access_vector.size() - 1; ++s) {
 			access_Pos = access_vector.at(s);
 			// break if it is a string, and the string access will be handled in identifier node evaluation
-			// TODO: ckeck if it will handle assign
+			// TODO: ckeck if it will handle string assign
 			if (current_Val->at(access_Pos)->curr_type == parser::Type::T_STRING) {
 				has_string_access = true;
 				break;
@@ -108,31 +115,31 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 		// declare variable, depending on type
 		switch (type) {
 		case parser::Type::T_BOOL:
-			scopes.back()->declare_variable(get_namespace() + astnode->identifier, current_expression_value.b);
+			scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.b);
 			break;
 		case parser::Type::T_INT:
-			scopes.back()->declare_variable(get_namespace() + astnode->identifier, current_expression_value.i);
+			scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.i);
 			break;
 		case parser::Type::T_FLOAT:
 			if (current_expression_value.curr_type == parser::Type::T_INT)
-				scopes.back()->declare_variable(get_namespace() + astnode->identifier, (cp_float)current_expression_value.i);
+				scopes[get_namespace()].back()->declare_variable(astnode->identifier, (cp_float)current_expression_value.i);
 			else
-				scopes.back()->declare_variable(get_namespace() + astnode->identifier, current_expression_value.f);
+				scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.f);
 			break;
 		case parser::Type::T_CHAR:
-			scopes.back()->declare_variable(get_namespace() + astnode->identifier, current_expression_value.c);
+			scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.c);
 			break;
 		case parser::Type::T_STRING:
 			if (current_expression_value.curr_type == parser::Type::T_CHAR)
-				scopes.back()->declare_variable(get_namespace() + astnode->identifier, std::string{ current_expression_value.c });
+				scopes[get_namespace()].back()->declare_variable(astnode->identifier, std::string{ current_expression_value.c });
 			else
-				scopes.back()->declare_variable(get_namespace() + astnode->identifier, current_expression_value.s);
+				scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.s);
 			break;
 		case parser::Type::T_ARRAY:
-			scopes.back()->declare_variable(get_namespace() + astnode->identifier, current_expression_value.arr);
+			scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.arr);
 			break;
 		case parser::Type::T_STRUCT:
-			assign_structure(get_namespace() + astnode->identifier, current_expression_value);
+			assign_structure(astnode->identifier, current_expression_value);
 			break;
 		}
 	}
@@ -142,10 +149,10 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 				auto undefvalue = Value_t(parser::Type::T_STRUCT);
 				undefvalue.set_null();
 				undefvalue.str.first = astnode->type_name;
-				assign_structure(get_namespace() + astnode->identifier, undefvalue);
+				assign_structure(astnode->identifier, undefvalue);
 			}
 			else {
-				scopes.back()->declare_null_variable(get_namespace() + astnode->identifier, astnode->type);
+				scopes[get_namespace()].back()->declare_null_variable(astnode->identifier, astnode->type);
 			}
 		}
 		else {
@@ -153,16 +160,16 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 				auto nllvalue = Value_t(parser::Type::T_STRUCT);
 				nllvalue.set_undefined();
 				nllvalue.str.first = astnode->type_name;
-				assign_structure(get_namespace() + astnode->identifier, nllvalue);
+				assign_structure(astnode->identifier, nllvalue);
 			}
 			else {
-				scopes.back()->declare_undef_variable(get_namespace() + astnode->identifier, astnode->type);
+				scopes[get_namespace()].back()->declare_undef_variable(astnode->identifier, astnode->type);
 			}
 		}
 	}
 
-	Value_t* val = access_value(scopes.back(), scopes.back()->find_declared_variable(get_namespace() + astnode->identifier),
-		std::vector<parser::Identifier_t>{parser::Identifier_t(get_namespace() + astnode->identifier, std::vector<parser::ASTExprNode*>())});
+	Value_t* val = access_value(scopes[get_namespace()].back(), scopes[get_namespace()].back()->find_declared_variable(astnode->identifier),
+		std::vector<parser::Identifier_t>{parser::Identifier_t(astnode->identifier, std::vector<parser::ASTExprNode*>())});
 	val->dim = astnode->dim;
 	val->arr_type = astnode->array_type;
 }
@@ -174,14 +181,14 @@ void Interpreter::assign_structure(std::string identifier_vector, Value_t new_va
 	size_t str_def_scope_idx = 0;
 
 	if (new_value.has_value) {
-		value = scopes.back()->declare_variable(identifier_vector, new_value.str);
+		value = scopes[get_namespace()].back()->declare_variable(identifier_vector, new_value.str);
 	}
 	else {
-		value = scopes.back()->declare_null_struct_variable(identifier_vector, type_name);
+		value = scopes[get_namespace()].back()->declare_null_struct_variable(identifier_vector, type_name);
 	}
 
-	for (str_def_scope_idx = scopes.size() - 1; !scopes[str_def_scope_idx]->already_declared_structure_definition(type_name); --str_def_scope_idx);
-	struct_definition = scopes[str_def_scope_idx]->find_declared_structure_definition(type_name);
+	for (str_def_scope_idx = scopes[get_namespace()].size() - 1; !scopes[get_namespace()][str_def_scope_idx]->already_declared_structure_definition(type_name); --str_def_scope_idx);
+	struct_definition = scopes[get_namespace()][str_def_scope_idx]->find_declared_structure_definition(type_name);
 
 	for (size_t j = 0; j < struct_definition.variables.size(); ++j) {
 		bool found = false;
@@ -255,10 +262,10 @@ cp_float visitor::Interpreter::do_operation(cp_float lval, cp_float rval, std::s
 void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	// determine innermost scope in which variable is declared
 	size_t i;
-	for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
+	for (i = scopes[get_namespace()].size() - 1; !scopes[get_namespace()][i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
 
-	Value_t* root = scopes[i]->find_declared_variable(astnode->identifier_vector[0].identifier);
-	Value_t* value = access_value(scopes[i], root, astnode->identifier_vector);
+	Value_t* root = scopes[get_namespace()][i]->find_declared_variable(astnode->identifier_vector[0].identifier);
+	Value_t* value = access_value(scopes[get_namespace()][i], root, astnode->identifier_vector);
 
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
@@ -356,9 +363,9 @@ void visitor::Interpreter::visit(parser::ASTPrintNode* astnode) {
 void visitor::Interpreter::visit(parser::ASTReturnNode* astnode) {
 	// update current expression
 	astnode->expr->accept(this);
-	for (long long i = scopes.size() - 1; i >= 0; --i) {
-		if (!scopes[i]->get_name().empty()) {
-			return_from_function_name = scopes[i]->get_name();
+	for (long long i = scopes[get_namespace()].size() - 1; i >= 0; --i) {
+		if (!scopes[get_namespace()][i]->get_name().empty()) {
+			return_from_function_name = scopes[get_namespace()][i]->get_name();
 			return_from_function = true;
 			break;
 		}
@@ -367,7 +374,7 @@ void visitor::Interpreter::visit(parser::ASTReturnNode* astnode) {
 
 void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	// create new scope
-	scopes.push_back(new InterpreterScope(this, current_function_name));
+	scopes[get_namespace()].push_back(new InterpreterScope(this, current_function_name));
 	current_function_name = "";
 
 	// check whether this is a function block by seeing if we have any current function parameters
@@ -375,25 +382,25 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	for (unsigned int i = 0; i < current_function_arguments.size(); ++i) {
 		switch (current_function_arguments[i].first) {
 		case parser::Type::T_BOOL:
-			scopes.back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->b);
+			scopes[get_namespace()].back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->b);
 			break;
 		case parser::Type::T_INT:
-			scopes.back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->i);
+			scopes[get_namespace()].back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->i);
 			break;
 		case parser::Type::T_FLOAT:
-			scopes.back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->f);
+			scopes[get_namespace()].back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->f);
 			break;
 		case parser::Type::T_CHAR:
-			scopes.back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->c);
+			scopes[get_namespace()].back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->c);
 			break;
 		case parser::Type::T_STRING:
-			scopes.back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->s);
+			scopes[get_namespace()].back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->s);
 			break;
 		case parser::Type::T_STRUCT:
-			scopes.back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->str);
+			scopes[get_namespace()].back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->str);
 			break;
 		case parser::Type::T_ARRAY:
-			scopes.back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->arr);
+			scopes[get_namespace()].back()->declare_variable(current_function_parameters[i], current_function_arguments[i].second->arr);
 			break;
 		}
 	}
@@ -415,7 +422,7 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 		}
 
 		if (return_from_function) {
-			if (!return_from_function_name.empty() && return_from_function_name == scopes.back()->get_name()) {
+			if (!return_from_function_name.empty() && return_from_function_name == scopes[get_namespace()].back()->get_name()) {
 				return_from_function_name = "";
 				return_from_function = false;
 			}
@@ -424,7 +431,7 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	}
 
 	// close scope
-	scopes.pop_back();
+	scopes[get_namespace()].pop_back();
 }
 
 void visitor::Interpreter::visit(parser::ASTContinueNode* astnode) {
@@ -439,7 +446,7 @@ void visitor::Interpreter::visit(parser::ASTSwitchNode* astnode) {
 	is_switch = true;
 
 	// create new scope
-	scopes.push_back(new InterpreterScope(this, ""));
+	scopes[get_namespace()].push_back(new InterpreterScope(this, ""));
 
 	int pos = -1;
 
@@ -468,7 +475,7 @@ void visitor::Interpreter::visit(parser::ASTSwitchNode* astnode) {
 		}
 
 		if (return_from_function) {
-			if (!return_from_function_name.empty() && return_from_function_name == scopes.back()->get_name()) {
+			if (!return_from_function_name.empty() && return_from_function_name == scopes[get_namespace()].back()->get_name()) {
 				return_from_function_name = "";
 				return_from_function = false;
 			}
@@ -477,7 +484,7 @@ void visitor::Interpreter::visit(parser::ASTSwitchNode* astnode) {
 	}
 
 	// close scope
-	scopes.pop_back();
+	scopes[get_namespace()].pop_back();
 	is_switch = false;
 }
 
@@ -521,7 +528,7 @@ void visitor::Interpreter::visit(parser::ASTIfNode* astnode) {
 
 void visitor::Interpreter::visit(parser::ASTForNode* astnode) {
 	is_loop = true;
-	scopes.push_back(new InterpreterScope(this, ""));
+	scopes[get_namespace()].push_back(new InterpreterScope(this, ""));
 
 	if (astnode->dci[0]) {
 		astnode->dci[0]->accept(this);
@@ -565,7 +572,7 @@ void visitor::Interpreter::visit(parser::ASTForNode* astnode) {
 		result = current_expression_value.curr_type == parser::Type::T_BOOL ? current_expression_value.b : current_expression_value.has_value;
 	}
 
-	scopes.pop_back();
+	scopes[get_namespace()].pop_back();
 	is_loop = false;
 }
 
@@ -576,7 +583,7 @@ void visitor::Interpreter::visit(parser::ASTForEachNode* astnode) {
 	auto colletion = current_expression_value.arr;
 
 	for (auto val : colletion) {
-		scopes.push_back(new InterpreterScope(this, ""));
+		scopes[get_namespace()].push_back(new InterpreterScope(this, ""));
 
 		astnode->itdecl->accept(this);
 
@@ -584,9 +591,9 @@ void visitor::Interpreter::visit(parser::ASTForEachNode* astnode) {
 
 		// determine innermost scope in which variable is declared
 		size_t i;
-		for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(itdecl->identifier); --i);
+		for (i = scopes[get_namespace()].size() - 1; !scopes[get_namespace()][i]->already_declared_variable(itdecl->identifier); --i);
 
-		Value_t* value = access_value(scopes.back(), scopes.back()->find_declared_variable(itdecl->identifier),
+		Value_t* value = access_value(scopes[get_namespace()].back(), scopes[get_namespace()].back()->find_declared_variable(itdecl->identifier),
 			std::vector<parser::Identifier_t>{parser::Identifier_t(itdecl->identifier, std::vector<parser::ASTExprNode*>())});
 
 		switch (val->curr_type) {
@@ -616,7 +623,7 @@ void visitor::Interpreter::visit(parser::ASTForEachNode* astnode) {
 		// execute block
 		astnode->block->accept(this);
 
-		scopes.pop_back();
+		scopes[get_namespace()].pop_back();
 
 		if (continue_block) {
 			continue_block = false;
@@ -665,11 +672,11 @@ void visitor::Interpreter::visit(parser::ASTWhileNode* astnode) {
 
 void visitor::Interpreter::visit(parser::ASTFunctionDefinitionNode* astnode) {
 	// add function to symbol table
-	scopes.back()->declare_function(get_namespace() + astnode->identifier, astnode->signature, astnode->variable_names, astnode->block);
+	scopes[get_namespace()].back()->declare_function(get_namespace() + astnode->identifier, astnode->signature, astnode->variable_names, astnode->block);
 }
 
 void visitor::Interpreter::visit(parser::ASTStructDefinitionNode* astnode) {
-	scopes.back()->declare_structure_definition(get_namespace() + astnode->identifier, astnode->variables, astnode->row, astnode->col);
+	scopes[get_namespace()].back()->declare_structure_definition(get_namespace() + astnode->identifier, astnode->variables, astnode->row, astnode->col);
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_bool>* lit) {
@@ -743,8 +750,8 @@ void visitor::Interpreter::visit(parser::ASTStructConstructorNode* astnode) {
 
 void visitor::Interpreter::declare_structure(cp_struct* str) {
 	size_t i;
-	for (i = scopes.size() - 1; !scopes[i]->already_declared_structure_definition(str->first); --i);
-	auto typeStruct = scopes[i]->find_declared_structure_definition(str->first);
+	for (i = scopes[get_namespace()].size() - 1; !scopes[get_namespace()][i]->already_declared_structure_definition(str->first); --i);
+	auto typeStruct = scopes[get_namespace()][i]->find_declared_structure_definition(str->first);
 
 	for (auto& varTypeStruct : typeStruct.variables) {
 		auto found = false;
@@ -913,19 +920,19 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* astnode) {
 	current_expression_value = value;
 }
 
-bool visitor::Interpreter::is_namespace(std::string identifier) {
-	for (auto& prog : programs) {
-		if (prog->alias == identifier) {
-			return true;
-		}
-	}
-}
+//bool visitor::Interpreter::is_namespace(std::string identifier) {
+//	for (auto& prog : programs) {
+//		if (prog->alias == identifier) {
+//			return true;
+//		}
+//	}
+//}
 
 void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 
 	// determine innermost scope in which variable is declared
 	long long i;
-	for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(astnode->identifier_vector[0].identifier); --i) {
+	for (i = scopes[get_namespace()].size() - 1; !scopes[get_namespace()][i]->already_declared_variable(astnode->identifier_vector[0].identifier); --i)/* {
 		if (i <= 0) {
 			if (is_namespace(astnode->identifier_vector[0].identifier)) {
 				astnode->identifier_vector[0].identifier = astnode->identifier_vector[0].identifier + "." + astnode->identifier_vector[1].identifier;
@@ -934,9 +941,9 @@ void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 			for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(astnode->identifier_vector[0].identifier); --i);
 			break;
 		}
-	}
+	}*/;
 
-	current_expression_value = *access_value(scopes[i], scopes[i]->find_declared_variable(astnode->identifier_vector[0].identifier), astnode->identifier_vector);
+	current_expression_value = *access_value(scopes[get_namespace()][i], scopes[get_namespace()][i]->find_declared_variable(astnode->identifier_vector[0].identifier), astnode->identifier_vector);
 
 	if (current_expression_value.curr_type == parser::Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
 		astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
@@ -989,9 +996,9 @@ void visitor::Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
 		auto id = static_cast<parser::ASTIdentifierNode*>(astnode->expr);
 
 		size_t i;
-		for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(id->identifier_vector[0].identifier); i--);
+		for (i = scopes[get_namespace()].size() - 1; !scopes[get_namespace()][i]->already_declared_variable(id->identifier_vector[0].identifier); i--);
 
-		Value_t* value = access_value(scopes[i], scopes[i]->find_declared_variable(id->identifier_vector[0].identifier), id->identifier_vector);
+		Value_t* value = access_value(scopes[get_namespace()][i], scopes[get_namespace()][i]->find_declared_variable(id->identifier_vector[0].identifier), id->identifier_vector);
 
 		switch (value->curr_type) {
 		case parser::Type::T_BOOL:
@@ -1046,17 +1053,17 @@ void visitor::Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 
 	// determine in which scope the function is declared
 	size_t i;
-	for (i = scopes.size() - 1; !scopes[i]->already_declared_function(astnode->identifier, signature); i--);
+	for (i = scopes[get_namespace()].size() - 1; !scopes[get_namespace()][i]->already_declared_function(astnode->identifier, signature); i--);
 
 	// populate the global vector of function parameter names, to be used in creation of function scope
-	current_function_parameters = std::get<1>(scopes[i]->find_declared_function(astnode->identifier, signature));
+	current_function_parameters = std::get<1>(scopes[get_namespace()][i]->find_declared_function(astnode->identifier, signature));
 
 	current_name = astnode->identifier;
 	current_function_name = astnode->identifier;
 
 	is_function_context = true;
 	// visit the corresponding function block
-	std::get<2>(scopes[i]->find_declared_function(astnode->identifier, signature))->accept(this);
+	std::get<2>(scopes[get_namespace()][i]->find_declared_function(astnode->identifier, signature))->accept(this);
 	is_function_context = false;
 
 	current_name = current_program->name;
@@ -1317,9 +1324,9 @@ unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_string>* astno
 unsigned int visitor::Interpreter::hash(parser::ASTIdentifierNode* astnode) {
 	// determine innermost scope in which variable is declared
 	size_t i;
-	for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
+	for (i = scopes[get_namespace()].size() - 1; !scopes[get_namespace()][i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
 
-	Value_t* value = access_value(scopes[i], scopes[i]->find_declared_variable(astnode->identifier_vector[0].identifier), astnode->identifier_vector);
+	Value_t* value = access_value(scopes[get_namespace()][i], scopes[get_namespace()][i]->find_declared_variable(astnode->identifier_vector[0].identifier), astnode->identifier_vector);
 
 	switch (value->curr_type) {
 	case parser::Type::T_BOOL:
