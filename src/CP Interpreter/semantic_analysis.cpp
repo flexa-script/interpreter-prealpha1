@@ -108,13 +108,13 @@ SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticVa
 		//		"' of '" + identifier_vector[i - 1].identifier + "' was not declared ");
 		//}
 
-		if (is_void(next_value->type)
-			|| is_undefined(next_value->type)) {
-			auto dectype = is_void(next_value->type) ? "null" : "undefined";
+		//if (is_void(next_value->type)
+		//	|| is_undefined(next_value->type)) {
+		//	auto dectype = is_void(next_value->type) ? "null" : "undefined";
 
-			throw std::runtime_error(msg_header(current_row, current_row) + "trying assign '" + identifier_vector[i].identifier +
-				"' but '" + identifier_vector[i - 1].identifier + "' is " + dectype);
-		}
+		//	throw std::runtime_error(msg_header(current_row, current_row) + "trying assign '" + identifier_vector[i].identifier +
+		//		"' but '" + identifier_vector[i - 1].identifier + "' is " + dectype);
+		//}
 
 		next_value = next_value_aux;
 
@@ -370,6 +370,24 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		if (auto str_expr = dynamic_cast<ASTStructConstructorNode*>(astnode->expr)) {
 			assign_structure(curr_scope, variable_expression, str_expr);
 		}
+		else if (auto str_expr = dynamic_cast<ASTIdentifierNode*>(astnode->expr)) {
+			// determine the inner-most scope in which the value is declared
+			SemanticScope* assng_scope;
+			try {
+				assng_scope = get_inner_most_variable_scope(str_expr->nmspace.empty() ? get_namespace() : str_expr->nmspace, str_expr->identifier_vector[0].identifier);
+			}
+			catch (...) {
+				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "identifier '" + str_expr->identifier_vector[0].identifier +
+					"' being reassigned was never declared");
+			}
+
+			// get base variable
+			auto declared_variable = assng_scope->find_declared_variable(str_expr->identifier_vector[0].identifier);
+			auto variable_expression = access_value(assng_scope, declared_variable->value, str_expr->identifier_vector, astnode->row, astnode->col);
+
+			curr_scope->declare_variable(astnode->identifier_vector[0].identifier, declared_variable->type, declared_variable->array_type,
+				declared_variable->dim, declared_variable->type_name, variable_expression, declared_variable->is_const, declared_variable->row, declared_variable->col);
+		}
 	}
 	else if (is_array(declared_variable->type) && (is_array(assignment_expr.type) || is_void(assignment_expr.type)) // array or null assigning array 
 		|| is_array(declared_variable->type) && match_type(variable_expression->type, assignment_expr.type)) { // variable is array, but it is assigning subvalues
@@ -589,7 +607,7 @@ void SemanticAnalyser::visit(ASTPrintNode* astnode) {
 void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 	// update current expression
 	astnode->expr->accept(this);
-
+	
 	for (long long i = scopes[get_namespace()].size() - 1; i >= 0; --i) {
 		if (!scopes[get_namespace()][i]->get_name().empty()) {
 			retfun_identifier = scopes[get_namespace()][i]->get_name();
