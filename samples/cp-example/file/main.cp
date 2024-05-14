@@ -1,80 +1,31 @@
-// var arr[3] = {1,2,3};
-
-// for (var i = 0; i < len(arr); i++) {
-//     print(arr[i]);
-// }
-// print("\n\n");
-
-// var i = 0;
-// i++;
-// i++;
-// i++;
-// print(i);
-// print("\n\n");
-
-struct Foo {
-    var bar;
+struct Node {
+    var value: any;
+    var next: Node;
 };
-var foo = Foo{bar=10};
-foo.bar++;
-foo.bar++;
-foo.bar++;
-print(string(foo) + "\n");
 
+struct List {
+    var first: Node;
+    var size: int;
+};
 
-// var arr[3] = {1,2,3};
-// var arr2[3];
+def list_add(list: List, value: any) {
+    if (list.first == null) { 
+        list.first = Node{value=value, next=null};
+        list.size = 1;
+    } else {
+        var prev_node: Node = Node{};
+        var curr_node = list.first;
 
-// arr2 = arr;
+        while (curr_node.next != null) {
+            prev_node = curr_node;
+            curr_node = curr_node.next;
+        }
 
-// print(string(arr) + "\n");
-// print(string(arr2) + "\n");
+        curr_node.next = Node{value=value};
+        list.size++;
+    }
+}
 
-// arr[0] = 99;
+var numbers: List = List{first=null, size=0};
 
-// print(string(arr) + "\n");
-// print(string(arr2) + "\n");
-
-// print("\n\n");
-
-// var a = 10;
-// var b;
-
-// b = a;
-
-// print(string(a) + "\n");
-// print(string(b) + "\n");
-
-// a = 99;
-
-// print(string(a) + "\n");
-// print(string(b) + "\n");
-
-// print("\n\n");
-
-// struct Foo {
-//     var bar;
-// };
-
-// var foo = Foo{bar=10};
-// var bar;
-
-// bar = foo;
-
-// print(string(foo) + "\n");
-// print(string(bar) + "\n");
-
-// foo.bar = 99;
-
-// print(string(foo) + "\n");
-// print(string(bar) + "\n");
-
-
-
-// var a = null;
-
-// if (a != null) {
-//   print("is not null");
-// } else {
-//   print("is null");
-// }
+list_add(numbers, 10);
