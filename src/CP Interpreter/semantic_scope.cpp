@@ -36,7 +36,7 @@ FunctionDefinition_t SemanticScope::find_declared_function(std::string identifie
 
 	// if key is not present in multimap
 	if (std::distance(funcs.first, funcs.second) == 0) {
-		throw std::runtime_error("something went wrong when determining the type of '" + identifier + "'.");
+		throw std::runtime_error("something went wrong when determining the type of '" + identifier + "'");
 	}
 
 	// check signature for each function in functionSymbolTable
