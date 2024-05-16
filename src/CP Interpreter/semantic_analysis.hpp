@@ -27,7 +27,7 @@ namespace visitor {
 	private:
 		bool returns(parser::ASTNode*);
 
-		void assign_structure(SemanticScope*, parser::SemanticValue_t*, parser::ASTStructConstructorNode*);
+		void validate_struct_assign(SemanticScope*, parser::SemanticValue_t*, parser::ASTStructConstructorNode*);
 		void declare_structure();
 
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
@@ -41,7 +41,7 @@ namespace visitor {
 		void determine_array_type(parser::ASTArrayConstructorNode*);
 		void check_array_type(parser::ASTExprNode*, unsigned int, unsigned int);
 
-		parser::Type access_value_type(std::vector<Identifier_t> identifier_vector, std::string, unsigned int = 0);
+		parser::VariableDefinition_t access_struct_variable(std::vector<parser::Identifier_t>, std::string, unsigned int = 0);
 		//parser::SemanticValue_t* access_value(SemanticScope*, parser::SemanticValue_t*, std::vector<parser::Identifier_t>,
 		//	unsigned int, unsigned int, bool = false, size_t = 0);
 
