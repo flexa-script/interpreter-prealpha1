@@ -61,71 +61,6 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	}
 }
 
-//SemanticValue_t* SemanticAnalyser::access_value(SemanticScope* scope, SemanticValue_t* value, std::vector<Identifier_t> identifier_vector,
-//	unsigned int current_row, unsigned int current_col, bool check_undef, size_t i) {
-//	if (check_undef && is_undefined(value->type)) {
-//		throw std::runtime_error(msg_header(current_row, current_col) + "variable '" + identifier_vector[i].identifier + "' is not initialized");
-//	}
-//
-//	SemanticValue_t* next_value = value;
-//
-//	// check if the base variable is not null
-//	if (is_void(next_value->type) || is_undefined(next_value->type)) {
-//		auto dectype = is_void(next_value->type) ? "null" : "undefined";
-//		// array
-//		if (identifier_vector[i].access_vector.size() > 0) {
-//			throw std::runtime_error(msg_header(current_row, current_col) + "trying assign '" + identifier_vector[i].identifier + "' array position but it's " + dectype);
-//		}
-//	}
-//
-//	// evaluate array access vector
-//	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
-//
-//	if (access_vector.size() > 0) {
-//		size_t s = 0;
-//		size_t accessPos = 0;
-//
-//		for (s = 0; s < access_vector.size(); ++s) {
-//			accessPos = access_vector.at(s);
-//			if (accessPos >= next_value->array_values.size()) {
-//				throw std::runtime_error(msg_header(current_row, current_row) + "trying to access a invalid position");
-//			}
-//			if (next_value->array_values.at(accessPos)->type == Type::T_STRING) {
-//				break;
-//			}
-//			next_value = next_value->array_values.at(accessPos);
-//		}
-//
-//	}
-//
-//	++i;
-//
-//	if (i < identifier_vector.size()) {
-//		auto next_value_aux = next_value->struct_vars[identifier_vector[i].identifier];
-//
-//		//if (!next_value_aux) {
-//		//	throw std::runtime_error(msg_header(current_row, current_row) + "member '" + identifier_vector[i].identifier +
-//		//		"' of '" + identifier_vector[i - 1].identifier + "' was not declared ");
-//		//}
-//
-//		//if (is_void(next_value->type)
-//		//	|| is_undefined(next_value->type)) {
-//		//	auto dectype = is_void(next_value->type) ? "null" : "undefined";
-//
-//		//	throw std::runtime_error(msg_header(current_row, current_row) + "trying assign '" + identifier_vector[i].identifier +
-//		//		"' but '" + identifier_vector[i - 1].identifier + "' is " + dectype);
-//		//}
-//
-//		next_value = next_value_aux;
-//
-//		if (identifier_vector[i].access_vector.size() > 0) {
-//			return access_value(scope, next_value, identifier_vector, i, check_undef);
-//		}
-//	}
-//
-//	return next_value;
-//}
-
 VariableDefinition_t SemanticAnalyser::access_struct_variable(std::vector<Identifier_t> identifier_vector, std::string type_name, unsigned int i) {
 	SemanticScope* curr_scope;
 	try {
@@ -215,13 +150,15 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 				decl_current_expr->type_name = current_expression.type_name;
 			}
 
-			if (auto str_expr = dynamic_cast<ASTIdentifierNode*>(astnode->expr)) {
-				current_scope->declare_variable(astnode->identifier, astnode_type, astnode_array_type,
-					astnode->dim, astnode_type_name, decl_current_expr, astnode->is_const, astnode->row, astnode->col);
-			}
-			else {
+			//if (auto str_expr = dynamic_cast<ASTIdentifierNode*>(astnode->expr)) {
+			//	current_scope->declare_variable(astnode->identifier, astnode_type, astnode_array_type,
+			//		astnode->dim, astnode_type_name, decl_current_expr, astnode->is_const, astnode->row, astnode->col);
+			//}
+			//else if (auto str_expr = dynamic_cast<ASTStructConstructorNode*>(astnode->expr)){
 
-			}
+			//}
+			current_scope->declare_variable(astnode->identifier, astnode_type, astnode_array_type,
+				astnode->dim, astnode_type_name, decl_current_expr, astnode->is_const, astnode->row, astnode->col);
 
 			//current_scope->declare_variable(astnode->identifier, astnode_type, astnode_array_type,
 			//	astnode->dim, astnode_type_name, decl_current_expr, astnode->is_const, astnode->row, astnode->col);

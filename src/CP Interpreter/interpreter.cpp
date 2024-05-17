@@ -672,11 +672,11 @@ void visitor::Interpreter::visit(parser::ASTWhileNode* astnode) {
 
 void visitor::Interpreter::visit(parser::ASTFunctionDefinitionNode* astnode) {
 	// add function to symbol table
-	scopes[get_namespace()].back()->declare_function(get_namespace() + astnode->identifier, astnode->signature, astnode->variable_names, astnode->block);
+	scopes[get_namespace()].back()->declare_function(astnode->identifier, astnode->signature, astnode->variable_names, astnode->block);
 }
 
 void visitor::Interpreter::visit(parser::ASTStructDefinitionNode* astnode) {
-	scopes[get_namespace()].back()->declare_structure_definition(get_namespace() + astnode->identifier, astnode->variables, astnode->row, astnode->col);
+	scopes[get_namespace()].back()->declare_structure_definition(astnode->identifier, astnode->variables, astnode->row, astnode->col);
 }
 
 void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_bool>* lit) {

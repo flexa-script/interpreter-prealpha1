@@ -10,14 +10,12 @@ using namespace parser;
 
 SemanticValue::SemanticValue(parser::Type current_type, unsigned int row, unsigned int col)
 	: type(current_type), array_type(current_type), dim(std::vector<ASTExprNode*>()),
-	/*array_values(std::vector<SemanticValue*>()), */type_name(""),
-	/*struct_vars(std::map<std::string, SemanticValue*>()), */hash(0),
-	is_const(false), row(row), col(col) {}
+	type_name(""), hash(0), is_const(false), row(row), col(col) {}
 
 SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim, std::vector<SemanticValue*> array_values,
 	std::string type_name, std::map<std::string, SemanticValue*> struct_vars, unsigned int hash, bool is_const, unsigned int row, unsigned int col)
-	: type(type), array_type(array_type), dim(dim), /*array_values(array_values), */type_name(type_name),
-	/*struct_vars(struct_vars), */hash(hash), is_const(is_const), row(row), col(col) {}
+	: type(type), array_type(array_type), dim(dim), type_name(type_name),
+	hash(hash), is_const(is_const), row(row), col(col) {}
 
 void SemanticValue::copy_from(SemanticValue* value) {
 	type = value->type;
@@ -28,26 +26,12 @@ void SemanticValue::copy_from(SemanticValue* value) {
 	is_const = value->is_const;
 	row = value->row;
 	col = value->col;
-
-	//struct_vars = std::map<std::string, SemanticValue*>();
-	//for (auto& var : value->struct_vars) {
-	//	auto val = new SemanticValue();
-	//	val->copy_from(var.second);
-	//	struct_vars.emplace(var.first, val);
-	//}
-
-	//array_values = std::vector<SemanticValue*>();
-	//for (auto& var : value->array_values) {
-	//	auto val = new SemanticValue();
-	//	val->copy_from(var);
-	//	array_values.emplace_back(val);
-	//}
 }
 
 SemanticVariable::SemanticVariable(std::string identifier, Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
-	std::string type_name, SemanticValue* value, bool is_const, unsigned int row, unsigned int col, bool is_parameter)
+	std::string type_name, SemanticValue* value, bool is_const, unsigned int row, unsigned int col)
 	: identifier(identifier), type(type), array_type(array_type), dim(dim), type_name(type_name),
-	value(value), is_const(is_const), row(row), col(col), is_parameter(is_parameter) { }
+	value(value), is_const(is_const), row(row), col(col) { }
 
 void SemanticVariable::copy_from(SemanticVariable* var) {
 	identifier = var->identifier;
@@ -56,7 +40,6 @@ void SemanticVariable::copy_from(SemanticVariable* var) {
 	dim = var->dim;
 	type_name = var->type_name;
 	is_const = value->is_const;
-	is_parameter = var->is_parameter;
 	row = var->row;
 	col = var->col;
 

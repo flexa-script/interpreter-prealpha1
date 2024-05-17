@@ -29,3 +29,8 @@ def list_add(list: List, value: any) {
 var numbers: List = List{first=null, size=0};
 
 list_add(numbers, 10);
+list_add(numbers, 9);
+list_add(numbers, 8);
+list_add(numbers, 7);
+
+print(numbers);

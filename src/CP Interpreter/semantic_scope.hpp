@@ -29,7 +29,7 @@ namespace visitor {
 
 		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
 		void declare_variable(std::string, parser::Type, parser::Type, std::vector<parser::ASTExprNode*>,
-			std::string, parser::SemanticValue*, bool, unsigned int, unsigned int, bool = false);
+			std::string, parser::SemanticValue*, bool, unsigned int, unsigned int);
 		void declare_function(std::string, parser::Type, std::string, parser::Type, parser::Type,
 			std::vector<parser::ASTExprNode*>, std::vector<parser::Type>, std::vector<parser::VariableDefinition_t>,
 			parser::ASTBlockNode*, unsigned int, unsigned int);
@@ -40,10 +40,6 @@ namespace visitor {
 		parser::StructureDefinition_t find_declared_structure_definition(std::string);
 		parser::FunctionDefinition_t find_declared_function(std::string, std::vector<parser::Type>);
 		parser::SemanticVariable_t* find_declared_variable(std::string);
-
-		//parser::SemanticValue_t* access_value(std::vector<std::string>, std::vector<parser::ASTExprNode*>, bool = false);
-		//parser::SemanticValue_t* access_value_of_array(parser::SemanticValue_t*, std::vector<parser::ASTExprNode*>);
-		//parser::SemanticValue_t* access_value_of_structure(parser::SemanticValue_t*, std::vector<std::string>);
 
 		std::string get_name();
 		void set_name(std::string);

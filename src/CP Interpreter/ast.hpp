@@ -16,14 +16,12 @@ namespace parser {
 		SemanticValue(parser::Type, parser::Type, std::vector<ASTExprNode*>, std::vector<SemanticValue*>,
 			std::string, std::map<std::string, SemanticValue*>, unsigned int, bool, unsigned int, unsigned int);
 		// simplified constructor
-		SemanticValue(parser::Type current_type, unsigned int row, unsigned int col);
+		SemanticValue(parser::Type, unsigned int, unsigned int);
 		SemanticValue() = default;
 		parser::Type type;
 		parser::Type array_type;
 		std::vector<ASTExprNode*> dim;
-		//std::vector<SemanticValue*> array_values;
 		std::string type_name;
-		//std::map<std::string, SemanticValue*> struct_vars;
 		unsigned int hash;
 		bool is_const;
 		unsigned int row;
@@ -32,17 +30,15 @@ namespace parser {
 	} SemanticValue_t;
 
 	typedef struct SemanticVariable {
-		SemanticVariable(std::string, Type, Type, std::vector<ASTExprNode*>, std::string, SemanticValue_t*, bool, unsigned int, unsigned int, bool = false);
+		SemanticVariable(std::string, Type, Type, std::vector<ASTExprNode*>, std::string, SemanticValue_t*, bool, unsigned int, unsigned int);
 		SemanticVariable() = default;
 		std::string identifier;
 		parser::Type type;
 		parser::Type array_type;
 		std::vector<ASTExprNode*> dim;
-		std::vector<unsigned int> parsed_dim;
 		std::string type_name;
 		SemanticValue_t* value;
 		bool is_const;
-		bool is_parameter;
 		unsigned int row;
 		unsigned int col;
 		void copy_from(SemanticVariable*);

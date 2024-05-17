@@ -80,9 +80,9 @@ void SemanticScope::declare_structure_definition(std::string name, std::vector<V
 }
 
 void SemanticScope::declare_variable(std::string identifier, Type type, Type array_type, std::vector<ASTExprNode*> dim,
-	std::string type_name, SemanticValue* value, bool is_const, unsigned int row, unsigned int col, bool is_parameter) {
+	std::string type_name, SemanticValue* value, bool is_const, unsigned int row, unsigned int col) {
 	SemanticVariable_t* var = new SemanticVariable_t(identifier, type, array_type, dim,
-		type_name, value, is_const, row, col, is_parameter);
+		type_name, value, is_const, row, col);
 	variable_symbol_table[identifier] = var;
 }
 
