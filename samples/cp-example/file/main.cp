@@ -26,6 +26,24 @@ def list_add(list: List, value: any) {
     }
 }
 
+def list_print(list : List) {
+    if (list.first == null) {
+        print("[]");
+        
+    } else {
+        var node = list.first;
+        print("[");
+        while (node != null) {
+            print(string(node.value));
+            if (node.next != null) {
+                print(",");
+            }
+            node = node.next;
+        }
+        print("]");
+    }
+}
+
 var numbers: List = List{first=null, size=0};
 
 list_add(numbers, 10);
@@ -34,3 +52,4 @@ list_add(numbers, 8);
 list_add(numbers, 7);
 
 print(numbers);
+list_print(numbers);

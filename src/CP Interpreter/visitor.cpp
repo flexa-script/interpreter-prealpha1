@@ -75,7 +75,7 @@ namespace parser {
 }
 
 Value::Value(parser::Type type)
-	: b(0), i(0), f(0), c(0), s(""), str(cp_struct()), arr(cp_array()), has_value(false), type(type), curr_type(type), arr_type(type) {};
+	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), has_value(false), type(type), curr_type(type), arr_type(type) {};
 
 void Value::set(cp_bool b) {
 	this->b = b;
@@ -108,17 +108,18 @@ void Value::set(cp_string s) {
 }
 
 void Value::set(cp_array arr) {
-	this->arr = cp_array();
-	for (auto ca : arr) {
-		auto val = new Value_t(ca->curr_type);
-		val->copy_from(ca);
-		this->arr.emplace_back(val);
-	}
+	//this->arr = cp_array();
+	//for (auto ca : arr) {
+	//	auto val = new Value_t(ca->curr_type);
+	//	val->copy_from(ca);
+	//	this->arr.emplace_back(val);
+	//}
+	this->arr = arr;
 	has_value = true;
 	set_curr_type(parser::Type::T_ARRAY);
 }
 
-void Value::set(cp_struct str) {
+void Value::set(cp_struct* str) {
 	this->str = str;
 	has_value = true;
 	set_curr_type(parser::Type::T_STRUCT);

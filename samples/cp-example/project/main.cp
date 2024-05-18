@@ -10,47 +10,72 @@ if (this == "main") {
     var numbers: List = List{first=null, size=0};
     
     print("numbers: " + string(numbers) + "\n");
-
     print("List init: size: " + string(numbers.size) + "\n");
 
     list_add(numbers, 10);
-    print("add 10: size: " + string(numbers.size) + "\n");
+    // list_print(numbers);
+    // print("\n");
+    // print("add 10: size: " + string(numbers.size) + "\n");
     list_add(numbers, 20);
+    // list_print(numbers);
+    // print("\n");
     // print("add 20: size: " + string(numbers.size) + "\n");
+    list_add(numbers, 30);
+    // list_print(numbers);
+    // print("\n");
     list_add(numbers, 40);
+    // list_print(numbers);
+    // print("\n");
     list_add(numbers, 50);
+    // list_print(numbers);
+    // print("\n");
     list_add(numbers, 60);
+    // list_print(numbers);
+    // print("\n");
     // print("antes print: size: " + string(numbers.size) + "\n");
     
+    // print(numbers);
+    // print("\n");
+    // print(numbers.first);
+    // print("\n");
+    // print(numbers.first.next);
+    // print("\n");
+    // print(numbers.first.next.next);
     list_print(numbers);
     print("\n\n\n");
 
-    // print("at: size: " + string(numbers.size) + "\n");
+    print("size: " + string(numbers.size) + "\n");
     
-    print(string(list_get(numbers, 0)) + "\n\n");
-    print(string(list_get(numbers, 1)) + "\n\n");
-    print(string(list_get(numbers, 2)) + "\n\n");
-    print(string(list_get(numbers, 3)) + "\n\n");
-    print(string(list_get(numbers, 4)) + "\n\n");
+    print(string(list_get(numbers, 0)) + "\n");
+    print(string(list_get(numbers, 1)) + "\n");
+    print(string(list_get(numbers, 2)) + "\n");
+    print(string(list_get(numbers, 3)) + "\n");
+    print(string(list_get(numbers, 4)) + "\n");
+    print(string(list_get(numbers, 5)) + "\n");
     print("\n");
     
     // print("remove: size: " + string(numbers.size) + "\n");
+    list_print(numbers);
+    print("\n");
     list_remove(numbers, 0);
     list_print(numbers);
-    print("\n\n");
+    print("\n");
     list_remove(numbers, 1);
     list_print(numbers);
-    print("\n\n");
-    list_remove(numbers, 2);
+    print("\n");
+    list_remove(numbers, 3);
     list_print(numbers);
-    print("\n\n");
-    list_remove(numbers, 1); // deveria gerar erro
+    print("\n");
+    list_remove(numbers, 1);
     list_print(numbers);
-    print("\n\n");
+    print("\n");
     // print("fim: size: " + string(numbers.size) + "\n");
+    list_remove(numbers, 1);
+    list_print(numbers);
+    print("\n");
     list_remove(numbers, 0);
     list_print(numbers);
-    print("\n\n");
+    print("\n");
 
-    print(list_iterator(numbers));
+    // print(list_iterator(numbers));
 }

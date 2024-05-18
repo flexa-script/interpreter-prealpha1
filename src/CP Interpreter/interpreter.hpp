@@ -34,7 +34,7 @@ namespace visitor {
 		//bool is_namespace(std::string);
 
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
-		void assign_structure(std::string, Value_t);
+		void declare_new_structure(std::string, Value_t);
 		void declare_structure(cp_struct*);
 		void print_value(Value_t);
 		void print_array(cp_array);

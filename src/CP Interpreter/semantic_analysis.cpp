@@ -11,7 +11,7 @@ using namespace parser;
 
 SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
 	: current_expression(SemanticValue_t()), retfun_has_return(false), retfun_returned(false),
-	Visitor(programs, main_program) {
+	Visitor(programs, main_program, main_program ? main_program->name : "main") {
 	scopes["main"].push_back(global_scope);
 };
 

@@ -48,7 +48,7 @@ Value_t* InterpreterScope::declare_undef_variable(std::string identifier, parser
 
 Value_t* InterpreterScope::declare_undef_struct_variable(std::string identifier, std::string type_name) {
 	Value_t* value = declare_undef_variable(identifier, parser::Type::T_STRUCT);
-	value->str.first = type_name;
+	value->str->first = type_name;
 	return value;
 }
 
@@ -61,7 +61,7 @@ Value_t* InterpreterScope::declare_null_variable(std::string identifier, parser:
 
 Value_t* InterpreterScope::declare_null_struct_variable(std::string identifier, std::string type_name) {
 	Value_t* value = declare_null_variable(identifier, parser::Type::T_STRUCT);
-	value->str.first = type_name;
+	value->str->first = type_name;
 	return value;
 }
 
@@ -107,13 +107,16 @@ Value_t* InterpreterScope::declare_variable(std::string identifier, cp_array arr
 	return value;
 }
 
-
-Value_t* InterpreterScope::declare_variable(std::string identifier, cp_struct strValue) {
+Value_t* InterpreterScope::declare_variable(std::string identifier, cp_struct* strValue) {
 	Value_t* value = new Value_t(parser::Type::T_STRUCT);
 	value->set(strValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
+
+//void InterpreterScope::declare_value(std::string identifier, Value_t* value) {
+//	variable_symbol_table[identifier] = value;
+//}
 
 void InterpreterScope::declare_structure_definition(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
 	parser::StructureDefinition_t type(name, variables, row, col);
