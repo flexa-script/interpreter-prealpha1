@@ -8,18 +8,18 @@
 using namespace parser;
 
 
-TypeDefinition::TypeDefinition(parser::Type type, parser::Type array_type,
-	std::vector<ASTExprNode*> dim, std::string type_name, unsigned int row, unsigned int col)
-	: type(type), type_name(type_name), array_type(array_type), dim(dim), row(row), col(col) {}
+TypeDefinition::TypeDefinition(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+	std::string type_name, std::string type_name_space, unsigned int row, unsigned int col)
+	: type(type), type_name(type_name), type_name_space(type_name_space), array_type(array_type), dim(dim), row(row), col(col) {}
 
 SemanticValue::SemanticValue(parser::Type type, unsigned int row, unsigned int col)
 	: hash(0), is_const(false),
-	TypeDefinition(type, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", row, col) {}
+	TypeDefinition(type, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", "", row, col) {}
 
 SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
-	std::string type_name, unsigned int hash, bool is_const, unsigned int row, unsigned int col)
+	std::string type_name, std::string type_name_space, unsigned int hash, bool is_const, unsigned int row, unsigned int col)
 	: hash(hash), is_const(is_const),
-	TypeDefinition(type, array_type, dim, type_name, row, col) {}
+	TypeDefinition(type, array_type, dim, type_name, type_name_space, row, col) {}
 
 void SemanticValue::copy_from(SemanticValue* value) {
 	type = value->type;
@@ -33,9 +33,9 @@ void SemanticValue::copy_from(SemanticValue* value) {
 }
 
 SemanticVariable::SemanticVariable(std::string identifier, Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
-	std::string type_name, SemanticValue* value, bool is_const, unsigned int row, unsigned int col)
+	std::string type_name, std::string type_name_space, SemanticValue* value, bool is_const, unsigned int row, unsigned int col)
 	: identifier(identifier), value(value), is_const(is_const), row(row), col(col),
-	TypeDefinition(type, array_type, dim, type_name, row, col) {}
+	TypeDefinition(type, array_type, dim, type_name, type_name_space, row, col) {}
 
 void SemanticVariable::copy_from(SemanticVariable* var) {
 	identifier = var->identifier;
@@ -52,19 +52,19 @@ void SemanticVariable::copy_from(SemanticVariable* var) {
 	value->copy_from(var->value);
 }
 
-VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name,
+VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name, std::string type_name_space,
 	Type any_type, Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col)
 	: identifier(identifier), row(row), col(col),
-	TypeDefinition(type, array_type, dim, type_name, row, col) {}
+	TypeDefinition(type, array_type, dim, type_name, type_name_space, row, col) {}
 
 StructureDefinition::StructureDefinition(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
 	: identifier(identifier), variables(variables), row(row), col(col) {}
 
-FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, Type array_type,
+FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, std::string type_name_space, Type array_type,
 	std::vector<ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition_t> parameters,
 	ASTBlockNode* block, unsigned int row, unsigned int col)
 	: identifier(identifier), signature(signature), parameters(parameters), row(row), col(col),
-	TypeDefinition(type, array_type, dim, type_name, row, col) {}
+	TypeDefinition(type, array_type, dim, type_name, type_name_space, row, col) {}
 
 Identifier::Identifier(std::string identifier, std::vector<ASTExprNode*> access_vector)
 	: identifier(identifier), access_vector(access_vector) {}
@@ -78,9 +78,11 @@ ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string nam
 ASTUsingNode::ASTUsingNode(std::vector<std::string> library, std::string alias, unsigned int row, unsigned int col)
 	: library(std::move(library)), alias(std::move(alias)), row(row), col(col) {}
 
-ASTDeclarationNode::ASTDeclarationNode(Type type, std::string type_name, std::string identifier, ASTExprNode* expr, bool is_const,
-	Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col)
-	: type(type), type_name(std::move(type_name)), identifier(std::move(identifier)), expr(expr), is_const(is_const), array_type(array_type), dim(dim), row(row), col(col) {}
+ASTDeclarationNode::ASTDeclarationNode(std::string identifier, Type type, Type array_type, std::vector<ASTExprNode*> dim,
+	std::string type_name, std::string type_name_space, ASTExprNode* expr, bool is_const,
+	unsigned int row, unsigned int col)
+	: identifier(std::move(identifier)), expr(expr), is_const(is_const), row(row), col(col),
+	TypeDefinition(type, array_type, dim, type_name, type_name_space, row, col) {}
 
 ASTAssignmentNode::ASTAssignmentNode(std::vector<Identifier_t> identifier_vector, std::string nmspace, std::string op, ASTExprNode* expr, unsigned int row, unsigned int col)
 	: identifier_vector(identifier_vector), nmspace(nmspace), expr(expr), op(std::move(op)), row(row), col(col) {}
@@ -119,9 +121,9 @@ ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned
 	: condition(condition), block(block), row(row), col(col) {}
 
 ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<VariableDefinition_t> parameters,
-	Type type, std::string type_name, Type array_type, std::vector<ASTExprNode*> dim, ASTBlockNode* block, unsigned int row, unsigned int col)
-	: identifier(std::move(identifier)), parameters(std::move(parameters)), type(type), type_name(type_name),
-	array_type(array_type), dim(dim), block(block), row(row), col(col) {
+	Type type, std::string type_name, std::string type_name_space, Type array_type, std::vector<ASTExprNode*> dim, ASTBlockNode* block, unsigned int row, unsigned int col)
+	: identifier(std::move(identifier)), parameters(std::move(parameters)), block(block), row(row), col(col),
+	TypeDefinition(type, array_type, dim, type_name, type_name_space, row, col) {
 	// generate signature
 	this->signature = std::vector<Type>();
 

@@ -36,7 +36,7 @@ namespace visitor {
 		void determine_array_type(parser::ASTArrayConstructorNode*);
 		void check_array_type(parser::ASTExprNode*, unsigned int, unsigned int);
 
-		parser::VariableDefinition_t access_struct_variable(std::vector<parser::Identifier_t>, std::string, unsigned int = 0);
+		parser::VariableDefinition_t access_struct_variable(std::vector<parser::Identifier_t>, std::string, std::string, unsigned int = 0);
 
 		std::string msg_header(unsigned int, unsigned int);
 

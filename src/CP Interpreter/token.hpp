@@ -116,7 +116,7 @@ namespace lexer {
 		"print",
 		"read",
 		"len",
-		"type",
+		"typeof",
 		"round",
 		"identifier",
 		"",

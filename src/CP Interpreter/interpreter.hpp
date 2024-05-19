@@ -33,11 +33,13 @@ namespace visitor {
 
 	private:
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
+		std::vector<Value_t*> build_array(std::vector<parser::ASTExprNode*>, Value_t*, long long);
 		void declare_new_structure(std::string, Value_t);
 		void declare_structure(cp_struct*, std::string);
 
 		cp_int do_operation(cp_int, cp_int, std::string);
 		cp_float do_operation(cp_float, cp_float, std::string);
+		cp_string do_operation(cp_string, cp_string, std::string);
 		std::string parse_value_to_string(Value_t);
 		std::string parse_array_to_string(cp_array);
 		std::string parse_struct_to_string(cp_struct);

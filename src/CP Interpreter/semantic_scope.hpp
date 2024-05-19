@@ -27,8 +27,8 @@ namespace visitor {
 
 		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition_t>, unsigned int, unsigned int);
 		void declare_variable(std::string, parser::Type, parser::Type, std::vector<parser::ASTExprNode*>,
-			std::string, parser::SemanticValue*, bool, unsigned int, unsigned int);
-		void declare_function(std::string, parser::Type, std::string, parser::Type,
+			std::string, std::string, parser::SemanticValue*, bool, unsigned int, unsigned int);
+		void declare_function(std::string, parser::Type, std::string, std::string, parser::Type,
 			std::vector<parser::ASTExprNode*>, std::vector<parser::Type>, std::vector<parser::VariableDefinition_t>,
 			parser::ASTBlockNode*, unsigned int, unsigned int);
 

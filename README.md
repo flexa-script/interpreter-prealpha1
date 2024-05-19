@@ -36,23 +36,24 @@
     - [X] continue
     - [X] +=,-=,*=,/=,%= assignment
     - [X] namespace
-    - [ ] set namespace
+    - [ ] instaceof
+    - [ ] as namespace
     - [ ] exit
     - [ ] enum
     - [ ] try catch
 - [ ] Add expression operators:
     - [X] ++,--
-    - [ ] Add 'in' operator to check if anything is in array/string
-    - [ ] Add array(size) initializer to build custon sized arrays
+    - [ ] Add array(size) initializer to build custom sized arrays
     - [ ] Add { init_value } to initilize all positions with same value
+    - [ ] Add 'in' operator to check if anything is in array/string
     - [ ] immediate if
 - [X] Add built in funcs:
     - [X] len: returns size of array/string
     - [X] round: round a float number
-    - [X] type: returns type of object
+    - [X] typeof: returns type of object
 - [X] Let functions return array
 - [X] Add lib scope lib.(method|properties|struct)
-- [ ] Guanrantee that a lib is loaded once
+- [X] Guanrantee that a lib is loaded once
 - [X] Flex function return (currently it's mandatory specificate the return type)
 - [X] Remove struct as bool in expression and change this type of verification to void value comparation (eg: var == null)
 - [X] Move function body parser to caller node (as interpreter), to check parameters of each caller

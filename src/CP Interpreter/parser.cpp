@@ -219,6 +219,7 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 	current_array_type = Type::T_UNDEF;
 	std::string identifier;
 	std::string type_name = "";
+	std::string type_name_space = "";
 	ASTExprNode* expr;
 	auto dim_vector = std::vector<ASTExprNode*>();
 	unsigned int row = current_token.row;
@@ -237,6 +238,13 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 	if (next_token.type == lexer::TOK_COLON) {
 		consume_token();
 		consume_token();
+
+		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+			type_name_space = current_token.value;
+			consume_token();
+			consume_token();
+		}
+
 		if (type == Type::T_UNDEF) {
 			type = parse_type();
 		}
@@ -271,12 +279,13 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 		type = Type::T_ANY;
 	}
 
-	return new ASTDeclarationNode(type, type_name, identifier, expr, is_const, current_array_type, dim_vector, row, col);
+	return new ASTDeclarationNode(identifier, type, current_array_type, dim_vector, type_name, type_name_space, expr, is_const, row, col);
 }
 
 VariableDefinition_t* Parser::parse_formal_param() {
 	std::string identifier;
 	std::string type_name;
+	std::string type_name_space;
 	Type type = Type::T_UNDEF;
 	ASTExprNode* expr_size;
 	auto access_vector = std::vector<ASTExprNode*>();
@@ -298,6 +307,13 @@ VariableDefinition_t* Parser::parse_formal_param() {
 	if (next_token.type == lexer::TOK_COLON) {
 		consume_token();
 		consume_token();
+
+		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+			type_name_space = current_token.value;
+			consume_token();
+			consume_token();
+		}
+
 		if (type == Type::T_UNDEF) {
 			type = parse_type();
 		}
@@ -318,7 +334,7 @@ VariableDefinition_t* Parser::parse_formal_param() {
 		type = Type::T_ANY;
 	}
 
-	return new VariableDefinition_t(identifier, type, type_name, type, current_array_type, access_vector, row, col);
+	return new VariableDefinition_t(identifier, type, type_name, type_name_space, type, current_array_type, access_vector, row, col);
 };
 
 std::vector<ASTExprNode*>* Parser::parse_actual_params() {
@@ -839,6 +855,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	Type type;
 	Type array_type = parser::Type::T_UNDEF;
 	std::string type_name = "";
+	std::string type_name_space = "";
 	ASTBlockNode* block;
 	ASTExprNode* expr;
 	ASTExprNode* expr_size;
@@ -885,6 +902,12 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 		// consume type
 		consume_token();
 
+		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+			type_name_space = current_token.value;
+			consume_token();
+			consume_token();
+		}
+
 		if (current_token.type == lexer::TOK_IDENTIFIER) {
 			type_name = current_token.value;
 		}
@@ -909,7 +932,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	// parse block
 	block = parse_block();
 
-	return new ASTFunctionDefinitionNode(identifier, parameters, type, type_name, array_type, dim_vector, block, row, col);
+	return new ASTFunctionDefinitionNode(identifier, parameters, type, type_name, type_name_space, array_type, dim_vector, block, row, col);
 }
 
 ASTStructDefinitionNode* Parser::parse_struct_definition() {

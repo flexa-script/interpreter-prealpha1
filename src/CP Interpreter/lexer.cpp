@@ -195,7 +195,7 @@ Token Lexer::process_identifier() {
 		type = TOK_READ;
 	else if (identifier == "len")
 		type = TOK_LEN;
-	else if (identifier == "type")
+	else if (identifier == "typeof")
 		type = TOK_TYPE;
 	else if (identifier == "round")
 		type = TOK_ROUND;

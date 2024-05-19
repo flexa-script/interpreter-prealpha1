@@ -2,37 +2,43 @@ using core.person;
 using list;
 using util.println;
 
-// set namespace io;
+// as namespace io;
+
+def my_list(): list::List {
+    return list::List{first=null, size=0};
+}
 
 if (this == "main") {
     // var numbers: List;
-    // list_init(numbers); // DEVERIA PREENCHER O VALOR
-    var numbers: List = list_create(); // A LISTA NÃO É PREENCHIDA
+    // list::init(numbers); // DEVERIA PREENCHER O VALOR
+    var numbers: list::List = list::create(); // A LISTA NÃO É PREENCHIDA
     // var numbers: List = List{first=null, size=0};
     
+    print(string(my_list())+"\n");
+
     //print("numbers: " + string(numbers) + "\n");
     io::println("numbers: " + string(numbers));
     print("List init: size: " + string(numbers.size) + io::NEW_LINE);
 
-    list_add(numbers, 10);
-    // list_print(numbers);
+    list::add(numbers, 10);
+    // list::print(numbers);
     // print("\n");
     // print("add 10: size: " + string(numbers.size) + "\n");
-    list_add(numbers, 20);
-    // list_print(numbers);
+    list::add(numbers, 20);
+    // list::print(numbers);
     // print("\n");
     // print("add 20: size: " + string(numbers.size) + "\n");
-    list_add(numbers, 30);
-    // list_print(numbers);
+    list::add(numbers, 30);
+    // list::print(numbers);
     // print("\n");
-    list_add(numbers, 40);
-    // list_print(numbers);
+    list::add(numbers, 40);
+    // list::print(numbers);
     // print("\n");
-    list_add(numbers, 50);
-    // list_print(numbers);
+    list::add(numbers, 50);
+    // list::print(numbers);
     // print("\n");
-    list_add(numbers, 60);
-    // list_print(numbers);
+    list::add(numbers, 60);
+    // list::print(numbers);
     // print("\n");
     // print("antes print: size: " + string(numbers.size) + "\n");
     
@@ -43,41 +49,47 @@ if (this == "main") {
     // print(numbers.first.next);
     // print("\n");
     // print(numbers.first.next.next);
-    list_print(numbers);
+    print(string(numbers.size) + "\n");
+    print(list::to_string(numbers));
     print("\n\n\n");
 
     print("size: " + string(numbers.size) + "\n");
     
-    print(string(list_get(numbers, 0)) + "\n");
-    print(string(list_get(numbers, 1)) + "\n");
-    print(string(list_get(numbers, 2)) + "\n");
-    print(string(list_get(numbers, 3)) + "\n");
-    print(string(list_get(numbers, 4)) + "\n");
-    print(string(list_get(numbers, 5)) + "\n");
-    print("\n");
-    
-    // print("remove: size: " + string(numbers.size) + "\n");
-    list_print(numbers);
-    print("\n");
-    list_remove(numbers, 0);
-    list_print(numbers);
-    print("\n");
-    list_remove(numbers, 1);
-    list_print(numbers);
-    print("\n");
-    list_remove(numbers, 3);
-    list_print(numbers);
-    print("\n");
-    list_remove(numbers, 1);
-    list_print(numbers);
-    print("\n");
-    // print("fim: size: " + string(numbers.size) + "\n");
-    list_remove(numbers, 1);
-    list_print(numbers);
-    print("\n");
-    list_remove(numbers, 0);
-    list_print(numbers);
+    print(string(list::get(numbers, 0)) + "\n");
+    print(string(list::get(numbers, 1)) + "\n");
+    print(string(list::get(numbers, 2)) + "\n");
+    print(string(list::get(numbers, 3)) + "\n");
+    print(string(list::get(numbers, 4)) + "\n");
+    print(string(list::get(numbers, 5)) + "\n");
     print("\n");
 
-    print(list_iterator(numbers));
+    print("\n\nto_array return: \n" + string(list::to_array(numbers)));
+    print("\n\n");
+    
+    // print("remove: size: " + string(numbers.size) + "\n");
+    // print(string(numbers));
+    // print("\n");
+    print(list::to_string(numbers));
+    print("\n");
+    list::remove(numbers, 0);
+    print(list::to_string(numbers));
+    print("\n");
+    list::remove(numbers, 1);
+    print(list::to_string(numbers));
+    print("\n");
+    list::remove(numbers, 3);
+    print(list::to_string(numbers));
+    print("\n");
+    list::remove(numbers, 1);
+    print(list::to_string(numbers));
+    print("\n");
+    // print("fim: size: " + string(numbers.size) + "\n");
+    list::remove(numbers, 1);
+    print(list::to_string(numbers));
+    print("\n");
+    list::remove(numbers, 0);
+    print(list::to_string(numbers));
+    print("\n");
+
+    print("\n\nto_array return: \n" + string(list::to_array(numbers)));
 }

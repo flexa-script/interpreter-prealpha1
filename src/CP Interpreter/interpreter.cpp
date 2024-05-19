@@ -69,6 +69,7 @@ Value_t* Interpreter::access_value(InterpreterScope* scope, Value_t* value, std:
 		size_t access_pos = 0;
 
 		for (s = 0; s < access_vector.size() - 1; ++s) {
+			// check array position access
 			access_pos = access_vector.at(s);
 			// break if it is a string, and the string access will be handled in identifier node evaluation
 			// TODO: ckeck if it will handle string assign
@@ -112,23 +113,36 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 			scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.i);
 			break;
 		case parser::Type::T_FLOAT:
-			if (current_expression_value.curr_type == parser::Type::T_INT)
+			if (current_expression_value.curr_type == parser::Type::T_INT){
 				scopes[get_namespace()].back()->declare_variable(astnode->identifier, (cp_float)current_expression_value.i);
-			else
+			}
+			else{
 				scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.f);
+			}
 			break;
 		case parser::Type::T_CHAR:
 			scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.c);
 			break;
 		case parser::Type::T_STRING:
-			if (current_expression_value.curr_type == parser::Type::T_CHAR)
+			if (current_expression_value.curr_type == parser::Type::T_CHAR){
 				scopes[get_namespace()].back()->declare_variable(astnode->identifier, std::string{ current_expression_value.c });
-			else
+			}
+			else{
 				scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.s);
+			}
 			break;
-		case parser::Type::T_ARRAY:
-			scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.arr);
+		case parser::Type::T_ARRAY: {
+			if (current_expression_value.arr.size() == 1) {
+				//auto init_value = current_expression_value.arr[0];
+				//auto dim = evaluate_access_vector(astnode->dim);
+				auto arr = build_array(astnode->dim, current_expression_value.arr[0], astnode->dim.size() - 1);
+				scopes[get_namespace()].back()->declare_variable(astnode->identifier, arr);
+			}
+			else {
+				scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.arr);
+			}
 			break;
+		}
 		case parser::Type::T_STRUCT:
 			declare_new_structure(astnode->identifier, current_expression_value);
 			break;
@@ -163,6 +177,29 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 		std::vector<parser::Identifier_t>{parser::Identifier_t(astnode->identifier, std::vector<parser::ASTExprNode*>())});
 	val->dim = astnode->dim;
 	val->arr_type = astnode->array_type;
+}
+
+std::vector<Value_t*> Interpreter::build_array(std::vector<parser::ASTExprNode*> dim, Value_t* init_value, long long i) {
+	auto arr = std::vector<Value_t*>();
+
+	auto crr_acc = dim[i];
+	crr_acc->accept(this);
+
+	size_t size = current_expression_value.i;
+
+	for (size_t j = 0; j < size; ++j) {
+		arr.push_back(init_value);
+	}
+
+	--i;
+
+	if (i >= 0) {
+		auto val = new Value_t(Type::T_ARRAY);
+		val->set(arr);
+		return build_array(dim, val, i);
+	}
+
+	return arr;
 }
 
 void Interpreter::declare_new_structure(std::string identifier_vector, Value_t new_value) {
@@ -229,6 +266,16 @@ cp_float visitor::Interpreter::do_operation(cp_float lval, cp_float rval, std::s
 	return rval;
 }
 
+cp_string visitor::Interpreter::do_operation(cp_string lval, cp_string rval, std::string op) {
+	if (op == "=") {
+		return rval;
+	}
+	else if (op == "+=") {
+		return lval + rval;
+	}
+	return rval;
+}
+
 void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	// determine innermost scope in which variable is declared
 	size_t i;
@@ -252,10 +299,15 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 			value->set(do_operation(value->f, current_expression_value.f, astnode->op));
 			break;
 		case parser::Type::T_CHAR:
-			value->set(current_expression_value.c);
+			if (is_string(value->curr_type)) {
+				value->set(do_operation(value->s, std::string{ current_expression_value.c }, astnode->op));
+			}
+			else {
+				value->set(current_expression_value.c);
+			}
 			break;
 		case parser::Type::T_STRING:
-			value->set(current_expression_value.s);
+			value->set(do_operation(value->s, current_expression_value.s, astnode->op));
 			break;
 		case parser::Type::T_ARRAY:
 			value->set(current_expression_value.arr);
@@ -829,12 +881,25 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* astnode) {
 }
 
 void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
-
-	// determine innermost scope in which variable is declared
 	std::string nmspace = get_namespace(astnode->nmspace);
-	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(astnode->identifier_vector[0].identifier); --i);
-	auto id_scope = scopes[nmspace][i];
+	InterpreterScope* id_scope = nullptr;
+	size_t i;
+	try {
+		for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(astnode->identifier_vector[0].identifier); --i);
+		id_scope = scopes[nmspace][i];
+	}
+	catch (...) {
+		try {
+			for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(astnode->identifier_vector[0].identifier); --i);
+			current_expression_value = Value_t(Type::T_STRUCT);
+			auto str = new cp_struct();
+			str->first = astnode->identifier_vector[0].identifier;
+			current_expression_value.set(str);
+			return;
+		}
+		catch (...) { }
+	}
+
 
 	auto root = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	current_expression_value = *access_value(id_scope, root, astnode->identifier_vector);
@@ -1231,6 +1296,7 @@ unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_string>* astno
 unsigned int visitor::Interpreter::hash(parser::ASTIdentifierNode* astnode) {
 	// determine innermost scope in which variable is declared
 	std::string nmspace = get_namespace(astnode->nmspace);
+
 	size_t i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
 	auto id_scope = scopes[nmspace][i];
