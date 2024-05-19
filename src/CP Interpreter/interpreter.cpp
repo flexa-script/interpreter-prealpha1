@@ -1,5 +1,4 @@
 #include <iostream>
-//#include <sstream>
 #include <cmath>
 
 #include "interpreter.hpp"

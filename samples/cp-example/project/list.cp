@@ -102,11 +102,11 @@ def list_is_empty(list: List): bool {
     return list.size == 0;
 }
 
-// def list_iterator(list: List): any[] {
-//     var arr[]: any;
-//     // arr[0] = list.first.value;
-//     return arr;
-// }
+def list_iterator(list: List): any[] {
+    var arr[]: any = {null};
+    // arr[0] = list.first.value;
+    return arr;
+}
 
 def list_print(list : List) {
     if (list.first == null) {

@@ -12,7 +12,7 @@ struct Value;
 
 namespace parser {
 	enum class Type {
-		T_UNDEF, T_VOID, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ANY, T_ARRAY, T_STRUCT
+		T_UNDEF, T_VOID, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ARRAY, T_STRUCT, T_ANY
 	};
 	std::string type_str(Type);
 	bool match_type(parser::Type, parser::Type);

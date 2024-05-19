@@ -595,7 +595,9 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 		}
 		else {
 			// while not reached end of block or end of file
-			while (current_token.type != lexer::TOK_CASE && current_token.type != lexer::TOK_DEFAULT && current_token.type != lexer::TOK_RIGHT_CURLY && current_token.type != lexer::TOK_ERROR && current_token.type != lexer::TOK_EOF) {
+			while (current_token.type != lexer::TOK_CASE && current_token.type != lexer::TOK_DEFAULT
+				&& current_token.type != lexer::TOK_RIGHT_CURLY && current_token.type != lexer::TOK_ERROR
+				&& current_token.type != lexer::TOK_EOF) {
 				consume_semicolon = true;
 				// parse the statement
 				statements->push_back(parse_block_statement());

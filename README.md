@@ -36,6 +36,7 @@
     - [X] continue
     - [X] +=,-=,*=,/=,%= assignment
     - [X] namespace
+    - [ ] set namespace
     - [ ] exit
     - [ ] enum
     - [ ] try catch

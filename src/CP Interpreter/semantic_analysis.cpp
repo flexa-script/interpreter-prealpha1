@@ -651,10 +651,11 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 
 	auto has_return = returns(astnode->block);
 	auto type = is_void(astnode->type) && has_return ? Type::T_ANY : astnode->type;
+	auto array_type = (is_void(astnode->array_type) || is_undefined(astnode->array_type)) && has_return ? Type::T_ANY : astnode->type;
 
 	// add function to symbol table
 	scopes[get_namespace()].back()->declare_function(astnode->identifier, type, astnode->type_name,
-		astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
+		array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
 	
 	auto curr_function = scopes[get_namespace()].back()->find_declared_function(astnode->identifier, astnode->signature);
 
@@ -683,6 +684,7 @@ void SemanticAnalyser::visit(ASTBlockNode* astnode) {
 		// add function parameters to the current scope
 		for (size_t i = 0; i < current_function.top().parameters.size(); ++i) {
 			auto param = current_function.top().parameters[i];
+
 			auto var_expr = new SemanticValue_t();
 			var_expr->type = param.type;
 			var_expr->array_type = param.array_type;
@@ -690,6 +692,7 @@ void SemanticAnalyser::visit(ASTBlockNode* astnode) {
 			var_expr->dim = param.dim;
 			var_expr->row = param.row;
 			var_expr->col = param.col;
+
 			scopes[get_namespace()].back()->declare_variable(param.identifier, param.type, param.array_type,
 				param.dim, param.type_name, var_expr, false, param.row, param.col);
 		}
@@ -1060,10 +1063,10 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 		if (is_bool(l_type) || is_array(l_type) || is_struct(l_type) || is_bool(r_type) || is_array(r_type) || is_struct(r_type)) {
 			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid operand for '+' operator, expected numerical or string operand");
 		}
-		if ((is_string(l_type) || is_char(l_type)) && (is_string(r_type) || is_char(r_type))) { // If both string, no error
+		if ((is_string(l_type) || is_char(l_type)) && (is_string(r_type) || is_char(r_type))) {
 			current_expression.type = is_char(l_type) && is_char(r_type) ? Type::T_CHAR : Type::T_STRING;
 		}
-		else if (is_string(l_type) || is_char(l_type) || is_string(r_type) || is_char(r_type)) { // only one is string, error
+		else if (is_string(l_type) || is_char(l_type) || is_string(r_type) || is_char(r_type)) {
 			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "mismatched operands for '+' operator, found " + type_str(l_type) + " on the left, but " + type_str(r_type) + " on the right");
 		}
 		else { // real/int possibilities remain. If both int, then result is int, otherwise result is real
@@ -1124,7 +1127,6 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 		current_expression.array_type = sub_var.array_type;
 		current_expression.dim = sub_var.dim;
 	}
-
 
 }
 

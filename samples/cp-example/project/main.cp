@@ -2,12 +2,13 @@ using core.person;
 using list;
 using util.println;
 
+// set namespace io;
 
 if (this == "main") {
     // var numbers: List;
     // list_init(numbers); // DEVERIA PREENCHER O VALOR
-    // var numbers: List = list_create(); // A LISTA NÃO É PREENCHIDA
-    var numbers: List = List{first=null, size=0};
+    var numbers: List = list_create(); // A LISTA NÃO É PREENCHIDA
+    // var numbers: List = List{first=null, size=0};
     
     //print("numbers: " + string(numbers) + "\n");
     io::println("numbers: " + string(numbers));
@@ -78,5 +79,5 @@ if (this == "main") {
     list_print(numbers);
     print("\n");
 
-    // print(list_iterator(numbers));
+    print(list_iterator(numbers));
 }
