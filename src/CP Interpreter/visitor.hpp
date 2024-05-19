@@ -71,8 +71,6 @@ typedef char                  cp_char;
 typedef std::string           cp_string;
 typedef std::vector<Value*>   cp_array;
 
-//typedef std::pair<std::string, Value*>           cp_struct_value;
-//typedef std::vector<cp_struct_value>             cp_struct_values;
 typedef std::map<std::string, Value*>            cp_struct_values;
 typedef std::pair<std::string, cp_struct_values> cp_struct;
 

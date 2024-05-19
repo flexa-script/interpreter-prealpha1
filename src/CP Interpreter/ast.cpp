@@ -8,14 +8,18 @@
 using namespace parser;
 
 
-SemanticValue::SemanticValue(parser::Type current_type, unsigned int row, unsigned int col)
-	: type(current_type), array_type(current_type), dim(std::vector<ASTExprNode*>()),
-	type_name(""), hash(0), is_const(false), row(row), col(col) {}
+TypeDefinition::TypeDefinition(parser::Type type, parser::Type array_type,
+	std::vector<ASTExprNode*> dim, std::string type_name, unsigned int row, unsigned int col)
+	: type(type), type_name(type_name), array_type(array_type), dim(dim), row(row), col(col) {}
 
-SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim, std::vector<SemanticValue*> array_values,
-	std::string type_name, std::map<std::string, SemanticValue*> struct_vars, unsigned int hash, bool is_const, unsigned int row, unsigned int col)
-	: type(type), array_type(array_type), dim(dim), type_name(type_name),
-	hash(hash), is_const(is_const), row(row), col(col) {}
+SemanticValue::SemanticValue(parser::Type type, unsigned int row, unsigned int col)
+	: hash(0), is_const(false),
+	TypeDefinition(type, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", row, col) {}
+
+SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+	std::string type_name, unsigned int hash, bool is_const, unsigned int row, unsigned int col)
+	: hash(hash), is_const(is_const),
+	TypeDefinition(type, array_type, dim, type_name, row, col) {}
 
 void SemanticValue::copy_from(SemanticValue* value) {
 	type = value->type;
@@ -30,8 +34,8 @@ void SemanticValue::copy_from(SemanticValue* value) {
 
 SemanticVariable::SemanticVariable(std::string identifier, Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
 	std::string type_name, SemanticValue* value, bool is_const, unsigned int row, unsigned int col)
-	: identifier(identifier), type(type), array_type(array_type), dim(dim), type_name(type_name),
-	value(value), is_const(is_const), row(row), col(col) { }
+	: identifier(identifier), value(value), is_const(is_const), row(row), col(col),
+	TypeDefinition(type, array_type, dim, type_name, row, col) {}
 
 void SemanticVariable::copy_from(SemanticVariable* var) {
 	identifier = var->identifier;
@@ -50,17 +54,17 @@ void SemanticVariable::copy_from(SemanticVariable* var) {
 
 VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name,
 	Type any_type, Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col)
-	: identifier(identifier), type(type), type_name(type_name),
-	array_type(array_type), dim(dim), row(row), col(col) {}
+	: identifier(identifier), row(row), col(col),
+	TypeDefinition(type, array_type, dim, type_name, row, col) {}
 
 StructureDefinition::StructureDefinition(std::string identifier, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col)
 	: identifier(identifier), variables(variables), row(row), col(col) {}
 
-FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, Type any_type, Type array_type,
+FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, Type array_type,
 	std::vector<ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition_t> parameters,
 	ASTBlockNode* block, unsigned int row, unsigned int col)
-	: identifier(identifier), type(type), type_name(type_name), any_type(any_type), array_type(array_type),
-	dim(dim), signature(signature), parameters(parameters), row(row), col(col) {};
+	: identifier(identifier), signature(signature), parameters(parameters), row(row), col(col),
+	TypeDefinition(type, array_type, dim, type_name, row, col) {}
 
 Identifier::Identifier(std::string identifier, std::vector<ASTExprNode*> access_vector)
 	: identifier(identifier), access_vector(access_vector) {}

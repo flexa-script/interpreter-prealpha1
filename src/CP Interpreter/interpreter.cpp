@@ -1,4 +1,5 @@
 #include <iostream>
+//#include <sstream>
 #include <cmath>
 
 #include "interpreter.hpp"
@@ -269,67 +270,6 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	}
 }
 
-void Interpreter::print_value(Value_t value) {
-	switch (value.curr_type) {
-	case parser::Type::T_VOID:
-		std::cout << "null";
-		break;
-	case parser::Type::T_BOOL:
-		std::cout << ((value.b) ? "true" : "false");
-		break;
-	case parser::Type::T_INT:
-		std::cout << value.i;
-		break;
-	case parser::Type::T_FLOAT:
-		std::cout << value.f;
-		break;
-	case parser::Type::T_CHAR:
-		std::cout << value.c;
-		break;
-	case parser::Type::T_STRING:
-		std::cout << value.s;
-		break;
-	case parser::Type::T_STRUCT:
-		print_struct(*value.str);
-		break;
-	case parser::Type::T_ARRAY:
-		print_array(value.arr);
-		break;
-	default:
-		throw std::runtime_error("IERR: can't determine value type on printing");
-	}
-}
-
-void Interpreter::print_array(cp_array value) {
-	std::cout << '[';
-	for (auto i = 0; i < value.size(); ++i) {
-		print_value(*value.at(i));
-		if (i < value.size() - 1) {
-			std::cout << ',';
-		}
-	}
-	std::cout << ']';
-}
-
-void Interpreter::print_struct(cp_struct value) {
-	std::cout << value.first << "{";
-	for (auto const& [key, val] : value.second) {
-		std::cout << key << ":";
-		print_value(*val);
-		// TODO: remove
-		//if (i < value.second.size() - 1) {
-		std::cout << ",";
-		//}
-	}
-	std::cout << "}";
-}
-
-void visitor::Interpreter::visit(parser::ASTPrintNode* astnode) {
-	// visit expression node to update current value/type
-	astnode->expr->accept(this);
-	print_value(current_expression_value);
-}
-
 void visitor::Interpreter::visit(parser::ASTReturnNode* astnode) {
 	// update current expression
 	astnode->expr->accept(this);
@@ -347,8 +287,7 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	scopes[get_namespace()].push_back(new InterpreterScope(current_function_name));
 	current_function_name = "";
 
-	// check whether this is a function block by seeing if we have any current function parameters
-	// if we do, then add them to the current scope
+	// add parameters to the current scope
 	for (unsigned int i = 0; i < current_function_arguments.size(); ++i) {
 		switch (current_function_arguments[i].first) {
 		case parser::Type::T_BOOL:
@@ -715,7 +654,7 @@ void visitor::Interpreter::visit(parser::ASTStructConstructorNode* astnode) {
 }
 
 void visitor::Interpreter::declare_structure(cp_struct* str, std::string nmspace) {
-	std::string actnmspace = nmspace.empty() ? get_namespace() : nmspace;
+	std::string actnmspace = get_namespace(nmspace);
 	size_t i;
 	for (i = scopes[actnmspace].size() - 1; !scopes[actnmspace][i]->already_declared_structure_definition(str->first); --i);
 	auto struct_def = scopes[actnmspace][i]->find_declared_structure_definition(str->first);
@@ -890,29 +829,12 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* astnode) {
 	current_expression_value = *value;
 }
 
-//bool visitor::Interpreter::is_namespace(std::string identifier) {
-//	for (auto& prog : programs) {
-//		if (prog->alias == identifier) {
-//			return true;
-//		}
-//	}
-//}
-
 void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 
 	// determine innermost scope in which variable is declared
-	std::string nmspace = astnode->nmspace.empty() ? get_namespace() : astnode->nmspace;
+	std::string nmspace = get_namespace(astnode->nmspace);
 	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(astnode->identifier_vector[0].identifier); --i)/* {
-		if (i <= 0) {
-			if (is_namespace(astnode->identifier_vector[0].identifier)) {
-				astnode->identifier_vector[0].identifier = astnode->identifier_vector[0].identifier + "." + astnode->identifier_vector[1].identifier;
-				astnode->identifier_vector.erase(std::next(astnode->identifier_vector.begin()));
-			}
-			for (i = scopes.size() - 1; !scopes[i]->already_declared_variable(astnode->identifier_vector[0].identifier); --i);
-			break;
-		}
-	}*/;
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(astnode->identifier_vector[0].identifier); --i);
 	auto id_scope = scopes[nmspace][i];
 
 	auto root = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
@@ -968,7 +890,7 @@ void visitor::Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
 	if (has_assign) {
 		auto id = static_cast<parser::ASTIdentifierNode*>(astnode->expr);
 
-		std::string nmspace = id->nmspace.empty() ? get_namespace() : id->nmspace;
+		std::string nmspace = get_namespace(id->nmspace);;
 		size_t i;
 		for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(id->identifier_vector[0].identifier); i--);
 		auto id_scope = scopes[nmspace][i];
@@ -1027,7 +949,7 @@ void visitor::Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 	}
 
 	// determine in which scope the function is declared
-	auto nmspace = astnode->nmspace.empty() ? get_namespace() : astnode->nmspace;
+	auto nmspace = get_namespace(astnode->nmspace);
 	size_t i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(astnode->identifier, signature); i--);
 	auto func_scope = scopes[nmspace][i];
@@ -1178,29 +1100,35 @@ std::string Interpreter::parse_value_to_string(Value_t value) {
 }
 
 std::string Interpreter::parse_array_to_string(cp_array value) {
-	std::string s = "[";
+	std::stringstream s = std::stringstream();
+	s << "[";
 	for (auto i = 0; i < value.size(); ++i) {
-		s += parse_value_to_string(*value.at(i));
+		s << parse_value_to_string(*value.at(i));
 		if (i < value.size() - 1) {
-			s += ",";
+			s << ",";
 		}
 	}
-	s += "]";
-	return s;
+	s << "]";
+	return s.str();
 }
 
 std::string Interpreter::parse_struct_to_string(cp_struct value) {
-	std::string s = value.first + "{"; // TODO: change to string stream
+	std::stringstream s = std::stringstream();
+	s << value.first + "{";
 	for (auto const& [key, val] : value.second) {
-		s += key + ":";
-		s += parse_value_to_string(*val);
-		// TODO: fix
-		//if (i < value.second.size() - 1) {
-		s += ",";
-		//}
+		s << key + ":";
+		s << parse_value_to_string(*val);
+		s << ",";
 	}
-	s += "}";
-	return s;
+	s.seekp(-1, std::ios_base::end);
+	s << "}";
+	return s.str();
+}
+
+void visitor::Interpreter::visit(parser::ASTPrintNode* astnode) {
+	// visit expression node to update current value/type
+	astnode->expr->accept(this);
+	std::cout << parse_value_to_string(current_expression_value);
 }
 
 void visitor::Interpreter::visit(parser::ASTTypeNode* astnode) {
@@ -1303,7 +1231,7 @@ unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_string>* astno
 
 unsigned int visitor::Interpreter::hash(parser::ASTIdentifierNode* astnode) {
 	// determine innermost scope in which variable is declared
-	std::string nmspace = astnode->nmspace.empty() ? get_namespace() : astnode->nmspace;
+	std::string nmspace = get_namespace(astnode->nmspace);
 	size_t i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
 	auto id_scope = scopes[nmspace][i];

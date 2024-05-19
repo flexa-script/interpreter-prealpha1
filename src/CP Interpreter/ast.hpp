@@ -11,32 +11,33 @@
 
 namespace parser {
 
-	typedef struct SemanticValue {
+	typedef struct TypeDefinition {
+		TypeDefinition(Type, Type, std::vector<ASTExprNode*>, std::string, unsigned int, unsigned int);
+		TypeDefinition() = default;
+		parser::Type type;
+		std::string type_name;
+		parser::Type array_type;
+		std::vector<ASTExprNode*> dim;
+		unsigned int row;
+		unsigned int col;
+	} TypeDefinition_t;
+
+	typedef struct SemanticValue : public TypeDefinition {
 		// complete constructor
-		SemanticValue(parser::Type, parser::Type, std::vector<ASTExprNode*>, std::vector<SemanticValue*>,
-			std::string, std::map<std::string, SemanticValue*>, unsigned int, bool, unsigned int, unsigned int);
+		SemanticValue(parser::Type, parser::Type, std::vector<ASTExprNode*>,
+			std::string, unsigned int, bool, unsigned int, unsigned int);
 		// simplified constructor
 		SemanticValue(parser::Type, unsigned int, unsigned int);
 		SemanticValue() = default;
-		parser::Type type;
-		parser::Type array_type;
-		std::vector<ASTExprNode*> dim;
-		std::string type_name;
 		unsigned int hash;
 		bool is_const;
-		unsigned int row;
-		unsigned int col;
 		void copy_from(SemanticValue*);
 	} SemanticValue_t;
 
-	typedef struct SemanticVariable {
+	typedef struct SemanticVariable : public TypeDefinition {
 		SemanticVariable(std::string, Type, Type, std::vector<ASTExprNode*>, std::string, SemanticValue_t*, bool, unsigned int, unsigned int);
 		SemanticVariable() = default;
 		std::string identifier;
-		parser::Type type;
-		parser::Type array_type;
-		std::vector<ASTExprNode*> dim;
-		std::string type_name;
 		SemanticValue_t* value;
 		bool is_const;
 		unsigned int row;
@@ -44,28 +45,19 @@ namespace parser {
 		void copy_from(SemanticVariable*);
 	} SemanticVariable_t;
 
-	typedef struct VariableDefinition {
+	typedef struct VariableDefinition : public TypeDefinition {
 		VariableDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, unsigned int, unsigned int);
 		VariableDefinition() = default;
 		std::string identifier;
-		parser::Type type;
-		parser::Type array_type;
-		std::vector<ASTExprNode*> dim;
-		std::string type_name;
 		unsigned int row;
 		unsigned int col;
 	} VariableDefinition_t;
 
-	typedef struct FunctionDefinition {
-		FunctionDefinition(std::string, Type, std::string, Type, Type, std::vector<ASTExprNode*>, std::vector<parser::Type>,
+	typedef struct FunctionDefinition : public TypeDefinition {
+		FunctionDefinition(std::string, Type, std::string, Type, std::vector<ASTExprNode*>, std::vector<parser::Type>,
 			std::vector<parser::VariableDefinition_t>, ASTBlockNode*, unsigned int, unsigned int);
 		FunctionDefinition() = default;
 		std::string identifier;
-		parser::Type type;
-		parser::Type any_type;
-		parser::Type array_type;
-		std::vector<ASTExprNode*> dim;
-		std::string type_name;
 		std::vector<parser::Type> signature;
 		std::vector<parser::VariableDefinition_t> parameters;
 		unsigned int row;

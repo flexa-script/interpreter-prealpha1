@@ -32,14 +32,9 @@ namespace visitor {
 		bool has_string_access = false;
 
 	private:
-		//bool is_namespace(std::string);
-
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 		void declare_new_structure(std::string, Value_t);
 		void declare_structure(cp_struct*, std::string);
-		void print_value(Value_t);
-		void print_array(cp_array);
-		void print_struct(cp_struct);
 
 		cp_int do_operation(cp_int, cp_int, std::string);
 		cp_float do_operation(cp_float, cp_float, std::string);

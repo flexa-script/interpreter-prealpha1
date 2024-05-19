@@ -76,10 +76,10 @@ void SemanticScope::declare_variable(std::string identifier, Type type, Type arr
 	variable_symbol_table[identifier] = var;
 }
 
-void SemanticScope::declare_function(std::string identifier, Type type, std::string type_name, Type any_type,
+void SemanticScope::declare_function(std::string identifier, Type type, std::string type_name,
 	Type array_type, std::vector<ASTExprNode*> dim, std::vector<Type> signature, std::vector<VariableDefinition_t> parameters,
 	ASTBlockNode* block, unsigned int row, unsigned int col) {
-	FunctionDefinition_t fun(identifier, type, type_name, any_type, array_type, dim, signature, parameters, block, row, col);
+	FunctionDefinition_t fun(identifier, type, type_name, array_type, dim, signature, parameters, block, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
 }
 
