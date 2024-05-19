@@ -4,7 +4,7 @@
 - [X] Add load file from param
 - [X] Rewrite the lexer
 - [X] Rewrite EBNF
-- [X] Implements new EBNF existent commands
+- [X] Implements new EBNF commands
 - [X] Change expression evaluation to left to right
 - [X] Add and precedence
 - [X] Add void support to function
@@ -14,14 +14,13 @@
 - [X] Add collum on errors
 - [X] Add 'this' token to get current function name
 - [X] Add const support
-- [X] Add float type
 - [X] Add char type
 - [X] Add any type
 - [X] Add array type
   - [X] Make array accessor accepts expression
 - [X] Add struct support
     - [X] Add struct array-like constructor
-    - [X] Add Java class behavior
+    - [X] Add Java class pointer-like behavior
 - [X] Add null support
 - [X] Add type convert support
     - [X] Add array and struct support (based on print)
@@ -36,7 +35,7 @@
     - [X] break
     - [X] continue
     - [X] +=,-=,*=,/=,%= assignment
-    - [ ] namespace
+    - [X] namespace
     - [ ] exit
     - [ ] enum
     - [ ] try catch

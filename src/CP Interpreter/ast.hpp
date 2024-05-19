@@ -68,8 +68,6 @@ namespace parser {
 		std::string type_name;
 		std::vector<parser::Type> signature;
 		std::vector<parser::VariableDefinition_t> parameters;
-		std::vector<SemanticValue_t*> values;
-		ASTBlockNode* block;
 		unsigned int row;
 		unsigned int col;
 	} FunctionDefinition_t;

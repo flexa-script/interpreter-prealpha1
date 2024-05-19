@@ -13,7 +13,6 @@ namespace visitor {
 
 	class SemanticScope {
 	private:
-		std::string name;
 		std::map<std::string, parser::StructureDefinition_t> structure_symbol_table;
 		std::map<std::string, parser::SemanticVariable_t*> variable_symbol_table;
 		std::multimap<std::string, parser::FunctionDefinition_t> function_symbol_table;

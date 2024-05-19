@@ -60,7 +60,7 @@ FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::s
 	std::vector<ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition_t> parameters,
 	ASTBlockNode* block, unsigned int row, unsigned int col)
 	: identifier(identifier), type(type), type_name(type_name), any_type(any_type), array_type(array_type),
-	dim(dim), signature(signature), parameters(parameters), block(block), row(row), col(col) {};
+	dim(dim), signature(signature), parameters(parameters), row(row), col(col) {};
 
 Identifier::Identifier(std::string identifier, std::vector<ASTExprNode*> access_vector)
 	: identifier(identifier), access_vector(access_vector) {}

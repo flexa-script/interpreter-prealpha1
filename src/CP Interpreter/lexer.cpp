@@ -360,7 +360,14 @@ Token Lexer::process_symbol() {
 		break;
 
 	case ':':
-		type = TOK_COLON;
+		if (current_char == ':') {
+			str_symbol += current_char;
+			advance();
+			type = TOK_LIB_ACESSOR_OP;
+		}
+		else {
+			type = TOK_COLON;
+		}
 		break;
 
 	case '.':

@@ -20,6 +20,7 @@ namespace visitor {
 		std::vector<std::string> current_function_parameters;
 		std::vector<std::pair<parser::Type, Value_t*>> current_function_arguments;
 		std::string current_function_name;
+		std::string current_function_nmspace;
 		bool is_function_context;
 		std::string return_from_function_name;
 		bool return_from_function = false;
@@ -35,7 +36,7 @@ namespace visitor {
 
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 		void declare_new_structure(std::string, Value_t);
-		void declare_structure(cp_struct*);
+		void declare_structure(cp_struct*, std::string);
 		void print_value(Value_t);
 		void print_array(cp_array);
 		void print_struct(cp_struct);
@@ -57,8 +58,8 @@ namespace visitor {
 
 		void start();
 
-		std::string get_namespace() override;
-		std::string get_namespace(parser::ASTProgramNode*) override;
+		std::string get_namespace(std::string = "") override;
+		std::string get_namespace(parser::ASTProgramNode*, std::string = "") override;
 
 		void visit(parser::ASTProgramNode*) override;
 		void visit(parser::ASTUsingNode*) override;

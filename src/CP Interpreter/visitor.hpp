@@ -121,8 +121,8 @@ namespace visitor {
 		parser::ASTProgramNode* current_program;
 		std::string current_name;
 
-		virtual std::string get_namespace() = 0;
-		virtual std::string get_namespace(parser::ASTProgramNode*) = 0;
+		virtual std::string get_namespace(std::string = "") = 0;
+		virtual std::string get_namespace(parser::ASTProgramNode*, std::string = "") = 0;
 
 		virtual void visit(parser::ASTProgramNode*) = 0;
 		virtual void visit(parser::ASTUsingNode*) = 0;

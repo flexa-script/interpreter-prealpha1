@@ -19,10 +19,6 @@ namespace visitor {
 		std::string current_namespace;
 		parser::SemanticValue_t current_expression;
 		std::stack<parser::FunctionDefinition_t> current_function;
-		std::string retfun_identifier;
-		parser::SemanticValue_t retfun_expression;
-		bool retfun_has_return;
-		bool retfun_returned;
 
 	private:
 		bool returns(parser::ASTNode*);
@@ -50,8 +46,8 @@ namespace visitor {
 
 		void start();
 
-		std::string get_namespace() override;
-		std::string get_namespace(parser::ASTProgramNode*) override;
+		std::string get_namespace(std::string = "") override;
+		std::string get_namespace(parser::ASTProgramNode*, std::string = "") override;
 
 		void visit(parser::ASTProgramNode*) override;
 		void visit(parser::ASTUsingNode*) override;

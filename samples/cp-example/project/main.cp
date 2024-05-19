@@ -9,8 +9,9 @@ if (this == "main") {
     // var numbers: List = list_create(); // A LISTA NÃO É PREENCHIDA
     var numbers: List = List{first=null, size=0};
     
-    print("numbers: " + string(numbers) + "\n");
-    print("List init: size: " + string(numbers.size) + "\n");
+    //print("numbers: " + string(numbers) + "\n");
+    io::println("numbers: " + string(numbers));
+    print("List init: size: " + string(numbers.size) + io::NEW_LINE);
 
     list_add(numbers, 10);
     // list_print(numbers);

@@ -10,7 +10,7 @@ using namespace parser;
 
 
 SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
-	: current_expression(SemanticValue_t()), retfun_has_return(false), retfun_returned(false),
+	: current_expression(SemanticValue_t()),
 	Visitor(programs, main_program, main_program ? main_program->name : "main") {
 	scopes["main"].push_back(global_scope);
 };
@@ -19,12 +19,12 @@ void SemanticAnalyser::start() {
 	visit(current_program);
 }
 
-std::string SemanticAnalyser::get_namespace() {
-	return get_namespace(current_program);
+std::string SemanticAnalyser::get_namespace(std::string nmspace) {
+	return get_namespace(current_program, nmspace);
 }
 
-std::string SemanticAnalyser::get_namespace(ASTProgramNode* program) {
-	return program->alias.empty() ? "main" : program->alias;
+std::string SemanticAnalyser::get_namespace(ASTProgramNode* program, std::string nmspace) {
+	return nmspace.empty() ? (program->alias.empty() ? "main" : program->alias) : nmspace;
 }
 
 void SemanticAnalyser::visit(ASTProgramNode* astnode) {
@@ -56,6 +56,9 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 		libs.push_back(libname);
 		auto prev_program = current_program;
 		current_program = program;
+		if (!program->alias.empty()) {
+			scopes[program->alias].push_back(new SemanticScope());
+		}
 		start();
 		current_program = prev_program;
 	}
@@ -464,7 +467,7 @@ void SemanticAnalyser::validate_struct_assign(SemanticScope* curr_scope, Semanti
 	// determine the inner-most scope in which the value is declared
 	SemanticScope* tn_scope;
 	try {
-		tn_scope = get_inner_most_struct_definition_scope(axe::Util::contains(expr->type_name, ":") ? axe::Util::split_vector(expr->type_name, ':')[0] : get_namespace(), expr->type_name);
+		tn_scope = get_inner_most_struct_definition_scope(expr->nmspace.empty() ? get_namespace() : expr->nmspace, expr->type_name);
 	}
 	catch (...) {
 		throw std::runtime_error(msg_header(expr->row, expr->col) + "struct '" + expr->type_name +
@@ -573,14 +576,6 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 	// update current expression
 	astnode->expr->accept(this);
 	
-	for (long long i = scopes[get_namespace()].size() - 1; i >= 0; --i) {
-		if (!scopes[get_namespace()][i]->get_name().empty()) {
-			retfun_identifier = scopes[get_namespace()][i]->get_name();
-			retfun_has_return = true;
-			break;
-		}
-	}
-
 	// if we are not global, check that we return current function return type
 	if (!current_function.empty()) {
 
@@ -655,16 +650,11 @@ SemanticScope* SemanticAnalyser::get_inner_most_function_scope(std::string nmspa
 void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	// determine the signature of the function
 	std::vector<Type> signature;
-	std::vector<SemanticValue_t*> values;
 
 	// for each parameter,
 	for (auto param : astnode->parameters) {
 		// visit to update current expr type
 		param->accept(this);
-
-		SemanticValue_t* value = new SemanticValue_t();
-		value->copy_from(&current_expression);
-		values.push_back(value);
 
 		// add the type of current expr to signature
 		signature.push_back(current_expression.type);
@@ -673,7 +663,7 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	// make sure the function exists in some scope i
 	SemanticScope* curr_scope;
 	try {
-		curr_scope = get_inner_most_function_scope(get_namespace(), astnode->identifier, signature);
+		curr_scope = get_inner_most_function_scope(astnode->nmspace.empty() ? get_namespace() : astnode->nmspace, astnode->identifier, signature);
 	}
 	catch (...) {
 		std::string func_name = astnode->identifier + "(";
@@ -689,21 +679,14 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	}
 
 	auto curr_function = curr_scope->find_declared_function(astnode->identifier, signature);
-	curr_function.values = values;
 
-	retfun_identifier = curr_function.identifier;
-
-	// push current function type into function stack
-	current_function.push(curr_function);
-
-	// check semantics of function block by visiting nodes
-	curr_function.block->accept(this);
-
-	// end the current function
-	current_function.pop();
-	retfun_has_return = false;
-	retfun_returned = false;
-	current_expression = retfun_expression;
+	current_expression = SemanticValue_t();
+	current_expression.type = curr_function.type;
+	current_expression.array_type = curr_function.array_type;
+	current_expression.type_name = curr_function.type_name;
+	current_expression.dim = curr_function.dim;
+	current_expression.row = curr_function.row;
+	current_expression.col = curr_function.col;
 }
 
 void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
@@ -731,6 +714,14 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 	// add function to symbol table
 	scopes[get_namespace()].back()->declare_function(astnode->identifier, type, astnode->type_name, type,
 		astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
+	
+	auto curr_function = scopes[get_namespace()].back()->find_declared_function(astnode->identifier, astnode->signature);
+
+	// push current function type into function stack
+	current_function.push(curr_function);
+
+	// check semantics of function block by visiting nodes
+	astnode->block->accept(this);
 
 	if (!is_void(type)) {
 		// check that the function body returns
@@ -738,33 +729,34 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "defined function '" + astnode->identifier + "' is not guaranteed to return a value");
 		}
 	}
+
+	// end the current function
+	current_function.pop();
 }
 
 void SemanticAnalyser::visit(ASTBlockNode* astnode) {
 	// create new scope
-	scopes[get_namespace()].push_back(new SemanticScope(retfun_identifier));
-	retfun_identifier = "";
+	scopes[get_namespace()].push_back(new SemanticScope());
 
 	if (!current_function.empty()) {
 		// check whether this is a function block by seeing if we have any current function parameters. If we do, then add them to the current scope.
 		for (size_t i = 0; i < current_function.top().parameters.size(); ++i) {
 			auto param = current_function.top().parameters[i];
-			auto value = current_function.top().values[i];
+			auto var_expr = new SemanticValue_t();
+			var_expr->type = param.type;
+			var_expr->array_type = param.array_type;
+			var_expr->type_name = param.type_name;
+			var_expr->dim = param.dim;
+			var_expr->row = param.row;
+			var_expr->col = param.col;
 			scopes[get_namespace()].back()->declare_variable(param.identifier, param.type, param.array_type,
-				param.dim, param.type_name, value, value->is_const, param.row, param.col);
+				param.dim, param.type_name, var_expr, false, param.row, param.col);
 		}
 	}
 
 	// visit each statement in the block
 	for (auto& stmt : astnode->statements) {
 		stmt->accept(this);
-
-		if (retfun_has_return && !retfun_returned) {
-			if (!retfun_identifier.empty() && retfun_identifier == scopes[get_namespace()].back()->get_name()) {
-				retfun_returned = true;
-				retfun_expression = current_expression;
-			}
-		}
 	}
 
 	// close scope

@@ -9,7 +9,7 @@
 using namespace visitor;
 
 
-InterpreterScope::InterpreterScope(Interpreter* parent, std::string name) : name(name) {}
+InterpreterScope::InterpreterScope(std::string name) : name(name) {}
 
 InterpreterScope::InterpreterScope() : name("") { }
 

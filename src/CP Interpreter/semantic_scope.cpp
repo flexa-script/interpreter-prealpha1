@@ -9,19 +9,9 @@ using namespace visitor;
 using namespace parser;
 
 
-SemanticScope::SemanticScope(std::string name) : name(name) {}
-
 SemanticScope::SemanticScope() = default;
 
 SemanticScope::~SemanticScope() = default;
-
-std::string SemanticScope::get_name() {
-	return name;
-}
-
-void SemanticScope::set_name(std::string name) {
-	this->name = name;
-}
 
 StructureDefinition_t SemanticScope::find_declared_structure_definition(std::string identifier) {
 	return structure_symbol_table[identifier];

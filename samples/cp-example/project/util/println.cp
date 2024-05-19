@@ -1,4 +1,7 @@
+namespace io;
+
+const NEW_LINE: char = '\n';
+
 def println(value: any) {
-  var lnc = '\n';
-  print(string(value) + lnc);
+  print(string(value) + NEW_LINE);
 }

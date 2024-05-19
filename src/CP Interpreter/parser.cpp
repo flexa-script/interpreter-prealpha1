@@ -148,10 +148,10 @@ ASTNode* Parser::parse_identifier_statement() {
 		}
 		return expr;
 	}
-	else if (next_token.value == "[" || next_token.value == "."
-		|| next_token.value == "++" || next_token.value == "--"
+	else if (next_token.value == "[" || next_token.value == "." || next_token.value == ":"
 		|| next_token.value == "=" || next_token.value == "+=" || next_token.value == "-="
-		|| next_token.value == "*=" || next_token.value == "/=" || next_token.value == "%=") {
+		|| next_token.value == "*=" || next_token.value == "/=" || next_token.value == "%="
+		|| next_token.value == "++" || next_token.value == "--") {
 		return parse_assignment_or_increment_node();
 	}
 	else {
@@ -338,13 +338,16 @@ std::vector<ASTExprNode*>* Parser::parse_actual_params() {
 	return parameters;
 }
 
-ASTIdentifierNode* Parser::parse_identifier_node() {
+ASTIdentifierNode* Parser::parse_identifier_node(std::string expr_nmspace) {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
-	std::string nmspace = "";
+	std::string nmspace = expr_nmspace;
 	auto identifier_vector = std::vector<Identifier_t>();
 
-	if (next_token.type == lexer::TOK_COLON) {
+	if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+		if (!nmspace.empty()) {
+			throw std::runtime_error(msg_header() + "unexpected token '" + next_token.value + "'");
+		}
 		nmspace = current_token.value;
 		consume_token();
 		consume_token();
@@ -360,7 +363,15 @@ ASTNode* Parser::parse_assignment_or_increment_node() {
 
 	identifier = parse_identifier_node();
 
-	if (next_token.type == lexer::TOK_ADDITIVE_UN_OP) { // unary expression case
+	if (next_token.value == "(") {
+		ASTFunctionCallNode* expr = parse_function_call_parameters_node(identifier->identifier_vector[0].identifier, identifier->nmspace);
+		if (consume_semicolon) {
+			consume_semicolon = false;
+			consume_token(lexer::TOK_SEMICOLON);
+		}
+		return expr;
+	}
+	else if (next_token.type == lexer::TOK_ADDITIVE_UN_OP) { // unary expression case
 		return parse_increment_expression(identifier);
 	}
 	else {
@@ -1085,23 +1096,25 @@ ASTExprNode* Parser::parse_factor() {
 	case lexer::TOK_THIS:
 		return parse_this_node();
 
-	case lexer::TOK_IDENTIFIER: // identifier or function call case
+	case lexer::TOK_IDENTIFIER: {// identifier or function call case
+		std::string nmspace = "";
+
+		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+			nmspace = current_token.value;
+			consume_token();
+			consume_token();
+		}
+
 		switch (next_token.type)
 		{
 		case lexer::TOK_LEFT_BRACKET:
-			return parse_function_call_node();
+			return parse_function_call_node(nmspace);
 		case lexer::TOK_LEFT_CURLY:
-			return parse_struct_constructor_node();
-		//case lexer::TOK_ADDITIVE_UN_OP: { // unary expression case
-		//	auto id = parse_identifier_node();
-		//	consume_token();
-		//	std::string current_token_value = current_token.value;
-		//	return new ASTUnaryExprNode(current_token_value, id, row, col);
-		//}
+			return parse_struct_constructor_node(nmspace);
 		default:
-			return parse_identifier_node();
+			return parse_identifier_node(nmspace);
 		}
-
+	}
 	case lexer::TOK_READ: // read case
 		return parse_read_node();
 
@@ -1188,14 +1201,17 @@ ASTArrayConstructorNode* Parser::parse_array_constructor_node() {
 	return new ASTArrayConstructorNode(values, row, col);
 }
 
-ASTStructConstructorNode* Parser::parse_struct_constructor_node() {
+ASTStructConstructorNode* Parser::parse_struct_constructor_node(std::string expr_nmspace) {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 	std::map<std::string, ASTExprNode*> values = std::map<std::string, ASTExprNode*>();
-	std::string nmspace = "";
+	std::string nmspace = expr_nmspace;
 	std::string type_name = "";
 
-	if (next_token.type == lexer::TOK_COLON) {
+	if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+		if (!nmspace.empty()) {
+			throw std::runtime_error(msg_header() + "unexpected token '" + next_token.value + "'");
+		}
 		nmspace = current_token.value;
 		consume_token();
 		consume_token();
@@ -1322,22 +1338,53 @@ cp_string Parser::parse_string_literal() {
 	return str;
 }
 
-ASTFunctionCallNode* Parser::parse_function_call_node() {
+ASTFunctionCallNode* Parser::parse_function_call_node(std::string expr_nmspace) {
 	// current token is the function identifier
 	std::string identifier = "";
-	std::string nmspace = "";
+	std::string nmspace = expr_nmspace;
 	std::vector<ASTExprNode*> access_vector = std::vector<ASTExprNode*>();
 	auto* parameters = new std::vector<ASTExprNode*>;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	if (next_token.type == lexer::TOK_COLON) {
+	if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+		if (!nmspace.empty()) {
+			throw std::runtime_error(msg_header() + "unexpected token '" + next_token.value + "'");
+		}
 		nmspace = current_token.value;
 		consume_token();
 		consume_token();
 	}
 
 	identifier = current_token.value;
+
+	consume_token(lexer::TOK_LEFT_BRACKET);
+
+	// if next token is not right bracket, we have parameters
+	if (next_token.type != lexer::TOK_RIGHT_BRACKET) {
+		parameters = parse_actual_params();
+	}
+	else {
+		// consume ')'
+		consume_token();
+	}
+
+	// ensure right close bracket after fetching parameters
+	check_current_token(lexer::TOK_RIGHT_BRACKET);
+
+	if (next_token.type == lexer::TOK_LEFT_BRACE) {
+		consume_token();
+		access_vector = parse_dimension_vector();
+	}
+
+	return new ASTFunctionCallNode(identifier, nmspace, access_vector, *parameters, row, col);
+}
+
+ASTFunctionCallNode* Parser::parse_function_call_parameters_node(std::string identifier, std::string nmspace) {
+	std::vector<ASTExprNode*> access_vector = std::vector<ASTExprNode*>();
+	auto* parameters = new std::vector<ASTExprNode*>;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
 
 	consume_token(lexer::TOK_LEFT_BRACKET);
 

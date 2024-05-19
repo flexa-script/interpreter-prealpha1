@@ -87,9 +87,11 @@ namespace parser {
 
 		ASTArrayConstructorNode* parse_array_constructor_node();
 
-		ASTStructConstructorNode* parse_struct_constructor_node();
+		ASTStructConstructorNode* parse_struct_constructor_node(std::string = "");
 
-		ASTFunctionCallNode* parse_function_call_node();
+		ASTFunctionCallNode* parse_function_call_node(std::string = "");
+
+		ASTFunctionCallNode* parse_function_call_parameters_node(std::string, std::string);
 
 		ASTReadNode* parse_read_node();
 
@@ -131,7 +133,7 @@ namespace parser {
 
 		VariableDefinition_t* parse_formal_param();
 
-		ASTIdentifierNode* parse_identifier_node();
+		ASTIdentifierNode* parse_identifier_node(std::string = "");
 
 		cp_bool parse_bool_literal();
 
