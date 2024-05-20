@@ -75,35 +75,35 @@ namespace parser {
 }
 
 Value::Value(parser::Type type)
-	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), has_value(false), type(type), curr_type(type), arr_type(type) {};
+	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array())/*, has_value(false)*/, type(type), curr_type(type), arr_type(type) {};
 
 void Value::set(cp_bool b) {
 	this->b = b;
-	has_value = true;
+	//has_value = true;
 	set_curr_type(parser::Type::T_BOOL);
 }
 
 void Value::set(cp_int i) {
 	this->i = i;
-	has_value = true;
+	//has_value = true;
 	set_curr_type(parser::Type::T_INT);
 }
 
 void Value::set(cp_float f) {
 	this->f = f;
-	has_value = true;
+	//has_value = true;
 	set_curr_type(parser::Type::T_FLOAT);
 }
 
 void Value::set(cp_char c) {
 	this->c = c;
-	has_value = true;
+	//has_value = true;
 	set_curr_type(parser::Type::T_CHAR);
 }
 
 void Value::set(cp_string s) {
 	this->s = s;
-	has_value = true;
+	//has_value = true;
 	set_curr_type(parser::Type::T_STRING);
 }
 
@@ -114,13 +114,13 @@ void Value::set(cp_array arr) {
 		val->copy_from(ca);
 		this->arr.emplace_back(val);
 	}
-	has_value = true;
+	//has_value = true;
 	set_curr_type(parser::Type::T_ARRAY);
 }
 
 void Value::set(cp_struct* str) {
 	this->str = str;
-	has_value = true;
+	//has_value = true;
 	set_curr_type(parser::Type::T_STRUCT);
 }
 
@@ -132,22 +132,30 @@ void Value::set_curr_type(parser::Type curr_type) {
 	this->curr_type = curr_type;
 }
 
+void Value::set_arr_type(parser::Type arr_type) {
+	this->arr_type = arr_type;
+}
+
 void Value::set_null() {
-	has_value = false;
+	//has_value = false;
 	set_curr_type(parser::Type::T_VOID);
 }
 
 void Value::set_undefined() {
-	has_value = false;
+	//has_value = false;
 	set_curr_type(parser::Type::T_UNDEF);
 }
 
+bool Value::has_value() {
+	return curr_type != parser::Type::T_UNDEF && curr_type != parser::Type::T_VOID;
+}
+
 void Value::copy_from(Value* value) {
-	has_value = value->has_value;
+	//has_value = value->has_value;
+	type = value->type;
 	curr_type = value->curr_type;
 	arr_type = value->arr_type;
-	dim = value->dim;
-	type = value->type;
+	//dim = value->dim;
 	b = value->b;
 	i = value->i;
 	f = value->f;

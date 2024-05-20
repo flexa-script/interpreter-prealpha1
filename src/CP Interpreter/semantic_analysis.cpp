@@ -1127,29 +1127,35 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
+	auto identifier = astnode->identifier_vector[0].identifier;
+
 	// determine the inner-most scope in which the value is declared
 	SemanticScope* curr_scope;
 	auto nmspace = get_namespace(astnode->nmspace);
 	try {
-		curr_scope = get_inner_most_variable_scope(nmspace, astnode->identifier_vector[0].identifier);
+		curr_scope = get_inner_most_variable_scope(nmspace, identifier);
 	}
 	catch (...) {
+		current_expression = SemanticValue_t();
+		if (identifier == "bool" || identifier == "int" || identifier == "float"
+			|| identifier == "char" || identifier == "string") {
+			return;
+		}
 		try {
-			curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->identifier_vector[0].identifier);
-			current_expression = SemanticValue_t();
+			curr_scope = get_inner_most_struct_definition_scope(nmspace, identifier);
 			return;
 		}
 		catch (...) {
-			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "identifier '" + astnode->identifier_vector[0].identifier +
+			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "identifier '" + identifier +
 				"' was not declared");
 		}
 	}
 
-	auto declared_variable = curr_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
+	auto declared_variable = curr_scope->find_declared_variable(identifier);
 	auto variable_expr = declared_variable->value;
 
 	if (is_undefined(variable_expr->type)) {
-		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "variable '" + astnode->identifier_vector[0].identifier + "' is undefined");
+		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "variable '" + identifier + "' is undefined");
 	}
 
 	current_expression = *variable_expr;

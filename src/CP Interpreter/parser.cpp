@@ -44,7 +44,7 @@ ASTProgramNode* Parser::parse_program() {
 		statements->push_back(parse_using_statement());
 		consume_token();
 	}
-	
+
 	if (current_token.type == lexer::TOK_NAMESPACE) {
 		consume_token();
 		alias = current_token.value;
@@ -705,7 +705,7 @@ ASTIfNode* Parser::parse_if_statement() {
 
 	// consume ')'
 	consume_token(lexer::TOK_RIGHT_BRACKET);
-	
+
 	// consume '{'
 	consume_token(lexer::TOK_LEFT_CURLY);
 
@@ -1177,18 +1177,15 @@ ASTTypeNode* Parser::parse_type_node() {
 	case lexer::TOK_FLOAT_TYPE:
 	case lexer::TOK_CHAR_TYPE:
 	case lexer::TOK_STRING_TYPE: {
-		//expr = parse_identifier_node();
-		// parse type 
-		// parse dom vector
-		if (current_token.type != lexer::TOK_RIGHT_BRACKET) {
-			throw std::runtime_error(msg_header() + "expected ')'");
-		}
+		auto id = parse_identifier();
+		expr = new ASTIdentifierNode(std::vector{ id }, std::string(), row, col);
 		break;
 	}
 	default:
 		expr = parse_expression();
-		consume_token(lexer::TOK_RIGHT_BRACKET);
 	}
+
+	consume_token(lexer::TOK_RIGHT_BRACKET);
 
 	return new ASTTypeNode(expr, row, col);
 }

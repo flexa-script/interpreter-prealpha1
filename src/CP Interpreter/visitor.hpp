@@ -64,25 +64,21 @@ namespace parser {
 	class ASTRoundNode;
 }
 
-typedef bool                  cp_bool;
-typedef int64_t               cp_int;
-typedef long double           cp_float;
-typedef char                  cp_char;
-typedef std::string           cp_string;
-typedef std::vector<Value*>   cp_array;
-
-typedef std::map<std::string, Value*>            cp_struct_values;
+typedef bool cp_bool;
+typedef int64_t cp_int;
+typedef long double cp_float;
+typedef char cp_char;
+typedef std::string cp_string; 
+typedef std::vector<Value*> cp_array;
+typedef std::map<std::string, Value*> cp_struct_values;
 typedef std::pair<std::string, cp_struct_values> cp_struct;
 
 typedef struct Value {
 	Value(parser::Type);
-
-	bool has_value;
 	
 	parser::Type type;
 	parser::Type curr_type;
 	parser::Type arr_type;
-	std::vector<parser::ASTExprNode*> dim; // just to know array dimension in array type parse, maybe find another solution...
 
 	cp_bool b;
 	cp_int i;
@@ -104,6 +100,9 @@ typedef struct Value {
 
 	void set_type(parser::Type);
 	void set_curr_type(parser::Type);
+	void set_arr_type(parser::Type);
+
+	bool has_value();
 
 	void copy_from(Value*);
 } Value_t;

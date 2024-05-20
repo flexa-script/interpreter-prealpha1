@@ -33,7 +33,10 @@ namespace visitor {
 
 	private:
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
+		std::vector<unsigned int> calculate_array_dim_size(cp_array);
+
 		std::vector<Value_t*> build_array(std::vector<parser::ASTExprNode*>, Value_t*, long long);
+
 		void declare_new_structure(std::string, Value_t);
 		void declare_structure(cp_struct*, std::string);
 

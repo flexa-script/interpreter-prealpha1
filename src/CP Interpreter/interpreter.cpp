@@ -28,14 +28,14 @@ void Interpreter::start() {
 	visit(current_program);
 }
 
-void visitor::Interpreter::visit(parser::ASTProgramNode* astnode) {
+void Interpreter::visit(parser::ASTProgramNode* astnode) {
 	// for each statement, accept
 	for (auto& statement : astnode->statements) {
 		statement->accept(this);
 	}
 }
 
-void visitor::Interpreter::visit(parser::ASTUsingNode* astnode) {
+void Interpreter::visit(parser::ASTUsingNode* astnode) {
 	std::string libname = axe::Util::join(astnode->library, ".");
 
 	auto program = programs[libname];
@@ -96,13 +96,13 @@ Value_t* Interpreter::access_value(InterpreterScope* scope, Value_t* value, std:
 	return next_value;
 }
 
-void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
+void Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 	// visit expression to update current value/type
 	if (astnode->expr) {
 		astnode->expr->accept(this);
 	}
 
-	if (astnode->expr && current_expression_value.has_value) {
+	if (astnode->expr && current_expression_value.has_value()) {
 		auto type = astnode->type == parser::Type::T_ANY ? current_expression_value.curr_type : astnode->type;
 		// declare variable, depending on type
 		switch (type) {
@@ -113,10 +113,10 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 			scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.i);
 			break;
 		case parser::Type::T_FLOAT:
-			if (current_expression_value.curr_type == parser::Type::T_INT){
+			if (current_expression_value.curr_type == parser::Type::T_INT) {
 				scopes[get_namespace()].back()->declare_variable(astnode->identifier, (cp_float)current_expression_value.i);
 			}
-			else{
+			else {
 				scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.f);
 			}
 			break;
@@ -124,10 +124,10 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 			scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.c);
 			break;
 		case parser::Type::T_STRING:
-			if (current_expression_value.curr_type == parser::Type::T_CHAR){
+			if (current_expression_value.curr_type == parser::Type::T_CHAR) {
 				scopes[get_namespace()].back()->declare_variable(astnode->identifier, std::string{ current_expression_value.c });
 			}
-			else{
+			else {
 				scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.s);
 			}
 			break;
@@ -175,7 +175,7 @@ void visitor::Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 
 	Value_t* val = access_value(scopes[get_namespace()].back(), scopes[get_namespace()].back()->find_declared_variable(astnode->identifier),
 		std::vector<parser::Identifier_t>{parser::Identifier_t(astnode->identifier, std::vector<parser::ASTExprNode*>())});
-	val->dim = astnode->dim;
+	//val->dim = astnode->dim;
 	val->arr_type = astnode->array_type;
 }
 
@@ -208,7 +208,7 @@ void Interpreter::declare_new_structure(std::string identifier_vector, Value_t n
 	parser::StructureDefinition_t struct_definition;
 	size_t str_def_scope_idx = 0;
 
-	if (new_value.has_value) {
+	if (new_value.has_value()) {
 		value = scopes[get_namespace()].back()->declare_variable(identifier_vector, new_value.str);
 	}
 	else {
@@ -225,7 +225,7 @@ std::vector<unsigned int> Interpreter::evaluate_access_vector(std::vector<parser
 	return access_vector;
 }
 
-cp_int visitor::Interpreter::do_operation(cp_int lval, cp_int rval, std::string op) {
+cp_int Interpreter::do_operation(cp_int lval, cp_int rval, std::string op) {
 	if (op == "=") {
 		return rval;
 	}
@@ -247,7 +247,7 @@ cp_int visitor::Interpreter::do_operation(cp_int lval, cp_int rval, std::string 
 	return rval;
 }
 
-cp_float visitor::Interpreter::do_operation(cp_float lval, cp_float rval, std::string op) {
+cp_float Interpreter::do_operation(cp_float lval, cp_float rval, std::string op) {
 	if (op == "=") {
 		return rval;
 	}
@@ -266,7 +266,7 @@ cp_float visitor::Interpreter::do_operation(cp_float lval, cp_float rval, std::s
 	return rval;
 }
 
-cp_string visitor::Interpreter::do_operation(cp_string lval, cp_string rval, std::string op) {
+cp_string Interpreter::do_operation(cp_string lval, cp_string rval, std::string op) {
 	if (op == "=") {
 		return rval;
 	}
@@ -276,7 +276,7 @@ cp_string visitor::Interpreter::do_operation(cp_string lval, cp_string rval, std
 	return rval;
 }
 
-void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
+void Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	// determine innermost scope in which variable is declared
 	size_t i;
 	for (i = scopes[get_namespace()].size() - 1; !scopes[get_namespace()][i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
@@ -287,7 +287,7 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
 
-	if (current_expression_value.has_value) {
+	if (current_expression_value.has_value()) {
 		switch (current_expression_value.curr_type) {
 		case parser::Type::T_BOOL:
 			value->set(current_expression_value.b);
@@ -321,7 +321,7 @@ void visitor::Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	}
 }
 
-void visitor::Interpreter::visit(parser::ASTReturnNode* astnode) {
+void Interpreter::visit(parser::ASTReturnNode* astnode) {
 	// update current expression
 	astnode->expr->accept(this);
 	for (long long i = scopes[get_namespace()].size() - 1; i >= 0; --i) {
@@ -333,7 +333,7 @@ void visitor::Interpreter::visit(parser::ASTReturnNode* astnode) {
 	}
 }
 
-void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
+void Interpreter::visit(parser::ASTBlockNode* astnode) {
 	// create new scope
 	scopes[get_namespace()].push_back(new InterpreterScope(current_function_name));
 	current_function_name = "";
@@ -394,15 +394,15 @@ void visitor::Interpreter::visit(parser::ASTBlockNode* astnode) {
 	scopes[get_namespace()].pop_back();
 }
 
-void visitor::Interpreter::visit(parser::ASTContinueNode* astnode) {
+void Interpreter::visit(parser::ASTContinueNode* astnode) {
 	continue_block = true;
 }
 
-void visitor::Interpreter::visit(parser::ASTBreakNode* astnode) {
+void Interpreter::visit(parser::ASTBreakNode* astnode) {
 	break_block = true;
 }
 
-void visitor::Interpreter::visit(parser::ASTSwitchNode* astnode) {
+void Interpreter::visit(parser::ASTSwitchNode* astnode) {
 	is_switch = true;
 
 	// create new scope
@@ -448,7 +448,7 @@ void visitor::Interpreter::visit(parser::ASTSwitchNode* astnode) {
 	is_switch = false;
 }
 
-void visitor::Interpreter::visit(parser::ASTElseIfNode* astnode) {
+void Interpreter::visit(parser::ASTElseIfNode* astnode) {
 	executed_elif = false;
 
 	// evaluate if condition
@@ -463,7 +463,7 @@ void visitor::Interpreter::visit(parser::ASTElseIfNode* astnode) {
 	}
 }
 
-void visitor::Interpreter::visit(parser::ASTIfNode* astnode) {
+void Interpreter::visit(parser::ASTIfNode* astnode) {
 	// evaluate if condition
 	astnode->condition->accept(this);
 
@@ -486,7 +486,7 @@ void visitor::Interpreter::visit(parser::ASTIfNode* astnode) {
 	}
 }
 
-void visitor::Interpreter::visit(parser::ASTForNode* astnode) {
+void Interpreter::visit(parser::ASTForNode* astnode) {
 	is_loop = true;
 	scopes[get_namespace()].push_back(new InterpreterScope(""));
 
@@ -536,7 +536,7 @@ void visitor::Interpreter::visit(parser::ASTForNode* astnode) {
 	is_loop = false;
 }
 
-void visitor::Interpreter::visit(parser::ASTForEachNode* astnode) {
+void Interpreter::visit(parser::ASTForEachNode* astnode) {
 	is_loop = true;
 
 	astnode->collection->accept(this);
@@ -599,7 +599,7 @@ void visitor::Interpreter::visit(parser::ASTForEachNode* astnode) {
 	is_loop = false;
 }
 
-void visitor::Interpreter::visit(parser::ASTWhileNode* astnode) {
+void Interpreter::visit(parser::ASTWhileNode* astnode) {
 	is_loop = true;
 
 	// evaluate while condition
@@ -630,45 +630,45 @@ void visitor::Interpreter::visit(parser::ASTWhileNode* astnode) {
 	is_loop = false;
 }
 
-void visitor::Interpreter::visit(parser::ASTFunctionDefinitionNode* astnode) {
+void Interpreter::visit(parser::ASTFunctionDefinitionNode* astnode) {
 	scopes[get_namespace()].back()->declare_function(astnode->identifier, astnode->signature, astnode->variable_names, astnode->block);
 }
 
-void visitor::Interpreter::visit(parser::ASTStructDefinitionNode* astnode) {
+void Interpreter::visit(parser::ASTStructDefinitionNode* astnode) {
 	scopes[get_namespace()].back()->declare_structure_definition(astnode->identifier, astnode->variables, astnode->row, astnode->col);
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_bool>* lit) {
+void Interpreter::visit(parser::ASTLiteralNode<cp_bool>* lit) {
 	auto value = Value_t(parser::Type::T_BOOL);
 	value.set(lit->val);
 	current_expression_value = value;
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_int>* lit) {
+void Interpreter::visit(parser::ASTLiteralNode<cp_int>* lit) {
 	auto value = Value_t(parser::Type::T_INT);
 	value.set(lit->val);
 	current_expression_value = value;
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_float>* lit) {
+void Interpreter::visit(parser::ASTLiteralNode<cp_float>* lit) {
 	auto value = Value_t(parser::Type::T_FLOAT);
 	value.set(lit->val);
 	current_expression_value = value;
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_char>* lit) {
+void Interpreter::visit(parser::ASTLiteralNode<cp_char>* lit) {
 	auto value = Value_t(parser::Type::T_CHAR);
 	value.set(lit->val);
 	current_expression_value = value;
 }
 
-void visitor::Interpreter::visit(parser::ASTLiteralNode<cp_string>* lit) {
+void Interpreter::visit(parser::ASTLiteralNode<cp_string>* lit) {
 	auto value = Value_t(parser::Type::T_STRING);
 	value.set(lit->val);
 	current_expression_value = value;
 }
 
-void visitor::Interpreter::visit(parser::ASTArrayConstructorNode* astnode) {
+void Interpreter::visit(parser::ASTArrayConstructorNode* astnode) {
 	auto value = Value_t(parser::Type::T_ARRAY);
 	cp_array arr = cp_array();
 
@@ -684,7 +684,7 @@ void visitor::Interpreter::visit(parser::ASTArrayConstructorNode* astnode) {
 	current_expression_value = value;
 }
 
-void visitor::Interpreter::visit(parser::ASTStructConstructorNode* astnode) {
+void Interpreter::visit(parser::ASTStructConstructorNode* astnode) {
 	auto value = Value_t(parser::Type::T_STRUCT);
 
 	auto str = new cp_struct();
@@ -704,7 +704,7 @@ void visitor::Interpreter::visit(parser::ASTStructConstructorNode* astnode) {
 	current_expression_value = value;
 }
 
-void visitor::Interpreter::declare_structure(cp_struct* str, std::string nmspace) {
+void Interpreter::declare_structure(cp_struct* str, std::string nmspace) {
 	std::string actnmspace = get_namespace(nmspace);
 	size_t i;
 	for (i = scopes[actnmspace].size() - 1; !scopes[actnmspace][i]->already_declared_structure_definition(str->first); --i);
@@ -722,7 +722,7 @@ void visitor::Interpreter::declare_structure(cp_struct* str, std::string nmspace
 	}
 }
 
-void visitor::Interpreter::visit(parser::ASTBinaryExprNode* astnode) {
+void Interpreter::visit(parser::ASTBinaryExprNode* astnode) {
 	// operator
 	std::string op = astnode->op;
 
@@ -812,10 +812,10 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* astnode) {
 		cp_bool r = r_value.b;
 
 		if (l_type == parser::Type::T_STRUCT) {
-			l = l_value.has_value;
+			l = l_value.has_value();
 		}
 		if (r_type == parser::Type::T_STRUCT) {
-			r = r_value.has_value;
+			r = r_value.has_value();
 		}
 
 		if (op == "and") {
@@ -880,20 +880,60 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* astnode) {
 	current_expression_value = *value;
 }
 
-void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
-	std::string nmspace = get_namespace(astnode->nmspace);
+void Interpreter::visit(parser::ASTIdentifierNode* astnode) {
+	auto identifier = astnode->identifier_vector[0].identifier;
+	auto nmspace = get_namespace(astnode->nmspace);
 	InterpreterScope* id_scope = nullptr;
 	long long i;
 	if (astnode->identifier_vector[0].identifier == "List") {
 		int a = 0;
 	}
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(astnode->identifier_vector[0].identifier); --i) {
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); --i) {
 		if (i <= 0) {
-			for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(astnode->identifier_vector[0].identifier); --i);
-			current_expression_value = Value_t(Type::T_STRUCT);
-			auto str = new cp_struct();
-			str->first = astnode->identifier_vector[0].identifier;
-			current_expression_value.set(str);
+			auto dim = astnode->identifier_vector[0].access_vector;
+			auto type = Type::T_UNDEF;
+			auto expression_value = new Value_t(Type::T_UNDEF);
+
+			if (identifier == "bool") {
+				type = Type::T_BOOL;
+			}
+			else if (identifier == "int") {
+				type = Type::T_INT;
+			}
+			else if (identifier == "float") {
+				type = Type::T_FLOAT;
+			}
+			else if (identifier == "char") {
+				type = Type::T_CHAR;
+			}
+			else if (identifier == "string") {
+				type = Type::T_STRING;
+			}
+
+			if (is_undefined(type)) {
+				for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); --i);
+				type = Type::T_STRUCT;
+				auto str = new cp_struct();
+				str->first = identifier;
+				expression_value->set(str);
+			}
+
+			expression_value->set_type(type);
+			expression_value->set_curr_type(type);
+
+			if (dim.size() > 0) {
+				cp_array arr;
+
+				arr = build_array(dim, expression_value, dim.size() - 1);
+
+				current_expression_value = Value_t(Type::T_ARRAY);
+				current_expression_value.set_arr_type(type);
+				current_expression_value.set(arr);
+			}
+			else {
+				current_expression_value.copy_from(expression_value);
+			}
+
 			return;
 		}
 	}
@@ -912,7 +952,7 @@ void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 	}
 }
 
-void visitor::Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
+void Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
 	bool has_assign = false;
 
 	// update current expression
@@ -985,7 +1025,7 @@ void visitor::Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
 	}
 }
 
-void visitor::Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
+void Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 	// determine the signature of the function
 	std::vector<parser::Type> signature;
 	std::vector<std::pair<parser::Type, Value_t*>> current_function_arguments;
@@ -1032,7 +1072,7 @@ void visitor::Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 	current_name = current_program->name;
 }
 
-void visitor::Interpreter::visit(parser::ASTTypeParseNode* astnode) {
+void Interpreter::visit(parser::ASTTypeParseNode* astnode) {
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
 
@@ -1187,36 +1227,57 @@ std::string Interpreter::parse_struct_to_string(cp_struct value) {
 	return s.str();
 }
 
-void visitor::Interpreter::visit(parser::ASTPrintNode* astnode) {
+void Interpreter::visit(parser::ASTPrintNode* astnode) {
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
 	std::cout << parse_value_to_string(current_expression_value);
 }
 
-void visitor::Interpreter::visit(parser::ASTTypeNode* astnode) {
+std::vector<unsigned int> Interpreter::calculate_array_dim_size(cp_array arr) {
+	auto dim = std::vector<unsigned int>();
+
+	dim.push_back(arr.size());
+
+	if (is_array(arr.at(0)->type)) {
+		auto dim2 = calculate_array_dim_size(arr.at(0)->arr);
+		dim.insert(dim.end(), dim2.begin(), dim2.end());
+	}
+
+	return dim;
+}
+
+void Interpreter::visit(parser::ASTTypeNode* astnode) {
 	astnode->expr->accept(this);
 
 	auto currentValue = current_expression_value;
-
-	auto dim = evaluate_access_vector(currentValue.dim);
-
+	auto dim = std::vector<unsigned int>();
 	auto type = is_void(currentValue.curr_type) ? currentValue.type : currentValue.curr_type;
-	auto str_type = parser::type_str(type);
+	std::string str_type = "";
 
-	if (type == parser::Type::T_ARRAY) {
-		str_type = parser::type_str(currentValue.arr_type);
-		
-		// TODO: find array struct typename
-		if (type == parser::Type::T_STRUCT) {
-			str_type += "<" + currentValue.str->first + ">";
+	if (is_array(type)) {
+		dim = calculate_array_dim_size(currentValue.arr);
+		type = currentValue.arr_type;
+	}
+
+	str_type = parser::type_str(type);
+	
+	if (type == parser::Type::T_STRUCT) {
+		if (dim.size() > 0) {
+			auto arr = currentValue.arr[0];
+			for (size_t i = 0; i < dim.size() - 1; ++i) {
+				arr = arr->arr[0];
+			}
+			str_type = arr->str->first;
 		}
+		else {
+			str_type = currentValue.str->first;
+		}
+	}
 
+	if (dim.size() > 0) {
 		for (size_t i = 0; i < dim.size(); ++i) {
 			str_type += "[" + std::to_string(dim[i]) + "]";
 		}
-	}
-	else if (type == parser::Type::T_STRUCT) {
-		str_type += "<" + currentValue.str->first + ">";
 	}
 
 	auto value = Value_t(parser::Type::T_STRING);
@@ -1224,7 +1285,7 @@ void visitor::Interpreter::visit(parser::ASTTypeNode* astnode) {
 	current_expression_value = value;
 }
 
-void visitor::Interpreter::visit(parser::ASTLenNode* astnode) {
+void Interpreter::visit(parser::ASTLenNode* astnode) {
 	astnode->expr->accept(this);
 	auto val = Value_t(parser::Type::T_INT);
 
@@ -1238,7 +1299,7 @@ void visitor::Interpreter::visit(parser::ASTLenNode* astnode) {
 	current_expression_value = val;
 }
 
-void visitor::Interpreter::visit(parser::ASTRoundNode* astnode) {
+void Interpreter::visit(parser::ASTRoundNode* astnode) {
 	astnode->expr->accept(this);
 	auto val = Value_t(parser::Type::T_FLOAT);
 	val.set(cp_float(roundl(current_expression_value.f)));
@@ -1246,19 +1307,19 @@ void visitor::Interpreter::visit(parser::ASTRoundNode* astnode) {
 }
 
 
-void visitor::Interpreter::visit(parser::ASTNullNode* astnode) {
+void Interpreter::visit(parser::ASTNullNode* astnode) {
 	auto value = Value_t(parser::Type::T_VOID);
 	value.set_null();
 	current_expression_value = value;
 }
 
-void visitor::Interpreter::visit(parser::ASTThisNode* astnode) {
+void Interpreter::visit(parser::ASTThisNode* astnode) {
 	auto value = Value_t(parser::Type::T_STRING);
 	value.set(cp_string(current_name));
 	current_expression_value = value;
 }
 
-void visitor::Interpreter::visit(parser::ASTReadNode* astnode) {
+void Interpreter::visit(parser::ASTReadNode* astnode) {
 	std::string line;
 	std::getline(std::cin, line);
 
@@ -1273,31 +1334,31 @@ std::string Interpreter::msg_header(unsigned int row, unsigned int col) {
 	return "(IERR) " + current_program->name + '[' + std::to_string(row) + ':' + std::to_string(col) + "]: ";
 }
 
-unsigned int visitor::Interpreter::hash(parser::ASTExprNode* astnode) {
+unsigned int Interpreter::hash(parser::ASTExprNode* astnode) {
 	return 0;
 }
 
-unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_bool>* astnode) {
+unsigned int Interpreter::hash(parser::ASTLiteralNode<cp_bool>* astnode) {
 	return static_cast<unsigned int>(astnode->val);
 }
 
-unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_int>* astnode) {
+unsigned int Interpreter::hash(parser::ASTLiteralNode<cp_int>* astnode) {
 	return static_cast<unsigned int>(astnode->val);
 }
 
-unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_float>* astnode) {
+unsigned int Interpreter::hash(parser::ASTLiteralNode<cp_float>* astnode) {
 	return static_cast<unsigned int>(astnode->val);
 }
 
-unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_char>* astnode) {
+unsigned int Interpreter::hash(parser::ASTLiteralNode<cp_char>* astnode) {
 	return static_cast<unsigned int>(astnode->val);
 }
 
-unsigned int visitor::Interpreter::hash(parser::ASTLiteralNode<cp_string>* astnode) {
+unsigned int Interpreter::hash(parser::ASTLiteralNode<cp_string>* astnode) {
 	return axe::Util::hashcode(astnode->val);
 }
 
-unsigned int visitor::Interpreter::hash(parser::ASTIdentifierNode* astnode) {
+unsigned int Interpreter::hash(parser::ASTIdentifierNode* astnode) {
 	// determine innermost scope in which variable is declared
 	std::string nmspace = get_namespace(astnode->nmspace);
 
