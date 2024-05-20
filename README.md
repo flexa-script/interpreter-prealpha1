@@ -36,15 +36,15 @@
     - [X] continue
     - [X] +=,-=,*=,/=,%= assignment
     - [X] namespace
-    - [ ] instaceof
+    <!-- - [0] instaceof (typeof was adapted to accept types) -->
     - [ ] as namespace
     - [ ] exit
     - [ ] enum
     - [ ] try catch
 - [ ] Add expression operators:
     - [X] ++,--
-    - [ ] Add array(size) initializer to build custom sized arrays
-    - [ ] Add { init_value } to initilize all positions with same value
+    <!-- - [ ] Add array(size) initializer to build custom sized arrays -->
+    <!-- - [ ] Add { init_value } to initilize all positions with same value -->
     - [ ] Add 'in' operator to check if anything is in array/string
     - [ ] immediate if
 - [X] Add built in funcs:

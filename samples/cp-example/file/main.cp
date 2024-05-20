@@ -1,55 +1,55 @@
-struct Node {
-    var value: any;
-    var next: Node;
+// typeof.cp
+
+struct Foo {
+  var bar : int;
 };
 
-struct List {
-    var first: Node;
-    var size: int;
-};
+var boolValue : bool = false;
+var intValue : int = 0;
+var floatValue : float = 0.0;
+var charValue : char = '\0';
+var stringValue : string = "";
+var arrayValue1[3] : int = {0,0,0};
+var arrayValue2[3][4] : Foo = {{Foo{},Foo{},Foo{},Foo{}},{Foo{},Foo{},Foo{},Foo{}},{Foo{},Foo{},Foo{},Foo{}}};
+var arrayValue3[3][4][2] : float = {{{0,0},{0,0},{0,0},{0,0}},{{0,0},{0,0},{0,0},{0,0}},{{0,0},{0,0},{0,0},{0,0}}};
+var structValue : Foo = Foo{};
 
-def list_add(list: List, value: any) {
-    if (list.first == null) { 
-        list.first = Node{value=value, next=null};
-        list.size = 1;
-    } else {
-        var prev_node: Node = Node{};
-        var curr_node = list.first;
+print(typeof(boolValue));
+print("\n");
+print(typeof(intValue));
+print("\n");
+print(typeof(floatValue));
+print("\n");
+print(typeof(charValue));
+print("\n");
+print(typeof(stringValue));
+print("\n");
+print(typeof(arrayValue1));
+print("\n");
+print(typeof(arrayValue2));
+print("\n");
+print(typeof(arrayValue3));
+print("\n");
+print(typeof(structValue));
+print("\n");
+print(typeof(structValue.bar));
+print("\n\n");
 
-        while (curr_node.next != null) {
-            prev_node = curr_node;
-            curr_node = curr_node.next;
-        }
-
-        curr_node.next = Node{value=value};
-        list.size++;
-    }
-}
-
-def list_print(list : List) {
-    if (list.first == null) {
-        print("[]");
-        
-    } else {
-        var node = list.first;
-        print("[");
-        while (node != null) {
-            print(string(node.value));
-            if (node.next != null) {
-                print(",");
-            }
-            node = node.next;
-        }
-        print("]");
-    }
-}
-
-var numbers: List = List{first=null, size=0};
-
-list_add(numbers, 10);
-list_add(numbers, 9);
-list_add(numbers, 8);
-list_add(numbers, 7);
-
-print(numbers);
-list_print(numbers);
+print(typeof(bool));
+print("\n");
+print(typeof(int));
+print("\n");
+print(typeof(float));
+print("\n");
+print(typeof(char));
+print("\n");
+print(typeof(string));
+print("\n");
+print(typeof(int[3]));
+print("\n");
+print(typeof(Foo[3][4]));
+print("\n");
+print(typeof(float[3][4][2]));
+print("\n");
+print(typeof(Foo));
+print("\n\n");

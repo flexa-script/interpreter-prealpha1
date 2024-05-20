@@ -883,13 +883,12 @@ void visitor::Interpreter::visit(parser::ASTBinaryExprNode* astnode) {
 void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 	std::string nmspace = get_namespace(astnode->nmspace);
 	InterpreterScope* id_scope = nullptr;
-	size_t i;
-	try {
-		for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(astnode->identifier_vector[0].identifier); --i);
-		id_scope = scopes[nmspace][i];
+	long long i;
+	if (astnode->identifier_vector[0].identifier == "List") {
+		int a = 0;
 	}
-	catch (...) {
-		try {
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(astnode->identifier_vector[0].identifier); --i) {
+		if (i <= 0) {
 			for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(astnode->identifier_vector[0].identifier); --i);
 			current_expression_value = Value_t(Type::T_STRUCT);
 			auto str = new cp_struct();
@@ -897,9 +896,8 @@ void visitor::Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 			current_expression_value.set(str);
 			return;
 		}
-		catch (...) { }
 	}
-
+	id_scope = scopes[nmspace][i];
 
 	auto root = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	current_expression_value = *access_value(id_scope, root, astnode->identifier_vector);
@@ -1202,11 +1200,17 @@ void visitor::Interpreter::visit(parser::ASTTypeNode* astnode) {
 
 	auto dim = evaluate_access_vector(currentValue.dim);
 
-	auto type = currentValue.curr_type;
+	auto type = is_void(currentValue.curr_type) ? currentValue.type : currentValue.curr_type;
 	auto str_type = parser::type_str(type);
 
 	if (type == parser::Type::T_ARRAY) {
 		str_type = parser::type_str(currentValue.arr_type);
+		
+		// TODO: find array struct typename
+		if (type == parser::Type::T_STRUCT) {
+			str_type += "<" + currentValue.str->first + ">";
+		}
+
 		for (size_t i = 0; i < dim.size(); ++i) {
 			str_type += "[" + std::to_string(dim[i]) + "]";
 		}

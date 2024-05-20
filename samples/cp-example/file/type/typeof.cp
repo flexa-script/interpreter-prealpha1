@@ -1,4 +1,4 @@
-// type.cp
+// typeof.cp
 
 struct Foo {
   var bar : int;

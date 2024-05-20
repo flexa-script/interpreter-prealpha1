@@ -109,6 +109,8 @@ def to_array(list: List): any[] {
     // print(arr);
     var curr_node = list.first;
     for (var i = 0; i < list.size; i++) {
+        // print(typeof(List) + "\n");
+        // print(typeof(curr_node.value) + "\n");
         if (typeof(curr_node.value) == typeof(List)) {
             arr[i] = to_array(curr_node.value);
         } else {

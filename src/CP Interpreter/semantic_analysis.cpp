@@ -348,7 +348,7 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 				+ "' type assigning '" + astnode->identifier_vector[0].identifier + "' array");
 		}
 
-		if (is_array(assignment_expr.type) && is_array(decl_var_expression->type)) {
+		if (is_array(assignment_expr.type) && is_array(decl_var_expression->type) && astnode->identifier_vector[0].access_vector.size() == 0) {
 
 			std::vector<unsigned int> var_dim = evaluate_access_vector(decl_var_expression->dim);
 			std::vector<unsigned int> expr_dim = evaluate_access_vector(assignment_expr.dim);

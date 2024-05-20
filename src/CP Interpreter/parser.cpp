@@ -1170,8 +1170,25 @@ ASTTypeNode* Parser::parse_type_node() {
 	consume_token(lexer::TOK_LEFT_BRACKET);
 
 	consume_token();
-	expr = parse_expression();
-	consume_token(lexer::TOK_RIGHT_BRACKET);
+
+	switch (current_token.type) {
+	case lexer::TOK_BOOL_TYPE:
+	case lexer::TOK_INT_TYPE:
+	case lexer::TOK_FLOAT_TYPE:
+	case lexer::TOK_CHAR_TYPE:
+	case lexer::TOK_STRING_TYPE: {
+		//expr = parse_identifier_node();
+		// parse type 
+		// parse dom vector
+		if (current_token.type != lexer::TOK_RIGHT_BRACKET) {
+			throw std::runtime_error(msg_header() + "expected ')'");
+		}
+		break;
+	}
+	default:
+		expr = parse_expression();
+		consume_token(lexer::TOK_RIGHT_BRACKET);
+	}
 
 	return new ASTTypeNode(expr, row, col);
 }
@@ -1441,7 +1458,7 @@ ASTTypeParseNode* Parser::parse_type_parse_node() {
 
 	consume_token(lexer::TOK_LEFT_BRACKET);
 
-	// get expression to print
+	// get expression
 	consume_token();
 	ASTExprNode* expr = parse_expression();
 
