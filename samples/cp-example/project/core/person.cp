@@ -1,4 +1,4 @@
 struct Person {
-    var name : string;
-    var age : int;
+    var name: string;
+    var age: int;
 };
