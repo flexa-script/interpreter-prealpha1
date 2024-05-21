@@ -1326,10 +1326,6 @@ void Interpreter::visit(parser::ASTReadNode* astnode) {
 	current_expression_value.set(cp_string(std::move(line)));
 }
 
-std::pair<parser::Type, Value*> Interpreter::current_expr() {
-	return std::move(std::make_pair(current_expression_value.curr_type, &current_expression_value));
-};
-
 std::string Interpreter::msg_header(unsigned int row, unsigned int col) {
 	return "(IERR) " + current_program->name + '[' + std::to_string(row) + ':' + std::to_string(col) + "]: ";
 }

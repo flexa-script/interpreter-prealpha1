@@ -105,10 +105,6 @@ namespace visitor {
 		unsigned int hash(parser::ASTLiteralNode<cp_char>*) override;
 		unsigned int hash(parser::ASTLiteralNode<cp_string>*) override;
 
-		std::pair<parser::Type, Value*> current_expr();
-		Value get_current_expression_value() {
-			return current_expression_value;
-		}
 	};
 }
 
