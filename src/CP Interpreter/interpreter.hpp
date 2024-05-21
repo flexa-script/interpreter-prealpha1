@@ -16,9 +16,9 @@ namespace visitor {
 	private:
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
 		std::vector<std::string> libs;
-		Value_t current_expression_value;
+		Value current_expression_value;
 		std::vector<std::string> current_function_parameters;
-		std::vector<std::pair<parser::Type, Value_t*>> current_function_arguments;
+		std::vector<std::pair<parser::Type, Value*>> current_function_arguments;
 		std::string current_function_name;
 		std::string current_function_nmspace;
 		bool is_function_context;
@@ -35,19 +35,19 @@ namespace visitor {
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 		std::vector<unsigned int> calculate_array_dim_size(cp_array);
 
-		std::vector<Value_t*> build_array(std::vector<parser::ASTExprNode*>, Value_t*, long long);
+		std::vector<Value*> build_array(std::vector<parser::ASTExprNode*>, Value*, long long);
 
-		void declare_new_structure(std::string, Value_t);
+		void declare_new_structure(std::string, Value);
 		void declare_structure(cp_struct*, std::string);
 
 		cp_int do_operation(cp_int, cp_int, std::string);
 		cp_float do_operation(cp_float, cp_float, std::string);
 		cp_string do_operation(cp_string, cp_string, std::string);
-		std::string parse_value_to_string(Value_t);
+		std::string parse_value_to_string(Value);
 		std::string parse_array_to_string(cp_array);
 		std::string parse_struct_to_string(cp_struct);
 
-		Value_t* access_value(InterpreterScope*, Value_t*, std::vector<parser::Identifier>, size_t i = 0);
+		Value* access_value(InterpreterScope*, Value*, std::vector<parser::Identifier>, size_t i = 0);
 
 		std::string msg_header(unsigned int, unsigned int);
 
@@ -105,8 +105,8 @@ namespace visitor {
 		unsigned int hash(parser::ASTLiteralNode<cp_char>*) override;
 		unsigned int hash(parser::ASTLiteralNode<cp_string>*) override;
 
-		std::pair<parser::Type, Value_t*> current_expr();
-		Value_t get_current_expression_value() {
+		std::pair<parser::Type, Value*> current_expr();
+		Value get_current_expression_value() {
 			return current_expression_value;
 		}
 	};

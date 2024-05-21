@@ -8,7 +8,7 @@
 #include <stdexcept>
 
 
-struct Value;
+class Value;
 
 namespace parser {
 	enum class Type {
@@ -73,7 +73,8 @@ typedef std::vector<Value*> cp_array;
 typedef std::map<std::string, Value*> cp_struct_values;
 typedef std::pair<std::string, cp_struct_values> cp_struct;
 
-typedef struct Value {
+class Value {
+public:
 	Value(parser::Type);
 	
 	parser::Type type;
@@ -105,7 +106,7 @@ typedef struct Value {
 	bool has_value();
 
 	void copy_from(Value*);
-} Value_t;
+};
 
 namespace visitor {
 	class Visitor {

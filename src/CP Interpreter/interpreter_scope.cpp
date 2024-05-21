@@ -39,76 +39,76 @@ bool InterpreterScope::already_declared_function(std::string identifier, std::ve
 	}
 }
 
-Value_t* InterpreterScope::declare_undef_variable(std::string identifier, parser::Type type) {
-	Value_t* value = new Value_t(type);
+Value* InterpreterScope::declare_undef_variable(std::string identifier, parser::Type type) {
+	Value* value = new Value(type);
 	value->set_undefined();
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declare_undef_struct_variable(std::string identifier, std::string type_name) {
-	Value_t* value = declare_undef_variable(identifier, parser::Type::T_STRUCT);
+Value* InterpreterScope::declare_undef_struct_variable(std::string identifier, std::string type_name) {
+	Value* value = declare_undef_variable(identifier, parser::Type::T_STRUCT);
 	value->str->first = type_name;
 	return value;
 }
 
-Value_t* InterpreterScope::declare_null_variable(std::string identifier, parser::Type type) {
-	Value_t* value = new Value_t(type);
+Value* InterpreterScope::declare_null_variable(std::string identifier, parser::Type type) {
+	Value* value = new Value(type);
 	value->set_null();
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declare_null_struct_variable(std::string identifier, std::string type_name) {
-	Value_t* value = declare_null_variable(identifier, parser::Type::T_STRUCT);
+Value* InterpreterScope::declare_null_struct_variable(std::string identifier, std::string type_name) {
+	Value* value = declare_null_variable(identifier, parser::Type::T_STRUCT);
 	value->str->first = type_name;
 	return value;
 }
 
-Value_t* InterpreterScope::declare_variable(std::string identifier, cp_bool boolValue) {
-	Value_t* value = new Value_t(parser::Type::T_BOOL);
+Value* InterpreterScope::declare_variable(std::string identifier, cp_bool boolValue) {
+	Value* value = new Value(parser::Type::T_BOOL);
 	value->set(boolValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declare_variable(std::string identifier, cp_int intValue) {
-	Value_t* value = new Value_t(parser::Type::T_INT);
+Value* InterpreterScope::declare_variable(std::string identifier, cp_int intValue) {
+	Value* value = new Value(parser::Type::T_INT);
 	value->set(intValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declare_variable(std::string identifier, cp_float floatValue) {
-	Value_t* value = new Value_t(parser::Type::T_FLOAT);
+Value* InterpreterScope::declare_variable(std::string identifier, cp_float floatValue) {
+	Value* value = new Value(parser::Type::T_FLOAT);
 	value->set(floatValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declare_variable(std::string identifier, cp_char charValue) {
-	Value_t* value = new Value_t(parser::Type::T_CHAR);
+Value* InterpreterScope::declare_variable(std::string identifier, cp_char charValue) {
+	Value* value = new Value(parser::Type::T_CHAR);
 	value->set(charValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declare_variable(std::string identifier, cp_string stringValue) {
-	Value_t* value = new Value_t(parser::Type::T_STRING);
+Value* InterpreterScope::declare_variable(std::string identifier, cp_string stringValue) {
+	Value* value = new Value(parser::Type::T_STRING);
 	value->set(stringValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declare_variable(std::string identifier, cp_array arrValue) {
-	Value_t* value = new Value_t(parser::Type::T_ARRAY);
+Value* InterpreterScope::declare_variable(std::string identifier, cp_array arrValue) {
+	Value* value = new Value(parser::Type::T_ARRAY);
 	value->set(arrValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value_t* InterpreterScope::declare_variable(std::string identifier, cp_struct* strValue) {
-	Value_t* value = new Value_t(parser::Type::T_STRUCT);
+Value* InterpreterScope::declare_variable(std::string identifier, cp_struct* strValue) {
+	Value* value = new Value(parser::Type::T_STRUCT);
 	value->set(strValue);
 	variable_symbol_table[identifier] = value;
 	return value;
@@ -127,7 +127,7 @@ parser::StructureDefinition InterpreterScope::find_declared_structure_definition
 	return structure_symbol_table[identifier];
 }
 
-Value_t* InterpreterScope::find_declared_variable(std::string identifier) {
+Value* InterpreterScope::find_declared_variable(std::string identifier) {
 	return variable_symbol_table[identifier];
 }
 

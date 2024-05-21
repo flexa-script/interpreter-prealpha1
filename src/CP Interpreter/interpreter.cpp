@@ -11,7 +11,7 @@ using namespace parser;
 
 
 Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
-	: current_expression_value(Value_t(parser::Type::T_UNDEF)), is_function_context(false),
+	: current_expression_value(Value(parser::Type::T_UNDEF)), is_function_context(false),
 	Visitor(programs, main_program, main_program ? main_program->name : "main") {
 	scopes["main"].push_back(global_scope);
 }
@@ -58,8 +58,8 @@ void Interpreter::visit(parser::ASTUsingNode* astnode) {
 }
 
 
-Value_t* Interpreter::access_value(InterpreterScope* scope, Value_t* value, std::vector<parser::Identifier> identifier_vector, size_t i) {
-	Value_t* next_value = value;
+Value* Interpreter::access_value(InterpreterScope* scope, Value* value, std::vector<parser::Identifier> identifier_vector, size_t i) {
+	Value* next_value = value;
 
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
@@ -151,7 +151,7 @@ void Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 	else {
 		if (is_void(current_expression_value.curr_type)) {
 			if (astnode->type == parser::Type::T_STRUCT) {
-				auto undefvalue = Value_t(parser::Type::T_STRUCT);
+				auto undefvalue = Value(parser::Type::T_STRUCT);
 				undefvalue.set_null();
 				undefvalue.str->first = astnode->type_name;
 				declare_new_structure(astnode->identifier, undefvalue);
@@ -162,7 +162,7 @@ void Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 		}
 		else {
 			if (astnode->type == parser::Type::T_STRUCT) {
-				auto nllvalue = Value_t(parser::Type::T_STRUCT);
+				auto nllvalue = Value(parser::Type::T_STRUCT);
 				nllvalue.set_undefined();
 				nllvalue.str->first = astnode->type_name;
 				declare_new_structure(astnode->identifier, nllvalue);
@@ -173,14 +173,14 @@ void Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 		}
 	}
 
-	Value_t* val = access_value(scopes[get_namespace()].back(), scopes[get_namespace()].back()->find_declared_variable(astnode->identifier),
+	Value* val = access_value(scopes[get_namespace()].back(), scopes[get_namespace()].back()->find_declared_variable(astnode->identifier),
 		std::vector<parser::Identifier>{parser::Identifier(astnode->identifier, std::vector<parser::ASTExprNode*>())});
 	//val->dim = astnode->dim;
 	val->arr_type = astnode->array_type;
 }
 
-std::vector<Value_t*> Interpreter::build_array(std::vector<parser::ASTExprNode*> dim, Value_t* init_value, long long i) {
-	auto arr = std::vector<Value_t*>();
+std::vector<Value*> Interpreter::build_array(std::vector<parser::ASTExprNode*> dim, Value* init_value, long long i) {
+	auto arr = std::vector<Value*>();
 
 	auto crr_acc = dim[i];
 	crr_acc->accept(this);
@@ -194,7 +194,7 @@ std::vector<Value_t*> Interpreter::build_array(std::vector<parser::ASTExprNode*>
 	--i;
 
 	if (i >= 0) {
-		auto val = new Value_t(Type::T_ARRAY);
+		auto val = new Value(Type::T_ARRAY);
 		val->set(arr);
 		return build_array(dim, val, i);
 	}
@@ -202,8 +202,8 @@ std::vector<Value_t*> Interpreter::build_array(std::vector<parser::ASTExprNode*>
 	return arr;
 }
 
-void Interpreter::declare_new_structure(std::string identifier_vector, Value_t new_value) {
-	Value_t* value = nullptr;
+void Interpreter::declare_new_structure(std::string identifier_vector, Value new_value) {
+	Value* value = nullptr;
 	std::string type_name = new_value.str->first;
 	parser::StructureDefinition struct_definition;
 	size_t str_def_scope_idx = 0;
@@ -281,8 +281,8 @@ void Interpreter::visit(parser::ASTAssignmentNode* astnode) {
 	size_t i;
 	for (i = scopes[get_namespace()].size() - 1; !scopes[get_namespace()][i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
 
-	Value_t* root = scopes[get_namespace()][i]->find_declared_variable(astnode->identifier_vector[0].identifier);
-	Value_t* value = access_value(scopes[get_namespace()][i], root, astnode->identifier_vector);
+	Value* root = scopes[get_namespace()][i]->find_declared_variable(astnode->identifier_vector[0].identifier);
+	Value* value = access_value(scopes[get_namespace()][i], root, astnode->identifier_vector);
 
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
@@ -553,7 +553,7 @@ void Interpreter::visit(parser::ASTForEachNode* astnode) {
 		size_t i;
 		for (i = scopes[get_namespace()].size() - 1; !scopes[get_namespace()][i]->already_declared_variable(itdecl->identifier); --i);
 
-		Value_t* value = access_value(scopes[get_namespace()].back(), scopes[get_namespace()].back()->find_declared_variable(itdecl->identifier),
+		Value* value = access_value(scopes[get_namespace()].back(), scopes[get_namespace()].back()->find_declared_variable(itdecl->identifier),
 			std::vector<parser::Identifier>{parser::Identifier(itdecl->identifier, std::vector<parser::ASTExprNode*>())});
 
 		switch (val->curr_type) {
@@ -639,42 +639,42 @@ void Interpreter::visit(parser::ASTStructDefinitionNode* astnode) {
 }
 
 void Interpreter::visit(parser::ASTLiteralNode<cp_bool>* lit) {
-	auto value = Value_t(parser::Type::T_BOOL);
+	auto value = Value(parser::Type::T_BOOL);
 	value.set(lit->val);
 	current_expression_value = value;
 }
 
 void Interpreter::visit(parser::ASTLiteralNode<cp_int>* lit) {
-	auto value = Value_t(parser::Type::T_INT);
+	auto value = Value(parser::Type::T_INT);
 	value.set(lit->val);
 	current_expression_value = value;
 }
 
 void Interpreter::visit(parser::ASTLiteralNode<cp_float>* lit) {
-	auto value = Value_t(parser::Type::T_FLOAT);
+	auto value = Value(parser::Type::T_FLOAT);
 	value.set(lit->val);
 	current_expression_value = value;
 }
 
 void Interpreter::visit(parser::ASTLiteralNode<cp_char>* lit) {
-	auto value = Value_t(parser::Type::T_CHAR);
+	auto value = Value(parser::Type::T_CHAR);
 	value.set(lit->val);
 	current_expression_value = value;
 }
 
 void Interpreter::visit(parser::ASTLiteralNode<cp_string>* lit) {
-	auto value = Value_t(parser::Type::T_STRING);
+	auto value = Value(parser::Type::T_STRING);
 	value.set(lit->val);
 	current_expression_value = value;
 }
 
 void Interpreter::visit(parser::ASTArrayConstructorNode* astnode) {
-	auto value = Value_t(parser::Type::T_ARRAY);
+	auto value = Value(parser::Type::T_ARRAY);
 	cp_array arr = cp_array();
 
 	for (auto& exrp : astnode->values) {
 		exrp->accept(this);
-		auto arr_value = new Value_t(current_expression_value.curr_type);
+		auto arr_value = new Value(current_expression_value.curr_type);
 		arr_value->copy_from(&current_expression_value);
 		arr.push_back(arr_value);
 	}
@@ -685,7 +685,7 @@ void Interpreter::visit(parser::ASTArrayConstructorNode* astnode) {
 }
 
 void Interpreter::visit(parser::ASTStructConstructorNode* astnode) {
-	auto value = Value_t(parser::Type::T_STRUCT);
+	auto value = Value(parser::Type::T_STRUCT);
 
 	auto str = new cp_struct();
 	str->first = astnode->type_name;
@@ -693,7 +693,7 @@ void Interpreter::visit(parser::ASTStructConstructorNode* astnode) {
 
 	for (auto& expr : astnode->values) {
 		expr.second->accept(this);
-		auto str_alue = new Value_t(current_expression_value.curr_type);
+		auto str_alue = new Value(current_expression_value.curr_type);
 		str_alue->copy_from(&current_expression_value);
 		str->second[expr.first] = str_alue;
 	}
@@ -715,7 +715,7 @@ void Interpreter::declare_structure(cp_struct* str, std::string nmspace) {
 			str->second[struct_var_def.identifier]->set_type(struct_var_def.type);
 		}
 		else {
-			Value_t* str_value = new Value_t(struct_var_def.type);
+			Value* str_value = new Value(struct_var_def.type);
 			str_value->set_null();
 			str->second[struct_var_def.identifier] = str_value;
 		}
@@ -729,15 +729,15 @@ void Interpreter::visit(parser::ASTBinaryExprNode* astnode) {
 	// visit left node first
 	astnode->left->accept(this);
 	parser::Type l_type = current_expression_value.curr_type;
-	Value_t l_value = current_expression_value;
+	Value l_value = current_expression_value;
 
 	// then right node
 	astnode->right->accept(this);
 	parser::Type r_type = current_expression_value.curr_type;
-	Value_t r_value = current_expression_value;
+	Value r_value = current_expression_value;
 
 	// expression struct
-	auto value = new Value_t(parser::Type::T_UNDEF);
+	auto value = new Value(parser::Type::T_UNDEF);
 
 	// arithmetic operators for now
 	if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%") {
@@ -892,7 +892,7 @@ void Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 		if (i <= 0) {
 			auto dim = astnode->identifier_vector[0].access_vector;
 			auto type = Type::T_UNDEF;
-			auto expression_value = new Value_t(Type::T_UNDEF);
+			auto expression_value = new Value(Type::T_UNDEF);
 
 			if (identifier == "bool") {
 				type = Type::T_BOOL;
@@ -926,7 +926,7 @@ void Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 
 				arr = build_array(dim, expression_value, dim.size() - 1);
 
-				current_expression_value = Value_t(Type::T_ARRAY);
+				current_expression_value = Value(Type::T_ARRAY);
 				current_expression_value.set_arr_type(type);
 				current_expression_value.set(arr);
 			}
@@ -946,7 +946,7 @@ void Interpreter::visit(parser::ASTIdentifierNode* astnode) {
 		astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
 		auto pos = current_expression_value.i;
 
-		auto char_value = Value_t(current_expression_value.curr_type);
+		auto char_value = Value(current_expression_value.curr_type);
 		char_value.set(cp_char(current_expression_value.s[pos]));
 		current_expression_value = char_value;
 	}
@@ -997,7 +997,7 @@ void Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
 		for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(id->identifier_vector[0].identifier); i--);
 		auto id_scope = scopes[nmspace][i];
 
-		Value_t* value = access_value(id_scope, id_scope->find_declared_variable(id->identifier_vector[0].identifier), id->identifier_vector);
+		Value* value = access_value(id_scope, id_scope->find_declared_variable(id->identifier_vector[0].identifier), id->identifier_vector);
 
 		switch (value->curr_type) {
 		case parser::Type::T_BOOL:
@@ -1028,7 +1028,7 @@ void Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
 void Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 	// determine the signature of the function
 	std::vector<parser::Type> signature;
-	std::vector<std::pair<parser::Type, Value_t*>> current_function_arguments;
+	std::vector<std::pair<parser::Type, Value*>> current_function_arguments;
 
 	// for each parameter
 	for (auto param : astnode->parameters) {
@@ -1040,7 +1040,7 @@ void Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 
 		// add the current expr to the local vector of function arguments, to be
 		// used in the creation of the function scope
-		Value_t* value = new Value_t(current_expression_value.curr_type);
+		Value* value = new Value(current_expression_value.curr_type);
 		value->copy_from(&current_expression_value);
 		current_function_arguments.emplace_back(current_expression_value.curr_type, value);
 	}
@@ -1178,7 +1178,7 @@ void Interpreter::visit(parser::ASTTypeParseNode* astnode) {
 }
 
 
-std::string Interpreter::parse_value_to_string(Value_t value) {
+std::string Interpreter::parse_value_to_string(Value value) {
 	switch (value.curr_type) {
 	case parser::Type::T_VOID:
 		return "null";
@@ -1260,7 +1260,7 @@ void Interpreter::visit(parser::ASTTypeNode* astnode) {
 	}
 
 	str_type = parser::type_str(type);
-	
+
 	if (type == parser::Type::T_STRUCT) {
 		if (dim.size() > 0) {
 			auto arr = currentValue.arr[0];
@@ -1280,14 +1280,14 @@ void Interpreter::visit(parser::ASTTypeNode* astnode) {
 		}
 	}
 
-	auto value = Value_t(parser::Type::T_STRING);
+	auto value = Value(parser::Type::T_STRING);
 	value.set(cp_string(str_type));
 	current_expression_value = value;
 }
 
 void Interpreter::visit(parser::ASTLenNode* astnode) {
 	astnode->expr->accept(this);
-	auto val = Value_t(parser::Type::T_INT);
+	auto val = Value(parser::Type::T_INT);
 
 	if (current_expression_value.curr_type == parser::Type::T_ARRAY) {
 		val.set(cp_int(current_expression_value.arr.size()));
@@ -1301,20 +1301,20 @@ void Interpreter::visit(parser::ASTLenNode* astnode) {
 
 void Interpreter::visit(parser::ASTRoundNode* astnode) {
 	astnode->expr->accept(this);
-	auto val = Value_t(parser::Type::T_FLOAT);
+	auto val = Value(parser::Type::T_FLOAT);
 	val.set(cp_float(roundl(current_expression_value.f)));
 	current_expression_value = val;
 }
 
 
 void Interpreter::visit(parser::ASTNullNode* astnode) {
-	auto value = Value_t(parser::Type::T_VOID);
+	auto value = Value(parser::Type::T_VOID);
 	value.set_null();
 	current_expression_value = value;
 }
 
 void Interpreter::visit(parser::ASTThisNode* astnode) {
-	auto value = Value_t(parser::Type::T_STRING);
+	auto value = Value(parser::Type::T_STRING);
 	value.set(cp_string(current_name));
 	current_expression_value = value;
 }
@@ -1326,7 +1326,7 @@ void Interpreter::visit(parser::ASTReadNode* astnode) {
 	current_expression_value.set(cp_string(std::move(line)));
 }
 
-std::pair<parser::Type, Value_t*> Interpreter::current_expr() {
+std::pair<parser::Type, Value*> Interpreter::current_expr() {
 	return std::move(std::make_pair(current_expression_value.curr_type, &current_expression_value));
 };
 
@@ -1366,7 +1366,7 @@ unsigned int Interpreter::hash(parser::ASTIdentifierNode* astnode) {
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
 	auto id_scope = scopes[nmspace][i];
 
-	Value_t* value = access_value(id_scope, id_scope->find_declared_variable(astnode->identifier_vector[0].identifier), astnode->identifier_vector);
+	Value* value = access_value(id_scope, id_scope->find_declared_variable(astnode->identifier_vector[0].identifier), astnode->identifier_vector);
 
 	switch (value->curr_type) {
 	case parser::Type::T_BOOL:

@@ -110,7 +110,7 @@ void Value::set(cp_string s) {
 void Value::set(cp_array arr) {
 	this->arr = cp_array();
 	for (auto ca : arr) {
-		auto val = new Value_t(ca->curr_type);
+		auto val = new Value(ca->curr_type);
 		val->copy_from(ca);
 		this->arr.emplace_back(val);
 	}
