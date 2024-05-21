@@ -27,6 +27,7 @@
 - [X] Remove mandatory variable type definition
 - [X] Fix cp dependencies/libs loader
 - [X] Add string array-like accessor
+- [X] Add callback
 - [ ] Add statements:
     - [X] for
     - [X] foreach

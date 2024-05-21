@@ -114,8 +114,8 @@ Value_t* InterpreterScope::declare_variable(std::string identifier, cp_struct* s
 	return value;
 }
 
-void InterpreterScope::declare_structure_definition(std::string name, std::vector<parser::VariableDefinition_t> variables, unsigned int row, unsigned int col) {
-	parser::StructureDefinition_t type(name, variables, row, col);
+void InterpreterScope::declare_structure_definition(std::string name, std::vector<parser::VariableDefinition> variables, unsigned int row, unsigned int col) {
+	parser::StructureDefinition type(name, variables, row, col);
 	structure_symbol_table[name] = (type);
 }
 
@@ -123,7 +123,7 @@ void InterpreterScope::declare_function(std::string identifier, std::vector<pars
 	function_symbol_table.insert(std::make_pair(identifier, std::make_tuple(signature, variable_names, block)));
 }
 
-parser::StructureDefinition_t InterpreterScope::find_declared_structure_definition(std::string identifier) {
+parser::StructureDefinition InterpreterScope::find_declared_structure_definition(std::string identifier) {
 	return structure_symbol_table[identifier];
 }
 

@@ -10,7 +10,7 @@ using namespace parser;
 
 
 SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
-	: current_expression(SemanticValue_t()),
+	: current_expression(SemanticValue()),
 	Visitor(programs, main_program, main_program ? main_program->name : "main") {
 	scopes["main"].push_back(global_scope);
 };
@@ -62,7 +62,7 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	}
 }
 
-VariableDefinition_t SemanticAnalyser::access_struct_variable(std::vector<Identifier_t> identifier_vector, std::string type_name, std::string nmspace, unsigned int i) {
+VariableDefinition SemanticAnalyser::access_struct_variable(std::vector<Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i) {
 	SemanticScope* curr_scope;
 	try {
 		curr_scope = get_inner_most_struct_definition_scope(get_namespace(nmspace), type_name);
@@ -106,10 +106,10 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		astnode->expr->accept(this);
 	}
 	else {
-		current_expression = SemanticValue_t(Type::T_UNDEF, astnode->row, astnode->col);
+		current_expression = SemanticValue(Type::T_UNDEF, astnode->row, astnode->col);
 	}
 
-	auto decl_current_expr = new SemanticValue_t();
+	auto decl_current_expr = new SemanticValue();
 	decl_current_expr->copy_from(&current_expression);
 	decl_current_expr->hash = astnode->expr ? astnode->expr->hash(this) : 0;
 
@@ -284,13 +284,13 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	if (is_float(declared_variable->type) && is_int(assignment_expr.type) ||
 		is_string(declared_variable->type) && is_char(assignment_expr.type)) {
 		delete declared_variable->value;
-		declared_variable->value = new SemanticValue_t();
+		declared_variable->value = new SemanticValue();
 		declared_variable->value->copy_from(&assignment_expr);
 	}
 	else if (is_any(declared_variable->type)) {
 		if (declared_variable->value == decl_var_expression) {
 			delete declared_variable->value;
-			declared_variable->value = new SemanticValue_t();
+			declared_variable->value = new SemanticValue();
 			declared_variable->value->copy_from(&assignment_expr);
 		}
 		else {
@@ -366,7 +366,7 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 
 		if (declared_variable->value == decl_var_expression) { // is root value, assign a new one
 			delete declared_variable->value;
-			declared_variable->value = new SemanticValue_t();
+			declared_variable->value = new SemanticValue();
 			declared_variable->value->copy_from(&assignment_expr);
 		}
 		else { // is subvalue, assign specific value
@@ -375,7 +375,7 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	}
 	else if (match_type(declared_variable->type, assignment_expr.type)) {
 		delete declared_variable->value;
-		declared_variable->value = new SemanticValue_t();
+		declared_variable->value = new SemanticValue();
 		declared_variable->value->copy_from(&assignment_expr);
 	}
 	// otherwise throw error
@@ -438,7 +438,7 @@ SemanticScope* SemanticAnalyser::get_inner_most_struct_definition_scope(std::str
 	return scopes[nmspace][i];
 }
 
-void SemanticAnalyser::validate_struct_assign(SemanticScope* curr_scope, SemanticValue_t* expression, ASTStructConstructorNode* expr) {
+void SemanticAnalyser::validate_struct_assign(SemanticScope* curr_scope, SemanticValue* expression, ASTStructConstructorNode* expr) {
 	// determine the inner-most scope in which the value is declared
 	SemanticScope* tn_scope;
 	try {
@@ -453,7 +453,7 @@ void SemanticAnalyser::validate_struct_assign(SemanticScope* curr_scope, Semanti
 
 	for (auto const& expr_value : expr->values) {
 
-		VariableDefinition_t str_var_def;
+		VariableDefinition str_var_def;
 		auto found = false;
 		for (size_t i = 0; i < struct_def.variables.size(); ++i) {
 			str_var_def = struct_def.variables[i];
@@ -644,7 +644,7 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 
 	auto curr_function = curr_scope->find_declared_function(astnode->identifier, signature);
 
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.type = curr_function.type;
 	current_expression.array_type = curr_function.array_type;
 	current_expression.type_name = curr_function.type_name;
@@ -708,7 +708,7 @@ void SemanticAnalyser::visit(ASTBlockNode* astnode) {
 		for (size_t i = 0; i < current_function.top().parameters.size(); ++i) {
 			auto param = current_function.top().parameters[i];
 
-			auto var_expr = new SemanticValue_t();
+			auto var_expr = new SemanticValue();
 			var_expr->type = param.type;
 			var_expr->array_type = param.array_type;
 			var_expr->type_name = param.type_name;
@@ -936,7 +936,7 @@ void SemanticAnalyser::visit(ASTStructDefinitionNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTLiteralNode<cp_bool>*) {
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.type = Type::T_BOOL;
 	current_expression.type_name = "";
 	current_expression.array_type = Type::T_UNDEF;
@@ -944,7 +944,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_bool>*) {
 }
 
 void SemanticAnalyser::visit(ASTLiteralNode<cp_int>*) {
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.type = Type::T_INT;
 	current_expression.type_name = "";
 	current_expression.array_type = Type::T_UNDEF;
@@ -952,7 +952,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_int>*) {
 }
 
 void SemanticAnalyser::visit(ASTLiteralNode<cp_float>*) {
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.type = Type::T_FLOAT;
 	current_expression.type_name = "";
 	current_expression.array_type = Type::T_UNDEF;
@@ -960,7 +960,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_float>*) {
 }
 
 void SemanticAnalyser::visit(ASTLiteralNode<cp_char>*) {
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.type = Type::T_CHAR;
 	current_expression.type_name = "";
 	current_expression.array_type = Type::T_UNDEF;
@@ -968,7 +968,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_char>*) {
 }
 
 void SemanticAnalyser::visit(ASTLiteralNode<cp_string>*) {
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.type = Type::T_STRING;
 	current_expression.type_name = "";
 	current_expression.array_type = Type::T_UNDEF;
@@ -978,13 +978,13 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_string>*) {
 void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
 		astnode->values.at(i)->accept(this);
-		auto new_val = new SemanticValue_t();
+		auto new_val = new SemanticValue();
 		new_val->copy_from(&current_expression);
 	}
 
 	determine_array_type(astnode);
 	auto current_expression_array_type = current_expression.array_type;
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.array_type = current_expression_array_type;
 	current_expression.type = Type::T_ARRAY;
 	current_expression.type_name = "";
@@ -1006,7 +1006,7 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 
 	for (auto& expr : astnode->values) {
 		bool found = false;
-		VariableDefinition_t var_type_struct;
+		VariableDefinition var_type_struct;
 		for (size_t i = 0; i < type_struct.variables.size(); ++i) {
 			var_type_struct = type_struct.variables[i];
 			if (var_type_struct.identifier == expr.first) {
@@ -1026,7 +1026,7 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 		}
 	}
 
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.type = Type::T_STRUCT;
 	current_expression.type_name = astnode->type_name;
 	current_expression.type_name_space = astnode->nmspace;
@@ -1136,7 +1136,7 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 		curr_scope = get_inner_most_variable_scope(nmspace, identifier);
 	}
 	catch (...) {
-		current_expression = SemanticValue_t();
+		current_expression = SemanticValue();
 		if (identifier == "bool" || identifier == "int" || identifier == "float"
 			|| identifier == "char" || identifier == "string") {
 			return;
@@ -1204,7 +1204,7 @@ void SemanticAnalyser::visit(ASTTypeParseNode* astnode) {
 			+ type_str(current_expression.type) + " to " + type_str(astnode->type));
 	}
 
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.type = astnode->type;
 	current_expression.type_name = "";
 	current_expression.array_type = Type::T_UNDEF;
@@ -1220,7 +1220,7 @@ void SemanticAnalyser::visit(ASTReadNode* astnode) {
 
 void SemanticAnalyser::visit(ASTTypeNode* astnode) {
 	astnode->expr->accept(this);
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.type = Type::T_STRING;
 	current_expression.type_name = "";
 	current_expression.array_type = Type::T_UNDEF;
@@ -1234,7 +1234,7 @@ void SemanticAnalyser::visit(ASTLenNode* astnode) {
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "can't read len of type " + type_str(current_expression.type));
 	}
 
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.type = Type::T_INT;
 	current_expression.type_name = "";
 	current_expression.array_type = Type::T_UNDEF;
@@ -1248,7 +1248,7 @@ void SemanticAnalyser::visit(ASTRoundNode* astnode) {
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "can't round type " + type_str(current_expression.type));
 	}
 
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.type = Type::T_FLOAT;
 	current_expression.type_name = "";
 	current_expression.array_type = Type::T_UNDEF;
@@ -1256,7 +1256,7 @@ void SemanticAnalyser::visit(ASTRoundNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTNullNode* astnode) {
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.type = Type::T_VOID;
 	current_expression.type_name = "";
 	current_expression.array_type = Type::T_UNDEF;
@@ -1264,7 +1264,7 @@ void SemanticAnalyser::visit(ASTNullNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTThisNode* astnode) {
-	current_expression = SemanticValue_t();
+	current_expression = SemanticValue();
 	current_expression.type = Type::T_STRING;
 	current_expression.type_name = "";
 	current_expression.array_type = Type::T_UNDEF;

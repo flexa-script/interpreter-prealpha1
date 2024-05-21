@@ -13,15 +13,15 @@ SemanticScope::SemanticScope() = default;
 
 SemanticScope::~SemanticScope() = default;
 
-StructureDefinition_t SemanticScope::find_declared_structure_definition(std::string identifier) {
+StructureDefinition SemanticScope::find_declared_structure_definition(std::string identifier) {
 	return structure_symbol_table[identifier];
 }
 
-SemanticVariable_t* SemanticScope::find_declared_variable(std::string identifier) {
+SemanticVariable* SemanticScope::find_declared_variable(std::string identifier) {
 	return variable_symbol_table[identifier];
 }
 
-FunctionDefinition_t SemanticScope::find_declared_function(std::string identifier, std::vector<Type> signature) {
+FunctionDefinition SemanticScope::find_declared_function(std::string identifier, std::vector<Type> signature) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
 	// if key is not present in multimap
@@ -64,22 +64,22 @@ bool SemanticScope::already_declared_function(std::string identifier, std::vecto
 	}
 }
 
-void SemanticScope::declare_structure_definition(std::string name, std::vector<VariableDefinition_t> variables, unsigned int row, unsigned int col) {
-	StructureDefinition_t str_def(name, variables, row, col);
+void SemanticScope::declare_structure_definition(std::string name, std::vector<VariableDefinition> variables, unsigned int row, unsigned int col) {
+	StructureDefinition str_def(name, variables, row, col);
 	structure_symbol_table[name] = str_def;
 }
 
 void SemanticScope::declare_variable(std::string identifier, Type type, Type array_type, std::vector<ASTExprNode*> dim,
 	std::string type_name, std::string type_name_space, SemanticValue* value, bool is_const, unsigned int row, unsigned int col) {
-	SemanticVariable_t* var = new SemanticVariable_t(identifier, type, array_type, dim,
+	SemanticVariable* var = new SemanticVariable(identifier, type, array_type, dim,
 		type_name, type_name_space, value, is_const, row, col);
 	variable_symbol_table[identifier] = var;
 }
 
 void SemanticScope::declare_function(std::string identifier, Type type, std::string type_name, std::string type_name_space,
-	Type array_type, std::vector<ASTExprNode*> dim, std::vector<Type> signature, std::vector<VariableDefinition_t> parameters,
+	Type array_type, std::vector<ASTExprNode*> dim, std::vector<Type> signature, std::vector<VariableDefinition> parameters,
 	ASTBlockNode* block, unsigned int row, unsigned int col) {
-	FunctionDefinition_t fun(identifier, type, type_name, type_name_space, array_type, dim, signature, parameters, block, row, col);
+	FunctionDefinition fun(identifier, type, type_name, type_name_space, array_type, dim, signature, parameters, block, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
 }
 

@@ -46,6 +46,31 @@ def add(list: List, value: any) {
     }
 }
 
+// def add(list: List, index: int, value: any): bool {
+//     if (index >= list.size) {
+//         return false;
+//     }
+
+//     if (index == 0) {
+//         var new_node = Node{value=value, next=list.first};
+//         list.first = new_node;
+//     } else {
+//         var prev_node;
+//         var curr_node = list.first;
+
+//         for (var i = 0; i < index; i++) {
+//             prev_node = curr_node;
+//             curr_node = curr_node.next;
+//         }
+
+//         var new_node = Node{value=value, next=curr_node};
+//         prev_node.next = new_node;
+//         list.size++;
+//     }
+
+//     return true;
+// }
+
 def remove(list: List, index: int): bool {
     // print("curr list: "+string(list)+"\n");
     // print("list.first="+string(list.first)+"\n");
@@ -97,6 +122,10 @@ def get(list: List, index: int): any {
     }
 
     return node.value;
+}
+
+def clear(list: List) {
+    list = create();
 }
 
 def is_empty(list: List): bool {

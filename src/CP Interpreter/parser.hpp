@@ -131,7 +131,7 @@ namespace parser {
 
 		std::vector<ASTExprNode*>* parse_actual_params();
 
-		VariableDefinition_t* parse_formal_param();
+		VariableDefinition* parse_formal_param();
 
 		ASTIdentifierNode* parse_identifier_node(std::string = "");
 
@@ -147,9 +147,9 @@ namespace parser {
 
 		std::vector<ASTExprNode*> parse_dimension_vector();
 
-		Identifier_t parse_identifier();
+		Identifier parse_identifier();
 
-		std::vector<Identifier_t> parse_identifier_vector();
+		std::vector<Identifier> parse_identifier_vector();
 
 	};
 }

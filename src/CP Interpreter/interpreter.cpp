@@ -58,7 +58,7 @@ void Interpreter::visit(parser::ASTUsingNode* astnode) {
 }
 
 
-Value_t* Interpreter::access_value(InterpreterScope* scope, Value_t* value, std::vector<parser::Identifier_t> identifier_vector, size_t i) {
+Value_t* Interpreter::access_value(InterpreterScope* scope, Value_t* value, std::vector<parser::Identifier> identifier_vector, size_t i) {
 	Value_t* next_value = value;
 
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
@@ -174,7 +174,7 @@ void Interpreter::visit(parser::ASTDeclarationNode* astnode) {
 	}
 
 	Value_t* val = access_value(scopes[get_namespace()].back(), scopes[get_namespace()].back()->find_declared_variable(astnode->identifier),
-		std::vector<parser::Identifier_t>{parser::Identifier_t(astnode->identifier, std::vector<parser::ASTExprNode*>())});
+		std::vector<parser::Identifier>{parser::Identifier(astnode->identifier, std::vector<parser::ASTExprNode*>())});
 	//val->dim = astnode->dim;
 	val->arr_type = astnode->array_type;
 }
@@ -205,7 +205,7 @@ std::vector<Value_t*> Interpreter::build_array(std::vector<parser::ASTExprNode*>
 void Interpreter::declare_new_structure(std::string identifier_vector, Value_t new_value) {
 	Value_t* value = nullptr;
 	std::string type_name = new_value.str->first;
-	parser::StructureDefinition_t struct_definition;
+	parser::StructureDefinition struct_definition;
 	size_t str_def_scope_idx = 0;
 
 	if (new_value.has_value()) {
@@ -554,7 +554,7 @@ void Interpreter::visit(parser::ASTForEachNode* astnode) {
 		for (i = scopes[get_namespace()].size() - 1; !scopes[get_namespace()][i]->already_declared_variable(itdecl->identifier); --i);
 
 		Value_t* value = access_value(scopes[get_namespace()].back(), scopes[get_namespace()].back()->find_declared_variable(itdecl->identifier),
-			std::vector<parser::Identifier_t>{parser::Identifier_t(itdecl->identifier, std::vector<parser::ASTExprNode*>())});
+			std::vector<parser::Identifier>{parser::Identifier(itdecl->identifier, std::vector<parser::ASTExprNode*>())});
 
 		switch (val->curr_type) {
 		case parser::Type::T_BOOL:

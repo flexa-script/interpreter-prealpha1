@@ -182,7 +182,7 @@ std::vector<ASTExprNode*> Parser::parse_dimension_vector() {
 	return access_vector;
 }
 
-Identifier_t Parser::parse_identifier() {
+Identifier Parser::parse_identifier() {
 	std::string identifier = "";
 	std::vector<ASTExprNode*> access_vector = std::vector<ASTExprNode*>();
 
@@ -193,11 +193,11 @@ Identifier_t Parser::parse_identifier() {
 		access_vector = parse_dimension_vector();
 	}
 
-	return Identifier_t(identifier, access_vector);
+	return Identifier(identifier, access_vector);
 }
 
-std::vector<Identifier_t> Parser::parse_identifier_vector() {
-	auto identifier_vector = std::vector<Identifier_t>();
+std::vector<Identifier> Parser::parse_identifier_vector() {
+	auto identifier_vector = std::vector<Identifier>();
 
 	while (current_token.type == lexer::TOK_IDENTIFIER) {
 		identifier_vector.push_back(parse_identifier());
@@ -282,7 +282,7 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 	return new ASTDeclarationNode(identifier, type, current_array_type, dim_vector, type_name, type_name_space, expr, is_const, row, col);
 }
 
-VariableDefinition_t* Parser::parse_formal_param() {
+VariableDefinition* Parser::parse_formal_param() {
 	std::string identifier;
 	std::string type_name;
 	std::string type_name_space;
@@ -334,7 +334,7 @@ VariableDefinition_t* Parser::parse_formal_param() {
 		type = Type::T_ANY;
 	}
 
-	return new VariableDefinition_t(identifier, type, type_name, type_name_space, type, current_array_type, access_vector, row, col);
+	return new VariableDefinition(identifier, type, type_name, type_name_space, type, current_array_type, access_vector, row, col);
 };
 
 std::vector<ASTExprNode*>* Parser::parse_actual_params() {
@@ -358,7 +358,7 @@ ASTIdentifierNode* Parser::parse_identifier_node(std::string expr_nmspace) {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 	std::string nmspace = expr_nmspace;
-	auto identifier_vector = std::vector<Identifier_t>();
+	auto identifier_vector = std::vector<Identifier>();
 
 	if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
 		if (!nmspace.empty()) {
@@ -851,7 +851,7 @@ ASTWhileNode* Parser::parse_while_statement() {
 ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	// node attributes
 	std::string identifier;
-	std::vector<VariableDefinition_t> parameters;
+	std::vector<VariableDefinition> parameters;
 	Type type;
 	Type array_type = parser::Type::T_UNDEF;
 	std::string type_name = "";
@@ -938,7 +938,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 ASTStructDefinitionNode* Parser::parse_struct_definition() {
 	// node attributes
 	std::string identifier;
-	std::vector<VariableDefinition_t> variables;
+	std::vector<VariableDefinition> variables;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 

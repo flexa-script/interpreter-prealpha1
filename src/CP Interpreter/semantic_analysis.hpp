@@ -17,13 +17,13 @@ namespace visitor {
 		std::map<std::string, std::vector<SemanticScope*>> scopes;
 		std::vector<std::string> libs;
 		std::string current_namespace;
-		parser::SemanticValue_t current_expression;
-		std::stack<parser::FunctionDefinition_t> current_function;
+		parser::SemanticValue current_expression;
+		std::stack<parser::FunctionDefinition> current_function;
 
 	private:
 		bool returns(parser::ASTNode*);
 
-		void validate_struct_assign(SemanticScope*, parser::SemanticValue_t*, parser::ASTStructConstructorNode*);
+		void validate_struct_assign(SemanticScope*, parser::SemanticValue*, parser::ASTStructConstructorNode*);
 		void declare_structure();
 
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
@@ -36,7 +36,7 @@ namespace visitor {
 		void determine_array_type(parser::ASTArrayConstructorNode*);
 		void check_array_type(parser::ASTExprNode*, unsigned int, unsigned int);
 
-		parser::VariableDefinition_t access_struct_variable(std::vector<parser::Identifier_t>, std::string, std::string, unsigned int = 0);
+		parser::VariableDefinition access_struct_variable(std::vector<parser::Identifier>, std::string, std::string, unsigned int = 0);
 
 		std::string msg_header(unsigned int, unsigned int);
 

@@ -47,13 +47,13 @@ namespace visitor {
 		std::string parse_array_to_string(cp_array);
 		std::string parse_struct_to_string(cp_struct);
 
-		Value_t* access_value(InterpreterScope*, Value_t*, std::vector<parser::Identifier_t>, size_t i = 0);
+		Value_t* access_value(InterpreterScope*, Value_t*, std::vector<parser::Identifier>, size_t i = 0);
 
 		std::string msg_header(unsigned int, unsigned int);
 
 	public:
-		Interpreter() = default;
 		Interpreter(InterpreterScope*, parser::ASTProgramNode*, std::map<std::string, parser::ASTProgramNode*>);
+		Interpreter() = default;
 		~Interpreter() = default;
 
 		void start();
