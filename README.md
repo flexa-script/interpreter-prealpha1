@@ -28,6 +28,7 @@
 - [X] Fix cp dependencies/libs loader
 - [X] Add string array-like accessor
 - [ ] Add callback
+    - [ ] as type function
 - [ ] Pass parameter by reference
 - [ ] Add statements:
     - [X] for
