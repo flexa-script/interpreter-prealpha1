@@ -27,7 +27,8 @@
 - [X] Remove mandatory variable type definition
 - [X] Fix cp dependencies/libs loader
 - [X] Add string array-like accessor
-- [X] Add callback
+- [ ] Add callback
+- [ ] Pass parameter by reference
 - [ ] Add statements:
     - [X] for
     - [X] foreach
@@ -52,12 +53,19 @@
     - [X] len: returns size of array/string
     - [X] round: round a float number
     - [X] typeof: returns type of object
+    - [ ] rand:
+        - [ ] rand(from: int, to: int): int
+        - [ ] seed(seed: int)
 - [X] Let functions return array
 - [X] Add lib scope lib.(method|properties|struct)
 - [X] Guanrantee that a lib is loaded once
 - [X] Flex function return (currently it's mandatory specificate the return type)
 - [X] Remove struct as bool in expression and change this type of verification to void value comparation (eg: var == null)
 - [X] Move function body parser to caller node (as interpreter), to check parameters of each caller
+- [ ] Console control tools
+    - [ ] Set caret pos
+    - [ ] Change color
+    - [ ] ...
 - [ ] Improve error system (based on C)
 - [ ] Improve REPL:
     - [ ] Now expressions can be executed in statements, dont need more to execute expression parser directly

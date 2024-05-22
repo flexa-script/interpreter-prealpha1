@@ -177,7 +177,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 					auto expr_dim = calculate_array_dim_size(arr);
 					auto pars_dim = evaluate_access_vector(astnode->dim);
 
-					if (pars_dim.size() != 1) {
+					if (expr_dim.size() != 1) {
 						if (astnode->dim.size() != expr_dim.size()) {
 							throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid array dimension assigning '" + astnode->identifier + "'");
 						}
@@ -336,7 +336,7 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 				declared_variable->is_const, declared_variable->row, declared_variable->col);
 		}
 	}
-	else if (is_array(declared_variable->type)) { // variable is array, but it is assigning subvalues
+	else if (is_array(declared_variable->type)) { // variable is array
 
 		if (is_undefined(decl_var_expression->type) && astnode->identifier_vector[0].access_vector.size() > 0) {
 			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "can't assing position of undefinded '"
@@ -1212,9 +1212,10 @@ void SemanticAnalyser::visit(ASTTypeParseNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTReadNode* astnode) {
-	if (!is_string(current_expression.type)) {
-		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "trying to assing an invalid type");
-	}
+	current_expression = SemanticValue();
+	current_expression.type = Type::T_STRING;
+	current_expression.type_name = "";
+	current_expression.array_type = Type::T_UNDEF;
 	current_expression.is_const = false;
 }
 
