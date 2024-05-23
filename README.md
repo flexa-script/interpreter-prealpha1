@@ -70,6 +70,7 @@
 - [ ] Improve error system (based on C)
 - [ ] Improve REPL:
     - [ ] Now expressions can be executed in statements, dont need more to execute expression parser directly
+- [X] Add a default interface to implements built in functions
 - [ ] Add a default interface to implements core libs
 - [ ] Add core library:
     - [ ] File I/O
