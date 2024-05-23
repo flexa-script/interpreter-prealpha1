@@ -16,7 +16,7 @@ namespace visitor {
 	class Interpreter : public Visitor {
 	private:
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
-		std::map<std::string, std::function<bool(std::vector<std::pair<parser::Type, Value*>>)>> builtin_functions;
+		std::map<std::string, std::function<void(std::vector<std::pair<parser::Type, Value*>>)>> builtin_functions;
 		std::vector<std::string> libs;
 		Value current_expression_value;
 		std::vector<std::string> current_function_parameters;
@@ -33,7 +33,6 @@ namespace visitor {
 		bool executed_elif = false;
 		bool has_string_access = false;
 
-	private:
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 		std::vector<unsigned int> calculate_array_dim_size(cp_array);
 
@@ -60,16 +59,15 @@ namespace visitor {
 		Interpreter() = default;
 		~Interpreter() = default;
 
-		void start();
-
 		std::string get_namespace(std::string = "") override;
 		std::string get_namespace(parser::ASTProgramNode*, std::string = "") override;
+
+		void start();
 
 		void visit(parser::ASTProgramNode*) override;
 		void visit(parser::ASTUsingNode*) override;
 		void visit(parser::ASTDeclarationNode*) override;
 		void visit(parser::ASTAssignmentNode*) override;
-		void visit(parser::ASTPrintNode*) override;
 		void visit(parser::ASTReturnNode*) override;
 		void visit(parser::ASTBlockNode*) override;
 		void visit(parser::ASTContinueNode*) override;
@@ -94,12 +92,9 @@ namespace visitor {
 		void visit(parser::ASTUnaryExprNode*) override;
 		void visit(parser::ASTFunctionCallNode*) override;
 		void visit(parser::ASTTypeParseNode*) override;
-		void visit(parser::ASTTypeNode*) override;
-		void visit(parser::ASTLenNode*) override;
-		void visit(parser::ASTRoundNode*) override;
-		void visit(parser::ASTReadNode*) override;
 		void visit(parser::ASTNullNode*) override;
 		void visit(parser::ASTThisNode*) override;
+		void visit(parser::ASTTypeofNode*) override;
 
 		unsigned int hash(parser::ASTExprNode*) override;
 		unsigned int hash(parser::ASTIdentifierNode*) override;

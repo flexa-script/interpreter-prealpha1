@@ -7,7 +7,7 @@
 using namespace lexer;
 
 
-Lexer::Lexer(std::string& source, std::string name) 
+Lexer::Lexer(std::string& source, std::string name)
 	: source(source), name(name) {
 	tokenize();
 }
@@ -68,18 +68,9 @@ Token Lexer::process_comment() {
 	}
 
 	do {
-		//if (current_char == '\n') {
-		//	++current_row;
-		//}
-
 		comment += current_char;
 		advance();
 	} while (has_next() && (is_block && (current_char != '/' || before_char != '*') || !is_block && current_char != '\n'));
-
-
-	//if (current_char == '\n') {
-	//	++current_row;
-	//}
 
 	comment += current_char;
 	advance();
@@ -189,16 +180,6 @@ Token Lexer::process_identifier() {
 		type = TOK_FOREACH;
 	else if (identifier == "while")
 		type = TOK_WHILE;
-	else if (identifier == "print")
-		type = TOK_PRINT;
-	else if (identifier == "read")
-		type = TOK_READ;
-	else if (identifier == "len")
-		type = TOK_LEN;
-	else if (identifier == "typeof")
-		type = TOK_TYPE;
-	else if (identifier == "round")
-		type = TOK_ROUND;
 	else if (identifier == "void")
 		type = TOK_VOID_TYPE;
 	else if (identifier == "bool")
@@ -213,6 +194,8 @@ Token Lexer::process_identifier() {
 		type = TOK_STRING_TYPE;
 	else if (identifier == "any")
 		type = TOK_ANY_TYPE;
+	else if (identifier == "typeof")
+		type = TOK_TYPEOF;
 	else if (identifier == "true" || identifier == "false")
 		type = TOK_BOOL_LITERAL;
 	else if (identifier == "null")
@@ -235,7 +218,7 @@ Token Lexer::process_number() {
 
 	while (has_next() && (std::isdigit(current_char) || current_char == '.')) {
 		if (current_char == '.') {
-			if (has_dot){
+			if (has_dot) {
 				throw std::runtime_error(msg_header() + "found '" + current_char + "' defining float");
 			}
 			has_dot = true;

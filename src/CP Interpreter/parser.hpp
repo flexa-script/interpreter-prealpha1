@@ -51,8 +51,6 @@ namespace parser {
 
 		ASTUnaryExprNode* parse_increment_expression(ASTIdentifierNode*);
 
-		ASTPrintNode* parse_print_statement();
-
 		ASTReturnNode* parse_return_statement();
 
 		ASTBlockNode* parse_block();
@@ -93,17 +91,12 @@ namespace parser {
 
 		ASTFunctionCallNode* parse_function_call_parameters_node(std::string, std::string);
 
-		ASTReadNode* parse_read_node();
-
 		ASTTypeParseNode* parse_type_parse_node();
 
 		ASTThisNode* parse_this_node();
 
-		ASTTypeNode* parse_type_node();
+		ASTTypeofNode* parse_typeof_node();
 
-		ASTLenNode* parse_len_node();
-
-		ASTRoundNode* parse_round_node();
 
 		// expression nodes
 

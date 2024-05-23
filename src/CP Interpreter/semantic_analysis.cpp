@@ -530,11 +530,6 @@ std::vector<unsigned int> SemanticAnalyser::evaluate_access_vector(std::vector<A
 	return access_vector;
 }
 
-void SemanticAnalyser::visit(ASTPrintNode* astnode) {
-	// update current expression
-	astnode->expr->accept(this);
-}
-
 void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 	// update current expression
 	astnode->expr->accept(this);
@@ -611,22 +606,6 @@ SemanticScope* SemanticAnalyser::get_inner_most_function_scope(std::string nmspa
 	return scopes[nmspace][i];
 }
 
-void SemanticAnalyser::register_built_in_functions() {
-	builtin_functions["system"] = [](std::vector<Type> args) {
-		if (args.size() != 1) {
-			return false;
-		}
-		if (!is_string(args[0])) {
-			return false;
-		}
-		return true;
-	};
-
-	builtin_functions["test"] = [](std::vector<Type> args) {
-		return true;
-	};
-}
-
 void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	// determine the signature of the function
 	std::vector<Type> signature;
@@ -647,21 +626,30 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 		curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
 	}
 	catch (...) {
-		auto res = builtin_functions[astnode->identifier](signature);
-
-		if (!res) {
-			std::string func_name = astnode->identifier + "(";
-			for (auto param : signature) {
-				func_name += type_str(param) + ", ";
-			}
-			if (signature.size() > 0) {
-				func_name.pop_back();   // remove last whitespace
-				func_name.pop_back();   // remove last comma
-			}
-			func_name += ")";
-			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "function '" + func_name + "' was never declared");
+		try {
+			builtin_functions[astnode->identifier](signature);
+			return;
 		}
-		return;
+		catch (std::runtime_error ex) {
+			std::string errmsg = "";
+
+			if (builtin_functions.find(astnode->identifier) != builtin_functions.end()) {
+				errmsg = ex.what();
+			}
+			else {
+				std::string func_name = astnode->identifier + "(";
+				for (auto param : signature) {
+					func_name += type_str(param) + ", ";
+				}
+				if (signature.size() > 0) {
+					func_name.pop_back();   // remove last whitespace
+					func_name.pop_back();   // remove last comma
+				}
+				func_name += ")";
+				errmsg = "function '" + func_name + "' was never declared";
+			}
+			throw std::runtime_error(msg_header(astnode->row, astnode->col) + errmsg);
+		}
 	}
 
 	auto curr_function = curr_scope->find_declared_function(astnode->identifier, signature);
@@ -1233,51 +1221,6 @@ void SemanticAnalyser::visit(ASTTypeParseNode* astnode) {
 	current_expression.is_const = false;
 }
 
-void SemanticAnalyser::visit(ASTReadNode* astnode) {
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_STRING;
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
-	current_expression.is_const = false;
-}
-
-void SemanticAnalyser::visit(ASTTypeNode* astnode) {
-	astnode->expr->accept(this);
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_STRING;
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
-	current_expression.is_const = false;
-}
-
-void SemanticAnalyser::visit(ASTLenNode* astnode) {
-	astnode->expr->accept(this);
-
-	if (!is_array(current_expression.type) && !is_string(current_expression.type)) {
-		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "can't read len of type " + type_str(current_expression.type));
-	}
-
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_INT;
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
-	current_expression.is_const = false;
-}
-
-void SemanticAnalyser::visit(ASTRoundNode* astnode) {
-	astnode->expr->accept(this);
-
-	if (!is_float(current_expression.type)) {
-		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "can't round type " + type_str(current_expression.type));
-	}
-
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_FLOAT;
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
-	current_expression.is_const = false;
-}
-
 void SemanticAnalyser::visit(ASTNullNode* astnode) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_VOID;
@@ -1287,6 +1230,15 @@ void SemanticAnalyser::visit(ASTNullNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTThisNode* astnode) {
+	current_expression = SemanticValue();
+	current_expression.type = Type::T_STRING;
+	current_expression.type_name = "";
+	current_expression.array_type = Type::T_UNDEF;
+	current_expression.is_const = false;
+}
+
+void SemanticAnalyser::visit(ASTTypeofNode* astnode) {
+	astnode->expr->accept(this);
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_STRING;
 	current_expression.type_name = "";
@@ -1339,4 +1291,79 @@ unsigned int SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 	auto variable_expression = declared_variable->value;
 
 	return variable_expression->hash;
+}
+
+void SemanticAnalyser::register_built_in_functions() {
+	builtin_functions["print"] = [](std::vector<Type> args) {
+		if (args.size() != 1) {
+			throw std::runtime_error("expected one parameter");
+		}
+	};
+
+	builtin_functions["read"] = [this](std::vector<Type> args) {
+		auto size = args.size();
+		if (size < 1 && size > 2) {
+			throw std::runtime_error("expected just one optional parameter");
+		}
+
+		current_expression = SemanticValue();
+		current_expression.type = Type::T_STRING;
+		current_expression.type_name = "";
+		current_expression.array_type = Type::T_UNDEF;
+		current_expression.is_const = false;
+	};
+
+	builtin_functions["system"] = [](std::vector<Type> args) {
+		if (args.size() != 1) {
+			throw std::runtime_error("expected string parameter");
+		}
+		if (!is_string(args[0])) {
+			throw std::runtime_error("parameter must be a string");
+		}
+	};
+
+	builtin_functions["round"] = [this](std::vector<Type> args) {
+		if (args.size() != 1) {
+			throw std::runtime_error("expected float parameter");
+		}
+		if (!is_float(args[0])) {
+			throw std::runtime_error("can't round type " + type_str(args[0]));
+		}
+
+		current_expression = SemanticValue();
+		current_expression.type = Type::T_FLOAT;
+		current_expression.type_name = "";
+		current_expression.array_type = Type::T_UNDEF;
+		current_expression.is_const = false;
+	};
+
+	builtin_functions["len"] = [this](std::vector<Type> args) {
+		if (args.size() != 1) {
+			throw std::runtime_error("expected string or array parameter");
+		}
+		if (!is_array(args[0]) && !is_string(args[0])) {
+			throw std::runtime_error("can't read len of type " + type_str(current_expression.type));
+		}
+
+		current_expression = SemanticValue();
+		current_expression.type = Type::T_INT;
+		current_expression.type_name = "";
+		current_expression.array_type = Type::T_UNDEF;
+		current_expression.is_const = false;
+	};
+
+	builtin_functions["rand"] = [this](std::vector<Type> args) {
+		//if (args.size() != 1) {
+		//	throw std::runtime_error("expected string or array parameter");
+		//}
+		//if (!is_array(args[0]) && !is_string(args[0])) {
+		//	throw std::runtime_error("can't read len of type " + type_str(current_expression.type));
+		//}
+
+		//current_expression = SemanticValue();
+		//current_expression.type = Type::T_INT;
+		//current_expression.type_name = "";
+		//current_expression.array_type = Type::T_UNDEF;
+		//current_expression.is_const = false;
+	};
 }

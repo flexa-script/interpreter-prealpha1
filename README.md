@@ -50,10 +50,12 @@
     <!-- - [ ] Add { init_value } to initilize all positions with same value -->
     - [ ] Add 'in' operator to check if anything is in array/string
     - [ ] immediate if
+    - [X] typeof: returns type of object
+        - [ ] add namespace to type
+    - [ ] typeid: returns hash of typeof
 - [X] Add built in funcs:
     - [X] len: returns size of array/string
     - [X] round: round a float number
-    - [X] typeof: returns type of object
     - [ ] rand:
         - [ ] rand(from: int, to: int): int
         - [ ] seed(seed: int)

@@ -90,9 +90,6 @@ ASTAssignmentNode::ASTAssignmentNode(std::vector<Identifier> identifier_vector, 
 	: ASTStatementNode(row, col),
 	identifier_vector(identifier_vector), nmspace(nmspace), expr(expr), op(std::move(op)) {}
 
-ASTPrintNode::ASTPrintNode(ASTExprNode* expr, unsigned int row, unsigned int col)
-	: ASTStatementNode(row, col), expr(expr) {}
-
 ASTReturnNode::ASTReturnNode(ASTExprNode* expr, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), expr(expr) {}
 
@@ -140,6 +137,9 @@ ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std
 	}
 }
 
+ASTTypeofNode::ASTTypeofNode(ASTExprNode* expr, unsigned int row, unsigned int col)
+	: ASTExprNode(row, col), expr(expr) {}
+
 ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::vector<VariableDefinition> variables,
 	unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), identifier(std::move(identifier)), variables(std::move(variables))
@@ -176,18 +176,6 @@ ASTFunctionCallNode::ASTFunctionCallNode(std::string identifier, std::string nms
 
 ASTTypeParseNode::ASTTypeParseNode(Type type, ASTExprNode* expr, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), type(type), expr(expr) {}
-
-ASTRoundNode::ASTRoundNode(ASTExprNode* expr, unsigned int ndigits, unsigned int row, unsigned int col)
-	: ASTExprNode(row, col), expr(expr), ndigits(ndigits) {}
-
-ASTLenNode::ASTLenNode(ASTExprNode* expr, unsigned int row, unsigned int col)
-	: ASTExprNode(row, col), expr(expr) {}
-
-ASTTypeNode::ASTTypeNode(ASTExprNode* expr, unsigned int row, unsigned int col)
-	: ASTExprNode(row, col), expr(expr) {}
-
-ASTReadNode::ASTReadNode(unsigned int row, unsigned int col)
-	: ASTExprNode(row, col) {}
 
 
 // Accept functions for visitors
@@ -263,33 +251,15 @@ void ASTFunctionCallNode::accept(visitor::Visitor* v) {
 
 unsigned int ASTFunctionCallNode::hash(visitor::Visitor* v) { return 0; }
 
-void ASTTypeNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-unsigned int ASTTypeNode::hash(visitor::Visitor* v) { return 0; }
-
-void ASTRoundNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-unsigned int ASTRoundNode::hash(visitor::Visitor* v) { return 0; }
-
-void ASTLenNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-unsigned int ASTLenNode::hash(visitor::Visitor* v) { return 0; }
-
-void ASTReadNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-unsigned int ASTReadNode::hash(visitor::Visitor* v) { return 0; }
-
 void ASTIdentifierNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
+
+void ASTTypeofNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+unsigned int ASTTypeofNode::hash(visitor::Visitor* v) { return 0; }
 
 unsigned int ASTIdentifierNode::hash(visitor::Visitor* v) {
 	return v->hash(this);
@@ -324,10 +294,6 @@ void ASTDeclarationNode::accept(visitor::Visitor* v) {
 }
 
 void ASTAssignmentNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-void ASTPrintNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 

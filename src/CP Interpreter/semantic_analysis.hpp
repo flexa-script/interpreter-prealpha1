@@ -16,7 +16,7 @@ namespace visitor {
 	class SemanticAnalyser : Visitor {
 	private:
 		std::map<std::string, std::vector<SemanticScope*>> scopes;
-		std::map<std::string, std::function<bool(std::vector<parser::Type>)>> builtin_functions;
+		std::map<std::string, std::function<void(std::vector<parser::Type>)>> builtin_functions;
 		std::vector<std::string> libs;
 		std::string current_namespace;
 		parser::SemanticValue current_expression;
@@ -57,7 +57,6 @@ namespace visitor {
 		void visit(parser::ASTUsingNode*) override;
 		void visit(parser::ASTDeclarationNode*) override;
 		void visit(parser::ASTAssignmentNode*) override;
-		void visit(parser::ASTPrintNode*) override;
 		void visit(parser::ASTReturnNode*) override;
 		void visit(parser::ASTBlockNode*) override;
 		void visit(parser::ASTContinueNode*) override;
@@ -82,12 +81,9 @@ namespace visitor {
 		void visit(parser::ASTUnaryExprNode*) override;
 		void visit(parser::ASTFunctionCallNode*) override;
 		void visit(parser::ASTTypeParseNode*) override;
-		void visit(parser::ASTTypeNode*) override;
-		void visit(parser::ASTLenNode*) override;
-		void visit(parser::ASTRoundNode*) override;
-		void visit(parser::ASTReadNode*) override;
 		void visit(parser::ASTNullNode*) override;
 		void visit(parser::ASTThisNode*) override;
+		void visit(parser::ASTTypeofNode*) override;
 
 		unsigned int hash(parser::ASTExprNode*) override;
 		unsigned int hash(parser::ASTIdentifierNode*) override;

@@ -170,15 +170,6 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
-	class ASTPrintNode : public ASTStatementNode {
-	public:
-		ASTExprNode* expr;
-
-		ASTPrintNode(ASTExprNode*, unsigned int, unsigned int);
-
-		void accept(visitor::Visitor*) override;
-	};
-
 	class ASTReturnNode : public ASTStatementNode {
 	public:
 		ASTExprNode* expr;
@@ -412,40 +403,11 @@ namespace parser {
 		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
-	class ASTRoundNode : public ASTExprNode {
-	public:
-		ASTExprNode* expr;
-		unsigned int ndigits;
-
-		ASTRoundNode(ASTExprNode*, unsigned int, unsigned int, unsigned int);
-
-		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
-	};
-
-	class ASTLenNode : public ASTExprNode {
+	class ASTTypeofNode : public ASTExprNode {
 	public:
 		ASTExprNode* expr;
 
-		ASTLenNode(ASTExprNode*, unsigned int, unsigned int);
-
-		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
-	};
-
-	class ASTTypeNode : public ASTExprNode {
-	public:
-		ASTExprNode* expr;
-
-		ASTTypeNode(ASTExprNode*, unsigned int, unsigned int);
-
-		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
-	};
-
-	class ASTReadNode : public ASTExprNode {
-	public:
-		ASTReadNode(unsigned int, unsigned int);
+		ASTTypeofNode(ASTExprNode*, unsigned int, unsigned int);
 
 		void accept(visitor::Visitor*) override;
 		virtual unsigned int hash(visitor::Visitor*) override;

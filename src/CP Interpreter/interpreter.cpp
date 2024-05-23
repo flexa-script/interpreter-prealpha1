@@ -1028,18 +1028,6 @@ void Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
 	}
 }
 
-void Interpreter::register_built_in_functions() {
-	builtin_functions["system"] = [this](std::vector<std::pair<parser::Type, Value*>> args) {
-		system(args[0].second->s.c_str());
-		return true;
-	};
-
-	builtin_functions["test"] = [](std::vector<std::pair<parser::Type, Value*>> args) {
-		std::cout << "called test with " + std::to_string(args.size()) + " args" << std::endl;
-		return true;
-	};
-}
-
 void Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 	std::vector<parser::Type> signature;
 	std::vector<std::pair<parser::Type, Value*>> current_function_arguments;
@@ -1069,7 +1057,7 @@ void Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(astnode->identifier, signature); i--) {
 		if (i <= 0) {
-			auto res = builtin_functions[astnode->identifier](current_function_arguments);
+			builtin_functions[astnode->identifier](current_function_arguments);
 			return;
 		}
 	}
@@ -1247,12 +1235,6 @@ std::string Interpreter::parse_struct_to_string(cp_struct value) {
 	return s.str();
 }
 
-void Interpreter::visit(parser::ASTPrintNode* astnode) {
-	// visit expression node to update current value/type
-	astnode->expr->accept(this);
-	std::cout << parse_value_to_string(current_expression_value);
-}
-
 std::vector<unsigned int> Interpreter::calculate_array_dim_size(cp_array arr) {
 	auto dim = std::vector<unsigned int>();
 
@@ -1266,7 +1248,19 @@ std::vector<unsigned int> Interpreter::calculate_array_dim_size(cp_array arr) {
 	return dim;
 }
 
-void Interpreter::visit(parser::ASTTypeNode* astnode) {
+void Interpreter::visit(parser::ASTNullNode* astnode) {
+	auto value = Value(parser::Type::T_VOID);
+	value.set_null();
+	current_expression_value = value;
+}
+
+void Interpreter::visit(parser::ASTThisNode* astnode) {
+	auto value = Value(parser::Type::T_STRING);
+	value.set(cp_string(current_name));
+	current_expression_value = value;
+}
+
+void Interpreter::visit(parser::ASTTypeofNode* astnode) {
 	astnode->expr->accept(this);
 
 	auto currentValue = current_expression_value;
@@ -1303,47 +1297,6 @@ void Interpreter::visit(parser::ASTTypeNode* astnode) {
 	auto value = Value(parser::Type::T_STRING);
 	value.set(cp_string(str_type));
 	current_expression_value = value;
-}
-
-void Interpreter::visit(parser::ASTLenNode* astnode) {
-	astnode->expr->accept(this);
-	auto val = Value(parser::Type::T_INT);
-
-	if (current_expression_value.curr_type == parser::Type::T_ARRAY) {
-		val.set(cp_int(current_expression_value.arr.size()));
-	}
-	else if (current_expression_value.curr_type == parser::Type::T_STRING) {
-		val.set(cp_int(current_expression_value.s.size()));
-	}
-
-	current_expression_value = val;
-}
-
-void Interpreter::visit(parser::ASTRoundNode* astnode) {
-	astnode->expr->accept(this);
-	auto val = Value(parser::Type::T_FLOAT);
-	val.set(cp_float(roundl(current_expression_value.f)));
-	current_expression_value = val;
-}
-
-
-void Interpreter::visit(parser::ASTNullNode* astnode) {
-	auto value = Value(parser::Type::T_VOID);
-	value.set_null();
-	current_expression_value = value;
-}
-
-void Interpreter::visit(parser::ASTThisNode* astnode) {
-	auto value = Value(parser::Type::T_STRING);
-	value.set(cp_string(current_name));
-	current_expression_value = value;
-}
-
-void Interpreter::visit(parser::ASTReadNode* astnode) {
-	std::string line;
-	std::getline(std::cin, line);
-
-	current_expression_value.set(cp_string(std::move(line)));
 }
 
 std::string Interpreter::msg_header(unsigned int row, unsigned int col) {
@@ -1396,4 +1349,46 @@ unsigned int Interpreter::hash(parser::ASTIdentifierNode* astnode) {
 	case parser::Type::T_STRING:
 		return axe::Util::hashcode(value->s);
 	}
+}
+
+void Interpreter::register_built_in_functions() {
+	builtin_functions["print"] = [this](std::vector<std::pair<parser::Type, Value*>> args) {
+		std::cout << parse_value_to_string(*args[0].second);
+	};
+
+	builtin_functions["read"] = [this](std::vector<std::pair<parser::Type, Value*>> args) {
+		if (args.size() > 0) {
+			builtin_functions["print"](args);
+		}
+
+		std::string line;
+		std::getline(std::cin, line);
+
+		current_expression_value.set(cp_string(std::move(line)));
+	};
+
+	builtin_functions["system"] = [this](std::vector<std::pair<parser::Type, Value*>> args) {
+		system(args[0].second->s.c_str());
+	};
+
+	builtin_functions["round"] = [this](std::vector<std::pair<parser::Type, Value*>> args) {
+		auto val = Value(parser::Type::T_FLOAT);
+		val.set(cp_float(roundl(args[0].second->f)));
+		current_expression_value = val;
+	};
+
+	builtin_functions["len"] = [this](std::vector<std::pair<parser::Type, Value*>> args) {
+		auto& curr_val = args[0].second;
+		auto val = Value(Type::T_INT);
+
+		if (is_array(curr_val->curr_type)) {
+			val.set(cp_int(curr_val->arr.size()));
+		}
+		else {
+			val.set(cp_int(curr_val->s.size()));
+		}
+
+		current_expression_value = val;
+	};
+
 }

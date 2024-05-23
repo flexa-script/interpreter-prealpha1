@@ -105,8 +105,6 @@ ASTNode* Parser::parse_block_statement() {
 		return parse_declaration_statement();
 	case lexer::TOK_STRUCT:
 		return parse_struct_definition();
-	case lexer::TOK_PRINT:
-		return parse_print_statement();
 	case lexer::TOK_SWITCH:
 		return parse_switch_statement();
 	case lexer::TOK_IF:
@@ -431,28 +429,6 @@ ASTAssignmentNode* Parser::parse_assignment_statement(ASTIdentifierNode* identif
 	}
 
 	return new ASTAssignmentNode(identifier->identifier_vector, identifier->nmspace, op, expr, identifier->row, identifier->col);
-}
-
-ASTPrintNode* Parser::parse_print_statement() {
-	// determine line number
-	unsigned int row = current_token.row;
-	unsigned int col = current_token.col;
-
-	consume_token(lexer::TOK_LEFT_BRACKET);
-
-	// get expression to print
-	consume_token();
-	ASTExprNode* expr = parse_expression();
-
-	// ensure right close bracket after fetching parameters
-	consume_token(lexer::TOK_RIGHT_BRACKET);
-
-	if (consume_semicolon) {
-		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
-	}
-
-	return new ASTPrintNode(expr, row, col);
 }
 
 ASTReturnNode* Parser::parse_return_statement() {
@@ -1106,22 +1082,16 @@ ASTExprNode* Parser::parse_factor() {
 	case lexer::TOK_STRING_TYPE:
 		return parse_type_parse_node();
 
-	case lexer::TOK_TYPE:
-		return parse_type_node();
-
-	case lexer::TOK_LEN:
-		return parse_len_node();
-
-	case lexer::TOK_ROUND:
-		return parse_round_node();
-
 	case lexer::TOK_NULL:
 		return new ASTNullNode(row, col);
 
 	case lexer::TOK_THIS:
 		return parse_this_node();
 
-	case lexer::TOK_IDENTIFIER: {// identifier or function call case
+	case lexer::TOK_TYPEOF:
+		return parse_typeof_node();
+
+	case lexer::TOK_IDENTIFIER: { // identifier or function call case
 		std::string nmspace = "";
 
 		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
@@ -1140,8 +1110,6 @@ ASTExprNode* Parser::parse_factor() {
 			return parse_identifier_node(nmspace);
 		}
 	}
-	case lexer::TOK_READ: // read case
-		return parse_read_node();
 
 	case lexer::TOK_LEFT_BRACKET: { // subexpression case
 		consume_token();
@@ -1162,7 +1130,7 @@ ASTExprNode* Parser::parse_factor() {
 	}
 }
 
-ASTTypeNode* Parser::parse_type_node() {
+ASTTypeofNode* Parser::parse_typeof_node() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 	ASTExprNode* expr = nullptr;
@@ -1187,36 +1155,7 @@ ASTTypeNode* Parser::parse_type_node() {
 
 	consume_token(lexer::TOK_RIGHT_BRACKET);
 
-	return new ASTTypeNode(expr, row, col);
-}
-
-ASTLenNode* Parser::parse_len_node() {
-	unsigned int row = current_token.row;
-	unsigned int col = current_token.col;
-	ASTExprNode* expr = nullptr;
-
-	consume_token(lexer::TOK_LEFT_BRACKET);
-
-	consume_token();
-	expr = parse_expression();
-	consume_token(lexer::TOK_RIGHT_BRACKET);
-
-	return new ASTLenNode(expr, row, col);
-}
-
-ASTRoundNode* Parser::parse_round_node() {
-	unsigned int row = current_token.row;
-	unsigned int col = current_token.col;
-	unsigned int ndigits = 0;
-	ASTExprNode* expr = nullptr;
-
-	consume_token(lexer::TOK_LEFT_BRACKET);
-
-	consume_token();
-	expr = parse_expression();
-	consume_token(lexer::TOK_RIGHT_BRACKET);
-
-	return new ASTRoundNode(expr, ndigits, row, col);
+	return new ASTTypeofNode(expr, row, col);
 }
 
 ASTArrayConstructorNode* Parser::parse_array_constructor_node() {
@@ -1471,20 +1410,6 @@ ASTThisNode* Parser::parse_this_node() {
 	unsigned int col = current_token.col;
 
 	return new ASTThisNode(row, col);
-}
-
-ASTReadNode* Parser::parse_read_node() {
-	// determine line number
-	unsigned int row = current_token.row;
-	unsigned int col = current_token.col;
-
-	// left open bracket
-	consume_token(lexer::TOK_LEFT_BRACKET);
-
-	// ensure right close bracket after fetching parameters
-	consume_token(lexer::TOK_RIGHT_BRACKET);
-
-	return new ASTReadNode(row, col);
 }
 
 std::string Parser::msg_header() {

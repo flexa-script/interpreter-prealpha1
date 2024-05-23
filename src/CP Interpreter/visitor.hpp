@@ -32,8 +32,6 @@ namespace parser {
 	class ASTUsingNode;
 	class ASTDeclarationNode;
 	class ASTAssignmentNode;
-	class ASTPrintNode;
-	class ASTReadNode;
 	class ASTFunctionCallNode;
 	class ASTReturnNode;
 	class ASTBlockNode;
@@ -56,12 +54,9 @@ namespace parser {
 	class ASTUnaryExprNode;
 	class ASTFunctionCallNode;
 	class ASTTypeParseNode;
-	class ASTReadNode;
 	class ASTNullNode;
 	class ASTThisNode;
-	class ASTTypeNode;
-	class ASTLenNode;
-	class ASTRoundNode;
+	class ASTTypeofNode;
 }
 
 typedef bool cp_bool;
@@ -113,13 +108,13 @@ public:
 namespace visitor {
 	class Visitor {
 	public:
-		Visitor(std::map<std::string, parser::ASTProgramNode*> programs, parser::ASTProgramNode* main_program, std::string current_name)
-			: programs(programs), main_program(main_program), current_program(main_program), current_name(current_name) { };
-
 		std::map<std::string, parser::ASTProgramNode*> programs;
 		parser::ASTProgramNode* main_program;
 		parser::ASTProgramNode* current_program;
 		std::string current_name;
+
+		Visitor(std::map<std::string, parser::ASTProgramNode*> programs, parser::ASTProgramNode* main_program, std::string current_name)
+			: programs(programs), main_program(main_program), current_program(main_program), current_name(current_name) { };
 
 		virtual std::string get_namespace(std::string = "") = 0;
 		virtual std::string get_namespace(parser::ASTProgramNode*, std::string = "") = 0;
@@ -128,7 +123,6 @@ namespace visitor {
 		virtual void visit(parser::ASTUsingNode*) = 0;
 		virtual void visit(parser::ASTDeclarationNode*) = 0;
 		virtual void visit(parser::ASTAssignmentNode*) = 0;
-		virtual void visit(parser::ASTPrintNode*) = 0;
 		virtual void visit(parser::ASTReturnNode*) = 0;
 		virtual void visit(parser::ASTBlockNode*) = 0;
 		virtual void visit(parser::ASTContinueNode*) = 0;
@@ -153,12 +147,9 @@ namespace visitor {
 		virtual void visit(parser::ASTUnaryExprNode*) = 0;
 		virtual void visit(parser::ASTFunctionCallNode*) = 0;
 		virtual void visit(parser::ASTTypeParseNode*) = 0;
-		virtual void visit(parser::ASTTypeNode*) = 0;
-		virtual void visit(parser::ASTLenNode*) = 0;
-		virtual void visit(parser::ASTRoundNode*) = 0;
-		virtual void visit(parser::ASTReadNode*) = 0;
 		virtual void visit(parser::ASTNullNode*) = 0;
 		virtual void visit(parser::ASTThisNode*) = 0;
+		virtual void visit(parser::ASTTypeofNode*) = 0;
 
 		virtual unsigned int hash(parser::ASTExprNode*) = 0;
 		virtual unsigned int hash(parser::ASTIdentifierNode*) = 0;
