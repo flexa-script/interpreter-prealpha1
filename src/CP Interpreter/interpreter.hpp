@@ -4,6 +4,7 @@
 #include <map>
 #include <stack>
 #include <any>
+#include <functional>
 
 #include "visitor.hpp"
 #include "ast.hpp"
@@ -15,6 +16,7 @@ namespace visitor {
 	class Interpreter : public Visitor {
 	private:
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
+		std::map<std::string, std::function<bool(std::vector<std::pair<parser::Type, Value*>>)>> builtin_functions;
 		std::vector<std::string> libs;
 		Value current_expression_value;
 		std::vector<std::string> current_function_parameters;
@@ -48,6 +50,8 @@ namespace visitor {
 		std::string parse_struct_to_string(cp_struct);
 
 		Value* access_value(InterpreterScope*, Value*, std::vector<parser::Identifier>, size_t i = 0);
+
+		void register_built_in_functions();
 
 		std::string msg_header(unsigned int, unsigned int);
 

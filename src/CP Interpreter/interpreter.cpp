@@ -14,6 +14,7 @@ Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_pr
 	: current_expression_value(Value(parser::Type::T_UNDEF)), is_function_context(false),
 	Visitor(programs, main_program, main_program ? main_program->name : "main") {
 	scopes["main"].push_back(global_scope);
+	register_built_in_functions();
 }
 
 std::string Interpreter::get_namespace(std::string nmspace) {
@@ -1027,8 +1028,19 @@ void Interpreter::visit(parser::ASTUnaryExprNode* astnode) {
 	}
 }
 
+void Interpreter::register_built_in_functions() {
+	builtin_functions["system"] = [this](std::vector<std::pair<parser::Type, Value*>> args) {
+		system(args[0].second->s.c_str());
+		return true;
+	};
+
+	builtin_functions["test"] = [](std::vector<std::pair<parser::Type, Value*>> args) {
+		std::cout << "called test with " + std::to_string(args.size()) + " args" << std::endl;
+		return true;
+	};
+}
+
 void Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
-	// determine the signature of the function
 	std::vector<parser::Type> signature;
 	std::vector<std::pair<parser::Type, Value*>> current_function_arguments;
 
@@ -1054,8 +1066,14 @@ void Interpreter::visit(parser::ASTFunctionCallNode* astnode) {
 
 	// determine in which scope the function is declared
 	auto nmspace = get_namespace(astnode->nmspace);
-	size_t i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(astnode->identifier, signature); i--);
+	long long i;
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(astnode->identifier, signature); i--) {
+		if (i <= 0) {
+			auto res = builtin_functions[astnode->identifier](current_function_arguments);
+			return;
+		}
+	}
+
 	auto func_scope = scopes[nmspace][i];
 
 	// populate the global vector of function parameter names, to be used in creation of function scope

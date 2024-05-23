@@ -13,6 +13,7 @@ SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, ASTProgramNode* 
 	: current_expression(SemanticValue()),
 	Visitor(programs, main_program, main_program ? main_program->name : "main") {
 	scopes["main"].push_back(global_scope);
+	register_built_in_functions();
 };
 
 void SemanticAnalyser::start() {
@@ -254,7 +255,7 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 			&& !is_int(decl_var_expression->type) && !is_float(decl_var_expression->type)
 			&& !is_string(assignment_expr.type) && !is_string(decl_var_expression->type)
 			&& !is_string(decl_var_expression->type) && !is_char(assignment_expr.type)) {
-			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid value type '" + 
+			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "invalid value type '" +
 				type_str(decl_var_expression->type) + "' and '" +
 				type_str(assignment_expr.type) + "' to '" + astnode->op + "' operation");
 		}
@@ -537,7 +538,7 @@ void SemanticAnalyser::visit(ASTPrintNode* astnode) {
 void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 	// update current expression
 	astnode->expr->accept(this);
-	
+
 	// if we are not global, check that we return current function return type
 	if (!current_function.empty()) {
 
@@ -610,11 +611,27 @@ SemanticScope* SemanticAnalyser::get_inner_most_function_scope(std::string nmspa
 	return scopes[nmspace][i];
 }
 
+void SemanticAnalyser::register_built_in_functions() {
+	builtin_functions["system"] = [](std::vector<Type> args) {
+		if (args.size() != 1) {
+			return false;
+		}
+		if (!is_string(args[0])) {
+			return false;
+		}
+		return true;
+	};
+
+	builtin_functions["test"] = [](std::vector<Type> args) {
+		return true;
+	};
+}
+
 void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	// determine the signature of the function
 	std::vector<Type> signature;
 
-	// for each parameter,
+	// for each parameter
 	for (auto param : astnode->parameters) {
 		// visit to update current expr type
 		param->accept(this);
@@ -630,16 +647,21 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 		curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
 	}
 	catch (...) {
-		std::string func_name = astnode->identifier + "(";
-		for (auto param : signature) {
-			func_name += type_str(param) + ", ";
+		auto res = builtin_functions[astnode->identifier](signature);
+
+		if (!res) {
+			std::string func_name = astnode->identifier + "(";
+			for (auto param : signature) {
+				func_name += type_str(param) + ", ";
+			}
+			if (signature.size() > 0) {
+				func_name.pop_back();   // remove last whitespace
+				func_name.pop_back();   // remove last comma
+			}
+			func_name += ")";
+			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "function '" + func_name + "' was never declared");
 		}
-		if (signature.size() > 0) {
-			func_name.pop_back();   // remove last whitespace
-			func_name.pop_back();   // remove last comma
-		}
-		func_name += ")";
-		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "function '" + func_name + "' was never declared");
+		return;
 	}
 
 	auto curr_function = curr_scope->find_declared_function(astnode->identifier, signature);
@@ -679,7 +701,7 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 	// add function to symbol table
 	scopes[get_namespace()].back()->declare_function(astnode->identifier, type, astnode->type_name, astnode->type_name_space,
 		array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
-	
+
 	auto curr_function = scopes[get_namespace()].back()->find_declared_function(astnode->identifier, astnode->signature);
 
 	// push current function type into function stack

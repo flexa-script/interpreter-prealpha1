@@ -5,6 +5,7 @@
 #include <vector>
 #include <stack>
 #include <xutility>
+#include <functional>
 
 #include "ast.hpp"
 #include "semantic_scope.hpp"
@@ -15,6 +16,7 @@ namespace visitor {
 	class SemanticAnalyser : Visitor {
 	private:
 		std::map<std::string, std::vector<SemanticScope*>> scopes;
+		std::map<std::string, std::function<bool(std::vector<parser::Type>)>> builtin_functions;
 		std::vector<std::string> libs;
 		std::string current_namespace;
 		parser::SemanticValue current_expression;
@@ -30,13 +32,15 @@ namespace visitor {
 		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);
 
 		SemanticScope* get_inner_most_variable_scope(std::string, std::string);
-		SemanticScope* get_inner_most_function_scope(std::string nmspace, std::string identifier, std::vector<parser::Type> signature);
+		SemanticScope* get_inner_most_function_scope(std::string, std::string, std::vector<parser::Type>);
 		SemanticScope* get_inner_most_struct_definition_scope(std::string, std::string);
 
 		void determine_array_type(parser::ASTArrayConstructorNode*);
 		void check_array_type(parser::ASTExprNode*, unsigned int, unsigned int);
 
 		parser::VariableDefinition access_struct_variable(std::vector<parser::Identifier>, std::string, std::string, unsigned int = 0);
+
+		void register_built_in_functions();
 
 		std::string msg_header(unsigned int, unsigned int);
 
