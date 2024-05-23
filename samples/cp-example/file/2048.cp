@@ -6,7 +6,7 @@ def print_board(board[4][4]: int) {
         for (var j: int = 0; j < 4; j++) {
             print("[" + string(board[i][j]) + "]\t");
         }
-        print("\n\n");
+        print("\n");
     }
 }
 

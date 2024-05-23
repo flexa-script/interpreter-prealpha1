@@ -76,6 +76,7 @@ typedef std::pair<std::string, cp_struct_values> cp_struct;
 class Value {
 public:
 	Value(parser::Type);
+	Value(Value*);
 	
 	parser::Type type;
 	parser::Type curr_type;
@@ -105,6 +106,7 @@ public:
 
 	bool has_value();
 
+	void copy_array(cp_array);
 	void copy_from(Value*);
 };
 

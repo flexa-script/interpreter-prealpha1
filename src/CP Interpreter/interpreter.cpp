@@ -188,13 +188,15 @@ std::vector<Value*> Interpreter::build_array(std::vector<parser::ASTExprNode*> d
 	size_t size = current_expression_value.i;
 
 	for (size_t j = 0; j < size; ++j) {
-		arr.push_back(init_value);
+		auto val = new Value(init_value);
+		arr.push_back(val);
 	}
 
 	--i;
 
 	if (i >= 0) {
 		auto val = new Value(Type::T_ARRAY);
+		val->arr_type = init_value->type;
 		val->set(arr);
 		return build_array(dim, val, i);
 	}
