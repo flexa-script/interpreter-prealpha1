@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cmath>
+#include <conio.h>
 
 #include "interpreter.hpp"
 #include "util.hpp"
@@ -134,8 +135,6 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 			break;
 		case Type::T_ARRAY: {
 			if (current_expression_value.arr.size() == 1) {
-				//auto init_value = current_expression_value.arr[0];
-				//auto dim = evaluate_access_vector(astnode->dim);
 				auto arr = build_array(astnode->dim, current_expression_value.arr[0], astnode->dim.size() - 1);
 				scopes[get_namespace()].back()->declare_variable(astnode->identifier, arr);
 			}
@@ -176,7 +175,6 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 
 	Value* val = access_value(scopes[get_namespace()].back(), scopes[get_namespace()].back()->find_declared_variable(astnode->identifier),
 		std::vector<Identifier>{Identifier(astnode->identifier, std::vector<ASTExprNode*>())});
-	//val->dim = astnode->dim;
 	val->arr_type = astnode->array_type;
 }
 
@@ -289,6 +287,10 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
+
+	if (is_undefined(value->curr_type)) {
+		value->set_curr_type(is_any(value->type) ? current_expression_value.curr_type : value->type);
+	}
 
 	if (current_expression_value.has_value()) {
 		switch (current_expression_value.curr_type) {
@@ -1047,11 +1049,6 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		current_function_arguments.emplace_back(current_expression_value.curr_type, value);
 	}
 
-	// update the global vector current_function_arguments
-	for (auto& arg : current_function_arguments) {
-		this->current_function_arguments.push_back(arg);
-	}
-
 	// determine in which scope the function is declared
 	auto nmspace = get_namespace(astnode->nmspace);
 	long long i;
@@ -1060,6 +1057,11 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 			builtin_functions[astnode->identifier](current_function_arguments);
 			return;
 		}
+	}
+
+	// update the global vector current_function_arguments
+	for (auto& arg : current_function_arguments) {
+		this->current_function_arguments.push_back(arg);
 	}
 
 	auto func_scope = scopes[nmspace][i];
@@ -1365,6 +1367,15 @@ void Interpreter::register_built_in_functions() {
 		std::getline(std::cin, line);
 
 		current_expression_value.set(cp_string(std::move(line)));
+	};
+
+	builtin_functions["readch"] = [this](std::vector<std::pair<Type, Value*>> args) {
+		char ch;
+		//std::cout << "chamou\n";
+		while (!_kbhit());
+		ch = _getch();
+		//std::cout << "char="<<ch<<std::endl;
+		current_expression_value.set(cp_char(ch));
 	};
 
 	builtin_functions["system"] = [this](std::vector<std::pair<Type, Value*>> args) {

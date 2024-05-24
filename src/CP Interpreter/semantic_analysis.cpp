@@ -1313,6 +1313,18 @@ void SemanticAnalyser::register_built_in_functions() {
 		current_expression.is_const = false;
 	};
 
+	builtin_functions["readch"] = [this](std::vector<Type> args) {
+		if (args.size() > 0) {
+			throw std::runtime_error("readch do not expect parameter");
+		}
+
+		current_expression = SemanticValue();
+		current_expression.type = Type::T_CHAR;
+		current_expression.type_name = "";
+		current_expression.array_type = Type::T_UNDEF;
+		current_expression.is_const = false;
+	};
+
 	builtin_functions["system"] = [](std::vector<Type> args) {
 		if (args.size() != 1) {
 			throw std::runtime_error("expected string parameter");
@@ -1352,18 +1364,18 @@ void SemanticAnalyser::register_built_in_functions() {
 		current_expression.is_const = false;
 	};
 
-	builtin_functions["rand"] = [this](std::vector<Type> args) {
-		//if (args.size() != 1) {
-		//	throw std::runtime_error("expected string or array parameter");
-		//}
-		//if (!is_array(args[0]) && !is_string(args[0])) {
-		//	throw std::runtime_error("can't read len of type " + type_str(current_expression.type));
-		//}
+	//builtin_functions["rand"] = [this](std::vector<Type> args) {
+	//	if (args.size() != 1) {
+	//		throw std::runtime_error("expected string or array parameter");
+	//	}
+	//	if (!is_array(args[0]) && !is_string(args[0])) {
+	//		throw std::runtime_error("can't read len of type " + type_str(current_expression.type));
+	//	}
 
-		//current_expression = SemanticValue();
-		//current_expression.type = Type::T_INT;
-		//current_expression.type_name = "";
-		//current_expression.array_type = Type::T_UNDEF;
-		//current_expression.is_const = false;
-	};
+	//	current_expression = SemanticValue();
+	//	current_expression.type = Type::T_INT;
+	//	current_expression.type_name = "";
+	//	current_expression.array_type = Type::T_UNDEF;
+	//	current_expression.is_const = false;
+	//};
 }
