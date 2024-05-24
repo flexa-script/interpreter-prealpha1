@@ -54,11 +54,14 @@
         - [ ] add namespace to type
     - [ ] typeid: returns hash of typeof
 - [X] Add built in funcs:
+    - [ ] abs: ret absolute value of a number
+    - [ ] max: return greather from two or more parameters
+    - [ ] min: return lesser from two or more parameters
+    - [ ] sum: sum all items from array
     - [X] len: returns size of array/string
     - [X] round: round a float number
-    - [ ] rand:
-        - [ ] rand(from: int, to: int): int
-        - [ ] seed(seed: int)
+    - [ ] sorted: sort a list
+    - [ ] reversed: reverse a list
 - [X] Let functions return array
 - [X] Add lib scope lib.(method|properties|struct)
 - [X] Guanrantee that a lib is loaded once
@@ -83,6 +86,9 @@
     - [ ] Time
     - [ ] Web/API
     - [ ] Util
+    - [ ] Random (https://docs.godotengine.org/en/stable/classes/class_randomnumbergenerator.html):
+        - [ ] randi(from: int, to: int): int
+        - [ ] seed(seed: int)
 - [ ] General otimizations:
     - [ ] Remove duplicate codes
         - [ ] Type checks
