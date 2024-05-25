@@ -13,7 +13,7 @@ namespace axe {
     std::string Util::replace(std::string str, const std::string from, const std::string to) {
         std::string replaced = str;
         if (from.empty()){
-            return;
+            return replaced;
         }
         size_t start_pos = 0;
         while ((start_pos = replaced.find(from, start_pos)) != std::string::npos) {

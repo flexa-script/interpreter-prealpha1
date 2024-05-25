@@ -15,9 +15,11 @@ public:
 
 	std::vector<Program> load_programs(std::vector<std::string>);
 
+	void parse_programs(std::vector<Program>, parser::ASTProgramNode*,
+		std::map<std::string, parser::ASTProgramNode*>*);
+
 	int interpreter(std::vector<Program>);
 
-	std::vector<Program> debug_programs();
 };
 
 #endif // CPINTERPRETER_HPP

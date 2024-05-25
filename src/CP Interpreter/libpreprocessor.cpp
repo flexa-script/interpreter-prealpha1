@@ -101,5 +101,5 @@ void LibPreprocessor::visit(ASTTypeofNode*) {}
 void LibPreprocessor::visit(ASTNullNode*) {}
 void LibPreprocessor::visit(ASTThisNode*) {}
 
-std::string LibPreprocessor::get_namespace(std::string) {}
-std::string LibPreprocessor::get_namespace(ASTProgramNode*, std::string) {}
+std::string LibPreprocessor::get_namespace(std::string) { return ""; }
+std::string LibPreprocessor::get_namespace(ASTProgramNode*, std::string) { return ""; }

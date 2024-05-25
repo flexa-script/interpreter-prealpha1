@@ -47,6 +47,25 @@ std::vector<Program> CPInterpreter::load_programs(std::vector<std::string> files
 	return source_programs;
 }
 
+void CPInterpreter::parse_programs(std::vector<Program> source_programs, parser::ASTProgramNode* main_program,
+	std::map<std::string, parser::ASTProgramNode*>* programs) {
+	
+	for (auto source : source_programs) {
+		// tokenise and initialise parser
+		lexer::Lexer lexer(source.source, source.name);
+		parser::Parser parser(&lexer, source.name);
+
+		parser::ASTProgramNode* program = parser.parse_program();
+
+		if (!main_program) {
+			main_program = program;
+		}
+
+		// try to parse as program
+		(*programs)[program->name] = program;
+	}
+}
+
 int CPInterpreter::interpreter(std::vector<Program> source_programs) {
 	// create Global Scopes
 	visitor::SemanticScope semantic_global_scope;
@@ -55,26 +74,13 @@ int CPInterpreter::interpreter(std::vector<Program> source_programs) {
 	try {
 		parser::ASTProgramNode* main_program = nullptr;
 		std::map<std::string, parser::ASTProgramNode*> programs;
-
-		for (auto source : source_programs) {
-			// tokenise and initialise parser
-			lexer::Lexer lexer(source.source, source.name);
-			parser::Parser parser(&lexer, source.name);
-
-			parser::ASTProgramNode* program = parser.parse_program();
-
-			if (!main_program) {
-				main_program = program;
-			}
-
-			// try to parse as program
-			programs[program->name] = program;
-		}
+		parse_programs(source_programs, main_program, &programs);
 
 		visitor::LibPreprocessor libpreprocessor(main_program, programs);
 		libpreprocessor.start();
 
-		auto programs = load_programs(files);
+		auto cplib_programs = load_programs(libpreprocessor.get_lib_names());
+		parse_programs(cplib_programs, main_program, &programs);
 
 		// if this succeeds, perform semantic analysis modifying global scope
 		visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, main_program, programs);
