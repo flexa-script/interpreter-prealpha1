@@ -39,7 +39,7 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	std::string libname = axe::Util::join(astnode->library, ".");
 
 	if (programs.find(libname) == programs.end()) {
-		// find in cp core libs
+		// TODO: find in cp core libs
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "lib '" + libname + "' not found");
 	}
 
@@ -830,7 +830,7 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 	astnode->collection->accept(this);
 	col_type = current_expression.array_type;
 
-	if (is_any(decl_type)) {
+	if (is_any(decl_type) || is_undefined(decl_type)) {
 		decl_type = col_type;
 		auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl);
 
@@ -1134,7 +1134,6 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 	else {
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "unhandled semantic error in binary operator");
 	}
-	current_expression.is_const = false;
 }
 
 void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {

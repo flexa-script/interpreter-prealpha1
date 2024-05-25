@@ -52,6 +52,12 @@
     <Filter Include="Source Files\modules">
       <UniqueIdentifier>{4f752d3d-3fc0-49be-beef-da7b6651996b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\cp">
+      <UniqueIdentifier>{1fd1859f-d1be-49c6-a217-346b387150ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\cp">
+      <UniqueIdentifier>{35d44f8c-d1c2-49fe-8d55-84b2ef768b34}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lexer.hpp">
@@ -96,17 +102,20 @@
     <ClInclude Include="util.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="libpreprocessor.hpp">
-      <Filter>Header Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="cputil.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="cpinterpreter.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\cp</Filter>
     </ClInclude>
     <ClInclude Include="cprepl.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\cp</Filter>
+    </ClInclude>
+    <ClInclude Include="cputil.hpp">
+      <Filter>Header Files\cp</Filter>
+    </ClInclude>
+    <ClInclude Include="cplibloader.hpp">
+      <Filter>Header Files\cp</Filter>
+    </ClInclude>
+    <ClInclude Include="cpsource.hpp">
+      <Filter>Header Files\cp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -147,16 +156,19 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cputil.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\cp</Filter>
     </ClCompile>
     <ClCompile Include="cpinterpreter.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\cp</Filter>
     </ClCompile>
     <ClCompile Include="cprepl.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\cp</Filter>
     </ClCompile>
-    <ClCompile Include="libpreprocessor.cpp">
-      <Filter>Source Files\core</Filter>
+    <ClCompile Include="cplibloader.cpp">
+      <Filter>Source Files\cp</Filter>
+    </ClCompile>
+    <ClCompile Include="cpsource.cpp">
+      <Filter>Source Files\cp</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

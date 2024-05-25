@@ -775,14 +775,16 @@ ASTForEachNode* Parser::parse_foreach_statement() {
 	// consume decl first token
 	consume_token();
 
+	consume_semicolon = false;
 	itdecl = parse_declaration_statement();
 
-	check_current_token(lexer::TOK_IN);
+	consume_token(lexer::TOK_IN);
 
 	// consume expression first token
 	consume_token();
 
 	collection = parse_foreach_collection();
+	consume_semicolon = true;
 
 	// consume ')'
 	consume_token(lexer::TOK_RIGHT_BRACKET);

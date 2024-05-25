@@ -2,18 +2,19 @@
 #define LIBPREPROCESSOR_HPP
 
 #include "ast.hpp"
+#include "cpsource.hpp"
 
 
 namespace visitor {
 
-	class LibPreprocessor : Visitor {
+	class LibFinder : Visitor {
 	private:
 		std::string cp_path;
 		std::vector<std::string> lib_names;
 		std::vector<std::string> libs;
 
 	public:
-		LibPreprocessor(parser::ASTProgramNode*, std::map<std::string, parser::ASTProgramNode*>);
+		LibFinder(parser::ASTProgramNode*, std::map<std::string, parser::ASTProgramNode*>);
 
 		void start();
 		std::vector<std::string> get_lib_names();

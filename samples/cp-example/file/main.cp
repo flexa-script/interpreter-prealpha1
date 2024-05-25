@@ -1,4 +1,4 @@
-// https://github.com/saiduc/2048-Cpp
+using cp.std.random;
 
 const PRINT_TOP_LINE = "+---------------------------------------------------------------+";
 const PRINT_BLK_LINE = "                                                               ";
@@ -194,7 +194,7 @@ def counts_zero(board[4][4]: int): int {
 
 def spawn_random(n: int, board[4][4]: int): int[4][4] {
     //var spawn: int = 1 + (rand() % n);
-    var spawn: int = 1 + (1 % n);
+    var spawn: int = 1 + (random::randi() % n);
     var p: int = 0;
     var spawn2: bool = true;
     for (var i: int = 0; i < 4; i++) {

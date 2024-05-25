@@ -80,4 +80,9 @@ namespace axe {
         return path.remove_filename().generic_string();
     }
 
+    std::string Util::normalize_path_sep(std::string path) {
+        std::string sep(std::string{ std::filesystem::path::preferred_separator });
+        return replace(replace(path, "\\", sep), "/", sep);
+    }
+
 }

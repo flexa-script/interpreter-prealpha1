@@ -62,11 +62,12 @@
     <ClInclude Include="ast.hpp" />
     <ClInclude Include="cpinterpreter.hpp" />
     <ClInclude Include="cprepl.hpp" />
+    <ClInclude Include="cpsource.hpp" />
     <ClInclude Include="cputil.hpp" />
     <ClInclude Include="interpreter.hpp" />
     <ClInclude Include="interpreter_scope.hpp" />
     <ClInclude Include="lexer.hpp" />
-    <ClInclude Include="libpreprocessor.hpp" />
+    <ClInclude Include="cplibloader.hpp" />
     <ClInclude Include="logging.hpp" />
     <ClInclude Include="modules.hpp" />
     <ClInclude Include="olcPixelGameEngine.h" />
@@ -82,11 +83,12 @@
     <ClCompile Include="ast.cpp" />
     <ClCompile Include="cpinterpreter.cpp" />
     <ClCompile Include="cprepl.cpp" />
+    <ClCompile Include="cpsource.cpp" />
     <ClCompile Include="cputil.cpp" />
     <ClCompile Include="interpreter.cpp" />
     <ClCompile Include="interpreter_scope.cpp" />
     <ClCompile Include="lexer.cpp" />
-    <ClCompile Include="libpreprocessor.cpp" />
+    <ClCompile Include="cplibloader.cpp" />
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="parser.cpp" />
