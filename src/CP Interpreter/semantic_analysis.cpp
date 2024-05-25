@@ -170,7 +170,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 			//}
 
 			if (astnode->expr) {
-				if (!is_array(decl_current_expr->type) && !is_void(decl_current_expr->type)) {
+				if (!is_array(decl_current_expr->type) && !is_void(decl_current_expr->type) && decl_current_expr->dim.size() == 0) {
 					throw std::runtime_error(msg_header(astnode->row, astnode->col) + "expected array expression assigning '" + astnode->identifier + "'");
 				}
 
@@ -628,8 +628,11 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	}
 	catch (...) {
 		try {
-			builtin_functions[astnode->identifier](signature);
-			return;
+			if (builtin_functions.find(astnode->identifier) != builtin_functions.end()) {
+				builtin_functions[astnode->identifier](signature);
+				return;
+			}
+			throw std::runtime_error("");
 		}
 		catch (std::runtime_error ex) {
 			std::string errmsg = "";
