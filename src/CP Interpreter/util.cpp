@@ -1,12 +1,27 @@
+#include <Windows.h>
 #include <algorithm>
 #include <sstream>
 #include <iostream>
 #include <iterator>
+#include <filesystem>
 
 #include "util.hpp"
 
 
 namespace axe {
+
+    std::string Util::replace(std::string str, const std::string from, const std::string to) {
+        std::string replaced = str;
+        if (from.empty()){
+            return;
+        }
+        size_t start_pos = 0;
+        while ((start_pos = replaced.find(from, start_pos)) != std::string::npos) {
+            replaced.replace(start_pos, from.length(), to);
+            start_pos += to.length();
+        }
+        return replaced;
+    }
 
 	std::string Util::tolower(std::string str) {
 		std::string lowerStr = str;
@@ -47,11 +62,22 @@ namespace axe {
     }
 
     unsigned int Util::hashcode(const std::string& str) {
-        int h = 0;
+        unsigned int h = 0;
         for (size_t i = 0; i < str.size(); ++i){
             h = h * 31 + static_cast<unsigned int>(str[i]);
         }
         return h;
+    }
+
+    std::string Util::get_current_path() {
+        HMODULE this_process_handle = GetModuleHandle(NULL);
+        wchar_t this_process_path[MAX_PATH];
+
+        GetModuleFileNameW(NULL, this_process_path, sizeof(this_process_path));
+
+        std::filesystem::path path(this_process_path);
+
+        return path.remove_filename().generic_string();
     }
 
 }

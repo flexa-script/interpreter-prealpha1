@@ -1,14 +1,20 @@
 // https://github.com/saiduc/2048-Cpp
 
+const PRINT_TOP_LINE = "+---------------------------------------------------------------+";
+const PRINT_BLK_LINE = "                                                               ";
 
 def print_board(board[4][4]: int) {
     system("cls");
+    print(PRINT_TOP_LINE);
     for (var i: int = 0; i < 4; i++) {
+        print("\n|" + PRINT_BLK_LINE + "|\n|" + PRINT_BLK_LINE + "|\n|");
         for (var j: int = 0; j < 4; j++) {
-            print("[" + string(board[i][j]) + "]\t");
+            print("\t" + string(board[i][j]) + "\t");
         }
-        print("\n\n");
+        print("|\n|" + PRINT_BLK_LINE + "|");
     }
+    print("\n|" + PRINT_BLK_LINE + "|\n");
+    print(PRINT_TOP_LINE);
 }
 
 def moves_up(board[4][4]: int): int[4][4] {

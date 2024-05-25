@@ -41,6 +41,7 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 	std::string libname = axe::Util::join(astnode->library, ".");
 
 	auto program = programs[libname];
+	// find in cp core libs
 
 	// add lib to current program
 	current_program->libs.push_back(libname);
@@ -890,9 +891,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	auto nmspace = get_namespace(astnode->nmspace);
 	InterpreterScope* id_scope = nullptr;
 	long long i;
-	if (astnode->identifier_vector[0].identifier == "List") {
-		int a = 0;
-	}
+
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); --i) {
 		if (i <= 0) {
 			auto dim = astnode->identifier_vector[0].access_vector;
@@ -1362,30 +1361,19 @@ void Interpreter::register_built_in_functions() {
 		if (args.size() > 0) {
 			builtin_functions["print"](args);
 		}
-
 		std::string line;
 		std::getline(std::cin, line);
-
 		current_expression_value.set(cp_string(std::move(line)));
 	};
 
 	builtin_functions["readch"] = [this](std::vector<std::pair<Type, Value*>> args) {
-		char ch;
-		//std::cout << "chamou\n";
 		while (!_kbhit());
-		ch = _getch();
-		//std::cout << "char="<<ch<<std::endl;
+		char ch = _getch();
 		current_expression_value.set(cp_char(ch));
 	};
 
 	builtin_functions["system"] = [this](std::vector<std::pair<Type, Value*>> args) {
 		system(args[0].second->s.c_str());
-	};
-
-	builtin_functions["round"] = [this](std::vector<std::pair<Type, Value*>> args) {
-		auto val = Value(Type::T_FLOAT);
-		val.set(cp_float(roundl(args[0].second->f)));
-		current_expression_value = val;
 	};
 
 	builtin_functions["len"] = [this](std::vector<std::pair<Type, Value*>> args) {

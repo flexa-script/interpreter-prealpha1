@@ -39,6 +39,7 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	std::string libname = axe::Util::join(astnode->library, ".");
 
 	if (programs.find(libname) == programs.end()) {
+		// find in cp core libs
 		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "lib '" + libname + "' not found");
 	}
 
@@ -1334,21 +1335,6 @@ void SemanticAnalyser::register_built_in_functions() {
 		}
 	};
 
-	builtin_functions["round"] = [this](std::vector<Type> args) {
-		if (args.size() != 1) {
-			throw std::runtime_error("expected float parameter");
-		}
-		if (!is_float(args[0])) {
-			throw std::runtime_error("can't round type " + type_str(args[0]));
-		}
-
-		current_expression = SemanticValue();
-		current_expression.type = Type::T_FLOAT;
-		current_expression.type_name = "";
-		current_expression.array_type = Type::T_UNDEF;
-		current_expression.is_const = false;
-	};
-
 	builtin_functions["len"] = [this](std::vector<Type> args) {
 		if (args.size() != 1) {
 			throw std::runtime_error("expected string or array parameter");
@@ -1363,19 +1349,4 @@ void SemanticAnalyser::register_built_in_functions() {
 		current_expression.array_type = Type::T_UNDEF;
 		current_expression.is_const = false;
 	};
-
-	//builtin_functions["rand"] = [this](std::vector<Type> args) {
-	//	if (args.size() != 1) {
-	//		throw std::runtime_error("expected string or array parameter");
-	//	}
-	//	if (!is_array(args[0]) && !is_string(args[0])) {
-	//		throw std::runtime_error("can't read len of type " + type_str(current_expression.type));
-	//	}
-
-	//	current_expression = SemanticValue();
-	//	current_expression.type = Type::T_INT;
-	//	current_expression.type_name = "";
-	//	current_expression.array_type = Type::T_UNDEF;
-	//	current_expression.is_const = false;
-	//};
 }

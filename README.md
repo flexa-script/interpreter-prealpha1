@@ -30,6 +30,7 @@
 - [ ] Add callback
     - [ ] as type function
 - [ ] Pass parameter by reference
+- [ ] Add inifit parameters
 - [ ] Add statements:
     - [X] for
     - [X] foreach
@@ -54,12 +55,8 @@
         - [ ] add namespace to type
     - [ ] typeid: returns hash of typeof
 - [X] Add built in funcs:
-    - [ ] abs: ret absolute value of a number
-    - [ ] max: return greather from two or more parameters
-    - [ ] min: return lesser from two or more parameters
-    - [ ] sum: sum all items from array
     - [X] len: returns size of array/string
-    - [X] round: round a float number
+    - [ ] round: round a float number
     - [ ] sorted: sort a list
     - [ ] reversed: reverse a list
 - [X] Let functions return array
@@ -85,10 +82,6 @@
     - [ ] Keyboard
     - [ ] Time
     - [ ] Web/API
-    - [ ] Util
-    - [ ] Random (https://docs.godotengine.org/en/stable/classes/class_randomnumbergenerator.html):
-        - [ ] randi(from: int, to: int): int
-        - [ ] seed(seed: int)
 - [ ] General otimizations:
     - [ ] Remove duplicate codes
         - [ ] Type checks
@@ -96,12 +89,24 @@
         - [X] Array size check from interpreter
 - [ ] Add CP library:
     - [ ] String
+    - [ ] Array:
+        - [ ] sorted: sort a list
+        - [ ] reversed: reverse a list
     - [ ] Math
+        - [X] abs: ret absolute value of a number
+        - [X] max: return greather from two or more parameters
+        - [X] min: return lesser from two or more parameters
+        - [ ] sum: sum all items from array
+        - [ ] round: round a float number
+    - [ ] Random (https://docs.godotengine.org/en/stable/classes/class_randomnumbergenerator.html):
+        - [ ] randi(from: int, to: int): int
+        - [ ] seed(seed: int)
     - [ ] Collections
         - [ ] List
         - [ ] Queue
         - [ ] Stack
-    - [ ] Util
+        - [ ] Dict
+    - [ ] Util?
 
 ## Errors
 - Errors has CP prefix, eg. CP9999

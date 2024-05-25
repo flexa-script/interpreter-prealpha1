@@ -1,3 +1,4 @@
+#include "util.hpp"
 #include "cprepl.hpp"
 #include "cpinterpreter.hpp"
 //#include "logging.hpp"
@@ -5,6 +6,7 @@
 
 
 int main(int argc, const char* argv[]) {
+
 	//auto log = axe::Logger(axe::DEBUG, ".\\data.log");
 
 	//for (int i = 0; i < argc; ++i) {

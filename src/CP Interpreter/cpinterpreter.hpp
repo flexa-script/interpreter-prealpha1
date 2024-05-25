@@ -1,18 +1,6 @@
 #ifndef CPINTERPRETER_HPP
 #define CPINTERPRETER_HPP
 
-#include <iostream>
-#include <fstream>
-#include <regex>
-#include <iomanip>
-
-#include "lexer.hpp"
-#include "parser.hpp"
-#include "semantic_analysis.hpp"
-#include "interpreter.hpp"
-#include "util.hpp"
-#include "cputil.hpp"
-
 
 typedef struct Program {
 public:

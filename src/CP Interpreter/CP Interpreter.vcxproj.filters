@@ -49,6 +49,9 @@
     <Filter Include="Source Files\vendor">
       <UniqueIdentifier>{5fa8aaa9-1151-4dea-967e-08b7509fe366}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\modules">
+      <UniqueIdentifier>{4f752d3d-3fc0-49be-beef-da7b6651996b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lexer.hpp">
@@ -78,18 +81,6 @@
     <ClInclude Include="interpreter_scope.hpp">
       <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
-    <ClInclude Include="cpinterpreter.hpp">
-      <Filter>Header Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="cprepl.hpp">
-      <Filter>Header Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="cputil.hpp">
-      <Filter>Header Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="util.hpp">
-      <Filter>Header Files\core</Filter>
-    </ClInclude>
     <ClInclude Include="olcPixelGameEngine.h">
       <Filter>Header Files\vendor</Filter>
     </ClInclude>
@@ -101,6 +92,21 @@
     </ClInclude>
     <ClInclude Include="modules.hpp">
       <Filter>Header Files\vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="util.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="libpreprocessor.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="cputil.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpinterpreter.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cprepl.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -134,20 +140,23 @@
     <ClCompile Include="visitor.cpp">
       <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
-    <ClCompile Include="cpinterpreter.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="cprepl.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="cputil.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="util.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
     <ClCompile Include="logging.cpp">
       <Filter>Source Files\vendor</Filter>
+    </ClCompile>
+    <ClCompile Include="util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cputil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cpinterpreter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cprepl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libpreprocessor.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
