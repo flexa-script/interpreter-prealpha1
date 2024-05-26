@@ -152,12 +152,6 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 				found = false;
 				break;
 			}
-
-			//if (func_sig.at(it) != signature.at(it) && func_sig.at(it) != parser::Type::T_ANY
-			//	&& signature.at(it) != parser::Type::T_VOID && signature.at(it) != parser::Type::T_UNDEF) {
-			//	found = false;
-			//	break;
-			//}
 		}
 		if (found) return i->second;
 	}
