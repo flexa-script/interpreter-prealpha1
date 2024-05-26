@@ -16,7 +16,7 @@ namespace visitor {
 	class Interpreter : public Visitor {
 	private:
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
-		std::map<std::string, std::function<void(std::vector<std::pair<parser::Type, Value*>>)>> builtin_functions;
+		std::map<std::string, std::function<void()>> builtin_functions;
 		std::vector<std::string> libs;
 		Value current_expression_value;
 		std::vector<std::string> current_function_parameters;

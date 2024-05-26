@@ -1030,7 +1030,7 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 }
 
 void Interpreter::visit(ASTFunctionCallNode* astnode) {
-	std::vector<Type> signature;
+	std::vector<TypeDefinition> signature;
 	std::vector<std::pair<Type, Value*>> current_function_arguments;
 
 	// for each parameter
@@ -1039,7 +1039,9 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		param->accept(this);
 
 		// add the type of current expr to signature
-		signature.push_back(current_expression_value.curr_type);
+		auto td = TypeDefinition(current_expression_value.type, current_expression_value.arr_type,
+			std::vector<ASTExprNode*>(), "", "");
+		signature.push_back(td);
 
 		// add the current expr to the local vector of function arguments, to be
 		// used in the creation of the function scope
@@ -1048,19 +1050,20 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		current_function_arguments.emplace_back(current_expression_value.curr_type, value);
 	}
 
+	// update the global vector current_function_arguments
+	for (auto& arg : current_function_arguments) {
+		this->current_function_arguments.push_back(arg);
+	}
+
 	// determine in which scope the function is declared
 	auto nmspace = get_namespace(astnode->nmspace);
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(astnode->identifier, signature); i--) {
 		if (i <= 0) {
-			builtin_functions[astnode->identifier](current_function_arguments);
+			builtin_functions[astnode->identifier]();
+			this->current_function_arguments.clear();
 			return;
 		}
-	}
-
-	// update the global vector current_function_arguments
-	for (auto& arg : current_function_arguments) {
-		this->current_function_arguments.push_back(arg);
 	}
 
 	auto func_scope = scopes[nmspace][i];
@@ -1353,31 +1356,31 @@ unsigned int Interpreter::hash(ASTIdentifierNode* astnode) {
 }
 
 void Interpreter::register_built_in_functions() {
-	builtin_functions["print"] = [this](std::vector<std::pair<Type, Value*>> args) {
-		std::cout << parse_value_to_string(*args[0].second);
+	builtin_functions["print"] = [this]() {
+		std::cout << parse_value_to_string(*current_function_arguments[0].second);
 	};
 
-	builtin_functions["read"] = [this](std::vector<std::pair<Type, Value*>> args) {
-		if (args.size() > 0) {
-			builtin_functions["print"](args);
+	builtin_functions["read"] = [this]() {
+		if (current_function_arguments.size() > 0) {
+			builtin_functions["print"]();
 		}
 		std::string line;
 		std::getline(std::cin, line);
 		current_expression_value.set(cp_string(std::move(line)));
 	};
 
-	builtin_functions["readch"] = [this](std::vector<std::pair<Type, Value*>> args) {
+	builtin_functions["readch"] = [this]() {
 		while (!_kbhit());
 		char ch = _getch();
 		current_expression_value.set(cp_char(ch));
 	};
 
-	builtin_functions["system"] = [this](std::vector<std::pair<Type, Value*>> args) {
-		system(args[0].second->s.c_str());
+	builtin_functions["system"] = [this]() {
+		system(current_function_arguments[0].second->s.c_str());
 	};
 
-	builtin_functions["len"] = [this](std::vector<std::pair<Type, Value*>> args) {
-		auto& curr_val = args[0].second;
+	builtin_functions["len"] = [this]() {
+		auto& curr_val = current_function_arguments[0].second;
 		auto val = Value(Type::T_INT);
 
 		if (is_array(curr_val->curr_type)) {

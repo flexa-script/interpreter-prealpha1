@@ -23,20 +23,20 @@ namespace visitor {
 
 		bool already_declared_structure_definition(std::string);
 		bool already_declared_variable(std::string);
-		bool already_declared_function(std::string, std::vector<parser::Type>);
+		bool already_declared_function(std::string, std::vector<parser::TypeDefinition>);
 
 		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition>, unsigned int, unsigned int);
 		void declare_variable(std::string, parser::Type, parser::Type, std::vector<parser::ASTExprNode*>,
 			std::string, std::string, parser::SemanticValue*, bool, unsigned int, unsigned int);
 		void declare_function(std::string, parser::Type, std::string, std::string, parser::Type,
-			std::vector<parser::ASTExprNode*>, std::vector<parser::Type>, std::vector<parser::VariableDefinition>,
+			std::vector<parser::ASTExprNode*>, std::vector<parser::TypeDefinition>, std::vector<parser::VariableDefinition>,
 			parser::ASTBlockNode*, unsigned int, unsigned int);
 
 		void change_current_variable_type(std::string, parser::Type);
 		void change_variable_type_name(std::string, std::string);
 
 		parser::StructureDefinition find_declared_structure_definition(std::string);
-		parser::FunctionDefinition find_declared_function(std::string, std::vector<parser::Type>);
+		parser::FunctionDefinition find_declared_function(std::string, std::vector<parser::TypeDefinition>);
 		parser::SemanticVariable* find_declared_variable(std::string);
 
 	};

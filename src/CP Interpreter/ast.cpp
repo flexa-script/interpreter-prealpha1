@@ -61,7 +61,7 @@ StructureDefinition::StructureDefinition(std::string identifier, std::vector<Var
 	: CodePosition(row, col), identifier(identifier), variables(variables) {}
 
 FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, std::string type_name_space, Type array_type,
-	std::vector<ASTExprNode*> dim, std::vector<parser::Type> signature, std::vector<parser::VariableDefinition> parameters,
+	std::vector<ASTExprNode*> dim, std::vector<parser::TypeDefinition> signature, std::vector<parser::VariableDefinition> parameters,
 	ASTBlockNode* block, unsigned int row, unsigned int col)
 	: identifier(identifier), signature(signature), parameters(parameters),
 	TypeDefinition(type, array_type, dim, type_name, type_name_space), CodePosition(row, col) {}
@@ -129,11 +129,12 @@ ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std
 	: ASTStatementNode(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
 	identifier(std::move(identifier)), parameters(std::move(parameters)), block(block) {
 	// generate signature
-	this->signature = std::vector<Type>();
+	this->signature = std::vector<TypeDefinition>();
 
 	for (auto param : this->parameters) {
 		variable_names.push_back(param.identifier);
-		signature.push_back(param.type);
+		auto td = TypeDefinition(param.type, param.array_type, param.dim, param.type_name, param.type_name_space);
+		signature.push_back(td);
 	}
 }
 

@@ -21,7 +21,7 @@ SemanticVariable* SemanticScope::find_declared_variable(std::string identifier) 
 	return variable_symbol_table[identifier];
 }
 
-FunctionDefinition SemanticScope::find_declared_function(std::string identifier, std::vector<Type> signature) {
+FunctionDefinition SemanticScope::find_declared_function(std::string identifier, std::vector<TypeDefinition> signature) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
 	// if key is not present in multimap
@@ -34,8 +34,11 @@ FunctionDefinition SemanticScope::find_declared_function(std::string identifier,
 		auto& func_sig = i->second.signature;
 		auto found = true;
 		for (size_t it = 0; it < func_sig.size(); ++it) {
-			if (func_sig.at(it) != signature.at(it) && func_sig.at(it) != Type::T_ANY
-				&& signature.at(it) != Type::T_VOID && signature.at(it) != Type::T_UNDEF && signature.at(it) != Type::T_ANY) {
+			auto is_arr = is_array(func_sig.at(it).type) && is_array(signature.at(it).type);
+			auto ftype = is_arr ? func_sig.at(it).array_type : func_sig.at(it).type;
+			auto stype = is_arr ? signature.at(it).array_type : signature.at(it).type;
+			if (!match_type(ftype, stype) && !is_any(ftype)
+				&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
 				found = false;
 				break;
 			}
@@ -54,7 +57,7 @@ bool SemanticScope::already_declared_variable(std::string identifier) {
 	return variable_symbol_table.find(identifier) != variable_symbol_table.end();
 }
 
-bool SemanticScope::already_declared_function(std::string identifier, std::vector<Type> signature) {
+bool SemanticScope::already_declared_function(std::string identifier, std::vector<TypeDefinition> signature) {
 	try {
 		find_declared_function(identifier, signature);
 		return true;
@@ -77,7 +80,7 @@ void SemanticScope::declare_variable(std::string identifier, Type type, Type arr
 }
 
 void SemanticScope::declare_function(std::string identifier, Type type, std::string type_name, std::string type_name_space,
-	Type array_type, std::vector<ASTExprNode*> dim, std::vector<Type> signature, std::vector<VariableDefinition> parameters,
+	Type array_type, std::vector<ASTExprNode*> dim, std::vector<TypeDefinition> signature, std::vector<VariableDefinition> parameters,
 	ASTBlockNode* block, unsigned int row, unsigned int col) {
 	FunctionDefinition fun(identifier, type, type_name, type_name_space, array_type, dim, signature, parameters, block, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));

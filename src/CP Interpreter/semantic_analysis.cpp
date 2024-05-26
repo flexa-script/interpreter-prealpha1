@@ -131,6 +131,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	}
 	// equal types and special types (any, struct and array)
 	else if (match_type(astnode->type, current_expression.type) // types match
+		|| is_array(current_expression.type) && match_type(astnode->type, current_expression.array_type) // array types match
 		|| is_any(astnode->type) || is_struct(astnode->type) || is_array(astnode->type) // variable special types
 		|| is_void(current_expression.type) || is_undefined(current_expression.type)) { // special expressions
 
@@ -198,6 +199,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		}
 		// handle equal types or any
 		else if (match_type(astnode->type, current_expression.type) || is_any(astnode->type)
+			|| is_array(current_expression.type) && match_type(astnode->type, current_expression.array_type) // array types match
 			|| is_void(current_expression.type) || is_undefined(current_expression.type)) {
 			current_scope->declare_variable(astnode->identifier, astnode_type, astnode_array_type,
 				astnode->dim, astnode_type_name, astnode->type_name_space, decl_current_expr, astnode->is_const, astnode->row, astnode->col);
@@ -596,7 +598,7 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 	}
 }
 
-SemanticScope* SemanticAnalyser::get_inner_most_function_scope(std::string nmspace, std::string identifier, std::vector<Type> signature) {
+SemanticScope* SemanticAnalyser::get_inner_most_function_scope(std::string nmspace, std::string identifier, std::vector<TypeDefinition> signature) {
 	// determine the inner-most scope in which the value is declared
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); i--) {
@@ -609,18 +611,19 @@ SemanticScope* SemanticAnalyser::get_inner_most_function_scope(std::string nmspa
 
 void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	// determine the signature of the function
-	std::vector<Type> signature;
+	std::vector<TypeDefinition> signature = std::vector<TypeDefinition>();
 
 	// for each parameter
 	for (auto param : astnode->parameters) {
 		// visit to update current expr type
 		param->accept(this);
 
-		// add the type of current expr to signature
-		signature.push_back(current_expression.type);
+		auto td = TypeDefinition(current_expression.type, current_expression.array_type, current_expression.dim,
+			current_expression.type_name, current_expression.type_name_space);
+		signature.push_back(td);
 	}
 
-	// make sure the function exists in some scope i
+	// make sure the function exists in some scope
 	SemanticScope* curr_scope;
 	try {
 		auto nmspace = get_namespace(astnode->nmspace);
@@ -643,7 +646,7 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 			else {
 				std::string func_name = astnode->identifier + "(";
 				for (auto param : signature) {
-					func_name += type_str(param) + ", ";
+					func_name += type_str(param.type) + ", ";
 				}
 				if (signature.size() > 0) {
 					func_name.pop_back();   // remove last whitespace
@@ -670,10 +673,11 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 	// first check that all enclosing scopes have not already defined the function
 	for (auto& scope : scopes[get_namespace()]) {
+		// TODO: differ array types
 		if (scope->already_declared_function(astnode->identifier, astnode->signature)) {
 			std::string signature = "(";
 			for (auto param : astnode->signature) {
-				signature += type_str(param) + ", ";
+				signature += type_str(param.type) + ", ";
 			}
 			if (astnode->signature.size() > 0) {
 				signature.pop_back();   // remove last whitespace
@@ -1297,13 +1301,13 @@ unsigned int SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 }
 
 void SemanticAnalyser::register_built_in_functions() {
-	builtin_functions["print"] = [](std::vector<Type> args) {
+	builtin_functions["print"] = [](std::vector<TypeDefinition> args) {
 		if (args.size() != 1) {
 			throw std::runtime_error("expected one parameter");
 		}
 	};
 
-	builtin_functions["read"] = [this](std::vector<Type> args) {
+	builtin_functions["read"] = [this](std::vector<TypeDefinition> args) {
 		auto size = args.size();
 		if (size < 1 && size > 2) {
 			throw std::runtime_error("expected just one optional parameter");
@@ -1316,7 +1320,7 @@ void SemanticAnalyser::register_built_in_functions() {
 		current_expression.is_const = false;
 	};
 
-	builtin_functions["readch"] = [this](std::vector<Type> args) {
+	builtin_functions["readch"] = [this](std::vector<TypeDefinition> args) {
 		if (args.size() > 0) {
 			throw std::runtime_error("readch do not expect parameter");
 		}
@@ -1328,20 +1332,20 @@ void SemanticAnalyser::register_built_in_functions() {
 		current_expression.is_const = false;
 	};
 
-	builtin_functions["system"] = [](std::vector<Type> args) {
+	builtin_functions["system"] = [](std::vector<TypeDefinition> args) {
 		if (args.size() != 1) {
 			throw std::runtime_error("expected string parameter");
 		}
-		if (!is_string(args[0])) {
+		if (!is_string(args[0].type)) {
 			throw std::runtime_error("parameter must be a string");
 		}
 	};
 
-	builtin_functions["len"] = [this](std::vector<Type> args) {
+	builtin_functions["len"] = [this](std::vector<TypeDefinition> args) {
 		if (args.size() != 1) {
 			throw std::runtime_error("expected string or array parameter");
 		}
-		if (!is_array(args[0]) && !is_string(args[0])) {
+		if (!is_array(args[0].type) && !is_string(args[0].type)) {
 			throw std::runtime_error("can't read len of type " + type_str(current_expression.type));
 		}
 

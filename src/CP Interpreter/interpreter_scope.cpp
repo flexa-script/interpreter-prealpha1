@@ -29,7 +29,7 @@ bool InterpreterScope::already_declared_structure_definition(std::string identif
 	return structure_symbol_table.find(identifier) != structure_symbol_table.end();
 }
 
-bool InterpreterScope::already_declared_function(std::string identifier, std::vector<parser::Type> signature) {
+bool InterpreterScope::already_declared_function(std::string identifier, std::vector<parser::TypeDefinition> signature) {
 	try {
 		find_declared_function(identifier, signature);
 		return true;
@@ -119,7 +119,7 @@ void InterpreterScope::declare_structure_definition(std::string name, std::vecto
 	structure_symbol_table[name] = (type);
 }
 
-void InterpreterScope::declare_function(std::string identifier, std::vector<parser::Type> signature, std::vector<std::string> variable_names, parser::ASTBlockNode* block) {
+void InterpreterScope::declare_function(std::string identifier, std::vector<parser::TypeDefinition> signature, std::vector<std::string> variable_names, parser::ASTBlockNode* block) {
 	function_symbol_table.insert(std::make_pair(identifier, std::make_tuple(signature, variable_names, block)));
 }
 
@@ -131,7 +131,7 @@ Value* InterpreterScope::find_declared_variable(std::string identifier) {
 	return variable_symbol_table[identifier];
 }
 
-std::tuple<std::vector<parser::Type>, std::vector<std::string>, parser::ASTBlockNode*> InterpreterScope::find_declared_function(std::string identifier, std::vector<parser::Type> signature) {
+interpreter_function_t InterpreterScope::find_declared_function(std::string identifier, std::vector<parser::TypeDefinition> signature) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
 	// if key is not present in multimap
@@ -141,14 +141,23 @@ std::tuple<std::vector<parser::Type>, std::vector<std::string>, parser::ASTBlock
 
 	// check signature for each function in multimap
 	for (auto& i = funcs.first; i != funcs.second; ++i) {
-		auto& funcSig = std::get<0>(i->second);
+		auto& func_sig = std::get<0>(i->second);
 		auto found = true;
-		for (size_t it = 0; it < funcSig.size(); ++it) {
-			if (funcSig.at(it) != signature.at(it) && funcSig.at(it) != parser::Type::T_ANY
-				&& signature.at(it) != parser::Type::T_VOID && signature.at(it) != parser::Type::T_UNDEF) {
+		for (size_t it = 0; it < func_sig.size(); ++it) {
+			auto is_arr = is_array(func_sig.at(it).type) && is_array(signature.at(it).type);
+			auto ftype = is_arr ? func_sig.at(it).array_type : func_sig.at(it).type;
+			auto stype = is_arr ? signature.at(it).array_type : signature.at(it).type;
+			if (!match_type(ftype, stype) && !is_any(ftype)
+				&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
 				found = false;
 				break;
 			}
+
+			//if (func_sig.at(it) != signature.at(it) && func_sig.at(it) != parser::Type::T_ANY
+			//	&& signature.at(it) != parser::Type::T_VOID && signature.at(it) != parser::Type::T_UNDEF) {
+			//	found = false;
+			//	break;
+			//}
 		}
 		if (found) return i->second;
 	}

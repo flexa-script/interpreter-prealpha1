@@ -16,7 +16,7 @@ namespace visitor {
 	class SemanticAnalyser : Visitor {
 	private:
 		std::map<std::string, std::vector<SemanticScope*>> scopes;
-		std::map<std::string, std::function<void(std::vector<parser::Type>)>> builtin_functions;
+		std::map<std::string, std::function<void(std::vector<parser::TypeDefinition>)>> builtin_functions;
 		std::vector<std::string> libs;
 		std::string current_namespace;
 		parser::SemanticValue current_expression;
@@ -32,7 +32,7 @@ namespace visitor {
 		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);
 
 		SemanticScope* get_inner_most_variable_scope(std::string, std::string);
-		SemanticScope* get_inner_most_function_scope(std::string, std::string, std::vector<parser::Type>);
+		SemanticScope* get_inner_most_function_scope(std::string, std::string, std::vector<parser::TypeDefinition>);
 		SemanticScope* get_inner_most_struct_definition_scope(std::string, std::string);
 
 		void determine_array_type(parser::ASTArrayConstructorNode*);

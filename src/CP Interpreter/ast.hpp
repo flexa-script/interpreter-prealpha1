@@ -70,11 +70,11 @@ namespace parser {
 	class FunctionDefinition : public TypeDefinition, public CodePosition {
 	public:
 		std::string identifier;
-		std::vector<parser::Type> signature;
+		std::vector<parser::TypeDefinition> signature;
 		std::vector<parser::VariableDefinition> parameters;
 
 		FunctionDefinition(std::string, Type, std::string, std::string, Type, std::vector<ASTExprNode*>,
-			std::vector<parser::Type>, std::vector<parser::VariableDefinition>, ASTBlockNode*,
+			std::vector<parser::TypeDefinition>, std::vector<parser::VariableDefinition>, ASTBlockNode*,
 			unsigned int, unsigned int);
 		FunctionDefinition() = default;
 	};
@@ -276,7 +276,7 @@ namespace parser {
 		std::string identifier;
 		std::vector<VariableDefinition> parameters;
 		std::vector<std::string> variable_names;
-		std::vector<Type> signature;
+		std::vector<TypeDefinition> signature;
 		ASTBlockNode* block;
 
 		ASTFunctionDefinitionNode(std::string, std::vector<VariableDefinition>, Type, std::string,

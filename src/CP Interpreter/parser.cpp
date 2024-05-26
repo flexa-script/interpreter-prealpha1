@@ -318,7 +318,9 @@ VariableDefinition* Parser::parse_formal_param() {
 		else if (type == Type::T_ARRAY) {
 			current_array_type = parse_type();
 
-			if (current_array_type == parser::Type::T_UNDEF || current_array_type == parser::Type::T_VOID || current_array_type == parser::Type::T_ARRAY) {
+			if (current_array_type == parser::Type::T_UNDEF
+				|| current_array_type == parser::Type::T_VOID
+				|| current_array_type == parser::Type::T_ARRAY) {
 				current_array_type = parser::Type::T_ANY;
 			}
 		}
