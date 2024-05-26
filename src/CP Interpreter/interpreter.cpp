@@ -280,11 +280,12 @@ cp_string Interpreter::do_operation(cp_string lval, cp_string rval, std::string 
 
 void Interpreter::visit(ASTAssignmentNode* astnode) {
 	// determine innermost scope in which variable is declared
+	auto nmspace = get_namespace();
 	size_t i;
-	for (i = scopes[get_namespace()].size() - 1; !scopes[get_namespace()][i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
 
-	Value* root = scopes[get_namespace()][i]->find_declared_variable(astnode->identifier_vector[0].identifier);
-	Value* value = access_value(scopes[get_namespace()][i], root, astnode->identifier_vector);
+	Value* root = scopes[nmspace][i]->find_declared_variable(astnode->identifier_vector[0].identifier);
+	Value* value = access_value(scopes[nmspace][i], root, astnode->identifier_vector);
 
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
@@ -330,9 +331,10 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 void Interpreter::visit(ASTReturnNode* astnode) {
 	// update current expression
 	astnode->expr->accept(this);
-	for (long long i = scopes[get_namespace()].size() - 1; i >= 0; --i) {
-		if (!scopes[get_namespace()][i]->get_name().empty()) {
-			return_from_function_name = scopes[get_namespace()][i]->get_name();
+	auto nmspace = get_namespace();
+	for (long long i = scopes[nmspace].size() - 1; i >= 0; --i) {
+		if (!scopes[nmspace][i]->get_name().empty()) {
+			return_from_function_name = scopes[nmspace][i]->get_name();
 			return_from_function = true;
 			break;
 		}
