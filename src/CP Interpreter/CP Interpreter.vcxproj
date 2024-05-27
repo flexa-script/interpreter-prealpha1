@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ast.hpp" />
+    <ClInclude Include="graphics.hpp" />
     <ClInclude Include="cpinterpreter.hpp" />
     <ClInclude Include="cprepl.hpp" />
     <ClInclude Include="cpsource.hpp" />
@@ -68,35 +69,35 @@
     <ClInclude Include="interpreter_scope.hpp" />
     <ClInclude Include="lexer.hpp" />
     <ClInclude Include="cplibloader.hpp" />
-    <ClInclude Include="logging.hpp" />
-    <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="parser.hpp" />
     <ClInclude Include="semantic_analysis.hpp" />
     <ClInclude Include="semantic_scope.hpp" />
     <ClInclude Include="token.hpp" />
-    <ClInclude Include="util.hpp" />
+    <ClInclude Include="vendor\graphics.hpp" />
+    <ClInclude Include="vendor\logging.hpp" />
+    <ClInclude Include="vendor\util.hpp" />
+    <ClInclude Include="vendor\watch.h" />
     <ClInclude Include="visitor.hpp" />
-    <ClInclude Include="watch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ast.cpp" />
+    <ClCompile Include="graphics.cpp" />
     <ClCompile Include="cpinterpreter.cpp" />
     <ClCompile Include="cprepl.cpp" />
     <ClCompile Include="cpsource.cpp" />
     <ClCompile Include="cputil.cpp" />
-    <ClCompile Include="graphics.cpp" />
-    <ClCompile Include="graphics.hpp" />
     <ClCompile Include="interpreter.cpp" />
     <ClCompile Include="interpreter_scope.cpp" />
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="cplibloader.cpp" />
-    <ClCompile Include="logging.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="semantic_analysis.cpp" />
     <ClCompile Include="semantic_scope.cpp" />
     <ClCompile Include="token.cpp" />
-    <ClCompile Include="util.cpp" />
+    <ClCompile Include="vendor\graphics.cpp" />
+    <ClCompile Include="vendor\logging.cpp" />
+    <ClCompile Include="vendor\util.cpp" />
     <ClCompile Include="visitor.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

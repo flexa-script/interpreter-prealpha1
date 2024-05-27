@@ -2,7 +2,7 @@
 #include <numeric>
 
 #include "ast.hpp"
-#include "util.hpp"
+#include "vendor/util.hpp"
 
 
 using namespace parser;

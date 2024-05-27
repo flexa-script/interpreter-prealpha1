@@ -1,37 +1,30 @@
-/**
- * MIT License
- * Copyright (c) 2024 Carlos Machado
- * v1.0.0
- */
+#ifndef CPCGRAPHICS_HPP
+#define CPCGRAPHICS_HPP
 
-#ifndef GRAPHICS_HPP
-#define GRAPHICS_HPP
+#include "vendor/graphics.hpp"
 
-#include <windows.h>
+class Graphics {
+	Graphics() {
+		axe::Graphics engine;
 
-class SimpleGraphicsEngine {
-public:
-    SimpleGraphicsEngine();
-    ~SimpleGraphicsEngine();
+		if (engine.initialize(L"Graphics", 800, 600)) {
+			while (!engine.is_quit()) {
+				engine.clear_screen(RGB(0, 0, 0));
 
-    bool Initialize(const wchar_t* title, int width, int height);
-    void Run();
-    void ClearScreen(COLORREF color);
-    void DrawPixel(int x, int y, COLORREF color);
+				engine.draw_pixel(100, 100, RGB(255, 0, 0));
+				engine.draw_line(110, 110, 210, 210, RGB(255, 0, 0));
 
-protected:
-    virtual void OnInitialize() {}
-    virtual void OnUpdate() {}
-    virtual void OnDraw() {}
+				engine.draw_rect(120, 50, 100, 100, RGB(0, 255, 0));
+				engine.fill_rect(600, 350, 100, 100, RGB(0, 255, 0));
 
-private:
-    HWND hwnd;
-    HDC hdc;
-    HBITMAP hbmBackBuffer;
-    HDC hdcBackBuffer;
-    int screenWidth, screenHeight;
+				engine.draw_circle(400, 350, 100, RGB(0, 0, 255));
+				engine.fill_circle(600, 100, 100, RGB(0, 0, 255));
 
-    static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+				engine.update();
+			}
+		}
+	}
+
 };
 
-#endif // GRAPHICS_HPP
+#endif // CPCGRAPHICS_HPP

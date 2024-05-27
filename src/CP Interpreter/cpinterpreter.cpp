@@ -8,7 +8,7 @@
 #include "parser.hpp"
 #include "semantic_analysis.hpp"
 #include "interpreter.hpp"
-#include "util.hpp"
+#include "vendor/util.hpp"
 #include "cputil.hpp"
 #include "cpinterpreter.hpp"
 #include "cplibloader.hpp"

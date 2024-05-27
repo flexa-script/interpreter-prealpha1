@@ -28,9 +28,6 @@
     <Filter Include="Header Files\modules">
       <UniqueIdentifier>{7530e65e-0216-4307-87d9-55883f91daca}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\modules\graphics">
-      <UniqueIdentifier>{aa9f5271-3bd5-48a7-8554-1e4accf32dc0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\core">
       <UniqueIdentifier>{f0a1e035-dea8-4051-9d2f-04bf6e738d5e}</UniqueIdentifier>
     </Filter>
@@ -57,6 +54,9 @@
     </Filter>
     <Filter Include="Source Files\cp">
       <UniqueIdentifier>{35d44f8c-d1c2-49fe-8d55-84b2ef768b34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\modules\cp.core">
+      <UniqueIdentifier>{62145de0-2a6a-4615-99e7-af14be83a5bf}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -87,18 +87,6 @@
     <ClInclude Include="interpreter_scope.hpp">
       <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
-    <ClInclude Include="olcPixelGameEngine.h">
-      <Filter>Header Files\vendor</Filter>
-    </ClInclude>
-    <ClInclude Include="watch.h">
-      <Filter>Header Files\vendor</Filter>
-    </ClInclude>
-    <ClInclude Include="logging.hpp">
-      <Filter>Header Files\vendor</Filter>
-    </ClInclude>
-    <ClInclude Include="util.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="cpinterpreter.hpp">
       <Filter>Header Files\cp</Filter>
     </ClInclude>
@@ -113,6 +101,21 @@
     </ClInclude>
     <ClInclude Include="cpsource.hpp">
       <Filter>Header Files\cp</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\graphics.hpp">
+      <Filter>Header Files\vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\logging.hpp">
+      <Filter>Header Files\vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\util.hpp">
+      <Filter>Header Files\vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\watch.h">
+      <Filter>Header Files\vendor</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics.hpp">
+      <Filter>Header Files\modules\cp.core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -146,12 +149,6 @@
     <ClCompile Include="visitor.cpp">
       <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
-    <ClCompile Include="logging.cpp">
-      <Filter>Source Files\vendor</Filter>
-    </ClCompile>
-    <ClCompile Include="util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="cputil.cpp">
       <Filter>Source Files\cp</Filter>
     </ClCompile>
@@ -167,10 +164,16 @@
     <ClCompile Include="cpsource.cpp">
       <Filter>Source Files\cp</Filter>
     </ClCompile>
-    <ClCompile Include="graphics.hpp">
-      <Filter>Header Files\vendor</Filter>
-    </ClCompile>
     <ClCompile Include="graphics.cpp">
+      <Filter>Source Files\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\util.cpp">
+      <Filter>Source Files\vendor</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\logging.cpp">
+      <Filter>Source Files\vendor</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\graphics.cpp">
       <Filter>Source Files\vendor</Filter>
     </ClCompile>
   </ItemGroup>

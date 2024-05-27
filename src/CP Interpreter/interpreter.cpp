@@ -3,8 +3,8 @@
 #include <conio.h>
 
 #include "interpreter.hpp"
-#include "util.hpp"
-#include "watch.h"
+#include "vendor/util.hpp"
+#include "vendor/watch.h"
 
 
 using namespace visitor;
