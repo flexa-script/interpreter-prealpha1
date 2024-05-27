@@ -69,7 +69,6 @@
     <ClInclude Include="lexer.hpp" />
     <ClInclude Include="cplibloader.hpp" />
     <ClInclude Include="logging.hpp" />
-    <ClInclude Include="modules.hpp" />
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="parser.hpp" />
     <ClInclude Include="semantic_analysis.hpp" />
@@ -85,6 +84,8 @@
     <ClCompile Include="cprepl.cpp" />
     <ClCompile Include="cpsource.cpp" />
     <ClCompile Include="cputil.cpp" />
+    <ClCompile Include="graphics.cpp" />
+    <ClCompile Include="graphics.hpp" />
     <ClCompile Include="interpreter.cpp" />
     <ClCompile Include="interpreter_scope.cpp" />
     <ClCompile Include="lexer.cpp" />

@@ -1,3 +1,9 @@
+/**
+ * MIT License
+ * Copyright (c) 2024 Carlos Machado
+ * v1.0.0
+ */
+
 #ifndef LOGGING_HPP
 #define LOGGING_HPP
 
