@@ -19,10 +19,10 @@ namespace visitor {
 		std::map<std::string, std::function<void()>> builtin_functions;
 		std::vector<std::string> libs;
 		Value current_expression_value;
-		std::vector<std::string> current_function_parameters;
-		std::vector<std::pair<parser::Type, Value*>> current_function_arguments;
-		std::string current_function_name;
-		std::string current_function_nmspace;
+		std::string last_function_name;
+		std::vector<std::string> last_function_parameters;
+		std::vector<std::pair<parser::Type, Value*>> last_function_arguments;
+		std::stack<std::string> current_function_nmspace;
 		bool is_function_context;
 		std::string return_from_function_name;
 		bool return_from_function = false;
