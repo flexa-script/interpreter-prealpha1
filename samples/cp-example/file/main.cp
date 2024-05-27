@@ -5,23 +5,15 @@ const PRINT_TOP_LINE = "+---------------------------------------+";
 const PRINT_BLK_LINE = "                                       ";
 
 def print_board(board[4][4]: int) {
-    // system("cls");
-    // println("\nchamou "+this);
-    // println("\n"+string(board));
+    system("cls");
     print(PRINT_TOP_LINE);
-    // println("antes for");
     for (var i: int = 0; i < 4; i++) {
-        // print("i="+string(i));
         print("\n|" + PRINT_BLK_LINE + "|\n|" + PRINT_BLK_LINE + "|\n|");
         for (var j: int = 0; j < 4; j++) {
-            // print("j="+string(j));
             print("\t" + string(board[i][j]));
-            // print("board[i][j]="+string(board[i][j]));
         }
-        // print("fim i="+string(i));
         print("\t|\n|" + PRINT_BLK_LINE + "|");
     }
-    // print("fim loop");
     print("\n|" + PRINT_BLK_LINE + "|\n");
     print(PRINT_TOP_LINE);
 }
@@ -202,33 +194,21 @@ def counts_zero(board[4][4]: int): int {
 }
 
 def spawn_random(n: int, board[4][4]: int): int[4][4] {
-    //var spawn: int = 1 + (rand() % n);
-    // println("\ncall "+this);
-    // println("\ninicio board "+string(board));
-    var rnd = random::randi();
-    println("randi="+string(rnd));
-    var spawn: int = 1 + (rnd % n);
-    println("spawn="+string(spawn));
+    // var rnd = random::randi();
+    var spawn: int = 1 + (random::randi() % n);
     var p: int = 0;
-    // println("p="+string(p));
     var spawn2: bool = true;
-    // println("spawn2="+string(spawn2));
     for (var i: int = 0; i < 4; i++) {
         for (var j: int = 0; j < 4; j++) {
-            // println("\nboard "+string(board));
             if (board[i][j] == 0) {
                 p++;
             }
             if (p == spawn and spawn2 == true) {
-                println("local ["+string(i)+"]["+string(j)+"]");
-                // println("antes assign "+string(board));
                 board[i][j] = 2;
-                // println("\n depois assign "+string(board));
                 spawn2 = false;
             }
         }
     }
-    // println("\nfim "+string(board));
 
     return board;
 }

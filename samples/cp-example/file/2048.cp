@@ -1,7 +1,8 @@
 using cp.std.random;
+using cp.std.print;
 
-const PRINT_TOP_LINE = "+---------------------------------------------------------------+";
-const PRINT_BLK_LINE = "                                                               ";
+const PRINT_TOP_LINE = "+---------------------------------------+";
+const PRINT_BLK_LINE = "                                       ";
 
 def print_board(board[4][4]: int) {
     system("cls");
@@ -9,9 +10,9 @@ def print_board(board[4][4]: int) {
     for (var i: int = 0; i < 4; i++) {
         print("\n|" + PRINT_BLK_LINE + "|\n|" + PRINT_BLK_LINE + "|\n|");
         for (var j: int = 0; j < 4; j++) {
-            print("\t" + string(board[i][j]) + "\t");
+            print("\t" + string(board[i][j]));
         }
-        print("|\n|" + PRINT_BLK_LINE + "|");
+        print("\t|\n|" + PRINT_BLK_LINE + "|");
     }
     print("\n|" + PRINT_BLK_LINE + "|\n");
     print(PRINT_TOP_LINE);
@@ -193,8 +194,9 @@ def counts_zero(board[4][4]: int): int {
 }
 
 def spawn_random(n: int, board[4][4]: int): int[4][4] {
-    //var spawn: int = 1 + (rand() % n);
+    // var rnd = random::randi();
     var spawn: int = 1 + (random::randi() % n);
+    println("spawn="+string(spawn));
     var p: int = 0;
     var spawn2: bool = true;
     for (var i: int = 0; i < 4; i++) {
@@ -203,6 +205,7 @@ def spawn_random(n: int, board[4][4]: int): int[4][4] {
                 p++;
             }
             if (p == spawn and spawn2 == true) {
+                println("local ["+string(i)+"]["+string(j)+"]");
                 board[i][j] = 2;
                 spawn2 = false;
             }
