@@ -3,6 +3,7 @@
 
 #include "semantic_analysis.hpp"
 #include "vendor/util.hpp"
+#include "cpgraphics.hpp"
 
 
 using namespace visitor;
@@ -1365,7 +1366,7 @@ void SemanticAnalyser::register_built_in_functions() {
 	};
 
 	if (axe::Util::contains(included_built_in_libs, built_in_libs[0])) {
-		modules::CPGraphics().register_semantic_functions(this);
+		(new modules::CPGraphics())->register_semantic_functions(this);
 	}
 
 	if (axe::Util::contains(included_built_in_libs, built_in_libs[1])) {

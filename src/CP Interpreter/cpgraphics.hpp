@@ -5,18 +5,10 @@
 #include <string>
 #include <functional>
 
+#include "visitor.hpp"
+#include "semantic_analysis.hpp"
+#include "interpreter.hpp"
 #include "vendor/graphics.hpp"
-
-namespace visitor {
-	class SemanticAnalyser;
-	class Interpreter;
-}
-
-class Value;
-
-namespace parser {
-	enum Type;
-}
 
 namespace modules {
 	class CPGraphics {
@@ -26,8 +18,8 @@ namespace modules {
 	public:
 		CPGraphics();
 
-		void register_semantic_functions(visitor::SemanticAnalyser* semantic_analyser);
-		void register_interpreter_functions(visitor::Interpreter* interpreter);
+		void register_semantic_functions(visitor::Visitor* semantic_analyser);
+		void register_interpreter_functions(visitor::Visitor* interpreter);
 	};
 }
 

@@ -1,10 +1,10 @@
 using cp.core.graphics;
-using cp.std.random;
-using cp.std.math;
+// using cp.std.random;
+// using cp.std.math;
 
 cp::initialize("CP Graphics", 800, 450);
 
-while(!cp::is_quit()) {
+while(not cp::is_quit()) {
     clear_screen(Color{r=0,g=0,b=0});
 
 	draw_pixel(100, 50, Color{r=255,g=0,b=0});

@@ -5,7 +5,9 @@ using namespace modules;
 
 CPGraphics::CPGraphics() : graphic_engine(axe::Graphics()) {}
 
-void CPGraphics::register_interpreter_functions(visitor::Interpreter* interpreter) {
+void CPGraphics::register_interpreter_functions(visitor::Visitor* visitor) {
+	visitor::Interpreter* interpreter = (visitor::Interpreter*)visitor;
+
 	interpreter->builtin_functions["initialize"] = [this, interpreter]() {
 		auto val = Value(parser::Type::T_BOOL);
 
@@ -47,7 +49,9 @@ void CPGraphics::register_interpreter_functions(visitor::Interpreter* interprete
 	};
 }
 
-void CPGraphics::register_semantic_functions(visitor::SemanticAnalyser* semantic_analyser) {
+void CPGraphics::register_semantic_functions(visitor::Visitor* visitor) {
+	visitor::SemanticAnalyser* semantic_analyser = (visitor::SemanticAnalyser*)visitor;
+
 	semantic_analyser->builtin_functions["initialize"] = [semantic_analyser]() {
 		if (semantic_analyser->signature.size() != 3) {
 			throw std::runtime_error("");

@@ -7,10 +7,13 @@
 #include <xutility>
 #include <functional>
 
-#include "cpgraphics.hpp"
 #include "ast.hpp"
 #include "semantic_scope.hpp"
 
+
+namespace modules {
+	class CPGraphics;
+}
 
 namespace visitor {
 

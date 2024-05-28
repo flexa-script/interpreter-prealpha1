@@ -6,11 +6,14 @@
 #include <any>
 #include <functional>
 
-#include "cpgraphics.hpp"
 #include "visitor.hpp"
 #include "ast.hpp"
 #include "interpreter_scope.hpp"
 
+
+namespace modules {
+	class CPGraphics;
+}
 
 namespace visitor {
 
@@ -36,7 +39,7 @@ namespace visitor {
 		bool executed_elif = false;
 		bool has_string_access = false;
 
-		modules::CPGraphics cpgraphics;
+		modules::CPGraphics* cpgraphics;
 
 
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);

@@ -5,6 +5,7 @@
 #include "interpreter.hpp"
 #include "vendor/util.hpp"
 #include "vendor/watch.h"
+#include "cpgraphics.hpp"
 
 
 using namespace visitor;
@@ -1409,8 +1410,8 @@ void Interpreter::register_built_in_functions() {
 	};
 
 	if (axe::Util::contains(included_built_in_libs, built_in_libs[0])) {
-		cpgraphics = modules::CPGraphics();
-		cpgraphics.register_interpreter_functions(this);
+		cpgraphics = new modules::CPGraphics();
+		cpgraphics->register_interpreter_functions(this);
 	}
 
 	if (axe::Util::contains(included_built_in_libs, built_in_libs[1])) {
