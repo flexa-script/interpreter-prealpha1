@@ -7,9 +7,9 @@
 #include <xutility>
 #include <functional>
 
+#include "cpgraphics.hpp"
 #include "ast.hpp"
 #include "semantic_scope.hpp"
-#include "cpgraphics.hpp"
 
 
 namespace visitor {
