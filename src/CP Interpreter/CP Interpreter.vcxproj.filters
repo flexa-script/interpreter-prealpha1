@@ -58,6 +58,9 @@
     <Filter Include="Header Files\modules\cp.core">
       <UniqueIdentifier>{62145de0-2a6a-4615-99e7-af14be83a5bf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\modules\cp.core">
+      <UniqueIdentifier>{b1edb529-77be-4e86-a690-c74c53dc4993}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lexer.hpp">
@@ -114,7 +117,7 @@
     <ClInclude Include="vendor\watch.h">
       <Filter>Header Files\vendor</Filter>
     </ClInclude>
-    <ClInclude Include="graphics.hpp">
+    <ClInclude Include="cpgraphics.hpp">
       <Filter>Header Files\modules\cp.core</Filter>
     </ClInclude>
   </ItemGroup>
@@ -164,9 +167,6 @@
     <ClCompile Include="cpsource.cpp">
       <Filter>Source Files\cp</Filter>
     </ClCompile>
-    <ClCompile Include="graphics.cpp">
-      <Filter>Source Files\modules</Filter>
-    </ClCompile>
     <ClCompile Include="vendor\util.cpp">
       <Filter>Source Files\vendor</Filter>
     </ClCompile>
@@ -175,6 +175,9 @@
     </ClCompile>
     <ClCompile Include="vendor\graphics.cpp">
       <Filter>Source Files\vendor</Filter>
+    </ClCompile>
+    <ClCompile Include="cpgraphics.cpp">
+      <Filter>Source Files\modules\cp.core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

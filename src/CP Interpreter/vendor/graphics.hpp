@@ -15,9 +15,9 @@ namespace axe {
 	private:
 		HWND hwnd;
 		HDC hdc;
-		HBITMAP hbmBackBuffer;
-		HDC hdcBackBuffer;
-		int screenWidth, screenHeight;
+		HBITMAP hbm_back_buffer;
+		HDC hdc_back_buffer;
+		int screen_width, screen_height;
 		MSG msg = { 0 };
 		bool quit = false;
 

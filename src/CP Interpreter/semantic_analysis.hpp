@@ -9,14 +9,18 @@
 
 #include "ast.hpp"
 #include "semantic_scope.hpp"
+#include "cpgraphics.hpp"
 
 
 namespace visitor {
 
 	class SemanticAnalyser : Visitor {
+	public:
+		std::map<std::string, std::function<void()>> builtin_functions;
+		std::vector<parser::TypeDefinition> signature;
+
 	private:
 		std::map<std::string, std::vector<SemanticScope*>> scopes;
-		std::map<std::string, std::function<void(std::vector<parser::TypeDefinition>)>> builtin_functions;
 		std::vector<std::string> libs;
 		std::string current_namespace;
 		parser::SemanticValue current_expression;

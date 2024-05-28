@@ -63,7 +63,7 @@ typedef bool cp_bool;
 typedef int64_t cp_int;
 typedef long double cp_float;
 typedef char cp_char;
-typedef std::string cp_string; 
+typedef std::string cp_string;
 typedef std::vector<Value*> cp_array;
 typedef std::map<std::string, Value*> cp_struct_values;
 typedef std::pair<std::string, cp_struct_values> cp_struct;
@@ -72,7 +72,7 @@ class Value {
 public:
 	Value(parser::Type);
 	Value(Value*);
-	
+
 	parser::Type type;
 	parser::Type curr_type;
 	parser::Type arr_type;
@@ -112,9 +112,15 @@ namespace visitor {
 		parser::ASTProgramNode* main_program;
 		parser::ASTProgramNode* current_program;
 		std::string current_name;
+		std::vector<std::string> built_in_libs = {
+			"cp.core.graphics",
+			"cp.core.file"
+		};
+		std::vector<std::string> included_built_in_libs;
 
 		Visitor(std::map<std::string, parser::ASTProgramNode*> programs, parser::ASTProgramNode* main_program, std::string current_name)
-			: programs(programs), main_program(main_program), current_program(main_program), current_name(current_name) { };
+			: programs(programs), main_program(main_program), current_program(main_program), current_name(current_name),
+			included_built_in_libs(std::vector<std::string>()) { };
 
 		virtual std::string get_namespace(std::string = "") = 0;
 		virtual std::string get_namespace(parser::ASTProgramNode*, std::string = "") = 0;

@@ -160,7 +160,7 @@ def moves_right(board[4][4]: int): int[4][4] {
             board[i][j - 2] = 0;
         }
 
-        j = 2;
+        j = 1;
         if (board[i][j] == board[i][j - 1] and board[i][j] != 0) {
             board[i][j] = 2 * board[i][j];
             board[i][j - 1] = 0;
@@ -194,9 +194,7 @@ def counts_zero(board[4][4]: int): int {
 }
 
 def spawn_random(n: int, board[4][4]: int): int[4][4] {
-    // var rnd = random::randi();
     var spawn: int = 1 + (random::randi() % n);
-    println("spawn="+string(spawn));
     var p: int = 0;
     var spawn2: bool = true;
     for (var i: int = 0; i < 4; i++) {
@@ -205,7 +203,6 @@ def spawn_random(n: int, board[4][4]: int): int[4][4] {
                 p++;
             }
             if (p == spawn and spawn2 == true) {
-                println("local ["+string(i)+"]["+string(j)+"]");
                 board[i][j] = 2;
                 spawn2 = false;
             }

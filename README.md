@@ -87,6 +87,11 @@
         - [ ] Type checks
     - [X] Move some verifications to semantic analisys:
         - [X] Array size check from interpreter
+- [ ] Projects to implement in CP:
+    - [ ] https://github.com/drmenguin/minilang-interpreter
+    - [ ] https://github.com/univesity-projects/sort-algorithms
+    - [ ] https://github.com/univesity-projects/caesar-cipher
+    - [ ] https://github.com/univesity-projects/pong-pro-player
 - [ ] Add CP library:
     - [ ] String
     - [ ] Array:
@@ -96,11 +101,11 @@
         - [X] abs: ret absolute value of a number
         - [X] max: return greather from two or more parameters
         - [X] min: return lesser from two or more parameters
-        - [ ] sum: sum all items from array
-        - [ ] round: round a float number
-    - [ ] Random (https://docs.godotengine.org/en/stable/classes/class_randomnumbergenerator.html):
-        - [ ] randi(from: int, to: int): int
-        - [ ] seed(seed: int)
+        - [X] sum: sum all items from array
+        - [X] round: round a float number
+    - [X] Random (https://docs.godotengine.org/en/stable/classes/class_randomnumbergenerator.html):
+        - [X] randi(from: int, to: int): int
+        - [X] seed(seed: int)
     - [ ] Collections
         - [ ] List
         - [ ] Queue
@@ -120,7 +125,6 @@
 ## Rules
 
 ### Arrays
-- If an array don't have your size defined, it can be assigned and reassigned of all sizes. Altought must respect the dimension.
 - If an array has your size defined in declaration, it can just assigned and reassigned with a same size and dimension array expression.
 
 ### Types

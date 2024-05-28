@@ -44,24 +44,24 @@ void Interpreter::visit(ASTProgramNode* astnode) {
 void Interpreter::visit(ASTUsingNode* astnode) {
 	std::string libname = axe::Util::join(astnode->library, ".");
 
-	auto program = programs[libname];
-	// find in cp core libs
+	if (!axe::Util::contains(built_in_libs, libname)) {
+		auto program = programs[libname];
 
-	// add lib to current program
-	current_program->libs.push_back(libname);
+		// add lib to current program
+		current_program->libs.push_back(libname);
 
-	// if can't parsed yet
-	if (!axe::Util::contains(libs, libname)) {
-		libs.push_back(libname);
-		auto prev_program = current_program;
-		current_program = program;
-		if (!program->alias.empty()) {
-			scopes[program->alias].push_back(new InterpreterScope());
+		// if can't parsed yet
+		if (!axe::Util::contains(libs, libname)) {
+			libs.push_back(libname);
+			auto prev_program = current_program;
+			current_program = program;
+			if (!program->alias.empty()) {
+				scopes[program->alias].push_back(new InterpreterScope());
+			}
+			start();
+			current_program = prev_program;
 		}
-		start();
-		current_program = prev_program;
 	}
-
 }
 
 
@@ -1408,4 +1408,12 @@ void Interpreter::register_built_in_functions() {
 		current_expression_value = val;
 	};
 
+	if (axe::Util::contains(included_built_in_libs, built_in_libs[0])) {
+		cpgraphics = modules::CPGraphics();
+		cpgraphics.register_interpreter_functions(this);
+	}
+
+	if (axe::Util::contains(included_built_in_libs, built_in_libs[1])) {
+
+	}
 }

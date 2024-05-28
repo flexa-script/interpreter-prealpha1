@@ -836,7 +836,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	Type array_type = parser::Type::T_UNDEF;
 	std::string type_name = "";
 	std::string type_name_space = "";
-	ASTBlockNode* block;
+	ASTBlockNode* block = nullptr;
 	ASTExprNode* expr;
 	ASTExprNode* expr_size;
 	auto dim_vector = std::vector<ASTExprNode*>();
@@ -907,10 +907,15 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 		type = Type::T_VOID;
 	}
 
-	check_current_token(lexer::TOK_LEFT_CURLY);
-
 	// parse block
-	block = parse_block();
+	if (current_token.type == lexer::TOK_LEFT_CURLY) {
+		block = parse_block();
+	}
+	else {
+		if (current_token.type == lexer::TOK_COMMA) {
+			throw std::runtime_error(msg_header() + "expected { or ;");
+		}
+	}
 
 	return new ASTFunctionDefinitionNode(identifier, parameters, type, type_name, type_name_space, array_type, dim_vector, block, row, col);
 }

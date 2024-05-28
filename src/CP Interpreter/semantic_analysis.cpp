@@ -39,8 +39,13 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	std::string libname = axe::Util::join(astnode->library, ".");
 
 	if (programs.find(libname) == programs.end()) {
-		// TODO: find in cp core libs
-		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "lib '" + libname + "' not found");
+		if (axe::Util::contains(built_in_libs, libname)) {
+			included_built_in_libs.push_back(libname);
+			return;
+		}
+		else {
+			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "lib '" + libname + "' not found");
+		}
 	}
 
 	auto program = programs[libname];
@@ -632,7 +637,8 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	catch (...) {
 		try {
 			if (builtin_functions.find(astnode->identifier) != builtin_functions.end()) {
-				builtin_functions[astnode->identifier](signature);
+				this->signature = signature;
+				builtin_functions[astnode->identifier]();
 				return;
 			}
 			throw std::runtime_error("");
@@ -640,7 +646,7 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 		catch (std::runtime_error ex) {
 			std::string errmsg = "";
 
-			if (builtin_functions.find(astnode->identifier) != builtin_functions.end()) {
+			if (builtin_functions.find(astnode->identifier) != builtin_functions.end() && ex.what() != "") {
 				errmsg = ex.what();
 			}
 			else {
@@ -673,15 +679,15 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 	// first check that all enclosing scopes have not already defined the function
 	for (auto& scope : scopes[get_namespace()]) {
-		// TODO: differ array types
-		if (scope->already_declared_function(astnode->identifier, astnode->signature)) {
+		if (scope->already_declared_function(astnode->identifier, astnode->signature)
+			|| builtin_functions.find(astnode->identifier) != builtin_functions.end()) {
 			std::string signature = "(";
 			for (auto param : astnode->signature) {
 				signature += type_str(param.type) + ", ";
 			}
 			if (astnode->signature.size() > 0) {
-				signature.pop_back();   // remove last whitespace
-				signature.pop_back();   // remove last comma
+				signature.pop_back(); // remove last whitespace
+				signature.pop_back(); // remove last comma
 			}
 			signature += ")";
 
@@ -690,31 +696,33 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 		}
 	}
 
-	auto has_return = returns(astnode->block);
-	auto type = is_void(astnode->type) && has_return ? Type::T_ANY : astnode->type;
-	auto array_type = (is_void(astnode->array_type) || is_undefined(astnode->array_type)) && has_return ? Type::T_ANY : astnode->type;
+	if (astnode->block) {
+		auto has_return = returns(astnode->block);
+		auto type = is_void(astnode->type) && has_return ? Type::T_ANY : astnode->type;
+		auto array_type = (is_void(astnode->array_type) || is_undefined(astnode->array_type)) && has_return ? Type::T_ANY : astnode->type;
 
-	// add function to symbol table
-	scopes[get_namespace()].back()->declare_function(astnode->identifier, type, astnode->type_name, astnode->type_name_space,
-		array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
+		// add function to symbol table
+		scopes[get_namespace()].back()->declare_function(astnode->identifier, type, astnode->type_name, astnode->type_name_space,
+			array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
 
-	auto curr_function = scopes[get_namespace()].back()->find_declared_function(astnode->identifier, astnode->signature);
+		auto curr_function = scopes[get_namespace()].back()->find_declared_function(astnode->identifier, astnode->signature);
 
-	// push current function type into function stack
-	current_function.push(curr_function);
+		// push current function type into function stack
+		current_function.push(curr_function);
 
-	// check semantics of function block by visiting nodes
-	astnode->block->accept(this);
+		// check semantics of function block by visiting nodes
+		astnode->block->accept(this);
 
-	if (!is_void(type)) {
-		// check that the function body returns
-		if (!has_return) {
-			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "defined function '" + astnode->identifier + "' is not guaranteed to return a value");
+		if (!is_void(type)) {
+			// check that the function body returns
+			if (!has_return) {
+				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "defined function '" + astnode->identifier + "' is not guaranteed to return a value");
+			}
 		}
-	}
 
-	// end the current function
-	current_function.pop();
+		// end the current function
+		current_function.pop();
+	}
 }
 
 void SemanticAnalyser::visit(ASTBlockNode* astnode) {
@@ -1301,14 +1309,14 @@ unsigned int SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 }
 
 void SemanticAnalyser::register_built_in_functions() {
-	builtin_functions["print"] = [](std::vector<TypeDefinition> args) {
-		if (args.size() != 1) {
+	builtin_functions["print"] = [this]() {
+		if (signature.size() != 1) {
 			throw std::runtime_error("expected one parameter");
 		}
 	};
 
-	builtin_functions["read"] = [this](std::vector<TypeDefinition> args) {
-		auto size = args.size();
+	builtin_functions["read"] = [this]() {
+		auto size = signature.size();
 		if (size < 1 && size > 2) {
 			throw std::runtime_error("expected just one optional parameter");
 		}
@@ -1320,8 +1328,8 @@ void SemanticAnalyser::register_built_in_functions() {
 		current_expression.is_const = false;
 	};
 
-	builtin_functions["readch"] = [this](std::vector<TypeDefinition> args) {
-		if (args.size() > 0) {
+	builtin_functions["readch"] = [this]() {
+		if (signature.size() > 0) {
 			throw std::runtime_error("readch do not expect parameter");
 		}
 
@@ -1332,20 +1340,20 @@ void SemanticAnalyser::register_built_in_functions() {
 		current_expression.is_const = false;
 	};
 
-	builtin_functions["system"] = [](std::vector<TypeDefinition> args) {
-		if (args.size() != 1) {
+	builtin_functions["system"] = [this]() {
+		if (signature.size() != 1) {
 			throw std::runtime_error("expected string parameter");
 		}
-		if (!is_string(args[0].type)) {
+		if (!is_string(signature[0].type)) {
 			throw std::runtime_error("parameter must be a string");
 		}
 	};
 
-	builtin_functions["len"] = [this](std::vector<TypeDefinition> args) {
-		if (args.size() != 1) {
+	builtin_functions["len"] = [this]() {
+		if (signature.size() != 1) {
 			throw std::runtime_error("expected string or array parameter");
 		}
-		if (!is_array(args[0].type) && !is_string(args[0].type)) {
+		if (!is_array(signature[0].type) && !is_string(signature[0].type)) {
 			throw std::runtime_error("can't read len of type " + type_str(current_expression.type));
 		}
 
@@ -1355,4 +1363,12 @@ void SemanticAnalyser::register_built_in_functions() {
 		current_expression.array_type = Type::T_UNDEF;
 		current_expression.is_const = false;
 	};
+
+	if (axe::Util::contains(included_built_in_libs, built_in_libs[0])) {
+		modules::CPGraphics().register_semantic_functions(this);
+	}
+
+	if (axe::Util::contains(included_built_in_libs, built_in_libs[1])) {
+
+	}
 }

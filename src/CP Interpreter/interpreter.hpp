@@ -9,19 +9,22 @@
 #include "visitor.hpp"
 #include "ast.hpp"
 #include "interpreter_scope.hpp"
+#include "cpgraphics.hpp"
 
 
 namespace visitor {
 
 	class Interpreter : public Visitor {
+	public:
+		std::map<std::string, std::function<void()>> builtin_functions;
+		std::vector<std::pair<parser::Type, Value*>> last_function_arguments;
+		Value current_expression_value;
+
 	private:
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
-		std::map<std::string, std::function<void()>> builtin_functions;
 		std::vector<std::string> libs;
-		Value current_expression_value;
 		std::string last_function_name;
 		std::vector<std::string> last_function_parameters;
-		std::vector<std::pair<parser::Type, Value*>> last_function_arguments;
 		std::stack<std::string> current_function_nmspace;
 		bool is_function_context;
 		std::string return_from_function_name;
@@ -32,6 +35,9 @@ namespace visitor {
 		bool break_block = false;
 		bool executed_elif = false;
 		bool has_string_access = false;
+
+		modules::CPGraphics cpgraphics;
+
 
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 		std::vector<unsigned int> calculate_array_dim_size(cp_array);
