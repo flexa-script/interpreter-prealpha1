@@ -27,8 +27,8 @@ std::string Interpreter::get_namespace(ASTProgramNode* program, std::string nmsp
 	return nmspace.empty() ? (
 		current_function_nmspace.size() == 0 ? (
 			program->alias.empty() ? "main" : program->alias
-		) : current_function_nmspace.top()
-	) : nmspace;
+			) : current_function_nmspace.top()
+		) : nmspace;
 }
 
 void Interpreter::start() {
@@ -45,23 +45,25 @@ void Interpreter::visit(ASTProgramNode* astnode) {
 void Interpreter::visit(ASTUsingNode* astnode) {
 	std::string libname = axe::Util::join(astnode->library, ".");
 
-	if (!axe::Util::contains(built_in_libs, libname)) {
-		auto program = programs[libname];
+	if (axe::Util::contains(built_in_libs, libname)) {
+		register_built_in_lib(libname);
+	}
 
-		// add lib to current program
-		current_program->libs.push_back(libname);
+	auto program = programs[libname];
 
-		// if can't parsed yet
-		if (!axe::Util::contains(libs, libname)) {
-			libs.push_back(libname);
-			auto prev_program = current_program;
-			current_program = program;
-			if (!program->alias.empty()) {
-				scopes[program->alias].push_back(new InterpreterScope());
-			}
-			start();
-			current_program = prev_program;
+	// add lib to current program
+	current_program->libs.push_back(libname);
+
+	// if can't parsed yet
+	if (!axe::Util::contains(libs, libname)) {
+		libs.push_back(libname);
+		auto prev_program = current_program;
+		current_program = program;
+		if (!program->alias.empty()) {
+			scopes[program->alias].push_back(new InterpreterScope());
 		}
+		start();
+		current_program = prev_program;
 	}
 }
 
@@ -649,10 +651,6 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 	is_loop = false;
 }
 
-void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
-	scopes[get_namespace()].back()->declare_function(astnode->identifier, astnode->signature, astnode->variable_names, astnode->block);
-}
-
 void Interpreter::visit(ASTStructDefinitionNode* astnode) {
 	scopes[get_namespace()].back()->declare_structure_definition(astnode->identifier, astnode->variables, astnode->row, astnode->col);
 }
@@ -1042,6 +1040,10 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 	}
 }
 
+void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
+	scopes[get_namespace()].back()->declare_function(astnode->identifier, astnode->signature, astnode->variable_names, astnode->block);
+}
+
 void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	auto nmspace = get_namespace(astnode->nmspace);
 
@@ -1091,7 +1093,17 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	is_function_context = true;
 	current_function_nmspace.push(nmspace);
 	// visit the corresponding function block
-	std::get<2>(func_scope->find_declared_function(astnode->identifier, signature))->accept(this);
+	auto block = std::get<2>(func_scope->find_declared_function(astnode->identifier, signature));
+	if (block) {
+		block->accept(this);
+	}
+	else {
+		if (astnode->identifier == "print") {
+			std::cout << "t";
+		}
+		builtin_functions[astnode->identifier]();
+		this->last_function_arguments.clear();
+	}
 	is_function_context = false;
 	current_function_nmspace.pop();
 
@@ -1408,13 +1420,15 @@ void Interpreter::register_built_in_functions() {
 
 		current_expression_value = val;
 	};
+}
 
-	if (axe::Util::contains(included_built_in_libs, built_in_libs[0])) {
+void Interpreter::register_built_in_lib(std::string libname) {
+	if (built_in_libs[0] == libname) {
 		cpgraphics = new modules::CPGraphics();
-		cpgraphics->register_interpreter_functions(this);
+		cpgraphics->register_functions(this);
 	}
 
-	if (axe::Util::contains(included_built_in_libs, built_in_libs[1])) {
+	if (built_in_libs[1] == libname) {
 
 	}
 }

@@ -112,15 +112,9 @@ namespace visitor {
 		parser::ASTProgramNode* main_program;
 		parser::ASTProgramNode* current_program;
 		std::string current_name;
-		std::vector<std::string> built_in_libs = {
-			"cp.core.graphics",
-			"cp.core.file"
-		};
-		std::vector<std::string> included_built_in_libs;
 
 		Visitor(std::map<std::string, parser::ASTProgramNode*> programs, parser::ASTProgramNode* main_program, std::string current_name)
-			: programs(programs), main_program(main_program), current_program(main_program), current_name(current_name),
-			included_built_in_libs(std::vector<std::string>()) { };
+			: programs(programs), main_program(main_program), current_program(main_program), current_name(current_name) { };
 
 		virtual std::string get_namespace(std::string = "") = 0;
 		virtual std::string get_namespace(parser::ASTProgramNode*, std::string = "") = 0;

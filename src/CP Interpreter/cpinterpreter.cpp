@@ -53,7 +53,7 @@ std::vector<CPSource> CPInterpreter::load_programs(std::vector<std::string> file
 std::vector<CPSource> CPInterpreter::load_cp_libs(std::vector<std::string> files) {
 	std::vector<CPSource> source_programs;
 	auto norm_path = axe::Util::normalize_path_sep(files[0]);
-	std::string searchstr("cp" + std::string{ std::filesystem::path::preferred_separator } + "std");
+	std::string searchstr("cp" + std::string{ std::filesystem::path::preferred_separator });
 	auto start_lib_name_index = norm_path.rfind(searchstr);
 
 	auto program = CPSource(CPUtil::get_lib_name(start_lib_name_index, norm_path), CPUtil::load_source(norm_path));

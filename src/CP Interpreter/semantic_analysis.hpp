@@ -48,6 +48,7 @@ namespace visitor {
 		parser::VariableDefinition access_struct_variable(std::vector<parser::Identifier>, std::string, std::string, unsigned int = 0);
 
 		void register_built_in_functions();
+		void register_built_in_lib(std::string libname);
 
 		std::string msg_header(unsigned int, unsigned int);
 

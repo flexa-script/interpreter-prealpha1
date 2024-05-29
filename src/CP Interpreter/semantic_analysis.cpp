@@ -40,13 +40,7 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	std::string libname = axe::Util::join(astnode->library, ".");
 
 	if (programs.find(libname) == programs.end()) {
-		if (axe::Util::contains(built_in_libs, libname)) {
-			included_built_in_libs.push_back(libname);
-			return;
-		}
-		else {
-			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "lib '" + libname + "' not found");
-		}
+		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "lib '" + libname + "' not found");
 	}
 
 	auto program = programs[libname];
@@ -607,7 +601,7 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 SemanticScope* SemanticAnalyser::get_inner_most_function_scope(std::string nmspace, std::string identifier, std::vector<TypeDefinition> signature) {
 	// determine the inner-most scope in which the value is declared
 	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); i--) {
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); --i) {
 		if (i <= 0) {
 			throw std::runtime_error("identifier '" + identifier + "' was not declared");
 		}
@@ -656,8 +650,8 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 					func_name += type_str(param.type) + ", ";
 				}
 				if (signature.size() > 0) {
-					func_name.pop_back();   // remove last whitespace
-					func_name.pop_back();   // remove last comma
+					func_name.pop_back(); // remove last whitespace
+					func_name.pop_back(); // remove last comma
 				}
 				func_name += ")";
 				errmsg = "function '" + func_name + "' was never declared";
@@ -680,8 +674,8 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 	// first check that all enclosing scopes have not already defined the function
 	for (auto& scope : scopes[get_namespace()]) {
-		if (scope->already_declared_function(astnode->identifier, astnode->signature)
-			|| builtin_functions.find(astnode->identifier) != builtin_functions.end()) {
+		if (scope->already_declared_function(astnode->identifier, astnode->signature)/*
+			|| builtin_functions.find(astnode->identifier) != builtin_functions.end()*/) {
 			std::string signature = "(";
 			for (auto param : astnode->signature) {
 				signature += type_str(param.type) + ", ";
@@ -723,6 +717,10 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 
 		// end the current function
 		current_function.pop();
+	}
+	else {
+		scopes[get_namespace()].back()->declare_function(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
+			astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
 	}
 }
 
@@ -1364,12 +1362,4 @@ void SemanticAnalyser::register_built_in_functions() {
 		current_expression.array_type = Type::T_UNDEF;
 		current_expression.is_const = false;
 	};
-
-	if (axe::Util::contains(included_built_in_libs, built_in_libs[0])) {
-		(new modules::CPGraphics())->register_semantic_functions(this);
-	}
-
-	if (axe::Util::contains(included_built_in_libs, built_in_libs[1])) {
-
-	}
 }

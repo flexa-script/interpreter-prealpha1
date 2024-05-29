@@ -39,6 +39,11 @@ namespace visitor {
 		bool executed_elif = false;
 		bool has_string_access = false;
 
+		std::vector<std::string> built_in_libs = {
+			"cp.core.graphics",
+			"cp.core.file"
+		};
+
 		modules::CPGraphics* cpgraphics;
 
 
@@ -60,6 +65,7 @@ namespace visitor {
 		Value* access_value(InterpreterScope*, Value*, std::vector<parser::Identifier>, size_t i = 0);
 
 		void register_built_in_functions();
+		void register_built_in_lib(std::string libname);
 
 		std::string msg_header(unsigned int, unsigned int);
 

@@ -5,8 +5,6 @@
 #include <string>
 #include <functional>
 
-#include "visitor.hpp"
-#include "semantic_analysis.hpp"
 #include "interpreter.hpp"
 #include "vendor/graphics.hpp"
 
@@ -18,8 +16,7 @@ namespace modules {
 	public:
 		CPGraphics();
 
-		void register_semantic_functions(visitor::Visitor* semantic_analyser);
-		void register_interpreter_functions(visitor::Visitor* interpreter);
+		void register_functions(visitor::Interpreter* interpreter);
 	};
 }
 
