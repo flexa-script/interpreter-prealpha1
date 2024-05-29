@@ -26,12 +26,14 @@ while(not cp::is_quit()) {
 	cp::draw_pixel(104, 55, cp::Color{r=255,g=0,b=0});
 	cp::draw_pixel(105, 55, cp::Color{r=255,g=0,b=0});
 	
-	cp::draw_pixel(99, 51, cp::Color{r=255,g=0,b=0});
-	cp::draw_pixel(99, 52, cp::Color{r=255,g=0,b=0});
-	cp::draw_pixel(99, 53, cp::Color{r=255,g=0,b=0});
-	cp::draw_pixel(99, 54, cp::Color{r=255,g=0,b=0});
+	cp::draw_pixel(100, 51, cp::Color{r=255,g=0,b=0});
+	cp::draw_pixel(100, 52, cp::Color{r=255,g=0,b=0});
+	cp::draw_pixel(100, 53, cp::Color{r=255,g=0,b=0});
+	cp::draw_pixel(100, 54, cp::Color{r=255,g=0,b=0});
 
 	cp::update();
 }
+
+cp::destroy();
 
 print("quit");

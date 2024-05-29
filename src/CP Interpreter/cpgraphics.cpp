@@ -10,8 +10,11 @@ void CPGraphics::register_functions(visitor::Interpreter* interpreter) {
 	interpreter->builtin_functions["initialize"] = [this, interpreter]() {
 		auto val = Value(parser::Type::T_BOOL);
 
+		auto str = interpreter->last_function_arguments[0].second->s;
+		auto wstr = std::wstring(str.begin(), str.end());
+
 		val.b = graphic_engine.initialize(
-			(const wchar_t*)interpreter->last_function_arguments[0].second->s.c_str(),
+			wstr.c_str(),
 			(int)interpreter->last_function_arguments[1].second->i,
 			(int)interpreter->last_function_arguments[2].second->i
 		);
@@ -39,6 +42,10 @@ void CPGraphics::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["update"] = [this, interpreter]() {
 		graphic_engine.update();
+	};
+
+	interpreter->builtin_functions["destroy"] = [this, interpreter]() {
+		graphic_engine.~Graphics();
 	};
 
 	interpreter->builtin_functions["is_quit"] = [this, interpreter]() {
