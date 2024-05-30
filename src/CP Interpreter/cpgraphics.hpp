@@ -11,7 +11,7 @@
 namespace modules {
 	class CPGraphics {
 	private:
-		std::vector<axe::Graphics> graphic_engine;
+		std::vector<axe::Graphics*> graphic_engine;
 
 	public:
 		CPGraphics();

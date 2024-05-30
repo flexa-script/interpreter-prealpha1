@@ -3,7 +3,7 @@
 using namespace modules;
 
 
-CPGraphics::CPGraphics() : graphic_engine(std::vector<axe::Graphics>()) {}
+CPGraphics::CPGraphics() : graphic_engine(std::vector<axe::Graphics*>()) {}
 
 void CPGraphics::register_functions(visitor::Interpreter* interpreter) {
 
@@ -15,7 +15,7 @@ void CPGraphics::register_functions(visitor::Interpreter* interpreter) {
 		win->str->second["height"] = new Value(interpreter->last_function_arguments[3].second);
 
 		// create a new window graphic engine
-		graphic_engine.push_back(axe::Graphics());
+		graphic_engine.push_back(new axe::Graphics());
 		win->str->second["__instance_index"] = new Value(parser::Type::T_INT);
 		win->str->second["__instance_index"]->i = graphic_engine.size() - 1;
 
@@ -23,7 +23,7 @@ void CPGraphics::register_functions(visitor::Interpreter* interpreter) {
 		auto str = win->str->second["title"]->s;
 		auto wstr = std::wstring(str.begin(), str.end());
 		auto rval = Value(parser::Type::T_BOOL);
-		rval.b = graphic_engine[win->str->second["__instance_index"]->i].initialize(
+		rval.b = graphic_engine[win->str->second["__instance_index"]->i]->initialize(
 			wstr.c_str(),
 			(int)win->str->second["width"]->i,
 			(int)win->str->second["height"]->i
@@ -37,7 +37,7 @@ void CPGraphics::register_functions(visitor::Interpreter* interpreter) {
 		r = (int)interpreter->last_function_arguments[1].second->str->second["r"]->i;
 		g = (int)interpreter->last_function_arguments[1].second->str->second["g"]->i;
 		b = (int)interpreter->last_function_arguments[1].second->str->second["b"]->i;
-		graphic_engine[win->str->second["__instance_index"]->i].clear_screen(RGB(r, g, b));
+		graphic_engine[win->str->second["__instance_index"]->i]->clear_screen(RGB(r, g, b));
 	};
 
 	interpreter->builtin_functions["draw_pixel"] = [this, interpreter]() {
@@ -48,23 +48,23 @@ void CPGraphics::register_functions(visitor::Interpreter* interpreter) {
 		r = (int)interpreter->last_function_arguments[3].second->str->second["r"]->i;
 		g = (int)interpreter->last_function_arguments[3].second->str->second["g"]->i;
 		b = (int)interpreter->last_function_arguments[3].second->str->second["b"]->i;
-		graphic_engine[win->str->second["__instance_index"]->i].draw_pixel(x, y, RGB(r, g, b));
+		graphic_engine[win->str->second["__instance_index"]->i]->draw_pixel(x, y, RGB(r, g, b));
 	};
 
 	interpreter->builtin_functions["update"] = [this, interpreter]() {
 		Value* win = interpreter->last_function_arguments[0].second;
-		graphic_engine[win->str->second["__instance_index"]->i].update();
+		graphic_engine[win->str->second["__instance_index"]->i]->update();
 	};
 
 	interpreter->builtin_functions["destroy"] = [this, interpreter]() {
 		Value* win = interpreter->last_function_arguments[0].second;
-		graphic_engine[win->str->second["__instance_index"]->i].~Graphics();
+		graphic_engine[win->str->second["__instance_index"]->i]->~Graphics();
 	};
 
 	interpreter->builtin_functions["is_quit"] = [this, interpreter]() {
 		Value* win = interpreter->last_function_arguments[0].second;
 		auto val = Value(parser::Type::T_BOOL);
-		val.b = graphic_engine[win->str->second["__instance_index"]->i].is_quit();
+		val.b = graphic_engine[win->str->second["__instance_index"]->i]->is_quit();
 		interpreter->current_expression_value = val;
 	};
 }

@@ -26,7 +26,7 @@ bool Graphics::initialize(const wchar_t* title, int width, int height) {
 	WNDCLASS wc = { 0 };
 	wc.lpfnWndProc = window_proc;
 	wc.hInstance = GetModuleHandle(NULL);
-	wc.lpszClassName = L"SimpleGraphicsEngineWindowClass";
+	wc.lpszClassName = title;
 
 	if (!RegisterClass(&wc)) {
 		return false;

@@ -17,8 +17,9 @@ namespace axe {
 		HDC hdc;
 		HBITMAP hbm_back_buffer;
 		HDC hdc_back_buffer;
-		int screen_width, screen_height;
 		MSG msg = { 0 };
+		int screen_width;
+		int screen_height;
 		bool quit = false;
 
 	public:

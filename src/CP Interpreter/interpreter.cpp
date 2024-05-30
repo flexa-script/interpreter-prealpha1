@@ -1098,9 +1098,6 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		block->accept(this);
 	}
 	else {
-		if (astnode->identifier == "print") {
-			std::cout << "t";
-		}
 		builtin_functions[astnode->identifier]();
 		this->last_function_arguments.clear();
 	}
