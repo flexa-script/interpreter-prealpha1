@@ -8,6 +8,7 @@
 #define GRAPHICS_HPP
 
 #include <windows.h>
+#include <map>
 
 namespace axe {
 
@@ -17,10 +18,11 @@ namespace axe {
 		HDC hdc;
 		HBITMAP hbm_back_buffer;
 		HDC hdc_back_buffer;
+		int screen_width, screen_height;
 		MSG msg = { 0 };
-		int screen_width;
-		int screen_height;
 		bool quit = false;
+
+		static std::map<HWND, Graphics*> hwnd_map;
 
 	public:
 		Graphics();
@@ -35,13 +37,13 @@ namespace axe {
 		void draw_circle(int xc, int yc, int radius, COLORREF color);
 		void fill_circle(int xc, int yc, int radius, COLORREF color);
 		void update();
-
 		bool is_quit();
 
-	private:
-		static LRESULT CALLBACK window_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	};
+		static LRESULT CALLBACK window_proc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 
+	private:
+		LRESULT handle_message(UINT umsg, WPARAM wparam, LPARAM lparam);
+	};
 }
 
 #endif // GRAPHICS_HPP

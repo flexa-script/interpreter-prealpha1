@@ -21,7 +21,7 @@ void CPGraphics::register_functions(visitor::Interpreter* interpreter) {
 		win->str->second["__instance_index"]->i = graphic_engine.size() - 1;
 
 		// initialize window graphic engine and return value
-		auto str = win->str->second["title"]->s + " ID:" + std::to_string(win->str->second["__instance_index"]->i);
+		auto str = win->str->second["title"]->s;
 		auto wstr = std::wstring(str.begin(), str.end());
 		auto rval = Value(parser::Type::T_BOOL);
 		rval.b = graphic_engine[win->str->second["__instance_index"]->i]->initialize(
@@ -73,12 +73,8 @@ void CPGraphics::register_functions(visitor::Interpreter* interpreter) {
 		Value* win = interpreter->last_function_arguments[0].second;
 		if (!parser::is_void(win->curr_type)) {
 			if (graphic_engine[win->str->second["__instance_index"]->i]) {
-				std::cout << "title " << win->str->second["title"]->s << std::endl;
-				std::cout << "index " << win->str->second["__instance_index"]->i << std::endl;
 				graphic_engine[win->str->second["__instance_index"]->i]->~Graphics();
 				graphic_engine[win->str->second["__instance_index"]->i] = nullptr;
-				//graphic_engine.erase(graphic_engine.begin() + win->str->second["__instance_index"]->i);
-				//win->set_null();
 			}
 		}
 	};
@@ -88,8 +84,6 @@ void CPGraphics::register_functions(visitor::Interpreter* interpreter) {
 		auto val = Value(parser::Type::T_BOOL);
 		if (!parser::is_void(win->curr_type)) {
 			if (graphic_engine[win->str->second["__instance_index"]->i]) {
-				std::cout << "title " << win->str->second["title"]->s << std::endl;
-				std::cout << "index " << win->str->second["__instance_index"]->i << std::endl;
 				val.b = graphic_engine[win->str->second["__instance_index"]->i]->is_quit();
 			}
 			else {

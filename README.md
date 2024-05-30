@@ -21,6 +21,7 @@
 - [X] Add struct support
     - [X] Add struct array-like constructor
     - [X] Add Java class pointer-like behavior
+        - [ ] Fix null set inside funcion
 - [X] Add null support
 - [X] Add type convert support
     - [X] Add array and struct support (based on print)

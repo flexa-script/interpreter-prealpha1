@@ -3,6 +3,8 @@
 using namespace axe;
 
 
+std::map<HWND, Graphics*> Graphics::hwnd_map;
+
 Graphics::Graphics()
 	: hwnd(nullptr), hdc(nullptr), hbm_back_buffer(nullptr),
 	hdc_back_buffer(nullptr), screen_width(0), screen_height(0) {}
@@ -17,6 +19,7 @@ Graphics::~Graphics() {
 	if (hwnd) {
 		DestroyWindow(hwnd);
 	}
+	hwnd_map.erase(hwnd);
 }
 
 bool Graphics::initialize(const wchar_t* title, int width, int height) {
@@ -48,6 +51,8 @@ bool Graphics::initialize(const wchar_t* title, int width, int height) {
 	hbm_back_buffer = CreateCompatibleBitmap(hdc, width, height);
 	SelectObject(hdc_back_buffer, hbm_back_buffer);
 
+	hwnd_map[hwnd] = this;
+
 	return true;
 }
 
@@ -56,6 +61,10 @@ void Graphics::clear_screen(COLORREF color) {
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
+
+			if (hwnd_map.empty()) {
+				PostQuitMessage(0);
+			}
 		}
 		else {
 			HBRUSH hBrush = CreateSolidBrush(color);
@@ -68,6 +77,7 @@ void Graphics::clear_screen(COLORREF color) {
 		quit = true;
 	}
 }
+
 
 void Graphics::draw_pixel(int x, int y, COLORREF color) {
 	SetPixel(hdc_back_buffer, x, y, color);
@@ -127,11 +137,31 @@ bool Graphics::is_quit() {
 	return quit;
 }
 
-LRESULT CALLBACK Graphics::window_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT Graphics::handle_message(UINT umsg, WPARAM wparam, LPARAM lparam) {
+	switch (umsg) {
+	case WM_CLOSE:
+		hwnd_map.erase(hwnd);
+		if (hwnd_map.empty()) {
+			PostQuitMessage(0);
+		}
+		quit = true;
+		return 0;
+	case WM_PAINT: {
+		PAINTSTRUCT ps;
+		BeginPaint(hwnd, &ps);
+		BitBlt(ps.hdc, 0, 0, screen_width, screen_height, hdc_back_buffer, 0, 0, SRCCOPY);
+		EndPaint(hwnd, &ps);
+		return 0;
+	}
+	}
+	return DefWindowProc(hwnd, umsg, wparam, lparam);
+}
+
+LRESULT CALLBACK Graphics::window_proc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam) {
 	Graphics* graphic_engine;
 
-	if (uMsg == WM_CREATE) {
-		graphic_engine = reinterpret_cast<Graphics*>(reinterpret_cast<LPCREATESTRUCT>(lParam)->lpCreateParams);
+	if (umsg == WM_CREATE) {
+		graphic_engine = reinterpret_cast<Graphics*>(reinterpret_cast<LPCREATESTRUCT>(lparam)->lpCreateParams);
 		SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(graphic_engine));
 	}
 	else {
@@ -139,19 +169,17 @@ LRESULT CALLBACK Graphics::window_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 	}
 
 	if (graphic_engine) {
-		switch (uMsg) {
-		case WM_CLOSE:
-			PostQuitMessage(0);
-			return 0;
-		case WM_PAINT: {
-			PAINTSTRUCT ps;
-			BeginPaint(hwnd, &ps);
-			BitBlt(ps.hdc, 0, 0, graphic_engine->screen_width, graphic_engine->screen_height, graphic_engine->hdc_back_buffer, 0, 0, SRCCOPY);
-			EndPaint(hwnd, &ps);
-			return 0;
-		}
-		}
+		return graphic_engine->handle_message(umsg, wparam, lparam);
 	}
 
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	if (umsg == WM_CLOSE) {
+		hwnd_map.erase(hwnd);
+		if (hwnd_map.empty()) {
+			PostQuitMessage(0);
+		}
+		return 0;
+	}
+
+	return DefWindowProc(hwnd, umsg, wparam, lparam);
 }
+
