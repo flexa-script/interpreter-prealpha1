@@ -969,15 +969,16 @@ ASTExprNode* Parser::parse_expression_tail(ASTExprNode* lhs) {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	if (next_token.type == lexer::TOK_LOGICAL_OR_OP) {
+	while (next_token.type == lexer::TOK_LOGICAL_OR_OP) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
-		return new ASTBinaryExprNode(current_token_value, lhs, parse_expression(), row, col);
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, parse_logical_expression(), row, col);
 	}
 
 	return lhs;
 }
+
 
 ASTExprNode* Parser::parse_logical_expression() {
 	ASTExprNode* relational_expression = parse_relational_expression();
@@ -992,8 +993,7 @@ ASTExprNode* Parser::parse_logical_expression_tail(ASTExprNode* lhs) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
-		ASTExprNode* bin_expr = new ASTBinaryExprNode(current_token_value, lhs, parse_relational_expression(), row, col);
-		return parse_logical_expression_tail(bin_expr);
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, parse_relational_expression(), row, col);
 	}
 
 	return lhs;
@@ -1013,7 +1013,7 @@ ASTExprNode* Parser::parse_relational_expression_tail(ASTExprNode* lhs) {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		ASTExprNode* bin_expr = new ASTBinaryExprNode(current_token_value, lhs, parse_simple_expression(), row, col);
-		return parse_relational_expression_tail(bin_expr);
+		lhs = parse_relational_expression_tail(bin_expr);
 	}
 
 	return lhs;
@@ -1028,12 +1028,12 @@ ASTExprNode* Parser::parse_simple_expression_tail(ASTExprNode* lhs) {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	if (next_token.type == lexer::TOK_ADDITIVE_OP) {
+	while (next_token.type == lexer::TOK_ADDITIVE_OP) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
 		ASTExprNode* bin_expr = new ASTBinaryExprNode(current_token_value, lhs, parse_term(), row, col);
-		return parse_simple_expression_tail(bin_expr);
+		lhs = parse_simple_expression_tail(bin_expr);
 	}
 
 	return lhs;
@@ -1048,12 +1048,12 @@ ASTExprNode* Parser::parse_term_tail(ASTExprNode* lhs) {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	if (next_token.type == lexer::TOK_MULTIPLICATIVE_OP) {
+	while (next_token.type == lexer::TOK_MULTIPLICATIVE_OP) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
 		ASTExprNode* bin_expr = new ASTBinaryExprNode(current_token_value, lhs, parse_factor(), row, col);
-		return parse_term_tail(bin_expr);
+		lhs = parse_term_tail(bin_expr);
 	}
 
 	return lhs;
@@ -1109,8 +1109,7 @@ ASTExprNode* Parser::parse_factor() {
 			consume_token();
 		}
 
-		switch (next_token.type)
-		{
+		switch (next_token.type) {
 		case lexer::TOK_LEFT_BRACKET:
 			return parse_function_call_node(nmspace);
 		case lexer::TOK_LEFT_CURLY:
@@ -1131,7 +1130,7 @@ ASTExprNode* Parser::parse_factor() {
 	case lexer::TOK_NOT: {
 		std::string current_token_value = current_token.value;
 		consume_token();
-		return new ASTUnaryExprNode(current_token_value, parse_expression(), row, col);
+		return new ASTUnaryExprNode(current_token_value, parse_factor(), row, col);
 	}
 
 	default:
