@@ -55,6 +55,11 @@ while (not cp::is_quit(window1) or not cp::is_quit(window2)) {
 		cp::draw_pixel(window1, 100, 53, cp::Color{r=255,g=0,b=0});
 		cp::draw_pixel(window1, 100, 54, cp::Color{r=255,g=0,b=0});
 
+		cp::draw_line(window1, 90, 40, 600, 80, cp::Color{r=255,g=0,b=0});
+
+		cp::draw_rect(window1, 500, 200, 100, 80, cp::Color{r=255,g=0,b=0});
+		cp::fill_rect(window1, 200, 200, 100, 80, cp::Color{r=255,g=0,b=0});
+
 		cp::update(window1);
 	}
 	else {
