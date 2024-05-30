@@ -12,7 +12,7 @@
 
 
 namespace modules {
-	class CPGraphics;
+	class Graphics;
 }
 
 namespace visitor {
@@ -44,7 +44,7 @@ namespace visitor {
 			"cp.core.file"
 		};
 
-		modules::CPGraphics* cpgraphics;
+		modules::Graphics* cpgraphics;
 
 
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);

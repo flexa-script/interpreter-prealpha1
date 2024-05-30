@@ -5,7 +5,7 @@
 #include "interpreter.hpp"
 #include "vendor/util.hpp"
 #include "vendor/watch.h"
-#include "cpgraphics.hpp"
+#include "graphics.hpp"
 
 
 using namespace visitor;
@@ -1421,7 +1421,7 @@ void Interpreter::register_built_in_functions() {
 
 void Interpreter::register_built_in_lib(std::string libname) {
 	if (built_in_libs[0] == libname) {
-		cpgraphics = new modules::CPGraphics();
+		cpgraphics = new modules::Graphics();
 		cpgraphics->register_functions(this);
 	}
 

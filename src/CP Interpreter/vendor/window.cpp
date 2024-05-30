@@ -1,15 +1,15 @@
-#include "graphics.hpp"
+#include "window.hpp"
 
 using namespace axe;
 
 
-std::map<HWND, Graphics*> Graphics::hwnd_map;
+std::map<HWND, Window*> Window::hwnd_map;
 
-Graphics::Graphics()
+Window::Window()
 	: hwnd(nullptr), hdc(nullptr), hbm_back_buffer(nullptr),
 	hdc_back_buffer(nullptr), screen_width(0), screen_height(0) {}
 
-Graphics::~Graphics() {
+Window::~Window() {
 	if (hbm_back_buffer) {
 		DeleteObject(hbm_back_buffer);
 	}
@@ -22,7 +22,7 @@ Graphics::~Graphics() {
 	hwnd_map.erase(hwnd);
 }
 
-bool Graphics::initialize(const wchar_t* title, int width, int height) {
+bool Window::initialize(const wchar_t* title, int width, int height) {
 	screen_width = width;
 	screen_height = height;
 
@@ -56,7 +56,7 @@ bool Graphics::initialize(const wchar_t* title, int width, int height) {
 	return true;
 }
 
-void Graphics::clear_screen(COLORREF color) {
+void Window::clear_screen(COLORREF color) {
 	if (msg.message != WM_QUIT) {
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
@@ -79,11 +79,11 @@ void Graphics::clear_screen(COLORREF color) {
 }
 
 
-void Graphics::draw_pixel(int x, int y, COLORREF color) {
+void Window::draw_pixel(int x, int y, COLORREF color) {
 	SetPixel(hdc_back_buffer, x, y, color);
 }
 
-void Graphics::draw_line(int x1, int y1, int x2, int y2, COLORREF color) {
+void Window::draw_line(int x1, int y1, int x2, int y2, COLORREF color) {
 	HPEN pen = CreatePen(PS_SOLID, 1, color);
 	HPEN oldPen = (HPEN)SelectObject(hdc_back_buffer, pen);
 	MoveToEx(hdc_back_buffer, x1, y1, nullptr);
@@ -92,7 +92,7 @@ void Graphics::draw_line(int x1, int y1, int x2, int y2, COLORREF color) {
 	DeleteObject(pen);
 }
 
-void Graphics::draw_rect(int x, int y, int width, int height, COLORREF color) {
+void Window::draw_rect(int x, int y, int width, int height, COLORREF color) {
 	HPEN pen = CreatePen(PS_SOLID, 1, color);
 	HPEN oldPen = (HPEN)SelectObject(hdc_back_buffer, pen);
 	HBRUSH oldBrush = (HBRUSH)SelectObject(hdc_back_buffer, GetStockObject(NULL_BRUSH));
@@ -102,14 +102,14 @@ void Graphics::draw_rect(int x, int y, int width, int height, COLORREF color) {
 	DeleteObject(pen);
 }
 
-void Graphics::fill_rect(int x, int y, int width, int height, COLORREF color) {
+void Window::fill_rect(int x, int y, int width, int height, COLORREF color) {
 	RECT rect = { x, y, x + width, y + height };
 	HBRUSH brush = CreateSolidBrush(color);
 	FillRect(hdc_back_buffer, &rect, brush);
 	DeleteObject(brush);
 }
 
-void Graphics::draw_circle(int xc, int yc, int radius, COLORREF color) {
+void Window::draw_circle(int xc, int yc, int radius, COLORREF color) {
 	HPEN pen = CreatePen(PS_SOLID, 1, color);
 	HPEN oldPen = (HPEN)SelectObject(hdc_back_buffer, pen);
 	HBRUSH oldBrush = (HBRUSH)SelectObject(hdc_back_buffer, GetStockObject(NULL_BRUSH));
@@ -119,7 +119,7 @@ void Graphics::draw_circle(int xc, int yc, int radius, COLORREF color) {
 	DeleteObject(pen);
 }
 
-void Graphics::fill_circle(int xc, int yc, int radius, COLORREF color) {
+void Window::fill_circle(int xc, int yc, int radius, COLORREF color) {
 	HBRUSH brush = CreateSolidBrush(color);
 	HBRUSH oldBrush = (HBRUSH)SelectObject(hdc_back_buffer, brush);
 	HPEN oldPen = (HPEN)SelectObject(hdc_back_buffer, GetStockObject(NULL_PEN));
@@ -129,15 +129,15 @@ void Graphics::fill_circle(int xc, int yc, int radius, COLORREF color) {
 	DeleteObject(brush);
 }
 
-void Graphics::update() {
+void Window::update() {
 	BitBlt(hdc, 0, 0, screen_width, screen_height, hdc_back_buffer, 0, 0, SRCCOPY);
 }
 
-bool Graphics::is_quit() {
+bool Window::is_quit() {
 	return quit;
 }
 
-LRESULT Graphics::handle_message(UINT umsg, WPARAM wparam, LPARAM lparam) {
+LRESULT Window::handle_message(UINT umsg, WPARAM wparam, LPARAM lparam) {
 	switch (umsg) {
 	case WM_CLOSE:
 		hwnd_map.erase(hwnd);
@@ -157,19 +157,19 @@ LRESULT Graphics::handle_message(UINT umsg, WPARAM wparam, LPARAM lparam) {
 	return DefWindowProc(hwnd, umsg, wparam, lparam);
 }
 
-LRESULT CALLBACK Graphics::window_proc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam) {
-	Graphics* graphic_engine;
+LRESULT CALLBACK Window::window_proc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam) {
+	Window* windows;
 
 	if (umsg == WM_CREATE) {
-		graphic_engine = reinterpret_cast<Graphics*>(reinterpret_cast<LPCREATESTRUCT>(lparam)->lpCreateParams);
-		SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(graphic_engine));
+		windows = reinterpret_cast<Window*>(reinterpret_cast<LPCREATESTRUCT>(lparam)->lpCreateParams);
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windows));
 	}
 	else {
-		graphic_engine = reinterpret_cast<Graphics*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+		windows = reinterpret_cast<Window*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 	}
 
-	if (graphic_engine) {
-		return graphic_engine->handle_message(umsg, wparam, lparam);
+	if (windows) {
+		return windows->handle_message(umsg, wparam, lparam);
 	}
 
 	if (umsg == WM_CLOSE) {

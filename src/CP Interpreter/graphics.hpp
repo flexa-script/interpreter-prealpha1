@@ -5,15 +5,15 @@
 #include <functional>
 
 #include "interpreter.hpp"
-#include "vendor/graphics.hpp"
+#include "vendor/window.hpp"
 
 namespace modules {
-	class CPGraphics {
+	class Graphics {
 	private:
-		std::vector<axe::Graphics*> graphic_engine;
+		std::vector<axe::Window*> windows;
 
 	public:
-		CPGraphics();
+		Graphics();
 
 		void register_functions(visitor::Interpreter* interpreter);
 	};

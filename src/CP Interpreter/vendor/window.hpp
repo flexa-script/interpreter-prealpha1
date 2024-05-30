@@ -12,7 +12,7 @@
 
 namespace axe {
 
-	class Graphics {
+	class Window {
 	private:
 		HWND hwnd;
 		HDC hdc;
@@ -22,11 +22,11 @@ namespace axe {
 		MSG msg = { 0 };
 		bool quit = false;
 
-		static std::map<HWND, Graphics*> hwnd_map;
+		static std::map<HWND, Window*> hwnd_map;
 
 	public:
-		Graphics();
-		~Graphics();
+		Window();
+		~Window();
 
 		bool initialize(const wchar_t* title, int width, int height);
 		void clear_screen(COLORREF color);
