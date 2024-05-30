@@ -103,4 +103,4 @@ namespace visitor {
 	};
 }
 
-#endif // SEMANTIC_ANALYSIS_HPP
+#endif // !SEMANTIC_ANALYSIS_HPP

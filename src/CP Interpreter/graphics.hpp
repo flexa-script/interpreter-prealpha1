@@ -18,4 +18,4 @@ namespace modules {
 	};
 }
 
-#endif // GRAPHICS_HPP
+#endif // !GRAPHICS_HPP

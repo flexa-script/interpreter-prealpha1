@@ -22,4 +22,4 @@ namespace axe {
 	};
 }
 
-#endif // UTIL_HPP
+#endif // !UTIL_HPP

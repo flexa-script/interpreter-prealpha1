@@ -48,16 +48,15 @@
     - [ ] try catch
 - [ ] Add expression operators:
     - [X] ++,--
-    <!-- - [ ] Add array(size) initializer to build custom sized arrays -->
-    <!-- - [ ] Add { init_value } to initilize all positions with same value -->
+    <!-- - [ ] Add array(size) initializer to build custom sized arrays (we now let init array with a non constant value) -->
+    - [X] Add { init_value } to initilize all positions with same value
     - [ ] Add 'in' operator to check if anything is in array/string
     - [ ] immediate if
     - [X] typeof: returns type of object
-        - [ ] add namespace to type
+        - [ ] add namespace to type name
     - [ ] typeid: returns hash of typeof
 - [X] Add built in funcs:
     - [X] len: returns size of array/string
-    - [ ] round: round a float number
     - [ ] sorted: sort a list
     - [ ] reversed: reverse a list
 - [X] Let functions return array

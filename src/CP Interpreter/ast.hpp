@@ -414,4 +414,4 @@ namespace parser {
 	};
 }
 
-#endif // AST_HPP
+#endif // !AST_HPP

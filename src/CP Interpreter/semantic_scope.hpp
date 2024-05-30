@@ -42,4 +42,4 @@ namespace visitor {
 	};
 }
 
-#endif // SEMANTIC_SCOPE_HPP
+#endif // !SEMANTIC_SCOPE_HPP

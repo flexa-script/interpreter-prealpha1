@@ -66,4 +66,4 @@ namespace axe {
 	};
 }
 
-#endif // LOGGING_HPP
+#endif // !LOGGING_HPP

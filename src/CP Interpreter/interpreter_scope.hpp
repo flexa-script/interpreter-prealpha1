@@ -58,4 +58,4 @@ namespace visitor {
 	};
 }
 
-#endif // INTERPRETER_SCOPE_HPP
+#endif // !INTERPRETER_SCOPE_HPP

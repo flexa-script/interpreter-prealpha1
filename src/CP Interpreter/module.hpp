@@ -16,7 +16,7 @@ namespace modules {
 	};
 }
 
-#endif // MODULE_HPP
+#endif // !MODULE_HPP
 
 
 

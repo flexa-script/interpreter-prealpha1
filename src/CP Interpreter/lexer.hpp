@@ -45,4 +45,4 @@ namespace lexer {
     };
 };
 
-#endif // LEXER_HPP
+#endif // !LEXER_HPP

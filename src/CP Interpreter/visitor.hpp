@@ -161,4 +161,4 @@ namespace visitor {
 	};
 }
 
-#endif // VISITOR_HPP
+#endif // !VISITOR_HPP

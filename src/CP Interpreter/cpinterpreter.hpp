@@ -17,4 +17,4 @@ public:
 
 };
 
-#endif // CPINTERPRETER_HPP
+#endif // !CPINTERPRETER_HPP

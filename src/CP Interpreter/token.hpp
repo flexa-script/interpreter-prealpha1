@@ -151,4 +151,4 @@ namespace lexer {
 	};
 };
 
-#endif // TOKEN_HPP
+#endif // !TOKEN_HPP

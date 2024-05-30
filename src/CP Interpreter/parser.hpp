@@ -147,4 +147,4 @@ namespace parser {
 	};
 }
 
-#endif // PARSER_HPP
+#endif // !PARSER_HPP
