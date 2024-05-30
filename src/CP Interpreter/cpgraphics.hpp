@@ -1,7 +1,6 @@
 #ifndef CPGRAPHICS_HPP
 #define CPGRAPHICS_HPP
 
-#include <map>
 #include <string>
 #include <functional>
 

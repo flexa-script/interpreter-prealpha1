@@ -1,3 +1,22 @@
+// struct a{
+// var b:int;
+// };
+// def test(aaa: a){
+// 	aaa = null;
+// }
+// var asd: a = a{};
+// print(asd);
+// print("\n");
+// asd = null;
+// print(asd);
+// print("\n");
+// asd = a{};
+// print(asd);
+// print("\n");
+// test(asd);
+// print(asd);
+// print("\n");
+
 using cp.core.graphics;
 // using cp.std.random;
 // using cp.std.math;
@@ -50,5 +69,8 @@ while (not cp::is_quit(window) or not cp::is_quit(window2)) {
 		cp::destroy(window2);
 	}
 }
+
+cp::destroy(window);
+cp::destroy(window2);
 
 print("quit");

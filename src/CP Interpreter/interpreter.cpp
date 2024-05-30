@@ -350,68 +350,6 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 	}
 }
 
-void Interpreter::visit(ASTBlockNode* astnode) {
-	// create new scope
-	auto nmspace = get_namespace();
-	scopes[nmspace].push_back(new InterpreterScope(last_function_name));
-	last_function_name = "";
-
-	// add parameters to the current scope
-	for (unsigned int i = 0; i < last_function_arguments.size(); ++i) {
-		switch (last_function_arguments[i].first) {
-		case Type::T_BOOL:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->b);
-			break;
-		case Type::T_INT:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->i);
-			break;
-		case Type::T_FLOAT:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->f);
-			break;
-		case Type::T_CHAR:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->c);
-			break;
-		case Type::T_STRING:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->s);
-			break;
-		case Type::T_STRUCT:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->str);
-			break;
-		case Type::T_ARRAY:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->arr);
-			break;
-		}
-	}
-
-	// clear the global function parameter/argument vectors
-	last_function_parameters.clear();
-	last_function_arguments.clear();
-
-	// visit each statement in the block
-	for (auto& stmt : astnode->statements) {
-		stmt->accept(this);
-
-		if (continue_block && (is_loop || is_switch)) {
-			break;
-		}
-
-		if (break_block && (is_loop || is_switch)) {
-			break;
-		}
-
-		if (return_from_function) {
-			if (!return_from_function_name.empty() && return_from_function_name == scopes[nmspace].back()->get_name()) {
-				return_from_function_name = "";
-				return_from_function = false;
-			}
-			break;
-		}
-	}
-
-	// close scope
-	scopes[nmspace].pop_back();
-}
-
 void Interpreter::visit(ASTContinueNode* astnode) {
 	continue_block = true;
 }
@@ -1038,6 +976,68 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 			break;
 		}
 	}
+}
+
+void Interpreter::visit(ASTBlockNode* astnode) {
+	// create new scope
+	auto nmspace = get_namespace();
+	scopes[nmspace].push_back(new InterpreterScope(last_function_name));
+	last_function_name = "";
+
+	// add parameters to the current scope
+	for (unsigned int i = 0; i < last_function_arguments.size(); ++i) {
+		switch (last_function_arguments[i].first) {
+		case Type::T_BOOL:
+			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->b);
+			break;
+		case Type::T_INT:
+			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->i);
+			break;
+		case Type::T_FLOAT:
+			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->f);
+			break;
+		case Type::T_CHAR:
+			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->c);
+			break;
+		case Type::T_STRING:
+			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->s);
+			break;
+		case Type::T_STRUCT:
+			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->str);
+			break;
+		case Type::T_ARRAY:
+			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->arr);
+			break;
+		}
+	}
+
+	// clear the global function parameter/argument vectors
+	last_function_parameters.clear();
+	last_function_arguments.clear();
+
+	// visit each statement in the block
+	for (auto& stmt : astnode->statements) {
+		stmt->accept(this);
+
+		if (continue_block && (is_loop || is_switch)) {
+			break;
+		}
+
+		if (break_block && (is_loop || is_switch)) {
+			break;
+		}
+
+		if (return_from_function) {
+			if (!return_from_function_name.empty() && return_from_function_name == scopes[nmspace].back()->get_name()) {
+				return_from_function_name = "";
+				return_from_function = false;
+			}
+			break;
+		}
+	}
+
+	// close scope
+	scopes[nmspace].pop_back();
 }
 
 void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {

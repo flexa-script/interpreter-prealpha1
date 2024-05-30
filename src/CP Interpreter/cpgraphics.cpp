@@ -1,4 +1,5 @@
 #include "cpgraphics.hpp"
+#include <iostream>
 
 using namespace modules;
 
@@ -20,7 +21,7 @@ void CPGraphics::register_functions(visitor::Interpreter* interpreter) {
 		win->str->second["__instance_index"]->i = graphic_engine.size() - 1;
 
 		// initialize window graphic engine and return value
-		auto str = win->str->second["title"]->s;
+		auto str = win->str->second["title"]->s + " ID:" + std::to_string(win->str->second["__instance_index"]->i);
 		auto wstr = std::wstring(str.begin(), str.end());
 		auto rval = Value(parser::Type::T_BOOL);
 		rval.b = graphic_engine[win->str->second["__instance_index"]->i]->initialize(
@@ -33,38 +34,71 @@ void CPGraphics::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["clear_screen"] = [this, interpreter]() {
 		Value* win = interpreter->last_function_arguments[0].second;
-		int r, g, b;
-		r = (int)interpreter->last_function_arguments[1].second->str->second["r"]->i;
-		g = (int)interpreter->last_function_arguments[1].second->str->second["g"]->i;
-		b = (int)interpreter->last_function_arguments[1].second->str->second["b"]->i;
-		graphic_engine[win->str->second["__instance_index"]->i]->clear_screen(RGB(r, g, b));
+		if (!parser::is_void(win->curr_type)) {
+			if (graphic_engine[win->str->second["__instance_index"]->i]) {
+				int r, g, b;
+				r = (int)interpreter->last_function_arguments[1].second->str->second["r"]->i;
+				g = (int)interpreter->last_function_arguments[1].second->str->second["g"]->i;
+				b = (int)interpreter->last_function_arguments[1].second->str->second["b"]->i;
+				graphic_engine[win->str->second["__instance_index"]->i]->clear_screen(RGB(r, g, b));
+			}
+		}
 	};
 
 	interpreter->builtin_functions["draw_pixel"] = [this, interpreter]() {
 		Value* win = interpreter->last_function_arguments[0].second;
-		int x, y, r, g, b;
-		x = (int)interpreter->last_function_arguments[1].second->i;
-		y = (int)interpreter->last_function_arguments[2].second->i;
-		r = (int)interpreter->last_function_arguments[3].second->str->second["r"]->i;
-		g = (int)interpreter->last_function_arguments[3].second->str->second["g"]->i;
-		b = (int)interpreter->last_function_arguments[3].second->str->second["b"]->i;
-		graphic_engine[win->str->second["__instance_index"]->i]->draw_pixel(x, y, RGB(r, g, b));
+		if (!parser::is_void(win->curr_type)) {
+			if (graphic_engine[win->str->second["__instance_index"]->i]) {
+				int x, y, r, g, b;
+				x = (int)interpreter->last_function_arguments[1].second->i;
+				y = (int)interpreter->last_function_arguments[2].second->i;
+				r = (int)interpreter->last_function_arguments[3].second->str->second["r"]->i;
+				g = (int)interpreter->last_function_arguments[3].second->str->second["g"]->i;
+				b = (int)interpreter->last_function_arguments[3].second->str->second["b"]->i;
+				graphic_engine[win->str->second["__instance_index"]->i]->draw_pixel(x, y, RGB(r, g, b));
+			}
+		}
 	};
 
 	interpreter->builtin_functions["update"] = [this, interpreter]() {
 		Value* win = interpreter->last_function_arguments[0].second;
-		graphic_engine[win->str->second["__instance_index"]->i]->update();
+		if (!parser::is_void(win->curr_type)) {
+			if (graphic_engine[win->str->second["__instance_index"]->i]) {
+				graphic_engine[win->str->second["__instance_index"]->i]->update();
+			}
+		}
 	};
 
 	interpreter->builtin_functions["destroy"] = [this, interpreter]() {
 		Value* win = interpreter->last_function_arguments[0].second;
-		graphic_engine[win->str->second["__instance_index"]->i]->~Graphics();
+		if (!parser::is_void(win->curr_type)) {
+			if (graphic_engine[win->str->second["__instance_index"]->i]) {
+				std::cout << "title " << win->str->second["title"]->s << std::endl;
+				std::cout << "index " << win->str->second["__instance_index"]->i << std::endl;
+				graphic_engine[win->str->second["__instance_index"]->i]->~Graphics();
+				graphic_engine[win->str->second["__instance_index"]->i] = nullptr;
+				//graphic_engine.erase(graphic_engine.begin() + win->str->second["__instance_index"]->i);
+				//win->set_null();
+			}
+		}
 	};
 
 	interpreter->builtin_functions["is_quit"] = [this, interpreter]() {
 		Value* win = interpreter->last_function_arguments[0].second;
 		auto val = Value(parser::Type::T_BOOL);
-		val.b = graphic_engine[win->str->second["__instance_index"]->i]->is_quit();
+		if (!parser::is_void(win->curr_type)) {
+			if (graphic_engine[win->str->second["__instance_index"]->i]) {
+				std::cout << "title " << win->str->second["title"]->s << std::endl;
+				std::cout << "index " << win->str->second["__instance_index"]->i << std::endl;
+				val.b = graphic_engine[win->str->second["__instance_index"]->i]->is_quit();
+			}
+			else {
+				val.b = true;
+			}
+		}
+		else {
+			val.b = true;
+		}
 		interpreter->current_expression_value = val;
 	};
 }
