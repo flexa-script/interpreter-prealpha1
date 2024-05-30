@@ -4,8 +4,8 @@
  * v1.0.0
  */
 
-#ifndef GRAPHICS_HPP
-#define GRAPHICS_HPP
+#ifndef WINDOW_HPP
+#define WINDOW_HPP
 
 #include <windows.h>
 #include <map>
@@ -46,4 +46,4 @@ namespace axe {
 	};
 }
 
-#endif // GRAPHICS_HPP
+#endif // WINDOW_HPP

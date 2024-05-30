@@ -1,22 +1,21 @@
-#ifndef CPGRAPHICS_HPP
-#define CPGRAPHICS_HPP
+#ifndef GRAPHICS_HPP
+#define GRAPHICS_HPP
 
-#include <string>
 #include <functional>
 
-#include "interpreter.hpp"
+#include "module.hpp"
 #include "vendor/window.hpp"
 
 namespace modules {
-	class Graphics {
+	class Graphics : public Module {
 	private:
 		std::vector<axe::Window*> windows;
 
 	public:
 		Graphics();
 
-		void register_functions(visitor::Interpreter* interpreter);
+		void register_functions(visitor::Interpreter* interpreter) override;
 	};
 }
 
-#endif // CPGRAPHICS_HPP
+#endif // GRAPHICS_HPP
