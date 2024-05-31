@@ -160,6 +160,8 @@ Token Lexer::process_identifier() {
 		type = TOK_CONTINUE;
 	else if (identifier == "break")
 		type = TOK_BREAK;
+	else if (identifier == "exit")
+		type = TOK_EXIT;
 	else if (identifier == "switch")
 		type = TOK_SWITCH;
 	else if (identifier == "default")
@@ -174,6 +176,12 @@ Token Lexer::process_identifier() {
 		type = TOK_IF;
 	else if (identifier == "else")
 		type = TOK_ELSE;
+	else if (identifier == "enum")
+		type = TOK_ENUM;
+	else if (identifier == "try")
+		type = TOK_TRY;
+	else if (identifier == "catch")
+		type = TOK_CATCH;
 	else if (identifier == "for")
 		type = TOK_FOR;
 	else if (identifier == "foreach")
@@ -196,6 +204,8 @@ Token Lexer::process_identifier() {
 		type = TOK_ANY_TYPE;
 	else if (identifier == "typeof")
 		type = TOK_TYPEOF;
+	else if (identifier == "typeid")
+		type = TOK_TYPEID;
 	else if (identifier == "true" || identifier == "false")
 		type = TOK_BOOL_LITERAL;
 	else if (identifier == "null")

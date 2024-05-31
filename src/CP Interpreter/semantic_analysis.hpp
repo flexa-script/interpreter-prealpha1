@@ -11,10 +11,6 @@
 #include "semantic_scope.hpp"
 
 
-namespace modules {
-	class CPGraphics;
-}
-
 namespace visitor {
 
 	class SemanticAnalyser : Visitor {
@@ -28,6 +24,7 @@ namespace visitor {
 		std::string current_namespace;
 		parser::SemanticValue current_expression;
 		std::stack<parser::FunctionDefinition> current_function;
+		std::map<std::string, std::vector<std::string>> program_nmspaces;
 
 	private:
 		bool returns(parser::ASTNode*);

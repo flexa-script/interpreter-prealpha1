@@ -982,38 +982,38 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 void Interpreter::visit(ASTBlockNode* astnode) {
 	// create new scope
 	auto nmspace = get_namespace();
-	scopes[nmspace].push_back(new InterpreterScope(last_function_name));
-	last_function_name = "";
+	scopes[nmspace].push_back(new InterpreterScope(function_call_name));
+	function_call_name = "";
 
 	// add parameters to the current scope
 	for (unsigned int i = 0; i < last_function_arguments.size(); ++i) {
 		switch (last_function_arguments[i].first) {
 		case Type::T_BOOL:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->b);
+			scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i].second->b);
 			break;
 		case Type::T_INT:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->i);
+			scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i].second->i);
 			break;
 		case Type::T_FLOAT:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->f);
+			scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i].second->f);
 			break;
 		case Type::T_CHAR:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->c);
+			scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i].second->c);
 			break;
 		case Type::T_STRING:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->s);
+			scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i].second->s);
 			break;
 		case Type::T_STRUCT:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->str);
+			scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i].second->str);
 			break;
 		case Type::T_ARRAY:
-			scopes[nmspace].back()->declare_variable(last_function_parameters[i], last_function_arguments[i].second->arr);
+			scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i].second->arr);
 			break;
 		}
 	}
 
 	// clear the global function parameter/argument vectors
-	last_function_parameters.clear();
+	function_call_parameters.clear();
 	last_function_arguments.clear();
 
 	// visit each statement in the block
@@ -1086,10 +1086,10 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	auto func_scope = scopes[nmspace][i];
 
 	// populate the global vector of function parameter names, to be used in creation of function scope
-	last_function_parameters = std::get<1>(func_scope->find_declared_function(astnode->identifier, signature));
+	function_call_parameters = std::get<1>(func_scope->find_declared_function(astnode->identifier, signature));
 
 	current_name = astnode->identifier;
-	last_function_name = astnode->identifier;
+	function_call_name = astnode->identifier;
 
 	is_function_context = true;
 	current_function_nmspace.push(nmspace);

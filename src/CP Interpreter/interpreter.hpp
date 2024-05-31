@@ -27,11 +27,12 @@ namespace visitor {
 	private:
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
 		std::vector<std::string> libs;
-		std::string last_function_name;
-		std::vector<std::string> last_function_parameters;
+		std::string function_call_name;
+		std::vector<std::string> function_call_parameters;
 		std::stack<std::string> current_function_nmspace;
-		bool is_function_context;
 		std::string return_from_function_name;
+		std::map<std::string, std::vector<std::string>> program_nmspaces;
+		bool is_function_context;
 		bool return_from_function = false;
 		bool is_switch = false;
 		bool is_loop = false;

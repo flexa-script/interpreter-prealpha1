@@ -42,10 +42,10 @@
     - [X] +=,-=,*=,/=,%= assignment
     - [X] namespace
     <!-- - [0] instaceof (typeof was adapted to accept types) -->
-    - [ ] as namespace
-    - [ ] exit
-    - [ ] enum
-    - [ ] try catch
+    - [I] as namespace
+    - [I] exit
+    - [I] enum
+    - [I] try catch
 - [ ] Add expression operators:
     - [X] ++,--
     <!-- - [ ] Add array(size) initializer to build custom sized arrays (we now let init array with a non constant value) -->
@@ -53,12 +53,10 @@
     - [ ] Add 'in' operator to check if anything is in array/string
     - [ ] immediate if
     - [X] typeof: returns type of object
-        - [ ] add namespace to type name
-    - [ ] typeid: returns hash of typeof
+        - [ ] add namespace to type name return
+    - [I] typeid: returns hash of typeof
 - [X] Add built in funcs:
     - [X] len: returns size of array/string
-    - [ ] sorted: sort a list
-    - [ ] reversed: reverse a list
 - [X] Let functions return array
 - [X] Add lib scope lib.(method|properties|struct)
 - [X] Guanrantee that a lib is loaded once
@@ -73,10 +71,10 @@
 - [ ] Improve REPL:
     - [ ] Now expressions can be executed in statements, dont need more to execute expression parser directly
 - [X] Add a default interface to implements built in functions
-- [ ] Add a default interface to implements core libs
+- [X] Add a default interface to implements core libs
 - [ ] Add core library:
-    - [ ] File I/O
-    - [ ] Graphics
+    - [X] File I/O
+    - [X] Graphics
     - [ ] Mouse
     - [ ] Sound
     - [ ] Keyboard

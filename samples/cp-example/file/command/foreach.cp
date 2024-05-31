@@ -3,7 +3,7 @@
 var arr[] : int = { 1, 2, 3 };
 var marr[][] : int = { { 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } };
 
-foreach (var val : int in arr) {
+foreach (var val: int in arr) {
     print("<");
     print(val);
     print(">\n");

@@ -146,6 +146,15 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
+	class ASTAsNamespaceNode : public ASTStatementNode {
+	public:
+		std::string nmspace;
+
+		ASTAsNamespaceNode(std::string nmspace, unsigned int col, unsigned int row);
+
+		void accept(visitor::Visitor*) override;
+	};
+
 	class ASTDeclarationNode : public ASTStatementNode, public TypeDefinition {
 	public:
 		std::string identifier;
@@ -202,6 +211,15 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
+	class ASTExitNode : public ASTStatementNode {
+	public:
+		ASTExprNode* exit_code;
+
+		ASTExitNode(ASTExprNode* exit_code, unsigned int row, unsigned int col);
+
+		void accept(visitor::Visitor*) override;
+	};
+
 	// at hashtable it's stored the correspondent case statement start
 	// it'll execute until find a break
 	// at vector it's stored switch statements
@@ -240,6 +258,26 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
+	class ASTEnumNode : public ASTStatementNode {
+	public:
+		std::vector<std::string> identifiers;
+
+		ASTEnumNode(std::vector<std::string> identifiers, unsigned int row, unsigned int col);
+
+		void accept(visitor::Visitor*) override;
+	};
+
+	class ASTTryCatchNode : public ASTStatementNode {
+	public:
+		ASTDeclarationNode* decl;
+		ASTBlockNode* try_block;
+		ASTBlockNode* catch_block;
+
+		ASTTryCatchNode(ASTDeclarationNode* decl, ASTBlockNode* try_block, ASTBlockNode* catch_block, unsigned int row, unsigned int col);
+
+		void accept(visitor::Visitor*) override;
+	};
+
 	class ASTForNode : public ASTStatementNode {
 	public:
 		std::array<ASTNode*, 3> dci;
@@ -252,11 +290,11 @@ namespace parser {
 
 	class ASTForEachNode : public ASTStatementNode {
 	public:
-		ASTNode* itdecl; // decl or assign node
+		ASTDeclarationNode* itdecl; // decl or assign node
 		ASTNode* collection;
 		ASTBlockNode* block;
 
-		ASTForEachNode(ASTNode*, ASTNode*, ASTBlockNode*, unsigned int, unsigned int);
+		ASTForEachNode(ASTDeclarationNode*, ASTNode*, ASTBlockNode*, unsigned int, unsigned int);
 
 		void accept(visitor::Visitor*) override;
 	};

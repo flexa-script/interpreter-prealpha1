@@ -39,11 +39,15 @@ namespace parser {
 		// statement nodes
 		ASTNode* parse_program_statement();
 
+		ASTAsNamespaceNode* parse_as_namespace_statement();
+
 		ASTUsingNode* parse_using_statement();
 
 		ASTNode* parse_block_statement();
 
 		ASTDeclarationNode* parse_declaration_statement();
+
+		ASTDeclarationNode* parse_undef_declaration_statement();
 
 		ASTNode* parse_assignment_or_increment_node();
 
@@ -52,6 +56,10 @@ namespace parser {
 		ASTUnaryExprNode* parse_increment_expression(ASTIdentifierNode*);
 
 		ASTReturnNode* parse_return_statement();
+
+		ASTExitNode* parse_exit_statement();
+
+		ASTEnumNode* parse_enum_statement();
 
 		ASTBlockNode* parse_block();
 
@@ -68,6 +76,8 @@ namespace parser {
 		ASTElseIfNode* parse_else_if_statement();
 
 		ASTIfNode* parse_if_statement();
+
+		ASTTryCatchNode* parse_try_catch_statement();
 
 		ASTForNode* parse_for_statement();
 

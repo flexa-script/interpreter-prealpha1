@@ -79,6 +79,9 @@ ASTUsingNode::ASTUsingNode(std::vector<std::string> library, std::string alias, 
 	: ASTStatementNode(row, col),
 	library(std::move(library)), alias(std::move(alias)) {}
 
+ASTAsNamespaceNode::ASTAsNamespaceNode(std::string nmspace, unsigned int row, unsigned int col)
+	: ASTStatementNode(row, col), nmspace(std::move(nmspace)) {}
+
 ASTDeclarationNode::ASTDeclarationNode(std::string identifier, Type type, Type array_type, std::vector<ASTExprNode*> dim,
 	std::string type_name, std::string type_name_space, ASTExprNode* expr, bool is_const,
 	unsigned int row, unsigned int col)
@@ -102,6 +105,9 @@ ASTContinueNode::ASTContinueNode(unsigned int row, unsigned int col)
 ASTBreakNode::ASTBreakNode(unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col) {}
 
+ASTExitNode::ASTExitNode(ASTExprNode* exit_code,  unsigned int row, unsigned int col)
+	: ASTStatementNode(row, col), exit_code(exit_code){}
+
 ASTSwitchNode::ASTSwitchNode(ASTExprNode* condition, std::vector<ASTNode*>* statements,
 	std::map<ASTExprNode*, unsigned int>* case_blocks, unsigned int default_block, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), condition(condition), statements(statements), case_blocks(case_blocks),
@@ -110,6 +116,12 @@ ASTSwitchNode::ASTSwitchNode(ASTExprNode* condition, std::vector<ASTNode*>* stat
 ASTElseIfNode::ASTElseIfNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), condition(condition), block(block) {}
 
+ASTEnumNode::ASTEnumNode(std::vector<std::string> identifiers, unsigned int row, unsigned int col)
+	: ASTStatementNode(row, col), identifiers(identifiers) {}
+
+ASTTryCatchNode::ASTTryCatchNode(ASTDeclarationNode* decl, ASTBlockNode* try_block, ASTBlockNode* catch_block, unsigned int row, unsigned int col)
+	: ASTStatementNode(row, col), decl(decl), try_block(try_block), catch_block(catch_block) {}
+
 ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* if_block, std::vector<ASTElseIfNode*> else_ifs,
 	ASTBlockNode* else_block, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), condition(condition), if_block(if_block), else_ifs(else_ifs), else_block(else_block) {}
@@ -117,7 +129,7 @@ ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* if_block, std::vector
 ASTForNode::ASTForNode(std::array<ASTNode*, 3> dci, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), dci(dci), block(block) {}
 
-ASTForEachNode::ASTForEachNode(ASTNode* itdecl, ASTNode* collection, ASTBlockNode* block, unsigned int row, unsigned int col)
+ASTForEachNode::ASTForEachNode(ASTDeclarationNode* itdecl, ASTNode* collection, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), itdecl(itdecl), collection(collection), block(block) {}
 
 ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
@@ -294,11 +306,19 @@ void ASTDeclarationNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
+void ASTAsNamespaceNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
 void ASTAssignmentNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
 void ASTReturnNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+void ASTExitNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
@@ -315,6 +335,14 @@ void ASTBreakNode::accept(visitor::Visitor* v) {
 }
 
 void ASTSwitchNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+void ASTEnumNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+void ASTTryCatchNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
