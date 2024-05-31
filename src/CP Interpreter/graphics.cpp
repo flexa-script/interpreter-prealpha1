@@ -158,8 +158,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 			if (windows[win->str->second[INSTANCE_ID_NAME]->i]) {
 				windows[win->str->second[INSTANCE_ID_NAME]->i]->~Window();
 				windows[win->str->second[INSTANCE_ID_NAME]->i] = nullptr;
-
-				// is not the ideal
+				// set null
 				win->str->second["title"]->set_null();
 				win->str->second["width"]->set_null();
 				win->str->second["height"]->set_null();

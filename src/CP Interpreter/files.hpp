@@ -2,11 +2,17 @@
 #define FILES_HPP
 
 #include <functional>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 #include "module.hpp"
 
 namespace modules {
 	class Files : public Module {
+	private:
+		std::vector<std::fstream*> files;
+
 	public:
 		Files();
 
