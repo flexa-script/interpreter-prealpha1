@@ -6,6 +6,7 @@
 #include "vendor/util.hpp"
 #include "vendor/watch.h"
 #include "graphics.hpp"
+#include "files.hpp"
 
 
 using namespace visitor;
@@ -1426,6 +1427,7 @@ void Interpreter::register_built_in_lib(std::string libname) {
 	}
 
 	if (built_in_libs[1] == libname) {
-
+		cpfiles = new modules::Files();
+		cpfiles->register_functions(this);
 	}
 }

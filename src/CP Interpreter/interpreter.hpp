@@ -13,6 +13,7 @@
 
 namespace modules {
 	class Graphics;
+	class Files;
 }
 
 namespace visitor {
@@ -41,10 +42,11 @@ namespace visitor {
 
 		std::vector<std::string> built_in_libs = {
 			"cp.core.graphics",
-			"cp.core.file"
+			"cp.core.files"
 		};
 
 		modules::Graphics* cpgraphics;
+		modules::Files* cpfiles;
 
 
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);

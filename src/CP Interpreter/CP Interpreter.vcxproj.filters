@@ -123,6 +123,9 @@
     <ClInclude Include="module.hpp">
       <Filter>Header Files\modules</Filter>
     </ClInclude>
+    <ClInclude Include="files.hpp">
+      <Filter>Header Files\modules\cp.core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -184,6 +187,9 @@
     </ClCompile>
     <ClCompile Include="module.cpp">
       <Filter>Source Files\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="files.cpp">
+      <Filter>Source Files\modules\cp.core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

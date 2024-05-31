@@ -6,7 +6,7 @@ Files::Files() {}
 
 void Files::register_functions(visitor::Interpreter* interpreter) {
 
-	interpreter->builtin_functions["initialize"] = [this, interpreter]() {
+	interpreter->builtin_functions["open"] = [this, interpreter]() {
 		// initialize file struct values
 		Value* cpfile = interpreter->last_function_arguments[0].second;
 		cpfile->str->second["path"] = new Value(interpreter->last_function_arguments[1].second);

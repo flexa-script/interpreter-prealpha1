@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ast.hpp" />
+    <ClInclude Include="files.hpp" />
     <ClInclude Include="graphics.hpp" />
     <ClInclude Include="cpinterpreter.hpp" />
     <ClInclude Include="cprepl.hpp" />
@@ -82,6 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ast.cpp" />
+    <ClCompile Include="files.cpp" />
     <ClCompile Include="graphics.cpp" />
     <ClCompile Include="cpinterpreter.cpp" />
     <ClCompile Include="cprepl.cpp" />
