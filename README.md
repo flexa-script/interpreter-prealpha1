@@ -4,7 +4,6 @@
 - [X] Add load file from param
 - [X] Rewrite the lexer
 - [X] Rewrite EBNF
-- [X] Implements new EBNF commands
 - [X] Change expression evaluation to left to right
 - [X] Add and precedence
 - [X] Add void support to function
@@ -21,17 +20,16 @@
 - [X] Add struct support
     - [X] Add struct array-like constructor
     - [X] Add Java class pointer-like behavior
-        - [ ] Fix null set inside funcion
 - [X] Add null support
 - [X] Add type convert support
     - [X] Add array and struct support (based on print)
 - [X] Remove mandatory variable type definition
-- [X] Fix cp dependencies/libs loader
+- [X] Improve cp dependencies/libs loader
 - [X] Add string array-like accessor
-- [ ] Add callback
-    - [ ] as type function
-- [ ] Pass parameter by reference
-- [ ] Add inifit parameters
+- [ ] Function improvements:
+    - [ ] Add callback as type function
+    - [ ] Pass parameter by reference
+    - [ ] Add infinit parameters in functions, like `def foo(...args)`
 - [ ] Add statements:
     - [X] for
     - [X] foreach
@@ -41,7 +39,6 @@
     - [X] continue
     - [X] +=,-=,*=,/=,%= assignment
     - [X] namespace
-    <!-- - [0] instaceof (typeof was adapted to accept types) -->
     - [X] as namespace
     - [X] exit
     - [X] enum
@@ -49,7 +46,6 @@
     - [X] do while
 - [ ] Add expression operators:
     - [X] ++,--
-    <!-- - [ ] Add array(size) initializer to build custom sized arrays (we now let init array with a non constant value) -->
     - [X] Add { init_value } to initilize all positions with same value
     - [ ] Add 'in' operator to check if anything is in array/string
     - [ ] immediate if
@@ -69,19 +65,11 @@
     - [ ] Set caret pos
     - [ ] Change color
     - [ ] ...
-- [ ] Improve error system (based on C)
+- [ ] Improve error system (based on C++)
 - [ ] Improve REPL:
     - [ ] Now expressions can be executed in statements, dont need more to execute expression parser directly
 - [X] Add a default interface to implements built in functions
 - [X] Add a default interface to implements core libs
-- [ ] Add core library:
-    - [X] File I/O
-    - [X] Graphics
-    - [ ] Mouse
-    - [ ] Sound
-    - [ ] Keyboard
-    - [ ] Time
-    - [ ] Web/API
 - [ ] General otimizations:
     - [ ] Remove duplicate codes
         - [ ] Type checks
@@ -92,6 +80,15 @@
     - [ ] https://github.com/univesity-projects/sort-algorithms
     - [ ] https://github.com/univesity-projects/caesar-cipher
     - [ ] https://github.com/univesity-projects/pong-pro-player
+    - [ ] https://github.com/carlosebmachado-games/tetris-Clone
+- [ ] Add core library:
+    - [X] File I/O
+    - [X] Graphics
+    - [ ] Mouse
+    - [ ] Sound
+    - [ ] Keyboard
+    - [ ] Time
+    - [ ] Web/API
 - [ ] Add CP library:
     - [ ] String
     - [ ] Array:
@@ -112,6 +109,10 @@
         - [ ] Stack
         - [ ] Dict
     - [ ] Util?
+
+## Known bugs
+- [ ] When a struct is passed by parameter, it can't be assigned as null, it occurs because it's passed just the strcut reference and not the variable
+- [ ] Parser can't handl unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))
 
 ## Errors
 - Errors has CP prefix, eg. CP9999
