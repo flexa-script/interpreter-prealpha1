@@ -22,19 +22,24 @@ namespace visitor {
 	private:
 		void visit(parser::ASTProgramNode*) override;
 		void visit(parser::ASTUsingNode*) override;
-
+		void visit(parser::ASTAsNamespaceNode*) override;
 		void visit(parser::ASTDeclarationNode*) override;
 		void visit(parser::ASTAssignmentNode*) override;
 		void visit(parser::ASTReturnNode*) override;
+		void visit(parser::ASTExitNode*) override;
 		void visit(parser::ASTBlockNode*) override;
 		void visit(parser::ASTContinueNode*) override;
 		void visit(parser::ASTBreakNode*) override;
 		void visit(parser::ASTSwitchNode*) override;
+		void visit(parser::ASTEnumNode*) override;
+		void visit(parser::ASTTryCatchNode*) override;
+		void visit(parser::ASTThrowNode*) override;
 		void visit(parser::ASTElseIfNode*) override;
 		void visit(parser::ASTIfNode*) override;
 		void visit(parser::ASTForNode*) override;
 		void visit(parser::ASTForEachNode*) override;
 		void visit(parser::ASTWhileNode*) override;
+		void visit(parser::ASTDoWhileNode*) override;
 		void visit(parser::ASTFunctionDefinitionNode*) override;
 		void visit(parser::ASTStructDefinitionNode*) override;
 		void visit(parser::ASTLiteralNode<cp_bool>*) override;
@@ -51,7 +56,7 @@ namespace visitor {
 		void visit(parser::ASTTypeParseNode*) override;
 		void visit(parser::ASTNullNode*) override;
 		void visit(parser::ASTThisNode*) override;
-		void visit(parser::ASTTypeofNode*) override;
+		void visit(parser::ASTTypingNode*) override;
 
 		unsigned int hash(parser::ASTExprNode*) override;
 		unsigned int hash(parser::ASTIdentifierNode*) override;

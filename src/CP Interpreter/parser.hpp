@@ -79,6 +79,8 @@ namespace parser {
 
 		ASTTryCatchNode* parse_try_catch_statement();
 
+		ASTThrowNode* parse_throw_statement();
+
 		ASTForNode* parse_for_statement();
 
 		ASTNode* parse_foreach_collection();
@@ -86,6 +88,8 @@ namespace parser {
 		ASTForEachNode* parse_foreach_statement();
 
 		ASTWhileNode* parse_while_statement();
+
+		ASTDoWhileNode* parse_do_while_statement();
 
 		ASTFunctionDefinitionNode* parse_function_definition();
 
@@ -153,6 +157,8 @@ namespace parser {
 		Identifier parse_identifier();
 
 		std::vector<Identifier> parse_identifier_vector();
+
+		void check_consume_semicolon();
 
 	};
 }

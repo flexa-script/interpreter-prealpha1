@@ -56,6 +56,8 @@ std::vector<std::string> LibFinder::get_lib_names() {
 	return lib_names;
 }
 
+void LibFinder::visit(ASTAsNamespaceNode*) {}
+
 void LibFinder::visit(ASTDeclarationNode*) {}
 void LibFinder::visit(ASTAssignmentNode*) {}
 
@@ -67,7 +69,11 @@ void LibFinder::visit(ASTBlockNode*) {}
 void LibFinder::visit(ASTContinueNode*) {}
 void LibFinder::visit(ASTBreakNode*) {}
 void LibFinder::visit(ASTReturnNode*) {}
+void LibFinder::visit(ASTExitNode*) {}
 
+void LibFinder::visit(ASTEnumNode*) {}
+void LibFinder::visit(ASTTryCatchNode*) {}
+void LibFinder::visit(ASTThrowNode*) {}
 void LibFinder::visit(ASTSwitchNode*) {}
 void LibFinder::visit(ASTElseIfNode*) {}
 void LibFinder::visit(ASTIfNode*) {}
@@ -75,6 +81,7 @@ void LibFinder::visit(ASTIfNode*) {}
 void LibFinder::visit(ASTForNode*) {}
 void LibFinder::visit(ASTForEachNode*) {}
 void LibFinder::visit(ASTWhileNode*) {}
+void LibFinder::visit(ASTDoWhileNode*) {}
 
 void LibFinder::visit(ASTBinaryExprNode*) {}
 void LibFinder::visit(ASTUnaryExprNode*) {}
@@ -90,6 +97,11 @@ void LibFinder::visit(ASTStructDefinitionNode*) {}
 void LibFinder::visit(ASTArrayConstructorNode*) {}
 void LibFinder::visit(ASTStructConstructorNode*) {}
 
+void LibFinder::visit(ASTTypeParseNode*) {}
+void LibFinder::visit(ASTTypingNode*) {}
+void LibFinder::visit(ASTNullNode*) {}
+void LibFinder::visit(ASTThisNode*) {}
+
 unsigned int LibFinder::hash(ASTExprNode*) { return 0; }
 unsigned int LibFinder::hash(ASTLiteralNode<cp_bool>*) { return 0; }
 unsigned int LibFinder::hash(ASTLiteralNode<cp_int>*) { return 0; }
@@ -97,11 +109,6 @@ unsigned int LibFinder::hash(ASTLiteralNode<cp_float>*) { return 0; }
 unsigned int LibFinder::hash(ASTLiteralNode<cp_char>*) { return 0; }
 unsigned int LibFinder::hash(ASTLiteralNode<cp_string>*) { return 0; }
 unsigned int LibFinder::hash(ASTIdentifierNode*) { return 0; }
-
-void LibFinder::visit(ASTTypeParseNode*) {}
-void LibFinder::visit(ASTTypeofNode*) {}
-void LibFinder::visit(ASTNullNode*) {}
-void LibFinder::visit(ASTThisNode*) {}
 
 std::string LibFinder::get_namespace(std::string) { return ""; }
 std::string LibFinder::get_namespace(ASTProgramNode*, std::string) { return ""; }

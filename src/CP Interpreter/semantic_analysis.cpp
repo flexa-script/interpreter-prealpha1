@@ -64,30 +64,8 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	}
 }
 
-VariableDefinition SemanticAnalyser::access_struct_variable(std::vector<Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i) {
-	SemanticScope* curr_scope;
-	try {
-		curr_scope = get_inner_most_struct_definition_scope(get_namespace(nmspace), type_name);
-	}
-	catch (...) {
-		throw std::runtime_error("SERR: can't find struct");
-	}
-	auto type_struct = curr_scope->find_declared_structure_definition(type_name);
-
-	for (auto& var_type_struct : type_struct.variables) {
-		if (identifier_vector[i].identifier == var_type_struct.identifier) {
-			if ((is_struct(var_type_struct.type) || is_any(var_type_struct.type)) && identifier_vector.size() - 1 > i) {
-				return access_struct_variable(identifier_vector, var_type_struct.type_name, var_type_struct.type_name_space, ++i);
-			}
-			else {
-				if (identifier_vector.size() - 1 > i) {
-					throw std::runtime_error("member '" + var_type_struct.identifier + "' of '" + type_name + "' is not a struct");
-				}
-				return var_type_struct;
-			}
-		}
-	}
-	throw std::runtime_error("SERR: can't determine type of '(" + type_name + ")" + identifier_vector[i].identifier + "'");
+void SemanticAnalyser::visit(ASTAsNamespaceNode* astnode) {
+	program_nmspaces[get_namespace(current_program->alias)].push_back(astnode->nmspace);
 }
 
 void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
@@ -218,20 +196,16 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 void SemanticAnalyser::visit(ASTEnumNode* astnode) {
 	auto nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
+		auto decl_current_expr = new SemanticValue();
+		decl_current_expr->type = Type::T_INT;
+		decl_current_expr->array_type = Type::T_UNDEF;
+		decl_current_expr->row = astnode->row;
+		decl_current_expr->col = astnode->col;
+		decl_current_expr->is_const = true;
+		decl_current_expr->hash = i;
 		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], Type::T_INT, Type::T_UNDEF,
-			std::vector<ASTExprNode*>(), "", "", nullptr, true, astnode->row, astnode->col);
+			std::vector<ASTExprNode*>(), "", "", decl_current_expr, true, astnode->row, astnode->col);
 	}
-}
-
-SemanticScope* SemanticAnalyser::get_inner_most_variable_scope(std::string nmspace, std::string identifier) {
-	// determine the inner-most scope in which the value is declared
-	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
-		if (i <= 0) {
-			throw std::runtime_error("identifier '" + identifier + "' was not declared");
-		}
-	}
-	return scopes[nmspace][i];
 }
 
 void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
@@ -398,149 +372,6 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 
 }
 
-void SemanticAnalyser::determine_array_type(ASTArrayConstructorNode* astnode) {
-	auto aux_curr_type = current_expression.type;
-	for (size_t i = 0; i < astnode->values.size(); ++i) {
-		astnode->values.at(i)->accept(this);
-
-		if (auto expr = dynamic_cast<ASTArrayConstructorNode*>(astnode->values.at(i))) {
-			determine_array_type(expr);
-		}
-		else {
-			check_array_type(astnode->values.at(i), astnode->row, astnode->col);
-		}
-	}
-	current_expression.type = aux_curr_type;
-}
-
-void SemanticAnalyser::check_array_type(ASTExprNode* astnode, unsigned int row, unsigned int col) {
-	auto aux_curr_type = current_expression.type;
-	astnode->accept(this);
-
-	if (is_any(current_expression.array_type) || is_undefined(current_expression.array_type) || is_void(current_expression.array_type)) {
-		current_expression.array_type = current_expression.type;
-	}
-	if (!match_type(current_expression.array_type, current_expression.type)) {
-		throw std::runtime_error(msg_header(row, col) + "mismatched type in array definition");
-	}
-	current_expression.type = aux_curr_type;
-}
-
-std::vector<unsigned int> SemanticAnalyser::calculate_array_dim_size(ASTArrayConstructorNode* arr) {
-	auto dim = std::vector<unsigned int>();
-
-	dim.push_back(arr->values.size());
-
-	if (auto sub_arr = dynamic_cast<ASTArrayConstructorNode*>(arr->values.at(0))) {
-		auto dim2 = calculate_array_dim_size(sub_arr);
-		dim.insert(dim.end(), dim2.begin(), dim2.end());
-	}
-
-	return dim;
-}
-
-SemanticScope* SemanticAnalyser::get_inner_most_struct_definition_scope(std::string nmspace, std::string identifier) {
-	// determine the inner-most scope in which the value is declared
-	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); i--) {
-		if (i <= 0) {
-			throw std::runtime_error("identifier '" + identifier + "' was not declared");
-		}
-	}
-	return scopes[nmspace][i];
-}
-
-void SemanticAnalyser::validate_struct_assign(SemanticScope* curr_scope, SemanticValue* expression, ASTStructConstructorNode* expr) {
-	// determine the inner-most scope in which the value is declared
-	SemanticScope* tn_scope;
-	try {
-		auto nmspace = get_namespace(expr->nmspace);
-		tn_scope = get_inner_most_struct_definition_scope(nmspace, expr->type_name);
-	}
-	catch (...) {
-		throw std::runtime_error(msg_header(expr->row, expr->col) + "struct '" + expr->type_name +
-			"' was not declared");
-	}
-	auto struct_def = tn_scope->find_declared_structure_definition(expr->type_name);
-
-	for (auto const& expr_value : expr->values) {
-
-		VariableDefinition str_var_def;
-		auto found = false;
-		for (size_t i = 0; i < struct_def.variables.size(); ++i) {
-			str_var_def = struct_def.variables[i];
-			if (str_var_def.identifier == expr_value.first) {
-				found = true;
-				break;
-			}
-		}
-
-		if (!found) {
-			throw std::runtime_error(msg_header(expr->row, expr->col) + "'" + expr_value.first + "' is not a member of '" + expression->type_name + "'");
-		}
-
-		expr_value.second->accept(this);
-		auto hash = expr_value.second ? expr_value.second->hash(this) : 0;
-
-		if (!match_type(current_expression.type, str_var_def.type) && !is_any(str_var_def.type) && !is_void(current_expression.type)) {
-			throw std::runtime_error(msg_header(expr->row, expr->col) + "invalid type assigning " + str_var_def.identifier);
-		}
-
-		if (is_array(str_var_def.type) && !match_type(current_expression.array_type, str_var_def.array_type) && !is_any(str_var_def.array_type) && !is_void(current_expression.type)) {
-			throw std::runtime_error(msg_header(expr->row, expr->col) + "invalid type assigning " + str_var_def.identifier);
-		}
-
-		if (is_array(str_var_def.type)) {
-			std::vector<unsigned int> var_dim = evaluate_access_vector(str_var_def.dim);
-			std::vector<unsigned int> expr_dim = evaluate_access_vector(current_expression.dim);
-
-			if (var_dim.size() != expr_dim.size()) {
-				throw std::runtime_error(msg_header(expr->row, expr->col) + "invalid array dimension assigning '" + str_var_def.identifier + "'");
-			}
-
-			for (size_t dc = 0; dc < var_dim.size(); ++dc) {
-				if (str_var_def.dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
-					throw std::runtime_error(msg_header(expr->row, expr->col) + "invalid array size assigning '" + str_var_def.identifier + "'");
-				}
-			}
-		}
-
-		if (is_struct(str_var_def.type)) {
-			if (str_var_def.type_name != current_expression.type_name && !is_void(current_expression.type)) {
-				throw std::runtime_error(msg_header(expr->row, expr->col) + "mismatched type for '" + str_var_def.identifier +
-					"' struct, expected '" + current_expression.type_name + "', found '" + current_expression.type_name + "'");
-			}
-		}
-
-		if (is_struct(str_var_def.type)) {
-			if (is_void(current_expression.type)) {
-			}
-			else if (auto str_expr = dynamic_cast<ASTStructConstructorNode*>(expr_value.second)) {
-			}
-			else {
-				throw std::runtime_error(msg_header(expr->row, expr->col) + "expected struct constructor");
-			}
-		}
-
-	}
-}
-
-std::vector<unsigned int> SemanticAnalyser::evaluate_access_vector(std::vector<ASTExprNode*> exprAcessVector) {
-	auto access_vector = std::vector<unsigned int>();
-	for (auto& expr : exprAcessVector) {
-		unsigned int val = 0;
-		if (expr) {
-			expr->accept(this);
-			val = expr->hash(this);
-			if (!is_int(current_expression.type)) {
-				throw std::runtime_error(msg_header(0, 0) + "array index access must be a integer value");
-			}
-		}
-		access_vector.push_back(val);
-	}
-	return access_vector;
-}
-
 void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 	// update current expression
 	astnode->expr->accept(this);
@@ -604,17 +435,6 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 		}
 
 	}
-}
-
-SemanticScope* SemanticAnalyser::get_inner_most_function_scope(std::string nmspace, std::string identifier, std::vector<TypeDefinition> signature) {
-	// determine the inner-most scope in which the value is declared
-	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); --i) {
-		if (i <= 0) {
-			throw std::runtime_error("identifier '" + identifier + "' was not declared");
-		}
-	}
-	return scopes[nmspace][i];
 }
 
 void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
@@ -925,11 +745,20 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 	scopes[nmspace].pop_back();
 }
 
-void SemanticAnalyser::visit(ASTWhileNode* astnode) {
-	// set current type to while expression
-	astnode->condition->accept(this);
+void SemanticAnalyser::visit(parser::ASTThrowNode* astnode) {
+	astnode->accept(this);
+	if (current_expression.type_name != "Exception") {
+		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "expected Exception struct in throw");
+	}
+}
 
-	// check the while block
+void SemanticAnalyser::visit(ASTWhileNode* astnode) {
+	astnode->condition->accept(this);
+	astnode->block->accept(this);
+}
+
+void SemanticAnalyser::visit(ASTDoWhileNode* astnode) {
+	astnode->condition->accept(this);
 	astnode->block->accept(this);
 }
 
@@ -1107,22 +936,6 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 	current_expression.is_const = false;
 
 	declare_structure();
-}
-
-void SemanticAnalyser::declare_structure() {
-	// determine the inner-most scope in which the value is declared
-	SemanticScope* curr_scope;
-	try {
-		curr_scope = get_inner_most_struct_definition_scope(get_namespace(current_expression.type_name_space), current_expression.type_name);
-	}
-	catch (...) {
-		throw std::runtime_error("SERR: can't find struct");
-	}
-	auto type_struct = curr_scope->find_declared_structure_definition(current_expression.type_name);
-
-	for (auto& var_type_struct : type_struct.variables) {
-
-	}
 }
 
 void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
@@ -1311,6 +1124,231 @@ void SemanticAnalyser::visit(ASTTypingNode* astnode) {
 	current_expression.type_name = "";
 	current_expression.array_type = Type::T_UNDEF;
 	current_expression.is_const = false;
+}
+
+VariableDefinition SemanticAnalyser::access_struct_variable(std::vector<Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i) {
+	SemanticScope* curr_scope;
+	try {
+		curr_scope = get_inner_most_struct_definition_scope(get_namespace(nmspace), type_name);
+	}
+	catch (...) {
+		throw std::runtime_error("SERR: can't find struct");
+	}
+	auto type_struct = curr_scope->find_declared_structure_definition(type_name);
+
+	for (auto& var_type_struct : type_struct.variables) {
+		if (identifier_vector[i].identifier == var_type_struct.identifier) {
+			if ((is_struct(var_type_struct.type) || is_any(var_type_struct.type)) && identifier_vector.size() - 1 > i) {
+				return access_struct_variable(identifier_vector, var_type_struct.type_name, var_type_struct.type_name_space, ++i);
+			}
+			else {
+				if (identifier_vector.size() - 1 > i) {
+					throw std::runtime_error("member '" + var_type_struct.identifier + "' of '" + type_name + "' is not a struct");
+				}
+				return var_type_struct;
+			}
+		}
+	}
+	throw std::runtime_error("SERR: can't determine type of '(" + type_name + ")" + identifier_vector[i].identifier + "'");
+}
+
+SemanticScope* SemanticAnalyser::get_inner_most_variable_scope(std::string nmspace, std::string identifier) {
+	// determine the inner-most scope in which the value is declared
+	long long i;
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
+		if (i <= 0) {
+			for (auto prgnmspace : program_nmspaces[get_namespace()]) {
+				try {
+					return get_inner_most_variable_scope(prgnmspace, identifier);
+				}
+				catch (...) {}
+			}
+			throw std::runtime_error("identifier '" + identifier + "' was not declared");
+		}
+	}
+	return scopes[nmspace][i];
+}
+
+SemanticScope* SemanticAnalyser::get_inner_most_struct_definition_scope(std::string nmspace, std::string identifier) {
+	long long i;
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); i--) {
+		if (i <= 0) {
+			bool found = false;
+			for (auto prgnmspace : program_nmspaces[get_namespace()]) {
+				try {
+					return get_inner_most_struct_definition_scope(prgnmspace, identifier);
+				}
+				catch (...) {}
+			}
+			throw std::runtime_error("struct '" + identifier + "' was not declared");
+		}
+	}
+	return scopes[nmspace][i];
+}
+
+SemanticScope* SemanticAnalyser::get_inner_most_function_scope(std::string nmspace, std::string identifier, std::vector<TypeDefinition> signature) {
+	// determine the inner-most scope in which the value is declared
+	long long i;
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); --i) {
+		if (i <= 0) {
+			for (auto prgnmspace : program_nmspaces[get_namespace()]) {
+				try {
+					return get_inner_most_function_scope(prgnmspace, identifier, signature);
+				}
+				catch (...) {}
+			}
+			throw std::runtime_error("function '" + identifier + "' was not declared");
+		}
+	}
+	return scopes[nmspace][i];
+}
+
+void SemanticAnalyser::declare_structure() {
+	// determine the inner-most scope in which the value is declared
+	SemanticScope* curr_scope;
+	try {
+		curr_scope = get_inner_most_struct_definition_scope(get_namespace(current_expression.type_name_space), current_expression.type_name);
+	}
+	catch (...) {
+		throw std::runtime_error("SERR: can't find struct");
+	}
+	auto type_struct = curr_scope->find_declared_structure_definition(current_expression.type_name);
+
+	for (auto& var_type_struct : type_struct.variables) {
+
+	}
+}
+
+void SemanticAnalyser::validate_struct_assign(SemanticScope* curr_scope, SemanticValue* expression, ASTStructConstructorNode* expr) {
+	// determine the inner-most scope in which the value is declared
+	SemanticScope* tn_scope;
+	try {
+		auto nmspace = get_namespace(expr->nmspace);
+		tn_scope = get_inner_most_struct_definition_scope(nmspace, expr->type_name);
+	}
+	catch (...) {
+		throw std::runtime_error(msg_header(expr->row, expr->col) + "struct '" + expr->type_name +
+			"' was not declared");
+	}
+	auto struct_def = tn_scope->find_declared_structure_definition(expr->type_name);
+
+	for (auto const& expr_value : expr->values) {
+
+		VariableDefinition str_var_def;
+		auto found = false;
+		for (size_t i = 0; i < struct_def.variables.size(); ++i) {
+			str_var_def = struct_def.variables[i];
+			if (str_var_def.identifier == expr_value.first) {
+				found = true;
+				break;
+			}
+		}
+
+		if (!found) {
+			throw std::runtime_error(msg_header(expr->row, expr->col) + "'" + expr_value.first + "' is not a member of '" + expression->type_name + "'");
+		}
+
+		expr_value.second->accept(this);
+		auto hash = expr_value.second ? expr_value.second->hash(this) : 0;
+
+		if (!match_type(current_expression.type, str_var_def.type) && !is_any(str_var_def.type) && !is_void(current_expression.type)) {
+			throw std::runtime_error(msg_header(expr->row, expr->col) + "invalid type assigning " + str_var_def.identifier);
+		}
+
+		if (is_array(str_var_def.type) && !match_type(current_expression.array_type, str_var_def.array_type) && !is_any(str_var_def.array_type) && !is_void(current_expression.type)) {
+			throw std::runtime_error(msg_header(expr->row, expr->col) + "invalid type assigning " + str_var_def.identifier);
+		}
+
+		if (is_array(str_var_def.type)) {
+			std::vector<unsigned int> var_dim = evaluate_access_vector(str_var_def.dim);
+			std::vector<unsigned int> expr_dim = evaluate_access_vector(current_expression.dim);
+
+			if (var_dim.size() != expr_dim.size()) {
+				throw std::runtime_error(msg_header(expr->row, expr->col) + "invalid array dimension assigning '" + str_var_def.identifier + "'");
+			}
+
+			for (size_t dc = 0; dc < var_dim.size(); ++dc) {
+				if (str_var_def.dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
+					throw std::runtime_error(msg_header(expr->row, expr->col) + "invalid array size assigning '" + str_var_def.identifier + "'");
+				}
+			}
+		}
+
+		if (is_struct(str_var_def.type)) {
+			if (str_var_def.type_name != current_expression.type_name && !is_void(current_expression.type)) {
+				throw std::runtime_error(msg_header(expr->row, expr->col) + "mismatched type for '" + str_var_def.identifier +
+					"' struct, expected '" + current_expression.type_name + "', found '" + current_expression.type_name + "'");
+			}
+		}
+
+		if (is_struct(str_var_def.type)) {
+			if (is_void(current_expression.type)) {
+			}
+			else if (auto str_expr = dynamic_cast<ASTStructConstructorNode*>(expr_value.second)) {
+			}
+			else {
+				throw std::runtime_error(msg_header(expr->row, expr->col) + "expected struct constructor");
+			}
+		}
+
+	}
+}
+
+void SemanticAnalyser::determine_array_type(ASTArrayConstructorNode* astnode) {
+	auto aux_curr_type = current_expression.type;
+	for (size_t i = 0; i < astnode->values.size(); ++i) {
+		astnode->values.at(i)->accept(this);
+
+		if (auto expr = dynamic_cast<ASTArrayConstructorNode*>(astnode->values.at(i))) {
+			determine_array_type(expr);
+		}
+		else {
+			check_array_type(astnode->values.at(i), astnode->row, astnode->col);
+		}
+	}
+	current_expression.type = aux_curr_type;
+}
+
+void SemanticAnalyser::check_array_type(ASTExprNode* astnode, unsigned int row, unsigned int col) {
+	auto aux_curr_type = current_expression.type;
+	astnode->accept(this);
+
+	if (is_any(current_expression.array_type) || is_undefined(current_expression.array_type) || is_void(current_expression.array_type)) {
+		current_expression.array_type = current_expression.type;
+	}
+	if (!match_type(current_expression.array_type, current_expression.type)) {
+		throw std::runtime_error(msg_header(row, col) + "mismatched type in array definition");
+	}
+	current_expression.type = aux_curr_type;
+}
+
+std::vector<unsigned int> SemanticAnalyser::evaluate_access_vector(std::vector<ASTExprNode*> exprAcessVector) {
+	auto access_vector = std::vector<unsigned int>();
+	for (auto& expr : exprAcessVector) {
+		unsigned int val = 0;
+		if (expr) {
+			expr->accept(this);
+			val = expr->hash(this);
+			if (!is_int(current_expression.type)) {
+				throw std::runtime_error(msg_header(0, 0) + "array index access must be a integer value");
+			}
+		}
+		access_vector.push_back(val);
+	}
+	return access_vector;
+}
+
+std::vector<unsigned int> SemanticAnalyser::calculate_array_dim_size(ASTArrayConstructorNode* arr) {
+	auto dim = std::vector<unsigned int>();
+
+	dim.push_back(arr->values.size());
+
+	if (auto sub_arr = dynamic_cast<ASTArrayConstructorNode*>(arr->values.at(0))) {
+		auto dim2 = calculate_array_dim_size(sub_arr);
+		dim.insert(dim.end(), dim2.begin(), dim2.end());
+	}
+
+	return dim;
 }
 
 std::string SemanticAnalyser::msg_header(unsigned int row, unsigned int col) {

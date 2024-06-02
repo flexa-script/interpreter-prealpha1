@@ -140,83 +140,129 @@ Token Lexer::process_identifier() {
 		advance();
 	}
 
-	if (identifier == "using")
+	if (identifier == "using") {
 		type = TOK_USING;
-	else if (identifier == "namespace")
+	}
+	else if (identifier == "namespace") {
 		type = TOK_NAMESPACE;
-	else if (identifier == "const")
+	}
+	else if (identifier == "const") {
 		type = TOK_CONST;
-	else if (identifier == "var")
+	}
+	else if (identifier == "var") {
 		type = TOK_VAR;
-	else if (identifier == "struct")
+	}
+	else if (identifier == "struct") {
 		type = TOK_STRUCT;
-	else if (identifier == "def")
+	}
+	else if (identifier == "def") {
 		type = TOK_DEF;
-	else if (identifier == "this")
+	}
+	else if (identifier == "this") {
 		type = TOK_THIS;
-	else if (identifier == "return")
+	}
+	else if (identifier == "return") {
 		type = TOK_RETURN;
-	else if (identifier == "continue")
+	}
+	else if (identifier == "continue") {
 		type = TOK_CONTINUE;
-	else if (identifier == "break")
+	}
+	else if (identifier == "break") {
 		type = TOK_BREAK;
-	else if (identifier == "exit")
+	}
+	else if (identifier == "exit") {
 		type = TOK_EXIT;
-	else if (identifier == "switch")
+	}
+	else if (identifier == "switch") {
 		type = TOK_SWITCH;
-	else if (identifier == "default")
+	}
+	else if (identifier == "default") {
 		type = TOK_DEFAULT;
-	else if (identifier == "case")
+	}
+	else if (identifier == "case") {
 		type = TOK_CASE;
-	else if (identifier == "as")
+	}
+	else if (identifier == "as") {
 		type = TOK_AS;
-	else if (identifier == "in")
+	}
+	else if (identifier == "in") {
 		type = TOK_IN;
-	else if (identifier == "if")
+	}
+	else if (identifier == "if") {
 		type = TOK_IF;
-	else if (identifier == "else")
+	}
+	else if (identifier == "else") {
 		type = TOK_ELSE;
-	else if (identifier == "enum")
+	}
+	else if (identifier == "enum") {
 		type = TOK_ENUM;
-	else if (identifier == "try")
+	}
+	else if (identifier == "try") {
 		type = TOK_TRY;
-	else if (identifier == "catch")
+	}
+	else if (identifier == "catch") {
 		type = TOK_CATCH;
-	else if (identifier == "for")
+	}
+	else if (identifier == "throw") {
+		type = TOK_THROW;
+	}
+	else if (identifier == "for") {
 		type = TOK_FOR;
-	else if (identifier == "foreach")
+	}
+	else if (identifier == "foreach") {
 		type = TOK_FOREACH;
-	else if (identifier == "while")
+	}
+	else if (identifier == "while") {
 		type = TOK_WHILE;
-	else if (identifier == "void")
+	}
+	else if (identifier == "do") {
+		type = TOK_DO;
+	}
+	else if (identifier == "void") {
 		type = TOK_VOID_TYPE;
-	else if (identifier == "bool")
+	}
+	else if (identifier == "bool") {
 		type = TOK_BOOL_TYPE;
-	else if (identifier == "int")
+	}
+	else if (identifier == "int") {
 		type = TOK_INT_TYPE;
-	else if (identifier == "float")
+	}
+	else if (identifier == "float") {
 		type = TOK_FLOAT_TYPE;
-	else if (identifier == "char")
+	}
+	else if (identifier == "char") {
 		type = TOK_CHAR_TYPE;
-	else if (identifier == "string")
+	}
+	else if (identifier == "string") {
 		type = TOK_STRING_TYPE;
-	else if (identifier == "any")
+	}
+	else if (identifier == "any") {
 		type = TOK_ANY_TYPE;
-	else if (identifier == "typeof")
+	}
+	else if (identifier == "typeof") {
 		type = TOK_TYPEOF;
-	else if (identifier == "typeid")
+	}
+	else if (identifier == "typeid") {
 		type = TOK_TYPEID;
-	else if (identifier == "true" || identifier == "false")
+	}
+	else if (identifier == "true" || identifier == "false") {
 		type = TOK_BOOL_LITERAL;
-	else if (identifier == "null")
+	}
+	else if (identifier == "null") {
 		type = TOK_NULL;
-	else if (identifier == "and")
+	}
+	else if (identifier == "and") {
 		type = TOK_LOGICAL_AND_OP;
-	else if (identifier == "or")
+	}
+	else if (identifier == "or") {
 		type = TOK_LOGICAL_OR_OP;
-	else if (identifier == "not")
+	}
+	else if (identifier == "not") {
 		type = TOK_NOT;
-	else type = TOK_IDENTIFIER;
+	}
+	else {
+		type = TOK_IDENTIFIER;
+	}
 
 	return Token(type, identifier, current_row, start_col);
 }

@@ -31,6 +31,7 @@ namespace visitor {
 		std::vector<std::string> function_call_parameters;
 		std::stack<std::string> current_function_nmspace;
 		std::string return_from_function_name;
+		std::string current_expression_nmspace;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		bool is_function_context;
 		bool return_from_function = false;
@@ -66,6 +67,10 @@ namespace visitor {
 		std::string parse_array_to_string(cp_array);
 		std::string parse_struct_to_string(cp_struct);
 
+		InterpreterScope* get_inner_most_variable_scope(std::string, std::string);
+		InterpreterScope* get_inner_most_function_scope(std::string, std::string, std::vector<parser::TypeDefinition>);
+		InterpreterScope* get_inner_most_struct_definition_scope(std::string, std::string);
+
 		Value* access_value(InterpreterScope*, Value*, std::vector<parser::Identifier>, size_t i = 0);
 
 		void register_built_in_functions();
@@ -78,6 +83,7 @@ namespace visitor {
 		Interpreter() = default;
 		~Interpreter() = default;
 
+		std::string get_current_namespace();
 		std::string get_namespace(std::string = "") override;
 		std::string get_namespace(parser::ASTProgramNode*, std::string = "") override;
 
@@ -95,12 +101,14 @@ namespace visitor {
 		void visit(parser::ASTBreakNode*) override;
 		void visit(parser::ASTEnumNode*) override;
 		void visit(parser::ASTTryCatchNode*) override;
+		void visit(parser::ASTThrowNode*) override;
 		void visit(parser::ASTSwitchNode*) override;
 		void visit(parser::ASTElseIfNode*) override;
 		void visit(parser::ASTIfNode*) override;
 		void visit(parser::ASTForNode*) override;
 		void visit(parser::ASTForEachNode*) override;
 		void visit(parser::ASTWhileNode*) override;
+		void visit(parser::ASTDoWhileNode*) override;
 		void visit(parser::ASTFunctionDefinitionNode*) override;
 		void visit(parser::ASTStructDefinitionNode*) override;
 		void visit(parser::ASTLiteralNode<cp_bool>*) override;

@@ -122,6 +122,9 @@ ASTEnumNode::ASTEnumNode(std::vector<std::string> identifiers, unsigned int row,
 ASTTryCatchNode::ASTTryCatchNode(ASTDeclarationNode* decl, ASTBlockNode* try_block, ASTBlockNode* catch_block, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), decl(decl), try_block(try_block), catch_block(catch_block) {}
 
+ASTThrowNode::ASTThrowNode(ASTExprNode* error, unsigned int row, unsigned int col)
+	: ASTStatementNode(row, col), error(error) {}
+
 ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* if_block, std::vector<ASTElseIfNode*> else_ifs,
 	ASTBlockNode* else_block, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), condition(condition), if_block(if_block), else_ifs(else_ifs), else_block(else_block) {}
@@ -134,6 +137,9 @@ ASTForEachNode::ASTForEachNode(ASTDeclarationNode* itdecl, ASTNode* collection, 
 
 ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), condition(condition), block(block) {}
+
+ASTDoWhileNode::ASTDoWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
+	: ASTWhileNode(condition, block, row, col) {}
 
 ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std::vector<VariableDefinition> parameters,
 	Type type, std::string type_name, std::string type_name_space, Type array_type, std::vector<ASTExprNode*> dim,
@@ -150,8 +156,8 @@ ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std
 	}
 }
 
-ASTTypingNode::ASTTypingNode(ASTExprNode* expr, unsigned int row, unsigned int col)
-	: ASTExprNode(row, col), expr(expr) {}
+ASTTypingNode::ASTTypingNode(std::string image, ASTExprNode* expr, unsigned int row, unsigned int col)
+	: ASTExprNode(row, col), image(image), expr(expr) {}
 
 ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::vector<VariableDefinition> variables,
 	unsigned int row, unsigned int col)
@@ -346,6 +352,10 @@ void ASTTryCatchNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
+void ASTThrowNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
 void ASTElseIfNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
@@ -363,6 +373,10 @@ void ASTForEachNode::accept(visitor::Visitor* v) {
 }
 
 void ASTWhileNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+void ASTDoWhileNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 

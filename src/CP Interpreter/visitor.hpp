@@ -44,9 +44,11 @@ namespace parser {
 	class ASTElseIfNode;
 	class ASTIfNode;
 	class ASTTryCatchNode;
+	class ASTThrowNode;
 	class ASTForNode;
 	class ASTForEachNode;
 	class ASTWhileNode;
+	class ASTDoWhileNode;
 	class ASTFunctionDefinitionNode;
 	class ASTStructDefinitionNode;
 	template <typename T> class ASTLiteralNode;
@@ -137,10 +139,12 @@ namespace visitor {
 		virtual void visit(parser::ASTElseIfNode*) = 0;
 		virtual void visit(parser::ASTEnumNode*) = 0;
 		virtual void visit(parser::ASTTryCatchNode*) = 0;
+		virtual void visit(parser::ASTThrowNode*) = 0;
 		virtual void visit(parser::ASTIfNode*) = 0;
 		virtual void visit(parser::ASTForNode*) = 0;
 		virtual void visit(parser::ASTForEachNode*) = 0;
 		virtual void visit(parser::ASTWhileNode*) = 0;
+		virtual void visit(parser::ASTDoWhileNode*) = 0;
 		virtual void visit(parser::ASTFunctionDefinitionNode*) = 0;
 		virtual void visit(parser::ASTStructDefinitionNode*) = 0;
 		virtual void visit(parser::ASTLiteralNode<cp_bool>*) = 0;

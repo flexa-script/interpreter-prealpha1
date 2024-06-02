@@ -42,11 +42,11 @@
     - [X] +=,-=,*=,/=,%= assignment
     - [X] namespace
     <!-- - [0] instaceof (typeof was adapted to accept types) -->
-    - [I] as namespace
-    - [I] exit
-    - [I] enum
-    - [I] try catch throw
-    - [ ] do while
+    - [X] as namespace
+    - [X] exit
+    - [X] enum
+    - [X] try catch throw
+    - [X] do while
 - [ ] Add expression operators:
     - [X] ++,--
     <!-- - [ ] Add array(size) initializer to build custom sized arrays (we now let init array with a non constant value) -->
@@ -54,8 +54,9 @@
     - [ ] Add 'in' operator to check if anything is in array/string
     - [ ] immediate if
     - [X] typeof: returns type of object
-        - [ ] add namespace to type name return
-    - [I] typeid: returns hash of typeof
+        - [X] add namespace to type name return
+        - [ ] bring error header to a higher level
+    - [X] typeid: returns hash of typeof
 - [X] Add built in funcs:
     - [X] len: returns size of array/string
 - [X] Let functions return array

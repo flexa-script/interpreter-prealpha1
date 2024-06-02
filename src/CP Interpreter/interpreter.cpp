@@ -32,12 +32,15 @@ std::string Interpreter::get_namespace(ASTProgramNode* program, std::string nmsp
 		) : nmspace;
 }
 
+std::string Interpreter::get_current_namespace() {
+	return current_program->alias.empty() ? "main" : current_program->alias;
+}
+
 void Interpreter::start() {
 	visit(current_program);
 }
 
 void Interpreter::visit(ASTProgramNode* astnode) {
-	// for each statement, accept
 	for (auto& statement : astnode->statements) {
 		statement->accept(this);
 	}
@@ -68,43 +71,8 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 	}
 }
 
-
-Value* Interpreter::access_value(InterpreterScope* scope, Value* value, std::vector<Identifier> identifier_vector, size_t i) {
-	Value* next_value = value;
-
-	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
-
-	if (access_vector.size() > 0) {
-		cp_array* current_Val = &next_value->arr;
-		size_t s = 0;
-		size_t access_pos = 0;
-
-		for (s = 0; s < access_vector.size() - 1; ++s) {
-			// check array position access
-			access_pos = access_vector.at(s);
-			// break if it is a string, and the string access will be handled in identifier node evaluation
-			// TODO: ckeck if it will handle string assign
-			if (current_Val->at(access_pos)->curr_type == Type::T_STRING) {
-				has_string_access = true;
-				break;
-			}
-			current_Val = &current_Val->at(access_pos)->arr;
-		}
-		access_pos = access_vector.at(s);
-		next_value = current_Val->at(access_pos);
-	}
-
-	++i;
-
-	if (i < identifier_vector.size()) {
-		next_value = next_value->str->second[identifier_vector[i].identifier];
-
-		if (identifier_vector[i].access_vector.size() > 0 || i < identifier_vector.size()) {
-			return access_value(scope, next_value, identifier_vector, i);
-		}
-	}
-
-	return next_value;
+void Interpreter::visit(ASTAsNamespaceNode* astnode) {
+	program_nmspaces[get_namespace(current_program->alias)].push_back(astnode->nmspace);
 }
 
 void Interpreter::visit(ASTDeclarationNode* astnode) {
@@ -196,113 +164,18 @@ void Interpreter::visit(ASTEnumNode* astnode) {
 	}
 }
 
-std::vector<Value*> Interpreter::build_array(std::vector<ASTExprNode*> dim, Value* init_value, long long i) {
-	auto arr = std::vector<Value*>();
-
-	auto crr_acc = dim[i];
-	crr_acc->accept(this);
-
-	size_t size = current_expression_value.i;
-
-	for (size_t j = 0; j < size; ++j) {
-		auto val = new Value(init_value);
-		arr.push_back(val);
-	}
-
-	--i;
-
-	if (i >= 0) {
-		auto val = new Value(Type::T_ARRAY);
-		val->arr_type = init_value->type;
-		val->set(arr);
-		return build_array(dim, val, i);
-	}
-
-	return arr;
-}
-
-void Interpreter::declare_new_structure(std::string identifier_vector, Value new_value) {
-	Value* value = nullptr;
-	std::string type_name = new_value.str->first;
-	StructureDefinition struct_definition;
-	size_t str_def_scope_idx = 0;
-
-	if (new_value.has_value()) {
-		value = scopes[get_namespace()].back()->declare_variable(identifier_vector, new_value.str);
-	}
-	else {
-		value = scopes[get_namespace()].back()->declare_null_struct_variable(identifier_vector, type_name);
-	}
-}
-
-std::vector<unsigned int> Interpreter::evaluate_access_vector(std::vector<ASTExprNode*> exprAcessVector) {
-	auto access_vector = std::vector<unsigned int>();
-	for (auto expr : exprAcessVector) {
-		expr->accept(this);
-		access_vector.push_back(current_expression_value.i);
-	}
-	return access_vector;
-}
-
-cp_int Interpreter::do_operation(cp_int lval, cp_int rval, std::string op) {
-	if (op == "=") {
-		return rval;
-	}
-	else if (op == "+=") {
-		return lval + rval;
-	}
-	else if (op == "-=") {
-		return lval - rval;
-	}
-	else if (op == "*=") {
-		return lval * rval;
-	}
-	else if (op == "/=") {
-		return lval / rval;
-	}
-	else if (op == "%=") {
-		return lval % rval;
-	}
-	return rval;
-}
-
-cp_float Interpreter::do_operation(cp_float lval, cp_float rval, std::string op) {
-	if (op == "=") {
-		return rval;
-	}
-	else if (op == "+=") {
-		return lval + rval;
-	}
-	else if (op == "-=") {
-		return lval - rval;
-	}
-	else if (op == "*=") {
-		return lval * rval;
-	}
-	else if (op == "/=") {
-		return lval / rval;
-	}
-	return rval;
-}
-
-cp_string Interpreter::do_operation(cp_string lval, cp_string rval, std::string op) {
-	if (op == "=") {
-		return rval;
-	}
-	else if (op == "+=") {
-		return lval + rval;
-	}
-	return rval;
-}
-
 void Interpreter::visit(ASTAssignmentNode* astnode) {
-	// determine innermost scope in which variable is declared
-	auto nmspace = get_namespace();
-	size_t i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
+	InterpreterScope* astscope;
+	try {
+		auto nmspace = get_namespace(astnode->nmspace);
+		astscope = get_inner_most_variable_scope(nmspace, astnode->identifier_vector[0].identifier);
+	}
+	catch (std::exception ex) {
+		throw std::runtime_error(ex.what());
+	}
 
-	Value* root = scopes[nmspace][i]->find_declared_variable(astnode->identifier_vector[0].identifier);
-	Value* value = access_value(scopes[nmspace][i], root, astnode->identifier_vector);
+	Value* root = astscope->find_declared_variable(astnode->identifier_vector[0].identifier);
+	Value* value = access_value(astscope, root, astnode->identifier_vector);
 
 	// visit expression node to update current value/type
 	astnode->expr->accept(this);
@@ -359,6 +232,7 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 }
 
 void Interpreter::visit(ASTExitNode* astnode) {
+	astnode->exit_code->accept(this);
 	exit_from_program = true;
 }
 
@@ -529,10 +403,6 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 
 		auto itdecl = static_cast<ASTDeclarationNode*>(astnode->itdecl);
 
-		// determine innermost scope in which variable is declared
-		size_t i;
-		for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(itdecl->identifier); --i);
-
 		Value* value = access_value(scopes[nmspace].back(), scopes[nmspace].back()->find_declared_variable(itdecl->identifier),
 			std::vector<Identifier>{Identifier(itdecl->identifier, std::vector<ASTExprNode*>())});
 
@@ -597,9 +467,6 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 		astnode->decl->accept(this);
 		auto itdecl = static_cast<ASTDeclarationNode*>(astnode->decl);
 
-		size_t i;
-		for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(itdecl->identifier); --i);
-
 		Value* value = access_value(scopes[nmspace].back(), scopes[nmspace].back()->find_declared_variable(itdecl->identifier),
 			std::vector<Identifier>{Identifier(itdecl->identifier, std::vector<ASTExprNode*>())});
 
@@ -611,6 +478,11 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 		astnode->catch_block->accept(this);
 		scopes[nmspace].pop_back();
 	}
+}
+
+void Interpreter::visit(parser::ASTThrowNode* astnode) {
+	astnode->accept(this);
+	throw std::exception(current_expression_value.str->second["error"]->s.c_str());
 }
 
 void Interpreter::visit(ASTWhileNode* astnode) {
@@ -644,6 +516,38 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 
 		result = current_expression_value.b;
 	}
+
+	is_loop = false;
+}
+
+void Interpreter::visit(ASTDoWhileNode* astnode) {
+	is_loop = true;
+
+	bool result;
+
+	do {
+		// execute block
+		astnode->block->accept(this);
+
+		if (exit_from_program) {
+			return;
+		}
+
+		if (continue_block) {
+			continue_block = false;
+			continue;
+		}
+
+		if (break_block) {
+			break_block = false;
+			break;
+		}
+
+		// evaluate while condition
+		astnode->condition->accept(this);
+
+		result = current_expression_value.b;
+	} while (result);
 
 	is_loop = false;
 }
@@ -713,27 +617,10 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 	}
 
 	declare_structure(str, astnode->nmspace);
+	current_expression_nmspace = astnode->nmspace;
 
 	value.set(str);
 	current_expression_value = value;
-}
-
-void Interpreter::declare_structure(cp_struct* str, std::string nmspace) {
-	std::string actnmspace = get_namespace(nmspace);
-	size_t i;
-	for (i = scopes[actnmspace].size() - 1; !scopes[actnmspace][i]->already_declared_structure_definition(str->first); --i);
-	auto struct_def = scopes[actnmspace][i]->find_declared_structure_definition(str->first);
-
-	for (auto& struct_var_def : struct_def.variables) {
-		if (str->second.find(struct_var_def.identifier) != str->second.end()) {
-			str->second[struct_var_def.identifier]->set_type(struct_var_def.type);
-		}
-		else {
-			Value* str_value = new Value(struct_var_def.type);
-			str_value->set_null();
-			str->second[struct_var_def.identifier] = str_value;
-		}
-	}
 }
 
 void Interpreter::visit(ASTBinaryExprNode* astnode) {
@@ -897,62 +784,64 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 void Interpreter::visit(ASTIdentifierNode* astnode) {
 	auto identifier = astnode->identifier_vector[0].identifier;
 	auto nmspace = get_namespace(astnode->nmspace);
-	InterpreterScope* id_scope = nullptr;
-	long long i;
-
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); --i) {
-		if (i <= 0) {
-			auto dim = astnode->identifier_vector[0].access_vector;
-			auto type = Type::T_UNDEF;
-			auto expression_value = new Value(Type::T_UNDEF);
-
-			if (identifier == "bool") {
-				type = Type::T_BOOL;
-			}
-			else if (identifier == "int") {
-				type = Type::T_INT;
-			}
-			else if (identifier == "float") {
-				type = Type::T_FLOAT;
-			}
-			else if (identifier == "char") {
-				type = Type::T_CHAR;
-			}
-			else if (identifier == "string") {
-				type = Type::T_STRING;
-			}
-
-			if (is_undefined(type)) {
-				for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); --i);
-				type = Type::T_STRUCT;
-				auto str = new cp_struct();
-				str->first = identifier;
-				expression_value->set(str);
-			}
-
-			expression_value->set_type(type);
-			expression_value->set_curr_type(type);
-
-			if (dim.size() > 0) {
-				cp_array arr;
-
-				arr = build_array(dim, expression_value, dim.size() - 1);
-
-				current_expression_value = Value(Type::T_ARRAY);
-				current_expression_value.set_arr_type(type);
-				current_expression_value.set(arr);
-			}
-			else {
-				current_expression_value.copy_from(expression_value);
-			}
-
-			return;
-		}
+	InterpreterScope* id_scope;
+	try {
+		id_scope = get_inner_most_variable_scope(nmspace, identifier);
 	}
-	id_scope = scopes[nmspace][i];
+	catch (...) {
+		auto dim = astnode->identifier_vector[0].access_vector;
+		auto type = Type::T_UNDEF;
+		auto expression_value = new Value(Type::T_UNDEF);
+
+		if (identifier == "bool") {
+			type = Type::T_BOOL;
+		}
+		else if (identifier == "int") {
+			type = Type::T_INT;
+		}
+		else if (identifier == "float") {
+			type = Type::T_FLOAT;
+		}
+		else if (identifier == "char") {
+			type = Type::T_CHAR;
+		}
+		else if (identifier == "string") {
+			type = Type::T_STRING;
+		}
+
+		if (is_undefined(type)) {
+			current_expression_nmspace = nmspace;
+			type = Type::T_STRUCT;
+			auto str = new cp_struct();
+			str->first = identifier;
+			expression_value->set(str);
+		}
+
+		expression_value->set_type(type);
+		expression_value->set_curr_type(type);
+
+		if (dim.size() > 0) {
+			cp_array arr;
+
+			arr = build_array(dim, expression_value, dim.size() - 1);
+
+			current_expression_value = Value(Type::T_ARRAY);
+			current_expression_value.set_arr_type(type);
+			current_expression_value.set(arr);
+		}
+		else {
+			current_expression_value.copy_from(expression_value);
+		}
+
+		return;
+	}
 
 	auto root = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	current_expression_value = *access_value(id_scope, root, astnode->identifier_vector);
+
+	if (is_struct(current_expression_value.curr_type)) {
+		current_expression_nmspace = nmspace;
+	}
 
 	if (current_expression_value.curr_type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
 		astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
@@ -1005,9 +894,13 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 		auto id = static_cast<ASTIdentifierNode*>(astnode->expr);
 
 		std::string nmspace = get_namespace(id->nmspace);;
-		size_t i;
-		for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(id->identifier_vector[0].identifier); i--);
-		auto id_scope = scopes[nmspace][i];
+		InterpreterScope* id_scope;
+		try {
+			id_scope = get_inner_most_variable_scope(nmspace, id->identifier_vector[0].identifier);
+		}
+		catch (std::exception ex) {
+			throw std::runtime_error(ex.what());
+		}
 
 		Value* value = access_value(id_scope, id_scope->find_declared_variable(id->identifier_vector[0].identifier), id->identifier_vector);
 
@@ -1136,16 +1029,15 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	}
 
 	// determine in which scope the function is declared
-	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(astnode->identifier, signature); i--) {
-		if (i <= 0) {
-			builtin_functions[astnode->identifier]();
-			this->last_function_arguments.clear();
-			return;
-		}
+	InterpreterScope* func_scope;
+	try {
+		func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
 	}
-
-	auto func_scope = scopes[nmspace][i];
+	catch (...) {
+		builtin_functions[astnode->identifier]();
+		this->last_function_arguments.clear();
+		return;
+	}
 
 	// populate the global vector of function parameter names, to be used in creation of function scope
 	function_call_parameters = std::get<1>(func_scope->find_declared_function(astnode->identifier, signature));
@@ -1275,6 +1167,289 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 	current_expression_value.set_curr_type(astnode->type);
 }
 
+void Interpreter::visit(ASTNullNode* astnode) {
+	auto value = Value(Type::T_VOID);
+	value.set_null();
+	current_expression_value = value;
+}
+
+void Interpreter::visit(ASTThisNode* astnode) {
+	auto value = Value(Type::T_STRING);
+	value.set(cp_string(current_name));
+	current_expression_value = value;
+}
+
+void Interpreter::visit(ASTTypingNode* astnode) {
+	current_expression_nmspace = "";
+
+	astnode->expr->accept(this);
+
+	auto curr_value = current_expression_value;
+	auto dim = std::vector<unsigned int>();
+	auto type = is_void(curr_value.curr_type) ? curr_value.type : curr_value.curr_type;
+	std::string str_type = "";
+
+	if (is_array(type)) {
+		dim = calculate_array_dim_size(curr_value.arr);
+		type = curr_value.arr_type;
+	}
+
+	str_type = type_str(type);
+
+	if (type == Type::T_STRUCT) {
+		if (dim.size() > 0) {
+			auto arr = curr_value.arr[0];
+			for (size_t i = 0; i < dim.size() - 1; ++i) {
+				arr = arr->arr[0];
+			}
+			str_type = arr->str->first;
+		}
+		else {
+			str_type = curr_value.str->first;
+		}
+	}
+
+	if (dim.size() > 0) {
+		for (size_t i = 0; i < dim.size(); ++i) {
+			str_type += "[" + std::to_string(dim[i]) + "]";
+		}
+	}
+
+	str_type = current_expression_nmspace + "::" + str_type;
+
+	if (astnode->image == "typeid") {
+		auto value = Value(Type::T_INT);
+		value.set(cp_int(axe::Util::hashcode(str_type)));
+		current_expression_value = value;
+	}
+	else {
+		auto value = Value(Type::T_STRING);
+		value.set(cp_string(str_type));
+		current_expression_value = value;
+	}
+}
+
+InterpreterScope* Interpreter::get_inner_most_variable_scope(std::string nmspace, std::string identifier) {
+	long long i;
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
+		if (i <= 0) {
+			for (auto prgnmspace : program_nmspaces[get_current_namespace()]) {
+				try {
+					return get_inner_most_variable_scope(prgnmspace, identifier);
+				}
+				catch (...) {}
+			}
+			throw std::runtime_error("identifier '" + identifier + "' was not declared");
+		}
+	}
+	return scopes[nmspace][i];
+}
+
+InterpreterScope* Interpreter::get_inner_most_struct_definition_scope(std::string nmspace, std::string identifier) {
+	long long i;
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); i--) {
+		if (i <= 0) {
+			bool found = false;
+			for (auto prgnmspace : program_nmspaces[get_current_namespace()]) {
+				try {
+					return get_inner_most_struct_definition_scope(prgnmspace, identifier);
+				}
+				catch (...) {}
+			}
+			throw std::runtime_error("struct '" + identifier + "' was not declared");
+		}
+	}
+	return scopes[nmspace][i];
+}
+
+InterpreterScope* Interpreter::get_inner_most_function_scope(std::string nmspace, std::string identifier, std::vector<TypeDefinition> signature) {
+	long long i;
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); --i) {
+		if (i <= 0) {
+			for (auto prgnmspace : program_nmspaces[get_current_namespace()]) {
+				try {
+					return get_inner_most_function_scope(prgnmspace, identifier, signature);
+				}
+				catch (...) {}
+			}
+			throw std::runtime_error("function '" + identifier + "' was not declared");
+		}
+	}
+	return scopes[nmspace][i];
+}
+
+Value* Interpreter::access_value(InterpreterScope* scope, Value* value, std::vector<Identifier> identifier_vector, size_t i) {
+	Value* next_value = value;
+
+	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
+
+	if (access_vector.size() > 0) {
+		cp_array* current_Val = &next_value->arr;
+		size_t s = 0;
+		size_t access_pos = 0;
+
+		for (s = 0; s < access_vector.size() - 1; ++s) {
+			// check array position access
+			access_pos = access_vector.at(s);
+			// break if it is a string, and the string access will be handled in identifier node evaluation
+			// TODO: ckeck if it will handle string assign
+			if (current_Val->at(access_pos)->curr_type == Type::T_STRING) {
+				has_string_access = true;
+				break;
+			}
+			current_Val = &current_Val->at(access_pos)->arr;
+		}
+		access_pos = access_vector.at(s);
+		next_value = current_Val->at(access_pos);
+	}
+
+	++i;
+
+	if (i < identifier_vector.size()) {
+		next_value = next_value->str->second[identifier_vector[i].identifier];
+
+		if (identifier_vector[i].access_vector.size() > 0 || i < identifier_vector.size()) {
+			return access_value(scope, next_value, identifier_vector, i);
+		}
+	}
+
+	return next_value;
+}
+
+std::vector<Value*> Interpreter::build_array(std::vector<ASTExprNode*> dim, Value* init_value, long long i) {
+	auto arr = std::vector<Value*>();
+
+	auto crr_acc = dim[i];
+	crr_acc->accept(this);
+
+	size_t size = current_expression_value.i;
+
+	for (size_t j = 0; j < size; ++j) {
+		auto val = new Value(init_value);
+		arr.push_back(val);
+	}
+
+	--i;
+
+	if (i >= 0) {
+		auto val = new Value(Type::T_ARRAY);
+		val->arr_type = init_value->type;
+		val->set(arr);
+		return build_array(dim, val, i);
+	}
+
+	return arr;
+}
+
+std::vector<unsigned int> Interpreter::calculate_array_dim_size(cp_array arr) {
+	auto dim = std::vector<unsigned int>();
+
+	dim.push_back(arr.size());
+
+	if (is_array(arr.at(0)->type)) {
+		auto dim2 = calculate_array_dim_size(arr.at(0)->arr);
+		dim.insert(dim.end(), dim2.begin(), dim2.end());
+	}
+
+	return dim;
+}
+
+void Interpreter::declare_new_structure(std::string identifier_vector, Value new_value) {
+	Value* value = nullptr;
+	std::string type_name = new_value.str->first;
+	StructureDefinition struct_definition;
+	size_t str_def_scope_idx = 0;
+
+	if (new_value.has_value()) {
+		value = scopes[get_namespace()].back()->declare_variable(identifier_vector, new_value.str);
+	}
+	else {
+		value = scopes[get_namespace()].back()->declare_null_struct_variable(identifier_vector, type_name);
+	}
+}
+
+void Interpreter::declare_structure(cp_struct* str, std::string nmspace) {
+	std::string actnmspace = get_namespace(nmspace);
+	InterpreterScope* curr_scope;
+	try {
+		curr_scope = get_inner_most_struct_definition_scope(get_namespace(actnmspace), str->first);
+	}
+	catch (std::exception ex) {
+		throw std::runtime_error(ex.what());
+	}
+	auto struct_def = curr_scope->find_declared_structure_definition(str->first);
+
+	for (auto& struct_var_def : struct_def.variables) {
+		if (str->second.find(struct_var_def.identifier) != str->second.end()) {
+			str->second[struct_var_def.identifier]->set_type(struct_var_def.type);
+		}
+		else {
+			Value* str_value = new Value(struct_var_def.type);
+			str_value->set_null();
+			str->second[struct_var_def.identifier] = str_value;
+		}
+	}
+}
+
+std::vector<unsigned int> Interpreter::evaluate_access_vector(std::vector<ASTExprNode*> exprAcessVector) {
+	auto access_vector = std::vector<unsigned int>();
+	for (auto expr : exprAcessVector) {
+		expr->accept(this);
+		access_vector.push_back(current_expression_value.i);
+	}
+	return access_vector;
+}
+
+cp_int Interpreter::do_operation(cp_int lval, cp_int rval, std::string op) {
+	if (op == "=") {
+		return rval;
+	}
+	else if (op == "+=") {
+		return lval + rval;
+	}
+	else if (op == "-=") {
+		return lval - rval;
+	}
+	else if (op == "*=") {
+		return lval * rval;
+	}
+	else if (op == "/=") {
+		return lval / rval;
+	}
+	else if (op == "%=") {
+		return lval % rval;
+	}
+	return rval;
+}
+
+cp_float Interpreter::do_operation(cp_float lval, cp_float rval, std::string op) {
+	if (op == "=") {
+		return rval;
+	}
+	else if (op == "+=") {
+		return lval + rval;
+	}
+	else if (op == "-=") {
+		return lval - rval;
+	}
+	else if (op == "*=") {
+		return lval * rval;
+	}
+	else if (op == "/=") {
+		return lval / rval;
+	}
+	return rval;
+}
+
+cp_string Interpreter::do_operation(cp_string lval, cp_string rval, std::string op) {
+	if (op == "=") {
+		return rval;
+	}
+	else if (op == "+=") {
+		return lval + rval;
+	}
+	return rval;
+}
 
 std::string Interpreter::parse_value_to_string(Value value) {
 	switch (value.curr_type) {
@@ -1327,79 +1502,6 @@ std::string Interpreter::parse_struct_to_string(cp_struct value) {
 	return s.str();
 }
 
-std::vector<unsigned int> Interpreter::calculate_array_dim_size(cp_array arr) {
-	auto dim = std::vector<unsigned int>();
-
-	dim.push_back(arr.size());
-
-	if (is_array(arr.at(0)->type)) {
-		auto dim2 = calculate_array_dim_size(arr.at(0)->arr);
-		dim.insert(dim.end(), dim2.begin(), dim2.end());
-	}
-
-	return dim;
-}
-
-void Interpreter::visit(ASTNullNode* astnode) {
-	auto value = Value(Type::T_VOID);
-	value.set_null();
-	current_expression_value = value;
-}
-
-void Interpreter::visit(ASTThisNode* astnode) {
-	auto value = Value(Type::T_STRING);
-	value.set(cp_string(current_name));
-	current_expression_value = value;
-}
-
-void Interpreter::visit(ASTTypingNode* astnode) {
-	astnode->expr->accept(this);
-
-	auto curr_value = current_expression_value;
-	auto dim = std::vector<unsigned int>();
-	auto type = is_void(curr_value.curr_type) ? curr_value.type : curr_value.curr_type;
-	std::string str_type = "";
-
-	if (is_array(type)) {
-		dim = calculate_array_dim_size(curr_value.arr);
-		type = curr_value.arr_type;
-	}
-
-	str_type = type_str(type);
-
-	if (type == Type::T_STRUCT) {
-		if (dim.size() > 0) {
-			auto arr = curr_value.arr[0];
-			for (size_t i = 0; i < dim.size() - 1; ++i) {
-				arr = arr->arr[0];
-			}
-			str_type = arr->str->first;
-		}
-		else {
-			str_type = curr_value.str->first;
-		}
-	}
-
-	if (dim.size() > 0) {
-		for (size_t i = 0; i < dim.size(); ++i) {
-			str_type += "[" + std::to_string(dim[i]) + "]";
-		}
-	}
-
-	//str_type = current_expression_nmspace + "::" + str_type;
-
-	if (astnode->image == "typeid") {
-		auto value = Value(Type::T_INT);
-		value.set(cp_int(axe::Util::hashcode(str_type)));
-		current_expression_value = value;
-	}
-	else {
-		auto value = Value(Type::T_STRING);
-		value.set(cp_string(str_type));
-		current_expression_value = value;
-	}
-}
-
 std::string Interpreter::msg_header(unsigned int row, unsigned int col) {
 	return "(IERR) " + current_program->name + '[' + std::to_string(row) + ':' + std::to_string(col) + "]: ";
 }
@@ -1432,9 +1534,13 @@ unsigned int Interpreter::hash(ASTIdentifierNode* astnode) {
 	// determine innermost scope in which variable is declared
 	std::string nmspace = get_namespace(astnode->nmspace);
 
-	size_t i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(astnode->identifier_vector[0].identifier); i--);
-	auto id_scope = scopes[nmspace][i];
+	InterpreterScope* id_scope;
+	try {
+		id_scope = get_inner_most_variable_scope(nmspace, astnode->identifier_vector[0].identifier);
+	}
+	catch (std::exception ex) {
+		throw std::runtime_error(ex.what());
+	}
 
 	Value* value = access_value(id_scope, id_scope->find_declared_variable(astnode->identifier_vector[0].identifier), astnode->identifier_vector);
 

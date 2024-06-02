@@ -45,6 +45,7 @@ namespace lexer {
 		TOK_EXIT,
 		TOK_TRY,
 		TOK_CATCH,
+		TOK_THROW,
 		TOK_SWITCH,
 		TOK_CASE,
 		TOK_DEFAULT,
@@ -55,6 +56,7 @@ namespace lexer {
 		TOK_FOR,
 		TOK_FOREACH,
 		TOK_WHILE,
+		TOK_DO,
 		TOK_IDENTIFIER,
 		TOK_COMMENT,
 		TOK_LEFT_CURLY,
@@ -67,8 +69,8 @@ namespace lexer {
 		TOK_DOT,
 		TOK_SEMICOLON,
 		TOK_COLON,
-		TOK_EOF,
-		TOK_ERROR
+		TOK_ERROR,
+		TOK_EOF
 	};
 
 	const std::string TOKEN_IMAGE[] = {
@@ -78,10 +80,10 @@ namespace lexer {
 		"char literal",
 		"string literal",
 		"additive operator",
-		"additive operator",
+		"unary additive operator",
 		"multiplicative operator",
 		"relational operator",
-		"lib accessor operator",
+		"::",
 		"=",
 		"and",
 		"or",
@@ -110,6 +112,7 @@ namespace lexer {
 		"exit",
 		"try",
 		"catch"
+		"throw"
 		"switch",
 		"case",
 		"default",
@@ -120,8 +123,9 @@ namespace lexer {
 		"for",
 		"foreach",
 		"while",
+		"do",
 		"identifier",
-		"",
+		"commentary token",
 		"{",
 		"}",
 		"(",

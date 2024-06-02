@@ -220,9 +220,6 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
-	// at hashtable it's stored the correspondent case statement start
-	// it'll execute until find a break
-	// at vector it's stored switch statements
 	class ASTSwitchNode : public ASTStatementNode {
 	public:
 		ASTExprNode* condition;
@@ -278,6 +275,15 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
+	class ASTThrowNode : public ASTStatementNode {
+	public:
+		ASTExprNode* error;
+
+		ASTThrowNode(ASTExprNode* error, unsigned int row, unsigned int col);
+
+		void accept(visitor::Visitor*) override;
+	};
+
 	class ASTForNode : public ASTStatementNode {
 	public:
 		std::array<ASTNode*, 3> dci;
@@ -305,6 +311,13 @@ namespace parser {
 		ASTBlockNode* block;
 
 		ASTWhileNode(ASTExprNode*, ASTBlockNode*, unsigned int, unsigned int);
+
+		void accept(visitor::Visitor*) override;
+	};
+
+	class ASTDoWhileNode : public ASTWhileNode {
+	public:
+		ASTDoWhileNode(ASTExprNode*, ASTBlockNode*, unsigned int, unsigned int);
 
 		void accept(visitor::Visitor*) override;
 	};

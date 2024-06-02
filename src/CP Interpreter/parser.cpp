@@ -104,17 +104,25 @@ ASTNode* Parser::parse_program_statement() {
 
 ASTNode* Parser::parse_block_statement() {
 	switch (current_token.type) {
+	case lexer::TOK_ENUM:
+		return parse_enum_statement();
 	case lexer::TOK_VAR:
 	case lexer::TOK_CONST:
 		return parse_declaration_statement();
 	case lexer::TOK_STRUCT:
 		return parse_struct_definition();
+	case lexer::TOK_TRY:
+		return parse_try_catch_statement();
+	case lexer::TOK_THROW:
+		return parse_throw_statement();
 	case lexer::TOK_SWITCH:
 		return parse_switch_statement();
 	case lexer::TOK_IF:
 		return parse_if_statement();
 	case lexer::TOK_WHILE:
 		return parse_while_statement();
+	case lexer::TOK_DO:
+		return parse_do_while_statement();
 	case lexer::TOK_FOR:
 		return parse_for_statement();
 	case lexer::TOK_FOREACH:
@@ -123,12 +131,19 @@ ASTNode* Parser::parse_block_statement() {
 		return parse_continue_statement();
 	case lexer::TOK_BREAK:
 		return parse_break_statement();
+	case lexer::TOK_EXIT:
+		return parse_exit_statement();
 	case lexer::TOK_RETURN:
 		return parse_return_statement();
 	case lexer::TOK_IDENTIFIER:
 		return parse_identifier_statement();
 	default:
-		parse_statement_expression();
+		try {
+			parse_statement_expression();
+		}
+		catch (std::exception ex) {
+			throw std::runtime_error(msg_header() + "expected statement or expression");
+		}
 	}
 }
 
@@ -147,20 +162,14 @@ ASTAsNamespaceNode* Parser::parse_as_namespace_statement() {
 
 ASTExprNode* Parser::parse_statement_expression() {
 	ASTExprNode* expr = parse_expression();
-	if (consume_semicolon) {
-		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
-	}
+	check_consume_semicolon();
 	return expr;
 }
 
 ASTNode* Parser::parse_identifier_statement() {
 	if (next_token.value == "(") {
 		ASTFunctionCallNode* expr = parse_function_call_node();
-		if (consume_semicolon) {
-			consume_semicolon = false;
-			consume_token(lexer::TOK_SEMICOLON);
-		}
+		check_consume_semicolon();
 		return expr;
 	}
 	else if (next_token.value == "[" || next_token.value == "." || next_token.value == ":"
@@ -285,10 +294,7 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 		expr = nullptr;
 	}
 
-	if (consume_semicolon) {
-		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
-	}
+	check_consume_semicolon();
 
 	if (type == Type::T_UNDEF) {
 		type = Type::T_ANY;
@@ -346,10 +352,7 @@ ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
 	
 	expr = nullptr;
 
-	if (consume_semicolon) {
-		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
-	}
+	check_consume_semicolon();
 
 	if (type == Type::T_UNDEF) {
 		type = Type::T_ANY;
@@ -459,10 +462,7 @@ ASTNode* Parser::parse_assignment_or_increment_node() {
 
 	if (next_token.value == "(") {
 		ASTFunctionCallNode* expr = parse_function_call_parameters_node(identifier->identifier_vector[0].identifier, identifier->nmspace);
-		if (consume_semicolon) {
-			consume_semicolon = false;
-			consume_token(lexer::TOK_SEMICOLON);
-		}
+		check_consume_semicolon();
 		return expr;
 	}
 	else if (next_token.type == lexer::TOK_ADDITIVE_UN_OP) { // unary expression case
@@ -477,10 +477,7 @@ ASTUnaryExprNode* Parser::parse_increment_expression(ASTIdentifierNode* identifi
 	consume_token();
 	std::string op = current_token.value;
 
-	if (consume_semicolon) {
-		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
-	}
+	check_consume_semicolon();
 
 	return new ASTUnaryExprNode(op, identifier, identifier->row, identifier->col);
 }
@@ -503,10 +500,7 @@ ASTAssignmentNode* Parser::parse_assignment_statement(ASTIdentifierNode* identif
 	consume_token();
 	expr = parse_expression();
 
-	if (consume_semicolon) {
-		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
-	}
+	check_consume_semicolon();
 
 	return new ASTAssignmentNode(identifier->identifier_vector, identifier->nmspace, op, expr, identifier->row, identifier->col);
 }
@@ -540,10 +534,7 @@ ASTExitNode* Parser::parse_exit_statement() {
 
 	consume_token(lexer::TOK_RIGHT_BRACKET);
 
-	if (consume_semicolon) {
-		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
-	}
+	check_consume_semicolon();
 
 	return new ASTExitNode(expr, row, col);
 }
@@ -555,19 +546,19 @@ ASTEnumNode* Parser::parse_enum_statement() {
 
 	consume_token(lexer::TOK_LEFT_CURLY);
 
-	while (current_token.type != lexer::TOK_RIGHT_CURLY
-		&& current_token.type != lexer::TOK_ERROR
-		&& current_token.type != lexer::TOK_EOF) {
+	while (next_token.type != lexer::TOK_RIGHT_CURLY
+		&& next_token.type != lexer::TOK_ERROR
+		&& next_token.type != lexer::TOK_EOF) {
 		consume_token(lexer::TOK_IDENTIFIER);
 		identifiers.push_back(current_token.value);
+		if (next_token.type == lexer::TOK_COMMA) {
+			consume_token();
+		}
 	}
 
 	consume_token(lexer::TOK_RIGHT_CURLY);
 
-	if (consume_semicolon) {
-		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
-	}
+	check_consume_semicolon();
 
 	return new ASTEnumNode(identifiers, row, col);
 }
@@ -644,10 +635,7 @@ ASTContinueNode* Parser::parse_continue_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	if (consume_semicolon) {
-		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
-	}
+	check_consume_semicolon();
 
 	// return return node
 	return new ASTContinueNode(row, col);
@@ -658,10 +646,7 @@ ASTBreakNode* Parser::parse_break_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	if (consume_semicolon) {
-		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
-	}
+	check_consume_semicolon();
 
 	// return return node
 	return new ASTBreakNode(row, col);
@@ -834,19 +819,34 @@ ASTTryCatchNode* Parser::parse_try_catch_statement() {
 
 	consume_token(lexer::TOK_LEFT_CURLY);
 	try_block = parse_block();
-	consume_token(lexer::TOK_RIGHT_CURLY);
+	check_current_token(lexer::TOK_RIGHT_CURLY);
 
 	consume_token(lexer::TOK_CATCH);
 	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token();
 	consume_semicolon = false;
 	decl = parse_undef_declaration_statement();
 	consume_token(lexer::TOK_RIGHT_BRACKET);
 
 	consume_token(lexer::TOK_LEFT_CURLY);
 	catch_block = parse_block();
-	consume_token(lexer::TOK_RIGHT_CURLY);
+	check_current_token(lexer::TOK_RIGHT_CURLY);
 
 	return new ASTTryCatchNode(decl, try_block, catch_block, row, col);
+}
+
+ASTThrowNode* Parser::parse_throw_statement() {
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+	ASTExprNode* expr;
+
+	consume_token();
+
+	expr = parse_expression();
+
+	check_consume_semicolon();
+
+	return new ASTThrowNode(expr, row, col);
 }
 
 ASTForNode* Parser::parse_for_statement() {
@@ -898,16 +898,16 @@ ASTForEachNode* Parser::parse_foreach_statement() {
 	ASTBlockNode* block;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
+	auto consaux = consume_semicolon;
 
 	consume_token(lexer::TOK_LEFT_BRACKET);
 	consume_token();
 	consume_semicolon = false;
 	itdecl = parse_undef_declaration_statement();
 	consume_token(lexer::TOK_IN);
-	// consume expression first token
 	consume_token();
 	collection = parse_foreach_collection();
-	consume_semicolon = true;
+	consume_semicolon = consaux;
 	consume_token(lexer::TOK_RIGHT_BRACKET);
 	consume_token(lexer::TOK_LEFT_CURLY);
 	block = parse_block();
@@ -929,6 +929,25 @@ ASTWhileNode* Parser::parse_while_statement() {
 	block = parse_block();
 
 	return new ASTWhileNode(condition, block, row, col);
+}
+
+ASTDoWhileNode* Parser::parse_do_while_statement() {
+	ASTExprNode* condition;
+	ASTBlockNode* block;
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+
+	consume_token(lexer::TOK_LEFT_CURLY);
+	block = parse_block();
+	check_current_token(lexer::TOK_RIGHT_CURLY);
+	consume_token(lexer::TOK_WHILE);
+	consume_token();
+	condition = parse_expression();
+	check_current_token(lexer::TOK_RIGHT_BRACKET);
+	consume_semicolon = true;
+	check_consume_semicolon();
+
+	return new ASTDoWhileNode(condition, block, row, col);
 }
 
 ASTFunctionDefinitionNode* Parser::parse_function_definition() {
@@ -1055,10 +1074,7 @@ ASTStructDefinitionNode* Parser::parse_struct_definition() {
 	// consume }
 	consume_token(lexer::TOK_RIGHT_CURLY);
 
-	if (consume_semicolon) {
-		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
-	}
+	check_consume_semicolon();
 
 	return new ASTStructDefinitionNode(identifier, variables, row, col);
 }
@@ -1523,6 +1539,13 @@ ASTThisNode* Parser::parse_this_node() {
 	unsigned int col = current_token.col;
 
 	return new ASTThisNode(row, col);
+}
+
+void Parser::check_consume_semicolon() {
+	if (consume_semicolon) {
+		consume_semicolon = false;
+		consume_token(lexer::TOK_SEMICOLON);
+	}
 }
 
 std::string Parser::msg_header() {
