@@ -10,7 +10,7 @@ using namespace parser;
 
 
 LibFinder::LibFinder(ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
-	: cp_path(axe::Util::get_current_path()), libs(std::vector<std::string>()), lib_names(std::vector<std::string>()),
+	: cp_root(axe::Util::get_current_path()), libs(std::vector<std::string>()), lib_names(std::vector<std::string>()),
 	Visitor(programs, main_program, main_program->name) {};
 
 void LibFinder::start() {
@@ -31,7 +31,7 @@ void LibFinder::visit(ASTUsingNode* astnode) {
 
 	if (programs.find(libname) == programs.end()) {
 		// find in cp std libs
-		std::string path = cp_path + axe::Util::replace(libname, ".", "/") + ".cp";
+		std::string path = axe::Util::replace(libname, ".", std::string{ std::filesystem::path::preferred_separator }) + ".cp";
 		if (std::filesystem::exists(path)) {
 			if (std::find(lib_names.begin(), lib_names.end(), path) == lib_names.end()) {
 				lib_names.push_back(path);
@@ -50,10 +50,6 @@ void LibFinder::visit(ASTUsingNode* astnode) {
 		start();
 		current_program = prev_program;
 	}
-}
-
-std::vector<std::string> LibFinder::get_lib_names() {
-	return lib_names;
 }
 
 void LibFinder::visit(ASTAsNamespaceNode*) {}

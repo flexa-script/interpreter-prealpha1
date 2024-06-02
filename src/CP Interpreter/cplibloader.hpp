@@ -8,16 +8,17 @@
 namespace visitor {
 
 	class LibFinder : Visitor {
-	private:
-		std::string cp_path;
+	public:
+		std::string cp_root;
 		std::vector<std::string> lib_names;
+
+	private:
 		std::vector<std::string> libs;
 
 	public:
 		LibFinder(parser::ASTProgramNode*, std::map<std::string, parser::ASTProgramNode*>);
 
 		void start();
-		std::vector<std::string> get_lib_names();
 
 	private:
 		void visit(parser::ASTProgramNode*) override;

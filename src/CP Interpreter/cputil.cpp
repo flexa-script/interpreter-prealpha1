@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include "vendor/util.hpp"
 #include "cputil.hpp"
 
@@ -30,9 +32,9 @@ std::string CPUtil::load_source(std::string path) {
 	return source;
 }
 
-std::string CPUtil::get_lib_name(size_t index, std::string path) {
-	std::string file_name = path.substr(index, path.size());
+std::string CPUtil::get_lib_name(std::string libpath) {
+	std::string file_name = libpath;
 	std::string lib_name = file_name.substr(0, file_name.length() - 3);
-	std::replace(lib_name.begin(), lib_name.end(), '\\', '.');
+	std::replace(lib_name.begin(), lib_name.end(), (char)std::filesystem::path::preferred_separator, '.');
 	return lib_name;
 }

@@ -1,16 +1,9 @@
 #include "vendor/util.hpp"
 #include "cprepl.hpp"
 #include "cpinterpreter.hpp"
-//#include "logging.hpp"
 #include "vendor/watch.h"
 
 int main(int argc, const char* argv[]) {
-	//auto log = axe::Logger(axe::DEBUG, ".\\data.log");
-
-	//for (int i = 0; i < argc; ++i) {
-	//	log.debug(argv[i]);
-	//}
-
 	auto sw = ChronoStopwatch();
 	sw.start();
 
@@ -25,6 +18,7 @@ int main(int argc, const char* argv[]) {
 
 	sw.stop();
 	std::cout << std::endl << "execution time: " << sw.get_elapsed_formatted() << std::endl;
+	std::cout << "process finished with exit code " << result << std::endl;
 	system("pause");
 	return result;
 }

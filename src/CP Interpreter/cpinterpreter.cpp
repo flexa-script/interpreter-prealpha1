@@ -15,55 +15,26 @@
 
 
 int CPInterpreter::execute(int argc, const char* argv[]) {
-	if (argc == 2) {
-
-	}
-
 	std::vector<std::string> files;
-	for (size_t i = 1; i < argc; ++i) {
+	std::string root = argv[1];
+	for (size_t i = 2; i < argc; ++i) {
 		files.push_back(argv[i]);
 	}
 	if (files.size() > 0) {
-		auto programs = load_programs(files);
+		auto programs = load_programs(root, files);
 		return interpreter(programs);
 	}
 
 	return 0;
 }
 
-std::vector<CPSource> CPInterpreter::load_programs(std::vector<std::string> files) {
+std::vector<CPSource> CPInterpreter::load_programs(std::string root, std::vector<std::string> files) {
 	std::vector<CPSource> source_programs;
-	auto norm_path = axe::Util::normalize_path_sep(files[0]);
-	auto start_lib_name_index = norm_path.find_last_of(std::filesystem::path::preferred_separator) + 1;
+	auto norm_root = axe::Util::normalize_path_sep(root);
 
-	auto program = CPSource(CPUtil::get_lib_name(start_lib_name_index, norm_path), CPUtil::load_source(norm_path));
-	if (program.source.empty()) throw std::runtime_error("file '" + program.name + "' is empty");
-	source_programs.push_back(program);
-
-	for (size_t i = 1; i < files.size(); ++i) {
-		norm_path = axe::Util::normalize_path_sep(files[i]);
-		program = CPSource(CPUtil::get_lib_name(start_lib_name_index, norm_path), CPUtil::load_source(norm_path));
-		if (program.source.empty()) throw std::runtime_error("file '" + program.name + "' is empty");
-		source_programs.push_back(program);
-	}
-
-	return source_programs;
-}
-
-std::vector<CPSource> CPInterpreter::load_cp_libs(std::vector<std::string> files) {
-	std::vector<CPSource> source_programs;
-	auto norm_path = axe::Util::normalize_path_sep(files[0]);
-	std::string searchstr("cp" + std::string{ std::filesystem::path::preferred_separator });
-	auto start_lib_name_index = norm_path.rfind(searchstr);
-
-	auto program = CPSource(CPUtil::get_lib_name(start_lib_name_index, norm_path), CPUtil::load_source(norm_path));
-	if (program.source.empty()) throw std::runtime_error("file '" + program.name + "' is empty");
-	source_programs.push_back(program);
-
-	for (size_t i = 1; i < files.size(); ++i) {
-		norm_path = axe::Util::normalize_path_sep(files[i]);
-		program = CPSource(CPUtil::get_lib_name(start_lib_name_index, norm_path), CPUtil::load_source(norm_path));
-		if (program.source.empty()) throw std::runtime_error("file '" + program.name + "' is empty");
+	for (size_t i = 0; i < files.size(); ++i) {
+		auto program_path = norm_root + std::string{ std::filesystem::path::preferred_separator } + axe::Util::normalize_path_sep(files[i]);
+		auto program = CPSource(CPUtil::get_lib_name(files[i]), CPUtil::load_source(program_path));
 		source_programs.push_back(program);
 	}
 
@@ -96,7 +67,6 @@ void CPInterpreter::parse_programs(std::vector<CPSource> source_programs, parser
 }
 
 int CPInterpreter::interpreter(std::vector<CPSource> source_programs) {
-	// create Global Scopes
 	visitor::SemanticScope semantic_global_scope;
 	visitor::InterpreterScope interpreter_global_scope;
 
@@ -109,10 +79,10 @@ int CPInterpreter::interpreter(std::vector<CPSource> source_programs) {
 			visitor::LibFinder libfinder(main_program, programs);
 			libfinder.start();
 
-			cplibs_size = libfinder.get_lib_names().size();
+			cplibs_size = libfinder.lib_names.size();
 
 			if (cplibs_size > 0) {
-				auto cplib_programs = load_cp_libs(libfinder.get_lib_names());
+				auto cplib_programs = load_programs(libfinder.cp_root, libfinder.lib_names);
 				parse_programs(cplib_programs, &main_program, &programs);
 			}
 		} while (cplibs_size > 0);
