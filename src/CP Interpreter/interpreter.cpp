@@ -189,6 +189,13 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	val->arr_type = astnode->array_type;
 }
 
+void Interpreter::visit(ASTEnumNode* astnode) {
+	auto nmspace = get_namespace();
+	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
+		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], (cp_int)i);
+	}
+}
+
 std::vector<Value*> Interpreter::build_array(std::vector<ASTExprNode*> dim, Value* init_value, long long i) {
 	auto arr = std::vector<Value*>();
 
@@ -351,7 +358,12 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 	}
 }
 
+void Interpreter::visit(ASTExitNode* astnode) {
+	exit_from_program = true;
+}
+
 void Interpreter::visit(ASTContinueNode* astnode) {
+	astnode->accept(this);
 	continue_block = true;
 }
 
@@ -381,6 +393,10 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 	// visit each statement in the block
 	for (int i = pos; i < astnode->statements->size(); ++i) {
 		astnode->statements->at(i)->accept(this);
+
+		if (exit_from_program) {
+			return;
+		}
 
 		if (continue_block) {
 			continue_block = false;
@@ -466,6 +482,10 @@ void Interpreter::visit(ASTForNode* astnode) {
 		// execute block
 		astnode->block->accept(this);
 
+		if (exit_from_program) {
+			return;
+		}
+
 		if (continue_block) {
 			continue_block = false;
 		}
@@ -545,6 +565,10 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 
 		scopes[nmspace].pop_back();
 
+		if (exit_from_program) {
+			return;
+		}
+
 		if (continue_block) {
 			continue_block = false;
 			continue;
@@ -559,6 +583,36 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 	is_loop = false;
 }
 
+void Interpreter::visit(ASTTryCatchNode* astnode) {
+	auto nmspace = get_namespace();
+
+	try {
+		scopes[nmspace].push_back(new InterpreterScope(""));
+		astnode->try_block->accept(this);
+		scopes[nmspace].pop_back();
+	}
+	catch (std::exception ex) {
+		scopes[nmspace].push_back(new InterpreterScope(""));
+
+		astnode->decl->accept(this);
+		auto itdecl = static_cast<ASTDeclarationNode*>(astnode->decl);
+
+		size_t i;
+		for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(itdecl->identifier); --i);
+
+		Value* value = access_value(scopes[nmspace].back(), scopes[nmspace].back()->find_declared_variable(itdecl->identifier),
+			std::vector<Identifier>{Identifier(itdecl->identifier, std::vector<ASTExprNode*>())});
+
+		value->str = new cp_struct();
+		value->str->first = "Exception";
+		value->str->second["error"] = new Value(Type::T_STRING);
+		value->str->second["error"]->s = ex.what();
+
+		astnode->catch_block->accept(this);
+		scopes[nmspace].pop_back();
+	}
+}
+
 void Interpreter::visit(ASTWhileNode* astnode) {
 	is_loop = true;
 
@@ -570,6 +624,10 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 	while (result) {
 		// execute block
 		astnode->block->accept(this);
+
+		if (exit_from_program) {
+			return;
+		}
 
 		if (continue_block) {
 			continue_block = false;
@@ -1020,6 +1078,10 @@ void Interpreter::visit(ASTBlockNode* astnode) {
 	for (auto& stmt : astnode->statements) {
 		stmt->accept(this);
 
+		if (exit_from_program) {
+			return;
+		}
+
 		if (continue_block && (is_loop || is_switch)) {
 			break;
 		}
@@ -1290,7 +1352,7 @@ void Interpreter::visit(ASTThisNode* astnode) {
 	current_expression_value = value;
 }
 
-void Interpreter::visit(ASTTypeofNode* astnode) {
+void Interpreter::visit(ASTTypingNode* astnode) {
 	astnode->expr->accept(this);
 
 	auto curr_value = current_expression_value;
@@ -1324,9 +1386,18 @@ void Interpreter::visit(ASTTypeofNode* astnode) {
 		}
 	}
 
-	auto value = Value(Type::T_STRING);
-	value.set(cp_string(str_type));
-	current_expression_value = value;
+	//str_type = current_expression_nmspace + "::" + str_type;
+
+	if (astnode->image == "typeid") {
+		auto value = Value(Type::T_INT);
+		value.set(cp_int(axe::Util::hashcode(str_type)));
+		current_expression_value = value;
+	}
+	else {
+		auto value = Value(Type::T_STRING);
+		value.set(cp_string(str_type));
+		current_expression_value = value;
+	}
 }
 
 std::string Interpreter::msg_header(unsigned int row, unsigned int col) {

@@ -441,15 +441,17 @@ namespace parser {
 		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
-	class ASTTypeofNode : public ASTExprNode {
+	class ASTTypingNode : public ASTExprNode {
 	public:
+		std::string image;
 		ASTExprNode* expr;
 
-		ASTTypeofNode(ASTExprNode*, unsigned int, unsigned int);
+		ASTTypingNode(std::string image, ASTExprNode* expr, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
 		virtual unsigned int hash(visitor::Visitor*) override;
 	};
+
 }
 
 #endif // !AST_HPP

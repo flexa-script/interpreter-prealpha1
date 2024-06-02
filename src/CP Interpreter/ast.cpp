@@ -150,7 +150,7 @@ ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std
 	}
 }
 
-ASTTypeofNode::ASTTypeofNode(ASTExprNode* expr, unsigned int row, unsigned int col)
+ASTTypingNode::ASTTypingNode(ASTExprNode* expr, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), expr(expr) {}
 
 ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::vector<VariableDefinition> variables,
@@ -268,11 +268,11 @@ void ASTIdentifierNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-void ASTTypeofNode::accept(visitor::Visitor* v) {
+void ASTTypingNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTTypeofNode::hash(visitor::Visitor* v) { return 0; }
+unsigned int ASTTypingNode::hash(visitor::Visitor* v) { return 0; }
 
 unsigned int ASTIdentifierNode::hash(visitor::Visitor* v) {
 	return v->hash(this);

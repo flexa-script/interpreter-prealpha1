@@ -215,6 +215,14 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	}
 }
 
+void SemanticAnalyser::visit(ASTEnumNode* astnode) {
+	auto nmspace = get_namespace();
+	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
+		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], Type::T_INT, Type::T_UNDEF,
+			std::vector<ASTExprNode*>(), "", "", nullptr, true, astnode->row, astnode->col);
+	}
+}
+
 SemanticScope* SemanticAnalyser::get_inner_most_variable_scope(std::string nmspace, std::string identifier) {
 	// determine the inner-most scope in which the value is declared
 	long long i;
@@ -759,6 +767,13 @@ void SemanticAnalyser::visit(ASTContinueNode* astnode) { }
 
 void SemanticAnalyser::visit(ASTBreakNode* astnode) { }
 
+void SemanticAnalyser::visit(ASTExitNode* astnode) {
+	astnode->exit_code->accept(this);
+	if (!is_int(current_expression.type)) {
+		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "expected int value");
+	}
+}
+
 void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 	// create new scope
 	scopes[get_namespace()].push_back(new SemanticScope());
@@ -875,6 +890,39 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 
 	// close scope
 	scopes[get_namespace()].pop_back();
+}
+
+void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
+	auto nmspace = get_namespace();
+
+	scopes[nmspace].push_back(new SemanticScope());
+	astnode->try_block->accept(this);
+	scopes[nmspace].pop_back();
+
+	scopes[nmspace].push_back(new SemanticScope());
+
+	astnode->decl->accept(this);
+	Type decl_type = current_expression.type;
+	if (is_any(decl_type) || is_undefined(decl_type)) {
+		auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl);
+
+		SemanticScope* curr_scope;
+		try {
+			curr_scope = get_inner_most_variable_scope(get_namespace(), idnode->identifier);
+		}
+		catch (...) {
+			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "identifier '" + idnode->identifier +
+				"' was not declared");
+		}
+
+		auto declared_variable = curr_scope->find_declared_variable(idnode->identifier);
+
+		curr_scope->change_current_variable_type(idnode->identifier, Type::T_STRUCT);
+		curr_scope->change_variable_type_name(idnode->identifier, "Exception");
+	}
+	astnode->catch_block->accept(this);
+
+	scopes[nmspace].pop_back();
 }
 
 void SemanticAnalyser::visit(ASTWhileNode* astnode) {
@@ -1251,10 +1299,15 @@ void SemanticAnalyser::visit(ASTThisNode* astnode) {
 	current_expression.is_const = false;
 }
 
-void SemanticAnalyser::visit(ASTTypeofNode* astnode) {
+void SemanticAnalyser::visit(ASTTypingNode* astnode) {
 	astnode->expr->accept(this);
 	current_expression = SemanticValue();
-	current_expression.type = Type::T_STRING;
+	if (astnode->image == "typeid") {
+		current_expression.type = Type::T_INT;
+	}
+	else {
+		current_expression.type = Type::T_STRING;
+	}
 	current_expression.type_name = "";
 	current_expression.array_type = Type::T_UNDEF;
 	current_expression.is_const = false;

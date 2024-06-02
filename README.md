@@ -45,7 +45,8 @@
     - [I] as namespace
     - [I] exit
     - [I] enum
-    - [I] try catch
+    - [I] try catch throw
+    - [ ] do while
 - [ ] Add expression operators:
     - [X] ++,--
     <!-- - [ ] Add array(size) initializer to build custom sized arrays (we now let init array with a non constant value) -->

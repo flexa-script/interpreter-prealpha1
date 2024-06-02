@@ -105,7 +105,7 @@ namespace parser {
 
 		ASTThisNode* parse_this_node();
 
-		ASTTypeofNode* parse_typeof_node();
+		ASTTypingNode* parse_typing_node();
 
 
 		// expression nodes

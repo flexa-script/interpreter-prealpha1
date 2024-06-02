@@ -60,7 +60,7 @@ namespace parser {
 	class ASTTypeParseNode;
 	class ASTNullNode;
 	class ASTThisNode;
-	class ASTTypeofNode;
+	class ASTTypingNode;
 }
 
 typedef bool cp_bool;
@@ -157,7 +157,7 @@ namespace visitor {
 		virtual void visit(parser::ASTTypeParseNode*) = 0;
 		virtual void visit(parser::ASTNullNode*) = 0;
 		virtual void visit(parser::ASTThisNode*) = 0;
-		virtual void visit(parser::ASTTypeofNode*) = 0;
+		virtual void visit(parser::ASTTypingNode*) = 0;
 
 		virtual unsigned int hash(parser::ASTExprNode*) = 0;
 		virtual unsigned int hash(parser::ASTIdentifierNode*) = 0;
