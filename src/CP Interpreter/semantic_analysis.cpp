@@ -12,8 +12,8 @@ using namespace parser;
 
 SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
 	: current_expression(SemanticValue()),
-	Visitor(programs, main_program, main_program ? main_program->name : "main") {
-	scopes["main"].push_back(global_scope);
+	Visitor(programs, main_program, main_program ? main_program->name : "__main") {
+	scopes["__main"].push_back(global_scope);
 	register_built_in_functions();
 };
 
@@ -26,7 +26,7 @@ std::string SemanticAnalyser::get_namespace(std::string nmspace) {
 }
 
 std::string SemanticAnalyser::get_namespace(ASTProgramNode* program, std::string nmspace) {
-	return nmspace.empty() ? (program->alias.empty() ? "main" : program->alias) : nmspace;
+	return nmspace.empty() ? (program->alias.empty() ? "__main" : program->alias) : nmspace;
 }
 
 void SemanticAnalyser::visit(ASTProgramNode* astnode) {

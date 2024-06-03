@@ -15,9 +15,11 @@ using namespace parser;
 
 Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
 	: current_expression_value(Value(Type::T_UNDEF)), is_function_context(false), current_name(std::stack<std::string>()),
-	Visitor(programs, main_program, main_program ? main_program->name : "main") {
-	current_name.push(main_program->name);
-	scopes["main"].push_back(global_scope);
+	Visitor(programs, main_program, main_program ? main_program->name : "__main") {
+	if (main_program) {
+		current_name.push(main_program->name);
+	}
+	scopes["__main"].push_back(global_scope);
 	register_built_in_functions();
 }
 
@@ -28,13 +30,13 @@ std::string Interpreter::get_namespace(std::string nmspace) {
 std::string Interpreter::get_namespace(ASTProgramNode* program, std::string nmspace) {
 	return nmspace.empty() ? (
 		current_function_nmspace.size() == 0 ? (
-			program->alias.empty() ? "main" : program->alias
+			program->alias.empty() ? "__main" : program->alias
 			) : current_function_nmspace.top()
 		) : nmspace;
 }
 
 std::string Interpreter::get_current_namespace() {
-	return current_program->alias.empty() ? "main" : current_program->alias;
+	return current_program->alias.empty() ? "__main" : current_program->alias;
 }
 
 void Interpreter::start() {
