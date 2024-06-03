@@ -152,6 +152,9 @@ Token Lexer::process_identifier() {
 	else if (identifier == "var") {
 		type = TOK_VAR;
 	}
+	else if (identifier == "ref") {
+		type = TOK_REF;
+	}
 	else if (identifier == "struct") {
 		type = TOK_STRUCT;
 	}

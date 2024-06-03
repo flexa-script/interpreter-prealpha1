@@ -21,7 +21,7 @@ namespace visitor {
 	class Interpreter : public Visitor {
 	public:
 		std::map<std::string, std::function<void()>> builtin_functions;
-		std::vector<std::pair<parser::Type, Value*>> last_function_arguments;
+		std::vector<Value*> builtin_arguments;
 		Value current_expression_value;
 
 	private:
@@ -33,6 +33,9 @@ namespace visitor {
 		std::stack<std::string> current_name;
 		std::string return_from_function_name;
 		std::string current_expression_nmspace;
+		Value* current_variable;
+		std::vector<Value*> last_function_arguments;
+		std::vector<Value*> last_function_reference_arguments;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		bool is_function_context;
 		bool return_from_function = false;
@@ -43,6 +46,7 @@ namespace visitor {
 		bool break_block = false;
 		bool executed_elif = false;
 		bool has_string_access = false;
+		bool is_reference;
 
 		modules::Graphics* cpgraphics;
 		modules::Files* cpfiles;
@@ -69,6 +73,8 @@ namespace visitor {
 
 		Value* access_value(InterpreterScope*, Value*, std::vector<parser::Identifier>, size_t i = 0);
 
+		void call_builtin_function(std::string identifier);
+		void declare_function_block_parameters(std::string nmspace);
 		void register_built_in_functions();
 		void register_built_in_lib(std::string libname);
 

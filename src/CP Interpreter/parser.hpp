@@ -136,7 +136,7 @@ namespace parser {
 
 		// special
 
-		std::vector<ASTExprNode*>* parse_actual_params();
+		std::vector<std::pair<bool, ASTExprNode*>>* parse_actual_params();
 
 		VariableDefinition* parse_formal_param();
 

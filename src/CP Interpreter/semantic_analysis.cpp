@@ -450,7 +450,11 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	// for each parameter
 	for (auto param : astnode->parameters) {
 		// visit to update current expr type
-		param->accept(this);
+		param.second->accept(this);
+
+		if (param.first && !dynamic_cast<parser::ASTIdentifierNode*>(param.second)) {
+			throw std::runtime_error(msg_header(astnode->row, astnode->col) + "reference parameters must be variable");
+		}
 
 		auto td = TypeDefinition(current_expression.type, current_expression.array_type, current_expression.dim,
 			current_expression.type_name, current_expression.type_name_space);

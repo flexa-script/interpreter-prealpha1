@@ -364,7 +364,6 @@ VariableDefinition* Parser::parse_formal_param() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	// make sure current token is identifier
 	check_current_token(lexer::TOK_IDENTIFIER);
 
 	auto id = parse_identifier();
@@ -412,19 +411,20 @@ VariableDefinition* Parser::parse_formal_param() {
 		type_name_space, type, current_array_type, access_vector, row, col);
 };
 
-std::vector<ASTExprNode*>* Parser::parse_actual_params() {
-	auto parameters = new std::vector<ASTExprNode*>;
-
-	consume_token();
-	parameters->push_back(parse_expression());
-	consume_token();
+std::vector<std::pair<bool, ASTExprNode*>>* Parser::parse_actual_params() {
+	auto parameters = new std::vector<std::pair<bool, ASTExprNode*>>();
 
 	// if there are more
-	while (current_token.type == lexer::TOK_COMMA) {
+	do {
 		consume_token();
-		parameters->push_back(parse_expression());
+		bool isref = false;
+		if (current_token.type == lexer::TOK_REF) {
+			consume_token();
+			isref = true;
+		}
+		parameters->emplace_back(isref, parse_expression());
 		consume_token();
-	}
+	}while (current_token.type == lexer::TOK_COMMA);
 
 	return parameters;
 }
@@ -977,6 +977,11 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	consume_token();
 	if (current_token.type == lexer::TOK_COLON) {
 		consume_token();
+		if (current_token.type != lexer::TOK_BOOL_TYPE && current_token.type != lexer::TOK_INT_TYPE
+			&& current_token.type != lexer::TOK_FLOAT_TYPE && current_token.type != lexer::TOK_CHAR_TYPE
+			&& current_token.type != lexer::TOK_STRING_TYPE && current_token.type != lexer::TOK_IDENTIFIER) {
+			throw std::runtime_error(msg_header() + "expected type");
+		}
 		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
 			type_name_space = current_token.value;
 			consume_token();
@@ -1423,7 +1428,7 @@ ASTFunctionCallNode* Parser::parse_function_call_node(std::string expr_nmspace) 
 	std::string identifier = "";
 	std::string nmspace = expr_nmspace;
 	std::vector<ASTExprNode*> access_vector = std::vector<ASTExprNode*>();
-	auto* parameters = new std::vector<ASTExprNode*>;
+	auto* parameters = new std::vector<std::pair<bool, ASTExprNode*>>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1462,7 +1467,7 @@ ASTFunctionCallNode* Parser::parse_function_call_node(std::string expr_nmspace) 
 
 ASTFunctionCallNode* Parser::parse_function_call_parameters_node(std::string identifier, std::string nmspace) {
 	std::vector<ASTExprNode*> access_vector = std::vector<ASTExprNode*>();
-	auto* parameters = new std::vector<ASTExprNode*>;
+	auto parameters = new std::vector<std::pair<bool, ASTExprNode*>>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 

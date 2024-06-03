@@ -28,7 +28,7 @@
 - [X] Add string array-like accessor
 - [ ] Function improvements:
     - [ ] Add callback as type function
-    - [ ] Pass parameter by reference
+    - [X] Pass parameter by reference
     - [ ] Add infinit parameters in functions, like `def foo(...args)`
 - [ ] Add statements:
     - [X] for
@@ -43,6 +43,7 @@
     - [X] exit
     - [X] enum
     - [X] try catch throw
+        - [ ] bring error header to a higher level
     - [X] do while
 - [ ] Add expression operators:
     - [X] ++,--
@@ -51,7 +52,6 @@
     - [ ] immediate if
     - [X] typeof: returns type of object
         - [X] add namespace to type name return
-        - [ ] bring error header to a higher level
     - [X] typeid: returns hash of typeof
 - [X] Add built in funcs:
     - [X] len: returns size of array/string
@@ -72,7 +72,7 @@
 - [X] Add a default interface to implements core libs
 - [ ] General otimizations:
     - [ ] Remove duplicate codes
-        - [ ] Type checks
+        - [ ] Organize semantic duplicated checks
     - [X] Move some verifications to semantic analisys:
         - [X] Array size check from interpreter
 - [ ] Projects to implement in CP:
@@ -111,8 +111,9 @@
     - [ ] Util?
 
 ## Known bugs
-- [ ] When a struct is passed by parameter, it can't be assigned as null, it occurs because it's passed just the strcut reference and not the variable
-- [ ] Parser can't handle unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))
+- [X] When a struct is passed by parameter, it can't be assigned as null, it occurs because it's passed just the strcut reference and not the variable
+- [ ] Can't assing string position
+- [X] Parser can't handle unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))
 - [X] This does not always return the expected value, eg when its inside a function tha does not has in main file
 
 ## Errors

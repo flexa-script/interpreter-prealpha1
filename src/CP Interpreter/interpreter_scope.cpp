@@ -114,6 +114,11 @@ Value* InterpreterScope::declare_variable(std::string identifier, cp_struct* str
 	return value;
 }
 
+Value* InterpreterScope::declare_value(std::string identifier, Value* value) {
+	variable_symbol_table[identifier] = value;
+	return value;
+}
+
 void InterpreterScope::declare_structure_definition(std::string name, std::vector<parser::VariableDefinition> variables, unsigned int row, unsigned int col) {
 	parser::StructureDefinition type(name, variables, row, col);
 	structure_symbol_table[name] = (type);

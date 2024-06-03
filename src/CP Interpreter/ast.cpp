@@ -190,7 +190,7 @@ ASTUnaryExprNode::ASTUnaryExprNode(std::string unary_op, ASTExprNode* expr, unsi
 	: ASTExprNode(row, col), unary_op(std::move(unary_op)), expr(expr) {}
 
 ASTFunctionCallNode::ASTFunctionCallNode(std::string identifier, std::string nmspace, std::vector<ASTExprNode*> access_vector,
-	std::vector<ASTExprNode*> parameters, unsigned int row, unsigned int col)
+	std::vector<std::pair<bool, ASTExprNode*>> parameters, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), identifier(std::move(identifier)), nmspace(nmspace), parameters(std::move(parameters)) {}
 
 ASTTypeParseNode::ASTTypeParseNode(Type type, ASTExprNode* expr, unsigned int row, unsigned int col)
