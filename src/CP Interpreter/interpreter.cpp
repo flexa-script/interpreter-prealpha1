@@ -14,7 +14,7 @@ using namespace parser;
 
 
 Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
-	: current_expression_value(Value(Type::T_UNDEF)), is_function_context(false),
+	: current_expression_value(Value(Type::T_UNDEF)), is_function_context(false), current_name(std::stack<std::string>()),
 	Visitor(programs, main_program, main_program ? main_program->name : "main") {
 	current_name.push(main_program->name);
 	scopes["main"].push_back(global_scope);
