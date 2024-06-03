@@ -1,4 +1,1 @@
-// do-while
-
-var i = 0;
-print(i++);
+var i] = 0;

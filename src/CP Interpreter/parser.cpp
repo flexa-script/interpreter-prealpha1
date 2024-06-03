@@ -40,11 +40,6 @@ ASTProgramNode* Parser::parse_program() {
 	auto statements = new std::vector<ASTNode*>;
 	std::string alias = "";
 
-	//while (current_token.type == lexer::TOK_USING && current_token.type != lexer::TOK_EOF) {
-	//	statements->push_back(parse_using_statement());
-	//	consume_token();
-	//}
-
 	if (current_token.type == lexer::TOK_NAMESPACE) {
 		consume_token(lexer::TOK_IDENTIFIER);
 		alias = current_token.value;
@@ -75,13 +70,6 @@ ASTUsingNode* Parser::parse_using_statement() {
 			consume_token();
 		}
 	} while (next_token.type == lexer::TOK_IDENTIFIER);
-
-	//if (next_token.type == lexer::TOK_AS) {
-	//	consume_token();
-	//	consume_token();
-
-	//	alias = current_token.value;
-	//}
 
 	consume_token(lexer::TOK_SEMICOLON);
 
@@ -275,7 +263,9 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 		else if (type == Type::T_ARRAY) {
 			current_array_type = parse_type();
 
-			if (current_array_type == parser::Type::T_UNDEF || current_array_type == parser::Type::T_VOID || current_array_type == parser::Type::T_ARRAY) {
+			if (current_array_type == parser::Type::T_UNDEF
+				|| current_array_type == parser::Type::T_VOID
+				|| current_array_type == parser::Type::T_ARRAY) {
 				current_array_type = parser::Type::T_ANY;
 			}
 		}
@@ -340,7 +330,9 @@ ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
 		else if (type == Type::T_ARRAY) {
 			current_array_type = parse_type();
 
-			if (current_array_type == parser::Type::T_UNDEF || current_array_type == parser::Type::T_VOID || current_array_type == parser::Type::T_ARRAY) {
+			if (current_array_type == parser::Type::T_UNDEF
+				|| current_array_type == parser::Type::T_VOID
+				|| current_array_type == parser::Type::T_ARRAY) {
 				current_array_type = parser::Type::T_ANY;
 			}
 		}
@@ -349,7 +341,7 @@ ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
 			type_name = current_token.value;
 		}
 	}
-	
+
 	expr = nullptr;
 
 	check_consume_semicolon();
@@ -358,7 +350,8 @@ ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
 		type = Type::T_ANY;
 	}
 
-	return new ASTDeclarationNode(identifier, type, current_array_type, dim_vector, type_name, type_name_space, expr, is_const, row, col);
+	return new ASTDeclarationNode(identifier, type, current_array_type, dim_vector,
+		type_name, type_name_space, expr, is_const, row, col);
 }
 
 VariableDefinition* Parser::parse_formal_param() {
@@ -415,7 +408,8 @@ VariableDefinition* Parser::parse_formal_param() {
 		type = Type::T_ANY;
 	}
 
-	return new VariableDefinition(identifier, type, type_name, type_name_space, type, current_array_type, access_vector, row, col);
+	return new VariableDefinition(identifier, type, type_name,
+		type_name_space, type, current_array_type, access_vector, row, col);
 };
 
 std::vector<ASTExprNode*>* Parser::parse_actual_params() {
@@ -951,7 +945,6 @@ ASTDoWhileNode* Parser::parse_do_while_statement() {
 }
 
 ASTFunctionDefinitionNode* Parser::parse_function_definition() {
-	// node attributes
 	std::string identifier;
 	std::vector<VariableDefinition> parameters;
 	Type type;
@@ -965,60 +958,35 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	// consume identifier
 	consume_token(lexer::TOK_IDENTIFIER);
-
 	identifier = current_token.value;
-
-	// consume '('
 	consume_token(lexer::TOK_LEFT_BRACKET);
-
-	// consume ')' or parameters
 	consume_token();
 
 	if (current_token.type != lexer::TOK_RIGHT_BRACKET) {
-		// parse first parameter
 		parameters.push_back(*parse_formal_param());
-
-		// consume ',' or ')'
 		consume_token();
-
 		while (current_token.type == lexer::TOK_COMMA) {
-			// consume identifier
 			consume_token();
-
-			// parse parameter
 			parameters.push_back(*parse_formal_param());
-
-			// consume ',' or ')'
 			consume_token();
 		}
-
 		check_current_token(lexer::TOK_RIGHT_BRACKET);
 	}
 
-	// consume ':' or '{'
 	consume_token();
-
 	if (current_token.type == lexer::TOK_COLON) {
-		// consume type
 		consume_token();
-
 		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
 			type_name_space = current_token.value;
 			consume_token();
 			consume_token();
 		}
-
 		if (current_token.type == lexer::TOK_IDENTIFIER) {
 			type_name = current_token.value;
 		}
-
 		type = parse_type();
-
-		// consume '{'
 		consume_token();
-
 		dim_vector = parse_dimension_vector();
 		if (dim_vector.size() > 0) {
 			type = Type::T_ARRAY;
@@ -1029,7 +997,6 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 		type = Type::T_VOID;
 	}
 
-	// parse block
 	if (current_token.type == lexer::TOK_LEFT_CURLY) {
 		block = parse_block();
 	}
@@ -1234,6 +1201,12 @@ ASTExprNode* Parser::parse_factor() {
 			return parse_function_call_node(nmspace);
 		case lexer::TOK_LEFT_CURLY:
 			return parse_struct_constructor_node(nmspace);
+		case lexer::TOK_ADDITIVE_UN_OP: {
+			ASTIdentifierNode* identifier = parse_identifier_node(nmspace);
+			consume_token();
+			std::string op = current_token.value;
+			return new ASTUnaryExprNode(op, identifier, identifier->row, identifier->col);
+		}
 		default:
 			return parse_identifier_node(nmspace);
 		}

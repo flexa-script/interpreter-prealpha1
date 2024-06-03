@@ -140,16 +140,6 @@ namespace lexer {
 		"EOF token"
 	};
 
-	const TokenType TYPE_TOKENS[] = {
-		TOK_VOID_TYPE,
-		TOK_BOOL_TYPE,
-		TOK_INT_TYPE,
-		TOK_FLOAT_TYPE,
-		TOK_CHAR_TYPE,
-		TOK_STRING_TYPE,
-		TOK_ANY_TYPE
-	};
-
 	class Token {
 	public:
 		TokenType type;
@@ -158,7 +148,7 @@ namespace lexer {
 		unsigned int col;
 
 		Token();
-		Token(TokenType, std::string, unsigned int row = 0, unsigned int col = 0);
+		Token(TokenType type, std::string value, unsigned int row = 0, unsigned int col = 0);
 
 		bool is_type();
 		static std::string token_image(const TokenType);
