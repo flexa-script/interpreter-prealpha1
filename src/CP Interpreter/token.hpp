@@ -111,8 +111,8 @@ namespace lexer {
 		"break",
 		"exit",
 		"try",
-		"catch"
-		"throw"
+		"catch",
+		"throw",
 		"switch",
 		"case",
 		"default",
@@ -150,7 +150,6 @@ namespace lexer {
 		Token();
 		Token(TokenType type, std::string value, unsigned int row = 0, unsigned int col = 0);
 
-		bool is_type();
 		static std::string token_image(const TokenType);
 	};
 };
