@@ -112,7 +112,8 @@
 
 ## Known bugs
 - [ ] When a struct is passed by parameter, it can't be assigned as null, it occurs because it's passed just the strcut reference and not the variable
-- [ ] Parser can't handl unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))
+- [ ] Parser can't handle unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))
+- [X] This does not always return the expected value, eg when its inside a function tha does not has in main file
 
 ## Errors
 - Errors has CP prefix, eg. CP9999

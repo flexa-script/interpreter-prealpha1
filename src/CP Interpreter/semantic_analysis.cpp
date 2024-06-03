@@ -53,6 +53,9 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 
 	// if can't parsed yet
 	if (!axe::Util::contains(libs, libname)) {
+		if (!program->alias.empty()) {
+			nmspaces.push_back(program->alias);
+		}
 		libs.push_back(libname);
 		auto prev_program = current_program;
 		current_program = program;
@@ -65,6 +68,9 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTAsNamespaceNode* astnode) {
+	if (!axe::Util::contains(nmspaces, astnode->nmspace)) {
+		throw std::runtime_error(msg_header(astnode->row, astnode->col) + "namespace '" + astnode->nmspace + "' not found");
+	}
 	program_nmspaces[get_namespace(current_program->alias)].push_back(astnode->nmspace);
 }
 
@@ -1158,10 +1164,15 @@ SemanticScope* SemanticAnalyser::get_inner_most_variable_scope(std::string nmspa
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
 		if (i <= 0) {
 			for (auto prgnmspace : program_nmspaces[get_namespace()]) {
-				try {
-					return get_inner_most_variable_scope(prgnmspace, identifier);
+				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_variable(identifier); --i) {
+					if (i <= 0) {
+						i = -1;
+						break;
+					}
 				}
-				catch (...) {}
+				if (i >= 0) {
+					return scopes[prgnmspace][i];
+				}
 			}
 			throw std::runtime_error("identifier '" + identifier + "' was not declared");
 		}
@@ -1173,12 +1184,16 @@ SemanticScope* SemanticAnalyser::get_inner_most_struct_definition_scope(std::str
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); i--) {
 		if (i <= 0) {
-			bool found = false;
 			for (auto prgnmspace : program_nmspaces[get_namespace()]) {
-				try {
-					return get_inner_most_struct_definition_scope(prgnmspace, identifier);
+				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_structure_definition(identifier); --i) {
+					if (i <= 0) {
+						i = -1;
+						break;
+					}
 				}
-				catch (...) {}
+				if (i >= 0) {
+					return scopes[prgnmspace][i];
+				}
 			}
 			throw std::runtime_error("struct '" + identifier + "' was not declared");
 		}
@@ -1192,10 +1207,15 @@ SemanticScope* SemanticAnalyser::get_inner_most_function_scope(std::string nmspa
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); --i) {
 		if (i <= 0) {
 			for (auto prgnmspace : program_nmspaces[get_namespace()]) {
-				try {
-					return get_inner_most_function_scope(prgnmspace, identifier, signature);
+				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function(identifier, signature); --i) {
+					if (i <= 0) {
+						i = -1;
+						break;
+					}
 				}
-				catch (...) {}
+				if (i >= 0) {
+					return scopes[prgnmspace][i];
+				}
 			}
 			throw std::runtime_error("function '" + identifier + "' was not declared");
 		}

@@ -74,6 +74,19 @@ namespace parser {
 	}
 }
 
+std::vector<std::string> std_libs = {
+	"cp.core.graphics",
+	"cp.core.files",
+	"cp.core.exception"
+};
+
+std::vector<std::string> built_in_libs = {
+	"cp.std.math",
+	"cp.std.print",
+	"cp.std.random",
+	"cp.std.testing"
+};
+
 Value::Value(parser::Type type)
 	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), type(type), curr_type(type), arr_type(type) {};
 

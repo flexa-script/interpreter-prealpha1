@@ -74,6 +74,9 @@ typedef std::vector<Value*> cp_array;
 typedef std::map<std::string, Value*> cp_struct_values;
 typedef std::pair<std::string, cp_struct_values> cp_struct;
 
+extern std::vector<std::string> std_libs;
+extern std::vector<std::string> built_in_libs;
+
 class Value {
 public:
 	Value(parser::Type);
@@ -117,10 +120,9 @@ namespace visitor {
 		std::map<std::string, parser::ASTProgramNode*> programs;
 		parser::ASTProgramNode* main_program;
 		parser::ASTProgramNode* current_program;
-		std::string current_name;
 
 		Visitor(std::map<std::string, parser::ASTProgramNode*> programs, parser::ASTProgramNode* main_program, std::string current_name)
-			: programs(programs), main_program(main_program), current_program(main_program), current_name(current_name) { };
+			: programs(programs), main_program(main_program), current_program(main_program) { };
 
 		virtual std::string get_namespace(std::string = "") = 0;
 		virtual std::string get_namespace(parser::ASTProgramNode*, std::string = "") = 0;

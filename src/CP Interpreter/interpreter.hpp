@@ -30,6 +30,7 @@ namespace visitor {
 		std::string function_call_name;
 		std::vector<std::string> function_call_parameters;
 		std::stack<std::string> current_function_nmspace;
+		std::stack<std::string> current_name;
 		std::string return_from_function_name;
 		std::string current_expression_nmspace;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
@@ -42,11 +43,6 @@ namespace visitor {
 		bool break_block = false;
 		bool executed_elif = false;
 		bool has_string_access = false;
-
-		std::vector<std::string> built_in_libs = {
-			"cp.core.graphics",
-			"cp.core.files"
-		};
 
 		modules::Graphics* cpgraphics;
 		modules::Files* cpfiles;

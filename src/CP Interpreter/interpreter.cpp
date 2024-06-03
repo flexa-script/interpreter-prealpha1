@@ -16,6 +16,7 @@ using namespace parser;
 Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
 	: current_expression_value(Value(Type::T_UNDEF)), is_function_context(false),
 	Visitor(programs, main_program, main_program ? main_program->name : "main") {
+	current_name.push(main_program->name);
 	scopes["main"].push_back(global_scope);
 	register_built_in_functions();
 }
@@ -1042,11 +1043,11 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	// populate the global vector of function parameter names, to be used in creation of function scope
 	function_call_parameters = std::get<1>(func_scope->find_declared_function(astnode->identifier, signature));
 
-	current_name = astnode->identifier;
-	function_call_name = astnode->identifier;
-
 	is_function_context = true;
+	function_call_name = astnode->identifier;
+	current_name.push(astnode->identifier);
 	current_function_nmspace.push(nmspace);
+
 	// visit the corresponding function block
 	auto block = std::get<2>(func_scope->find_declared_function(astnode->identifier, signature));
 	if (block) {
@@ -1056,10 +1057,10 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		builtin_functions[astnode->identifier]();
 		this->last_function_arguments.clear();
 	}
-	is_function_context = false;
-	current_function_nmspace.pop();
 
-	current_name = current_program->name;
+	current_function_nmspace.pop();
+	current_name.pop();
+	is_function_context = false;
 }
 
 void Interpreter::visit(ASTTypeParseNode* astnode) {
@@ -1175,7 +1176,7 @@ void Interpreter::visit(ASTNullNode* astnode) {
 
 void Interpreter::visit(ASTThisNode* astnode) {
 	auto value = Value(Type::T_STRING);
-	value.set(cp_string(current_name));
+	value.set(cp_string(current_name.top()));
 	current_expression_value = value;
 }
 
@@ -1234,10 +1235,15 @@ InterpreterScope* Interpreter::get_inner_most_variable_scope(std::string nmspace
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
 		if (i <= 0) {
 			for (auto prgnmspace : program_nmspaces[get_current_namespace()]) {
-				try {
-					return get_inner_most_variable_scope(prgnmspace, identifier);
+				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_variable(identifier); --i) {
+					if (i <= 0) {
+						i = -1;
+						break;
+					}
 				}
-				catch (...) {}
+				if (i >= 0) {
+					return scopes[prgnmspace][i];
+				}
 			}
 			throw std::runtime_error("identifier '" + identifier + "' was not declared");
 		}
@@ -1251,10 +1257,15 @@ InterpreterScope* Interpreter::get_inner_most_struct_definition_scope(std::strin
 		if (i <= 0) {
 			bool found = false;
 			for (auto prgnmspace : program_nmspaces[get_current_namespace()]) {
-				try {
-					return get_inner_most_struct_definition_scope(prgnmspace, identifier);
+				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_structure_definition(identifier); --i) {
+					if (i <= 0) {
+						i = -1;
+						break;
+					}
 				}
-				catch (...) {}
+				if (i >= 0) {
+					return scopes[prgnmspace][i];
+				}
 			}
 			throw std::runtime_error("struct '" + identifier + "' was not declared");
 		}
@@ -1267,10 +1278,15 @@ InterpreterScope* Interpreter::get_inner_most_function_scope(std::string nmspace
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); --i) {
 		if (i <= 0) {
 			for (auto prgnmspace : program_nmspaces[get_current_namespace()]) {
-				try {
-					return get_inner_most_function_scope(prgnmspace, identifier, signature);
+				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function(identifier, signature); --i) {
+					if (i <= 0) {
+						i = -1;
+						break;
+					}
 				}
-				catch (...) {}
+				if (i >= 0) {
+					return scopes[prgnmspace][i];
+				}
 			}
 			throw std::runtime_error("function '" + identifier + "' was not declared");
 		}
