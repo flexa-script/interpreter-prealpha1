@@ -69,6 +69,8 @@ namespace visitor {
 
 		std::string get_namespace(std::string = "") override;
 		std::string get_namespace(parser::ASTProgramNode*, std::string = "") override;
+		void set_curr_pos(unsigned int row, unsigned int col) override;
+		std::string msg_header() override;
 	};
 
 }

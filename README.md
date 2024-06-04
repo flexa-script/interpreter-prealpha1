@@ -43,7 +43,7 @@
     - [X] exit
     - [X] enum
     - [X] try catch throw
-        - [ ] bring error header to a higher level
+        - [X] bring error header to a higher level
     - [X] do while
 - [ ] Add expression operators:
     - [X] ++,--

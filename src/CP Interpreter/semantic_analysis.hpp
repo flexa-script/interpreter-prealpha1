@@ -48,16 +48,16 @@ namespace visitor {
 		void register_built_in_functions();
 		void register_built_in_lib(std::string libname);
 
-		std::string msg_header(unsigned int, unsigned int);
+		std::string get_namespace(std::string = "") override;
+		std::string get_namespace(parser::ASTProgramNode*, std::string = "") override;
+		void set_curr_pos(unsigned int row, unsigned int col) override;
+		std::string msg_header() override;
 
 	public:
 		SemanticAnalyser(SemanticScope*, parser::ASTProgramNode*, std::map<std::string, parser::ASTProgramNode*>);
 		~SemanticAnalyser() = default;
 
 		void start();
-
-		std::string get_namespace(std::string = "") override;
-		std::string get_namespace(parser::ASTProgramNode*, std::string = "") override;
 
 		void visit(parser::ASTProgramNode*) override;
 		void visit(parser::ASTUsingNode*) override;

@@ -37,7 +37,7 @@ namespace visitor {
 		std::vector<Value*> last_function_arguments;
 		std::vector<Value*> last_function_reference_arguments;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
-		bool is_function_context;
+		bool is_function_context = false;
 		bool return_from_function = false;
 		bool is_switch = false;
 		bool is_loop = false;
@@ -46,7 +46,7 @@ namespace visitor {
 		bool break_block = false;
 		bool executed_elif = false;
 		bool has_string_access = false;
-		bool is_reference;
+		bool is_reference = false;
 
 		modules::Graphics* cpgraphics;
 		modules::Files* cpfiles;
@@ -78,16 +78,16 @@ namespace visitor {
 		void register_built_in_functions();
 		void register_built_in_lib(std::string libname);
 
-		std::string msg_header(unsigned int, unsigned int);
+		std::string get_current_namespace();
+		std::string get_namespace(std::string = "") override;
+		std::string get_namespace(parser::ASTProgramNode*, std::string = "") override;
+		void set_curr_pos(unsigned int row, unsigned int col) override;
+		std::string msg_header() override;
 
 	public:
 		Interpreter(InterpreterScope*, parser::ASTProgramNode*, std::map<std::string, parser::ASTProgramNode*>);
 		Interpreter() = default;
 		~Interpreter() = default;
-
-		std::string get_current_namespace();
-		std::string get_namespace(std::string = "") override;
-		std::string get_namespace(parser::ASTProgramNode*, std::string = "") override;
 
 		void start();
 

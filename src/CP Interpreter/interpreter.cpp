@@ -45,7 +45,15 @@ void Interpreter::start() {
 
 void Interpreter::visit(ASTProgramNode* astnode) {
 	for (auto& statement : astnode->statements) {
-		statement->accept(this);
+		try {
+			statement->accept(this);
+		}
+		catch (std::exception ex) {
+			if (curr_row == 0 || curr_col == 0) {
+				set_curr_pos(astnode->row, astnode->col);
+			}
+			throw std::runtime_error(msg_header() + ex.what());
+		}
 	}
 }
 
@@ -473,6 +481,8 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 		Value* value = access_value(scopes[nmspace].back(), scopes[nmspace].back()->find_declared_variable(itdecl->identifier),
 			std::vector<Identifier>{Identifier(itdecl->identifier, std::vector<ASTExprNode*>())});
 
+		value->set_type(Type::T_STRUCT);
+		value->set_curr_type(Type::T_STRUCT);
 		value->str = new cp_struct();
 		value->str->first = "Exception";
 		value->str->second["error"] = new Value(Type::T_STRING);
@@ -659,7 +669,8 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 			}
 			else if (op == "/") {
 				if (r_value.i == 0) {
-					throw std::runtime_error(msg_header(astnode->row, astnode->col) + "division by zero encountered");
+					set_curr_pos(astnode->row, astnode->col);
+					throw std::runtime_error("division by zero encountered");
 				}
 				value->set((cp_int)(l_value.i / r_value.i));
 			}
@@ -687,7 +698,8 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 			}
 			else if (op == "/") {
 				if (r == 0) {
-					throw std::runtime_error(msg_header(astnode->row, astnode->col) + "division by zero encountered");
+					set_curr_pos(astnode->row, astnode->col);
+					throw std::runtime_error("division by zero encountered");
 				}
 				value->set((cp_float)l / r);
 			}
@@ -917,10 +929,11 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	}
 
 	auto root = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
-	if (is_reference || is_struct(root->curr_type)) {
+	auto sub_val = access_value(id_scope, root, astnode->identifier_vector);
+	current_expression_value = *sub_val;
+	if ((is_reference || is_struct(root->curr_type)) && !sub_val) {
 		current_variable = root;
 	}
-	current_expression_value = *access_value(id_scope, root, astnode->identifier_vector);
 
 	if (is_struct(current_expression_value.curr_type)) {
 		current_expression_nmspace = nmspace;
@@ -1083,7 +1096,8 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 				current_expression_value.set(cp_int(std::stoll(current_expression_value.s)));
 			}
 			catch (...) {
-				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "'" + current_expression_value.s + "' is not a valid value to parse int");
+				set_curr_pos(astnode->row, astnode->col);
+				throw std::runtime_error("'" + current_expression_value.s + "' is not a valid value to parse int");
 			}
 			break;
 		}
@@ -1107,7 +1121,8 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 				current_expression_value.set(cp_float(std::stold(current_expression_value.s)));
 			}
 			catch (...) {
-				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "'" + current_expression_value.s + "' is not a valid value to parse float");
+				set_curr_pos(astnode->row, astnode->col);
+				throw std::runtime_error("'" + current_expression_value.s + "' is not a valid value to parse float");
 			}
 			break;
 		}
@@ -1128,7 +1143,8 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 			break;
 		case Type::T_STRING:
 			if (current_expression_value.s.size() > 1) {
-				throw std::runtime_error(msg_header(astnode->row, astnode->col) + "'" + current_expression_value.s + "' is not a valid value to parse char");
+				set_curr_pos(astnode->row, astnode->col);
+				throw std::runtime_error("'" + current_expression_value.s + "' is not a valid value to parse char");
 			}
 			else {
 				current_expression_value.set(cp_char(current_expression_value.s[0]));
@@ -1575,8 +1591,12 @@ std::string Interpreter::parse_struct_to_string(cp_struct value) {
 	return s.str();
 }
 
-std::string Interpreter::msg_header(unsigned int row, unsigned int col) {
-	return "(IERR) " + current_program->name + '[' + std::to_string(row) + ':' + std::to_string(col) + "]: ";
+void Interpreter::set_curr_pos(unsigned int row, unsigned int col) {
+
+}
+
+std::string Interpreter::msg_header() {
+	return "(IERR) " + current_program->name + '[' + std::to_string(curr_row) + ':' + std::to_string(curr_col) + "]: ";
 }
 
 unsigned int Interpreter::hash(ASTExprNode* astnode) {
@@ -1634,7 +1654,7 @@ unsigned int Interpreter::hash(ASTIdentifierNode* astnode) {
 void Interpreter::register_built_in_functions() {
 	builtin_functions["print"] = [this]() {
 		std::cout << parse_value_to_string(*builtin_arguments[0]);
-	};
+		};
 
 	builtin_functions["read"] = [this]() {
 		if (builtin_arguments.size() > 0) {
@@ -1643,17 +1663,17 @@ void Interpreter::register_built_in_functions() {
 		std::string line;
 		std::getline(std::cin, line);
 		current_expression_value.set(cp_string(std::move(line)));
-	};
+		};
 
 	builtin_functions["readch"] = [this]() {
 		while (!_kbhit());
 		char ch = _getch();
 		current_expression_value.set(cp_char(ch));
-	};
+		};
 
 	builtin_functions["system"] = [this]() {
 		system(builtin_arguments[0]->s.c_str());
-	};
+		};
 
 	builtin_functions["len"] = [this]() {
 		auto& curr_val = builtin_arguments[0];
@@ -1667,7 +1687,7 @@ void Interpreter::register_built_in_functions() {
 		}
 
 		current_expression_value = val;
-	};
+		};
 }
 
 void Interpreter::register_built_in_lib(std::string libname) {

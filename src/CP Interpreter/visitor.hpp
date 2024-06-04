@@ -120,12 +120,17 @@ namespace visitor {
 		std::map<std::string, parser::ASTProgramNode*> programs;
 		parser::ASTProgramNode* main_program;
 		parser::ASTProgramNode* current_program;
+		int curr_row;
+		int curr_col;
 
 		Visitor(std::map<std::string, parser::ASTProgramNode*> programs, parser::ASTProgramNode* main_program, std::string current_name)
 			: programs(programs), main_program(main_program), current_program(main_program) { };
 
 		virtual std::string get_namespace(std::string = "") = 0;
 		virtual std::string get_namespace(parser::ASTProgramNode*, std::string = "") = 0;
+
+		virtual void set_curr_pos(unsigned int row, unsigned int col) = 0;
+		virtual std::string msg_header() = 0;
 
 		virtual void visit(parser::ASTProgramNode*) = 0;
 		virtual void visit(parser::ASTUsingNode*) = 0;

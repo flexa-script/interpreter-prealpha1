@@ -35,12 +35,10 @@ void LibFinder::visit(ASTUsingNode* astnode) {
 		}
 		// find in cp std libs
 		std::string path = axe::Util::replace(libname, ".", std::string{ std::filesystem::path::preferred_separator }) + ".cp";
-		if (std::filesystem::exists(path)) {
-			if (std::find(lib_names.begin(), lib_names.end(), path) == lib_names.end()) {
-				lib_names.push_back(path);
-			}
-			return;
+		if (std::find(lib_names.begin(), lib_names.end(), path) == lib_names.end()) {
+			lib_names.push_back(path);
 		}
+		return;
 	}
 
 	auto program = programs[libname];
@@ -111,3 +109,5 @@ unsigned int LibFinder::hash(ASTIdentifierNode*) { return 0; }
 
 std::string LibFinder::get_namespace(std::string) { return ""; }
 std::string LibFinder::get_namespace(ASTProgramNode*, std::string) { return ""; }
+void LibFinder::set_curr_pos(unsigned int, unsigned int) {}
+std::string LibFinder::msg_header() { return ""; }
