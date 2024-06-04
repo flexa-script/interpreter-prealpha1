@@ -1,3 +1,7 @@
+using cp.std.random;
+
+as namespace cp;
+
 var str: string = "str";
 
 print(str[0]);
@@ -13,3 +17,4 @@ print(str[0]);
 print("\n");
 print(str);
 print("\n");
+print(randi());

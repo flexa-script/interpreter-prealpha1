@@ -10,7 +10,8 @@ using namespace parser;
 
 
 LibFinder::LibFinder(ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
-	: cp_root(axe::Util::get_current_path()), libs(std::vector<std::string>()), lib_names(std::vector<std::string>()),
+	: cp_root(axe::Util::get_current_path() + std::string{ std::filesystem::path::preferred_separator } + "libs"),
+	libs(std::vector<std::string>()), lib_names(std::vector<std::string>()),
 	Visitor(programs, main_program, main_program->name) {};
 
 void LibFinder::start() {
