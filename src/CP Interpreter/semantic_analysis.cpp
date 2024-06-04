@@ -1547,7 +1547,7 @@ void SemanticAnalyser::register_built_in_functions() {
 		if (signature.size() != 1) {
 			throw std::runtime_error("expected one parameter");
 		}
-		};
+	};
 
 	builtin_functions["read"] = [this]() {
 		auto size = signature.size();
@@ -1560,7 +1560,7 @@ void SemanticAnalyser::register_built_in_functions() {
 		current_expression.type_name = "";
 		current_expression.array_type = Type::T_UNDEF;
 		current_expression.is_const = false;
-		};
+	};
 
 	builtin_functions["readch"] = [this]() {
 		if (signature.size() > 0) {
@@ -1572,20 +1572,11 @@ void SemanticAnalyser::register_built_in_functions() {
 		current_expression.type_name = "";
 		current_expression.array_type = Type::T_UNDEF;
 		current_expression.is_const = false;
-		};
-
-	builtin_functions["system"] = [this]() {
-		if (signature.size() != 1) {
-			throw std::runtime_error("expected string parameter");
-		}
-		if (!is_string(signature[0].type)) {
-			throw std::runtime_error("parameter must be a string");
-		}
-		};
+	};
 
 	builtin_functions["len"] = [this]() {
 		if (signature.size() != 1) {
-			throw std::runtime_error("expected string or array parameter");
+			throw std::runtime_error("expected one string or array parameter");
 		}
 		if (!is_array(signature[0].type) && !is_string(signature[0].type)) {
 			throw std::runtime_error("can't read len of type " + type_str(current_expression.type));
@@ -1596,5 +1587,50 @@ void SemanticAnalyser::register_built_in_functions() {
 		current_expression.type_name = "";
 		current_expression.array_type = Type::T_UNDEF;
 		current_expression.is_const = false;
-		};
+	};
+
+	builtin_functions["system"] = [this]() {
+		if (signature.size() != 1) {
+			throw std::runtime_error("expected one string parameter");
+		}
+		if (!is_string(signature[0].type)) {
+			throw std::runtime_error("parameter must be a string");
+		}
+	};
+
+	builtin_functions["set_console_color"] = [this]() {
+		if (signature.size() != 1) {
+			throw std::runtime_error("expected one int parameter");
+		}
+		if (!is_int(signature[0].type)) {
+			throw std::runtime_error("parameter must be int");
+		}
+	};
+
+	builtin_functions["set_console_cursor_position"] = [this]() {
+		if (signature.size() != 2) {
+			throw std::runtime_error("expected (int, int) parameters");
+		}
+		if (!is_int(signature[0].type)) {
+			throw std::runtime_error("parameter x must be int");
+		}
+		if (!is_int(signature[1].type)) {
+			throw std::runtime_error("parameter y must be int");
+		}
+	};
+
+	builtin_functions["set_console_font"] = [this]() {
+		if (signature.size() != 3) {
+			throw std::runtime_error("expected (string, int, int) parameters");
+		}
+		if (!is_string(signature[0].type)) {
+			throw std::runtime_error("parameter font_name must be string");
+		}
+		if (!is_int(signature[1].type)) {
+			throw std::runtime_error("parameter width must be int");
+		}
+		if (!is_int(signature[2].type)) {
+			throw std::runtime_error("parameter height must be int");
+		}
+	};
 }

@@ -413,7 +413,18 @@ Token Lexer::process_symbol() {
 		break;
 
 	case '.':
-		type = TOK_DOT;
+		if (current_char == '.') {
+			str_symbol += current_char;
+			advance();
+			if (current_char != '.') {
+				throw std::runtime_error(msg_header() + "expected '.'");
+			}
+			str_symbol += current_char;
+			type = TOK_RETICENCES;
+		}
+		else {
+			type = TOK_DOT;
+		}
 		break;
 
 	default:

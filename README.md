@@ -43,7 +43,8 @@
     - [X] exit
     - [X] enum
     - [X] try catch throw
-        - [X] bring error header to a higher level
+        - [X] Bring error header to a higher level
+        - [ ] add ... to ignore catch error
     - [X] do while
 - [ ] Add expression operators:
     - [X] ++,--
@@ -62,8 +63,9 @@
 - [X] Remove struct as bool in expression and change this type of verification to void value comparation (eg: var == null)
 - [X] Move function body parser to caller node (as interpreter), to check parameters of each caller
 - [ ] Console control tools
-    - [ ] Set caret pos
-    - [ ] Change color
+    - [X] Set caret position
+    - [X] Change color
+    - [X] Set font
     - [ ] ...
 - [ ] Improve error system (based on C++)
 - [ ] Improve REPL:

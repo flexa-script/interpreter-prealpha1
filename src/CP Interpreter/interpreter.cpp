@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cmath>
 #include <conio.h>
+#include <cwchar>
+#include <windows.h>
 
 #include "interpreter.hpp"
 #include "vendor/util.hpp"
@@ -1671,7 +1673,7 @@ unsigned int Interpreter::hash(ASTIdentifierNode* astnode) {
 void Interpreter::register_built_in_functions() {
 	builtin_functions["print"] = [this]() {
 		std::cout << parse_value_to_string(*builtin_arguments[0]);
-		};
+	};
 
 	builtin_functions["read"] = [this]() {
 		if (builtin_arguments.size() > 0) {
@@ -1680,17 +1682,13 @@ void Interpreter::register_built_in_functions() {
 		std::string line;
 		std::getline(std::cin, line);
 		current_expression_value.set(cp_string(std::move(line)));
-		};
+	};
 
 	builtin_functions["readch"] = [this]() {
 		while (!_kbhit());
 		char ch = _getch();
 		current_expression_value.set(cp_char(ch));
-		};
-
-	builtin_functions["system"] = [this]() {
-		system(builtin_arguments[0]->s.c_str());
-		};
+	};
 
 	builtin_functions["len"] = [this]() {
 		auto& curr_val = builtin_arguments[0];
@@ -1704,7 +1702,39 @@ void Interpreter::register_built_in_functions() {
 		}
 
 		current_expression_value = val;
-		};
+	};
+
+	builtin_functions["system"] = [this]() {
+		system(builtin_arguments[0]->s.c_str());
+	};
+
+	builtin_functions["set_console_color"] = [this]() {
+		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		SetConsoleTextAttribute(hConsole, builtin_arguments[0]->i);
+	};
+
+	builtin_functions["set_console_cursor_position"] = [this]() {
+		COORD pos = { builtin_arguments[0]->i, builtin_arguments[1]->i };
+		HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+		SetConsoleCursorPosition(output, pos);
+	};
+
+	builtin_functions["set_console_font"] = [this]() {
+		auto pfontname = std::wstring(builtin_arguments[0]->s.begin(), builtin_arguments[0]->s.end());
+		int pwidth = builtin_arguments[1]->i;
+		int pheight = builtin_arguments[2]->i;
+
+		CONSOLE_FONT_INFOEX cfi;
+		cfi.cbSize = sizeof(cfi);
+		cfi.nFont = 0;
+		cfi.dwFontSize.X = pwidth;
+		cfi.dwFontSize.Y = pheight;
+		cfi.FontFamily = FF_DONTCARE;
+		cfi.FontWeight = FW_NORMAL;
+#pragma warning(suppress : 4996)
+		std::wcscpy(cfi.FaceName, pfontname.c_str());
+		SetCurrentConsoleFontEx(GetStdHandle(STD_OUTPUT_HANDLE), FALSE, &cfi);
+	};
 }
 
 void Interpreter::register_built_in_lib(std::string libname) {
