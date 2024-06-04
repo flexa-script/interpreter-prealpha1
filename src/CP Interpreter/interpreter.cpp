@@ -208,7 +208,18 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 			break;
 		case Type::T_CHAR:
 			if (is_string(value->curr_type)) {
-				value->set(do_operation(value->s, std::string{ current_expression_value.c }, astnode->op));
+				if (astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
+					has_string_access = false;
+					auto c = current_expression_value.c;
+					astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
+					auto pos = current_expression_value.i;
+					auto str = value->s;
+					str[pos] = c;
+					value->set(cp_string(str));
+				}
+				else {
+					value->set(do_operation(value->s, std::string{ current_expression_value.c }, astnode->op));
+				}
 			}
 			else {
 				value->set(current_expression_value.c);
@@ -940,11 +951,13 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	}
 
 	if (current_expression_value.curr_type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
+		has_string_access = false;
+		auto str = current_expression_value.s;
 		astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
 		auto pos = current_expression_value.i;
 
-		auto char_value = Value(current_expression_value.curr_type);
-		char_value.set(cp_char(current_expression_value.s[pos]));
+		auto char_value = Value(Type::T_CHAR);
+		char_value.set(cp_char(str[pos]));
 		current_expression_value = char_value;
 	}
 }
@@ -1309,6 +1322,10 @@ Value* Interpreter::access_value(InterpreterScope* scope, Value* value, std::vec
 			}
 			current_Val = &current_Val->at(access_pos)->arr;
 		}
+		if (is_string(next_value->curr_type)) {
+			has_string_access = true;
+			return next_value;
+		}
 		access_pos = access_vector.at(s);
 		next_value = current_Val->at(access_pos);
 	}
@@ -1592,7 +1609,8 @@ std::string Interpreter::parse_struct_to_string(cp_struct value) {
 }
 
 void Interpreter::set_curr_pos(unsigned int row, unsigned int col) {
-
+	curr_row = row;
+	curr_col = col;
 }
 
 std::string Interpreter::msg_header() {

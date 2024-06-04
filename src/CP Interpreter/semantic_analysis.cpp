@@ -186,7 +186,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 			//		d->accept(this);
 			//		if (!current_expression.is_const) {
 			//			set_curr_lc(astnode->row, astnode->col);
-			throw std::runtime_error("array size must be a constant expression");
+			//			throw std::runtime_error("array size must be a constant expression");
 			//		}
 			//	}
 			//}
