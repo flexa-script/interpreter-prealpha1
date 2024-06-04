@@ -14,6 +14,7 @@
 namespace modules {
 	class Graphics;
 	class Files;
+	class Console;
 }
 
 namespace visitor {
@@ -50,6 +51,7 @@ namespace visitor {
 
 		modules::Graphics* cpgraphics;
 		modules::Files* cpfiles;
+		modules::Console* cpconsole;
 
 
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);

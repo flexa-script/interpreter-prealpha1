@@ -86,6 +86,8 @@
 - [ ] Add core library:
     - [X] File I/O
     - [X] Graphics
+    - [X] Exception
+    - [X] Console
     - [ ] Mouse
     - [ ] Sound
     - [ ] Keyboard

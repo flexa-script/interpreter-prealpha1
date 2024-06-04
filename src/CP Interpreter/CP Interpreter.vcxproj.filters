@@ -126,6 +126,9 @@
     <ClInclude Include="files.hpp">
       <Filter>Header Files\modules\cp.core</Filter>
     </ClInclude>
+    <ClInclude Include="console.hpp">
+      <Filter>Header Files\modules\cp.core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -185,10 +188,13 @@
     <ClCompile Include="graphics.cpp">
       <Filter>Source Files\modules\cp.core</Filter>
     </ClCompile>
+    <ClCompile Include="files.cpp">
+      <Filter>Source Files\modules\cp.core</Filter>
+    </ClCompile>
     <ClCompile Include="module.cpp">
       <Filter>Source Files\modules</Filter>
     </ClCompile>
-    <ClCompile Include="files.cpp">
+    <ClCompile Include="console.cpp">
       <Filter>Source Files\modules\cp.core</Filter>
     </ClCompile>
   </ItemGroup>

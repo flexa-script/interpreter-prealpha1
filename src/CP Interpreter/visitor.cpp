@@ -75,16 +75,17 @@ namespace parser {
 }
 
 std::vector<std::string> std_libs = {
-	"cp.core.graphics",
-	"cp.core.files",
-	"cp.core.exception"
-};
-
-std::vector<std::string> built_in_libs = {
 	"cp.std.math",
 	"cp.std.print",
 	"cp.std.random",
 	"cp.std.testing"
+};
+
+std::vector<std::string> built_in_libs = {
+	"cp.core.graphics",
+	"cp.core.files",
+	"cp.core.exception",
+	"cp.core.console"
 };
 
 Value::Value(parser::Type type)

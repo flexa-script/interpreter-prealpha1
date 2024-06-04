@@ -1597,40 +1597,4 @@ void SemanticAnalyser::register_built_in_functions() {
 			throw std::runtime_error("parameter must be a string");
 		}
 	};
-
-	builtin_functions["set_console_color"] = [this]() {
-		if (signature.size() != 1) {
-			throw std::runtime_error("expected one int parameter");
-		}
-		if (!is_int(signature[0].type)) {
-			throw std::runtime_error("parameter must be int");
-		}
-	};
-
-	builtin_functions["set_console_cursor_position"] = [this]() {
-		if (signature.size() != 2) {
-			throw std::runtime_error("expected (int, int) parameters");
-		}
-		if (!is_int(signature[0].type)) {
-			throw std::runtime_error("parameter x must be int");
-		}
-		if (!is_int(signature[1].type)) {
-			throw std::runtime_error("parameter y must be int");
-		}
-	};
-
-	builtin_functions["set_console_font"] = [this]() {
-		if (signature.size() != 3) {
-			throw std::runtime_error("expected (string, int, int) parameters");
-		}
-		if (!is_string(signature[0].type)) {
-			throw std::runtime_error("parameter font_name must be string");
-		}
-		if (!is_int(signature[1].type)) {
-			throw std::runtime_error("parameter width must be int");
-		}
-		if (!is_int(signature[2].type)) {
-			throw std::runtime_error("parameter height must be int");
-		}
-	};
 }
