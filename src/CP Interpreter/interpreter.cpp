@@ -1315,7 +1315,6 @@ Value* Interpreter::access_value(InterpreterScope* scope, Value* value, std::vec
 			// check array position access
 			access_pos = access_vector.at(s);
 			// break if it is a string, and the string access will be handled in identifier node evaluation
-			// TODO: ckeck if it will handle string assign
 			if (current_Val->at(access_pos)->curr_type == Type::T_STRING) {
 				has_string_access = true;
 				break;
