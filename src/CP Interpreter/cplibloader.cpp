@@ -91,6 +91,7 @@ void LibFinder::visit(ASTLiteralNode<cp_float>*) {}
 void LibFinder::visit(ASTLiteralNode<cp_char>*) {}
 void LibFinder::visit(ASTLiteralNode<cp_string>*) {}
 void LibFinder::visit(ASTIdentifierNode*) {}
+void LibFinder::visit(ASTInNode*) {}
 
 void LibFinder::visit(ASTStructDefinitionNode*) {}
 

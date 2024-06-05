@@ -79,18 +79,13 @@ namespace parser {
 		ASTTypingNode* parse_typing_node();
 
 		// expression nodes
-		//ASTExprNode* parse_expression_tail(ASTExprNode*);
-		ASTExprNode* parse_logical_or_expression();
-		//ASTExprNode* parse_logical_or_expression_tail(ASTExprNode*);
-		ASTExprNode* parse_logical_and_expression();
-		//ASTExprNode* parse_logical_and_expression_tail(ASTExprNode*);
-		ASTExprNode* parse_relational_expression();
-		//ASTExprNode* parse_relational_expression_tail(ASTExprNode*);
-		ASTExprNode* parse_simple_expression();
-		//ASTExprNode* parse_simple_expression_tail(ASTExprNode*);
-		ASTExprNode* parse_term();
-		//ASTExprNode* parse_term_tail(ASTExprNode*);
 		ASTExprNode* parse_ternary_expression();
+		ASTExprNode* parse_in_expression();
+		ASTExprNode* parse_logical_or_expression();
+		ASTExprNode* parse_logical_and_expression();
+		ASTExprNode* parse_relational_expression();
+		ASTExprNode* parse_simple_expression();
+		ASTExprNode* parse_term();
 		ASTExprNode* parse_factor();
 
 		// special

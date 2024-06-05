@@ -1208,6 +1208,11 @@ void SemanticAnalyser::visit(ASTTernaryNode* astnode) {
 	astnode->value_if_false->accept(this);
 }
 
+void SemanticAnalyser::visit(ASTInNode* astnode) {
+	astnode->value->accept(this);
+	astnode->collection->accept(this);
+}
+
 void SemanticAnalyser::visit(ASTTypeParseNode* astnode) {
 	astnode->expr->accept(this);
 

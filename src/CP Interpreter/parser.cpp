@@ -1020,35 +1020,23 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 }
 
 ASTStructDefinitionNode* Parser::parse_struct_definition() {
-	// node attributes
 	std::string identifier;
 	std::vector<VariableDefinition> variables;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	// consume identifier
 	consume_token(lexer::TOK_IDENTIFIER);
-
 	identifier = current_token.value;
-
-	// consume {
 	consume_token(lexer::TOK_LEFT_CURLY);
 
 	do {
-		// consume var
 		consume_token(lexer::TOK_VAR);
-		// consume identifier
 		consume_token(lexer::TOK_IDENTIFIER);
-
-		// parse parameter
 		variables.push_back(*parse_formal_param());
-
-		// consume ';'
 		consume_token();
 
 	} while (current_token.type == lexer::TOK_SEMICOLON && next_token.type != lexer::TOK_RIGHT_CURLY);
 
-	// consume }
 	consume_token(lexer::TOK_RIGHT_CURLY);
 
 	check_consume_semicolon();
@@ -1061,7 +1049,7 @@ ASTExprNode* Parser::parse_expression() {
 }
 
 ASTExprNode* Parser::parse_ternary_expression() {
-	auto expr = parse_logical_or_expression();
+	auto expr = parse_in_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1075,6 +1063,22 @@ ASTExprNode* Parser::parse_ternary_expression() {
 		consume_token();
 		value_if_false = parse_expression();
 		return new ASTTernaryNode(expr, value_if_true, value_if_false, row, col);
+	}
+
+	return expr;
+}
+
+ASTExprNode* Parser::parse_in_expression() {
+	auto expr = parse_logical_or_expression();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+
+	if (next_token.type == lexer::TOK_IN) {
+		ASTExprNode* collection;
+		consume_token();
+		consume_token();
+		collection = parse_expression();
+		return new ASTInNode(expr, collection, row, col);
 	}
 
 	return expr;

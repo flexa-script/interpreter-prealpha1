@@ -47,10 +47,10 @@
         - [X] add ... to ignore catch error
     - [X] do while
 - [ ] Add expression operators:
-    - [X] ++,--
+    - [X] Add ++,-- incrementor
     - [X] Add { init_value } to initilize all positions with same value
-    - [ ] Add 'in' operator to check if anything is in array/string
-    - [ ] immediate if
+    - [I] Add 'in' operator to check if anything is in array/string
+    - [X] Add ternary (immediate) if
     - [X] typeof: returns type of object
         - [X] add namespace to type name return
     - [X] typeid: returns hash of typeof
@@ -114,7 +114,7 @@
 
 ## Known bugs
 - [X] When a struct is passed by parameter, it can't be assigned as null, it occurs because it's passed just the strcut reference and not the variable
-- [ ] Can't assing string position
+- [X] Can't assing string position
 - [X] Parser can't handle unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))
 - [X] This does not always return the expected value, eg when its inside a function tha does not has in main file
 

@@ -164,8 +164,7 @@ ASTTypingNode::ASTTypingNode(std::string image, ASTExprNode* expr, unsigned int 
 
 ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::vector<VariableDefinition> variables,
 	unsigned int row, unsigned int col)
-	: ASTStatementNode(row, col), identifier(std::move(identifier)), variables(std::move(variables))
-{}
+	: ASTStatementNode(row, col), identifier(std::move(identifier)), variables(std::move(variables)) {}
 
 
 // Expression Nodes
@@ -174,8 +173,7 @@ ASTArrayConstructorNode::ASTArrayConstructorNode(std::vector<ASTExprNode*> value
 
 ASTStructConstructorNode::ASTStructConstructorNode(std::string type_name, std::string nmspace,
 	std::map<std::string, ASTExprNode*> values, unsigned int row, unsigned int col)
-	: ASTExprNode(row, col), type_name(type_name), nmspace(nmspace), values(values)
-{}
+	: ASTExprNode(row, col), type_name(type_name), nmspace(nmspace), values(values) {}
 
 ASTNullNode::ASTNullNode(unsigned int row, unsigned int col)
 	: ASTExprNode(row, col) {}
@@ -194,6 +192,9 @@ ASTIdentifierNode::ASTIdentifierNode(std::vector<Identifier> identifier_vector, 
 
 ASTTernaryNode::ASTTernaryNode(ASTExprNode* condition, ASTExprNode* value_if_true, ASTExprNode* value_if_false, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), condition(condition), value_if_true(value_if_true), value_if_false(value_if_false) {}
+
+ASTInNode::ASTInNode(ASTExprNode* value, ASTExprNode* collection, unsigned int row, unsigned int col)
+	: ASTExprNode(row, col), value(value), collection(collection) {}
 
 ASTFunctionCallNode::ASTFunctionCallNode(std::string identifier, std::string nmspace, std::vector<ASTExprNode*> access_vector,
 	std::vector<std::pair<bool, ASTExprNode*>> parameters, unsigned int row, unsigned int col)
@@ -269,6 +270,12 @@ void ASTBinaryExprNode::accept(visitor::Visitor* v) {
 }
 
 unsigned int ASTBinaryExprNode::hash(visitor::Visitor* v) { return 0; }
+
+void ASTInNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+unsigned int ASTInNode::hash(visitor::Visitor* v) { return 0; }
 
 void ASTFunctionCallNode::accept(visitor::Visitor* v) {
 	v->visit(this);

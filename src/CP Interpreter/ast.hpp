@@ -449,6 +449,17 @@ namespace parser {
 		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
+	class ASTInNode : public ASTExprNode {
+	public:
+		ASTExprNode* value;
+		ASTExprNode* collection;
+
+		ASTInNode(ASTExprNode* value, ASTExprNode* collection, unsigned int row, unsigned int col);
+
+		void accept(visitor::Visitor* visitor) override;
+		virtual unsigned int hash(visitor::Visitor*) override;
+	};
+
 	class ASTFunctionCallNode : public ASTExprNode {
 	public:
 		std::string identifier;

@@ -984,6 +984,62 @@ void Interpreter::visit(ASTTernaryNode* astnode) {
 	}
 }
 
+void Interpreter::visit(ASTInNode* astnode) {
+	astnode->value->accept(this);
+	auto expr_val = current_expression_value;
+	astnode->collection->accept(this);
+	auto expr_col = current_expression_value.arr;
+	bool res = false;
+
+	for (auto it : expr_col) {
+		switch (expr_val.curr_type) {
+		case Type::T_BOOL:
+			if (expr_val.b == it->b) {
+				res = true;
+			}
+			break;
+		case Type::T_INT:
+			if (expr_val.i == it->i) {
+				res = true;
+			}
+			break;
+		case Type::T_FLOAT:
+			if (expr_val.f == it->f) {
+				res = true;
+			}
+			break;
+		case Type::T_CHAR:
+			if (expr_val.c == it->c) {
+				res = true;
+			}
+			break;
+		case Type::T_STRING:
+			if (expr_val.s == it->s) {
+				res = true;
+			}
+			break;
+			// TODO: array and struct
+		case Type::T_ARRAY:
+			if (expr_val.arr == it->arr) {
+				res = true;
+			}
+			break;
+		case Type::T_STRUCT:
+			if (expr_val.str == it->str) {
+				res = true;
+			}
+			break;
+		}
+		if (res) {
+			break;
+		}
+	}
+
+	auto value = Value(Type::T_BOOL);
+	value.set(res);
+	current_expression_value = value;
+}
+
 void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	auto nmspace = get_namespace(astnode->nmspace);
 
