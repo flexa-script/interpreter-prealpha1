@@ -84,6 +84,7 @@ void LibFinder::visit(ASTDoWhileNode*) {}
 
 void LibFinder::visit(ASTBinaryExprNode*) {}
 void LibFinder::visit(ASTUnaryExprNode*) {}
+void LibFinder::visit(ASTTernaryNode*) {}
 void LibFinder::visit(ASTLiteralNode<cp_bool>*) {}
 void LibFinder::visit(ASTLiteralNode<cp_int>*) {}
 void LibFinder::visit(ASTLiteralNode<cp_float>*) {}

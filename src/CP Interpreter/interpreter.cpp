@@ -974,6 +974,16 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 	scopes[get_namespace()].back()->declare_function(astnode->identifier, astnode->signature, astnode->variable_names, astnode->block);
 }
 
+void Interpreter::visit(ASTTernaryNode* astnode) {
+	astnode->condition->accept(this);
+	if (current_expression_value.b) {
+		astnode->value_if_true->accept(this);
+	}
+	else {
+		astnode->value_if_false->accept(this);
+	}
+}
+
 void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	auto nmspace = get_namespace(astnode->nmspace);
 

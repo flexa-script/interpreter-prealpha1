@@ -428,6 +428,10 @@ Token Lexer::process_symbol() {
 		}
 		break;
 
+	case '?':
+		type = TOK_QMARK;
+		break;
+
 	default:
 		type = TOK_ERROR;
 	}

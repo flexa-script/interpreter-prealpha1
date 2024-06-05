@@ -1057,11 +1057,31 @@ ASTStructDefinitionNode* Parser::parse_struct_definition() {
 }
 
 ASTExprNode* Parser::parse_expression() {
-	ASTExprNode* simple_expression = parse_logical_expression();
-	return parse_expression_tail(simple_expression);
+	return parse_ternary_expression();
 }
 
-ASTExprNode* Parser::parse_expression_tail(ASTExprNode* lhs) {
+ASTExprNode* Parser::parse_ternary_expression() {
+	auto expr = parse_logical_or_expression();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+
+	if (next_token.type == lexer::TOK_QMARK) {
+		ASTExprNode* value_if_true;
+		ASTExprNode* value_if_false;
+		consume_token();
+		consume_token();
+		value_if_true = parse_expression();
+		consume_token(lexer::TOK_COLON);
+		consume_token();
+		value_if_false = parse_expression();
+		return new ASTTernaryNode(expr, value_if_true, value_if_false, row, col);
+	}
+
+	return expr;
+}
+
+ASTExprNode* Parser::parse_logical_or_expression() {
+	ASTExprNode* lhs = parse_logical_and_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1069,19 +1089,15 @@ ASTExprNode* Parser::parse_expression_tail(ASTExprNode* lhs) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, parse_logical_expression(), row, col);
+		auto rhs = parse_logical_and_expression();
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
-
-ASTExprNode* Parser::parse_logical_expression() {
-	ASTExprNode* relational_expression = parse_relational_expression();
-	return parse_logical_expression_tail(relational_expression);
-}
-
-ASTExprNode* Parser::parse_logical_expression_tail(ASTExprNode* lhs) {
+ASTExprNode* Parser::parse_logical_and_expression() {
+	ASTExprNode* lhs = parse_relational_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1089,18 +1105,15 @@ ASTExprNode* Parser::parse_logical_expression_tail(ASTExprNode* lhs) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, parse_relational_expression(), row, col);
+		auto rhs = parse_relational_expression();
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
 ASTExprNode* Parser::parse_relational_expression() {
-	ASTExprNode* relational_expr = parse_simple_expression();
-	return parse_relational_expression_tail(relational_expr);
-}
-
-ASTExprNode* Parser::parse_relational_expression_tail(ASTExprNode* lhs) {
+	ASTExprNode* lhs = parse_simple_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1108,19 +1121,15 @@ ASTExprNode* Parser::parse_relational_expression_tail(ASTExprNode* lhs) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
-		ASTExprNode* bin_expr = new ASTBinaryExprNode(current_token_value, lhs, parse_simple_expression(), row, col);
-		lhs = parse_relational_expression_tail(bin_expr);
+		auto rhs = parse_simple_expression();
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
 ASTExprNode* Parser::parse_simple_expression() {
-	ASTExprNode* term = parse_term();
-	return parse_simple_expression_tail(term);
-}
-
-ASTExprNode* Parser::parse_simple_expression_tail(ASTExprNode* lhs) {
+	ASTExprNode* lhs = parse_term();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1128,19 +1137,15 @@ ASTExprNode* Parser::parse_simple_expression_tail(ASTExprNode* lhs) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
-		ASTExprNode* bin_expr = new ASTBinaryExprNode(current_token_value, lhs, parse_term(), row, col);
-		lhs = parse_simple_expression_tail(bin_expr);
+		auto rhs = parse_term();
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
 ASTExprNode* Parser::parse_term() {
-	ASTExprNode* factor = parse_factor();
-	return parse_term_tail(factor);
-}
-
-ASTExprNode* Parser::parse_term_tail(ASTExprNode* lhs) {
+	ASTExprNode* lhs = parse_factor();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1148,8 +1153,8 @@ ASTExprNode* Parser::parse_term_tail(ASTExprNode* lhs) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
-		ASTExprNode* bin_expr = new ASTBinaryExprNode(current_token_value, lhs, parse_factor(), row, col);
-		lhs = parse_term_tail(bin_expr);
+		auto rhs = parse_factor();
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;

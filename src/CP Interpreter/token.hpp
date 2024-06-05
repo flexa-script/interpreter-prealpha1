@@ -71,6 +71,7 @@ namespace lexer {
 		TOK_DOT,
 		TOK_SEMICOLON,
 		TOK_COLON,
+		TOK_QMARK,
 		TOK_ERROR,
 		TOK_EOF
 	};
@@ -140,6 +141,7 @@ namespace lexer {
 		".",
 		";",
 		":",
+		"?",
 		"error token",
 		"EOF token"
 	};

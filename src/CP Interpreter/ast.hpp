@@ -415,6 +415,17 @@ namespace parser {
 		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
+	class ASTUnaryExprNode : public ASTExprNode {
+	public:
+		std::string unary_op;
+		ASTExprNode* expr;
+
+		ASTUnaryExprNode(std::string, ASTExprNode*, unsigned int, unsigned int);
+
+		void accept(visitor::Visitor*) override;
+		virtual unsigned int hash(visitor::Visitor*) override;
+	};
+
 	class ASTIdentifierNode : public ASTExprNode {
 	public:
 		std::vector<Identifier> identifier_vector;
@@ -426,14 +437,15 @@ namespace parser {
 		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
-	class ASTUnaryExprNode : public ASTExprNode {
+	class ASTTernaryNode : public ASTExprNode {
 	public:
-		std::string unary_op;
-		ASTExprNode* expr;
+		ASTExprNode* condition;
+		ASTExprNode* value_if_true;
+		ASTExprNode* value_if_false;
 
-		ASTUnaryExprNode(std::string, ASTExprNode*, unsigned int, unsigned int);
+		ASTTernaryNode(ASTExprNode* condition, ASTExprNode* value_if_true, ASTExprNode* value_if_false, unsigned int row, unsigned int col);
 
-		void accept(visitor::Visitor*) override;
+		void accept(visitor::Visitor* visitor) override;
 		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 

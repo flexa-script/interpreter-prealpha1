@@ -186,11 +186,14 @@ ASTThisNode::ASTThisNode(unsigned int row, unsigned int col)
 ASTBinaryExprNode::ASTBinaryExprNode(std::string op, ASTExprNode* left, ASTExprNode* right, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), op(std::move(op)), left(left), right(right) {}
 
+ASTUnaryExprNode::ASTUnaryExprNode(std::string unary_op, ASTExprNode* expr, unsigned int row, unsigned int col)
+	: ASTExprNode(row, col), unary_op(std::move(unary_op)), expr(expr) {}
+
 ASTIdentifierNode::ASTIdentifierNode(std::vector<Identifier> identifier_vector, std::string nmspace, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), identifier_vector(identifier_vector), nmspace(nmspace) {}
 
-ASTUnaryExprNode::ASTUnaryExprNode(std::string unary_op, ASTExprNode* expr, unsigned int row, unsigned int col)
-	: ASTExprNode(row, col), unary_op(std::move(unary_op)), expr(expr) {}
+ASTTernaryNode::ASTTernaryNode(ASTExprNode* condition, ASTExprNode* value_if_true, ASTExprNode* value_if_false, unsigned int row, unsigned int col)
+	: ASTExprNode(row, col), condition(condition), value_if_true(value_if_true), value_if_false(value_if_false) {}
 
 ASTFunctionCallNode::ASTFunctionCallNode(std::string identifier, std::string nmspace, std::vector<ASTExprNode*> access_vector,
 	std::vector<std::pair<bool, ASTExprNode*>> parameters, unsigned int row, unsigned int col)
@@ -292,6 +295,12 @@ void ASTUnaryExprNode::accept(visitor::Visitor* v) {
 }
 
 unsigned int ASTUnaryExprNode::hash(visitor::Visitor* v) { return 0; }
+
+void ASTTernaryNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+unsigned int ASTTernaryNode::hash(visitor::Visitor* v) { return 0; }
 
 void ASTTypeParseNode::accept(visitor::Visitor* v) {
 	v->visit(this);

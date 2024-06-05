@@ -1202,6 +1202,12 @@ void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
 	current_expression.is_const = false;
 }
 
+void SemanticAnalyser::visit(ASTTernaryNode* astnode) {
+	astnode->condition->accept(this);
+	astnode->value_if_true->accept(this);
+	astnode->value_if_false->accept(this);
+}
+
 void SemanticAnalyser::visit(ASTTypeParseNode* astnode) {
 	astnode->expr->accept(this);
 
