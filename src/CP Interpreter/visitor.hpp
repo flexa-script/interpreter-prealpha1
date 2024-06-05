@@ -45,6 +45,7 @@ namespace parser {
 	class ASTIfNode;
 	class ASTTryCatchNode;
 	class ASTThrowNode;
+	class ASTReticencesNode;
 	class ASTForNode;
 	class ASTForEachNode;
 	class ASTWhileNode;
@@ -147,6 +148,7 @@ namespace visitor {
 		virtual void visit(parser::ASTEnumNode*) = 0;
 		virtual void visit(parser::ASTTryCatchNode*) = 0;
 		virtual void visit(parser::ASTThrowNode*) = 0;
+		virtual void visit(parser::ASTReticencesNode*) = 0;
 		virtual void visit(parser::ASTIfNode*) = 0;
 		virtual void visit(parser::ASTForNode*) = 0;
 		virtual void visit(parser::ASTForEachNode*) = 0;

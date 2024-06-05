@@ -72,6 +72,7 @@ void LibFinder::visit(ASTExitNode*) {}
 void LibFinder::visit(ASTEnumNode*) {}
 void LibFinder::visit(ASTTryCatchNode*) {}
 void LibFinder::visit(ASTThrowNode*) {}
+void LibFinder::visit(ASTReticencesNode*) {}
 void LibFinder::visit(ASTSwitchNode*) {}
 void LibFinder::visit(ASTElseIfNode*) {}
 void LibFinder::visit(ASTIfNode*) {}

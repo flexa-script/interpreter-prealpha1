@@ -805,7 +805,7 @@ ASTIfNode* Parser::parse_if_statement() {
 }
 
 ASTTryCatchNode* Parser::parse_try_catch_statement() {
-	ASTDeclarationNode* decl;
+	ASTStatementNode* decl;
 	ASTBlockNode* try_block;
 	ASTBlockNode* catch_block;
 	unsigned int row = current_token.row;
@@ -818,8 +818,13 @@ ASTTryCatchNode* Parser::parse_try_catch_statement() {
 	consume_token(lexer::TOK_CATCH);
 	consume_token(lexer::TOK_LEFT_BRACKET);
 	consume_token();
-	consume_semicolon = false;
-	decl = parse_undef_declaration_statement();
+	if (current_token.type == lexer::TOK_RETICENCES) {
+		decl = new ASTReticencesNode(row, col);
+	}
+	else {
+		consume_semicolon = false;
+		decl = parse_undef_declaration_statement();
+	}
 	consume_token(lexer::TOK_RIGHT_BRACKET);
 
 	consume_token(lexer::TOK_LEFT_CURLY);

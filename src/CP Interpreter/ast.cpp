@@ -119,11 +119,14 @@ ASTElseIfNode::ASTElseIfNode(ASTExprNode* condition, ASTBlockNode* block, unsign
 ASTEnumNode::ASTEnumNode(std::vector<std::string> identifiers, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), identifiers(identifiers) {}
 
-ASTTryCatchNode::ASTTryCatchNode(ASTDeclarationNode* decl, ASTBlockNode* try_block, ASTBlockNode* catch_block, unsigned int row, unsigned int col)
+ASTTryCatchNode::ASTTryCatchNode(ASTStatementNode* decl, ASTBlockNode* try_block, ASTBlockNode* catch_block, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), decl(decl), try_block(try_block), catch_block(catch_block) {}
 
 ASTThrowNode::ASTThrowNode(ASTExprNode* error, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), error(error) {}
+
+ASTReticencesNode::ASTReticencesNode(unsigned int row, unsigned int col)
+	: ASTStatementNode(row, col) {}
 
 ASTIfNode::ASTIfNode(ASTExprNode* condition, ASTBlockNode* if_block, std::vector<ASTElseIfNode*> else_ifs,
 	ASTBlockNode* else_block, unsigned int row, unsigned int col)
@@ -353,6 +356,10 @@ void ASTTryCatchNode::accept(visitor::Visitor* v) {
 }
 
 void ASTThrowNode::accept(visitor::Visitor* v) {
+	v->visit(this);
+}
+
+void ASTReticencesNode::accept(visitor::Visitor* v) {
 	v->visit(this);
 }
 

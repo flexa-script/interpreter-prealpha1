@@ -44,7 +44,7 @@
     - [X] enum
     - [X] try catch throw
         - [X] Bring error header to a higher level
-        - [ ] add ... to ignore catch error
+        - [X] add ... to ignore catch error
     - [X] do while
 - [ ] Add expression operators:
     - [X] ++,--
@@ -62,11 +62,6 @@
 - [X] Flex function return (currently it's mandatory specificate the return type)
 - [X] Remove struct as bool in expression and change this type of verification to void value comparation (eg: var == null)
 - [X] Move function body parser to caller node (as interpreter), to check parameters of each caller
-- [ ] Console control tools
-    - [X] Set caret position
-    - [X] Change color
-    - [X] Set font
-    - [ ] ...
 - [ ] Improve error system (based on C++)
 - [ ] Improve REPL:
     - [ ] Now expressions can be executed in statements, dont need more to execute expression parser directly
@@ -85,13 +80,16 @@
     - [ ] https://github.com/carlosebmachado-games/tetris-Clone
 - [ ] Add core library:
     - [X] File I/O
+    - [ ] Time
     - [X] Graphics
-    - [X] Exception
-    - [X] Console
+    - [ ] Keyboard
     - [ ] Mouse
     - [ ] Sound
-    - [ ] Keyboard
-    - [ ] Time
+    - [X] Exception
+    - [X] Console:
+        - [X] Set caret position
+        - [X] Change color
+        - [X] Set font
     - [ ] Web/API
 - [ ] Add CP library:
     - [ ] String

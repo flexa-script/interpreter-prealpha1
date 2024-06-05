@@ -266,11 +266,11 @@ namespace parser {
 
 	class ASTTryCatchNode : public ASTStatementNode {
 	public:
-		ASTDeclarationNode* decl;
+		ASTStatementNode* decl;
 		ASTBlockNode* try_block;
 		ASTBlockNode* catch_block;
 
-		ASTTryCatchNode(ASTDeclarationNode* decl, ASTBlockNode* try_block, ASTBlockNode* catch_block, unsigned int row, unsigned int col);
+		ASTTryCatchNode(ASTStatementNode* decl, ASTBlockNode* try_block, ASTBlockNode* catch_block, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
 	};
@@ -280,6 +280,13 @@ namespace parser {
 		ASTExprNode* error;
 
 		ASTThrowNode(ASTExprNode* error, unsigned int row, unsigned int col);
+
+		void accept(visitor::Visitor*) override;
+	};
+
+	class ASTReticencesNode : public ASTStatementNode {
+	public:
+		ASTReticencesNode(unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
 	};

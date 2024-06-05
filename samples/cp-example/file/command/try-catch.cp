@@ -24,3 +24,12 @@ try{
 // var i = 10 / 0;
 // print(i);
 
+try {
+	print("try\n");
+	print(10/0);
+} catch (...) {
+	print("catch\n");
+}
+
+print("end");
+

@@ -488,18 +488,19 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 		scopes[nmspace].push_back(new InterpreterScope(""));
 
 		astnode->decl->accept(this);
-		auto itdecl = static_cast<ASTDeclarationNode*>(astnode->decl);
 
-		Value* value = access_value(scopes[nmspace].back(), scopes[nmspace].back()->find_declared_variable(itdecl->identifier),
-			std::vector<Identifier>{Identifier(itdecl->identifier, std::vector<ASTExprNode*>())});
+		if (auto itdecl = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
+			Value* value = access_value(scopes[nmspace].back(), scopes[nmspace].back()->find_declared_variable(itdecl->identifier),
+				std::vector<Identifier>{Identifier(itdecl->identifier, std::vector<ASTExprNode*>())});
 
-		value->set_type(Type::T_STRUCT);
-		value->set_curr_type(Type::T_STRUCT);
-		value->str = new cp_struct();
-		value->str->first = "Exception";
-		value->str->second["error"] = new Value(Type::T_STRING);
-		value->str->second["error"]->s = ex.what();
-
+			value->set_type(Type::T_STRUCT);
+			value->set_curr_type(Type::T_STRUCT);
+			value->str = new cp_struct();
+			value->str->first = "Exception";
+			value->str->second["error"] = new Value(Type::T_STRING);
+			value->str->second["error"]->s = ex.what();
+		}
+		
 		astnode->catch_block->accept(this);
 		scopes[nmspace].pop_back();
 	}
@@ -508,6 +509,12 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 void Interpreter::visit(parser::ASTThrowNode* astnode) {
 	astnode->accept(this);
 	throw std::exception(current_expression_value.str->second["error"]->s.c_str());
+}
+
+void Interpreter::visit(parser::ASTReticencesNode* astnode) {
+	auto value = Value(Type::T_UNDEF);
+	value.set_undefined();
+	current_expression_value = value;
 }
 
 void Interpreter::visit(ASTWhileNode* astnode) {

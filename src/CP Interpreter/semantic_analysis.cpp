@@ -819,22 +819,22 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 	astnode->decl->accept(this);
 	Type decl_type = current_expression.type;
 	if (is_any(decl_type) || is_undefined(decl_type)) {
-		auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl);
+		if (auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
+			SemanticScope* curr_scope;
+			try {
+				curr_scope = get_inner_most_variable_scope(get_namespace(), idnode->identifier);
+			}
+			catch (...) {
+				set_curr_pos(astnode->row, astnode->col);
+				throw std::runtime_error("identifier '" + idnode->identifier +
+					"' was not declared");
+			}
 
-		SemanticScope* curr_scope;
-		try {
-			curr_scope = get_inner_most_variable_scope(get_namespace(), idnode->identifier);
+			auto declared_variable = curr_scope->find_declared_variable(idnode->identifier);
+
+			curr_scope->change_current_variable_type(idnode->identifier, Type::T_STRUCT);
+			curr_scope->change_variable_type_name(idnode->identifier, "Exception");
 		}
-		catch (...) {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("identifier '" + idnode->identifier +
-				"' was not declared");
-		}
-
-		auto declared_variable = curr_scope->find_declared_variable(idnode->identifier);
-
-		curr_scope->change_current_variable_type(idnode->identifier, Type::T_STRUCT);
-		curr_scope->change_variable_type_name(idnode->identifier, "Exception");
 	}
 	astnode->catch_block->accept(this);
 
@@ -847,6 +847,14 @@ void SemanticAnalyser::visit(parser::ASTThrowNode* astnode) {
 		set_curr_pos(astnode->row, astnode->col);
 		throw std::runtime_error("expected Exception struct in throw");
 	}
+}
+
+void SemanticAnalyser::visit(ASTReticencesNode* astnode) {
+	current_expression = SemanticValue();
+	current_expression.type = Type::T_UNDEF;
+	current_expression.type_name = "";
+	current_expression.array_type = Type::T_UNDEF;
+	current_expression.is_const = true;
 }
 
 void SemanticAnalyser::visit(ASTWhileNode* astnode) {

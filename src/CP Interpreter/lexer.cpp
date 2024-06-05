@@ -420,6 +420,7 @@ Token Lexer::process_symbol() {
 				throw std::runtime_error(msg_header() + "expected '.'");
 			}
 			str_symbol += current_char;
+			advance();
 			type = TOK_RETICENCES;
 		}
 		else {

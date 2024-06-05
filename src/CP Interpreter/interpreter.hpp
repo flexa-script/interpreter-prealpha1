@@ -106,6 +106,7 @@ namespace visitor {
 		void visit(parser::ASTEnumNode*) override;
 		void visit(parser::ASTTryCatchNode*) override;
 		void visit(parser::ASTThrowNode*) override;
+		void visit(parser::ASTReticencesNode*) override;
 		void visit(parser::ASTSwitchNode*) override;
 		void visit(parser::ASTElseIfNode*) override;
 		void visit(parser::ASTIfNode*) override;
