@@ -26,6 +26,8 @@ namespace visitor {
 		parser::SemanticValue current_expression;
 		std::stack<parser::FunctionDefinition> current_function;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
+		bool is_switch = false;
+		bool is_loop = false;
 
 	private:
 		bool returns(parser::ASTNode*);

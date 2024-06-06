@@ -56,13 +56,11 @@ ASTProgramNode* Parser::parse_program() {
 }
 
 ASTUsingNode* Parser::parse_using_statement() {
-	// node attributes
 	std::vector<std::string> library = std::vector<std::string>();
 	std::string alias = "";
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	// consume library identifier
 	do {
 		consume_token(lexer::TOK_IDENTIFIER);
 		library.push_back(current_token.value);
@@ -374,7 +372,6 @@ VariableDefinition* Parser::parse_formal_param() {
 		type = Type::T_ARRAY;
 	}
 
-	// consume type
 	if (next_token.type == lexer::TOK_COLON) {
 		consume_token();
 		consume_token();
@@ -414,7 +411,6 @@ VariableDefinition* Parser::parse_formal_param() {
 std::vector<std::pair<bool, ASTExprNode*>>* Parser::parse_actual_params() {
 	auto parameters = new std::vector<std::pair<bool, ASTExprNode*>>();
 
-	// if there are more
 	do {
 		consume_token();
 		bool isref = false;
@@ -424,7 +420,7 @@ std::vector<std::pair<bool, ASTExprNode*>>* Parser::parse_actual_params() {
 		}
 		parameters->emplace_back(isref, parse_expression());
 		consume_token();
-	}while (current_token.type == lexer::TOK_COMMA);
+	} while (current_token.type == lexer::TOK_COMMA);
 
 	return parameters;
 }
@@ -453,13 +449,12 @@ ASTNode* Parser::parse_assignment_or_increment_node() {
 	ASTIdentifierNode* identifier = nullptr;
 
 	identifier = parse_identifier_node();
-
 	if (next_token.value == "(") {
 		ASTFunctionCallNode* expr = parse_function_call_parameters_node(identifier->identifier_vector[0].identifier, identifier->nmspace);
 		check_consume_semicolon();
 		return expr;
 	}
-	else if (next_token.type == lexer::TOK_ADDITIVE_UN_OP) { // unary expression case
+	else if (next_token.type == lexer::TOK_ADDITIVE_UN_OP) {
 		return parse_increment_expression(identifier);
 	}
 	else {
@@ -483,14 +478,11 @@ ASTAssignmentNode* Parser::parse_assignment_statement(ASTIdentifierNode* identif
 	auto access_vector = std::vector<ASTExprNode*>();
 
 	consume_token();
-
 	if (current_token.type != lexer::TOK_ADDITIVE_OP && current_token.type != lexer::TOK_MULTIPLICATIVE_OP && current_token.type != lexer::TOK_EQUALS) {
 		throw std::runtime_error(msg_header() + "invalid assignment operator '" + current_token.value + "'");
 	}
 
 	op = current_token.value;
-
-	// parse the right hand side
 	consume_token();
 	expr = parse_expression();
 
@@ -500,11 +492,9 @@ ASTAssignmentNode* Parser::parse_assignment_statement(ASTIdentifierNode* identif
 }
 
 ASTReturnNode* Parser::parse_return_statement() {
-	// determine line number
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	// get expression to return
 	consume_token();
 	ASTExprNode* expr = parse_expression();
 
@@ -513,7 +503,6 @@ ASTReturnNode* Parser::parse_return_statement() {
 		consume_token(lexer::TOK_SEMICOLON);
 	}
 
-	// return return node
 	return new ASTReturnNode(expr, row, col);
 }
 
@@ -551,7 +540,6 @@ ASTEnumNode* Parser::parse_enum_statement() {
 	}
 
 	consume_token(lexer::TOK_RIGHT_CURLY);
-
 	check_consume_semicolon();
 
 	return new ASTEnumNode(identifiers, row, col);
@@ -559,58 +547,40 @@ ASTEnumNode* Parser::parse_enum_statement() {
 
 ASTBlockNode* Parser::parse_block() {
 	auto statements = new std::vector<ASTNode*>();
-
-	// determine line number
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	// current token is '{', consume first token of statement
 	consume_token();
-
-	// while not reached end of block or end of file
 	while (current_token.type != lexer::TOK_RIGHT_CURLY
 		&& current_token.type != lexer::TOK_ERROR
 		&& current_token.type != lexer::TOK_EOF) {
 		consume_semicolon = true;
-		// parse the statement
 		statements->push_back(parse_block_statement());
-
-		// consume first token of next statement
 		consume_token();
 	}
 
-	// if block ended by '}', return block
 	if (current_token.type == lexer::TOK_RIGHT_CURLY) {
 		return new ASTBlockNode(*statements, row, col);
 	}
-	// otherwise the user left the block open
 	throw std::runtime_error(msg_header() + "reached end of file while parsing");
 }
 
 ASTBlockNode* Parser::parse_struct_block() {
 	auto statements = new std::vector<ASTNode*>;
-
-	// determine line number
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	// current token is '{', consume first token of statement
 	consume_token();
-
-	// while not reached end of block or end of file
-	while (current_token.type != lexer::TOK_RIGHT_CURLY && current_token.type != lexer::TOK_ERROR && current_token.type != lexer::TOK_EOF) {
-		// parse the statement
+	while (current_token.type != lexer::TOK_RIGHT_CURLY
+		&& current_token.type != lexer::TOK_ERROR
+		&& current_token.type != lexer::TOK_EOF) {
 		statements->push_back(parse_struct_block_variables());
-
-		// consume first token of next statement
 		consume_token();
 	}
 
-	// if block ended by '}', return block
 	if (current_token.type == lexer::TOK_RIGHT_CURLY) {
 		return new ASTBlockNode(*statements, row, col);
 	}
-	// otherwise the user left the block open
 	throw std::runtime_error(msg_header() + "mismatched scopes: reached end of file while parsing");
 }
 
@@ -625,24 +595,20 @@ ASTStatementNode* Parser::parse_struct_block_variables() {
 }
 
 ASTContinueNode* Parser::parse_continue_statement() {
-	// determine line number
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
 	check_consume_semicolon();
 
-	// return return node
 	return new ASTContinueNode(row, col);
 }
 
 ASTBreakNode* Parser::parse_break_statement() {
-	// determine line number
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
 	check_consume_semicolon();
 
-	// return return node
 	return new ASTBreakNode(row, col);
 }
 
@@ -655,20 +621,11 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	// consume '('
 	consume_token(lexer::TOK_LEFT_BRACKET);
-
-	// parse the expression
 	consume_token();
 	condition = parse_expression();
-
-	// consume ')'
 	consume_token(lexer::TOK_RIGHT_BRACKET);
-
-	// consume '{'
 	consume_token(lexer::TOK_LEFT_CURLY);
-
-	// consume case/default
 	consume_token();
 
 	while (current_token.type == lexer::TOK_CASE) {
@@ -676,60 +633,38 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 		consume_token();
 		ASTExprNode* case_exrp = parse_expression();
 		int start_position = statements->size();
-
-		// consume :
 		consume_token();
-
-		// consume first token of next statement
 		consume_token();
 
 		if (current_token.type == lexer::TOK_LEFT_CURLY) {
 			statements->push_back(parse_block());
-
-			// consume first token of next statement
 			consume_token();
 		}
 		else {
-			// while not reached end of block or end of file
 			while (current_token.type != lexer::TOK_CASE && current_token.type != lexer::TOK_DEFAULT
 				&& current_token.type != lexer::TOK_RIGHT_CURLY && current_token.type != lexer::TOK_ERROR
 				&& current_token.type != lexer::TOK_EOF) {
 				consume_semicolon = true;
-				// parse the statement
 				statements->push_back(parse_block_statement());
-
-				// consume first token of next statement
 				consume_token();
 			}
 		}
-
 		case_blocks->emplace(case_exrp, start_position);
 	}
 
 	if (current_token.type == lexer::TOK_DEFAULT) {
 		bool is_block = false;
 		default_block = statements->size();
-
-		// consume :
 		consume_token();
-
-		// consume first token of next statement
 		consume_token();
-
 		if (current_token.type == lexer::TOK_LEFT_CURLY) {
 			statements->push_back(parse_block());
-
-			// consume first token of next statement
 			consume_token();
 		}
 		else {
-			// while not reached end of block or end of file
 			while (current_token.type != lexer::TOK_RIGHT_CURLY && current_token.type != lexer::TOK_ERROR && current_token.type != lexer::TOK_EOF) {
 				consume_semicolon = true;
-				// parse the statement
 				statements->push_back(parse_block_statement());
-
-				// consume first token of next statement
 				consume_token();
 			}
 		}
@@ -739,31 +674,18 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 }
 
 ASTElseIfNode* Parser::parse_else_if_statement() {
-	// node attributes
 	ASTExprNode* condition;
 	ASTBlockNode* if_block;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	// consume '('
 	consume_token(lexer::TOK_LEFT_BRACKET);
-
-	// parse the expression
 	consume_token();
 	condition = parse_expression();
-
-	// consume ')'
 	consume_token(lexer::TOK_RIGHT_BRACKET);
-
-	// consume '{'
 	consume_token(lexer::TOK_LEFT_CURLY);
-
-	// consume if-block and '}'
 	if_block = parse_block();
 
-	//consume_token();
-
-	// return elif node
 	return new ASTElseIfNode(condition, if_block, row, col);
 }
 

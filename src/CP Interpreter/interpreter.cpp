@@ -90,14 +90,12 @@ void Interpreter::visit(ASTAsNamespaceNode* astnode) {
 void Interpreter::visit(ASTDeclarationNode* astnode) {
 	auto nmspace = get_namespace();
 
-	// visit expression to update current value/type
 	if (astnode->expr) {
 		astnode->expr->accept(this);
 	}
 
 	if (astnode->expr && current_expression_value.has_value()) {
 		auto type = astnode->type == Type::T_ANY ? current_expression_value.curr_type : astnode->type;
-		// declare variable, depending on type
 		switch (type) {
 		case Type::T_BOOL:
 			scopes[nmspace].back()->declare_variable(astnode->identifier, current_expression_value.b);
@@ -189,7 +187,6 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	Value* root = astscope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	Value* value = access_value(astscope, root, astnode->identifier_vector);
 
-	// visit expression node to update current value/type
 	astnode->expr->accept(this);
 
 	if (is_undefined(value->curr_type)) {
@@ -243,7 +240,6 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 
 void Interpreter::visit(ASTReturnNode* astnode) {
 	auto nmspace = get_namespace();
-	// update current expression
 	astnode->expr->accept(this);
 	for (long long i = scopes[nmspace].size() - 1; i >= 0; --i) {
 		if (!scopes[nmspace][i]->get_name().empty()) {
@@ -272,7 +268,6 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 	auto nmspace = get_namespace();
 	is_switch = true;
 
-	// create new scope
 	scopes[nmspace].push_back(new InterpreterScope(""));
 
 	int pos = -1;
@@ -287,7 +282,6 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 		pos = astnode->default_block;
 	}
 
-	// visit each statement in the block
 	for (int i = pos; i < astnode->statements->size(); ++i) {
 		astnode->statements->at(i)->accept(this);
 
@@ -314,7 +308,6 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 		}
 	}
 
-	// close scope
 	scopes[nmspace].pop_back();
 	is_switch = false;
 }
@@ -322,12 +315,10 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 void Interpreter::visit(ASTElseIfNode* astnode) {
 	executed_elif = false;
 
-	// evaluate if condition
 	astnode->condition->accept(this);
 
 	bool result = current_expression_value.b;
 
-	// execute appropriate blocks
 	if (result) {
 		astnode->block->accept(this);
 		executed_elif = true;
@@ -335,12 +326,10 @@ void Interpreter::visit(ASTElseIfNode* astnode) {
 }
 
 void Interpreter::visit(ASTIfNode* astnode) {
-	// evaluate if condition
 	astnode->condition->accept(this);
 
 	bool result = current_expression_value.b;
 
-	// execute appropriate blocks
 	if (result) {
 		astnode->if_block->accept(this);
 	}
@@ -376,7 +365,6 @@ void Interpreter::visit(ASTForNode* astnode) {
 	bool result = current_expression_value.b;
 
 	while (result) {
-		// execute block
 		astnode->block->accept(this);
 
 		if (exit_from_program) {
@@ -396,7 +384,6 @@ void Interpreter::visit(ASTForNode* astnode) {
 			astnode->dci[2]->accept(this);
 		}
 
-		// re-evaluate for condition
 		if (astnode->dci[1]) {
 			astnode->dci[1]->accept(this);
 		}
@@ -453,7 +440,6 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 			break;
 		}
 
-		// execute block
 		astnode->block->accept(this);
 
 		scopes[nmspace].pop_back();
@@ -520,13 +506,11 @@ void Interpreter::visit(parser::ASTReticencesNode* astnode) {
 void Interpreter::visit(ASTWhileNode* astnode) {
 	is_loop = true;
 
-	// evaluate while condition
 	astnode->condition->accept(this);
 
 	bool result = current_expression_value.b;
 
 	while (result) {
-		// execute block
 		astnode->block->accept(this);
 
 		if (exit_from_program) {
@@ -543,7 +527,6 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 			break;
 		}
 
-		// re-evaluate while condition
 		astnode->condition->accept(this);
 
 		result = current_expression_value.b;
@@ -555,10 +538,9 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 void Interpreter::visit(ASTDoWhileNode* astnode) {
 	is_loop = true;
 
-	bool result;
+	bool result = false;
 
 	do {
-		// execute block
 		astnode->block->accept(this);
 
 		if (exit_from_program) {
@@ -575,7 +557,6 @@ void Interpreter::visit(ASTDoWhileNode* astnode) {
 			break;
 		}
 
-		// evaluate while condition
 		astnode->condition->accept(this);
 
 		result = current_expression_value.b;
@@ -656,25 +637,19 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 }
 
 void Interpreter::visit(ASTBinaryExprNode* astnode) {
-	// operator
 	std::string op = astnode->op;
 
-	// visit left node first
 	astnode->left->accept(this);
 	Type l_type = current_expression_value.curr_type;
 	Value l_value = current_expression_value;
 
-	// then right node
 	astnode->right->accept(this);
 	Type r_type = current_expression_value.curr_type;
 	Value r_value = current_expression_value;
 
-	// expression struct
 	auto value = new Value(Type::T_UNDEF);
 
-	// arithmetic operators for now
 	if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%") {
-		// two ints
 		if (l_type == Type::T_INT && r_type == Type::T_INT) {
 			current_expression_value.curr_type = Type::T_INT;
 			if (op == "+") {
@@ -697,7 +672,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 				value->set((cp_int)(l_value.i % r_value.i));
 			}
 		}
-		else if (l_type == Type::T_FLOAT || r_type == Type::T_FLOAT) { // at least one real
+		else if (l_type == Type::T_FLOAT || r_type == Type::T_FLOAT) {
 			current_expression_value.curr_type = Type::T_FLOAT;
 			cp_float l = l_value.f, r = r_value.f;
 			if (l_type == Type::T_INT) {
@@ -723,24 +698,24 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 				value->set((cp_float)l / r);
 			}
 		}
-		else if (l_type == Type::T_CHAR && r_type == Type::T_STRING) { // char and string
+		else if (l_type == Type::T_CHAR && r_type == Type::T_STRING) { 
 			current_expression_value.curr_type = Type::T_STRING;
 			value->set(cp_string(std::string{ l_value.c } + r_value.s));
 		}
-		else if (l_type == Type::T_STRING && r_type == Type::T_CHAR) { // string and char
+		else if (l_type == Type::T_STRING && r_type == Type::T_CHAR) {
 			current_expression_value.curr_type = Type::T_STRING;
 			value->set(cp_string(l_value.s + std::string{ r_value.c }));
 		}
-		else if (l_type == Type::T_CHAR && r_type == Type::T_CHAR) { // char and string
+		else if (l_type == Type::T_CHAR && r_type == Type::T_CHAR) {
 			current_expression_value.curr_type = Type::T_STRING;
 			value->set(cp_string(std::string{ l_value.c } + std::string{ r_value.c }));
 		}
-		else { // remaining case is for strings
+		else {
 			current_expression_value.curr_type = Type::T_STRING;
 			value->set(cp_string(l_value.s + r_value.s));
 		}
 	}
-	else if (op == "and" || op == "or") { // now bool
+	else if (op == "and" || op == "or") {
 		current_expression_value.curr_type = Type::T_BOOL;
 
 		cp_bool l = l_value.b;
@@ -760,7 +735,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 			value->set((cp_bool)(l || r));
 		}
 	}
-	else { // now comparator operators
+	else {
 		current_expression_value.curr_type = Type::T_BOOL;
 
 		if (l_type == Type::T_VOID || r_type == Type::T_VOID) {
@@ -811,14 +786,12 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 		}
 	}
 
-	// update current expression
 	current_expression_value = *value;
 }
 
 void Interpreter::visit(ASTUnaryExprNode* astnode) {
 	bool has_assign = false;
 
-	// update current expression
 	astnode->expr->accept(this);
 	switch (current_expression_value.curr_type) {
 	case Type::T_INT:
@@ -988,17 +961,31 @@ void Interpreter::visit(ASTInNode* astnode) {
 	astnode->value->accept(this);
 	auto expr_val = current_expression_value;
 	astnode->collection->accept(this);
-	auto expr_col = current_expression_value.arr;
 	bool res = false;
 
-	is_vbv = astnode->vbv;
-	for (auto it : expr_col) {
-		res = equals_value(&expr_val, it);
-		if (res) {
-			break;
+	if (is_array(current_expression_value.curr_type)) {
+		auto expr_col = current_expression_value.arr;
+
+		is_vbv = astnode->vbv;
+		for (auto it : expr_col) {
+			res = equals_value(&expr_val, it);
+			if (res) {
+				break;
+			}
+		}
+		is_vbv = false;
+	}
+	else {
+		auto expr_col = current_expression_value.s;
+
+		is_vbv = astnode->vbv;
+		for (auto it : expr_col) {
+			res = expr_val.c == it;
+			if (res) {
+				break;
+			}
 		}
 	}
-	is_vbv = false;
 
 	auto value = Value(Type::T_BOOL);
 	value.set(res);
@@ -1012,32 +999,26 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	std::vector<Value*> function_arguments;
 	std::vector<Value*> function_variable_arguments;
 
-	// for each parameter
 	for (auto param : astnode->parameters) {
 		is_reference = param.first;
 		param.second->accept(this);
 		function_variable_arguments.push_back(dynamic_cast<parser::ASTIdentifierNode*>(param.second) ? current_variable : nullptr);
 		current_variable = nullptr;
 
-		// add the type of current expr to signature
 		auto td = TypeDefinition(current_expression_value.type, current_expression_value.arr_type,
 			std::vector<ASTExprNode*>(), "", "");
 		signature.push_back(td);
 
-		// add the current expr to the local vector of function arguments, to be
-		// used in the creation of the function scope
 		Value* value = new Value(current_expression_value.curr_type);
 		value->copy_from(&current_expression_value);
 		function_arguments.push_back(value);
 	}
 
-	// update the global vector current_function_arguments
 	for (size_t i = 0; i < function_arguments.size(); ++i) {
 		last_function_arguments.push_back(function_arguments[i]);
 		last_function_reference_arguments.push_back(function_variable_arguments[i]);
 	}
 
-	// determine in which scope the function is declared
 	InterpreterScope* func_scope;
 	try {
 		func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
@@ -1047,7 +1028,6 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		return;
 	}
 
-	// populate the global vector of function parameter names, to be used in creation of function scope
 	function_call_parameters = std::get<1>(func_scope->find_declared_function(astnode->identifier, signature));
 
 	is_function_context = true;
@@ -1055,7 +1035,6 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	current_name.push(astnode->identifier);
 	current_function_nmspace.push(nmspace);
 
-	// visit the corresponding function block
 	auto block = std::get<2>(func_scope->find_declared_function(astnode->identifier, signature));
 	if (block) {
 		block->accept(this);
@@ -1070,14 +1049,12 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 }
 
 void Interpreter::visit(ASTBlockNode* astnode) {
-	// create new scope
 	auto nmspace = get_namespace();
 	scopes[nmspace].push_back(new InterpreterScope(function_call_name));
 	function_call_name = "";
 
 	declare_function_block_parameters(nmspace);
 
-	// visit each statement in the block
 	for (auto& stmt : astnode->statements) {
 		stmt->accept(this);
 
@@ -1102,12 +1079,10 @@ void Interpreter::visit(ASTBlockNode* astnode) {
 		}
 	}
 
-	// close scope
 	scopes[nmspace].pop_back();
 }
 
 void Interpreter::visit(ASTTypeParseNode* astnode) {
-	// visit expression node to update current value/type
 	astnode->expr->accept(this);
 
 	switch (astnode->type) {
@@ -1426,12 +1401,14 @@ Value* Interpreter::access_value(InterpreterScope* scope, Value* value, std::vec
 		size_t access_pos = 0;
 
 		for (s = 0; s < access_vector.size() - 1; ++s) {
-			// check array position access
 			access_pos = access_vector.at(s);
 			// break if it is a string, and the string access will be handled in identifier node evaluation
 			if (current_Val->at(access_pos)->curr_type == Type::T_STRING) {
 				has_string_access = true;
 				break;
+			}
+			if (access_pos >= current_Val->size()) {
+				throw std::runtime_error("invalid array position access");
 			}
 			current_Val = &current_Val->at(access_pos)->arr;
 		}
@@ -1505,7 +1482,6 @@ void Interpreter::call_builtin_function(std::string identifier) {
 }
 
 void Interpreter::declare_function_block_parameters(std::string nmspace) {
-	// add parameters to the current scope
 	for (unsigned int i = 0; i < last_function_arguments.size(); ++i) {
 		switch (last_function_arguments[i]->curr_type) {
 		case Type::T_BOOL:
@@ -1567,7 +1543,6 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 		}
 	}
 
-	// clear the global function parameter/argument vectors
 	function_call_parameters.clear();
 	last_function_arguments.clear();
 	last_function_reference_arguments.clear();
