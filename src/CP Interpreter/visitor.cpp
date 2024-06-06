@@ -173,6 +173,33 @@ void Value::copy_from(Value* value) {
 	f = value->f;
 	c = value->c;
 	s = value->s;
-	arr = value->arr;
+	copy_array(value->arr);
 	str = value->str;
+}
+
+bool Value::equals_array(cp_array arr) {
+	if (this->arr.size() != arr.size()) {
+		return false;
+	}
+
+	for (size_t i = 0; i < arr.size(); ++i) {
+		if (!this->arr[i]->equals(arr[i])) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool Value::equals(Value* value) {
+	return type == value->type &&
+		curr_type == value->curr_type &&
+		arr_type == value->arr_type &&
+		b == value->b &&
+		i == value->i &&
+		f == value->f &&
+		c == value->c &&
+		s == value->s &&
+		equals_array(value->arr) &&
+		str == value->str;
 }

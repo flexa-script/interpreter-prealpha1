@@ -193,8 +193,8 @@ ASTIdentifierNode::ASTIdentifierNode(std::vector<Identifier> identifier_vector, 
 ASTTernaryNode::ASTTernaryNode(ASTExprNode* condition, ASTExprNode* value_if_true, ASTExprNode* value_if_false, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), condition(condition), value_if_true(value_if_true), value_if_false(value_if_false) {}
 
-ASTInNode::ASTInNode(ASTExprNode* value, ASTExprNode* collection, unsigned int row, unsigned int col)
-	: ASTExprNode(row, col), value(value), collection(collection) {}
+ASTInNode::ASTInNode(ASTExprNode* value, ASTExprNode* collection, bool vbv, unsigned int row, unsigned int col)
+	: ASTExprNode(row, col), value(value), collection(collection), vbv(vbv) {}
 
 ASTFunctionCallNode::ASTFunctionCallNode(std::string identifier, std::string nmspace, std::vector<ASTExprNode*> access_vector,
 	std::vector<std::pair<bool, ASTExprNode*>> parameters, unsigned int row, unsigned int col)

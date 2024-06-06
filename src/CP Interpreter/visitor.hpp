@@ -113,8 +113,11 @@ public:
 
 	bool has_value();
 
-	void copy_array(cp_array);
-	void copy_from(Value*);
+	void copy_array(cp_array arr);
+	void copy_from(Value* value);
+
+	bool equals_array(cp_array arr);
+	bool equals(Value* value);
 };
 
 namespace visitor {

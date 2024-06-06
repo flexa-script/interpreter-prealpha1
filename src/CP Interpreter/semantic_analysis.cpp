@@ -1563,15 +1563,11 @@ unsigned int SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 
 void SemanticAnalyser::register_built_in_functions() {
 	builtin_functions["print"] = [this]() {
-		if (signature.size() != 1) {
-			throw std::runtime_error("expected one parameter");
-		}
 	};
 
 	builtin_functions["read"] = [this]() {
-		auto size = signature.size();
-		if (size < 1 && size > 2) {
-			throw std::runtime_error("expected just one optional parameter");
+		if (signature.size() > 1) {
+			throw std::runtime_error("'read' expected just one optional parameter");
 		}
 
 		current_expression = SemanticValue();
@@ -1583,7 +1579,7 @@ void SemanticAnalyser::register_built_in_functions() {
 
 	builtin_functions["readch"] = [this]() {
 		if (signature.size() > 0) {
-			throw std::runtime_error("readch do not expect parameter");
+			throw std::runtime_error("'readch' do not expect parameter");
 		}
 
 		current_expression = SemanticValue();
@@ -1595,7 +1591,7 @@ void SemanticAnalyser::register_built_in_functions() {
 
 	builtin_functions["len"] = [this]() {
 		if (signature.size() != 1) {
-			throw std::runtime_error("expected one string or array parameter");
+			throw std::runtime_error("'len' expected one string or array parameter");
 		}
 		if (!is_array(signature[0].type) && !is_string(signature[0].type)) {
 			throw std::runtime_error("can't read len of type " + type_str(current_expression.type));
@@ -1608,9 +1604,21 @@ void SemanticAnalyser::register_built_in_functions() {
 		current_expression.is_const = false;
 	};
 
+	builtin_functions["equals"] = [this]() {
+		if (signature.size() != 2) {
+			throw std::runtime_error("'equals' expected (any, any) parameters");
+		}
+
+		current_expression = SemanticValue();
+		current_expression.type = Type::T_BOOL;
+		current_expression.type_name = "";
+		current_expression.array_type = Type::T_UNDEF;
+		current_expression.is_const = false;
+	};
+
 	builtin_functions["system"] = [this]() {
 		if (signature.size() != 1) {
-			throw std::runtime_error("expected one string parameter");
+			throw std::runtime_error("'system' expected one string parameter");
 		}
 		if (!is_string(signature[0].type)) {
 			throw std::runtime_error("parameter must be a string");

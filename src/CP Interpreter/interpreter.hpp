@@ -48,6 +48,7 @@ namespace visitor {
 		bool executed_elif = false;
 		bool has_string_access = false;
 		bool is_reference = false;
+		bool is_vbv = false;
 
 		modules::Graphics* cpgraphics;
 		modules::Files* cpfiles;
@@ -79,6 +80,10 @@ namespace visitor {
 		void declare_function_block_parameters(std::string nmspace);
 		void register_built_in_functions();
 		void register_built_in_lib(std::string libname);
+
+		bool equals_value(Value* lval, Value* rval);
+		bool equals_array(cp_array larr, cp_array rarr);
+		bool equals_struct(cp_struct* lstr, cp_struct* rstr);
 
 		std::string get_current_namespace();
 		std::string get_namespace(std::string = "") override;

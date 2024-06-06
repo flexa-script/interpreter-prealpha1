@@ -49,17 +49,25 @@
 - [ ] Add expression operators:
     - [X] Add ++,-- incrementor
     - [X] Add { init_value } to initilize all positions with same value
-    - [I] Add 'in' operator to check if anything is in array/string
+    - [P] Add 'in' operator to check if anything is in array/string
+        - [X] Add $ operator to compare struct values instead of pointer
     - [X] Add ternary (immediate) if
     - [X] typeof: returns type of object
         - [X] add namespace to type name return
     - [X] typeid: returns hash of typeof
 - [X] Add built in funcs:
+    - [X] print:
+        - [X] Improve to accept multiple values
+    - [X] read:
+        - [X] Improve to accept prompt
     - [X] len: returns size of array/string
+    - [X] readch: read 1 single char
+    - [X] equals: compare values, if struct, compare struct values and not struct pointer
+    - [X] system: execute systems commands
 - [X] Let functions return array
-- [X] Add lib scope lib.(method|properties|struct)
+- [X] Add namespace scope nmspace::(method|variable|struct)
 - [X] Guanrantee that a lib is loaded once
-- [X] Flex function return (currently it's mandatory specificate the return type)
+- [X] Flex function return, remove mandatory type definition in return
 - [X] Remove struct as bool in expression and change this type of verification to void value comparation (eg: var == null)
 - [X] Move function body parser to caller node (as interpreter), to check parameters of each caller
 - [ ] Improve error system (based on C++)
@@ -93,7 +101,19 @@
     - [ ] Web/API
 - [ ] Add CP library:
     - [ ] String
+        - [ ] size: size of string
+        - [ ] contains: string is contained in other string
+        - [ ] ends_with, starts_with: string is contained in extremities
+        - [ ] substring: returns substring
+        - [ ] replace: replace substrinf for another
+        - [ ] to_lower, to_upper: capitalize, uncapitalize
+        - [ ] to_string: value to string
+        - [ ] split: split string in array
+        - [ ] join: merge array values in string
+        - [ ] left_trim, right_trim, trim: removes whitespaces strings
     - [ ] Array:
+        - [ ] size: size of array
+        - [ ] contains: value is contained in array
         - [ ] sorted: sort a list
         - [ ] reversed: reverse a list
     - [ ] Math
@@ -102,9 +122,11 @@
         - [X] min: return lesser from two or more parameters
         - [X] sum: sum all items from array
         - [X] round: round a float number
+        - [ ] hash: returns hash of string
     - [X] Random (https://docs.godotengine.org/en/stable/classes/class_randomnumbergenerator.html):
         - [X] randi(from: int, to: int): int
         - [X] seed(seed: int)
+        - [ ] ...
     - [ ] Collections
         - [ ] List
         - [ ] Queue

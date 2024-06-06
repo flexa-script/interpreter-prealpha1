@@ -991,49 +991,14 @@ void Interpreter::visit(ASTInNode* astnode) {
 	auto expr_col = current_expression_value.arr;
 	bool res = false;
 
+	is_vbv = astnode->vbv;
 	for (auto it : expr_col) {
-		switch (expr_val.curr_type) {
-		case Type::T_BOOL:
-			if (expr_val.b == it->b) {
-				res = true;
-			}
-			break;
-		case Type::T_INT:
-			if (expr_val.i == it->i) {
-				res = true;
-			}
-			break;
-		case Type::T_FLOAT:
-			if (expr_val.f == it->f) {
-				res = true;
-			}
-			break;
-		case Type::T_CHAR:
-			if (expr_val.c == it->c) {
-				res = true;
-			}
-			break;
-		case Type::T_STRING:
-			if (expr_val.s == it->s) {
-				res = true;
-			}
-			break;
-			// TODO: array and struct
-		case Type::T_ARRAY:
-			if (expr_val.arr == it->arr) {
-				res = true;
-			}
-			break;
-		case Type::T_STRUCT:
-			if (expr_val.str == it->str) {
-				res = true;
-			}
-			break;
-		}
+		res = equals_value(&expr_val, it);
 		if (res) {
 			break;
 		}
 	}
+	is_vbv = false;
 
 	auto value = Value(Type::T_BOOL);
 	value.set(res);
@@ -1309,6 +1274,81 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 		value.set(cp_string(str_type));
 		current_expression_value = value;
 	}
+}
+
+bool Interpreter::equals_value(Value* lval, Value* rval) {
+	switch (lval->curr_type) {
+	case Type::T_BOOL:
+		if (lval->b == rval->b) {
+			return true;
+		}
+		break;
+	case Type::T_INT:
+		if (lval->i == rval->i) {
+			return true;
+		}
+		break;
+	case Type::T_FLOAT:
+		if (lval->f == rval->f) {
+			return true;
+		}
+		break;
+	case Type::T_CHAR:
+		if (lval->c == rval->c) {
+			return true;
+		}
+		break;
+	case Type::T_STRING:
+		if (lval->s == rval->s) {
+			return true;
+		}
+		break;
+	case Type::T_ARRAY:
+		if (equals_array(lval->arr, rval->arr)) {
+			return true;
+		}
+		break;
+	case Type::T_STRUCT:
+		if (is_vbv && equals_struct(lval->str, rval->str)
+			|| !is_vbv && lval->str == rval->str) {
+			return true;
+		}
+		break;
+	}
+
+	return false;
+}
+
+bool Interpreter::equals_struct(cp_struct* lstr, cp_struct* rstr) {
+	if (lstr->first != rstr->first
+		|| lstr->second.size() != rstr->second.size()) {
+		return false;
+	}
+
+	for (auto& lval : lstr->second) {
+		if (rstr->second.find(lval.first) == rstr->second.end()) {
+			return false;
+		}
+		if (!equals_value(lval.second, rstr->second[lval.first])) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool Interpreter::equals_array(cp_array larr, cp_array rarr) {
+	if (larr.size() != rarr.size()) {
+		return false;
+	}
+
+	for (size_t i = 0; i < larr.size(); ++i) {
+		if (!equals_value(larr[i], rarr[i])) {
+			return false;
+		}
+	}
+
+	return true;
 }
 
 InterpreterScope* Interpreter::get_inner_most_variable_scope(std::string nmspace, std::string identifier) {
@@ -1744,7 +1784,9 @@ unsigned int Interpreter::hash(ASTIdentifierNode* astnode) {
 
 void Interpreter::register_built_in_functions() {
 	builtin_functions["print"] = [this]() {
-		std::cout << parse_value_to_string(*builtin_arguments[0]);
+		for (auto arg : builtin_arguments) {
+			std::cout << parse_value_to_string(*arg);
+		}
 	};
 
 	builtin_functions["read"] = [this]() {
@@ -1774,6 +1816,16 @@ void Interpreter::register_built_in_functions() {
 		}
 
 		current_expression_value = val;
+	};
+
+	builtin_functions["equals"] = [this]() {
+		auto& rval = builtin_arguments[0];
+		auto& lval = builtin_arguments[1];
+		auto res = Value(Type::T_BOOL);
+
+		res.b = equals_struct(rval->str, lval->str);
+
+		current_expression_value = res;
 	};
 
 	builtin_functions["system"] = [this]() {

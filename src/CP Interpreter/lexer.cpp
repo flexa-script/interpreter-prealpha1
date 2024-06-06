@@ -432,6 +432,10 @@ Token Lexer::process_symbol() {
 		type = TOK_QMARK;
 		break;
 
+	case '$':
+		type = TOK_DSIGN;
+		break;
+
 	default:
 		type = TOK_ERROR;
 	}

@@ -453,8 +453,9 @@ namespace parser {
 	public:
 		ASTExprNode* value;
 		ASTExprNode* collection;
+		bool vbv;
 
-		ASTInNode(ASTExprNode* value, ASTExprNode* collection, unsigned int row, unsigned int col);
+		ASTInNode(ASTExprNode* value, ASTExprNode* collection, bool vbv, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor* visitor) override;
 		virtual unsigned int hash(visitor::Visitor*) override;

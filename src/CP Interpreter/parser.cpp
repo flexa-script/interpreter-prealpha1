@@ -840,9 +840,7 @@ ASTThrowNode* Parser::parse_throw_statement() {
 	ASTExprNode* expr;
 
 	consume_token();
-
 	expr = parse_expression();
-
 	check_consume_semicolon();
 
 	return new ASTThrowNode(expr, row, col);
@@ -1069,6 +1067,11 @@ ASTExprNode* Parser::parse_ternary_expression() {
 }
 
 ASTExprNode* Parser::parse_in_expression() {
+	bool vbv = current_token.type == lexer::TOK_DSIGN;
+	if (vbv) {
+		consume_token();
+	}
+
 	auto expr = parse_logical_or_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
@@ -1078,7 +1081,7 @@ ASTExprNode* Parser::parse_in_expression() {
 		consume_token();
 		consume_token();
 		collection = parse_expression();
-		return new ASTInNode(expr, collection, row, col);
+		return new ASTInNode(expr, collection, vbv, row, col);
 	}
 
 	return expr;
