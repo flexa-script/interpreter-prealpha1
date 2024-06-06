@@ -20,6 +20,7 @@
 - [X] Add struct support
     - [X] Add struct array-like constructor
     - [X] Add Java class pointer-like behavior
+    - [ ] Add some way to get struct as Dict
 - [X] Add null support
 - [X] Add type convert support
     - [X] Add array and struct support (based on print)
@@ -100,6 +101,10 @@
         - [X] Set font
     - [ ] Web/API
 - [ ] Add CP library:
+    - [ ] JSON (use Dict)
+        - [ ] struct to json
+        - [ ] json_stringfy
+        - [ ] json_parse
     - [ ] String
         - [ ] size: size of string
         - [ ] contains: string is contained in other string
