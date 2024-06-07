@@ -1162,8 +1162,8 @@ void SemanticAnalyser::visit(ASTInNode* astnode) {
 	auto valtype = current_expression.type;
 	astnode->collection->accept(this);
 	if (!match_type(valtype, current_expression.array_type) && !is_any(valtype) && !is_any(current_expression.array_type) && !is_any(current_expression.type)
-		|| is_string(valtype) && !is_string(current_expression.type)
-		|| is_char(valtype) && !is_string(current_expression.type)) {
+		&& is_string(valtype) && !is_string(current_expression.type)
+		&& is_char(valtype) && !is_string(current_expression.type)) {
 		throw std::runtime_error("types don't match '" + type_str(valtype) + "' and '" + type_str(current_expression.type) + "'");
 	}
 	if (!is_array(current_expression.type) && !is_string(current_expression.type)) {

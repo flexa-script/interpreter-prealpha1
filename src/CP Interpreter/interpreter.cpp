@@ -973,19 +973,18 @@ void Interpreter::visit(ASTInNode* astnode) {
 				break;
 			}
 		}
-		is_vbv = false;
 	}
 	else {
 		auto expr_col = current_expression_value.s;
 
-		is_vbv = astnode->vbv;
-		for (auto it : expr_col) {
-			res = expr_val.c == it;
-			if (res) {
-				break;
-			}
+		if (is_char(expr_val.curr_type)) {
+			res = current_expression_value.s.find(expr_val.c) != std::string::npos;
+		}
+		else {
+			res = current_expression_value.s.find(expr_val.s) != std::string::npos;
 		}
 	}
+	is_vbv = false;
 
 	auto value = Value(Type::T_BOOL);
 	value.set(res);

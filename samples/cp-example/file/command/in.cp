@@ -45,3 +45,54 @@ print("\n");
 // has value
 print($str1 in {Foo{a=10, s="str"}, Foo{a=10, s="str"}, Foo{a=10, s="str"}});
 print("\n");
+
+// strings
+print("strings\n\n");
+// match
+print("match:\n");
+print("0" in "012");
+print("\n");
+print("1" in "012");
+print("\n");
+print("2" in "012");
+print("\n");
+print("01" in "012");
+print("\n");
+print("012" in "012");
+print("\n");
+print("12" in "012");
+print("\n\n");
+// dont match
+print("dont match:\n");
+print("-0" in "012");
+print("\n");
+print("3" in "012");
+print("\n");
+print("9" in "012");
+print("\n");
+print("10" in "012");
+print("\n");
+print("-0123" in "012");
+print("\n");
+print("22" in "012");
+print("\n\n");
+
+// char
+print("chars\n\n");
+// match
+print("match:\n");
+print('0' in "012");
+print("\n");
+print('1' in "012");
+print("\n");
+print('2' in "012");
+print("\n\n");
+// match
+print("dont match:\n");
+print('\0' in "012");
+print("\n");
+print('\n' in "012");
+print("\n");
+print('3' in "012");
+print("\n\n");
+
