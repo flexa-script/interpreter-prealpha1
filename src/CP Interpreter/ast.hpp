@@ -26,7 +26,8 @@ namespace parser {
 		parser::Type array_type;
 		std::vector<ASTExprNode*> dim;
 
-		TypeDefinition(Type, Type, std::vector<ASTExprNode*>, std::string, std::string);
+		TypeDefinition(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+			std::string type_name, std::string type_name_space);
 		TypeDefinition() = default;
 	};
 
@@ -36,8 +37,8 @@ namespace parser {
 		bool is_const;
 
 		// complete constructor
-		SemanticValue(parser::Type, parser::Type, std::vector<ASTExprNode*>,
-			std::string, std::string, unsigned int, bool, unsigned int, unsigned int);
+		SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+			std::string type_name, std::string type_name_space, unsigned int hash, bool is_const, unsigned int row, unsigned int col);
 		// simplified constructor
 		SemanticValue(parser::Type, unsigned int, unsigned int);
 		SemanticValue() = default;
@@ -62,8 +63,8 @@ namespace parser {
 	public:
 		std::string identifier;
 
-		VariableDefinition(std::string, Type, std::string, std::string, Type, Type,
-			std::vector<ASTExprNode*>, unsigned int, unsigned int);
+		VariableDefinition(std::string identifier, Type type, std::string type_name, std::string type_name_space,
+			Type any_type, Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col);
 		VariableDefinition() = default;
 	};
 
@@ -73,9 +74,8 @@ namespace parser {
 		std::vector<parser::TypeDefinition> signature;
 		std::vector<parser::VariableDefinition> parameters;
 
-		FunctionDefinition(std::string, Type, std::string, std::string, Type, std::vector<ASTExprNode*>,
-			std::vector<parser::TypeDefinition>, std::vector<parser::VariableDefinition>,
-			unsigned int, unsigned int);
+		FunctionDefinition(std::string identifier, Type type, std::string type_name, std::string type_name_space, Type array_type,
+			std::vector<ASTExprNode*> dim, std::vector<parser::TypeDefinition> signature, std::vector<parser::VariableDefinition> parameters, unsigned int row, unsigned int col);
 		FunctionDefinition() = default;
 	};
 

@@ -29,9 +29,10 @@
 - [X] Add string array-like accessor
 - [ ] Function improvements:
     - [ ] Change builtin functions to ASTFunctionDefinitionNode
+    - [ ] Add infinit parameters, like `def foo(...args: any)`
+    - [ ] Add optional parameters
     - [ ] Add callback as type function
     - [X] Pass parameter by reference
-    - [ ] Add infinit parameters in functions, like `def foo(...args)`
 - [X] Add statements:
     - [X] for
     - [X] foreach

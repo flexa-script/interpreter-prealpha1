@@ -518,21 +518,21 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 		curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
 	}
 	catch (...) {
-		try {
-			if (builtin_functions.find(astnode->identifier) != builtin_functions.end()) {
-				this->signature = signature;
-				builtin_functions[astnode->identifier]();
-				return;
-			}
-			throw std::runtime_error("");
-		}
-		catch (std::runtime_error ex) {
+		//try {
+		//	if (builtin_functions.find(astnode->identifier) != builtin_functions.end()) {
+		//		this->signature = signature;
+		//		builtin_functions[astnode->identifier]();
+		//		return;
+		//	}
+		//	throw std::runtime_error("");
+		//}
+		//catch (std::runtime_error ex) {
 			std::string errmsg = "";
 
-			if (builtin_functions.find(astnode->identifier) != builtin_functions.end() && ex.what() != "") {
-				errmsg = ex.what();
-			}
-			else {
+			//if (builtin_functions.find(astnode->identifier) != builtin_functions.end() && ex.what() != "") {
+			//	errmsg = ex.what();
+			//}
+			//else {
 				std::string func_name = astnode->identifier + "(";
 				for (auto param : signature) {
 					func_name += type_str(param.type) + ", ";
@@ -543,10 +543,10 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 				}
 				func_name += ")";
 				errmsg = "function '" + func_name + "' was never declared";
-			}
+			//}
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error(errmsg);
-		}
+		//}
 	}
 
 	auto curr_function = curr_scope->find_declared_function(astnode->identifier, signature);
@@ -585,7 +585,7 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 		auto array_type = (is_void(astnode->array_type) || is_undefined(astnode->array_type)) && has_return ? Type::T_ANY : astnode->type;
 
 		scopes[get_namespace()].back()->declare_function(astnode->identifier, type, astnode->type_name, astnode->type_name_space,
-			array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
+			array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->row, astnode->row);
 
 		auto curr_function = scopes[get_namespace()].back()->find_declared_function(astnode->identifier, astnode->signature);
 
@@ -604,7 +604,7 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 	}
 	else {
 		scopes[get_namespace()].back()->declare_function(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
-			astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
+			astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->row, astnode->row);
 	}
 }
 
@@ -1516,66 +1516,52 @@ unsigned int SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 }
 
 void SemanticAnalyser::register_built_in_functions() {
-	builtin_functions["print"] = [this]() {
-	};
+	auto signature = std::vector<parser::TypeDefinition>();
+	auto parameters = std::vector<parser::VariableDefinition>();
+	auto arrdim = std::vector<ASTExprNode*>();
 
-	builtin_functions["read"] = [this]() {
-		if (signature.size() > 1) {
-			throw std::runtime_error("'read' expected just one optional parameter");
-		}
+	signature.clear();
+	parameters.clear();
+	signature.push_back(TypeDefinition(Type::T_ANY, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", ""));
+	parameters.push_back(VariableDefinition("args", Type::T_ANY, "", "", Type::T_UNDEF, Type::T_UNDEF, std::vector<ASTExprNode*>(), 0, 0));
+	scopes["__main"].back()->declare_function("print", Type::T_VOID, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
 
-		current_expression = SemanticValue();
-		current_expression.type = Type::T_STRING;
-		current_expression.type_name = "";
-		current_expression.array_type = Type::T_UNDEF;
-		current_expression.is_const = false;
-	};
 
-	builtin_functions["readch"] = [this]() {
-		if (signature.size() > 0) {
-			throw std::runtime_error("'readch' do not expect parameter");
-		}
+	signature.clear();
+	parameters.clear();
+	scopes["__main"].back()->declare_function("read", Type::T_STRING, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
 
-		current_expression = SemanticValue();
-		current_expression.type = Type::T_CHAR;
-		current_expression.type_name = "";
-		current_expression.array_type = Type::T_UNDEF;
-		current_expression.is_const = false;
-	};
 
-	builtin_functions["len"] = [this]() {
-		if (signature.size() != 1) {
-			throw std::runtime_error("'len' expected one string or array parameter");
-		}
-		if (!is_array(signature[0].type) && !is_string(signature[0].type)) {
-			throw std::runtime_error("can't read len of type " + type_str(current_expression.type));
-		}
+	signature.clear();
+	parameters.clear();
+	scopes["__main"].back()->declare_function("readch", Type::T_CHAR, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
 
-		current_expression = SemanticValue();
-		current_expression.type = Type::T_INT;
-		current_expression.type_name = "";
-		current_expression.array_type = Type::T_UNDEF;
-		current_expression.is_const = false;
-	};
 
-	builtin_functions["equals"] = [this]() {
-		if (signature.size() != 2) {
-			throw std::runtime_error("'equals' expected (any, any) parameters");
-		}
+	signature.clear();
+	parameters.clear();
+	signature.push_back(TypeDefinition(Type::T_ARRAY, Type::T_ANY, std::vector<ASTExprNode*>(), "", ""));
+	parameters.push_back(VariableDefinition("arr", Type::T_ARRAY, "", "", Type::T_ARRAY, Type::T_ANY, std::vector<ASTExprNode*>(), 0, 0));
+	scopes["__main"].back()->declare_function("len", Type::T_INT, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
 
-		current_expression = SemanticValue();
-		current_expression.type = Type::T_BOOL;
-		current_expression.type_name = "";
-		current_expression.array_type = Type::T_UNDEF;
-		current_expression.is_const = false;
-	};
+	signature.clear();
+	parameters.clear();
+	signature.push_back(TypeDefinition(Type::T_STRING, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", ""));
+	parameters.push_back(VariableDefinition("str", Type::T_STRING, "", "", Type::T_UNDEF, Type::T_UNDEF, std::vector<ASTExprNode*>(), 0, 0));
+	scopes["__main"].back()->declare_function("len", Type::T_INT, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
 
-	builtin_functions["system"] = [this]() {
-		if (signature.size() != 1) {
-			throw std::runtime_error("'system' expected one string parameter");
-		}
-		if (!is_string(signature[0].type)) {
-			throw std::runtime_error("parameter must be a string");
-		}
-	};
+
+	signature.clear();
+	parameters.clear();
+	signature.push_back(TypeDefinition(Type::T_ANY, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", ""));
+	signature.push_back(TypeDefinition(Type::T_ANY, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", ""));
+	parameters.push_back(VariableDefinition("lval", Type::T_ANY, "", "", Type::T_UNDEF, Type::T_UNDEF, std::vector<ASTExprNode*>(), 0, 0));
+	parameters.push_back(VariableDefinition("rval", Type::T_ANY, "", "", Type::T_UNDEF, Type::T_UNDEF, std::vector<ASTExprNode*>(), 0, 0));
+	scopes["__main"].back()->declare_function("equals", Type::T_BOOL, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
+
+
+	signature.clear();
+	parameters.clear();
+	signature.push_back(TypeDefinition(Type::T_STRING, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", ""));
+	parameters.push_back(VariableDefinition("cmd", Type::T_STRING, "", "", Type::T_UNDEF, Type::T_UNDEF, std::vector<ASTExprNode*>(), 0, 0));
+	scopes["__main"].back()->declare_function("system", Type::T_VOID, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
 }

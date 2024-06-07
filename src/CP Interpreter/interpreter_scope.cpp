@@ -158,7 +158,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 				break;
 			}
 		}
-		if (found) return i->second;
+		if (found && func_sig.size() == signature.size()) return i->second;
 	}
 
 	throw std::runtime_error("something went wrong searching '" + identifier + "'");

@@ -43,7 +43,7 @@ FunctionDefinition SemanticScope::find_declared_function(std::string identifier,
 				break;
 			}
 		}
-		if (found) return i->second;
+		if (found && func_sig.size() == signature.size()) return i->second;
 	}
 
 	throw std::runtime_error("SSERR: definition of '" + identifier + "' function not found");
@@ -80,9 +80,8 @@ void SemanticScope::declare_variable(std::string identifier, Type type, Type arr
 }
 
 void SemanticScope::declare_function(std::string identifier, Type type, std::string type_name, std::string type_name_space,
-	Type array_type, std::vector<ASTExprNode*> dim, std::vector<TypeDefinition> signature, std::vector<VariableDefinition> parameters,
-	ASTBlockNode* block, unsigned int row, unsigned int col) {
-	FunctionDefinition fun(identifier, type, type_name, type_name_space, array_type, dim, signature, parameters, block, row, col);
+	Type array_type, std::vector<ASTExprNode*> dim, std::vector<TypeDefinition> signature, std::vector<VariableDefinition> parameters, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, type, type_name, type_name_space, array_type, dim, signature, parameters, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
 }
 
