@@ -31,7 +31,7 @@
     - [ ] Add callback as type function
     - [X] Pass parameter by reference
     - [ ] Add infinit parameters in functions, like `def foo(...args)`
-- [ ] Add statements:
+- [X] Add statements:
     - [X] for
     - [X] foreach
     - [X] else if
@@ -50,7 +50,7 @@
 - [ ] Add expression operators:
     - [X] Add ++,-- incrementor
     - [X] Add { init_value } to initilize all positions with same value
-    - [P] Add 'in' operator to check if anything is in array/string
+    - [X] Add 'in' operator to check if anything is in array/string
         - [X] Add $ operator to compare struct values instead of pointer
     - [X] Add ternary (immediate) if
     - [X] typeof: returns type of object
@@ -127,7 +127,7 @@
         - [X] min: return lesser from two or more parameters
         - [X] sum: sum all items from array
         - [X] round: round a float number
-        - [ ] hash: returns hash of string
+        - [X] hash: returns hash of string
     - [X] Random (https://docs.godotengine.org/en/stable/classes/class_randomnumbergenerator.html):
         - [X] randi(from: int, to: int): int
         - [X] seed(seed: int)

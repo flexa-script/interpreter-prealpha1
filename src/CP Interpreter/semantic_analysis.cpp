@@ -1164,9 +1164,11 @@ void SemanticAnalyser::visit(ASTInNode* astnode) {
 	if (!match_type(valtype, current_expression.array_type) && !is_any(valtype) && !is_any(current_expression.array_type) && !is_any(current_expression.type)
 		&& is_string(valtype) && !is_string(current_expression.type)
 		&& is_char(valtype) && !is_string(current_expression.type)) {
+		set_curr_pos(astnode->row, astnode->col);
 		throw std::runtime_error("types don't match '" + type_str(valtype) + "' and '" + type_str(current_expression.type) + "'");
 	}
 	if (!is_array(current_expression.type) && !is_string(current_expression.type)) {
+		set_curr_pos(astnode->row, astnode->col);
 		throw std::runtime_error("invalid type '" + type_str(current_expression.type) +"', value must be a array or string");
 	}
 }
