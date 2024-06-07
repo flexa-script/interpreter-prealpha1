@@ -30,7 +30,8 @@
 - [ ] Function improvements:
     - [ ] Change builtin functions to ASTFunctionDefinitionNode
     - [ ] Add infinit parameters, like `def foo(...args: any)`
-    - [ ] Add optional parameters
+    - [ ] Add optional parameters `def foo(arg: any = 10)`
+    - [ ] Add arrow function `(arg): void {}`, `(arg) {}`, `() {}`
     - [ ] Add callback as type function
     - [X] Pass parameter by reference
 - [X] Add statements:

@@ -518,35 +518,18 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 		curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
 	}
 	catch (...) {
-		//try {
-		//	if (builtin_functions.find(astnode->identifier) != builtin_functions.end()) {
-		//		this->signature = signature;
-		//		builtin_functions[astnode->identifier]();
-		//		return;
-		//	}
-		//	throw std::runtime_error("");
-		//}
-		//catch (std::runtime_error ex) {
-			std::string errmsg = "";
+		std::string func_name = astnode->identifier + "(";
+		for (auto param : signature) {
+			func_name += type_str(param.type) + ", ";
+		}
+		if (signature.size() > 0) {
+			func_name.pop_back();
+			func_name.pop_back();
+		}
+		func_name += ")";
 
-			//if (builtin_functions.find(astnode->identifier) != builtin_functions.end() && ex.what() != "") {
-			//	errmsg = ex.what();
-			//}
-			//else {
-				std::string func_name = astnode->identifier + "(";
-				for (auto param : signature) {
-					func_name += type_str(param.type) + ", ";
-				}
-				if (signature.size() > 0) {
-					func_name.pop_back();
-					func_name.pop_back();
-				}
-				func_name += ")";
-				errmsg = "function '" + func_name + "' was never declared";
-			//}
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error(errmsg);
-		//}
+		set_curr_pos(astnode->row, astnode->col);
+		throw std::runtime_error("function '" + func_name + "' was never declared");
 	}
 
 	auto curr_function = curr_scope->find_declared_function(astnode->identifier, signature);
@@ -1169,7 +1152,7 @@ void SemanticAnalyser::visit(ASTInNode* astnode) {
 	}
 	if (!is_array(current_expression.type) && !is_string(current_expression.type)) {
 		set_curr_pos(astnode->row, astnode->col);
-		throw std::runtime_error("invalid type '" + type_str(current_expression.type) +"', value must be a array or string");
+		throw std::runtime_error("invalid type '" + type_str(current_expression.type) + "', value must be a array or string");
 	}
 }
 
@@ -1522,46 +1505,46 @@ void SemanticAnalyser::register_built_in_functions() {
 
 	signature.clear();
 	parameters.clear();
-	signature.push_back(TypeDefinition(Type::T_ANY, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", ""));
-	parameters.push_back(VariableDefinition("args", Type::T_ANY, "", "", Type::T_UNDEF, Type::T_UNDEF, std::vector<ASTExprNode*>(), 0, 0));
-	scopes["__main"].back()->declare_function("print", Type::T_VOID, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
+	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
+	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY));
+	scopes["__main"].back()->declare_basic_function("print", Type::T_VOID, signature, parameters);
 
 
 	signature.clear();
 	parameters.clear();
-	scopes["__main"].back()->declare_function("read", Type::T_STRING, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
+	scopes["__main"].back()->declare_basic_function("read", Type::T_STRING, signature, parameters);
 
 
 	signature.clear();
 	parameters.clear();
-	scopes["__main"].back()->declare_function("readch", Type::T_CHAR, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
+	scopes["__main"].back()->declare_basic_function("readch", Type::T_CHAR, signature, parameters);
 
 
 	signature.clear();
 	parameters.clear();
-	signature.push_back(TypeDefinition(Type::T_ARRAY, Type::T_ANY, std::vector<ASTExprNode*>(), "", ""));
-	parameters.push_back(VariableDefinition("arr", Type::T_ARRAY, "", "", Type::T_ARRAY, Type::T_ANY, std::vector<ASTExprNode*>(), 0, 0));
-	scopes["__main"].back()->declare_function("len", Type::T_INT, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
+	signature.push_back(TypeDefinition::get_array(Type::T_ARRAY, Type::T_ANY));
+	parameters.push_back(VariableDefinition::get_array("arr", Type::T_ARRAY, Type::T_ANY));
+	scopes["__main"].back()->declare_basic_function("len", Type::T_INT, signature, parameters);
 
 	signature.clear();
 	parameters.clear();
-	signature.push_back(TypeDefinition(Type::T_STRING, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", ""));
-	parameters.push_back(VariableDefinition("str", Type::T_STRING, "", "", Type::T_UNDEF, Type::T_UNDEF, std::vector<ASTExprNode*>(), 0, 0));
-	scopes["__main"].back()->declare_function("len", Type::T_INT, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
-
-
-	signature.clear();
-	parameters.clear();
-	signature.push_back(TypeDefinition(Type::T_ANY, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", ""));
-	signature.push_back(TypeDefinition(Type::T_ANY, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", ""));
-	parameters.push_back(VariableDefinition("lval", Type::T_ANY, "", "", Type::T_UNDEF, Type::T_UNDEF, std::vector<ASTExprNode*>(), 0, 0));
-	parameters.push_back(VariableDefinition("rval", Type::T_ANY, "", "", Type::T_UNDEF, Type::T_UNDEF, std::vector<ASTExprNode*>(), 0, 0));
-	scopes["__main"].back()->declare_function("equals", Type::T_BOOL, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
+	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
+	parameters.push_back(VariableDefinition::get_basic("str", Type::T_STRING));
+	scopes["__main"].back()->declare_basic_function("len", Type::T_INT, signature, parameters);
 
 
 	signature.clear();
 	parameters.clear();
-	signature.push_back(TypeDefinition(Type::T_STRING, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", ""));
-	parameters.push_back(VariableDefinition("cmd", Type::T_STRING, "", "", Type::T_UNDEF, Type::T_UNDEF, std::vector<ASTExprNode*>(), 0, 0));
-	scopes["__main"].back()->declare_function("system", Type::T_VOID, "", "", Type::T_UNDEF, arrdim, signature, parameters, 0, 0);
+	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
+	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
+	parameters.push_back(VariableDefinition::get_basic("lval", Type::T_ANY));
+	parameters.push_back(VariableDefinition::get_basic("rval", Type::T_ANY));
+	scopes["__main"].back()->declare_basic_function("equals", Type::T_BOOL, signature, parameters);
+
+
+	signature.clear();
+	parameters.clear();
+	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
+	parameters.push_back(VariableDefinition::get_basic("cmd", Type::T_STRING));
+	scopes["__main"].back()->declare_basic_function("system", Type::T_VOID, signature, parameters);
 }

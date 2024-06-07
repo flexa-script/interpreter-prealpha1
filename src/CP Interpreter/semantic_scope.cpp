@@ -85,6 +85,24 @@ void SemanticScope::declare_function(std::string identifier, Type type, std::str
 	function_symbol_table.insert(std::make_pair(identifier, fun));
 }
 
+void SemanticScope::declare_basic_function(std::string identifier, Type type, std::vector<TypeDefinition> signature,
+	std::vector<VariableDefinition> parameters, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, type, "", "", Type::T_UNDEF, std::vector<ASTExprNode*>(), signature, parameters, row, col);
+	function_symbol_table.insert(std::make_pair(identifier, fun));
+}
+
+void SemanticScope::declare_array_function(std::string identifier, Type type, Type array_type, std::vector<ASTExprNode*> dim,
+	std::vector<TypeDefinition> signature, std::vector<VariableDefinition> parameters, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, type, "", "", array_type, dim, signature, parameters, row, col);
+	function_symbol_table.insert(std::make_pair(identifier, fun));
+}
+
+void SemanticScope::declare_struct_function(std::string identifier, Type type, std::string type_name, std::string type_name_space,
+	std::vector<TypeDefinition> signature, std::vector<VariableDefinition> parameters, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, type, type_name, type_name_space, Type::T_UNDEF, std::vector<ASTExprNode*>(), signature, parameters, row, col);
+	function_symbol_table.insert(std::make_pair(identifier, fun));
+}
+
 void SemanticScope::change_variable_type_name(std::string identifier, std::string type_name) {
 	auto var = variable_symbol_table[identifier]->value->type_name = type_name;
 }

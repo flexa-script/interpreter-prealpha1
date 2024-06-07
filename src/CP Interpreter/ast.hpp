@@ -29,6 +29,10 @@ namespace parser {
 		TypeDefinition(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
 			std::string type_name, std::string type_name_space);
 		TypeDefinition() = default;
+
+		static TypeDefinition get_basic(parser::Type type);
+		static TypeDefinition get_array(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim = std::vector<ASTExprNode*>());
+		static TypeDefinition get_struct(parser::Type type, std::string type_name, std::string type_name_space);
 	};
 
 	class SemanticValue : public TypeDefinition, public CodePosition {
@@ -64,8 +68,12 @@ namespace parser {
 		std::string identifier;
 
 		VariableDefinition(std::string identifier, Type type, std::string type_name, std::string type_name_space,
-			Type any_type, Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col);
+			Type array_type, std::vector<ASTExprNode*> dim, unsigned int row, unsigned int col);
 		VariableDefinition() = default;
+
+		static VariableDefinition get_basic(std::string identifier, parser::Type type, unsigned int row = 0, unsigned int col = 0);
+		static VariableDefinition get_array(std::string identifier, parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim = std::vector<ASTExprNode*>(), unsigned int row = 0, unsigned int col = 0);
+		static VariableDefinition get_struct(std::string identifier, parser::Type type, std::string type_name, std::string type_name_space, unsigned int row = 0, unsigned int col = 0);
 	};
 
 	class FunctionDefinition : public TypeDefinition, public CodePosition {

@@ -405,7 +405,7 @@ VariableDefinition* Parser::parse_formal_param() {
 	}
 
 	return new VariableDefinition(identifier, type, type_name,
-		type_name_space, type, current_array_type, access_vector, row, col);
+		type_name_space, current_array_type, access_vector, row, col);
 };
 
 std::vector<std::pair<bool, ASTExprNode*>>* Parser::parse_actual_params() {
