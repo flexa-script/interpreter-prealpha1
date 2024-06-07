@@ -28,6 +28,7 @@
 - [X] Improve cp dependencies/libs loader
 - [X] Add string array-like accessor
 - [ ] Function improvements:
+    - [ ] Change builtin functions to ASTFunctionDefinitionNode
     - [ ] Add callback as type function
     - [X] Pass parameter by reference
     - [ ] Add infinit parameters in functions, like `def foo(...args)`
