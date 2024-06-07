@@ -61,8 +61,7 @@ StructureDefinition::StructureDefinition(std::string identifier, std::vector<Var
 	: CodePosition(row, col), identifier(identifier), variables(variables) {}
 
 FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, std::string type_name_space, Type array_type,
-	std::vector<ASTExprNode*> dim, std::vector<parser::TypeDefinition> signature, std::vector<parser::VariableDefinition> parameters,
-	ASTBlockNode* block, unsigned int row, unsigned int col)
+	std::vector<ASTExprNode*> dim, std::vector<parser::TypeDefinition> signature, std::vector<parser::VariableDefinition> parameters, unsigned int row, unsigned int col)
 	: identifier(identifier), signature(signature), parameters(parameters),
 	TypeDefinition(type, array_type, dim, type_name, type_name_space), CodePosition(row, col) {}
 

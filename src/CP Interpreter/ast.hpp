@@ -74,7 +74,7 @@ namespace parser {
 		std::vector<parser::VariableDefinition> parameters;
 
 		FunctionDefinition(std::string, Type, std::string, std::string, Type, std::vector<ASTExprNode*>,
-			std::vector<parser::TypeDefinition>, std::vector<parser::VariableDefinition>, ASTBlockNode*,
+			std::vector<parser::TypeDefinition>, std::vector<parser::VariableDefinition>,
 			unsigned int, unsigned int);
 		FunctionDefinition() = default;
 	};
