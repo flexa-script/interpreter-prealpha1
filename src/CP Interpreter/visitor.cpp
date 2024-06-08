@@ -74,6 +74,8 @@ namespace parser {
 	}
 }
 
+std::string default_namespace = "__main";
+
 std::vector<std::string> std_libs = {
 	"cp.std.math",
 	"cp.std.print",

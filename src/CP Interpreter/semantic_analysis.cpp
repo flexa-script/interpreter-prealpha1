@@ -12,8 +12,8 @@ using namespace parser;
 
 SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
 	: current_expression(SemanticValue()),
-	Visitor(programs, main_program, main_program ? main_program->name : "__main") {
-	scopes["__main"].push_back(global_scope);
+	Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
+	scopes[default_namespace].push_back(global_scope);
 	register_built_in_functions();
 };
 
@@ -26,7 +26,7 @@ std::string SemanticAnalyser::get_namespace(std::string nmspace) {
 }
 
 std::string SemanticAnalyser::get_namespace(ASTProgramNode* program, std::string nmspace) {
-	return nmspace.empty() ? (program->alias.empty() ? "__main" : program->alias) : nmspace;
+	return nmspace.empty() ? (program->alias.empty() ? default_namespace : program->alias) : nmspace;
 }
 
 void SemanticAnalyser::visit(ASTProgramNode* astnode) {
@@ -170,7 +170,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 
 		}
 		else if (is_array(astnode->type)) {
-			// testing initiate arrays with non-const values
+			// testing viability to initiate arrays with non-constant values
 			//for (auto& d : astnode->dim) {
 			//	if (d) {
 			//		d->accept(this);
@@ -1506,33 +1506,33 @@ void SemanticAnalyser::register_built_in_functions() {
 	parameters.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
 	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY));
-	scopes["__main"].back()->declare_basic_function("print", Type::T_VOID, signature, parameters);
+	scopes[default_namespace].back()->declare_basic_function("print", Type::T_VOID, signature, parameters);
 
 
 	signature.clear();
 	parameters.clear();
-	scopes["__main"].back()->declare_basic_function("read", Type::T_STRING, signature, parameters);
+	scopes[default_namespace].back()->declare_basic_function("read", Type::T_STRING, signature, parameters);
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
 	parameters.push_back(VariableDefinition::get_basic("msg", Type::T_ANY));
-	scopes["__main"].back()->declare_basic_function("read", Type::T_STRING, signature, parameters);
+	scopes[default_namespace].back()->declare_basic_function("read", Type::T_STRING, signature, parameters);
 
 
 	signature.clear();
 	parameters.clear();
-	scopes["__main"].back()->declare_basic_function("readch", Type::T_CHAR, signature, parameters);
+	scopes[default_namespace].back()->declare_basic_function("readch", Type::T_CHAR, signature, parameters);
 
 
 	signature.clear();
 	parameters.clear();
 	signature.push_back(TypeDefinition::get_array(Type::T_ARRAY, Type::T_ANY));
 	parameters.push_back(VariableDefinition::get_array("arr", Type::T_ARRAY, Type::T_ANY));
-	scopes["__main"].back()->declare_basic_function("len", Type::T_INT, signature, parameters);
+	scopes[default_namespace].back()->declare_basic_function("len", Type::T_INT, signature, parameters);
 
 	signature.clear();
 	parameters.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
 	parameters.push_back(VariableDefinition::get_basic("str", Type::T_STRING));
-	scopes["__main"].back()->declare_basic_function("len", Type::T_INT, signature, parameters);
+	scopes[default_namespace].back()->declare_basic_function("len", Type::T_INT, signature, parameters);
 
 
 	signature.clear();
@@ -1541,12 +1541,12 @@ void SemanticAnalyser::register_built_in_functions() {
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
 	parameters.push_back(VariableDefinition::get_basic("lval", Type::T_ANY));
 	parameters.push_back(VariableDefinition::get_basic("rval", Type::T_ANY));
-	scopes["__main"].back()->declare_basic_function("equals", Type::T_BOOL, signature, parameters);
+	scopes[default_namespace].back()->declare_basic_function("equals", Type::T_BOOL, signature, parameters);
 
 
 	signature.clear();
 	parameters.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
 	parameters.push_back(VariableDefinition::get_basic("cmd", Type::T_STRING));
-	scopes["__main"].back()->declare_basic_function("system", Type::T_VOID, signature, parameters);
+	scopes[default_namespace].back()->declare_basic_function("system", Type::T_VOID, signature, parameters);
 }

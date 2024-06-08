@@ -77,6 +77,7 @@ typedef std::vector<Value*> cp_array;
 typedef std::map<std::string, Value*> cp_struct_values;
 typedef std::pair<std::string, cp_struct_values> cp_struct;
 
+extern std::string default_namespace;
 extern std::vector<std::string> std_libs;
 extern std::vector<std::string> built_in_libs;
 

@@ -16,11 +16,11 @@ using namespace parser;
 
 Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
 	: current_expression_value(Value(Type::T_UNDEF)), is_function_context(false), current_name(std::stack<std::string>()),
-	Visitor(programs, main_program, main_program ? main_program->name : "__main") {
+	Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
 	if (main_program) {
 		current_name.push(main_program->name);
 	}
-	scopes["__main"].push_back(global_scope);
+	scopes[default_namespace].push_back(global_scope);
 	register_built_in_functions();
 }
 
@@ -31,13 +31,13 @@ std::string Interpreter::get_namespace(std::string nmspace) {
 std::string Interpreter::get_namespace(ASTProgramNode* program, std::string nmspace) {
 	return nmspace.empty() ? (
 		current_function_nmspace.size() == 0 ? (
-			program->alias.empty() ? "__main" : program->alias
+			program->alias.empty() ? default_namespace : program->alias
 			) : current_function_nmspace.top()
 		) : nmspace;
 }
 
 std::string Interpreter::get_current_namespace() {
-	return current_program->alias.empty() ? "__main" : current_program->alias;
+	return current_program->alias.empty() ? default_namespace : current_program->alias;
 }
 
 void Interpreter::start() {
@@ -1712,7 +1712,6 @@ unsigned int Interpreter::hash(ASTLiteralNode<cp_string>* astnode) {
 }
 
 unsigned int Interpreter::hash(ASTIdentifierNode* astnode) {
-	// determine innermost scope in which variable is declared
 	std::string nmspace = get_namespace(astnode->nmspace);
 
 	InterpreterScope* id_scope;
@@ -1762,7 +1761,7 @@ void Interpreter::register_built_in_functions() {
 	variable_names.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
 	variable_names.push_back("args");
-	scopes["__main"].back()->declare_function("print", signature, variable_names, nullptr);
+	scopes[default_namespace].back()->declare_function("print", signature, variable_names, nullptr);
 
 
 	builtin_functions["read"] = [this]() {
@@ -1775,10 +1774,10 @@ void Interpreter::register_built_in_functions() {
 	};
 	signature.clear();
 	variable_names.clear();
-	scopes["__main"].back()->declare_function("read", signature, variable_names, nullptr);
+	scopes[default_namespace].back()->declare_function("read", signature, variable_names, nullptr);
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
 	variable_names.push_back("msg");
-	scopes["__main"].back()->declare_function("read", signature, variable_names, nullptr);
+	scopes[default_namespace].back()->declare_function("read", signature, variable_names, nullptr);
 
 
 	builtin_functions["readch"] = [this]() {
@@ -1788,7 +1787,7 @@ void Interpreter::register_built_in_functions() {
 	};
 	signature.clear();
 	variable_names.clear();
-	scopes["__main"].back()->declare_function("readch", signature, variable_names, nullptr);
+	scopes[default_namespace].back()->declare_function("readch", signature, variable_names, nullptr);
 
 
 	builtin_functions["len"] = [this]() {
@@ -1808,12 +1807,12 @@ void Interpreter::register_built_in_functions() {
 	variable_names.clear();
 	signature.push_back(TypeDefinition::get_array(Type::T_ARRAY, Type::T_ANY));
 	variable_names.push_back("arr");
-	scopes["__main"].back()->declare_function("len", signature, variable_names, nullptr);
+	scopes[default_namespace].back()->declare_function("len", signature, variable_names, nullptr);
 	signature.clear();
 	variable_names.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
 	variable_names.push_back("str");
-	scopes["__main"].back()->declare_function("len", signature, variable_names, nullptr);
+	scopes[default_namespace].back()->declare_function("len", signature, variable_names, nullptr);
 
 
 	builtin_functions["equals"] = [this]() {
@@ -1831,7 +1830,7 @@ void Interpreter::register_built_in_functions() {
 	variable_names.push_back("lval");
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
 	variable_names.push_back("rval");
-	scopes["__main"].back()->declare_function("equals", signature, variable_names, nullptr);
+	scopes[default_namespace].back()->declare_function("equals", signature, variable_names, nullptr);
 
 
 	builtin_functions["system"] = [this]() {
@@ -1841,7 +1840,7 @@ void Interpreter::register_built_in_functions() {
 	variable_names.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
 	variable_names.push_back("cmd");
-	scopes["__main"].back()->declare_function("system", signature, variable_names, nullptr);
+	scopes[default_namespace].back()->declare_function("system", signature, variable_names, nullptr);
 }
 
 void Interpreter::register_built_in_lib(std::string libname) {
