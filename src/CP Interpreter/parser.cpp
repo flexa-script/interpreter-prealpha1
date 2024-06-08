@@ -225,8 +225,8 @@ std::vector<Identifier> Parser::parse_identifier_vector() {
 }
 
 ASTDeclarationNode* Parser::parse_declaration_statement() {
-	Type type = Type::T_UNDEF;
-	current_array_type = Type::T_UNDEF;
+	Type type = Type::T_UNDEFINED;
+	current_array_type = Type::T_UNDEFINED;
 	std::string identifier;
 	std::string type_name = "";
 	std::string type_name_space = "";
@@ -255,13 +255,13 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 			consume_token();
 		}
 
-		if (type == Type::T_UNDEF) {
+		if (type == Type::T_UNDEFINED) {
 			type = parse_type();
 		}
 		else if (type == Type::T_ARRAY) {
 			current_array_type = parse_type();
 
-			if (current_array_type == parser::Type::T_UNDEF
+			if (current_array_type == parser::Type::T_UNDEFINED
 				|| current_array_type == parser::Type::T_VOID
 				|| current_array_type == parser::Type::T_ARRAY) {
 				current_array_type = parser::Type::T_ANY;
@@ -284,7 +284,7 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 
 	check_consume_semicolon();
 
-	if (type == Type::T_UNDEF) {
+	if (type == Type::T_UNDEFINED) {
 		type = Type::T_ANY;
 	}
 
@@ -292,8 +292,8 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 }
 
 ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
-	Type type = Type::T_UNDEF;
-	current_array_type = Type::T_UNDEF;
+	Type type = Type::T_UNDEFINED;
+	current_array_type = Type::T_UNDEFINED;
 	std::string identifier;
 	std::string type_name = "";
 	std::string type_name_space = "";
@@ -322,13 +322,13 @@ ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
 			consume_token();
 		}
 
-		if (type == Type::T_UNDEF) {
+		if (type == Type::T_UNDEFINED) {
 			type = parse_type();
 		}
 		else if (type == Type::T_ARRAY) {
 			current_array_type = parse_type();
 
-			if (current_array_type == parser::Type::T_UNDEF
+			if (current_array_type == parser::Type::T_UNDEFINED
 				|| current_array_type == parser::Type::T_VOID
 				|| current_array_type == parser::Type::T_ARRAY) {
 				current_array_type = parser::Type::T_ANY;
@@ -344,7 +344,7 @@ ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
 
 	check_consume_semicolon();
 
-	if (type == Type::T_UNDEF) {
+	if (type == Type::T_UNDEFINED) {
 		type = Type::T_ANY;
 	}
 
@@ -356,7 +356,7 @@ VariableDefinition* Parser::parse_formal_param() {
 	std::string identifier;
 	std::string type_name;
 	std::string type_name_space;
-	Type type = Type::T_UNDEF;
+	Type type = Type::T_UNDEFINED;
 	ASTExprNode* expr_size;
 	auto access_vector = std::vector<ASTExprNode*>();
 	unsigned int row = current_token.row;
@@ -382,13 +382,13 @@ VariableDefinition* Parser::parse_formal_param() {
 			consume_token();
 		}
 
-		if (type == Type::T_UNDEF) {
+		if (type == Type::T_UNDEFINED) {
 			type = parse_type();
 		}
 		else if (type == Type::T_ARRAY) {
 			current_array_type = parse_type();
 
-			if (current_array_type == parser::Type::T_UNDEF
+			if (current_array_type == parser::Type::T_UNDEFINED
 				|| current_array_type == parser::Type::T_VOID
 				|| current_array_type == parser::Type::T_ARRAY) {
 				current_array_type = parser::Type::T_ANY;
@@ -400,7 +400,7 @@ VariableDefinition* Parser::parse_formal_param() {
 		}
 	}
 
-	if (type == Type::T_UNDEF) {
+	if (type == Type::T_UNDEFINED) {
 		type = Type::T_ANY;
 	}
 
@@ -873,7 +873,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	std::string identifier;
 	std::vector<VariableDefinition> parameters;
 	Type type;
-	Type array_type = parser::Type::T_UNDEF;
+	Type array_type = parser::Type::T_UNDEFINED;
 	std::string type_name = "";
 	std::string type_name_space = "";
 	ASTBlockNode* block = nullptr;

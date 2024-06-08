@@ -28,11 +28,11 @@
 - [X] Improve cp dependencies/libs loader
 - [X] Add string array-like accessor
 - [ ] Function improvements:
-    - [ ] Change builtin functions to ASTFunctionDefinitionNode
+    - [X] Change builtin functions to ASTFunctionDefinitionNode
+    - [ ] Add callback as type function
+    - [ ] Add arrow function `(arg): void {}`, `(arg) {}`, `() {}`
     - [ ] Add infinit parameters, like `def foo(...args: any)`
     - [ ] Add optional parameters `def foo(arg: any = 10)`
-    - [ ] Add arrow function `(arg): void {}`, `(arg) {}`, `() {}`
-    - [ ] Add callback as type function
     - [X] Pass parameter by reference
 - [X] Add statements:
     - [X] for
@@ -50,7 +50,7 @@
         - [X] Bring error header to a higher level
         - [X] add ... to ignore catch error
     - [X] do while
-- [ ] Add expression operators:
+- [X] Add expression operators:
     - [X] Add ++,-- incrementor
     - [X] Add { init_value } to initilize all positions with same value
     - [X] Add 'in' operator to check if anything is in array/string

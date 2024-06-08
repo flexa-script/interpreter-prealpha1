@@ -101,7 +101,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		astnode->expr->accept(this);
 	}
 	else {
-		current_expression = SemanticValue(Type::T_UNDEF, astnode->row, astnode->col);
+		current_expression = SemanticValue(Type::T_UNDEFINED, astnode->row, astnode->col);
 	}
 
 	auto decl_current_expr = new SemanticValue();
@@ -235,12 +235,12 @@ void SemanticAnalyser::visit(ASTEnumNode* astnode) {
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		auto decl_current_expr = new SemanticValue();
 		decl_current_expr->type = Type::T_INT;
-		decl_current_expr->array_type = Type::T_UNDEF;
+		decl_current_expr->array_type = Type::T_UNDEFINED;
 		decl_current_expr->row = astnode->row;
 		decl_current_expr->col = astnode->col;
 		decl_current_expr->is_const = true;
 		decl_current_expr->hash = i;
-		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], Type::T_INT, Type::T_UNDEF,
+		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], Type::T_INT, Type::T_UNDEFINED,
 			std::vector<ASTExprNode*>(), "", "", decl_current_expr, true, astnode->row, astnode->col);
 	}
 }
@@ -800,9 +800,9 @@ void SemanticAnalyser::visit(parser::ASTThrowNode* astnode) {
 
 void SemanticAnalyser::visit(ASTReticencesNode* astnode) {
 	current_expression = SemanticValue();
-	current_expression.type = Type::T_UNDEF;
+	current_expression.type = Type::T_UNDEFINED;
 	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
+	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = true;
 }
 
@@ -892,7 +892,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_bool>*) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_BOOL;
 	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
+	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = true;
 }
 
@@ -900,7 +900,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_int>*) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_INT;
 	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
+	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = true;
 }
 
@@ -908,7 +908,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_float>*) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_FLOAT;
 	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
+	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = true;
 }
 
@@ -916,7 +916,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_char>*) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_CHAR;
 	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
+	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = true;
 }
 
@@ -924,7 +924,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_string>*) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_STRING;
 	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
+	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = true;
 }
 
@@ -985,7 +985,7 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 	current_expression.type = Type::T_STRUCT;
 	current_expression.type_name = astnode->type_name;
 	current_expression.type_name_space = astnode->nmspace;
-	current_expression.array_type = Type::T_UNDEF;
+	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = false;
 
 	declare_structure();
@@ -1169,7 +1169,7 @@ void SemanticAnalyser::visit(ASTTypeParseNode* astnode) {
 	current_expression = SemanticValue();
 	current_expression.type = astnode->type;
 	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
+	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = false;
 }
 
@@ -1177,7 +1177,7 @@ void SemanticAnalyser::visit(ASTNullNode* astnode) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_VOID;
 	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
+	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = false;
 }
 
@@ -1185,7 +1185,7 @@ void SemanticAnalyser::visit(ASTThisNode* astnode) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_STRING;
 	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
+	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = false;
 }
 
@@ -1199,7 +1199,7 @@ void SemanticAnalyser::visit(ASTTypingNode* astnode) {
 		current_expression.type = Type::T_STRING;
 	}
 	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEF;
+	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = false;
 }
 

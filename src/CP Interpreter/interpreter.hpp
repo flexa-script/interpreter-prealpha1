@@ -3,7 +3,6 @@
 
 #include <map>
 #include <stack>
-#include <any>
 #include <functional>
 
 #include "visitor.hpp"

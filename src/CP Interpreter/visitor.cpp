@@ -4,7 +4,7 @@
 namespace parser {
 	std::string type_str(Type t) {
 		switch (t) {
-		case parser::Type::T_UNDEF:
+		case parser::Type::T_UNDEFINED:
 			return "undefined";
 		case parser::Type::T_VOID:
 			return "void";
@@ -34,7 +34,7 @@ namespace parser {
 	}
 
 	bool is_undefined(parser::Type type) {
-		return match_type(type, parser::Type::T_UNDEF);
+		return match_type(type, parser::Type::T_UNDEFINED);
 	}
 
 	bool is_void(parser::Type type) {
@@ -151,11 +151,11 @@ void Value::set_null() {
 }
 
 void Value::set_undefined() {
-	set_curr_type(parser::Type::T_UNDEF);
+	set_curr_type(parser::Type::T_UNDEFINED);
 }
 
 bool Value::has_value() {
-	return curr_type != parser::Type::T_UNDEF && curr_type != parser::Type::T_VOID;
+	return curr_type != parser::Type::T_UNDEFINED && curr_type != parser::Type::T_VOID;
 }
 
 void Value::copy_array(cp_array arr) {

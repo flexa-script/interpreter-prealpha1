@@ -13,7 +13,7 @@ TypeDefinition::TypeDefinition(parser::Type type, parser::Type array_type, std::
 	: type(type), type_name(type_name), type_name_space(type_name_space), array_type(array_type), dim(dim) {}
 
 TypeDefinition TypeDefinition::get_basic(parser::Type type) {
-	return TypeDefinition(type, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", "");
+	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "");
 }
 
 TypeDefinition TypeDefinition::get_array(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim) {
@@ -21,12 +21,12 @@ TypeDefinition TypeDefinition::get_array(parser::Type type, parser::Type array_t
 }
 
 TypeDefinition TypeDefinition::get_struct(parser::Type type, std::string type_name, std::string type_name_space) {
-	return TypeDefinition(type, Type::T_UNDEF, std::vector<ASTExprNode*>(), type_name, type_name_space);
+	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), type_name, type_name_space);
 }
 
 SemanticValue::SemanticValue(parser::Type type, unsigned int row, unsigned int col)
 	: hash(0), is_const(false),
-	TypeDefinition(type, Type::T_UNDEF, std::vector<ASTExprNode*>(), "", ""), CodePosition(row, col) {}
+	TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""), CodePosition(row, col) {}
 
 SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
 	std::string type_name, std::string type_name_space, unsigned int hash, bool is_const, unsigned int row, unsigned int col)
@@ -70,7 +70,7 @@ VariableDefinition::VariableDefinition(std::string identifier, Type type, std::s
 	TypeDefinition(type, array_type, dim, type_name, type_name_space), CodePosition(row, col) {}
 
 VariableDefinition VariableDefinition::get_basic(std::string identifier, parser::Type type, unsigned int row, unsigned int col) {
-	return VariableDefinition(identifier, type, "", "", Type::T_UNDEF, std::vector<ASTExprNode*>(), row, col);
+	return VariableDefinition(identifier, type, "", "", Type::T_UNDEFINED, std::vector<ASTExprNode*>(), row, col);
 }
 
 VariableDefinition VariableDefinition::get_array(std::string identifier, parser::Type type,
@@ -80,7 +80,7 @@ VariableDefinition VariableDefinition::get_array(std::string identifier, parser:
 
 VariableDefinition VariableDefinition::get_struct(std::string identifier, parser::Type type,
 	std::string type_name, std::string type_name_space, unsigned int row, unsigned int col) {
-	return VariableDefinition(identifier, type, type_name, type_name_space, Type::T_UNDEF, std::vector<ASTExprNode*>(), row, col);
+	return VariableDefinition(identifier, type, type_name, type_name_space, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), row, col);
 }
 
 StructureDefinition::StructureDefinition(std::string identifier, std::vector<VariableDefinition> variables, unsigned int row, unsigned int col)

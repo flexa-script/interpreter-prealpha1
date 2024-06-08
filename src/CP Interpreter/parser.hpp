@@ -12,7 +12,7 @@ namespace parser {
 		lexer::Lexer* lex;
 		lexer::Token current_token;
 		lexer::Token next_token;
-		Type current_array_type = Type::T_UNDEF;
+		Type current_array_type = Type::T_UNDEFINED;
 		bool consume_semicolon = false;
 
 	public:

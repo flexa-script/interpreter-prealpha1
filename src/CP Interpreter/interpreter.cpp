@@ -15,7 +15,7 @@ using namespace parser;
 
 
 Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
-	: current_expression_value(Value(Type::T_UNDEF)), is_function_context(false), current_name(std::stack<std::string>()),
+	: current_expression_value(Value(Type::T_UNDEFINED)), is_function_context(false), current_name(std::stack<std::string>()),
 	Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
 	if (main_program) {
 		current_name.push(main_program->name);
@@ -498,7 +498,7 @@ void Interpreter::visit(parser::ASTThrowNode* astnode) {
 }
 
 void Interpreter::visit(parser::ASTReticencesNode* astnode) {
-	auto value = Value(Type::T_UNDEF);
+	auto value = Value(Type::T_UNDEFINED);
 	value.set_undefined();
 	current_expression_value = value;
 }
@@ -647,7 +647,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 	Type r_type = current_expression_value.curr_type;
 	Value r_value = current_expression_value;
 
-	auto value = new Value(Type::T_UNDEF);
+	auto value = new Value(Type::T_UNDEFINED);
 
 	if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%") {
 		if (l_type == Type::T_INT && r_type == Type::T_INT) {
@@ -874,8 +874,8 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	}
 	catch (...) {
 		auto dim = astnode->identifier_vector[0].access_vector;
-		auto type = Type::T_UNDEF;
-		auto expression_value = new Value(Type::T_UNDEF);
+		auto type = Type::T_UNDEFINED;
+		auto expression_value = new Value(Type::T_UNDEFINED);
 
 		if (identifier == "bool") {
 			type = Type::T_BOOL;
