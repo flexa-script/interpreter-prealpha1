@@ -28,12 +28,21 @@
 - [X] Improve cp dependencies/libs loader
 - [X] Add string array-like accessor
 - [ ] Function improvements:
+    - [X] Pass parameter by reference
     - [X] Change builtin functions to ASTFunctionDefinitionNode
-    - [ ] Add callback as type function
-    - [ ] Add arrow function `(arg): void {}`, `(arg) {}`, `() {}`
+    - [X] Add callback as type function
     - [ ] Add infinit parameters, like `def foo(...args: any)`
     - [ ] Add optional parameters `def foo(arg: any = 10)`
-    - [X] Pass parameter by reference
+    - [ ] Add arrow function `(arg): void {}`, `(arg) {}`, `() {}`
+- [X] Add built in funcs:
+    - [X] print:
+        - [X] Improve to accept multiple values
+    - [X] read:
+        - [X] Improve to accept prompt
+    - [X] len: returns size of array/string
+    - [X] readch: read 1 single char
+    - [X] equals: compare values, if struct, compare struct values and not struct pointer
+    - [X] system: execute systems commands
 - [X] Add statements:
     - [X] for
     - [X] foreach
@@ -59,15 +68,8 @@
     - [X] typeof: returns type of object
         - [X] add namespace to type name return
     - [X] typeid: returns hash of typeof
-- [X] Add built in funcs:
-    - [X] print:
-        - [X] Improve to accept multiple values
-    - [X] read:
-        - [X] Improve to accept prompt
-    - [X] len: returns size of array/string
-    - [X] readch: read 1 single char
-    - [X] equals: compare values, if struct, compare struct values and not struct pointer
-    - [X] system: execute systems commands
+- [ ] Add expression:
+    - [ ] base literals
 - [X] Let functions return array
 - [X] Add namespace scope nmspace::(method|variable|struct)
 - [X] Guanrantee that a lib is loaded once

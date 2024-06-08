@@ -242,6 +242,9 @@ Token Lexer::process_identifier() {
 	else if (identifier == "any") {
 		type = TOK_ANY_TYPE;
 	}
+	else if (identifier == "function") {
+		type = TOK_FUNCTION_TYPE;
+	}
 	else if (identifier == "typeof") {
 		type = TOK_TYPEOF;
 	}

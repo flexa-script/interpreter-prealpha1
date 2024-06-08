@@ -34,6 +34,8 @@ namespace visitor {
 			parser::Type array_type, std::vector<parser::ASTExprNode*> dim, std::vector<parser::TypeDefinition> signature,
 			std::vector<parser::VariableDefinition> parameters, unsigned int row, unsigned int col);
 
+		void declare_variable_function(std::string identifier, unsigned int row, unsigned int col);
+
 		void declare_basic_function(std::string identifier, parser::Type type, std::vector<parser::TypeDefinition> signature,
 			std::vector<parser::VariableDefinition> parameters, unsigned int row = 0, unsigned int col = 0);
 

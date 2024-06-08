@@ -81,9 +81,11 @@ namespace parser {
 		std::string identifier;
 		std::vector<parser::TypeDefinition> signature;
 		std::vector<parser::VariableDefinition> parameters;
+		bool is_variable;
 
 		FunctionDefinition(std::string identifier, Type type, std::string type_name, std::string type_name_space, Type array_type,
 			std::vector<ASTExprNode*> dim, std::vector<parser::TypeDefinition> signature, std::vector<parser::VariableDefinition> parameters, unsigned int row, unsigned int col);
+		FunctionDefinition(std::string identifier, unsigned int row, unsigned int col);
 		FunctionDefinition() = default;
 	};
 

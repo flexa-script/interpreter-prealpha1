@@ -9,9 +9,10 @@
 
 
 namespace visitor {
-	typedef std::map<std::string, parser::StructureDefinition> interpreter_struct_t;
-	typedef std::map<std::string, Value*> interpreter_variable_t;
 	typedef std::tuple<std::vector<parser::TypeDefinition>, std::vector<std::string>, parser::ASTBlockNode*> interpreter_function_t;
+	typedef std::map<std::string, parser::StructureDefinition> interpreter_struct_list_t;
+	typedef std::map<std::string, Value*> interpreter_variable_list_t;
+	typedef std::multimap<std::string, interpreter_function_t> interpreter_function_list_t;
 
 	class Interpreter;
 
@@ -21,9 +22,9 @@ namespace visitor {
 
 	private:
 		std::string name;
-		interpreter_struct_t structure_symbol_table;
-		interpreter_variable_t variable_symbol_table;
-		std::multimap<std::string, interpreter_function_t> function_symbol_table;
+		interpreter_struct_list_t structure_symbol_table;
+		interpreter_variable_list_t variable_symbol_table;
+		interpreter_function_list_t function_symbol_table;
 
 	public:
 		InterpreterScope();
@@ -32,6 +33,7 @@ namespace visitor {
 		bool already_declared_structure_definition(std::string);
 		bool already_declared_variable(std::string);
 		bool already_declared_function(std::string, std::vector<parser::TypeDefinition>);
+		bool already_declared_function_name(std::string identifier);
 
 		Value* declare_undef_variable(std::string, parser::Type);
 		Value* declare_undef_struct_variable(std::string, std::string);
@@ -52,6 +54,7 @@ namespace visitor {
 		parser::StructureDefinition find_declared_structure_definition(std::string);
 		Value* find_declared_variable(std::string);
 		interpreter_function_t find_declared_function(std::string, std::vector<parser::TypeDefinition>);
+		std::pair<interpreter_function_list_t::iterator, interpreter_function_list_t::iterator> find_declared_functions(std::string identifier);
 
 		std::string get_name();
 		void set_name(std::string);

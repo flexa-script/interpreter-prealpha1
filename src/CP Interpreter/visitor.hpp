@@ -5,13 +5,14 @@
 #include <vector>
 #include <map>
 #include <stdexcept>
+#include <functional>
 
 
 class Value;
 
 namespace parser {
 	enum class Type {
-		T_UNDEFINED, T_VOID, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ARRAY, T_STRUCT, T_ANY
+		T_UNDEFINED, T_VOID, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ARRAY, T_STRUCT, T_ANY, T_FUNCTION
 	};
 	std::string type_str(Type);
 	bool match_type(parser::Type, parser::Type);
@@ -25,6 +26,9 @@ namespace parser {
 	bool is_any(parser::Type);
 	bool is_array(parser::Type);
 	bool is_struct(parser::Type);
+	bool is_function(parser::Type);
+
+	class TypeDefinition;
 
 	class ASTProgramNode;
 
@@ -75,6 +79,7 @@ typedef std::string cp_string;
 typedef std::vector<Value*> cp_array;
 typedef std::map<std::string, Value*> cp_struct_values;
 typedef std::pair<std::string, cp_struct_values> cp_struct;
+typedef std::pair<void*, std::string> cp_function;
 
 extern std::string default_namespace;
 extern std::vector<std::string> std_libs;
@@ -96,6 +101,7 @@ public:
 	cp_string s;
 	cp_array arr;
 	cp_struct* str;
+	cp_function fun;
 
 	void set(cp_bool);
 	void set(cp_int);
@@ -104,6 +110,7 @@ public:
 	void set(cp_string);
 	void set(cp_array);
 	void set(cp_struct*);
+	void set(cp_function);
 	void set_null();
 	void set_undefined();
 

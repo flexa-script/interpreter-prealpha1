@@ -36,7 +36,7 @@ void SemanticAnalyser::visit(ASTProgramNode* astnode) {
 		}
 		catch (std::exception ex) {
 			if (curr_row == 0 || curr_col == 0) {
-				set_curr_pos(astnode->row, astnode->col);
+				set_curr_pos(statement->row, statement->col);
 			}
 			throw std::runtime_error(msg_header() + ex.what());
 		}
@@ -251,22 +251,36 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		throw std::runtime_error("invalid assignment operator '" + astnode->op + "'");
 	}
 
+	auto identifier = astnode->identifier_vector[0].identifier;
+	auto nmspace = get_namespace(astnode->nmspace);
 	SemanticScope* curr_scope;
 	try {
-		curr_scope = get_inner_most_variable_scope(astnode->nmspace.empty() ? get_namespace() : astnode->nmspace, astnode->identifier_vector[0].identifier);
+		curr_scope = get_inner_most_variable_scope(nmspace, identifier);
 	}
 	catch (...) {
-		set_curr_pos(astnode->row, astnode->col);
-		throw std::runtime_error("identifier '" + astnode->identifier_vector[0].identifier +
-			"' being reassigned was never declared");
+		bool isfunc = false;
+		try {
+			curr_scope = get_inner_most_function_scope(nmspace, identifier, std::vector<TypeDefinition>());
+			isfunc = true;
+			throw std::runtime_error("function '" + identifier + "' can't be assigned");
+		}
+		catch (std::exception ex) {
+			set_curr_pos(astnode->row, astnode->col);
+			if (isfunc) {
+				throw std::runtime_error(ex.what());
+			}
+			else {
+				throw std::runtime_error("identifier '" + identifier + "' being reassigned was never declared");
+			}
+		}
 	}
 
-	auto declared_variable = curr_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
+	auto declared_variable = curr_scope->find_declared_variable(identifier);
 	auto decl_var_expression = declared_variable->value;
 
 	if (declared_variable->is_const) {
 		set_curr_pos(astnode->row, astnode->col);
-		throw std::runtime_error("'" + astnode->identifier_vector[0].identifier + "' constant being reassigned");
+		throw std::runtime_error("'" + identifier + "' constant being reassigned");
 	}
 
 	astnode->expr->accept(this);
@@ -595,19 +609,23 @@ void SemanticAnalyser::visit(ASTBlockNode* astnode) {
 	scopes[get_namespace()].push_back(new SemanticScope());
 
 	if (!current_function.empty()) {
-		for (size_t i = 0; i < current_function.top().parameters.size(); ++i) {
-			auto param = current_function.top().parameters[i];
+		for (auto param : current_function.top().parameters) {
+			if (is_function(param.type) || is_any(param.type)) {
+				scopes[get_namespace()].back()->declare_variable_function(param.identifier, param.row, param.row);
+			}
 
-			auto var_expr = new SemanticValue();
-			var_expr->type = param.type;
-			var_expr->array_type = param.array_type;
-			var_expr->type_name = param.type_name;
-			var_expr->dim = param.dim;
-			var_expr->row = param.row;
-			var_expr->col = param.col;
+			if (!is_function(param.type)) {
+				auto var_expr = new SemanticValue();
+				var_expr->type = param.type;
+				var_expr->array_type = param.array_type;
+				var_expr->type_name = param.type_name;
+				var_expr->dim = param.dim;
+				var_expr->row = param.row;
+				var_expr->col = param.col;
 
-			scopes[get_namespace()].back()->declare_variable(param.identifier, param.type, param.array_type,
-				param.dim, param.type_name, param.type_name_space, var_expr, false, param.row, param.col);
+				scopes[get_namespace()].back()->declare_variable(param.identifier, param.type, param.array_type,
+					param.dim, param.type_name, param.type_name_space, var_expr, false, param.row, param.col);
+			}
 		}
 	}
 
@@ -1082,9 +1100,21 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 			return;
 		}
 		catch (...) {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("identifier '" + identifier +
-				"' was not declared");
+			try {
+				curr_scope = get_inner_most_function_scope(nmspace, identifier, std::vector<TypeDefinition>());
+				current_expression = SemanticValue();
+				current_expression.type = Type::T_FUNCTION;
+				current_expression.type_name = "";
+				current_expression.type_name_space = "";
+				current_expression.array_type = Type::T_UNDEFINED;
+				current_expression.is_const = true;
+				return;
+			}
+			catch (...) {
+				set_curr_pos(astnode->row, astnode->col);
+				throw std::runtime_error("identifier '" + identifier +
+					"' was not declared");
+			}
 		}
 	}
 

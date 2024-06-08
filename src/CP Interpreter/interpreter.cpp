@@ -51,7 +51,7 @@ void Interpreter::visit(ASTProgramNode* astnode) {
 		}
 		catch (std::exception ex) {
 			if (curr_row == 0 || curr_col == 0) {
-				set_curr_pos(astnode->row, astnode->col);
+				set_curr_pos(statement->row, statement->col);
 			}
 			throw std::runtime_error(msg_header() + ex.what());
 		}
@@ -486,7 +486,7 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 			value->str->second["error"] = new Value(Type::T_STRING);
 			value->str->second["error"]->s = ex.what();
 		}
-		
+
 		astnode->catch_block->accept(this);
 		scopes[nmspace].pop_back();
 	}
@@ -698,7 +698,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 				value->set((cp_float)l / r);
 			}
 		}
-		else if (l_type == Type::T_CHAR && r_type == Type::T_STRING) { 
+		else if (l_type == Type::T_CHAR && r_type == Type::T_STRING) {
 			current_expression_value.curr_type = Type::T_STRING;
 			value->set(cp_string(std::string{ l_value.c } + r_value.s));
 		}
@@ -894,6 +894,25 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 		}
 
 		if (is_undefined(type)) {
+			InterpreterScope* curr_scope;
+			try {
+				curr_scope = get_inner_most_struct_definition_scope(nmspace, identifier);
+			}
+			catch (...) {
+				try {
+					curr_scope = get_inner_most_function_scope(nmspace, identifier, std::vector<TypeDefinition>());
+					auto fun = cp_function();
+					fun.first = curr_scope;
+					fun.second = identifier;
+					current_expression_value = Value(Type::T_FUNCTION);
+					current_expression_value.set(fun);
+					return;
+				}
+				catch (...) {
+					set_curr_pos(astnode->row, astnode->col);
+					throw std::runtime_error("identifier '" + identifier + "' was not declared");
+				}
+			}
 			current_expression_nmspace = nmspace;
 			type = Type::T_STRUCT;
 			auto str = new cp_struct();
@@ -1008,8 +1027,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 			std::vector<ASTExprNode*>(), "", "");
 		signature.push_back(td);
 
-		Value* value = new Value(current_expression_value.curr_type);
-		value->copy_from(&current_expression_value);
+		Value* value = new Value(&current_expression_value);
 		function_arguments.push_back(value);
 	}
 
@@ -1522,6 +1540,16 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 				scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->arr);
 			}
 			break;
+		case Type::T_FUNCTION:
+			auto funcs = ((InterpreterScope*)last_function_arguments[i]->fun.first)->find_declared_functions(last_function_arguments[i]->fun.second);
+			for (auto& it = funcs.first; it != funcs.second; ++it) {
+				auto& func_name = it->first;
+				auto& func_sig = std::get<0>(it->second);
+				auto& func_vars = std::get<1>(it->second);
+				auto& func_block = std::get<2>(it->second);
+				scopes[nmspace].back()->declare_function(function_call_parameters[i], func_sig, func_vars, func_block);
+			}
+			break;
 		}
 	}
 
@@ -1645,8 +1673,27 @@ std::string Interpreter::parse_value_to_string(Value value) {
 		return parse_struct_to_string(*value.str);
 	case Type::T_ARRAY:
 		return parse_array_to_string(value.arr);
+	case Type::T_FUNCTION: {
+		auto funcs = ((InterpreterScope*)value.fun.first)->find_declared_functions(value.fun.second);
+		for (auto& it = funcs.first; it != funcs.second; ++it) {
+			auto& func_name = it->first;
+			auto& func_sig = std::get<0>(it->second);
+
+			std::string func_decl = func_name + "(";
+			for (auto param : func_sig) {
+				func_decl += type_str(param.type) + ", ";
+			}
+			if (func_sig.size() > 0) {
+				func_decl.pop_back();
+				func_decl.pop_back();
+			}
+			func_decl += ")";
+
+			return func_decl;
+		}
+	}
 	default:
-		throw std::runtime_error("IERR: can't determine value type on parsing");
+		throw std::runtime_error("can't determine value type on parsing");
 	}
 }
 
@@ -1756,7 +1803,7 @@ void Interpreter::register_built_in_functions() {
 		for (auto arg : builtin_arguments) {
 			std::cout << parse_value_to_string(*arg);
 		}
-	};
+		};
 	signature.clear();
 	variable_names.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
@@ -1771,7 +1818,7 @@ void Interpreter::register_built_in_functions() {
 		std::string line;
 		std::getline(std::cin, line);
 		current_expression_value.set(cp_string(std::move(line)));
-	};
+		};
 	signature.clear();
 	variable_names.clear();
 	scopes[default_namespace].back()->declare_function("read", signature, variable_names, nullptr);
@@ -1784,7 +1831,7 @@ void Interpreter::register_built_in_functions() {
 		while (!_kbhit());
 		char ch = _getch();
 		current_expression_value.set(cp_char(ch));
-	};
+		};
 	signature.clear();
 	variable_names.clear();
 	scopes[default_namespace].back()->declare_function("readch", signature, variable_names, nullptr);
@@ -1802,7 +1849,7 @@ void Interpreter::register_built_in_functions() {
 		}
 
 		current_expression_value = val;
-	};
+		};
 	signature.clear();
 	variable_names.clear();
 	signature.push_back(TypeDefinition::get_array(Type::T_ARRAY, Type::T_ANY));
@@ -1823,7 +1870,7 @@ void Interpreter::register_built_in_functions() {
 		res.b = equals_struct(rval->str, lval->str);
 
 		current_expression_value = res;
-	};
+		};
 	signature.clear();
 	variable_names.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
@@ -1835,7 +1882,7 @@ void Interpreter::register_built_in_functions() {
 
 	builtin_functions["system"] = [this]() {
 		system(builtin_arguments[0]->s.c_str());
-	};
+		};
 	signature.clear();
 	variable_names.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));

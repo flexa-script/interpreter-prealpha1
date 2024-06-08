@@ -886,17 +886,17 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	consume_token(lexer::TOK_IDENTIFIER);
 	identifier = current_token.value;
 	consume_token(lexer::TOK_LEFT_BRACKET);
-	consume_token();
 
-	if (current_token.type != lexer::TOK_RIGHT_BRACKET) {
-		parameters.push_back(*parse_formal_param());
-		consume_token();
-		while (current_token.type == lexer::TOK_COMMA) {
+	if (next_token.type != lexer::TOK_RIGHT_BRACKET) {
+		do {
 			consume_token();
 			parameters.push_back(*parse_formal_param());
 			consume_token();
-		}
+		} while (current_token.type == lexer::TOK_COMMA);
 		check_current_token(lexer::TOK_RIGHT_BRACKET);
+	}
+	else {
+		consume_token();
 	}
 
 	consume_token();
@@ -904,7 +904,8 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 		consume_token();
 		if (current_token.type != lexer::TOK_BOOL_TYPE && current_token.type != lexer::TOK_INT_TYPE
 			&& current_token.type != lexer::TOK_FLOAT_TYPE && current_token.type != lexer::TOK_CHAR_TYPE
-			&& current_token.type != lexer::TOK_STRING_TYPE && current_token.type != lexer::TOK_IDENTIFIER) {
+			&& current_token.type != lexer::TOK_STRING_TYPE && current_token.type != lexer::TOK_IDENTIFIER
+			&& current_token.type != lexer::TOK_FUNCTION_TYPE && current_token.type != lexer::TOK_VOID_TYPE) {
 			throw std::runtime_error(msg_header() + "expected type");
 		}
 		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
@@ -1497,6 +1498,9 @@ Type Parser::parse_type() {
 
 	case lexer::TOK_ANY_TYPE:
 		return Type::T_ANY;
+
+	case lexer::TOK_FUNCTION_TYPE:
+		return Type::T_FUNCTION;
 
 	case lexer::TOK_IDENTIFIER:
 		return Type::T_STRUCT;

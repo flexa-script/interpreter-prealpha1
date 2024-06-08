@@ -72,6 +72,10 @@ namespace parser {
 	bool is_struct(parser::Type type) {
 		return match_type(type, parser::Type::T_STRUCT);
 	}
+
+	bool is_function(parser::Type type) {
+		return match_type(type, parser::Type::T_FUNCTION);
+	}
 }
 
 std::string default_namespace = "__main";
@@ -91,10 +95,10 @@ std::vector<std::string> built_in_libs = {
 };
 
 Value::Value(parser::Type type)
-	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), type(type), curr_type(type), arr_type(type) {};
+	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), fun(cp_function()), type(type), curr_type(type), arr_type(type) {};
 
 Value::Value(Value* value)
-	: b(value->b), i(value->i), f(value->f), c(value->c), s(value->s), str(value->str),
+	: b(value->b), i(value->i), f(value->f), c(value->c), s(value->s), str(value->str), fun(value->fun),
 	type(value->type), curr_type(value->curr_type), arr_type(value->arr_type) {
 	copy_array(value->arr);
 };
@@ -132,6 +136,11 @@ void Value::set(cp_array arr) {
 void Value::set(cp_struct* str) {
 	this->str = str;
 	set_curr_type(parser::Type::T_STRUCT);
+}
+
+void Value::set(cp_function fun) {
+	this->fun = fun;
+	set_curr_type(parser::Type::T_FUNCTION);
 }
 
 void Value::set_type(parser::Type type) {

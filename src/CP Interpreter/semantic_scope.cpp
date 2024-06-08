@@ -24,15 +24,21 @@ SemanticVariable* SemanticScope::find_declared_variable(std::string identifier) 
 FunctionDefinition SemanticScope::find_declared_function(std::string identifier, std::vector<TypeDefinition> signature) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
-	// if key is not present in multimap
 	if (std::distance(funcs.first, funcs.second) == 0) {
 		throw std::runtime_error("something went wrong when determining the type of '" + identifier + "'");
 	}
 
-	// check signature for each function in functionSymbolTable
+	FunctionDefinition* func = nullptr;
+
 	for (auto& i = funcs.first; i != funcs.second; ++i) {
 		auto& func_sig = i->second.signature;
+		if (!func && &i->second.is_variable) {
+			func = &i->second;
+		}
 		auto found = true;
+		if (func_sig.size() != signature.size()) {
+			continue;
+		}
 		for (size_t it = 0; it < func_sig.size(); ++it) {
 			auto is_arr = is_array(func_sig.at(it).type) && is_array(signature.at(it).type);
 			auto ftype = is_arr ? func_sig.at(it).array_type : func_sig.at(it).type;
@@ -43,7 +49,11 @@ FunctionDefinition SemanticScope::find_declared_function(std::string identifier,
 				break;
 			}
 		}
-		if (found && func_sig.size() == signature.size()) return i->second;
+		if (found) return i->second;
+	}
+
+	if (func) {
+		return *func;
 	}
 
 	throw std::runtime_error("SSERR: definition of '" + identifier + "' function not found");
@@ -82,6 +92,12 @@ void SemanticScope::declare_variable(std::string identifier, Type type, Type arr
 void SemanticScope::declare_function(std::string identifier, Type type, std::string type_name, std::string type_name_space,
 	Type array_type, std::vector<ASTExprNode*> dim, std::vector<TypeDefinition> signature, std::vector<VariableDefinition> parameters, unsigned int row, unsigned int col) {
 	FunctionDefinition fun(identifier, type, type_name, type_name_space, array_type, dim, signature, parameters, row, col);
+	function_symbol_table.insert(std::make_pair(identifier, fun));
+}
+
+void SemanticScope::declare_variable_function(std::string identifier, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, Type::T_UNDEFINED, "", "", Type::T_UNDEFINED, std::vector<ASTExprNode*>(),
+		std::vector<TypeDefinition>(), std::vector<VariableDefinition>(), row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
 }
 

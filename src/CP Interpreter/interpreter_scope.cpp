@@ -39,6 +39,16 @@ bool InterpreterScope::already_declared_function(std::string identifier, std::ve
 	}
 }
 
+bool InterpreterScope::already_declared_function_name(std::string identifier) {
+	try {
+		find_declared_functions(identifier);
+		return true;
+	}
+	catch (...) {
+		return false;
+	}
+}
+
 Value* InterpreterScope::declare_undef_variable(std::string identifier, parser::Type type) {
 	Value* value = new Value(type);
 	value->set_undefined();
@@ -139,15 +149,21 @@ Value* InterpreterScope::find_declared_variable(std::string identifier) {
 interpreter_function_t InterpreterScope::find_declared_function(std::string identifier, std::vector<parser::TypeDefinition> signature) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
-	// if key is not present in multimap
 	if (std::distance(funcs.first, funcs.second) == 0) {
 		throw std::runtime_error("something went wrong searching '" + identifier + "'");
 	}
 
-	// check signature for each function in multimap
+	interpreter_function_t* func = nullptr;
+
 	for (auto& i = funcs.first; i != funcs.second; ++i) {
 		auto& func_sig = std::get<0>(i->second);
+		if (!func) {
+			func = &i->second;
+		}
 		auto found = true;
+		if (func_sig.size() != signature.size()) {
+			continue;
+		}
 		for (size_t it = 0; it < func_sig.size(); ++it) {
 			auto is_arr = is_array(func_sig.at(it).type) && is_array(signature.at(it).type);
 			auto ftype = is_arr ? func_sig.at(it).array_type : func_sig.at(it).type;
@@ -158,8 +174,21 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 				break;
 			}
 		}
-		if (found && func_sig.size() == signature.size()) return i->second;
+		if (found) return i->second;
+	}
+
+	if (func) {
+		return *func;
 	}
 
 	throw std::runtime_error("something went wrong searching '" + identifier + "'");
+}
+
+std::pair<interpreter_function_list_t::iterator, interpreter_function_list_t::iterator>
+	InterpreterScope::find_declared_functions(std::string identifier) {
+	auto funcs = function_symbol_table.equal_range(identifier);
+	if (std::distance(funcs.first, funcs.second) == 0) {
+		throw std::runtime_error("something went wrong searching '" + identifier + "'");
+	}
+	return funcs;
 }
