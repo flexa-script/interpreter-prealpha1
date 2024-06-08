@@ -1501,7 +1501,6 @@ unsigned int SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 void SemanticAnalyser::register_built_in_functions() {
 	auto signature = std::vector<parser::TypeDefinition>();
 	auto parameters = std::vector<parser::VariableDefinition>();
-	auto arrdim = std::vector<ASTExprNode*>();
 
 	signature.clear();
 	parameters.clear();
@@ -1512,6 +1511,9 @@ void SemanticAnalyser::register_built_in_functions() {
 
 	signature.clear();
 	parameters.clear();
+	scopes["__main"].back()->declare_basic_function("read", Type::T_STRING, signature, parameters);
+	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
+	parameters.push_back(VariableDefinition::get_basic("msg", Type::T_ANY));
 	scopes["__main"].back()->declare_basic_function("read", Type::T_STRING, signature, parameters);
 
 
