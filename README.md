@@ -31,7 +31,7 @@
     - [X] Pass parameter by reference
     - [X] Change builtin functions to ASTFunctionDefinitionNode
     - [X] Add callback as type function
-    - [ ] Add infinit parameters, like `def foo(...args: any)`
+    - [X] Add rest parameters, like `def foo(...args: any)`
     - [ ] Add optional parameters `def foo(arg: any = 10)`
     - [ ] Add arrow function `(arg): void {}`, `(arg) {}`, `() {}`
 - [X] Add built in funcs:

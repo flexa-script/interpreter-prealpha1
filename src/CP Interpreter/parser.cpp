@@ -353,22 +353,30 @@ ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
 }
 
 VariableDefinition* Parser::parse_formal_param() {
+	bool is_rest = false;
 	std::string identifier;
 	std::string type_name;
 	std::string type_name_space;
 	Type type = Type::T_UNDEFINED;
+	Type array_type = Type::T_UNDEFINED;
 	ASTExprNode* expr_size;
-	auto access_vector = std::vector<ASTExprNode*>();
+	auto dim = std::vector<ASTExprNode*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	check_current_token(lexer::TOK_IDENTIFIER);
+	if (current_token.type == lexer::TOK_RETICENCES) {
+		is_rest = true;
+		consume_token(lexer::TOK_IDENTIFIER);
+	}
+	else {
+		check_current_token(lexer::TOK_IDENTIFIER);
+	}
 
 	auto id = parse_identifier();
 	identifier = id.identifier;
-	access_vector = id.access_vector;
+	dim = id.access_vector;
 
-	if (access_vector.size() > 0) {
+	if (dim.size() > 0) {
 		type = Type::T_ARRAY;
 	}
 
@@ -404,8 +412,19 @@ VariableDefinition* Parser::parse_formal_param() {
 		type = Type::T_ANY;
 	}
 
+	array_type = current_array_type;
+
+	if (is_rest) {
+		auto ndim = new ASTLiteralNode<cp_int>(0, row, col);
+		if (!is_array(type)) {
+			array_type = type;
+			type = Type::T_ARRAY;
+		}
+		dim.insert(dim.begin(), ndim);
+	}
+
 	return new VariableDefinition(identifier, type, type_name,
-		type_name_space, current_array_type, access_vector, row, col);
+		type_name_space, array_type, dim, SemanticValue(), is_rest, row, col);
 };
 
 std::vector<std::pair<bool, ASTExprNode*>>* Parser::parse_actual_params() {

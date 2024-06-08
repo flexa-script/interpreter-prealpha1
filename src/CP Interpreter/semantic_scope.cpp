@@ -30,26 +30,47 @@ FunctionDefinition SemanticScope::find_declared_function(std::string identifier,
 
 	FunctionDefinition* func = nullptr;
 
-	for (auto& i = funcs.first; i != funcs.second; ++i) {
-		auto& func_sig = i->second.signature;
-		if (!func && &i->second.is_variable) {
-			func = &i->second;
-		}
+	for (auto& it = funcs.first; it != funcs.second; ++it) {
+		auto& func_sig = it->second.signature;
+		bool rest = false;
+		bool match_sig_size = true;
 		auto found = true;
-		if (func_sig.size() != signature.size()) {
-			continue;
+		bool is_arr = false;
+		Type stype = Type::T_UNDEFINED;
+		Type ftype = Type::T_UNDEFINED;
+
+		if (!func && it->second.is_variable) {
+			func = &it->second;
 		}
-		for (size_t it = 0; it < func_sig.size(); ++it) {
-			auto is_arr = is_array(func_sig.at(it).type) && is_array(signature.at(it).type);
-			auto ftype = is_arr ? func_sig.at(it).array_type : func_sig.at(it).type;
-			auto stype = is_arr ? signature.at(it).array_type : signature.at(it).type;
+
+		if (func_sig.size() != signature.size()) {
+			match_sig_size = false;
+		}
+
+		for (size_t i = 0; i < signature.size(); ++i) {
+			if (rest) {
+				is_arr = true;
+			}
+			else {
+				is_arr = is_array(func_sig.at(i).type) && is_array(signature.at(i).type);
+				ftype = is_arr ? func_sig.at(i).array_type : func_sig.at(i).type;
+
+				if (!func && it->second.parameters[i].is_rest) {
+					rest = true;
+					func = &it->second;
+				}
+			}
+			stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
 			if (!match_type(ftype, stype) && !is_any(ftype)
 				&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
 				found = false;
 				break;
 			}
 		}
-		if (found) return i->second;
+
+		if (found && match_sig_size) {
+			return it->second;
+		}
 	}
 
 	if (func) {

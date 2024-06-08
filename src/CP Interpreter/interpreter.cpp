@@ -1481,76 +1481,72 @@ std::vector<unsigned int> Interpreter::calculate_array_dim_size(cp_array arr) {
 	return dim;
 }
 
+
+
 void Interpreter::declare_function_block_parameters(std::string nmspace) {
+	auto curr_scope = scopes[nmspace].back();
+	auto rest_name = std::string();
+	auto arr = cp_array();
+
 	for (unsigned int i = 0; i < last_function_arguments.size(); ++i) {
-		switch (last_function_arguments[i]->curr_type) {
-		case Type::T_BOOL:
-			if (last_function_reference_arguments[i]) {
-				scopes[nmspace].back()->declare_value(function_call_parameters[i], last_function_reference_arguments[i]);
+		if (i >= function_call_parameters.size() - 1) {
+			if (rest_name.empty()) {
+				rest_name = function_call_parameters[i];
+			}
+			
+			if (last_function_reference_arguments[i] && !is_function(last_function_arguments[i]->curr_type)) {
+				arr.push_back(last_function_reference_arguments[i]);
 			}
 			else {
-				scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->b);
+				arr.push_back(new Value(last_function_arguments[i]));
 			}
-			break;
-		case Type::T_INT:
-			if (last_function_reference_arguments[i]) {
-				scopes[nmspace].back()->declare_value(function_call_parameters[i], last_function_reference_arguments[i]);
-			}
-			else {
-				scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->i);
-			}
-			break;
-		case Type::T_FLOAT:
-			if (last_function_reference_arguments[i]) {
-				scopes[nmspace].back()->declare_value(function_call_parameters[i], last_function_reference_arguments[i]);
-			}
-			else {
-				scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->f);
-			}
-			break;
-		case Type::T_CHAR:
-			if (last_function_reference_arguments[i]) {
-				scopes[nmspace].back()->declare_value(function_call_parameters[i], last_function_reference_arguments[i]);
-			}
-			else {
-				scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->c);
-			}
-			break;
-		case Type::T_STRING:
-			if (last_function_reference_arguments[i]) {
-				scopes[nmspace].back()->declare_value(function_call_parameters[i], last_function_reference_arguments[i]);
-			}
-			else {
-				scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->s);
-			}
-			break;
-		case Type::T_STRUCT:
-			if (last_function_reference_arguments[i]) {
-				scopes[nmspace].back()->declare_value(function_call_parameters[i], last_function_reference_arguments[i]);
-			}
-			else {
-				scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->str);
-			}
-			break;
-		case Type::T_ARRAY:
-			if (last_function_reference_arguments[i]) {
-				scopes[nmspace].back()->declare_value(function_call_parameters[i], last_function_reference_arguments[i]);
-			}
-			else {
-				scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->arr);
-			}
-			break;
-		case Type::T_FUNCTION:
-			auto funcs = ((InterpreterScope*)last_function_arguments[i]->fun.first)->find_declared_functions(last_function_arguments[i]->fun.second);
-			for (auto& it = funcs.first; it != funcs.second; ++it) {
-				auto& func_name = it->first;
-				auto& func_sig = std::get<0>(it->second);
-				auto& func_vars = std::get<1>(it->second);
-				auto& func_block = std::get<2>(it->second);
-				scopes[nmspace].back()->declare_function(function_call_parameters[i], func_sig, func_vars, func_block);
-			}
-			break;
 		}
+		else {
+			if (last_function_reference_arguments[i] && !is_function(last_function_arguments[i]->curr_type)) {
+				scopes[nmspace].back()->declare_value(function_call_parameters[i], last_function_reference_arguments[i]);
+			}
+			else {
+				switch (last_function_arguments[i]->curr_type) {
+				case Type::T_BOOL:
+					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->b);
+					break;
+				case Type::T_INT:
+					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->i);
+					break;
+				case Type::T_FLOAT:
+					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->f);
+					break;
+				case Type::T_CHAR:
+					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->c);
+					break;
+				case Type::T_STRING:
+					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->s);
+					break;
+				case Type::T_STRUCT:
+					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->str);
+					break;
+				case Type::T_ARRAY:
+					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->arr);
+					break;
+				case Type::T_FUNCTION:
+					auto funcs = ((InterpreterScope*)last_function_arguments[i]->fun.first)->find_declared_functions(last_function_arguments[i]->fun.second);
+					for (auto& it = funcs.first; it != funcs.second; ++it) {
+						auto& func_name = it->first;
+						auto& func_sig = std::get<0>(it->second);
+						auto& func_vars = std::get<1>(it->second);
+						auto& func_block = std::get<2>(it->second);
+						scopes[nmspace].back()->declare_function(function_call_parameters[i], func_sig, func_vars, func_block);
+					}
+					break;
+				}
+			}
+		}
+	}
+
+	if (arr.size() > 0) {
+		auto rest = new Value(Type::T_ARRAY);
+		rest->set(arr);
+		scopes[nmspace].back()->declare_value(rest_name, rest);
 	}
 
 	function_call_parameters.clear();
