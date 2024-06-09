@@ -1029,10 +1029,6 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	auto nmspace = get_namespace(astnode->nmspace);
 
-	if (astnode->identifier == "println") {
-		int a = 0;
-	}
-
 	std::vector<TypeDefinition> signature;
 	std::vector<Value*> function_arguments;
 	std::vector<Value*> function_variable_arguments;
@@ -1518,6 +1514,7 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 		}
 		else {
 			auto pname = std::get<0>(function_call_parameters[i]);
+
 			if (last_function_reference_arguments[i] && !is_function(last_function_arguments[i]->curr_type)) {
 				last_value = scopes[nmspace].back()->declare_value(pname, last_function_reference_arguments[i]);
 			}
@@ -1554,6 +1551,7 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 					break;
 				}
 			}
+
 			if (std::get<2>(function_call_parameters[i])) {
 				rest_name = pname;
 				arr.push_back(last_value);
@@ -1804,7 +1802,7 @@ void Interpreter::call_builtin_function(std::string identifier) {
 	auto arr = cp_array();
 
 	for (size_t i = 0; i < last_function_arguments.size(); ++i) {
-		if (i >= function_call_parameters.size() - 1) {
+		if (i >= function_call_parameters.size()) {
 			if (last_function_reference_arguments[i] && !is_function(last_function_arguments[i]->curr_type)) {
 				arr.push_back(last_function_reference_arguments[i]);
 			}
@@ -1813,7 +1811,14 @@ void Interpreter::call_builtin_function(std::string identifier) {
 			}
 		}
 		else {
-			builtin_arguments.push_back(last_function_reference_arguments[i] ? last_function_reference_arguments[i] : last_function_arguments[i]);
+			auto last_value = last_function_reference_arguments[i] ? last_function_reference_arguments[i] : last_function_arguments[i];
+
+			if (std::get<2>(function_call_parameters[i])) {
+				arr.push_back(last_value);
+			}
+			else {
+				builtin_arguments.push_back(last_value);
+			}
 		}
 	}
 
@@ -1903,7 +1908,7 @@ void Interpreter::register_built_in_functions() {
 
 	builtin_functions["system"] = [this]() {
 		system(builtin_arguments[0]->s.c_str());
-		};
+	};
 	params.clear();
 	params.push_back(std::make_tuple("cmd", TypeDefinition::get_basic(Type::T_STRING), false));
 	scopes[default_namespace].back()->declare_function("system", params, nullptr);

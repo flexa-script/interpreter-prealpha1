@@ -233,7 +233,7 @@ def is_end_game(c1: bool, c2: bool, board[4][4]: int): bool {
 if (this == "main") {
     //srand(time(NULL));
     
-    var grid[4][4]: int = {0};
+    var grid[4][4]: int = { 0 };
 
     grid[3][3] = 2;
 
