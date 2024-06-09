@@ -924,7 +924,8 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 		if (current_token.type != lexer::TOK_BOOL_TYPE && current_token.type != lexer::TOK_INT_TYPE
 			&& current_token.type != lexer::TOK_FLOAT_TYPE && current_token.type != lexer::TOK_CHAR_TYPE
 			&& current_token.type != lexer::TOK_STRING_TYPE && current_token.type != lexer::TOK_IDENTIFIER
-			&& current_token.type != lexer::TOK_FUNCTION_TYPE && current_token.type != lexer::TOK_VOID_TYPE) {
+			&& current_token.type != lexer::TOK_FUNCTION_TYPE && current_token.type != lexer::TOK_VOID_TYPE
+			&& current_token.type != lexer::TOK_ANY_TYPE) {
 			throw std::runtime_error(msg_header() + "expected type");
 		}
 		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {

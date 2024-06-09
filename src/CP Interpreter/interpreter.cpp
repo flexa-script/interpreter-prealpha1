@@ -1481,8 +1481,6 @@ std::vector<unsigned int> Interpreter::calculate_array_dim_size(cp_array arr) {
 	return dim;
 }
 
-
-
 void Interpreter::declare_function_block_parameters(std::string nmspace) {
 	auto curr_scope = scopes[nmspace].back();
 	auto rest_name = std::string();
@@ -1687,6 +1685,7 @@ std::string Interpreter::parse_value_to_string(Value value) {
 
 			return func_decl;
 		}
+		break;
 	}
 	default:
 		throw std::runtime_error("can't determine value type on parsing");
@@ -1782,11 +1781,31 @@ unsigned int Interpreter::hash(ASTIdentifierNode* astnode) {
 }
 
 void Interpreter::call_builtin_function(std::string identifier) {
+	auto arr = cp_array();
+
 	for (size_t i = 0; i < last_function_arguments.size(); ++i) {
-		builtin_arguments.push_back(last_function_reference_arguments[i] ? last_function_reference_arguments[i] : last_function_arguments[i]);
+		if (i >= function_call_parameters.size() - 1) {
+			if (last_function_reference_arguments[i] && !is_function(last_function_arguments[i]->curr_type)) {
+				arr.push_back(last_function_reference_arguments[i]);
+			}
+			else {
+				arr.push_back(new Value(last_function_arguments[i]));
+			}
+		}
+		else {
+			builtin_arguments.push_back(last_function_reference_arguments[i] ? last_function_reference_arguments[i] : last_function_arguments[i]);
+		}
 	}
+
+	if (arr.size() > 0) {
+		auto rest = new Value(Type::T_ARRAY);
+		rest->set(arr);
+		builtin_arguments.push_back(rest);
+	}
+
 	last_function_arguments.clear();
 	last_function_reference_arguments.clear();
+
 	builtin_functions[identifier]();
 	builtin_arguments.clear();
 }
@@ -1796,10 +1815,10 @@ void Interpreter::register_built_in_functions() {
 	auto variable_names = std::vector<std::string>();
 
 	builtin_functions["print"] = [this]() {
-		for (auto arg : builtin_arguments) {
+		for (auto arg : builtin_arguments[0]->arr) {
 			std::cout << parse_value_to_string(*arg);
 		}
-		};
+	};
 	signature.clear();
 	variable_names.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
