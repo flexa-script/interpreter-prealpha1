@@ -37,7 +37,10 @@ std::string Interpreter::get_namespace(ASTProgramNode* program, std::string nmsp
 }
 
 std::string Interpreter::get_current_namespace() {
-	return current_program->alias.empty() ? default_namespace : current_program->alias;
+	//return current_program->alias.empty() ? default_namespace : current_program->alias;
+	return current_function_nmspace.size() == 0 ? (
+		current_program->alias.empty() ? default_namespace : current_program->alias
+		) : current_function_nmspace.top();
 }
 
 void Interpreter::start() {
@@ -81,7 +84,7 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 		libs.push_back(libname);
 		auto prev_program = current_program;
 		current_program = program;
-		program_nmspaces[get_namespace(current_program->alias)].push_back(default_namespace);
+		program_nmspaces[get_current_namespace()].push_back(default_namespace);
 		if (!program->alias.empty()) {
 			scopes[program->alias].push_back(new InterpreterScope());
 		}
@@ -793,6 +796,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 		}
 	}
 
+	value->set_type(value->curr_type);
 	current_expression_value = *value;
 }
 
@@ -1025,6 +1029,10 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	auto nmspace = get_namespace(astnode->nmspace);
 
+	if (astnode->identifier == "println") {
+		int a = 0;
+	}
+
 	std::vector<TypeDefinition> signature;
 	std::vector<Value*> function_arguments;
 	std::vector<Value*> function_variable_arguments;
@@ -1035,7 +1043,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		function_variable_arguments.push_back(dynamic_cast<parser::ASTIdentifierNode*>(param.second) ? current_variable : nullptr);
 		current_variable = nullptr;
 
-		auto td = TypeDefinition(current_expression_value.type, current_expression_value.arr_type,
+		auto td = TypeDefinition(current_expression_value.curr_type, current_expression_value.arr_type,
 			std::vector<ASTExprNode*>(), "", "");
 		signature.push_back(td);
 

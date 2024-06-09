@@ -74,7 +74,13 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 		libs.push_back(libname);
 		auto prev_program = current_program;
 		current_program = program;
+
+		if (current_program->alias == default_namespace) {
+			throw std::runtime_error("namespace '" + current_program->alias + "' is not valid ");
+		}
+
 		program_nmspaces[get_namespace(current_program->alias)].push_back(default_namespace);
+
 		if (!program->alias.empty()) {
 			scopes[program->alias].push_back(new SemanticScope());
 		}
@@ -87,6 +93,9 @@ void SemanticAnalyser::visit(ASTAsNamespaceNode* astnode) {
 	if (!axe::Util::contains(nmspaces, astnode->nmspace)) {
 		set_curr_pos(astnode->row, astnode->col);
 		throw std::runtime_error("namespace '" + astnode->nmspace + "' not found");
+	}
+	if (astnode->nmspace == default_namespace) {
+		throw std::runtime_error("namespace '" + astnode->nmspace + "' is not valid ");
 	}
 	program_nmspaces[get_namespace(current_program->alias)].push_back(astnode->nmspace);
 }

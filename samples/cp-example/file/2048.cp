@@ -194,7 +194,7 @@ def counts_zero(board[4][4]: int): int {
 }
 
 def spawn_random(n: int, board[4][4]: int): int[4][4] {
-    var spawn: int = 1 + (random::randi() % n);
+    var spawn: int = 1 + (cp::randi() % n);
     var p: int = 0;
     var spawn2: bool = true;
     for (var i: int = 0; i < 4; i++) {
