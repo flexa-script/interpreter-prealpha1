@@ -9,9 +9,11 @@
 
 
 namespace visitor {
-	typedef std::tuple<std::vector<parser::TypeDefinition>, std::vector<std::string>, parser::ASTBlockNode*> interpreter_function_t;
 	typedef std::map<std::string, parser::StructureDefinition> interpreter_struct_list_t;
 	typedef std::map<std::string, Value*> interpreter_variable_list_t;
+	typedef std::tuple<std::string, parser::TypeDefinition, bool> interpreter_parameter_t;
+	typedef std::vector<interpreter_parameter_t> interpreter_parameter_list_t;
+	typedef std::pair<interpreter_parameter_list_t, parser::ASTBlockNode*> interpreter_function_t;
 	typedef std::multimap<std::string, interpreter_function_t> interpreter_function_list_t;
 
 	class Interpreter;
@@ -48,7 +50,7 @@ namespace visitor {
 		Value* declare_variable(std::string, cp_struct*);
 		Value* declare_value(std::string, Value*);
 
-		void declare_function(std::string, std::vector<parser::TypeDefinition>, std::vector<std::string>, parser::ASTBlockNode*);
+		void declare_function(std::string identifier, std::vector<std::tuple<std::string, parser::TypeDefinition, bool>> variables, parser::ASTBlockNode* block);
 		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition>, unsigned int, unsigned int);
 
 		parser::StructureDefinition find_declared_structure_definition(std::string);

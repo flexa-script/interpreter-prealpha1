@@ -14,10 +14,6 @@
 namespace visitor {
 
 	class SemanticAnalyser : Visitor {
-	public:
-		std::map<std::string, std::function<void()>> builtin_functions;
-		std::vector<parser::TypeDefinition> signature;
-
 	private:
 		std::map<std::string, std::vector<SemanticScope*>> scopes;
 		std::vector<std::string> nmspaces;

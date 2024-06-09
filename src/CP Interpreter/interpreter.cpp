@@ -1014,7 +1014,12 @@ void Interpreter::visit(ASTInNode* astnode) {
 }
 
 void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
-	scopes[get_namespace()].back()->declare_function(astnode->identifier, astnode->signature, astnode->variable_names, astnode->block);
+	interpreter_parameter_list_t params;
+	for (size_t i = 0; i < astnode->parameters.size(); ++i)	{
+		interpreter_parameter_t param = std::make_tuple(astnode->variable_names[i], astnode->signature[i], astnode->parameters[i].is_rest);
+		params.push_back(param);
+	}
+	scopes[get_namespace()].back()->declare_function(astnode->identifier, params, astnode->block);
 }
 
 void Interpreter::visit(ASTFunctionCallNode* astnode) {
@@ -1045,14 +1050,14 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 
 	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
 
-	function_call_parameters = std::get<1>(func_scope->find_declared_function(astnode->identifier, signature));
+	function_call_parameters = func_scope->find_declared_function(astnode->identifier, signature).first;
 
 	is_function_context = true;
 	function_call_name = astnode->identifier;
 	current_name.push(astnode->identifier);
 	current_function_nmspace.push(nmspace);
 
-	auto block = std::get<2>(func_scope->find_declared_function(astnode->identifier, signature));
+	auto block = func_scope->find_declared_function(astnode->identifier, signature).second;
 	if (block) {
 		block->accept(this);
 	}
@@ -1358,7 +1363,7 @@ InterpreterScope* Interpreter::get_inner_most_variable_scope(std::string nmspace
 					return scopes[prgnmspace][i];
 				}
 			}
-			throw std::runtime_error("identifier '" + identifier + "' was not declared");
+			throw std::runtime_error("something went wrong searching '" + identifier + "'");
 		}
 	}
 	return scopes[nmspace][i];
@@ -1380,7 +1385,7 @@ InterpreterScope* Interpreter::get_inner_most_struct_definition_scope(std::strin
 					return scopes[prgnmspace][i];
 				}
 			}
-			throw std::runtime_error("struct '" + identifier + "' was not declared");
+			throw std::runtime_error("something went wrong searching '" + identifier + "'");
 		}
 	}
 	return scopes[nmspace][i];
@@ -1401,7 +1406,7 @@ InterpreterScope* Interpreter::get_inner_most_function_scope(std::string nmspace
 					return scopes[prgnmspace][i];
 				}
 			}
-			throw std::runtime_error("function '" + identifier + "' was not declared");
+			throw std::runtime_error("something went wrong searching '" + identifier + "'");
 		}
 	}
 	return scopes[nmspace][i];
@@ -1492,13 +1497,10 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 	auto curr_scope = scopes[nmspace].back();
 	auto rest_name = std::string();
 	auto arr = cp_array();
+	Value* last_value = nullptr;
 
 	for (unsigned int i = 0; i < last_function_arguments.size(); ++i) {
-		if (i >= function_call_parameters.size() - 1) {
-			if (rest_name.empty()) {
-				rest_name = function_call_parameters[i];
-			}
-			
+		if (i >= function_call_parameters.size()) {
 			if (last_function_reference_arguments[i] && !is_function(last_function_arguments[i]->curr_type)) {
 				arr.push_back(last_function_reference_arguments[i]);
 			}
@@ -1507,43 +1509,46 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 			}
 		}
 		else {
+			auto pname = std::get<0>(function_call_parameters[i]);
 			if (last_function_reference_arguments[i] && !is_function(last_function_arguments[i]->curr_type)) {
-				scopes[nmspace].back()->declare_value(function_call_parameters[i], last_function_reference_arguments[i]);
+				last_value = scopes[nmspace].back()->declare_value(pname, last_function_reference_arguments[i]);
 			}
 			else {
 				switch (last_function_arguments[i]->curr_type) {
 				case Type::T_BOOL:
-					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->b);
+					last_value = scopes[nmspace].back()->declare_variable(pname, last_function_arguments[i]->b);
 					break;
 				case Type::T_INT:
-					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->i);
+					last_value = scopes[nmspace].back()->declare_variable(pname, last_function_arguments[i]->i);
 					break;
 				case Type::T_FLOAT:
-					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->f);
+					last_value = scopes[nmspace].back()->declare_variable(pname, last_function_arguments[i]->f);
 					break;
 				case Type::T_CHAR:
-					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->c);
+					last_value = scopes[nmspace].back()->declare_variable(pname, last_function_arguments[i]->c);
 					break;
 				case Type::T_STRING:
-					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->s);
+					last_value = scopes[nmspace].back()->declare_variable(pname, last_function_arguments[i]->s);
 					break;
 				case Type::T_STRUCT:
-					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->str);
+					last_value = scopes[nmspace].back()->declare_variable(pname, last_function_arguments[i]->str);
 					break;
 				case Type::T_ARRAY:
-					scopes[nmspace].back()->declare_variable(function_call_parameters[i], last_function_arguments[i]->arr);
+					last_value = scopes[nmspace].back()->declare_variable(pname, last_function_arguments[i]->arr);
 					break;
 				case Type::T_FUNCTION:
 					auto funcs = ((InterpreterScope*)last_function_arguments[i]->fun.first)->find_declared_functions(last_function_arguments[i]->fun.second);
 					for (auto& it = funcs.first; it != funcs.second; ++it) {
-						auto& func_name = it->first;
-						auto& func_sig = std::get<0>(it->second);
-						auto& func_vars = std::get<1>(it->second);
-						auto& func_block = std::get<2>(it->second);
-						scopes[nmspace].back()->declare_function(function_call_parameters[i], func_sig, func_vars, func_block);
+						auto& func_params = it->second.first;
+						auto& func_block = it->second.second;
+						scopes[nmspace].back()->declare_function(pname, func_params, func_block);
 					}
 					break;
 				}
+			}
+			if (std::get<2>(function_call_parameters[i])) {
+				rest_name = pname;
+				arr.push_back(last_value);
 			}
 		}
 	}
@@ -1682,7 +1687,7 @@ std::string Interpreter::parse_value_to_string(Value value) {
 
 			std::string func_decl = func_name + "(";
 			for (auto param : func_sig) {
-				func_decl += type_str(param.type) + ", ";
+				func_decl += type_str(std::get<1>(param).type) + ", ";
 			}
 			if (func_sig.size() > 0) {
 				func_decl.pop_back();
@@ -1818,19 +1823,16 @@ void Interpreter::call_builtin_function(std::string identifier) {
 }
 
 void Interpreter::register_built_in_functions() {
-	auto signature = std::vector<parser::TypeDefinition>();
-	auto variable_names = std::vector<std::string>();
+	interpreter_parameter_list_t params;
 
 	builtin_functions["print"] = [this]() {
 		for (auto arg : builtin_arguments[0]->arr) {
 			std::cout << parse_value_to_string(*arg);
 		}
 	};
-	signature.clear();
-	variable_names.clear();
-	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
-	variable_names.push_back("args");
-	scopes[default_namespace].back()->declare_function("print", signature, variable_names, nullptr);
+	params.clear();
+	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), true));
+	scopes[default_namespace].back()->declare_function("print", params, nullptr);
 
 
 	builtin_functions["read"] = [this]() {
@@ -1840,23 +1842,19 @@ void Interpreter::register_built_in_functions() {
 		std::string line;
 		std::getline(std::cin, line);
 		current_expression_value.set(cp_string(std::move(line)));
-		};
-	signature.clear();
-	variable_names.clear();
-	scopes[default_namespace].back()->declare_function("read", signature, variable_names, nullptr);
-	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
-	variable_names.push_back("msg");
-	scopes[default_namespace].back()->declare_function("read", signature, variable_names, nullptr);
+	};
+	params.clear();
+	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), true));
+	scopes[default_namespace].back()->declare_function("read", params, nullptr);
 
 
 	builtin_functions["readch"] = [this]() {
 		while (!_kbhit());
 		char ch = _getch();
 		current_expression_value.set(cp_char(ch));
-		};
-	signature.clear();
-	variable_names.clear();
-	scopes[default_namespace].back()->declare_function("readch", signature, variable_names, nullptr);
+	};
+	params.clear();
+	scopes[default_namespace].back()->declare_function("readch", params, nullptr);
 
 
 	builtin_functions["len"] = [this]() {
@@ -1871,17 +1869,13 @@ void Interpreter::register_built_in_functions() {
 		}
 
 		current_expression_value = val;
-		};
-	signature.clear();
-	variable_names.clear();
-	signature.push_back(TypeDefinition::get_array(Type::T_ARRAY, Type::T_ANY));
-	variable_names.push_back("arr");
-	scopes[default_namespace].back()->declare_function("len", signature, variable_names, nullptr);
-	signature.clear();
-	variable_names.clear();
-	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
-	variable_names.push_back("str");
-	scopes[default_namespace].back()->declare_function("len", signature, variable_names, nullptr);
+	};
+	params.clear();
+	params.push_back(std::make_tuple("arr", TypeDefinition::get_array(Type::T_ARRAY, Type::T_ANY), false));
+	scopes[default_namespace].back()->declare_function("len", params, nullptr);
+	params.clear();
+	params.push_back(std::make_tuple("str", TypeDefinition::get_basic(Type::T_STRING), false));
+	scopes[default_namespace].back()->declare_function("len", params, nullptr);
 
 
 	builtin_functions["equals"] = [this]() {
@@ -1892,24 +1886,19 @@ void Interpreter::register_built_in_functions() {
 		res.b = equals_struct(rval->str, lval->str);
 
 		current_expression_value = res;
-		};
-	signature.clear();
-	variable_names.clear();
-	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
-	variable_names.push_back("lval");
-	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
-	variable_names.push_back("rval");
-	scopes[default_namespace].back()->declare_function("equals", signature, variable_names, nullptr);
+	};
+	params.clear();
+	params.push_back(std::make_tuple("lval", TypeDefinition::get_basic(Type::T_ANY), false));
+	params.push_back(std::make_tuple("rval", TypeDefinition::get_basic(Type::T_ANY), false));
+	scopes[default_namespace].back()->declare_function("equals", params, nullptr);
 
 
 	builtin_functions["system"] = [this]() {
 		system(builtin_arguments[0]->s.c_str());
 		};
-	signature.clear();
-	variable_names.clear();
-	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
-	variable_names.push_back("cmd");
-	scopes[default_namespace].back()->declare_function("system", signature, variable_names, nullptr);
+	params.clear();
+	params.push_back(std::make_tuple("cmd", TypeDefinition::get_basic(Type::T_STRING), false));
+	scopes[default_namespace].back()->declare_function("system", params, nullptr);
 }
 
 void Interpreter::register_built_in_lib(std::string libname) {

@@ -28,7 +28,7 @@ namespace visitor {
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
 		std::vector<std::string> libs;
 		std::string function_call_name;
-		std::vector<std::string> function_call_parameters;
+		interpreter_parameter_list_t function_call_parameters;
 		std::stack<std::string> current_function_nmspace;
 		std::stack<std::string> current_name;
 		std::string return_from_function_name;

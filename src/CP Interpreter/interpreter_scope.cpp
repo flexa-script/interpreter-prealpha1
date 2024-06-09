@@ -134,8 +134,8 @@ void InterpreterScope::declare_structure_definition(std::string name, std::vecto
 	structure_symbol_table[name] = (type);
 }
 
-void InterpreterScope::declare_function(std::string identifier, std::vector<parser::TypeDefinition> signature, std::vector<std::string> variable_names, parser::ASTBlockNode* block) {
-	function_symbol_table.insert(std::make_pair(identifier, std::make_tuple(signature, variable_names, block)));
+void InterpreterScope::declare_function(std::string identifier, std::vector<std::tuple<std::string, parser::TypeDefinition, bool>> variables, parser::ASTBlockNode* block) {
+	function_symbol_table.insert(std::make_pair(identifier, std::make_pair(variables, block)));
 }
 
 parser::StructureDefinition InterpreterScope::find_declared_structure_definition(std::string identifier) {
@@ -156,17 +156,17 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 	interpreter_function_t* func = nullptr;
 
 	for (auto& i = funcs.first; i != funcs.second; ++i) {
-		auto& func_sig = std::get<0>(i->second);
+		auto& func_params = i->second.first;
 		if (!func) {
 			func = &i->second;
 		}
 		auto found = true;
-		if (func_sig.size() != signature.size()) {
+		if (func_params.size() != signature.size()) {
 			continue;
 		}
-		for (size_t it = 0; it < func_sig.size(); ++it) {
-			auto is_arr = is_array(func_sig.at(it).type) && is_array(signature.at(it).type);
-			auto ftype = is_arr ? func_sig.at(it).array_type : func_sig.at(it).type;
+		for (size_t it = 0; it < func_params.size(); ++it) {
+			auto is_arr = is_array(std::get<1>(func_params.at(it)).type) && is_array(signature.at(it).type);
+			auto ftype = is_arr ? std::get<1>(func_params.at(it)).array_type : std::get<1>(func_params.at(it)).type;
 			auto stype = is_arr ? signature.at(it).array_type : signature.at(it).type;
 			if (!match_type(ftype, stype) && !is_any(ftype)
 				&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
