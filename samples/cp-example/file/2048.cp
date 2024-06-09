@@ -18,7 +18,7 @@ def print_board(board[4][4]: int) {
     print(PRINT_TOP_LINE);
 }
 
-def moves_up(board[4][4]: int): int[4][4] {
+def moves_up(board[4][4]: int) {
     for (var j: int = 0; j < 4; j++) {
         // moves everything close together
         for (var l: int = 0; l < 3; l++) {
@@ -52,11 +52,9 @@ def moves_up(board[4][4]: int): int[4][4] {
             board[i + 1][j] = 0;
         }
     }
-
-    return board;
 }
 
-def moves_down(board[4][4]: int): int[4][4] {
+def moves_down(board[4][4]: int) {
     for (var j: int = 0; j < 4; j++) {
         // moves everything close together
         for (var l: int = 0; l < 3; l++) {
@@ -90,11 +88,9 @@ def moves_down(board[4][4]: int): int[4][4] {
             board[i - 1][j] = 0;
         }
     }
-    
-    return board;
 }
 
-def moves_left(board[4][4]: int): int[4][4] {
+def moves_left(board[4][4]: int) {
     for (var i: int = 0; i < 4; i++) {
         // moves everything close together
         for (var l: int = 0; l < 3; l++) {
@@ -128,11 +124,9 @@ def moves_left(board[4][4]: int): int[4][4] {
             board[i][j + 1] = 0;
         }
     }
-    
-    return board;
 }
 
-def moves_right(board[4][4]: int): int[4][4] {
+def moves_right(board[4][4]: int) {
     for (var i: int = 0; i < 4; i++) {
         // moves everything close together
         for (var l: int = 0; l < 3; l++) {
@@ -166,8 +160,6 @@ def moves_right(board[4][4]: int): int[4][4] {
             board[i][j - 1] = 0;
         }
     }
-    
-    return board;
 }
 
 def is_valid_move(v: bool, board[4][4]: int, boardcopy[4][4]: int): bool {
@@ -193,7 +185,7 @@ def counts_zero(board[4][4]: int): int {
     return n;
 }
 
-def spawn_random(n: int, board[4][4]: int): int[4][4] {
+def spawn_random(n: int, board[4][4]: int) {
     var spawn: int = 1 + (cp::randi() % n);
     var p: int = 0;
     var spawn2: bool = true;
@@ -208,8 +200,6 @@ def spawn_random(n: int, board[4][4]: int): int[4][4] {
             }
         }
     }
-
-    return board;
 }
 
 def is_end_game(c1: bool, c2: bool, board[4][4]: int): bool {
@@ -254,16 +244,16 @@ if (this == "main") {
         direction = readch();
 
         if (direction == "w") {
-            grid = moves_up(grid);
+            moves_up(ref grid);
         }
         else if (direction == "s") {
-            grid = moves_down(grid);
+            moves_down(ref grid);
         }
         else if (direction == "a") {
-            grid = moves_left(grid);
+            moves_left(ref grid);
         }
         else if (direction == "d") {
-            grid = moves_right(grid);
+            moves_right(ref grid);
         }
 
         var valid: bool = false;
@@ -273,7 +263,7 @@ if (this == "main") {
             var z: int = counts_zero(grid);
 
             if (z > 0) {
-                grid = spawn_random(z, grid);
+                spawn_random(z, ref grid);
             }
 
             print_board(grid);

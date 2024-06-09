@@ -953,7 +953,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	auto root = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	auto sub_val = access_value(id_scope, root, astnode->identifier_vector);
 	current_expression_value = *sub_val;
-	if ((is_reference || is_struct(root->curr_type)) && !sub_val) {
+	if ((is_reference || is_struct(root->curr_type)) && !sub_val || sub_val == root) {
 		current_variable = root;
 	}
 
