@@ -1013,7 +1013,7 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 
 		expr.second->accept(this);
 
-		if (!is_any(var_type_struct.type) && !is_void(current_expression.type) && !match_type(var_type_struct.type, current_expression.type)) {
+		if (!is_any(var_type_struct.type) && !is_any(current_expression.type) && !is_void(current_expression.type) && !match_type(var_type_struct.type, current_expression.type)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("invalid type " + type_str(var_type_struct.type) +
 				" trying to assign '" + astnode->type_name + "' struct");
@@ -1254,6 +1254,10 @@ void SemanticAnalyser::visit(ASTTypingNode* astnode) {
 	current_expression.is_const = false;
 }
 
+bool SemanticAnalyser::namespace_exists(std::string nmspace) {
+	return scopes.find(nmspace) != scopes.end();
+}
+
 VariableDefinition SemanticAnalyser::access_struct_variable(std::vector<Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i) {
 	SemanticScope* curr_scope;
 	try {
@@ -1281,6 +1285,9 @@ VariableDefinition SemanticAnalyser::access_struct_variable(std::vector<Identifi
 }
 
 SemanticScope* SemanticAnalyser::get_inner_most_variable_scope(std::string nmspace, std::string identifier) {
+	if (!namespace_exists(nmspace)) {
+		throw std::runtime_error("namespace '" + nmspace + "' was not declared");
+	}
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
 		if (i <= 0) {
@@ -1302,6 +1309,9 @@ SemanticScope* SemanticAnalyser::get_inner_most_variable_scope(std::string nmspa
 }
 
 SemanticScope* SemanticAnalyser::get_inner_most_struct_definition_scope(std::string nmspace, std::string identifier) {
+	if (!namespace_exists(nmspace)) {
+		throw std::runtime_error("namespace '" + nmspace + "' was not declared");
+	}
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); i--) {
 		if (i <= 0) {
@@ -1323,6 +1333,9 @@ SemanticScope* SemanticAnalyser::get_inner_most_struct_definition_scope(std::str
 }
 
 SemanticScope* SemanticAnalyser::get_inner_most_function_scope(std::string nmspace, std::string identifier, std::vector<TypeDefinition> signature) {
+	if (!namespace_exists(nmspace)) {
+		throw std::runtime_error("namespace '" + nmspace + "' was not declared");
+	}
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); --i) {
 		if (i <= 0) {

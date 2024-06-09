@@ -39,6 +39,7 @@ namespace visitor {
 		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
 		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);
 
+		bool namespace_exists(std::string nmspace);
 		SemanticScope* get_inner_most_variable_scope(std::string, std::string);
 		SemanticScope* get_inner_most_function_scope(std::string, std::string, std::vector<parser::TypeDefinition>);
 		SemanticScope* get_inner_most_struct_definition_scope(std::string, std::string);
