@@ -48,6 +48,7 @@ namespace visitor {
 		bool has_string_access = false;
 		bool is_reference = false;
 		bool is_vbv = false;
+		bool exception = false;
 
 		modules::Graphics* cpgraphics;
 		modules::Files* cpfiles;

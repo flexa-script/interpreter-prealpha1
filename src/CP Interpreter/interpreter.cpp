@@ -53,7 +53,13 @@ void Interpreter::visit(ASTProgramNode* astnode) {
 			if (curr_row == 0 || curr_col == 0) {
 				set_curr_pos(statement->row, statement->col);
 			}
-			throw std::runtime_error(msg_header() + ex.what());
+			if (exception) {
+				throw std::runtime_error(ex.what());
+			}
+			else {
+				exception = true;
+				throw std::runtime_error(msg_header() + ex.what());
+			}
 		}
 	}
 }
@@ -75,6 +81,7 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 		libs.push_back(libname);
 		auto prev_program = current_program;
 		current_program = program;
+		program_nmspaces[get_namespace(current_program->alias)].push_back(default_namespace);
 		if (!program->alias.empty()) {
 			scopes[program->alias].push_back(new InterpreterScope());
 		}

@@ -38,7 +38,13 @@ void SemanticAnalyser::visit(ASTProgramNode* astnode) {
 			if (curr_row == 0 || curr_col == 0) {
 				set_curr_pos(statement->row, statement->col);
 			}
-			throw std::runtime_error(msg_header() + ex.what());
+			if (exception) {
+				throw std::runtime_error(ex.what());
+			}
+			else {
+				exception = true;
+				throw std::runtime_error(msg_header() + ex.what());
+			}
 		}
 	}
 }
@@ -68,6 +74,7 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 		libs.push_back(libname);
 		auto prev_program = current_program;
 		current_program = program;
+		program_nmspaces[get_namespace(current_program->alias)].push_back(default_namespace);
 		if (!program->alias.empty()) {
 			scopes[program->alias].push_back(new SemanticScope());
 		}
@@ -554,6 +561,7 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	current_expression.type = curr_function.type;
 	current_expression.array_type = curr_function.array_type;
 	current_expression.type_name = curr_function.type_name;
+	current_expression.type_name_space = curr_function.type_name_space.empty() ? astnode->nmspace : curr_function.type_name_space;
 	current_expression.dim = curr_function.dim;
 	current_expression.row = curr_function.row;
 	current_expression.col = curr_function.col;
