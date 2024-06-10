@@ -60,7 +60,7 @@
     <ClInclude Include="semantic_analysis.hpp" />
     <ClInclude Include="semantic_scope.hpp" />
     <ClInclude Include="token.hpp" />
-    <ClInclude Include="vendor\window.hpp" />
+    <ClInclude Include="vendor\axegraphics.hpp" />
     <ClInclude Include="vendor\logging.hpp" />
     <ClInclude Include="vendor\util.hpp" />
     <ClInclude Include="vendor\watch.h" />
@@ -85,7 +85,7 @@
     <ClCompile Include="semantic_analysis.cpp" />
     <ClCompile Include="semantic_scope.cpp" />
     <ClCompile Include="token.cpp" />
-    <ClCompile Include="vendor\window.cpp" />
+    <ClCompile Include="vendor\axegraphics.cpp" />
     <ClCompile Include="vendor\logging.cpp" />
     <ClCompile Include="vendor\util.cpp" />
     <ClCompile Include="visitor.cpp" />

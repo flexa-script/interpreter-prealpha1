@@ -95,7 +95,10 @@ std::vector<std::string> built_in_libs = {
 };
 
 Value::Value(parser::Type type)
-	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), fun(cp_function()), type(type), curr_type(type), arr_type(type) {};
+	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), fun(cp_function()), type(type), curr_type(type), arr_type(parser::Type::T_UNDEFINED) {};
+
+Value::Value(parser::Type type, parser::Type arr_type)
+	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), fun(cp_function()), type(type), curr_type(type), arr_type(arr_type) {};
 
 Value::Value(Value* value)
 	: b(value->b), i(value->i), f(value->f), c(value->c), s(value->s), str(value->str), fun(value->fun),
@@ -156,11 +159,17 @@ void Value::set_arr_type(parser::Type arr_type) {
 }
 
 void Value::set_null() {
-	set_curr_type(parser::Type::T_VOID);
+	set_empty(parser::Type::T_VOID);
 }
 
 void Value::set_undefined() {
-	set_curr_type(parser::Type::T_UNDEFINED);
+	set_empty(parser::Type::T_UNDEFINED);
+}
+
+void Value::set_empty(parser::Type empty_type) {
+	auto aux_type = type;
+	copy_from(new Value(empty_type));
+	type = aux_type;
 }
 
 bool Value::has_value() {

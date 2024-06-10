@@ -1,14 +1,15 @@
-#ifndef GRAPHICS_HPP
-#define GRAPHICS_HPP
+#ifndef CPGRAPHICS_HPP
+#define CPGRAPHICS_HPP
 
 #include <functional>
 
 #include "module.hpp"
-#include "vendor/window.hpp"
+#include "vendor/axegraphics.hpp"
 
 namespace modules {
 	class Graphics : public Module {
 	private:
+		std::vector<axe::Image*> images;
 		std::vector<axe::Window*> windows;
 
 	public:
@@ -18,4 +19,4 @@ namespace modules {
 	};
 }
 
-#endif // !GRAPHICS_HPP
+#endif // !CPGRAPHICS_HPP

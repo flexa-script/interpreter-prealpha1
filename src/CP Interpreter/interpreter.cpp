@@ -1727,9 +1727,11 @@ std::string Interpreter::parse_struct_to_string(cp_struct value) {
 	std::stringstream s = std::stringstream();
 	s << value.first + "{";
 	for (auto const& [key, val] : value.second) {
-		s << key + ":";
-		s << parse_value_to_string(*val);
-		s << ",";
+		if (key != modules::Module::INSTANCE_ID_NAME) {
+			s << key + ":";
+			s << parse_value_to_string(*val);
+			s << ",";
+		}
 	}
 	if (s.str() != "{") {
 		s.seekp(-1, std::ios_base::end);

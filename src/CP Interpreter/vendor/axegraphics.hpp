@@ -4,13 +4,23 @@
  * v1.0.0
  */
 
-#ifndef WINDOW_HPP
-#define WINDOW_HPP
+#ifndef AXEGRAPHICS_HPP
+#define AXEGRAPHICS_HPP
 
 #include <windows.h>
+#include <unordered_map>
 #include <map>
+#include <string>
 
 namespace axe {
+
+	struct Image {
+		HBITMAP bitmap;
+		int width;
+		int height;
+
+		static Image* load_image(const std::string& filename);
+	};
 
 	class Window {
 	private:
@@ -28,8 +38,9 @@ namespace axe {
 		Window();
 		~Window();
 
-		bool initialize(const wchar_t* title, int width, int height);
+		bool initialize(const std::string& title, int width, int height);
 		void clear_screen(COLORREF color);
+		void draw_image(Image* image, int x, int y);
 		void draw_pixel(int x, int y, COLORREF color);
 		void draw_line(int x1, int y1, int x2, int y2, COLORREF color);
 		void draw_rect(int x, int y, int width, int height, COLORREF color);
@@ -46,4 +57,4 @@ namespace axe {
 	};
 }
 
-#endif // !WINDOW_HPP
+#endif // !AXEGRAPHICS_HPP

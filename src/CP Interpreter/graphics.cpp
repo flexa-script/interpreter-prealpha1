@@ -8,12 +8,13 @@ Graphics::Graphics() : windows(std::vector<axe::Window*>()) {}
 
 void Graphics::register_functions(visitor::Interpreter* interpreter) {
 
-	interpreter->builtin_functions["initialize"] = [this, interpreter]() {
+	interpreter->builtin_functions["create_window"] = [this, interpreter]() {
 		// initialize window struct values
-		Value* win = interpreter->builtin_arguments[0];
-		win->str->second["title"] = new Value(interpreter->builtin_arguments[1]);
-		win->str->second["width"] = new Value(interpreter->builtin_arguments[2]);
-		win->str->second["height"] = new Value(interpreter->builtin_arguments[3]);
+		Value* win = new Value(parser::Type::T_STRUCT);
+		win->str->first = "Window";
+		win->str->second["title"] = new Value(interpreter->builtin_arguments[0]);
+		win->str->second["width"] = new Value(interpreter->builtin_arguments[1]);
+		win->str->second["height"] = new Value(interpreter->builtin_arguments[2]);
 
 		// create a new window graphic engine
 		windows.push_back(new axe::Window());
@@ -21,15 +22,15 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 		win->str->second[INSTANCE_ID_NAME]->i = windows.size() - 1;
 
 		// initialize window graphic engine and return value
-		auto str = win->str->second["title"]->s;
-		auto wstr = std::wstring(str.begin(), str.end());
-		auto rval = Value(parser::Type::T_BOOL);
-		rval.b = windows[win->str->second[INSTANCE_ID_NAME]->i]->initialize(
-			wstr.c_str(),
+		auto res = windows[win->str->second[INSTANCE_ID_NAME]->i]->initialize(
+			win->str->second["title"]->s,
 			(int)win->str->second["width"]->i,
 			(int)win->str->second["height"]->i
 		);
-		interpreter->current_expression_value = rval;
+		if (!res) {
+			win->set_null();
+		}
+		interpreter->current_expression_value = win;
 	};
 
 	interpreter->builtin_functions["clear_screen"] = [this, interpreter]() {
@@ -143,6 +144,53 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 		}
 	};
 
+	interpreter->builtin_functions["load_image"] = [this, interpreter]() {
+		auto filename = interpreter->builtin_arguments[1]->s;
+
+		// initialize image struct values
+		Value* img = new Value(parser::Type::T_STRUCT);
+		img->str->first = "Image";
+		img->str->second["path"] = new Value(interpreter->builtin_arguments[0]);
+
+		// loads image
+		auto image = axe::Image::load_image(filename);
+		if (!image) {
+			throw std::runtime_error("there was an error loading image");
+		}
+		images.push_back(image);
+		img->str->second[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
+		img->str->second[INSTANCE_ID_NAME]->i = windows.size() - 1;
+
+		img->str->second["width"] = new Value(parser::Type::T_INT);
+		img->str->second["width"]->i = image->width;
+		img->str->second["height"] = new Value(parser::Type::T_INT);
+		img->str->second["height"]->i = image->height;
+
+		interpreter->current_expression_value = img;
+	};
+
+	interpreter->builtin_functions["draw_image"] = [this, interpreter]() {
+		Value* win = interpreter->builtin_arguments[0];
+		if (parser::is_void(win->curr_type) ) {
+			throw std::exception("window is null");
+		}
+		auto window = windows[win->str->second[INSTANCE_ID_NAME]->i];
+		if (!window) {
+			throw std::runtime_error("there was an error handling window");
+		}
+		Value* img = interpreter->builtin_arguments[1];
+		if (parser::is_void(img->curr_type)) {
+			throw std::exception("window is null");
+		}
+		auto image = images[img->str->second[INSTANCE_ID_NAME]->i];
+		if (!image) {
+			throw std::runtime_error("there was an error handling image");
+		}
+		int x = (int)interpreter->builtin_arguments[2]->i;
+		int y = (int)interpreter->builtin_arguments[3]->i;
+		window->draw_image(image, x, y);
+	};
+
 	interpreter->builtin_functions["update"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
 		if (!parser::is_void(win->curr_type)) {
@@ -152,7 +200,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 		}
 	};
 
-	interpreter->builtin_functions["destroy"] = [this, interpreter]() {
+	interpreter->builtin_functions["destroy_window"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
 		if (!parser::is_void(win->curr_type)) {
 			if (windows[win->str->second[INSTANCE_ID_NAME]->i]) {

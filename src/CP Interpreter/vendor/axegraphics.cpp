@@ -1,7 +1,24 @@
-#include "window.hpp"
+#include <iostream>
+
+#include "axegraphics.hpp"
 
 using namespace axe;
 
+
+Image* Image::load_image(const std::string& filename) {
+	std::wstring wfilename(filename.begin(), filename.end());
+
+	HBITMAP hbm_image = (HBITMAP)LoadImage(NULL, wfilename.c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+	if (!hbm_image) {
+		return nullptr;
+	}
+
+	BITMAP bm;
+	GetObject(hbm_image, sizeof(BITMAP), &bm);
+
+	return new Image{ hbm_image, bm.bmWidth, bm.bmHeight };
+}
 
 std::map<HWND, Window*> Window::hwnd_map;
 
@@ -22,20 +39,21 @@ Window::~Window() {
 	hwnd_map.erase(hwnd);
 }
 
-bool Window::initialize(const wchar_t* title, int width, int height) {
+bool Window::initialize(const std::string& title, int width, int height) {
+	std::wstring wtitle(title.begin(), title.end());
 	screen_width = width;
 	screen_height = height;
 
 	WNDCLASS wc = { 0 };
 	wc.lpfnWndProc = window_proc;
 	wc.hInstance = GetModuleHandle(NULL);
-	wc.lpszClassName = title;
+	wc.lpszClassName = wtitle.c_str();
 
 	if (!RegisterClass(&wc)) {
 		return false;
 	}
 
-	hwnd = CreateWindowEx(0, wc.lpszClassName, title, WS_OVERLAPPEDWINDOW,
+	hwnd = CreateWindowEx(0, wc.lpszClassName, wtitle.c_str(), WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT, width, height,
 		NULL, NULL, GetModuleHandle(NULL), this);
 
@@ -78,6 +96,20 @@ void Window::clear_screen(COLORREF color) {
 	}
 }
 
+void Window::draw_image(Image* image, int x, int y) {
+	if (!image) {
+		std::cerr << "null image" << std::endl;
+		return;
+	}
+
+	HDC hdc_image = CreateCompatibleDC(hdc_back_buffer);
+	HGDIOBJ old_obj = SelectObject(hdc_image, image->bitmap);
+
+	BitBlt(hdc_back_buffer, x, y, image->width, image->height, hdc_image, 0, 0, SRCCOPY);
+
+	SelectObject(hdc_image, old_obj);
+	DeleteDC(hdc_image);
+}
 
 void Window::draw_pixel(int x, int y, COLORREF color) {
 	SetPixel(hdc_back_buffer, x, y, color);

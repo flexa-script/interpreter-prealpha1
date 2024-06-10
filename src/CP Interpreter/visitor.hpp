@@ -87,7 +87,8 @@ extern std::vector<std::string> built_in_libs;
 
 class Value {
 public:
-	Value(parser::Type);
+	Value(parser::Type type);
+	Value(parser::Type type, parser::Type arr_type);
 	Value(Value*);
 
 	parser::Type type;
@@ -111,8 +112,10 @@ public:
 	void set(cp_array);
 	void set(cp_struct*);
 	void set(cp_function);
+
 	void set_null();
 	void set_undefined();
+	void set_empty(parser::Type empty_type);
 
 	void set_type(parser::Type);
 	void set_curr_type(parser::Type);

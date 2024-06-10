@@ -6,7 +6,7 @@
 
 namespace modules {
 	class Module {
-	protected:
+	public:
 		static const std::string INSTANCE_ID_NAME;
 
 	public:
