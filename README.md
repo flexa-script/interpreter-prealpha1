@@ -84,6 +84,7 @@
 - [ ] General otimizations:
     - [ ] Remove duplicate codes
         - [ ] Organize semantic duplicated checks
+        - [ ] Implement detructors
     - [X] Move some verifications to semantic analisys:
         - [X] Array size check from interpreter
 - [ ] Projects to implement in CP:

@@ -145,21 +145,19 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 	};
 
 	interpreter->builtin_functions["load_image"] = [this, interpreter]() {
-		auto filename = interpreter->builtin_arguments[1]->s;
-
 		// initialize image struct values
 		Value* img = new Value(parser::Type::T_STRUCT);
 		img->str->first = "Image";
 		img->str->second["path"] = new Value(interpreter->builtin_arguments[0]);
 
 		// loads image
-		auto image = axe::Image::load_image(filename);
+		auto image = axe::Image::load_image(img->str->second["path"]->s);
 		if (!image) {
 			throw std::runtime_error("there was an error loading image");
 		}
 		images.push_back(image);
 		img->str->second[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
-		img->str->second[INSTANCE_ID_NAME]->i = windows.size() - 1;
+		img->str->second[INSTANCE_ID_NAME]->i = images.size() - 1;
 
 		img->str->second["width"] = new Value(parser::Type::T_INT);
 		img->str->second["width"]->i = image->width;

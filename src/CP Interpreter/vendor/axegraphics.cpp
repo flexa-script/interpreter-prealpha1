@@ -8,8 +8,7 @@ using namespace axe;
 Image* Image::load_image(const std::string& filename) {
 	std::wstring wfilename(filename.begin(), filename.end());
 
-	HBITMAP hbm_image = (HBITMAP)LoadImage(NULL, wfilename.c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-
+	HBITMAP hbm_image = (HBITMAP)LoadImage(GetModuleHandle(NULL), wfilename.c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 	if (!hbm_image) {
 		return nullptr;
 	}
