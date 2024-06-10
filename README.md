@@ -20,7 +20,7 @@
 - [X] Add struct support
     - [X] Add struct array-like constructor
     - [X] Add Java class pointer-like behavior
-    - [ ] Add some way to get struct as Dict
+    - [ ] Add struct as Dict by iterating over in foreach
 - [X] Add null support
 - [X] Add type convert support
     - [X] Add array and struct support (based on print)
