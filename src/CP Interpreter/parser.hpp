@@ -90,6 +90,7 @@ namespace parser {
 
 		// special
 		std::vector<std::pair<bool, ASTExprNode*>>* parse_actual_params();
+		VariableDefinition* parse_struct_var_def();
 		VariableDefinition* parse_formal_param();
 		ASTIdentifierNode* parse_identifier_node(std::string = "");
 		cp_bool parse_bool_literal();

@@ -65,11 +65,11 @@ void SemanticVariable::copy_from(SemanticVariable* var) {
 }
 
 VariableDefinition::VariableDefinition(std::string identifier, Type type, std::string type_name, std::string type_name_space,
-	Type array_type, std::vector<ASTExprNode*> dim, SemanticValue default_value, bool is_rest, unsigned int row, unsigned int col)
+	Type array_type, std::vector<ASTExprNode*> dim, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col)
 	: identifier(identifier), default_value(default_value), is_rest(is_rest),
 	TypeDefinition(type, array_type, dim, type_name, type_name_space), CodePosition(row, col) {}
 
-VariableDefinition VariableDefinition::get_basic(std::string identifier, parser::Type type, SemanticValue default_value, bool is_rest, unsigned int row, unsigned int col) {
+VariableDefinition VariableDefinition::get_basic(std::string identifier, parser::Type type, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col) {
 	return VariableDefinition(identifier, type, "", "", Type::T_UNDEFINED, std::vector<ASTExprNode*>(), default_value, is_rest, row, col);
 }
 

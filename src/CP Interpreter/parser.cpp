@@ -360,6 +360,7 @@ VariableDefinition* Parser::parse_formal_param() {
 	Type type = Type::T_UNDEFINED;
 	Type array_type = Type::T_UNDEFINED;
 	ASTExprNode* expr_size;
+	ASTExprNode* def_expr;
 	auto dim = std::vector<ASTExprNode*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
@@ -423,8 +424,17 @@ VariableDefinition* Parser::parse_formal_param() {
 		dim.insert(dim.begin(), ndim);
 	}
 
+	if (next_token.type == lexer::TOK_EQUALS) {
+		consume_token();
+		consume_token();
+		def_expr = parse_expression();
+	}
+	else {
+		def_expr = nullptr;
+	}
+
 	return new VariableDefinition(identifier, type, type_name,
-		type_name_space, array_type, dim, SemanticValue(), is_rest, row, col);
+		type_name_space, array_type, dim, def_expr, is_rest, row, col);
 };
 
 std::vector<std::pair<bool, ASTExprNode*>>* Parser::parse_actual_params() {
@@ -612,6 +622,81 @@ ASTStatementNode* Parser::parse_struct_block_variables() {
 		throw std::runtime_error(msg_header() + "invalid declaration starting with '" + current_token.value + "' encountered");
 	}
 }
+
+VariableDefinition* Parser::parse_struct_var_def() {
+	bool is_rest = false;
+	std::string identifier;
+	std::string type_name;
+	std::string type_name_space;
+	Type type = Type::T_UNDEFINED;
+	Type array_type = Type::T_UNDEFINED;
+	ASTExprNode* expr_size;
+	auto dim = std::vector<ASTExprNode*>();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+
+	if (current_token.type == lexer::TOK_RETICENCES) {
+		is_rest = true;
+		consume_token(lexer::TOK_IDENTIFIER);
+	}
+	else {
+		check_current_token(lexer::TOK_IDENTIFIER);
+	}
+
+	auto id = parse_identifier();
+	identifier = id.identifier;
+	dim = id.access_vector;
+
+	if (dim.size() > 0) {
+		type = Type::T_ARRAY;
+	}
+
+	if (next_token.type == lexer::TOK_COLON) {
+		consume_token();
+		consume_token();
+
+		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+			type_name_space = current_token.value;
+			consume_token();
+			consume_token();
+		}
+
+		if (type == Type::T_UNDEFINED) {
+			type = parse_type();
+		}
+		else if (type == Type::T_ARRAY) {
+			current_array_type = parse_type();
+
+			if (current_array_type == parser::Type::T_UNDEFINED
+				|| current_array_type == parser::Type::T_VOID
+				|| current_array_type == parser::Type::T_ARRAY) {
+				current_array_type = parser::Type::T_ANY;
+			}
+		}
+
+		if (current_token.type == lexer::TOK_IDENTIFIER) {
+			type_name = current_token.value;
+		}
+	}
+
+	if (type == Type::T_UNDEFINED) {
+		type = Type::T_ANY;
+	}
+
+	array_type = current_array_type;
+
+	if (is_rest) {
+		auto ndim = new ASTLiteralNode<cp_int>(0, row, col);
+		if (!is_array(type)) {
+			array_type = type;
+			type = Type::T_ARRAY;
+		}
+		dim.insert(dim.begin(), ndim);
+	}
+
+	return new VariableDefinition(identifier, type, type_name,
+		type_name_space, array_type, dim, SemanticValue(), is_rest, row, col);
+};
 
 ASTContinueNode* Parser::parse_continue_statement() {
 	unsigned int row = current_token.row;
@@ -973,7 +1058,7 @@ ASTStructDefinitionNode* Parser::parse_struct_definition() {
 	do {
 		consume_token(lexer::TOK_VAR);
 		consume_token(lexer::TOK_IDENTIFIER);
-		variables.push_back(*parse_formal_param());
+		variables.push_back(*parse_struct_var_def());
 		consume_token();
 
 	} while (current_token.type == lexer::TOK_SEMICOLON && next_token.type != lexer::TOK_RIGHT_CURLY);

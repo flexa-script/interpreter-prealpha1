@@ -67,10 +67,10 @@ namespace parser {
 	public:
 		std::string identifier;
 		bool is_rest;
-		SemanticValue default_value;
+		ASTExprNode* default_value;
 
 		VariableDefinition(std::string identifier, Type type, std::string type_name, std::string type_name_space,
-			Type array_type, std::vector<ASTExprNode*> dim, SemanticValue default_value, bool is_rest, unsigned int row, unsigned int col);
+			Type array_type, std::vector<ASTExprNode*> dim, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col);
 		VariableDefinition() = default;
 
 		static VariableDefinition get_basic(std::string identifier, parser::Type type, SemanticValue default_value = SemanticValue(),
