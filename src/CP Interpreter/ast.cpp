@@ -74,12 +74,12 @@ VariableDefinition VariableDefinition::get_basic(std::string identifier, parser:
 }
 
 VariableDefinition VariableDefinition::get_array(std::string identifier, parser::Type type,
-	parser::Type array_type, std::vector<ASTExprNode*> dim, SemanticValue default_value, bool is_rest, unsigned int row, unsigned int col) {
+	parser::Type array_type, std::vector<ASTExprNode*> dim, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col) {
 	return VariableDefinition(identifier, type, "", "", array_type, dim, default_value, is_rest, row, col);
 }
 
 VariableDefinition VariableDefinition::get_struct(std::string identifier, parser::Type type,
-	std::string type_name, std::string type_name_space, SemanticValue default_value, bool is_rest, unsigned int row, unsigned int col) {
+	std::string type_name, std::string type_name_space, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col) {
 	return VariableDefinition(identifier, type, type_name, type_name_space, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), default_value, is_rest, row, col);
 }
 

@@ -134,7 +134,7 @@ void InterpreterScope::declare_structure_definition(std::string name, std::vecto
 	structure_symbol_table[name] = (type);
 }
 
-void InterpreterScope::declare_function(std::string identifier, std::vector<std::tuple<std::string, parser::TypeDefinition, bool>> variables, parser::ASTBlockNode* block) {
+void InterpreterScope::declare_function(std::string identifier, interpreter_parameter_list_t variables, parser::ASTBlockNode* block) {
 	function_symbol_table.insert(std::make_pair(identifier, std::make_pair(variables, block)));
 }
 

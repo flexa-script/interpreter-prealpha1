@@ -695,7 +695,7 @@ VariableDefinition* Parser::parse_struct_var_def() {
 	}
 
 	return new VariableDefinition(identifier, type, type_name,
-		type_name_space, array_type, dim, SemanticValue(), is_rest, row, col);
+		type_name_space, array_type, dim, nullptr, is_rest, row, col);
 };
 
 ASTContinueNode* Parser::parse_continue_statement() {

@@ -73,13 +73,13 @@ namespace parser {
 			Type array_type, std::vector<ASTExprNode*> dim, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col);
 		VariableDefinition() = default;
 
-		static VariableDefinition get_basic(std::string identifier, parser::Type type, SemanticValue default_value = SemanticValue(),
+		static VariableDefinition get_basic(std::string identifier, parser::Type type, ASTExprNode* default_value = nullptr,
 			bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 		static VariableDefinition get_array(std::string identifier, parser::Type type, parser::Type array_type,
-			std::vector<ASTExprNode*> dim = std::vector<ASTExprNode*>(), SemanticValue default_value = SemanticValue(),
+			std::vector<ASTExprNode*> dim = std::vector<ASTExprNode*>(), ASTExprNode* default_value = nullptr,
 			bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 		static VariableDefinition get_struct(std::string identifier, parser::Type type, std::string type_name,
-			std::string type_name_space, SemanticValue default_value = SemanticValue(),
+			std::string type_name_space, ASTExprNode* default_value = nullptr,
 			bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 	};
 
