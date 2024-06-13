@@ -1528,7 +1528,9 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 					}
 				}
 				else {
-					last_value = scopes[nmspace].back()->declare_value(pname, new Value(last_function_reference_arguments[i]));
+					last_value = scopes[nmspace].back()->declare_value(pname, new Value(last_function_reference_arguments[i] ?
+																						last_function_reference_arguments[i] :
+																						last_function_arguments[i]));
 				}
 			}
 

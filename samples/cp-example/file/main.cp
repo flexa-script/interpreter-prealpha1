@@ -1,5 +1,15 @@
-def foo(bar = 10){
-    print(bar);
+// def foo(bar = 10){
+//     print(bar);
+// }
+
+// foo();
+
+def foo(msg, ...args) {
+	print(msg, ": ");
+	foreach (var a in args) {
+		print(a, ' ');
+	}
 }
 
-foo();
+foo("this is a normal parameters and then", 10, 'a', 99, "asdasd");
+

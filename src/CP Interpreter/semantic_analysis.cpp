@@ -634,6 +634,7 @@ void SemanticAnalyser::visit(ASTBlockNode* astnode) {
 	if (!current_function.empty()) {
 		for (auto param : current_function.top().parameters) {
 			if (is_function(param.type) || is_any(param.type)) {
+				//scopes[nmspace].back()->declare_variable_function(param.identifier, param.row, param.row);
 				scopes[nmspace].back()->declare_variable_function(param.identifier, param.row, param.row);
 			}
 

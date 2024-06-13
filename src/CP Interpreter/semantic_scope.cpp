@@ -36,23 +36,27 @@ FunctionDefinition SemanticScope::find_declared_function(std::string identifier,
 		bool match_sig_size = true;
 		auto found = true;
 		bool is_arr = false;
+		bool was_arr = false;
 		Type stype = Type::T_UNDEFINED;
 		Type ftype = Type::T_UNDEFINED;
 
-		if (!func && it->second.is_variable) {
-			func = &it->second;
-		}
+		//if (!func && it->second.is_variable) {
+		//	func = &it->second;
+		//}
 
 		if (func_sig.size() != signature.size()) {
 			match_sig_size = false;
 		}
 
 		for (size_t i = 0; i < signature.size(); ++i) {
+			// check default value parameters
+
 			if (rest) {
-				is_arr = true;
+				is_arr = was_arr;
 			}
 			else {
 				is_arr = is_array(func_sig.at(i).type) && is_array(signature.at(i).type);
+				was_arr = is_arr;
 				ftype = is_arr ? func_sig.at(i).array_type : func_sig.at(i).type;
 
 				if (!func && it->second.parameters[i].is_rest) {
@@ -77,7 +81,7 @@ FunctionDefinition SemanticScope::find_declared_function(std::string identifier,
 		return *func;
 	}
 
-	throw std::runtime_error("SSERR: definition of '" + identifier + "' function not found");
+	throw std::runtime_error("definition of '" + identifier + "' function not found");
 }
 
 bool SemanticScope::already_declared_structure_definition(std::string identifier) {
