@@ -3,124 +3,157 @@
  * Ref.: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
  *)
 
-program           = [ lib ] { statement }
+program               = [ namespace_def ] { program_statement }
 
-lib               = "using" path_identifier ";"
+namespace_def         = "namespace" identifier ";"
 
-statement         = struct_decl ";"
-                  | variable_decl ";"
-                  | constant_decl ";"
-                  | assignment ";"
-                  | switch_statement
-                  | if_statement
-                  | while_statement
-                  | for_statement
-                  | foreach_statement
-                  | break_statement ";"
-                  | return_statement ";"
-                  | function_decl
-                  | block
-                  | expression ";"
+program_statement     = lib ";"
+                      | as_namespace ";"
+                      | function_decl
+                      | statement
 
-block             = "{" { statement } "}"
+statement             = struct_decl ";"
+                      | variable_decl ";"
+                      | constant_decl ";"
+                      | assignment ";"
+                      | if_statement
+                      | switch_statement
+                      | while_statement
+                      | for_statement
+                      | foreach_statement
+                      | do_while_statement ";"
+                      | break_statement ";"
+                      | continue_statement ";"
+                      | return_statement ";"
+                      | expression ";"
 
-function_decl     = "def" identifier "(" [ formal_params ] ")" [ ":" def_type ] block
+lib                   = "using" path_identifier
 
-struct_decl       = "struct" identifier "{" { formal_params } "}"
+as_namespace          = "as" "namespace" identifier
 
-formal_params     = formal_param { "," formal_param }
+block                 = "{" { statement } "}"
 
-formal_param      = var_identifier ":" type
+function_decl         = "def" identifier "(" [ formal_params ] ")" [ ":" def_type ] block
 
-while_statement   = "while" "(" expression ")" block
+struct_decl           = "struct" identifier "{" { formal_params } "}"
 
-if_statement      = "if" "(" expression ")" block { elif_statement } [ else_statement ]
+struct_vars           = struct_var { struct_var }
 
-elif_statement    = "else" if_statement
+struct_var            = "var" identifier ":" type ";"
 
-else_statement    = "else" block
+formal_params         = formal_param { "," formal_param }
 
-return_statement  = "return" [ expression ]
+formal_param          = var_identifier [ ":" type ]
 
-variable_decl     = "var" var_identifier [ ":" type ] [ "=" expression ]
+while_statement       = "while" "(" expression ")" block
 
-constant_decl     = "const" var_identifier [ ":" type ] "=" expression
+do_while_statement    = "do" block "while" "(" expression ")" ";"
 
-assignment        = var_identifier "=" expression
+for_statement         = "for" "(" [ expression ] ";" [ expression ] ";" [ expression ] ")" block
 
-expression        = simple_expression { relational_op simple_expression }
+foreach_statement     = "foreach" "(" variable_decl "in" expression ")" block
 
-simple_expression = term { additive_op term }
+if_statement          = if_def { elif_statement } [ else_statement ]
 
-term              = factor { multiplicative_op factor }
+if_def                = "if" "(" expression ")" block
 
-factor            = literal
-                  | var_identifier
-                  | function_call
-                  | sub_expression
-                  | unary
+elif_statement        = "else" if_def
 
-unary             = ( "+" | "-" | "not" ) { expression }
+else_statement        = "else" block
 
-sub_expression    = "(" expression ")"
+switch_statement      = "switch" "(" expression ")" 
 
-function_call     = identifier "(" [actual_params] ")"
+switch_block          = "{" { switch_case } [ switch_default ] "}"
 
-actual_params     = expression { "," expression }
+switch_case           = "case" expression ":" case_block
 
-relational_op     = "<" | ">" | "==" | "!=" | "<=" | ">="
+switch_default        = "default" ":" case_block
 
-additive_op       = "+" | "-" | "or"
+case_block            = block | { statement }
 
-multiplicative_op = "*" | "/" | "%" | "and"
+return_statement      = "return" [ expression ]
 
-identifier        = ( "_" | letter ) { "_" | letter | digit }
+variable_decl         = "var" var_identifier [ ":" type ] [ "=" expression ]
 
-var_identifier    = path_identifier [ array_def ]
+constant_decl         = "const" var_identifier [ ":" type ] "=" expression
 
-array_def         = "[" { int_literal } "]" { array_def }
+assignment            = var_identifier "=" expression
 
-path_identifier   = identifier { "." identifier }
+expression            = simple_expression { relational_op simple_expression }
 
-literal           = bool_literal
-                  | int_literal
-                  | float_literal
-                  | char_literal
-                  | string_literal
-                  | array_literal
-                  | struct_literal
-                  | null_literal
+simple_expression     = term { additive_op term }
 
-bool_literal      = "true" | "false"
+term                  = factor { multiplicative_op factor }
 
-int_literal       = digit { digit }
+factor                = literal
+                      | var_identifier
+                      | function_call
+                      | sub_expression
+                      | unary
 
-float_literal     = digit { digit } "." { digit }
-                  | "." digit { digit }
+unary                 = ( "+" | "-" | "not" ) { expression }
 
-char_literal      = "'" printable "'"
+sub_expression        = "(" expression ")"
 
-string_literal    = "\"" { printable } "\""
+function_call         = identifier "(" [actual_params] ")"
 
-array_literal     = "{" literal { "," literal } "}"
+actual_params         = expression { "," expression }
 
-struct_literal    = identifier "{" { "var" identifier ":" type { "," literal } } "}"
+relational_op         = "<" | ">" | "==" | "!=" | "<=" | ">="
 
-null_literal      = "null"
+additive_op           = "+" | "-" | "or"
 
-def_type          = type | "void"
+multiplicative_op     = "*" | "/" | "%" | "and"
 
-type              = "bool" | "int" | "float" | "char" | "string" | identifier
+identifier            = ( "_" | letter ) { "_" | letter | digit }
 
-printable         = digit | letter | " " | "!" | "\"" | "#" | "$" | "%" | "&"
-                  | "'" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";"
-                  | "<" | "=" | ">" | "?" | "@" | "[" | "\\" | "]" | "^" | "_" | "`"
-                  | "{" | "|" | "}" | "~"
+var_identifier        = identifier [ array_def ]
 
-letter            = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K"
-                  | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V"
-                  | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g"
-                  | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r"
-                  | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+expr_identifier       = path_identifier [ array_def ]
 
-digit             = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+array_def             = "[" { int_literal } "]" { array_def }
+
+path_identifier       = identifier { "." identifier }
+
+literal               = bool_literal
+                      | int_literal
+                      | float_literal
+                      | char_literal
+                      | string_literal
+                      | array_constructor
+                      | struct_constructor
+                      | null_literal
+
+bool_literal          = "true" | "false"
+
+int_literal           = digit { digit }
+
+float_literal         = digit { digit } "." { digit } [ "f" ]
+                      | "." digit { digit } [ "f" ]
+
+char_literal          = "'" printable "'"
+
+string_literal        = "\"" { printable } "\""
+
+array_constructor     = "{" literal { "," literal } "}"
+
+struct_constructor    = identifier "{" { "var" identifier ":" type { "," literal } } "}"
+
+null_literal          = "null"
+
+def_type              = type | "void"
+
+type                  = "bool" | "int" | "float" | "char" | "string" | identifier
+
+printable             = digit | letter  | " " | "!" | "\"" | "#" | "$"  | "%" | "&"
+                      | "'" | "(" | ")" | "*" | "+" | ","  | "-" | "."  | "/" | ":"
+                      | ";" | "<" | "=" | ">" | "?" | "@"  | "[" | "\\" | "]" | "^"
+                      | "_" | "`" | "{" | "|" | "}" | "~"
+
+letter                = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K"
+                      | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V"
+                      | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g"
+                      | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r"
+                      | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+
+digit                 = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
