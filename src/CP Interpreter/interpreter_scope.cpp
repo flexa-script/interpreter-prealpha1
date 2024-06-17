@@ -156,13 +156,14 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 	interpreter_function_t* func = nullptr;
 
 	for (auto& i = funcs.first; i != funcs.second; ++i) {
+		bool match_sig_size = true;
 		auto& func_params = i->second.first;
 		if (!func) {
 			func = &i->second;
 		}
 		auto found = true;
 		if (func_params.size() != signature.size()) {
-			continue;
+			match_sig_size = false;
 		}
 		for (size_t it = 0; it < func_params.size(); ++it) {
 			auto is_arr = is_array(std::get<1>(func_params.at(it)).type) && is_array(signature.at(it).type);
@@ -174,7 +175,9 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 				break;
 			}
 		}
-		if (found) return i->second;
+		if (found && match_sig_size) {
+			return i->second;
+		}
 	}
 
 	if (func) {
@@ -185,7 +188,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 }
 
 std::pair<interpreter_function_list_t::iterator, interpreter_function_list_t::iterator>
-	InterpreterScope::find_declared_functions(std::string identifier) {
+InterpreterScope::find_declared_functions(std::string identifier) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 	if (std::distance(funcs.first, funcs.second) == 0) {
 		throw std::runtime_error("something went wrong searching '" + identifier + "'");

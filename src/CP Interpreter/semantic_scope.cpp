@@ -40,10 +40,6 @@ FunctionDefinition SemanticScope::find_declared_function(std::string identifier,
 		Type stype = Type::T_UNDEFINED;
 		Type ftype = Type::T_UNDEFINED;
 
-		//if (!func && it->second.is_variable) {
-		//	func = &it->second;
-		//}
-
 		if (func_sig.size() != signature.size()) {
 			match_sig_size = false;
 		}
@@ -59,6 +55,7 @@ FunctionDefinition SemanticScope::find_declared_function(std::string identifier,
 				was_arr = is_arr;
 				ftype = is_arr ? func_sig.at(i).array_type : func_sig.at(i).type;
 
+				// store current rest function, and try to find an exactly signature match
 				if (!func && it->second.parameters[i].is_rest) {
 					rest = true;
 					func = &it->second;
@@ -72,6 +69,7 @@ FunctionDefinition SemanticScope::find_declared_function(std::string identifier,
 			}
 		}
 
+		// if found and exactly signature size
 		if (found && match_sig_size) {
 			return it->second;
 		}

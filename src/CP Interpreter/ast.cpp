@@ -88,11 +88,11 @@ StructureDefinition::StructureDefinition(std::string identifier, std::vector<Var
 
 FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, std::string type_name_space, Type array_type,
 	std::vector<ASTExprNode*> dim, std::vector<parser::TypeDefinition> signature, std::vector<parser::VariableDefinition> parameters, unsigned int row, unsigned int col)
-	: identifier(identifier), signature(signature), parameters(parameters), /*is_variable(false),*/
+	: identifier(identifier), signature(signature), parameters(parameters),
 	TypeDefinition(type, array_type, dim, type_name, type_name_space), CodePosition(row, col) {}
 
 FunctionDefinition::FunctionDefinition(std::string identifier, unsigned int row, unsigned int col)
-	: identifier(identifier), signature(std::vector<parser::TypeDefinition>()), parameters(std::vector<parser::VariableDefinition>()), /*is_variable(true),*/
+	: identifier(identifier), signature(std::vector<parser::TypeDefinition>()), parameters(std::vector<parser::VariableDefinition>()),
 	TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""), CodePosition(row, col) {}
 
 void FunctionDefinition::check_sig() const {
