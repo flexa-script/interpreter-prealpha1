@@ -45,8 +45,6 @@ FunctionDefinition SemanticScope::find_declared_function(std::string identifier,
 		}
 
 		for (size_t i = 0; i < signature.size(); ++i) {
-			// check default value parameters
-
 			if (rest) {
 				is_arr = was_arr;
 			}
@@ -62,14 +60,22 @@ FunctionDefinition SemanticScope::find_declared_function(std::string identifier,
 				}
 			}
 			stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+
+			// TODO: get func / check precedence
+			if (it->second.parameters[i].default_value) {
+				rest = true;
+				func = &it->second;
+			}
+
 			if (!match_type(ftype, stype) && !is_any(ftype)
-				&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+				&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)
+				&& !it->second.parameters[i].default_value) {
 				found = false;
 				break;
 			}
 		}
 
-		// if found and exactly signature size
+		// if found and exactly signature size (not rest)
 		if (found && match_sig_size) {
 			return it->second;
 		}

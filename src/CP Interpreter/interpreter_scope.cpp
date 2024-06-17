@@ -7,6 +7,7 @@
 
 
 using namespace visitor;
+using namespace parser;
 
 
 InterpreterScope::InterpreterScope(std::string name) : name(name) {}
@@ -155,28 +156,51 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 
 	interpreter_function_t* func = nullptr;
 
-	for (auto& i = funcs.first; i != funcs.second; ++i) {
+	for (auto& it = funcs.first; it != funcs.second; ++it) {
+		auto& func_params = it->second.first;
+		bool rest = false;
 		bool match_sig_size = true;
-		auto& func_params = i->second.first;
-		if (!func) {
-			func = &i->second;
-		}
 		auto found = true;
+		bool is_arr = false;
+		bool was_arr = false;
+		Type stype = Type::T_UNDEFINED;
+		Type ftype = Type::T_UNDEFINED;
+
+		if (!func) {
+			func = &it->second;
+		}
+
 		if (func_params.size() != signature.size()) {
 			match_sig_size = false;
 		}
-		for (size_t it = 0; it < func_params.size(); ++it) {
-			auto is_arr = is_array(std::get<1>(func_params.at(it)).type) && is_array(signature.at(it).type);
-			auto ftype = is_arr ? std::get<1>(func_params.at(it)).array_type : std::get<1>(func_params.at(it)).type;
-			auto stype = is_arr ? signature.at(it).array_type : signature.at(it).type;
+
+		for (size_t i = 0; i < func_params.size(); ++i) {
+			if (rest) {
+				is_arr = was_arr;
+			}
+			else {
+				is_arr = is_array(std::get<1>(func_params.at(i)).type) && is_array(signature.at(i).type);
+				was_arr = is_arr;
+				ftype = is_arr ? std::get<1>(func_params.at(i)).array_type : std::get<1>(func_params.at(i)).type;
+
+				// store current rest function, and try to find an exactly signature match
+				if (!func && std::get<3>(it->second.first[i])) {
+					rest = true;
+					func = &it->second;
+				}
+			}
+			stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+
 			if (!match_type(ftype, stype) && !is_any(ftype)
-				&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+				&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)
+				&& !std::get<2>(it->second.first[i])) {
 				found = false;
 				break;
 			}
 		}
+
 		if (found && match_sig_size) {
-			return i->second;
+			return it->second;
 		}
 	}
 
