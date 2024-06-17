@@ -1031,12 +1031,11 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 
 	std::vector<TypeDefinition> signature;
 	std::vector<Value*> function_arguments;
-	std::vector<Value*> function_variable_arguments;
 
 	for (auto param : astnode->parameters) {
 		is_reference = param.first;
 		param.second->accept(this);
-		function_variable_arguments.push_back(dynamic_cast<parser::ASTIdentifierNode*>(param.second) ? current_variable : nullptr);
+		Value* reference_value = dynamic_cast<parser::ASTIdentifierNode*>(param.second) ? current_variable : nullptr;
 		current_variable = nullptr;
 
 		auto td = TypeDefinition(current_expression_value.curr_type, current_expression_value.arr_type,
@@ -1044,12 +1043,11 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		signature.push_back(td);
 
 		Value* value = new Value(&current_expression_value);
-		function_arguments.push_back(value);
+		function_arguments.push_back(reference_value ? reference_value : value);
 	}
 
 	for (size_t i = 0; i < function_arguments.size(); ++i) {
 		last_function_arguments.push_back(function_arguments[i]);
-		last_function_reference_arguments.push_back(function_variable_arguments[i]);
 	}
 
 	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
@@ -1505,34 +1503,24 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 
 	for (unsigned int i = 0; i < last_function_arguments.size(); ++i) {
 		if (i >= function_call_parameters.size()) {
-			if (last_function_reference_arguments[i] && !is_function(last_function_arguments[i]->curr_type)) {
-				arr.push_back(last_function_reference_arguments[i]);
-			}
-			else {
-				arr.push_back(new Value(last_function_arguments[i]));
-			}
+			arr.push_back(new Value(last_function_arguments[i]));
 		}
 		else {
 			auto pname = std::get<0>(function_call_parameters[i]);
 
-			if (last_function_reference_arguments[i] && !is_function(last_function_arguments[i]->curr_type)) {
-				last_value = scopes[nmspace].back()->declare_value(pname, last_function_reference_arguments[i]);
+			if (is_function(last_function_arguments[i]->curr_type)) {
+				auto funcs = ((InterpreterScope*)last_function_arguments[i]->fun.first)->find_declared_functions(last_function_arguments[i]->fun.second);
+				for (auto& it = funcs.first; it != funcs.second; ++it) {
+					auto& func_params = it->second.first;
+					auto& func_block = it->second.second;
+					scopes[nmspace].back()->declare_function(pname, func_params, func_block);
+				}
 			}
 			else {
-				if (is_function(last_function_arguments[i]->curr_type)) {
-					auto funcs = ((InterpreterScope*)last_function_arguments[i]->fun.first)->find_declared_functions(last_function_arguments[i]->fun.second);
-					for (auto& it = funcs.first; it != funcs.second; ++it) {
-						auto& func_params = it->second.first;
-						auto& func_block = it->second.second;
-						scopes[nmspace].back()->declare_function(pname, func_params, func_block);
-					}
-				}
-				else {
-					last_value = scopes[nmspace].back()->declare_value(pname, new Value(last_function_reference_arguments[i]));
-				}
+				last_value = scopes[nmspace].back()->declare_value(pname, new Value(last_function_arguments[i]));
 			}
 
-			if (std::get<2>(function_call_parameters[i])) {
+			if (std::get<3>(function_call_parameters[i])) {
 				rest_name = pname;
 				arr.push_back(last_value);
 			}
@@ -1547,7 +1535,6 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 
 	function_call_parameters.clear();
 	last_function_arguments.clear();
-	last_function_reference_arguments.clear();
 }
 
 void Interpreter::declare_new_structure(std::string identifier_vector, Value new_value) {
@@ -1785,17 +1772,12 @@ void Interpreter::call_builtin_function(std::string identifier) {
 
 	for (size_t i = 0; i < last_function_arguments.size(); ++i) {
 		if (i >= function_call_parameters.size()) {
-			if (last_function_reference_arguments[i] && !is_function(last_function_arguments[i]->curr_type)) {
-				arr.push_back(last_function_reference_arguments[i]);
-			}
-			else {
-				arr.push_back(new Value(last_function_arguments[i]));
-			}
+			arr.push_back(new Value(last_function_arguments[i]));
 		}
 		else {
-			auto last_value = last_function_reference_arguments[i] ? last_function_reference_arguments[i] : last_function_arguments[i];
+			auto last_value = last_function_arguments[i];
 
-			if (std::get<2>(function_call_parameters[i])) {
+			if (std::get<3>(function_call_parameters[i])) {
 				arr.push_back(last_value);
 			}
 			else {
@@ -1811,7 +1793,6 @@ void Interpreter::call_builtin_function(std::string identifier) {
 	}
 
 	last_function_arguments.clear();
-	last_function_reference_arguments.clear();
 
 	builtin_functions[identifier]();
 	builtin_arguments.clear();
