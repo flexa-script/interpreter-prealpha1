@@ -35,7 +35,6 @@ namespace visitor {
 		std::string current_expression_nmspace;
 		Value* current_variable;
 		std::vector<Value*> last_function_arguments;
-		std::vector<Value*> last_function_reference_arguments;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		bool is_function_context = false;
 		bool return_from_function = false;
