@@ -34,7 +34,7 @@ namespace visitor {
 		std::string return_from_function_name;
 		std::string current_expression_nmspace;
 		Value* current_variable;
-		std::vector<Value*> last_function_arguments;
+		std::vector<std::pair<bool, Value*>> last_function_arguments;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		bool is_function_context = false;
 		bool return_from_function = false;

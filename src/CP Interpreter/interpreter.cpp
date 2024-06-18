@@ -953,7 +953,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	auto root = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	auto sub_val = access_value(id_scope, root, astnode->identifier_vector);
 	current_expression_value = *sub_val;
-	if ((is_reference || is_struct(root->curr_type)) && !sub_val || sub_val == root) {
+	if ((is_reference || is_struct(root->curr_type)) && (!sub_val || sub_val == root)) {
 		current_variable = root;
 	}
 
@@ -1030,7 +1030,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	auto nmspace = get_namespace(astnode->nmspace);
 
 	std::vector<TypeDefinition> signature;
-	std::vector<Value*> function_arguments;
+	std::vector<std::pair<bool, Value*>> function_arguments;
 
 	for (auto param : astnode->parameters) {
 		is_reference = param.first;
@@ -1042,8 +1042,8 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 			std::vector<ASTExprNode*>(), "", "");
 		signature.push_back(td);
 
-		Value* value = new Value(&current_expression_value);
-		function_arguments.push_back(reference_value ? reference_value : value);
+		std::pair<bool, Value*> pvalue = std::pair(is_reference, is_reference ? reference_value : new Value(&current_expression_value));
+		function_arguments.push_back(pvalue);
 	}
 
 	for (size_t i = 0; i < function_arguments.size(); ++i) {
@@ -1499,19 +1499,21 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 	auto curr_scope = scopes[nmspace].back();
 	auto rest_name = std::string();
 	auto arr = cp_array();
-	Value* last_value = nullptr;
 	size_t i;
 
+	// adds function arguments
 	for (i = 0; i < last_function_arguments.size(); ++i) {
+		// is reference : not reference
+		Value* current_value = last_function_arguments[i].first ? last_function_arguments[i].second : new Value(last_function_arguments[i].second);
+
 		if (i >= function_call_parameters.size()) {
-			arr.push_back(new Value(last_function_arguments[i]));
+			arr.push_back(current_value);
 		}
 		else {
-			auto pname = std::get<0>(function_call_parameters[i]);
+			const auto& pname = std::get<0>(function_call_parameters[i]);
 
-			if (is_function(last_function_arguments[i]->curr_type)) {
-				last_value = last_function_arguments[i];
-				auto funcs = ((InterpreterScope*)last_function_arguments[i]->fun.first)->find_declared_functions(last_function_arguments[i]->fun.second);
+			if (is_function(last_function_arguments[i].second->curr_type)) {
+				auto funcs = ((InterpreterScope*)last_function_arguments[i].second->fun.first)->find_declared_functions(last_function_arguments[i].second->fun.second);
 				for (auto& it = funcs.first; it != funcs.second; ++it) {
 					auto& func_params = it->second.first;
 					auto& func_block = it->second.second;
@@ -1519,21 +1521,24 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 				}
 			}
 			else {
-				last_value = scopes[nmspace].back()->declare_value(pname, new Value(last_function_arguments[i]));
+				scopes[nmspace].back()->declare_value(pname, current_value);
 			}
 
+			// is rest
 			if (std::get<3>(function_call_parameters[i])) {
 				rest_name = pname;
-				arr.push_back(last_value);
+				arr.push_back(current_value);
 			}
 		}
 	}
+
+	// adds default values
 	for (; i < function_call_parameters.size(); ++i) {
 		if (std::get<3>(function_call_parameters[i])) {
 			break;
 		}
 
-		auto pname = std::get<0>(function_call_parameters[i]);
+		const auto& pname = std::get<0>(function_call_parameters[i]);
 		std::get<2>(function_call_parameters[i])->accept(this);
 
 		if (is_function(current_expression_value.curr_type)) {
@@ -1793,17 +1798,18 @@ void Interpreter::call_builtin_function(std::string identifier) {
 	auto arr = cp_array();
 
 	for (size_t i = 0; i < last_function_arguments.size(); ++i) {
+		// is reference : not reference
+		Value* current_value = last_function_arguments[i].first ? last_function_arguments[i].second : new Value(last_function_arguments[i].second);
+
 		if (i >= function_call_parameters.size()) {
-			arr.push_back(new Value(last_function_arguments[i]));
+			arr.push_back(current_value);
 		}
 		else {
-			auto last_value = last_function_arguments[i];
-
 			if (std::get<3>(function_call_parameters[i])) {
-				arr.push_back(last_value);
+				arr.push_back(current_value);
 			}
 			else {
-				builtin_arguments.push_back(last_value);
+				builtin_arguments.push_back(current_value);
 			}
 		}
 	}
