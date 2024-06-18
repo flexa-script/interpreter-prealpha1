@@ -65,6 +65,7 @@ void Interpreter::visit(ASTProgramNode* astnode) {
 			}
 		}
 	}
+	current_expression_value = Value(Type::T_UNDEFINED);
 }
 
 void Interpreter::visit(ASTUsingNode* astnode) {
@@ -1500,8 +1501,9 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 	auto rest_name = std::string();
 	auto arr = cp_array();
 	Value* last_value = nullptr;
+	size_t i;
 
-	for (unsigned int i = 0; i < last_function_arguments.size(); ++i) {
+	for (i = 0; i < last_function_arguments.size(); ++i) {
 		if (i >= function_call_parameters.size()) {
 			arr.push_back(new Value(last_function_arguments[i]));
 		}
@@ -1509,6 +1511,7 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 			auto pname = std::get<0>(function_call_parameters[i]);
 
 			if (is_function(last_function_arguments[i]->curr_type)) {
+				last_value = last_function_arguments[i];
 				auto funcs = ((InterpreterScope*)last_function_arguments[i]->fun.first)->find_declared_functions(last_function_arguments[i]->fun.second);
 				for (auto& it = funcs.first; it != funcs.second; ++it) {
 					auto& func_params = it->second.first;
@@ -1524,6 +1527,22 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 				rest_name = pname;
 				arr.push_back(last_value);
 			}
+		}
+	}
+	for (; i < function_call_parameters.size(); ++i) {
+		auto pname = std::get<0>(function_call_parameters[i]);
+		std::get<2>(function_call_parameters[i])->accept(this);
+
+		if (is_function(current_expression_value.curr_type)) {
+			auto funcs = ((InterpreterScope*)current_expression_value.fun.first)->find_declared_functions(current_expression_value.fun.second);
+			for (auto& it = funcs.first; it != funcs.second; ++it) {
+				auto& func_params = it->second.first;
+				auto& func_block = it->second.second;
+				scopes[nmspace].back()->declare_function(pname, func_params, func_block);
+			}
+		}
+		else {
+			scopes[nmspace].back()->declare_value(pname, new Value(current_expression_value));
 		}
 	}
 

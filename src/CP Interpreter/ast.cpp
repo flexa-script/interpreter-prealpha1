@@ -96,17 +96,17 @@ FunctionDefinition::FunctionDefinition(std::string identifier, unsigned int row,
 	TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""), CodePosition(row, col) {}
 
 void FunctionDefinition::check_sig() const {
-	//bool has_default = false;
+	bool has_default = false;
 	for (size_t i = 0; i < parameters.size(); ++i) {
 		if (parameters[i].is_rest && parameters.size() - 1 != i) {
 			throw std::runtime_error("'" + identifier + "': the rest parameter must be the last parameter");
 		}
-		//if (parameters[i].default_value) {
-		//	has_default = true;
-		//}
-		//if (!parameters[i].default_value && has_default) {
-		//	throw std::runtime_error("'" + identifier + "': the rest parameter must be the last parameter");
-		//}
+		if (parameters[i].default_value) {
+			has_default = true;
+		}
+		if (!parameters[i].default_value && has_default) {
+			throw std::runtime_error("'" + identifier + "': the rest parameter must be the last parameter");
+		}
 	}
 }
 

@@ -154,58 +154,85 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 		throw std::runtime_error("something went wrong searching '" + identifier + "'");
 	}
 
-	interpreter_function_t* func = nullptr;
-
 	for (auto& it = funcs.first; it != funcs.second; ++it) {
 		auto& func_params = it->second.first;
 		bool rest = false;
-		bool match_sig_size = true;
 		auto found = true;
 		bool is_arr = false;
-		bool was_arr = false;
 		Type stype = Type::T_UNDEFINED;
 		Type ftype = Type::T_UNDEFINED;
+		size_t func_sig_size = func_params.size();
+		size_t call_sig_size = signature.size();
 
-		if (!func) {
-			func = &it->second;
-		}
-
-		if (func_params.size() != signature.size()) {
-			match_sig_size = false;
-		}
-
-		for (size_t i = 0; i < func_params.size(); ++i) {
-			if (rest) {
-				is_arr = was_arr;
-			}
-			else {
+		// if signatures size match, handle normal cases
+		if (func_sig_size == call_sig_size) {
+			for (size_t i = 0; i < call_sig_size; ++i) {
 				is_arr = is_array(std::get<1>(func_params.at(i)).type) && is_array(signature.at(i).type);
-				was_arr = is_arr;
 				ftype = is_arr ? std::get<1>(func_params.at(i)).array_type : std::get<1>(func_params.at(i)).type;
+				stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
 
-				// store current rest function, and try to find an exactly signature match
-				if (!func && std::get<3>(it->second.first[i])) {
-					rest = true;
-					func = &it->second;
+				if (!match_type(ftype, stype) && !is_any(ftype)
+					&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+					found = false;
+					break;
 				}
 			}
-			stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
 
-			if (!match_type(ftype, stype) && !is_any(ftype)
-				&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)
-				&& !std::get<2>(it->second.first[i])) {
-				found = false;
+			if (found) {
+				return it->second;
+			}
+		}
+
+		// if function signature is lesser than signature call, handle rest case
+		found = true;
+		if (func_sig_size < call_sig_size) {
+			for (size_t i = 0; i < func_params.size(); ++i) {
+				if (!rest) {
+					is_arr = is_array(std::get<1>(func_params.at(i)).type) && is_array(signature.at(i).type);
+					ftype = is_arr ? std::get<1>(func_params.at(i)).array_type : std::get<1>(func_params.at(i)).type;
+
+					// store current rest function, and try to find an exactly signature match
+					if (std::get<3>(it->second.first[i])) {
+						rest = true;
+					}
+				}
+				stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+
+				if (!match_type(ftype, stype) && !is_any(ftype)
+					&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+					found = false;
+					break;
+				}
+			}
+
+			if (found) {
+				return it->second;
+			}
+		}
+
+		// if function signature is greater than signature call, handle default value cases
+		found = true;
+		for (size_t i = 0; i < func_sig_size; ++i) {
+			if (func_sig_size <= call_sig_size) {
+				is_arr = is_array(std::get<1>(func_params.at(i)).type) && is_array(signature.at(i).type);
+				ftype = is_arr ? std::get<1>(func_params.at(i)).array_type : std::get<1>(func_params.at(i)).type;
+				stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+
+				if (!match_type(ftype, stype) && !is_any(ftype)
+					&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+					found = false;
+					break;
+				}
+			}
+			else {
 				break;
 			}
 		}
 
-		if (found && match_sig_size) {
+		// if found and exactly signature size (not rest)
+		if (found) {
 			return it->second;
 		}
-	}
-
-	if (func) {
-		return *func;
 	}
 
 	throw std::runtime_error("something went wrong searching '" + identifier + "'");

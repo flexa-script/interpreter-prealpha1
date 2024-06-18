@@ -28,61 +28,88 @@ FunctionDefinition SemanticScope::find_declared_function(std::string identifier,
 		throw std::runtime_error("something went wrong when determining the type of '" + identifier + "'");
 	}
 
-	FunctionDefinition* func = nullptr;
-
 	for (auto& it = funcs.first; it != funcs.second; ++it) {
 		auto& func_sig = it->second.signature;
 		bool rest = false;
-		bool match_sig_size = true;
 		auto found = true;
 		bool is_arr = false;
-		bool was_arr = false;
 		Type stype = Type::T_UNDEFINED;
 		Type ftype = Type::T_UNDEFINED;
+		size_t func_sig_size = func_sig.size();
+		size_t call_sig_size = signature.size();
 
-		if (func_sig.size() != signature.size()) {
-			match_sig_size = false;
-		}
-
-		for (size_t i = 0; i < signature.size(); ++i) {
-			if (rest) {
-				is_arr = was_arr;
-			}
-			else {
+		// if signatures size match, handle normal cases
+		if (func_sig_size == call_sig_size) {
+			for (size_t i = 0; i < call_sig_size; ++i) {
 				is_arr = is_array(func_sig.at(i).type) && is_array(signature.at(i).type);
-				was_arr = is_arr;
 				ftype = is_arr ? func_sig.at(i).array_type : func_sig.at(i).type;
+				stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
 
-				// store current rest function, and try to find an exactly signature match
-				if (!func && it->second.parameters[i].is_rest) {
-					rest = true;
-					func = &it->second;
+				if (!match_type(ftype, stype) && !is_any(ftype)
+					&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+					found = false;
+					break;
 				}
 			}
-			stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
 
-			// TODO: get func / check precedence
-			if (it->second.parameters[i].default_value) {
-				rest = true;
-				func = &it->second;
+			if (found) {
+				return it->second;
+			}
+		}
+
+		// if function signature is lesser than signature call, handle rest case
+		found = true;
+		if (func_sig_size < call_sig_size) {
+			for (size_t i = 0; i < call_sig_size; ++i) {
+				if (!rest) {
+					is_arr = is_array(func_sig.at(i).type) && is_array(signature.at(i).type);
+					ftype = is_arr ? func_sig.at(i).array_type : func_sig.at(i).type;
+
+					// store current rest function, and try to find an exactly signature match
+					if (it->second.parameters[i].is_rest) {
+						rest = true;
+					}
+				}
+				stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+
+				if (!match_type(ftype, stype) && !is_any(ftype)
+					&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+					found = false;
+					break;
+				}
 			}
 
-			if (!match_type(ftype, stype) && !is_any(ftype)
-				&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)
-				&& !it->second.parameters[i].default_value) {
-				found = false;
-				break;
+			if (found) {
+				return it->second;
+			}
+		}
+
+		// if function signature is greater than signature call, handle default value cases
+		found = true;
+		for (size_t i = 0; i < func_sig_size; ++i) {
+			if (func_sig_size <= call_sig_size) {
+				is_arr = is_array(func_sig.at(i).type) && is_array(signature.at(i).type);
+				ftype = is_arr ? func_sig.at(i).array_type : func_sig.at(i).type;
+				stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+
+				if (!match_type(ftype, stype) && !is_any(ftype)
+					&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+					found = false;
+					break;
+				}
+			}
+			else {
+				if (!it->second.parameters[i].default_value) {
+					found = false;
+					break;
+				}
 			}
 		}
 
 		// if found and exactly signature size (not rest)
-		if (found && match_sig_size) {
+		if (found) {
 			return it->second;
 		}
-	}
-
-	if (func) {
-		return *func;
 	}
 
 	throw std::runtime_error("definition of '" + identifier + "' function not found");
