@@ -196,7 +196,7 @@ ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(std::string identifier, std
 	// generate signature
 	this->signature = std::vector<TypeDefinition>();
 
-	for (auto param : this->parameters) {
+	for (const auto& param : this->parameters) {
 		variable_names.push_back(param.identifier);
 		auto td = TypeDefinition(param.type, param.array_type, param.dim, param.type_name, param.type_name_space);
 		signature.push_back(td);

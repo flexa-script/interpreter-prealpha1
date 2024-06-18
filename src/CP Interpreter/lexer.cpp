@@ -7,7 +7,7 @@
 using namespace lexer;
 
 
-Lexer::Lexer(std::string& source, std::string name)
+Lexer::Lexer(const std::string& name, const std::string& source)
 	: source(source), name(name) {
 	tokenize();
 }
@@ -23,7 +23,7 @@ void Lexer::tokenize() {
 
 	while (has_next()) {
 		if (is_space()) {
-			// ignore white spaces
+			// ignore unuseful characters
 			advance();
 		}
 		else if (current_char == '/' && (next_char == '/' || next_char == '*')) {

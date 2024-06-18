@@ -12,7 +12,7 @@ namespace lexer {
     class Lexer {
 
     public:
-        Lexer(std::string&, std::string);
+        Lexer(const std::string& name, const std::string& source);
         ~Lexer();
 
         Token next_token();

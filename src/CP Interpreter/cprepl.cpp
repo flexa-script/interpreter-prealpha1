@@ -123,8 +123,8 @@ int CPRepl::execute() {
 		try {
 
 			// tokenise and initialise parser
-			lexer::Lexer lexer(program, "main");
-			parser::Parser parser(&lexer, "main");
+			lexer::Lexer lexer("__main", program);
+			parser::Parser parser("__main", &lexer);
 			parser::ASTProgramNode* prog;
 
 			// try to parse as program
@@ -142,8 +142,8 @@ int CPRepl::execute() {
 					}
 
 					// parse again, create program node manually
-					lexer::Lexer expr_lexer(program, "main");
-					parser = parser::Parser(&expr_lexer, 0);  // do not consume first token
+					lexer::Lexer expr_lexer("__main", program);
+					parser = parser::Parser("__main", &expr_lexer, 0);  // do not consume first token
 					//prog = new parser::ASTProgramNode(std::vector<parser::ASTNode*>({ parser.parse_expression() }), "main");
 
 					expr = true;

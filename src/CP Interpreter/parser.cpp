@@ -8,12 +8,12 @@ using namespace lexer;
 using namespace parser;
 
 
-Parser::Parser(Lexer* lex, std::string name) : lex(lex), name(name) {
+Parser::Parser(std::string name, Lexer* lex) : name(name), lex(lex) {
 	current_token = lex->next_token();
 	next_token = lex->next_token();
 }
 
-Parser::Parser(Lexer* lex, std::string name, unsigned int tokens) : lex(lex), name(name) {
+Parser::Parser(std::string name, Lexer* lex, unsigned int tokens) : name(name), lex(lex) {
 	next_token = lex->next_token();
 
 	for (unsigned int i = 0; i < tokens; i++) {
