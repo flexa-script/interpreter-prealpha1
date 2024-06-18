@@ -4,15 +4,16 @@
 #include "vendor/util.hpp"
 
 
+using namespace lexer;
 using namespace parser;
 
 
-Parser::Parser(lexer::Lexer* lex, std::string name) : lex(lex), name(name) {
+Parser::Parser(Lexer* lex, std::string name) : lex(lex), name(name) {
 	current_token = lex->next_token();
 	next_token = lex->next_token();
 }
 
-Parser::Parser(lexer::Lexer* lex, std::string name, unsigned int tokens) : lex(lex), name(name) {
+Parser::Parser(Lexer* lex, std::string name, unsigned int tokens) : lex(lex), name(name) {
 	next_token = lex->next_token();
 
 	for (unsigned int i = 0; i < tokens; i++) {
@@ -25,14 +26,14 @@ void Parser::consume_token() {
 	next_token = lex->next_token();
 }
 
-void Parser::consume_token(lexer::TokenType type) {
+void Parser::consume_token(TokenType type) {
 	consume_token();
 	check_current_token(type);
 }
 
-void Parser::check_current_token(lexer::TokenType type) {
+void Parser::check_current_token(TokenType type) {
 	if (current_token.type != type) {
-		throw std::runtime_error(msg_header() + "expected '" + lexer::Token::token_image(type) + "'");
+		throw std::runtime_error(msg_header() + "expected '" + Token::token_image(type) + "'");
 	}
 }
 
@@ -40,14 +41,14 @@ ASTProgramNode* Parser::parse_program() {
 	auto statements = new std::vector<ASTNode*>;
 	std::string alias = "";
 
-	if (current_token.type == lexer::TOK_NAMESPACE) {
-		consume_token(lexer::TOK_IDENTIFIER);
+	if (current_token.type == TOK_NAMESPACE) {
+		consume_token(TOK_IDENTIFIER);
 		alias = current_token.value;
-		consume_token(lexer::TOK_SEMICOLON);
+		consume_token(TOK_SEMICOLON);
 		consume_token();
 	}
 
-	while (current_token.type != lexer::TOK_EOF) {
+	while (current_token.type != TOK_EOF) {
 		statements->push_back(parse_program_statement());
 		consume_token();
 	}
@@ -62,25 +63,25 @@ ASTUsingNode* Parser::parse_using_statement() {
 	unsigned int col = current_token.col;
 
 	do {
-		consume_token(lexer::TOK_IDENTIFIER);
+		consume_token(TOK_IDENTIFIER);
 		library.push_back(current_token.value);
-		if (next_token.type == lexer::TOK_DOT) {
+		if (next_token.type == TOK_DOT) {
 			consume_token();
 		}
-	} while (next_token.type == lexer::TOK_IDENTIFIER);
+	} while (next_token.type == TOK_IDENTIFIER);
 
-	consume_token(lexer::TOK_SEMICOLON);
+	consume_token(TOK_SEMICOLON);
 
 	return new ASTUsingNode(library, alias, row, col);
 }
 
 ASTNode* Parser::parse_program_statement() {
 	switch (current_token.type) {
-	case lexer::TOK_USING:
+	case TOK_USING:
 		return parse_using_statement();
-	case lexer::TOK_AS:
+	case TOK_AS:
 		return parse_as_namespace_statement();
-	case lexer::TOK_DEF:
+	case TOK_DEF:
 		return parse_function_definition();
 	default:
 		consume_semicolon = true;
@@ -90,38 +91,38 @@ ASTNode* Parser::parse_program_statement() {
 
 ASTNode* Parser::parse_block_statement() {
 	switch (current_token.type) {
-	case lexer::TOK_ENUM:
+	case TOK_ENUM:
 		return parse_enum_statement();
-	case lexer::TOK_VAR:
-	case lexer::TOK_CONST:
+	case TOK_VAR:
+	case TOK_CONST:
 		return parse_declaration_statement();
-	case lexer::TOK_STRUCT:
+	case TOK_STRUCT:
 		return parse_struct_definition();
-	case lexer::TOK_TRY:
+	case TOK_TRY:
 		return parse_try_catch_statement();
-	case lexer::TOK_THROW:
+	case TOK_THROW:
 		return parse_throw_statement();
-	case lexer::TOK_SWITCH:
+	case TOK_SWITCH:
 		return parse_switch_statement();
-	case lexer::TOK_IF:
+	case TOK_IF:
 		return parse_if_statement();
-	case lexer::TOK_WHILE:
+	case TOK_WHILE:
 		return parse_while_statement();
-	case lexer::TOK_DO:
+	case TOK_DO:
 		return parse_do_while_statement();
-	case lexer::TOK_FOR:
+	case TOK_FOR:
 		return parse_for_statement();
-	case lexer::TOK_FOREACH:
+	case TOK_FOREACH:
 		return parse_foreach_statement();
-	case lexer::TOK_CONTINUE:
+	case TOK_CONTINUE:
 		return parse_continue_statement();
-	case lexer::TOK_BREAK:
+	case TOK_BREAK:
 		return parse_break_statement();
-	case lexer::TOK_EXIT:
+	case TOK_EXIT:
 		return parse_exit_statement();
-	case lexer::TOK_RETURN:
+	case TOK_RETURN:
 		return parse_return_statement();
-	case lexer::TOK_IDENTIFIER:
+	case TOK_IDENTIFIER:
 		return parse_identifier_statement();
 	default:
 		try {
@@ -138,10 +139,10 @@ ASTAsNamespaceNode* Parser::parse_as_namespace_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(lexer::TOK_NAMESPACE);
-	consume_token(lexer::TOK_IDENTIFIER);
+	consume_token(TOK_NAMESPACE);
+	consume_token(TOK_IDENTIFIER);
 	nmspace = current_token.value;
-	consume_token(lexer::TOK_SEMICOLON);
+	consume_token(TOK_SEMICOLON);
 
 	return new ASTAsNamespaceNode(nmspace, row, col);
 }
@@ -172,21 +173,21 @@ ASTNode* Parser::parse_identifier_statement() {
 std::vector<ASTExprNode*> Parser::parse_dimension_vector() {
 	std::vector<ASTExprNode*> access_vector = std::vector<ASTExprNode*>();
 
-	if (current_token.type == lexer::TOK_LEFT_BRACE) {
+	if (current_token.type == TOK_LEFT_BRACE) {
 		do {
 			ASTExprNode* expr_size = nullptr;
 			consume_token();
-			if (current_token.type != lexer::TOK_RIGHT_BRACE) {
+			if (current_token.type != TOK_RIGHT_BRACE) {
 				expr_size = parse_expression();
-				consume_token(lexer::TOK_RIGHT_BRACE);
+				consume_token(TOK_RIGHT_BRACE);
 			}
 			access_vector.push_back(expr_size);
 
-			if (next_token.type == lexer::TOK_LEFT_BRACE) {
+			if (next_token.type == TOK_LEFT_BRACE) {
 				consume_token();
 			}
 
-		} while (current_token.type == lexer::TOK_LEFT_BRACE);
+		} while (current_token.type == TOK_LEFT_BRACE);
 	}
 
 	return access_vector;
@@ -198,7 +199,7 @@ Identifier Parser::parse_identifier() {
 
 	identifier = current_token.value;
 
-	if (next_token.type == lexer::TOK_LEFT_BRACE) {
+	if (next_token.type == TOK_LEFT_BRACE) {
 		consume_token();
 		access_vector = parse_dimension_vector();
 	}
@@ -209,12 +210,12 @@ Identifier Parser::parse_identifier() {
 std::vector<Identifier> Parser::parse_identifier_vector() {
 	auto identifier_vector = std::vector<Identifier>();
 
-	while (current_token.type == lexer::TOK_IDENTIFIER) {
+	while (current_token.type == TOK_IDENTIFIER) {
 		identifier_vector.push_back(parse_identifier());
 
-		if (next_token.type == lexer::TOK_DOT) {
+		if (next_token.type == TOK_DOT) {
 			consume_token();
-			consume_token(lexer::TOK_IDENTIFIER);
+			consume_token(TOK_IDENTIFIER);
 		}
 		else {
 			break;
@@ -234,9 +235,9 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 	auto dim_vector = std::vector<ASTExprNode*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
-	bool is_const = current_token.type == lexer::TOK_CONST;
+	bool is_const = current_token.type == TOK_CONST;
 
-	consume_token(lexer::TOK_IDENTIFIER);
+	consume_token(TOK_IDENTIFIER);
 	auto id = parse_identifier();
 	identifier = id.identifier;
 	dim_vector = id.access_vector;
@@ -245,11 +246,11 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 		type = Type::T_ARRAY;
 	}
 
-	if (next_token.type == lexer::TOK_COLON) {
+	if (next_token.type == TOK_COLON) {
 		consume_token();
 		consume_token();
 
-		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+		if (next_token.type == TOK_LIB_ACESSOR_OP) {
 			type_name_space = current_token.value;
 			consume_token();
 			consume_token();
@@ -268,12 +269,12 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 			}
 		}
 
-		if (current_token.type == lexer::TOK_IDENTIFIER) {
+		if (current_token.type == TOK_IDENTIFIER) {
 			type_name = current_token.value;
 		}
 	}
 
-	if (next_token.type == lexer::TOK_EQUALS) {
+	if (next_token.type == TOK_EQUALS) {
 		consume_token();
 		consume_token();
 		expr = parse_expression();
@@ -301,9 +302,9 @@ ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
 	auto dim_vector = std::vector<ASTExprNode*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
-	bool is_const = current_token.type == lexer::TOK_CONST;
+	bool is_const = current_token.type == TOK_CONST;
 
-	consume_token(lexer::TOK_IDENTIFIER);
+	consume_token(TOK_IDENTIFIER);
 	auto id = parse_identifier();
 	identifier = id.identifier;
 	dim_vector = id.access_vector;
@@ -312,11 +313,11 @@ ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
 		type = Type::T_ARRAY;
 	}
 
-	if (next_token.type == lexer::TOK_COLON) {
+	if (next_token.type == TOK_COLON) {
 		consume_token();
 		consume_token();
 
-		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+		if (next_token.type == TOK_LIB_ACESSOR_OP) {
 			type_name_space = current_token.value;
 			consume_token();
 			consume_token();
@@ -335,7 +336,7 @@ ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
 			}
 		}
 
-		if (current_token.type == lexer::TOK_IDENTIFIER) {
+		if (current_token.type == TOK_IDENTIFIER) {
 			type_name = current_token.value;
 		}
 	}
@@ -365,12 +366,12 @@ VariableDefinition* Parser::parse_formal_param() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	if (current_token.type == lexer::TOK_RETICENCES) {
+	if (current_token.type == TOK_RETICENCES) {
 		is_rest = true;
-		consume_token(lexer::TOK_IDENTIFIER);
+		consume_token(TOK_IDENTIFIER);
 	}
 	else {
-		check_current_token(lexer::TOK_IDENTIFIER);
+		check_current_token(TOK_IDENTIFIER);
 	}
 
 	auto id = parse_identifier();
@@ -381,11 +382,11 @@ VariableDefinition* Parser::parse_formal_param() {
 		type = Type::T_ARRAY;
 	}
 
-	if (next_token.type == lexer::TOK_COLON) {
+	if (next_token.type == TOK_COLON) {
 		consume_token();
 		consume_token();
 
-		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+		if (next_token.type == TOK_LIB_ACESSOR_OP) {
 			type_name_space = current_token.value;
 			consume_token();
 			consume_token();
@@ -404,7 +405,7 @@ VariableDefinition* Parser::parse_formal_param() {
 			}
 		}
 
-		if (current_token.type == lexer::TOK_IDENTIFIER) {
+		if (current_token.type == TOK_IDENTIFIER) {
 			type_name = current_token.value;
 		}
 	}
@@ -424,7 +425,7 @@ VariableDefinition* Parser::parse_formal_param() {
 		dim.insert(dim.begin(), ndim);
 	}
 
-	if (next_token.type == lexer::TOK_EQUALS) {
+	if (next_token.type == TOK_EQUALS) {
 		consume_token();
 		consume_token();
 		def_expr = parse_expression();
@@ -443,13 +444,13 @@ std::vector<std::pair<bool, ASTExprNode*>>* Parser::parse_actual_params() {
 	do {
 		consume_token();
 		bool isref = false;
-		if (current_token.type == lexer::TOK_REF) {
+		if (current_token.type == TOK_REF) {
 			consume_token();
 			isref = true;
 		}
 		parameters->emplace_back(isref, parse_expression());
 		consume_token();
-	} while (current_token.type == lexer::TOK_COMMA);
+	} while (current_token.type == TOK_COMMA);
 
 	return parameters;
 }
@@ -460,7 +461,7 @@ ASTIdentifierNode* Parser::parse_identifier_node(std::string expr_nmspace) {
 	std::string nmspace = expr_nmspace;
 	auto identifier_vector = std::vector<Identifier>();
 
-	if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+	if (next_token.type == TOK_LIB_ACESSOR_OP) {
 		if (!nmspace.empty()) {
 			throw std::runtime_error(msg_header() + "unexpected token '" + next_token.value + "'");
 		}
@@ -483,7 +484,7 @@ ASTNode* Parser::parse_assignment_or_increment_node() {
 		check_consume_semicolon();
 		return expr;
 	}
-	else if (next_token.type == lexer::TOK_ADDITIVE_UN_OP) {
+	else if (next_token.type == TOK_ADDITIVE_UN_OP) {
 		return parse_increment_expression(identifier);
 	}
 	else {
@@ -507,7 +508,7 @@ ASTAssignmentNode* Parser::parse_assignment_statement(ASTIdentifierNode* identif
 	auto access_vector = std::vector<ASTExprNode*>();
 
 	consume_token();
-	if (current_token.type != lexer::TOK_ADDITIVE_OP && current_token.type != lexer::TOK_MULTIPLICATIVE_OP && current_token.type != lexer::TOK_EQUALS) {
+	if (current_token.type != TOK_ADDITIVE_OP && current_token.type != TOK_MULTIPLICATIVE_OP && current_token.type != TOK_EQUALS) {
 		throw std::runtime_error(msg_header() + "invalid assignment operator '" + current_token.value + "'");
 	}
 
@@ -529,7 +530,7 @@ ASTReturnNode* Parser::parse_return_statement() {
 
 	if (consume_semicolon) {
 		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
+		consume_token(TOK_SEMICOLON);
 	}
 
 	return new ASTReturnNode(expr, row, col);
@@ -539,12 +540,12 @@ ASTExitNode* Parser::parse_exit_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token(TOK_LEFT_BRACKET);
 
 	consume_token();
 	ASTExprNode* expr = parse_expression();
 
-	consume_token(lexer::TOK_RIGHT_BRACKET);
+	consume_token(TOK_RIGHT_BRACKET);
 
 	check_consume_semicolon();
 
@@ -556,19 +557,19 @@ ASTEnumNode* Parser::parse_enum_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(lexer::TOK_LEFT_CURLY);
+	consume_token(TOK_LEFT_CURLY);
 
-	while (next_token.type != lexer::TOK_RIGHT_CURLY
-		&& next_token.type != lexer::TOK_ERROR
-		&& next_token.type != lexer::TOK_EOF) {
-		consume_token(lexer::TOK_IDENTIFIER);
+	while (next_token.type != TOK_RIGHT_CURLY
+		&& next_token.type != TOK_ERROR
+		&& next_token.type != TOK_EOF) {
+		consume_token(TOK_IDENTIFIER);
 		identifiers.push_back(current_token.value);
-		if (next_token.type == lexer::TOK_COMMA) {
+		if (next_token.type == TOK_COMMA) {
 			consume_token();
 		}
 	}
 
-	consume_token(lexer::TOK_RIGHT_CURLY);
+	consume_token(TOK_RIGHT_CURLY);
 	check_consume_semicolon();
 
 	return new ASTEnumNode(identifiers, row, col);
@@ -580,15 +581,15 @@ ASTBlockNode* Parser::parse_block() {
 	unsigned int col = current_token.col;
 
 	consume_token();
-	while (current_token.type != lexer::TOK_RIGHT_CURLY
-		&& current_token.type != lexer::TOK_ERROR
-		&& current_token.type != lexer::TOK_EOF) {
+	while (current_token.type != TOK_RIGHT_CURLY
+		&& current_token.type != TOK_ERROR
+		&& current_token.type != TOK_EOF) {
 		consume_semicolon = true;
 		statements->push_back(parse_block_statement());
 		consume_token();
 	}
 
-	if (current_token.type == lexer::TOK_RIGHT_CURLY) {
+	if (current_token.type == TOK_RIGHT_CURLY) {
 		return new ASTBlockNode(*statements, row, col);
 	}
 	throw std::runtime_error(msg_header() + "reached end of file while parsing");
@@ -600,14 +601,14 @@ ASTBlockNode* Parser::parse_struct_block() {
 	unsigned int col = current_token.col;
 
 	consume_token();
-	while (current_token.type != lexer::TOK_RIGHT_CURLY
-		&& current_token.type != lexer::TOK_ERROR
-		&& current_token.type != lexer::TOK_EOF) {
+	while (current_token.type != TOK_RIGHT_CURLY
+		&& current_token.type != TOK_ERROR
+		&& current_token.type != TOK_EOF) {
 		statements->push_back(parse_struct_block_variables());
 		consume_token();
 	}
 
-	if (current_token.type == lexer::TOK_RIGHT_CURLY) {
+	if (current_token.type == TOK_RIGHT_CURLY) {
 		return new ASTBlockNode(*statements, row, col);
 	}
 	throw std::runtime_error(msg_header() + "mismatched scopes: reached end of file while parsing");
@@ -615,7 +616,7 @@ ASTBlockNode* Parser::parse_struct_block() {
 
 ASTStatementNode* Parser::parse_struct_block_variables() {
 	switch (current_token.type) {
-	case lexer::TOK_VAR:
+	case TOK_VAR:
 		return parse_declaration_statement();
 
 	default:
@@ -635,12 +636,12 @@ VariableDefinition* Parser::parse_struct_var_def() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	if (current_token.type == lexer::TOK_RETICENCES) {
+	if (current_token.type == TOK_RETICENCES) {
 		is_rest = true;
-		consume_token(lexer::TOK_IDENTIFIER);
+		consume_token(TOK_IDENTIFIER);
 	}
 	else {
-		check_current_token(lexer::TOK_IDENTIFIER);
+		check_current_token(TOK_IDENTIFIER);
 	}
 
 	auto id = parse_identifier();
@@ -651,11 +652,11 @@ VariableDefinition* Parser::parse_struct_var_def() {
 		type = Type::T_ARRAY;
 	}
 
-	if (next_token.type == lexer::TOK_COLON) {
+	if (next_token.type == TOK_COLON) {
 		consume_token();
 		consume_token();
 
-		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+		if (next_token.type == TOK_LIB_ACESSOR_OP) {
 			type_name_space = current_token.value;
 			consume_token();
 			consume_token();
@@ -674,7 +675,7 @@ VariableDefinition* Parser::parse_struct_var_def() {
 			}
 		}
 
-		if (current_token.type == lexer::TOK_IDENTIFIER) {
+		if (current_token.type == TOK_IDENTIFIER) {
 			type_name = current_token.value;
 		}
 	}
@@ -725,14 +726,14 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token(TOK_LEFT_BRACKET);
 	consume_token();
 	condition = parse_expression();
-	consume_token(lexer::TOK_RIGHT_BRACKET);
-	consume_token(lexer::TOK_LEFT_CURLY);
+	consume_token(TOK_RIGHT_BRACKET);
+	consume_token(TOK_LEFT_CURLY);
 	consume_token();
 
-	while (current_token.type == lexer::TOK_CASE) {
+	while (current_token.type == TOK_CASE) {
 		bool is_block = false;
 		consume_token();
 		ASTExprNode* case_exrp = parse_expression();
@@ -740,14 +741,14 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 		consume_token();
 		consume_token();
 
-		if (current_token.type == lexer::TOK_LEFT_CURLY) {
+		if (current_token.type == TOK_LEFT_CURLY) {
 			statements->push_back(parse_block());
 			consume_token();
 		}
 		else {
-			while (current_token.type != lexer::TOK_CASE && current_token.type != lexer::TOK_DEFAULT
-				&& current_token.type != lexer::TOK_RIGHT_CURLY && current_token.type != lexer::TOK_ERROR
-				&& current_token.type != lexer::TOK_EOF) {
+			while (current_token.type != TOK_CASE && current_token.type != TOK_DEFAULT
+				&& current_token.type != TOK_RIGHT_CURLY && current_token.type != TOK_ERROR
+				&& current_token.type != TOK_EOF) {
 				consume_semicolon = true;
 				statements->push_back(parse_block_statement());
 				consume_token();
@@ -756,17 +757,17 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 		case_blocks->emplace(case_exrp, start_position);
 	}
 
-	if (current_token.type == lexer::TOK_DEFAULT) {
+	if (current_token.type == TOK_DEFAULT) {
 		bool is_block = false;
 		default_block = statements->size();
 		consume_token();
 		consume_token();
-		if (current_token.type == lexer::TOK_LEFT_CURLY) {
+		if (current_token.type == TOK_LEFT_CURLY) {
 			statements->push_back(parse_block());
 			consume_token();
 		}
 		else {
-			while (current_token.type != lexer::TOK_RIGHT_CURLY && current_token.type != lexer::TOK_ERROR && current_token.type != lexer::TOK_EOF) {
+			while (current_token.type != TOK_RIGHT_CURLY && current_token.type != TOK_ERROR && current_token.type != TOK_EOF) {
 				consume_semicolon = true;
 				statements->push_back(parse_block_statement());
 				consume_token();
@@ -783,11 +784,11 @@ ASTElseIfNode* Parser::parse_else_if_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token(TOK_LEFT_BRACKET);
 	consume_token();
 	condition = parse_expression();
-	consume_token(lexer::TOK_RIGHT_BRACKET);
-	consume_token(lexer::TOK_LEFT_CURLY);
+	consume_token(TOK_RIGHT_BRACKET);
+	consume_token(TOK_LEFT_CURLY);
 	if_block = parse_block();
 
 	return new ASTElseIfNode(condition, if_block, row, col);
@@ -801,28 +802,28 @@ ASTIfNode* Parser::parse_if_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token(TOK_LEFT_BRACKET);
 	consume_token();
 	condition = parse_expression();
-	consume_token(lexer::TOK_RIGHT_BRACKET);
-	consume_token(lexer::TOK_LEFT_CURLY);
+	consume_token(TOK_RIGHT_BRACKET);
+	consume_token(TOK_LEFT_CURLY);
 	if_block = parse_block();
 
-	if (next_token.type == lexer::TOK_ELSE) {
+	if (next_token.type == TOK_ELSE) {
 		consume_token();
 
-		if (next_token.type == lexer::TOK_IF) {
+		if (next_token.type == TOK_IF) {
 			do {
-				consume_token(lexer::TOK_IF);
+				consume_token(TOK_IF);
 				else_ifs.push_back(parse_else_if_statement());
-				if (next_token.type == lexer::TOK_ELSE) {
-					consume_token(lexer::TOK_ELSE);
+				if (next_token.type == TOK_ELSE) {
+					consume_token(TOK_ELSE);
 				}
-			} while (next_token.type == lexer::TOK_IF);
+			} while (next_token.type == TOK_IF);
 		}
 
-		if (current_token.type == lexer::TOK_ELSE) {
-			consume_token(lexer::TOK_LEFT_CURLY);
+		if (current_token.type == TOK_ELSE) {
+			consume_token(TOK_LEFT_CURLY);
 			else_block = parse_block();
 		}
 	}
@@ -837,25 +838,25 @@ ASTTryCatchNode* Parser::parse_try_catch_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(lexer::TOK_LEFT_CURLY);
+	consume_token(TOK_LEFT_CURLY);
 	try_block = parse_block();
-	check_current_token(lexer::TOK_RIGHT_CURLY);
+	check_current_token(TOK_RIGHT_CURLY);
 
-	consume_token(lexer::TOK_CATCH);
-	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token(TOK_CATCH);
+	consume_token(TOK_LEFT_BRACKET);
 	consume_token();
-	if (current_token.type == lexer::TOK_RETICENCES) {
+	if (current_token.type == TOK_RETICENCES) {
 		decl = new ASTReticencesNode(row, col);
 	}
 	else {
 		consume_semicolon = false;
 		decl = parse_undef_declaration_statement();
 	}
-	consume_token(lexer::TOK_RIGHT_BRACKET);
+	consume_token(TOK_RIGHT_BRACKET);
 
-	consume_token(lexer::TOK_LEFT_CURLY);
+	consume_token(TOK_LEFT_CURLY);
 	catch_block = parse_block();
-	check_current_token(lexer::TOK_RIGHT_CURLY);
+	check_current_token(TOK_RIGHT_CURLY);
 
 	return new ASTTryCatchNode(decl, try_block, catch_block, row, col);
 }
@@ -878,10 +879,10 @@ ASTForNode* Parser::parse_for_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token(TOK_LEFT_BRACKET);
 
 	for (int i = 0; i < 3; ++i) {
-		if (next_token.type != lexer::TOK_SEMICOLON && next_token.type != lexer::TOK_RIGHT_BRACKET) {
+		if (next_token.type != TOK_SEMICOLON && next_token.type != TOK_RIGHT_BRACKET) {
 			consume_token();
 			consume_semicolon = i < 2;
 			dci[i] = parse_block_statement();
@@ -894,8 +895,8 @@ ASTForNode* Parser::parse_for_statement() {
 		}
 	}
 
-	consume_token(lexer::TOK_RIGHT_BRACKET);
-	consume_token(lexer::TOK_LEFT_CURLY);
+	consume_token(TOK_RIGHT_BRACKET);
+	consume_token(TOK_LEFT_CURLY);
 
 	block = parse_block();
 
@@ -906,9 +907,9 @@ ASTNode* Parser::parse_foreach_collection() {
 	consume_semicolon = false;
 
 	switch (current_token.type) {
-	case lexer::TOK_LEFT_CURLY:
+	case TOK_LEFT_CURLY:
 		return parse_array_constructor_node();
-	case lexer::TOK_IDENTIFIER:
+	case TOK_IDENTIFIER:
 		return parse_identifier_statement();
 	default:
 		throw std::runtime_error(msg_header() + "expected array");
@@ -923,16 +924,16 @@ ASTForEachNode* Parser::parse_foreach_statement() {
 	unsigned int col = current_token.col;
 	auto consaux = consume_semicolon;
 
-	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token(TOK_LEFT_BRACKET);
 	consume_token();
 	consume_semicolon = false;
 	itdecl = parse_undef_declaration_statement();
-	consume_token(lexer::TOK_IN);
+	consume_token(TOK_IN);
 	consume_token();
 	collection = parse_foreach_collection();
 	consume_semicolon = consaux;
-	consume_token(lexer::TOK_RIGHT_BRACKET);
-	consume_token(lexer::TOK_LEFT_CURLY);
+	consume_token(TOK_RIGHT_BRACKET);
+	consume_token(TOK_LEFT_CURLY);
 	block = parse_block();
 
 	return new ASTForEachNode(itdecl, collection, block, row, col);
@@ -944,11 +945,11 @@ ASTWhileNode* Parser::parse_while_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token(TOK_LEFT_BRACKET);
 	consume_token();
 	condition = parse_expression();
-	consume_token(lexer::TOK_RIGHT_BRACKET);
-	consume_token(lexer::TOK_LEFT_CURLY);
+	consume_token(TOK_RIGHT_BRACKET);
+	consume_token(TOK_LEFT_CURLY);
 	block = parse_block();
 
 	return new ASTWhileNode(condition, block, row, col);
@@ -960,13 +961,13 @@ ASTDoWhileNode* Parser::parse_do_while_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(lexer::TOK_LEFT_CURLY);
+	consume_token(TOK_LEFT_CURLY);
 	block = parse_block();
-	check_current_token(lexer::TOK_RIGHT_CURLY);
-	consume_token(lexer::TOK_WHILE);
+	check_current_token(TOK_RIGHT_CURLY);
+	consume_token(TOK_WHILE);
 	consume_token();
 	condition = parse_expression();
-	check_current_token(lexer::TOK_RIGHT_BRACKET);
+	check_current_token(TOK_RIGHT_BRACKET);
 	consume_semicolon = true;
 	check_consume_semicolon();
 
@@ -987,38 +988,38 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(lexer::TOK_IDENTIFIER);
+	consume_token(TOK_IDENTIFIER);
 	identifier = current_token.value;
-	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token(TOK_LEFT_BRACKET);
 
-	if (next_token.type != lexer::TOK_RIGHT_BRACKET) {
+	if (next_token.type != TOK_RIGHT_BRACKET) {
 		do {
 			consume_token();
 			parameters.push_back(*parse_formal_param());
 			consume_token();
-		} while (current_token.type == lexer::TOK_COMMA);
-		check_current_token(lexer::TOK_RIGHT_BRACKET);
+		} while (current_token.type == TOK_COMMA);
+		check_current_token(TOK_RIGHT_BRACKET);
 	}
 	else {
 		consume_token();
 	}
 
 	consume_token();
-	if (current_token.type == lexer::TOK_COLON) {
+	if (current_token.type == TOK_COLON) {
 		consume_token();
-		if (current_token.type != lexer::TOK_BOOL_TYPE && current_token.type != lexer::TOK_INT_TYPE
-			&& current_token.type != lexer::TOK_FLOAT_TYPE && current_token.type != lexer::TOK_CHAR_TYPE
-			&& current_token.type != lexer::TOK_STRING_TYPE && current_token.type != lexer::TOK_IDENTIFIER
-			&& current_token.type != lexer::TOK_FUNCTION_TYPE && current_token.type != lexer::TOK_VOID_TYPE
-			&& current_token.type != lexer::TOK_ANY_TYPE) {
+		if (current_token.type != TOK_BOOL_TYPE && current_token.type != TOK_INT_TYPE
+			&& current_token.type != TOK_FLOAT_TYPE && current_token.type != TOK_CHAR_TYPE
+			&& current_token.type != TOK_STRING_TYPE && current_token.type != TOK_IDENTIFIER
+			&& current_token.type != TOK_FUNCTION_TYPE && current_token.type != TOK_VOID_TYPE
+			&& current_token.type != TOK_ANY_TYPE) {
 			throw std::runtime_error(msg_header() + "expected type");
 		}
-		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+		if (next_token.type == TOK_LIB_ACESSOR_OP) {
 			type_name_space = current_token.value;
 			consume_token();
 			consume_token();
 		}
-		if (current_token.type == lexer::TOK_IDENTIFIER) {
+		if (current_token.type == TOK_IDENTIFIER) {
 			type_name = current_token.value;
 		}
 		type = parse_type();
@@ -1033,11 +1034,11 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 		type = Type::T_VOID;
 	}
 
-	if (current_token.type == lexer::TOK_LEFT_CURLY) {
+	if (current_token.type == TOK_LEFT_CURLY) {
 		block = parse_block();
 	}
 	else {
-		if (current_token.type == lexer::TOK_COMMA) {
+		if (current_token.type == TOK_COMMA) {
 			throw std::runtime_error(msg_header() + "expected { or ;");
 		}
 	}
@@ -1051,19 +1052,19 @@ ASTStructDefinitionNode* Parser::parse_struct_definition() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(lexer::TOK_IDENTIFIER);
+	consume_token(TOK_IDENTIFIER);
 	identifier = current_token.value;
-	consume_token(lexer::TOK_LEFT_CURLY);
+	consume_token(TOK_LEFT_CURLY);
 
 	do {
-		consume_token(lexer::TOK_VAR);
-		consume_token(lexer::TOK_IDENTIFIER);
+		consume_token(TOK_VAR);
+		consume_token(TOK_IDENTIFIER);
 		variables.push_back(*parse_struct_var_def());
 		consume_token();
 
-	} while (current_token.type == lexer::TOK_SEMICOLON && next_token.type != lexer::TOK_RIGHT_CURLY);
+	} while (current_token.type == TOK_SEMICOLON && next_token.type != TOK_RIGHT_CURLY);
 
-	consume_token(lexer::TOK_RIGHT_CURLY);
+	consume_token(TOK_RIGHT_CURLY);
 
 	check_consume_semicolon();
 
@@ -1079,13 +1080,13 @@ ASTExprNode* Parser::parse_ternary_expression() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	if (next_token.type == lexer::TOK_QMARK) {
+	if (next_token.type == TOK_QMARK) {
 		ASTExprNode* value_if_true;
 		ASTExprNode* value_if_false;
 		consume_token();
 		consume_token();
 		value_if_true = parse_expression();
-		consume_token(lexer::TOK_COLON);
+		consume_token(TOK_COLON);
 		consume_token();
 		value_if_false = parse_expression();
 		return new ASTTernaryNode(expr, value_if_true, value_if_false, row, col);
@@ -1095,7 +1096,7 @@ ASTExprNode* Parser::parse_ternary_expression() {
 }
 
 ASTExprNode* Parser::parse_in_expression() {
-	bool vbv = current_token.type == lexer::TOK_DSIGN;
+	bool vbv = current_token.type == TOK_DSIGN;
 	if (vbv) {
 		consume_token();
 	}
@@ -1104,7 +1105,7 @@ ASTExprNode* Parser::parse_in_expression() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	if (next_token.type == lexer::TOK_IN) {
+	if (next_token.type == TOK_IN) {
 		ASTExprNode* collection;
 		consume_token();
 		consume_token();
@@ -1120,7 +1121,7 @@ ASTExprNode* Parser::parse_logical_or_expression() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	while (next_token.type == lexer::TOK_LOGICAL_OR_OP) {
+	while (next_token.type == TOK_LOGICAL_OR_OP) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
@@ -1136,7 +1137,7 @@ ASTExprNode* Parser::parse_logical_and_expression() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	while (next_token.type == lexer::TOK_LOGICAL_AND_OP) {
+	while (next_token.type == TOK_LOGICAL_AND_OP) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
@@ -1152,7 +1153,7 @@ ASTExprNode* Parser::parse_relational_expression() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	while (next_token.type == lexer::TOK_RELATIONAL_OP) {
+	while (next_token.type == TOK_RELATIONAL_OP) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
@@ -1168,7 +1169,7 @@ ASTExprNode* Parser::parse_simple_expression() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	while (next_token.type == lexer::TOK_ADDITIVE_OP) {
+	while (next_token.type == TOK_ADDITIVE_OP) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
@@ -1184,7 +1185,7 @@ ASTExprNode* Parser::parse_term() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	while (next_token.type == lexer::TOK_MULTIPLICATIVE_OP) {
+	while (next_token.type == TOK_MULTIPLICATIVE_OP) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
@@ -1202,56 +1203,56 @@ ASTExprNode* Parser::parse_factor() {
 
 	switch (current_token.type) {
 		// literal cases
-	case lexer::TOK_BOOL_LITERAL:
+	case TOK_BOOL_LITERAL:
 		return new ASTLiteralNode<cp_bool>(parse_bool_literal(), row, col);
 
-	case lexer::TOK_INT_LITERAL:
+	case TOK_INT_LITERAL:
 		return new ASTLiteralNode<cp_int>(parse_int_literal(), row, col);
 
-	case lexer::TOK_FLOAT_LITERAL:
+	case TOK_FLOAT_LITERAL:
 		return new ASTLiteralNode<cp_float>(parse_float_literal(), row, col);
 
-	case lexer::TOK_CHAR_LITERAL:
+	case TOK_CHAR_LITERAL:
 		return new ASTLiteralNode<cp_char>(parse_char_literal(), row, col);
 
-	case lexer::TOK_STRING_LITERAL:
+	case TOK_STRING_LITERAL:
 		return new ASTLiteralNode<cp_string>(parse_string_literal(), row, col);
 
-	case lexer::TOK_LEFT_CURLY:
+	case TOK_LEFT_CURLY:
 		return parse_array_constructor_node();
 
-	case lexer::TOK_BOOL_TYPE:
-	case lexer::TOK_INT_TYPE:
-	case lexer::TOK_FLOAT_TYPE:
-	case lexer::TOK_CHAR_TYPE:
-	case lexer::TOK_STRING_TYPE:
+	case TOK_BOOL_TYPE:
+	case TOK_INT_TYPE:
+	case TOK_FLOAT_TYPE:
+	case TOK_CHAR_TYPE:
+	case TOK_STRING_TYPE:
 		return parse_type_parse_node();
 
-	case lexer::TOK_NULL:
+	case TOK_NULL:
 		return new ASTNullNode(row, col);
 
-	case lexer::TOK_THIS:
+	case TOK_THIS:
 		return parse_this_node();
 
-	case lexer::TOK_TYPEOF:
-	case lexer::TOK_TYPEID:
+	case TOK_TYPEOF:
+	case TOK_TYPEID:
 		return parse_typing_node();
 
-	case lexer::TOK_IDENTIFIER: { // identifier or function call case
+	case TOK_IDENTIFIER: { // identifier or function call case
 		std::string nmspace = "";
 
-		if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+		if (next_token.type == TOK_LIB_ACESSOR_OP) {
 			nmspace = current_token.value;
 			consume_token();
 			consume_token();
 		}
 
 		switch (next_token.type) {
-		case lexer::TOK_LEFT_BRACKET:
+		case TOK_LEFT_BRACKET:
 			return parse_function_call_node(nmspace);
-		case lexer::TOK_LEFT_CURLY:
+		case TOK_LEFT_CURLY:
 			return parse_struct_constructor_node(nmspace);
-		case lexer::TOK_ADDITIVE_UN_OP: {
+		case TOK_ADDITIVE_UN_OP: {
 			ASTIdentifierNode* identifier = parse_identifier_node(nmspace);
 			consume_token();
 			std::string op = current_token.value;
@@ -1262,15 +1263,15 @@ ASTExprNode* Parser::parse_factor() {
 		}
 	}
 
-	case lexer::TOK_LEFT_BRACKET: { // subexpression case
+	case TOK_LEFT_BRACKET: { // subexpression case
 		consume_token();
 		ASTExprNode* sub_expr = parse_expression();
-		consume_token(lexer::TOK_RIGHT_BRACKET);
+		consume_token(TOK_RIGHT_BRACKET);
 		return sub_expr;
 	}
 
-	case lexer::TOK_ADDITIVE_OP: // unary expression case
-	case lexer::TOK_NOT: {
+	case TOK_ADDITIVE_OP: // unary expression case
+	case TOK_NOT: {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		return new ASTUnaryExprNode(current_token_value, parse_factor(), row, col);
@@ -1287,16 +1288,16 @@ ASTTypingNode* Parser::parse_typing_node() {
 	unsigned int col = current_token.col;
 	ASTExprNode* expr = nullptr;
 
-	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token(TOK_LEFT_BRACKET);
 
 	consume_token();
 
 	switch (current_token.type) {
-	case lexer::TOK_BOOL_TYPE:
-	case lexer::TOK_INT_TYPE:
-	case lexer::TOK_FLOAT_TYPE:
-	case lexer::TOK_CHAR_TYPE:
-	case lexer::TOK_STRING_TYPE: {
+	case TOK_BOOL_TYPE:
+	case TOK_INT_TYPE:
+	case TOK_FLOAT_TYPE:
+	case TOK_CHAR_TYPE:
+	case TOK_STRING_TYPE: {
 		auto id = parse_identifier();
 		expr = new ASTIdentifierNode(std::vector{ id }, std::string(), row, col);
 		break;
@@ -1305,7 +1306,7 @@ ASTTypingNode* Parser::parse_typing_node() {
 		expr = parse_expression();
 	}
 
-	consume_token(lexer::TOK_RIGHT_BRACKET);
+	consume_token(TOK_RIGHT_BRACKET);
 
 	return new ASTTypingNode(image, expr, row, col);
 }
@@ -1321,12 +1322,12 @@ ASTArrayConstructorNode* Parser::parse_array_constructor_node() {
 
 		consume_token();
 
-	} while (next_token.type == lexer::TOK_LEFT_CURLY || next_token.type == lexer::TOK_NULL
-		|| next_token.type == lexer::TOK_BOOL_LITERAL || next_token.type == lexer::TOK_INT_LITERAL
-		|| next_token.type == lexer::TOK_IDENTIFIER || next_token.type == lexer::TOK_FLOAT_LITERAL
-		|| next_token.type == lexer::TOK_CHAR_LITERAL || next_token.type == lexer::TOK_STRING_LITERAL);
+	} while (next_token.type == TOK_LEFT_CURLY || next_token.type == TOK_NULL
+		|| next_token.type == TOK_BOOL_LITERAL || next_token.type == TOK_INT_LITERAL
+		|| next_token.type == TOK_IDENTIFIER || next_token.type == TOK_FLOAT_LITERAL
+		|| next_token.type == TOK_CHAR_LITERAL || next_token.type == TOK_STRING_LITERAL);
 
-	check_current_token(lexer::TOK_RIGHT_CURLY);
+	check_current_token(TOK_RIGHT_CURLY);
 
 	return new ASTArrayConstructorNode(values, row, col);
 }
@@ -1338,7 +1339,7 @@ ASTStructConstructorNode* Parser::parse_struct_constructor_node(std::string expr
 	std::string nmspace = expr_nmspace;
 	std::string type_name = "";
 
-	if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+	if (next_token.type == TOK_LIB_ACESSOR_OP) {
 		if (!nmspace.empty()) {
 			throw std::runtime_error(msg_header() + "unexpected token '" + next_token.value + "'");
 		}
@@ -1352,22 +1353,22 @@ ASTStructConstructorNode* Parser::parse_struct_constructor_node(std::string expr
 	consume_token();
 	consume_token();
 
-	while (current_token.type == lexer::TOK_IDENTIFIER) {
+	while (current_token.type == TOK_IDENTIFIER) {
 		auto var_identifier = current_token.value;
 
-		consume_token(lexer::TOK_EQUALS);
+		consume_token(TOK_EQUALS);
 
 		consume_token();
 		values[var_identifier] = parse_expression();
 
 		consume_token();
 
-		if (next_token.type == lexer::TOK_IDENTIFIER) {
+		if (next_token.type == TOK_IDENTIFIER) {
 			consume_token();
 		}
 	}
 
-	check_current_token(lexer::TOK_RIGHT_CURLY);
+	check_current_token(TOK_RIGHT_CURLY);
 
 	return new ASTStructConstructorNode(type_name, nmspace, values, row, col);
 }
@@ -1477,7 +1478,7 @@ ASTFunctionCallNode* Parser::parse_function_call_node(std::string expr_nmspace) 
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	if (next_token.type == lexer::TOK_LIB_ACESSOR_OP) {
+	if (next_token.type == TOK_LIB_ACESSOR_OP) {
 		if (!nmspace.empty()) {
 			throw std::runtime_error(msg_header() + "unexpected token '" + next_token.value + "'");
 		}
@@ -1488,10 +1489,10 @@ ASTFunctionCallNode* Parser::parse_function_call_node(std::string expr_nmspace) 
 
 	identifier = current_token.value;
 
-	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token(TOK_LEFT_BRACKET);
 
 	// if next token is not right bracket, we have parameters
-	if (next_token.type != lexer::TOK_RIGHT_BRACKET) {
+	if (next_token.type != TOK_RIGHT_BRACKET) {
 		parameters = parse_actual_params();
 	}
 	else {
@@ -1500,9 +1501,9 @@ ASTFunctionCallNode* Parser::parse_function_call_node(std::string expr_nmspace) 
 	}
 
 	// ensure right close bracket after fetching parameters
-	check_current_token(lexer::TOK_RIGHT_BRACKET);
+	check_current_token(TOK_RIGHT_BRACKET);
 
-	if (next_token.type == lexer::TOK_LEFT_BRACE) {
+	if (next_token.type == TOK_LEFT_BRACE) {
 		consume_token();
 		access_vector = parse_dimension_vector();
 	}
@@ -1516,10 +1517,10 @@ ASTFunctionCallNode* Parser::parse_function_call_parameters_node(std::string ide
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token(TOK_LEFT_BRACKET);
 
 	// if next token is not right bracket, we have parameters
-	if (next_token.type != lexer::TOK_RIGHT_BRACKET) {
+	if (next_token.type != TOK_RIGHT_BRACKET) {
 		parameters = parse_actual_params();
 	}
 	else {
@@ -1528,9 +1529,9 @@ ASTFunctionCallNode* Parser::parse_function_call_parameters_node(std::string ide
 	}
 
 	// ensure right close bracket after fetching parameters
-	check_current_token(lexer::TOK_RIGHT_BRACKET);
+	check_current_token(TOK_RIGHT_BRACKET);
 
-	if (next_token.type == lexer::TOK_LEFT_BRACE) {
+	if (next_token.type == TOK_LEFT_BRACE) {
 		consume_token();
 		access_vector = parse_dimension_vector();
 	}
@@ -1544,14 +1545,14 @@ ASTTypeParseNode* Parser::parse_type_parse_node() {
 	unsigned int col = current_token.col;
 	Type type = parse_type();
 
-	consume_token(lexer::TOK_LEFT_BRACKET);
+	consume_token(TOK_LEFT_BRACKET);
 
 	// get expression
 	consume_token();
 	ASTExprNode* expr = parse_expression();
 
 	// ensure right close bracket after fetching parameters
-	consume_token(lexer::TOK_RIGHT_BRACKET);
+	consume_token(TOK_RIGHT_BRACKET);
 
 	return new ASTTypeParseNode(type, expr, row, col);
 }
@@ -1567,7 +1568,7 @@ ASTThisNode* Parser::parse_this_node() {
 void Parser::check_consume_semicolon() {
 	if (consume_semicolon) {
 		consume_semicolon = false;
-		consume_token(lexer::TOK_SEMICOLON);
+		consume_token(TOK_SEMICOLON);
 	}
 }
 
@@ -1577,40 +1578,40 @@ std::string Parser::msg_header() {
 
 Type Parser::parse_type() {
 	switch (current_token.type) {
-	case lexer::TOK_VOID_TYPE:
-	case lexer::TOK_NULL:
+	case TOK_VOID_TYPE:
+	case TOK_NULL:
 		return Type::T_VOID;
 
-	case lexer::TOK_BOOL_TYPE:
-	case lexer::TOK_BOOL_LITERAL:
+	case TOK_BOOL_TYPE:
+	case TOK_BOOL_LITERAL:
 		return Type::T_BOOL;
 
-	case lexer::TOK_INT_TYPE:
-	case lexer::TOK_INT_LITERAL:
+	case TOK_INT_TYPE:
+	case TOK_INT_LITERAL:
 		return Type::T_INT;
 
-	case lexer::TOK_FLOAT_TYPE:
-	case lexer::TOK_FLOAT_LITERAL:
+	case TOK_FLOAT_TYPE:
+	case TOK_FLOAT_LITERAL:
 		return Type::T_FLOAT;
 
-	case lexer::TOK_CHAR_TYPE:
-	case lexer::TOK_CHAR_LITERAL:
+	case TOK_CHAR_TYPE:
+	case TOK_CHAR_LITERAL:
 		return Type::T_CHAR;
 
-	case lexer::TOK_STRING_TYPE:
-	case lexer::TOK_STRING_LITERAL:
+	case TOK_STRING_TYPE:
+	case TOK_STRING_LITERAL:
 		return Type::T_STRING;
 
-	case lexer::TOK_ANY_TYPE:
+	case TOK_ANY_TYPE:
 		return Type::T_ANY;
 
-	case lexer::TOK_FUNCTION_TYPE:
+	case TOK_FUNCTION_TYPE:
 		return Type::T_FUNCTION;
 
-	case lexer::TOK_IDENTIFIER:
+	case TOK_IDENTIFIER:
 		return Type::T_STRUCT;
 
-	case lexer::TOK_LEFT_CURLY:
+	case TOK_LEFT_CURLY:
 		return Type::T_ARRAY;
 
 	default:

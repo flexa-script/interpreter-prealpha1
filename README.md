@@ -59,17 +59,29 @@
         - [X] Bring error header to a higher level
         - [X] add ... to ignore catch error
     - [X] do while
-- [X] Add expression operators:
-    - [X] Add ++,-- incrementor
-    - [X] Add { init_value } to initilize all positions with same value
-    - [X] Add 'in' operator to check if anything is in array/string
-        - [X] Add $ operator to compare struct values instead of pointer
-    - [X] Add ternary (immediate) if
-    - [X] typeof: returns type of object
-        - [X] add namespace to type name return
-    - [X] typeid: returns hash of typeof
 - [ ] Add expression:
-    - [ ] base literals
+    - [X] Add expression operators:
+        - [X] Add ++,-- incrementor
+        - [X] Add { init_value } to initilize all positions with same value
+        - [X] Add 'in' operator to check if anything is in array/string
+            - [X] Add $ operator to compare struct values instead of pointer
+        - [X] Add ternary (immediate) if
+        - [X] typeof: returns type of object
+            - [X] add namespace to type name return
+        - [X] typeid: returns hash of typeof
+        - [ ] add bitwise operators:
+            - [ ] &   bitwise AND
+            - [ ] |   bitwise inclusive OR
+            - [ ] ^   bitwise XOR (exclusive OR)
+            - [ ] <<  left shift
+            - [ ] >>  right shift
+            - [ ] ~	  bitwise NOT (ones' complement) (unary)
+    - [ ] Add expression literal:
+        - [ ] base literals:
+            - [ ] bin
+            - [ ] oct
+            - [ ] dec
+            - [ ] hex
 - [X] Let functions return array
 - [X] Add namespace scope nmspace::(method|variable|struct)
 - [X] Guanrantee that a lib is loaded once
@@ -84,7 +96,7 @@
 - [ ] General otimizations:
     - [ ] Remove duplicate codes
         - [ ] Organize semantic duplicated checks
-        - [ ] Implement detructors
+    - [ ] Implement detructors
     - [X] Move some verifications to semantic analisys:
         - [X] Array size check from interpreter
 - [ ] Projects to implement in CP:
@@ -137,7 +149,7 @@
     - [X] Random (https://docs.godotengine.org/en/stable/classes/class_randomnumbergenerator.html):
         - [X] randi(from: int, to: int): int
         - [X] seed(seed: int)
-        - [ ] ...
+        - [X] ...
     - [ ] Collections
         - [ ] List
         - [ ] Queue
@@ -146,7 +158,7 @@
     - [ ] Util?
 
 ## Known bugs
-- [X] When a struct is passed by parameter, it can't be assigned as null, it occurs because it's passed just the strcut reference and not the variable
+- [X] When a struct is passed by parameter, it can't be assigned as null, it occours because it's passed just the strcut reference and not the variable
 - [X] Can't assing string position
 - [X] Parser can't handle unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))
 - [X] This does not always return the expected value, eg when its inside a function tha does not has in main file

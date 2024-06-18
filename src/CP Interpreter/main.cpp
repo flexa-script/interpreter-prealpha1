@@ -5,12 +5,12 @@
 #include "vendor/logging.hpp"
 
 int main(int argc, const char* argv[]) {
-	auto logger = axe::Logger(axe::INFO, ".\\logs.log");
-	std::string str = "";
-	for (int i = 0; i < argc; ++i) {
-		str.append(argv[i]);
-	}
-	logger.debug(str);
+	//auto logger = axe::Logger(axe::INFO, ".\\logs.log");
+	//std::string str = "";
+	//for (int i = 0; i < argc; ++i) {
+	//	str.append(argv[i]);
+	//}
+	//logger.debug(str);
 
 	auto sw = ChronoStopwatch();
 	sw.start();

@@ -1,80 +1,81 @@
 #include "visitor.hpp"
 
+using namespace parser;
 
 namespace parser {
 	std::string type_str(Type t) {
 		switch (t) {
-		case parser::Type::T_UNDEFINED:
+		case Type::T_UNDEFINED:
 			return "undefined";
-		case parser::Type::T_VOID:
+		case Type::T_VOID:
 			return "void";
-		case parser::Type::T_BOOL:
+		case Type::T_BOOL:
 			return "bool";
-		case parser::Type::T_INT:
+		case Type::T_INT:
 			return "int";
-		case parser::Type::T_FLOAT:
+		case Type::T_FLOAT:
 			return "float";
-		case parser::Type::T_CHAR:
+		case Type::T_CHAR:
 			return "char";
-		case parser::Type::T_STRING:
+		case Type::T_STRING:
 			return "string";
-		case parser::Type::T_ANY:
+		case Type::T_ANY:
 			return "any";
-		case parser::Type::T_ARRAY:
+		case Type::T_ARRAY:
 			return "array";
-		case parser::Type::T_STRUCT:
+		case Type::T_STRUCT:
 			return "struct";
 		default:
 			throw std::runtime_error("invalid type encountered");
 		}
 	}
 
-	bool match_type(parser::Type type1, parser::Type type2) {
+	bool match_type(Type type1, Type type2) {
 		return type1 == type2;
 	}
 
-	bool is_undefined(parser::Type type) {
-		return match_type(type, parser::Type::T_UNDEFINED);
+	bool is_undefined(Type type) {
+		return match_type(type, Type::T_UNDEFINED);
 	}
 
-	bool is_void(parser::Type type) {
-		return match_type(type, parser::Type::T_VOID);
+	bool is_void(Type type) {
+		return match_type(type, Type::T_VOID);
 	}
 
-	bool is_bool(parser::Type type) {
-		return match_type(type, parser::Type::T_BOOL);
+	bool is_bool(Type type) {
+		return match_type(type, Type::T_BOOL);
 	}
 
-	bool is_int(parser::Type type) {
-		return match_type(type, parser::Type::T_INT);
+	bool is_int(Type type) {
+		return match_type(type, Type::T_INT);
 	}
 
-	bool is_float(parser::Type type) {
-		return match_type(type, parser::Type::T_FLOAT);
+	bool is_float(Type type) {
+		return match_type(type, Type::T_FLOAT);
 	}
 
-	bool is_char(parser::Type type) {
-		return match_type(type, parser::Type::T_CHAR);
+	bool is_char(Type type) {
+		return match_type(type, Type::T_CHAR);
 	}
 
-	bool is_string(parser::Type type) {
-		return match_type(type, parser::Type::T_STRING);
+	bool is_string(Type type) {
+		return match_type(type, Type::T_STRING);
 	}
 
-	bool is_any(parser::Type type) {
-		return match_type(type, parser::Type::T_ANY);
+	bool is_any(Type type) {
+		return match_type(type, Type::T_ANY);
 	}
 
-	bool is_array(parser::Type type) {
-		return match_type(type, parser::Type::T_ARRAY);
+	bool is_array(Type type) {
+		return match_type(type, Type::T_ARRAY);
 	}
 
-	bool is_struct(parser::Type type) {
-		return match_type(type, parser::Type::T_STRUCT);
+	bool is_struct(Type type) {
+		return match_type(type, Type::T_STRUCT);
 	}
 
-	bool is_function(parser::Type type) {
-		return match_type(type, parser::Type::T_FUNCTION);
+	bool is_function(Type type) {
+		return match_type(type, Type::T_FUNCTION);
 	}
 }
 
@@ -94,10 +95,10 @@ std::vector<std::string> built_in_libs = {
 	"cp.core.console"
 };
 
-Value::Value(parser::Type type)
-	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), fun(cp_function()), type(type), curr_type(type), arr_type(parser::Type::T_UNDEFINED) {};
+Value::Value(Type type)
+	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), fun(cp_function()), type(type), curr_type(type), arr_type(Type::T_UNDEFINED) {};
 
-Value::Value(parser::Type type, parser::Type arr_type)
+Value::Value(Type type, Type arr_type)
 	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), fun(cp_function()), type(type), curr_type(type), arr_type(arr_type) {};
 
 Value::Value(Value* value)
@@ -108,72 +109,72 @@ Value::Value(Value* value)
 
 void Value::set(cp_bool b) {
 	this->b = b;
-	set_curr_type(parser::Type::T_BOOL);
+	set_curr_type(Type::T_BOOL);
 }
 
 void Value::set(cp_int i) {
 	this->i = i;
-	set_curr_type(parser::Type::T_INT);
+	set_curr_type(Type::T_INT);
 }
 
 void Value::set(cp_float f) {
 	this->f = f;
-	set_curr_type(parser::Type::T_FLOAT);
+	set_curr_type(Type::T_FLOAT);
 }
 
 void Value::set(cp_char c) {
 	this->c = c;
-	set_curr_type(parser::Type::T_CHAR);
+	set_curr_type(Type::T_CHAR);
 }
 
 void Value::set(cp_string s) {
 	this->s = s;
-	set_curr_type(parser::Type::T_STRING);
+	set_curr_type(Type::T_STRING);
 }
 
 void Value::set(cp_array arr) {
 	copy_array(arr);
-	set_curr_type(parser::Type::T_ARRAY);
+	set_curr_type(Type::T_ARRAY);
 }
 
 void Value::set(cp_struct* str) {
 	this->str = str;
-	set_curr_type(parser::Type::T_STRUCT);
+	set_curr_type(Type::T_STRUCT);
 }
 
 void Value::set(cp_function fun) {
 	this->fun = fun;
-	set_curr_type(parser::Type::T_FUNCTION);
+	set_curr_type(Type::T_FUNCTION);
 }
 
-void Value::set_type(parser::Type type) {
+void Value::set_type(Type type) {
 	this->type = type;
 }
 
-void Value::set_curr_type(parser::Type curr_type) {
+void Value::set_curr_type(Type curr_type) {
 	this->curr_type = curr_type;
 }
 
-void Value::set_arr_type(parser::Type arr_type) {
+void Value::set_arr_type(Type arr_type) {
 	this->arr_type = arr_type;
 }
 
 void Value::set_null() {
-	set_empty(parser::Type::T_VOID);
+	set_empty(Type::T_VOID);
 }
 
 void Value::set_undefined() {
-	set_empty(parser::Type::T_UNDEFINED);
+	set_empty(Type::T_UNDEFINED);
 }
 
-void Value::set_empty(parser::Type empty_type) {
+void Value::set_empty(Type empty_type) {
 	auto aux_type = type;
 	copy_from(new Value(empty_type));
 	type = aux_type;
 }
 
 bool Value::has_value() {
-	return curr_type != parser::Type::T_UNDEFINED && curr_type != parser::Type::T_VOID;
+	return curr_type != Type::T_UNDEFINED && curr_type != Type::T_VOID;
 }
 
 void Value::copy_array(cp_array arr) {

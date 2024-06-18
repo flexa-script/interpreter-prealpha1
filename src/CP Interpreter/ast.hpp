@@ -88,7 +88,6 @@ namespace parser {
 		std::string identifier;
 		std::vector<parser::TypeDefinition> signature;
 		std::vector<parser::VariableDefinition> parameters;
-		//bool is_variable;
 
 		FunctionDefinition(std::string identifier, Type type, std::string type_name, std::string type_name_space, Type array_type,
 			std::vector<ASTExprNode*> dim, std::vector<parser::TypeDefinition> signature, std::vector<parser::VariableDefinition> parameters, unsigned int row, unsigned int col);
@@ -116,7 +115,6 @@ namespace parser {
 		Identifier() = default;
 	};
 
-	// Abstract Nodes
 	class ASTNode : public CodePosition {
 	public:
 		ASTNode(unsigned int row, unsigned int col)
@@ -142,7 +140,6 @@ namespace parser {
 		virtual unsigned int hash(visitor::Visitor*) = 0;
 	};
 
-	// Statement Nodes
 	class ASTProgramNode : public ASTNode {
 	public:
 		std::string name;
@@ -322,7 +319,7 @@ namespace parser {
 
 	class ASTForEachNode : public ASTStatementNode {
 	public:
-		ASTDeclarationNode* itdecl; // decl or assign node
+		ASTDeclarationNode* itdecl;
 		ASTNode* collection;
 		ASTBlockNode* block;
 
@@ -372,7 +369,6 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
-	// Expression Nodes
 	template<typename T>
 	class ASTLiteralNode : public ASTExprNode {
 	public:

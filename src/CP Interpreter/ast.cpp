@@ -5,30 +5,31 @@
 #include "vendor/util.hpp"
 
 
+using namespace visitor;
 using namespace parser;
 
 
-TypeDefinition::TypeDefinition(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+TypeDefinition::TypeDefinition(Type type, Type array_type, std::vector<ASTExprNode*> dim,
 	std::string type_name, std::string type_name_space)
 	: type(type), type_name(type_name), type_name_space(type_name_space), array_type(array_type), dim(dim) {}
 
-TypeDefinition TypeDefinition::get_basic(parser::Type type) {
+TypeDefinition TypeDefinition::get_basic(Type type) {
 	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "");
 }
 
-TypeDefinition TypeDefinition::get_array(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim) {
+TypeDefinition TypeDefinition::get_array(Type type, Type array_type, std::vector<ASTExprNode*> dim) {
 	return TypeDefinition(type, array_type, dim, "", "");
 }
 
-TypeDefinition TypeDefinition::get_struct(parser::Type type, std::string type_name, std::string type_name_space) {
+TypeDefinition TypeDefinition::get_struct(Type type, std::string type_name, std::string type_name_space) {
 	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), type_name, type_name_space);
 }
 
-SemanticValue::SemanticValue(parser::Type type, unsigned int row, unsigned int col)
+SemanticValue::SemanticValue(Type type, unsigned int row, unsigned int col)
 	: hash(0), is_const(false),
 	TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""), CodePosition(row, col) {}
 
-SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+SemanticValue::SemanticValue(Type type, Type array_type, std::vector<ASTExprNode*> dim,
 	std::string type_name, std::string type_name_space, unsigned int hash, bool is_const, unsigned int row, unsigned int col)
 	: hash(hash), is_const(is_const),
 	TypeDefinition(type, array_type, dim, type_name, type_name_space), CodePosition(row, col) {}
@@ -44,7 +45,7 @@ void SemanticValue::copy_from(SemanticValue* value) {
 	col = value->col;
 }
 
-SemanticVariable::SemanticVariable(std::string identifier, Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+SemanticVariable::SemanticVariable(std::string identifier, Type type, Type array_type, std::vector<ASTExprNode*> dim,
 	std::string type_name, std::string type_name_space, SemanticValue* value, bool is_const, unsigned int row, unsigned int col)
 	: identifier(identifier), value(value), is_const(is_const),
 	TypeDefinition(type, array_type, dim, type_name, type_name_space), CodePosition(row, col) {}
@@ -69,16 +70,16 @@ VariableDefinition::VariableDefinition(std::string identifier, Type type, std::s
 	: identifier(identifier), default_value(default_value), is_rest(is_rest),
 	TypeDefinition(type, array_type, dim, type_name, type_name_space), CodePosition(row, col) {}
 
-VariableDefinition VariableDefinition::get_basic(std::string identifier, parser::Type type, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col) {
+VariableDefinition VariableDefinition::get_basic(std::string identifier, Type type, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col) {
 	return VariableDefinition(identifier, type, "", "", Type::T_UNDEFINED, std::vector<ASTExprNode*>(), default_value, is_rest, row, col);
 }
 
-VariableDefinition VariableDefinition::get_array(std::string identifier, parser::Type type,
-	parser::Type array_type, std::vector<ASTExprNode*> dim, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col) {
+VariableDefinition VariableDefinition::get_array(std::string identifier, Type type,
+	Type array_type, std::vector<ASTExprNode*> dim, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col) {
 	return VariableDefinition(identifier, type, "", "", array_type, dim, default_value, is_rest, row, col);
 }
 
-VariableDefinition VariableDefinition::get_struct(std::string identifier, parser::Type type,
+VariableDefinition VariableDefinition::get_struct(std::string identifier, Type type,
 	std::string type_name, std::string type_name_space, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col) {
 	return VariableDefinition(identifier, type, type_name, type_name_space, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), default_value, is_rest, row, col);
 }
@@ -87,12 +88,12 @@ StructureDefinition::StructureDefinition(std::string identifier, std::vector<Var
 	: CodePosition(row, col), identifier(identifier), variables(variables) {}
 
 FunctionDefinition::FunctionDefinition(std::string identifier, Type type, std::string type_name, std::string type_name_space, Type array_type,
-	std::vector<ASTExprNode*> dim, std::vector<parser::TypeDefinition> signature, std::vector<parser::VariableDefinition> parameters, unsigned int row, unsigned int col)
+	std::vector<ASTExprNode*> dim, std::vector<TypeDefinition> signature, std::vector<VariableDefinition> parameters, unsigned int row, unsigned int col)
 	: identifier(identifier), signature(signature), parameters(parameters),
 	TypeDefinition(type, array_type, dim, type_name, type_name_space), CodePosition(row, col) {}
 
 FunctionDefinition::FunctionDefinition(std::string identifier, unsigned int row, unsigned int col)
-	: identifier(identifier), signature(std::vector<parser::TypeDefinition>()), parameters(std::vector<parser::VariableDefinition>()),
+	: identifier(identifier), signature(std::vector<TypeDefinition>()), parameters(std::vector<VariableDefinition>()),
 	TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""), CodePosition(row, col) {}
 
 void FunctionDefinition::check_sig() const {
@@ -114,11 +115,10 @@ Identifier::Identifier(std::string identifier, std::vector<ASTExprNode*> access_
 	: identifier(identifier), access_vector(access_vector) {}
 
 
-// Program Node
 ASTProgramNode::ASTProgramNode(std::vector<ASTNode*> statements, std::string name, std::string alias)
 	: ASTNode(row, col), statements(std::move(statements)), name(name), alias(alias), libs(std::vector<std::string>()) {}
 
-// Statement Nodes
+
 ASTUsingNode::ASTUsingNode(std::vector<std::string> library, std::string alias, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col),
 	library(std::move(library)), alias(std::move(alias)) {}
@@ -149,8 +149,8 @@ ASTContinueNode::ASTContinueNode(unsigned int row, unsigned int col)
 ASTBreakNode::ASTBreakNode(unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col) {}
 
-ASTExitNode::ASTExitNode(ASTExprNode* exit_code,  unsigned int row, unsigned int col)
-	: ASTStatementNode(row, col), exit_code(exit_code){}
+ASTExitNode::ASTExitNode(ASTExprNode* exit_code, unsigned int row, unsigned int col)
+	: ASTStatementNode(row, col), exit_code(exit_code) {}
 
 ASTSwitchNode::ASTSwitchNode(ASTExprNode* condition, std::vector<ASTNode*>* statements,
 	std::map<ASTExprNode*, unsigned int>* case_blocks, unsigned int default_block, unsigned int row, unsigned int col)
@@ -211,7 +211,6 @@ ASTStructDefinitionNode::ASTStructDefinitionNode(std::string identifier, std::ve
 	: ASTStatementNode(row, col), identifier(std::move(identifier)), variables(std::move(variables)) {}
 
 
-// Expression Nodes
 ASTArrayConstructorNode::ASTArrayConstructorNode(std::vector<ASTExprNode*> values, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), values(values) {}
 
@@ -248,217 +247,208 @@ ASTTypeParseNode::ASTTypeParseNode(Type type, ASTExprNode* expr, unsigned int ro
 	: ASTExprNode(row, col), type(type), expr(expr) {}
 
 
-// Accept functions for visitors
-
-namespace parser {
-	template<>
-	void ASTLiteralNode<cp_bool>::accept(visitor::Visitor* v) {
-		v->visit(this);
-	}
-
-	unsigned int ASTLiteralNode<cp_bool>::hash(visitor::Visitor* v) {
-		return v->hash(this);
-	}
-
-	template<>
-	void ASTLiteralNode<cp_int>::accept(visitor::Visitor* v) {
-		v->visit(this);
-	}
-
-	unsigned int ASTLiteralNode<cp_int>::hash(visitor::Visitor* v) {
-		return v->hash(this);
-	}
-
-	template<>
-	void ASTLiteralNode<cp_float>::accept(visitor::Visitor* v) {
-		v->visit(this);
-	}
-
-	unsigned int ASTLiteralNode<cp_float>::hash(visitor::Visitor* v) {
-		return v->hash(this);
-	}
-
-	template<>
-	void ASTLiteralNode<cp_char>::accept(visitor::Visitor* v) {
-		v->visit(this);
-	}
-
-	unsigned int ASTLiteralNode<cp_char>::hash(visitor::Visitor* v) {
-		return v->hash(this);
-	}
-
-	template<>
-	void ASTLiteralNode<cp_string>::accept(visitor::Visitor* v) {
-		v->visit(this);
-	}
-
-	unsigned int ASTLiteralNode<cp_string>::hash(visitor::Visitor* v) {
-		return v->hash(this);
-	}
-}
-
-void ASTArrayConstructorNode::accept(visitor::Visitor* v) {
+void ASTLiteralNode<cp_bool>::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTArrayConstructorNode::hash(visitor::Visitor* v) { return 0; }
-
-void ASTStructConstructorNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-unsigned int ASTStructConstructorNode::hash(visitor::Visitor* v) { return 0; }
-
-void ASTBinaryExprNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-unsigned int ASTBinaryExprNode::hash(visitor::Visitor* v) { return 0; }
-
-void ASTInNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-unsigned int ASTInNode::hash(visitor::Visitor* v) { return 0; }
-
-void ASTFunctionCallNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-unsigned int ASTFunctionCallNode::hash(visitor::Visitor* v) { return 0; }
-
-void ASTIdentifierNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-void ASTTypingNode::accept(visitor::Visitor* v) {
-	v->visit(this);
-}
-
-unsigned int ASTTypingNode::hash(visitor::Visitor* v) { return 0; }
-
-unsigned int ASTIdentifierNode::hash(visitor::Visitor* v) {
+unsigned int ASTLiteralNode<cp_bool>::hash(Visitor* v) {
 	return v->hash(this);
 }
 
-void ASTUnaryExprNode::accept(visitor::Visitor* v) {
+void ASTLiteralNode<cp_int>::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTUnaryExprNode::hash(visitor::Visitor* v) { return 0; }
+unsigned int ASTLiteralNode<cp_int>::hash(Visitor* v) {
+	return v->hash(this);
+}
 
-void ASTTernaryNode::accept(visitor::Visitor* v) {
+void ASTLiteralNode<cp_float>::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTTernaryNode::hash(visitor::Visitor* v) { return 0; }
+unsigned int ASTLiteralNode<cp_float>::hash(Visitor* v) {
+	return v->hash(this);
+}
 
-void ASTTypeParseNode::accept(visitor::Visitor* v) {
+void ASTLiteralNode<cp_char>::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTTypeParseNode::hash(visitor::Visitor* v) { return 0; }
+unsigned int ASTLiteralNode<cp_char>::hash(Visitor* v) {
+	return v->hash(this);
+}
 
-void ASTNullNode::accept(visitor::Visitor* v) {
+void ASTLiteralNode<cp_string>::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTNullNode::hash(visitor::Visitor* v) { return 0; }
+unsigned int ASTLiteralNode<cp_string>::hash(Visitor* v) {
+	return v->hash(this);
+}
 
-void ASTThisNode::accept(visitor::Visitor* v) {
+void ASTArrayConstructorNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTThisNode::hash(visitor::Visitor* v) { return 0; }
+unsigned int ASTArrayConstructorNode::hash(Visitor* v) { return 0; }
 
-void ASTDeclarationNode::accept(visitor::Visitor* v) {
+void ASTStructConstructorNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTAsNamespaceNode::accept(visitor::Visitor* v) {
+unsigned int ASTStructConstructorNode::hash(Visitor* v) { return 0; }
+
+void ASTBinaryExprNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTAssignmentNode::accept(visitor::Visitor* v) {
+unsigned int ASTBinaryExprNode::hash(Visitor* v) { return 0; }
+
+void ASTInNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTReturnNode::accept(visitor::Visitor* v) {
+unsigned int ASTInNode::hash(Visitor* v) { return 0; }
+
+void ASTFunctionCallNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTExitNode::accept(visitor::Visitor* v) {
+unsigned int ASTFunctionCallNode::hash(Visitor* v) { return 0; }
+
+void ASTIdentifierNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTBlockNode::accept(visitor::Visitor* v) {
+void ASTTypingNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTContinueNode::accept(visitor::Visitor* v) {
+unsigned int ASTTypingNode::hash(Visitor* v) { return 0; }
+
+unsigned int ASTIdentifierNode::hash(Visitor* v) {
+	return v->hash(this);
+}
+
+void ASTUnaryExprNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTBreakNode::accept(visitor::Visitor* v) {
+unsigned int ASTUnaryExprNode::hash(Visitor* v) { return 0; }
+
+void ASTTernaryNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTSwitchNode::accept(visitor::Visitor* v) {
+unsigned int ASTTernaryNode::hash(Visitor* v) { return 0; }
+
+void ASTTypeParseNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTEnumNode::accept(visitor::Visitor* v) {
+unsigned int ASTTypeParseNode::hash(Visitor* v) { return 0; }
+
+void ASTNullNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTTryCatchNode::accept(visitor::Visitor* v) {
+unsigned int ASTNullNode::hash(Visitor* v) { return 0; }
+
+void ASTThisNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTThrowNode::accept(visitor::Visitor* v) {
+unsigned int ASTThisNode::hash(Visitor* v) { return 0; }
+
+void ASTDeclarationNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTReticencesNode::accept(visitor::Visitor* v) {
+void ASTAsNamespaceNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTElseIfNode::accept(visitor::Visitor* v) {
+void ASTAssignmentNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTIfNode::accept(visitor::Visitor* v) {
+void ASTReturnNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTForNode::accept(visitor::Visitor* v) {
+void ASTExitNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTForEachNode::accept(visitor::Visitor* v) {
+void ASTBlockNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTWhileNode::accept(visitor::Visitor* v) {
+void ASTContinueNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTDoWhileNode::accept(visitor::Visitor* v) {
+void ASTBreakNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTFunctionDefinitionNode::accept(visitor::Visitor* v) {
+void ASTSwitchNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTStructDefinitionNode::accept(visitor::Visitor* v) {
+void ASTEnumNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTUsingNode::accept(visitor::Visitor* v) {
+void ASTTryCatchNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTProgramNode::accept(visitor::Visitor* v) {
+void ASTThrowNode::accept(Visitor* v) {
+	v->visit(this);
+}
+
+void ASTReticencesNode::accept(Visitor* v) {
+	v->visit(this);
+}
+
+void ASTElseIfNode::accept(Visitor* v) {
+	v->visit(this);
+}
+
+void ASTIfNode::accept(Visitor* v) {
+	v->visit(this);
+}
+
+void ASTForNode::accept(Visitor* v) {
+	v->visit(this);
+}
+
+void ASTForEachNode::accept(Visitor* v) {
+	v->visit(this);
+}
+
+void ASTWhileNode::accept(Visitor* v) {
+	v->visit(this);
+}
+
+void ASTDoWhileNode::accept(Visitor* v) {
+	v->visit(this);
+}
+
+void ASTFunctionDefinitionNode::accept(Visitor* v) {
+	v->visit(this);
+}
+
+void ASTStructDefinitionNode::accept(Visitor* v) {
+	v->visit(this);
+}
+
+void ASTUsingNode::accept(Visitor* v) {
+	v->visit(this);
+}
+
+void ASTProgramNode::accept(Visitor* v) {
 	v->visit(this);
 }

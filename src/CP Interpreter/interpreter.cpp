@@ -37,7 +37,6 @@ std::string Interpreter::get_namespace(ASTProgramNode* program, std::string nmsp
 }
 
 std::string Interpreter::get_current_namespace() {
-	//return current_program->alias.empty() ? default_namespace : current_program->alias;
 	return current_function_nmspace.size() == 0 ? (
 		current_program->alias.empty() ? default_namespace : current_program->alias
 		) : current_function_nmspace.top();
