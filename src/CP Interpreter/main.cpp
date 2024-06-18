@@ -1,7 +1,7 @@
-//#include "vendor/util.hpp"
 #include "cprepl.hpp"
 #include "cpinterpreter.hpp"
 #include "vendor/watch.h"
+//#include "vendor/util.hpp"
 //#include "vendor/logging.hpp"
 
 int main(int argc, const char* argv[]) {

@@ -1529,6 +1529,10 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 		}
 	}
 	for (; i < function_call_parameters.size(); ++i) {
+		if (std::get<3>(function_call_parameters[i])) {
+			break;
+		}
+
 		auto pname = std::get<0>(function_call_parameters[i]);
 		std::get<2>(function_call_parameters[i])->accept(this);
 
@@ -1835,6 +1839,7 @@ void Interpreter::register_built_in_functions() {
 		}
 		std::string line;
 		std::getline(std::cin, line);
+		current_expression_value = Value(Type::T_STRING);
 		current_expression_value.set(cp_string(std::move(line)));
 	};
 	params.clear();
@@ -1845,6 +1850,7 @@ void Interpreter::register_built_in_functions() {
 	builtin_functions["readch"] = [this]() {
 		while (!_kbhit());
 		char ch = _getch();
+		current_expression_value = Value(Type::T_CHAR);
 		current_expression_value.set(cp_char(ch));
 	};
 	params.clear();
