@@ -1,8 +1,8 @@
-#include "vendor/util.hpp"
+//#include "vendor/util.hpp"
 #include "cprepl.hpp"
 #include "cpinterpreter.hpp"
 #include "vendor/watch.h"
-#include "vendor/logging.hpp"
+//#include "vendor/logging.hpp"
 
 int main(int argc, const char* argv[]) {
 	//auto logger = axe::Logger(axe::INFO, ".\\logs.log");
@@ -12,14 +12,14 @@ int main(int argc, const char* argv[]) {
 	//}
 	//logger.debug(str);
 
-	auto sw = ChronoStopwatch();
-	sw.start();
-
 	int result = 0;
 
 	if (argc == 1) {
 		return CPRepl::execute();
 	}
+
+	auto sw = ChronoStopwatch();
+	sw.start();
 
 	auto interpreter = CPInterpreter();
 	result = interpreter.execute(argc, argv);
