@@ -685,25 +685,25 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 	auto nmspace = get_namespace();
 	scopes[nmspace].push_back(new SemanticScope());
 
-	astnode->parsed_case_blocks = new std::map<unsigned int, unsigned int>();
+	astnode->parsed_case_blocks = std::map<unsigned int, unsigned int>();
 
 	astnode->condition->accept(this);
 
-	for (auto& expr : *astnode->case_blocks) {
+	for (auto& expr : astnode->case_blocks) {
 		expr.first->accept(this);
 		auto hash = expr.first->hash(this);
-		if (astnode->parsed_case_blocks->contains(hash)) {
+		if (astnode->parsed_case_blocks.contains(hash)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("duplicated case value: '" + std::to_string(hash) + "'");
 		}
-		astnode->parsed_case_blocks->emplace(hash, expr.second);
+		astnode->parsed_case_blocks.emplace(hash, expr.second);
 		if (!current_expression.is_const) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("expression is not an constant expression");
 		}
 	}
 
-	for (auto& stmt : *astnode->statements) {
+	for (auto& stmt : astnode->statements) {
 		stmt->accept(this);
 	}
 
@@ -896,7 +896,7 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 	}
 
 	if (auto switchstmt = dynamic_cast<ASTSwitchNode*>(astnode)) {
-		for (auto& blk_stmt : *switchstmt->statements) {
+		for (auto& blk_stmt : switchstmt->statements) {
 			if (returns(blk_stmt)) {
 				return true;
 			}

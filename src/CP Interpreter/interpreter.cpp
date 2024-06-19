@@ -286,14 +286,14 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 
 	try {
 		auto hash = astnode->condition->hash(this);
-		pos = astnode->parsed_case_blocks->at(hash);
+		pos = astnode->parsed_case_blocks.at(hash);
 	}
 	catch (...) {
 		pos = astnode->default_block;
 	}
 
-	for (int i = pos; i < astnode->statements->size(); ++i) {
-		astnode->statements->at(i)->accept(this);
+	for (int i = pos; i < astnode->statements.size(); ++i) {
+		astnode->statements.at(i)->accept(this);
 
 		if (exit_from_program) {
 			return;

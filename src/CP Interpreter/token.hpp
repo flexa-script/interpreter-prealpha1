@@ -160,7 +160,7 @@ namespace lexer {
 		Token(TokenType type, const std::string& value, unsigned int row = 0, unsigned int col = 0);
 		Token();
 
-		static const std::string& token_image(TokenType);
+		static const std::string& token_image(TokenType type);
 	};
 };
 

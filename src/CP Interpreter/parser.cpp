@@ -53,12 +53,11 @@ ASTProgramNode* Parser::parse_program() {
 		consume_token();
 	}
 
-	return new ASTProgramNode(*statements, name, alias);
+	return new ASTProgramNode(name, alias, std::move(*statements));
 }
 
 ASTUsingNode* Parser::parse_using_statement() {
 	std::vector<std::string> library = std::vector<std::string>();
-	std::string alias = "";
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -72,7 +71,7 @@ ASTUsingNode* Parser::parse_using_statement() {
 
 	consume_token(TOK_SEMICOLON);
 
-	return new ASTUsingNode(library, alias, row, col);
+	return new ASTUsingNode(library, row, col);
 }
 
 ASTNode* Parser::parse_program_statement() {
@@ -204,7 +203,7 @@ Identifier Parser::parse_identifier() {
 		access_vector = parse_dimension_vector();
 	}
 
-	return Identifier(identifier, access_vector);
+	return Identifier(identifier, std::move(access_vector));
 }
 
 std::vector<Identifier> Parser::parse_identifier_vector() {
@@ -289,7 +288,7 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 		type = Type::T_ANY;
 	}
 
-	return new ASTDeclarationNode(identifier, type, current_array_type, dim_vector, type_name, type_name_space, expr, is_const, row, col);
+	return new ASTDeclarationNode(identifier, type, current_array_type, std::move(dim_vector), type_name, type_name_space, expr, is_const, row, col);
 }
 
 ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
@@ -349,7 +348,7 @@ ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
 		type = Type::T_ANY;
 	}
 
-	return new ASTDeclarationNode(identifier, type, current_array_type, dim_vector,
+	return new ASTDeclarationNode(identifier, type, current_array_type, std::move(dim_vector),
 		type_name, type_name_space, expr, is_const, row, col);
 }
 
@@ -435,7 +434,7 @@ VariableDefinition* Parser::parse_formal_param() {
 	}
 
 	return new VariableDefinition(identifier, type, type_name,
-		type_name_space, array_type, dim, def_expr, is_rest, row, col);
+		type_name_space, array_type, std::move(dim), def_expr, is_rest, row, col);
 };
 
 std::vector<std::pair<bool, ASTExprNode*>>* Parser::parse_actual_params() {
@@ -518,7 +517,7 @@ ASTAssignmentNode* Parser::parse_assignment_statement(ASTIdentifierNode* identif
 
 	check_consume_semicolon();
 
-	return new ASTAssignmentNode(identifier->identifier_vector, identifier->nmspace, op, expr, identifier->row, identifier->col);
+	return new ASTAssignmentNode(std::move(identifier->identifier_vector), identifier->nmspace, op, expr, identifier->row, identifier->col);
 }
 
 ASTReturnNode* Parser::parse_return_statement() {
@@ -572,7 +571,7 @@ ASTEnumNode* Parser::parse_enum_statement() {
 	consume_token(TOK_RIGHT_CURLY);
 	check_consume_semicolon();
 
-	return new ASTEnumNode(identifiers, row, col);
+	return new ASTEnumNode(std::move(identifiers), row, col);
 }
 
 ASTBlockNode* Parser::parse_block() {
@@ -590,7 +589,7 @@ ASTBlockNode* Parser::parse_block() {
 	}
 
 	if (current_token.type == TOK_RIGHT_CURLY) {
-		return new ASTBlockNode(*statements, row, col);
+		return new ASTBlockNode(std::move(*statements), row, col);
 	}
 	throw std::runtime_error(msg_header() + "reached end of file while parsing");
 }
@@ -609,7 +608,7 @@ ASTBlockNode* Parser::parse_struct_block() {
 	}
 
 	if (current_token.type == TOK_RIGHT_CURLY) {
-		return new ASTBlockNode(*statements, row, col);
+		return new ASTBlockNode(std::move(*statements), row, col);
 	}
 	throw std::runtime_error(msg_header() + "mismatched scopes: reached end of file while parsing");
 }
@@ -696,7 +695,7 @@ VariableDefinition* Parser::parse_struct_var_def() {
 	}
 
 	return new VariableDefinition(identifier, type, type_name,
-		type_name_space, array_type, dim, nullptr, is_rest, row, col);
+		type_name_space, array_type, std::move(dim), nullptr, is_rest, row, col);
 };
 
 ASTContinueNode* Parser::parse_continue_statement() {
@@ -775,7 +774,7 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 		}
 	}
 
-	return new ASTSwitchNode(condition, statements, case_blocks, default_block, row, col);
+	return new ASTSwitchNode(condition, std::move(*statements), std::move(*case_blocks), default_block, row, col);
 }
 
 ASTElseIfNode* Parser::parse_else_if_statement() {
@@ -828,7 +827,7 @@ ASTIfNode* Parser::parse_if_statement() {
 		}
 	}
 
-	return new ASTIfNode(condition, if_block, else_ifs, else_block, row, col);
+	return new ASTIfNode(condition, if_block, std::move(else_ifs), else_block, row, col);
 }
 
 ASTTryCatchNode* Parser::parse_try_catch_statement() {
@@ -900,7 +899,7 @@ ASTForNode* Parser::parse_for_statement() {
 
 	block = parse_block();
 
-	return new ASTForNode(dci, block, row, col);
+	return new ASTForNode(std::move(dci), block, row, col);
 }
 
 ASTNode* Parser::parse_foreach_collection() {
@@ -1043,7 +1042,8 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 		}
 	}
 
-	return new ASTFunctionDefinitionNode(identifier, parameters, type, type_name, type_name_space, array_type, dim_vector, block, row, col);
+	return new ASTFunctionDefinitionNode(identifier, std::move(parameters), type, 
+		type_name, type_name_space, array_type, std::move(dim_vector), block, row, col);
 }
 
 ASTStructDefinitionNode* Parser::parse_struct_definition() {
@@ -1068,7 +1068,7 @@ ASTStructDefinitionNode* Parser::parse_struct_definition() {
 
 	check_consume_semicolon();
 
-	return new ASTStructDefinitionNode(identifier, variables, row, col);
+	return new ASTStructDefinitionNode(identifier, std::move(variables), row, col);
 }
 
 ASTExprNode* Parser::parse_expression() {
