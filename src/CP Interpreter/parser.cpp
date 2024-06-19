@@ -471,7 +471,7 @@ ASTIdentifierNode* Parser::parse_identifier_node(std::string expr_nmspace) {
 
 	identifier_vector = parse_identifier_vector();
 
-	return new ASTIdentifierNode(identifier_vector, nmspace, row, col);
+	return new ASTIdentifierNode(std::move(identifier_vector), nmspace, row, col);
 }
 
 ASTNode* Parser::parse_assignment_or_increment_node() {
@@ -1508,7 +1508,7 @@ ASTFunctionCallNode* Parser::parse_function_call_node(std::string expr_nmspace) 
 		access_vector = parse_dimension_vector();
 	}
 
-	return new ASTFunctionCallNode(identifier, nmspace, access_vector, *parameters, row, col);
+	return new ASTFunctionCallNode(identifier, nmspace, std::move(access_vector), std::move(*parameters), row, col);
 }
 
 ASTFunctionCallNode* Parser::parse_function_call_parameters_node(std::string identifier, std::string nmspace) {
@@ -1536,7 +1536,7 @@ ASTFunctionCallNode* Parser::parse_function_call_parameters_node(std::string ide
 		access_vector = parse_dimension_vector();
 	}
 
-	return new ASTFunctionCallNode(identifier, nmspace, access_vector, *parameters, row, col);
+	return new ASTFunctionCallNode(identifier, nmspace, std::move(access_vector), std::move(*parameters), row, col);
 }
 
 ASTTypeParseNode* Parser::parse_type_parse_node() {

@@ -461,7 +461,7 @@ namespace parser {
 		std::string unary_op;
 		ASTExprNode* expr;
 
-		ASTUnaryExprNode(std::string, ASTExprNode*, unsigned int, unsigned int);
+		ASTUnaryExprNode(const std::string& unary_op, ASTExprNode* expr, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
 		virtual unsigned int hash(visitor::Visitor*) override;
@@ -472,7 +472,7 @@ namespace parser {
 		std::vector<Identifier> identifier_vector;
 		std::string nmspace;
 
-		explicit ASTIdentifierNode(std::vector<Identifier>, std::string, unsigned int, unsigned int);
+		explicit ASTIdentifierNode(std::vector<Identifier>&& identifier_vector, std::string nmspace, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
 		virtual unsigned int hash(visitor::Visitor*) override;
@@ -486,7 +486,7 @@ namespace parser {
 
 		ASTTernaryNode(ASTExprNode* condition, ASTExprNode* value_if_true, ASTExprNode* value_if_false, unsigned int row, unsigned int col);
 
-		void accept(visitor::Visitor* visitor) override;
+		void accept(visitor::Visitor*) override;
 		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
@@ -498,7 +498,7 @@ namespace parser {
 
 		ASTInNode(ASTExprNode* value, ASTExprNode* collection, bool vbv, unsigned int row, unsigned int col);
 
-		void accept(visitor::Visitor* visitor) override;
+		void accept(visitor::Visitor*) override;
 		virtual unsigned int hash(visitor::Visitor*) override;
 	};
 
@@ -509,8 +509,8 @@ namespace parser {
 		std::vector<ASTExprNode*> access_vector;
 		std::vector<std::pair<bool, ASTExprNode*>> parameters;
 
-		ASTFunctionCallNode(std::string, std::string, std::vector<ASTExprNode*>,
-			std::vector<std::pair<bool, ASTExprNode*>> parameters, unsigned int, unsigned int);
+		ASTFunctionCallNode(const std::string& identifier, const std::string& nmspace, std::vector<ASTExprNode*>&& access_vector,
+			std::vector<std::pair<bool, ASTExprNode*>>&& parameters, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
 		virtual unsigned int hash(visitor::Visitor*) override;
@@ -521,7 +521,7 @@ namespace parser {
 		Type type;
 		ASTExprNode* expr;
 
-		ASTTypeParseNode(Type, ASTExprNode*, unsigned int, unsigned int);
+		ASTTypeParseNode(Type type, ASTExprNode* expr, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
 		virtual unsigned int hash(visitor::Visitor*) override;
