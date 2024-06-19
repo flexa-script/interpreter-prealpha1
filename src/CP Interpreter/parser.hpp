@@ -44,9 +44,8 @@ namespace parser {
 		ASTNode* parse_block_statement();
 		ASTDeclarationNode* parse_declaration_statement();
 		ASTDeclarationNode* parse_undef_declaration_statement();
-		ASTNode* parse_assignment_or_increment_node();
-		ASTAssignmentNode* parse_assignment_statement(ASTIdentifierNode*);
-		ASTUnaryExprNode* parse_increment_expression(ASTIdentifierNode*);
+		ASTAssignmentNode* parse_assignment_statement(ASTIdentifierNode* idnode);
+		ASTUnaryExprNode* parse_increment_expression(ASTIdentifierNode* idnode);
 		ASTReturnNode* parse_return_statement();
 		ASTExitNode* parse_exit_statement();
 		ASTEnumNode* parse_enum_statement();
@@ -71,9 +70,8 @@ namespace parser {
 		// complex expression nodes
 		ASTNode* parse_identifier_statement();
 		ASTArrayConstructorNode* parse_array_constructor_node();
-		ASTStructConstructorNode* parse_struct_constructor_node(std::string = "");
-		ASTFunctionCallNode* parse_function_call_node(std::string = "");
-		ASTFunctionCallNode* parse_function_call_parameters_node(std::string, std::string);
+		ASTStructConstructorNode* parse_struct_constructor_node(ASTIdentifierNode* idnode);
+		ASTFunctionCallNode* parse_function_call_node(ASTIdentifierNode* idnode);
 		ASTTypeParseNode* parse_type_parse_node();
 		ASTThisNode* parse_this_node();
 		ASTTypingNode* parse_typing_node();
@@ -92,7 +90,8 @@ namespace parser {
 		std::vector<std::pair<bool, ASTExprNode*>>* parse_actual_params();
 		VariableDefinition* parse_struct_var_def();
 		VariableDefinition* parse_formal_param();
-		ASTIdentifierNode* parse_identifier_node(std::string = "");
+		ASTExprNode* parse_identifier_expression();
+		ASTIdentifierNode* parse_identifier_node();
 		cp_bool parse_bool_literal();
 		cp_int parse_int_literal();
 		cp_float parse_float_literal();
