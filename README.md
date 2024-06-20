@@ -50,7 +50,11 @@
     - [X] switch
     - [X] break
     - [X] continue
-    - [X] +=,-=,*=,/=,%= assignment
+    - [X] assignment
+        - [X] +=, -=
+        - [X] *=, /=, %= 
+        - [ ] <<=, >>=
+        - [ ] &=, ^=, |=
     - [X] namespace
     - [X] as namespace
     - [X] exit
