@@ -1351,7 +1351,7 @@ ASTStructConstructorNode* Parser::parse_struct_constructor_node(ASTIdentifierNod
 	consume_token();
 
 	while (current_token.type == TOK_IDENTIFIER) {
-		auto& var_identifier = current_token.value;
+		auto var_identifier = current_token.value;
 
 		consume_token(TOK_EQUALS);
 

@@ -48,8 +48,9 @@ namespace visitor {
 		void register_built_in_functions();
 		void register_built_in_lib(std::string libname);
 
-		std::string get_namespace(std::string = "") override;
-		std::string get_namespace(parser::ASTProgramNode*, std::string = "") override;
+		const std::string& get_namespace(const std::string& nmspace = "") const override;
+		const std::string& get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace = "") const override;
+
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;
 

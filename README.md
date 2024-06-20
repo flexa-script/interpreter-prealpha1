@@ -69,6 +69,7 @@
         - [X] typeof: returns type of object
             - [X] add namespace to type name return
         - [X] typeid: returns hash of typeof
+        - [ ] isany: returns if a variable is any
         - [ ] add bitwise operators:
             - [ ] &   bitwise AND
             - [ ] |   bitwise inclusive OR

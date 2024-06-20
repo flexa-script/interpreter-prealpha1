@@ -19,18 +19,19 @@ namespace parser {
 		std::string name;
 
 	public:
-		explicit Parser(std::string, lexer::Lexer*);
-		Parser(std::string, lexer::Lexer*, unsigned int);
+		explicit Parser(std::string name, lexer::Lexer* lex);
+		// TODO: check if it will be necessary on REPL refact
+		Parser(std::string name, lexer::Lexer* lex, unsigned int tokens);
 
 		ASTProgramNode* parse_program();
-		ASTExprNode* parse_expression();  // public for repl
-		ASTExprNode* parse_statement_expression();  // public for repl
+		ASTExprNode* parse_expression(); // public for repl
+		ASTExprNode* parse_statement_expression(); // public for repl
 
 	private:
 		void consume_token();
-		void consume_token(lexer::TokenType);
+		void consume_token(lexer::TokenType type);
 		void check_consume_semicolon();
-		void check_current_token(lexer::TokenType);
+		void check_current_token(lexer::TokenType type);
 
 		// parse types and parameters
 		Type parse_type();

@@ -59,7 +59,6 @@ namespace visitor {
 
 		std::vector<Value*> build_array(std::vector<parser::ASTExprNode*>, Value*, long long);
 
-		void declare_new_structure(std::string, Value);
 		void declare_structure(cp_struct*, std::string);
 
 		cp_int do_operation(cp_int, cp_int, std::string);
@@ -84,9 +83,9 @@ namespace visitor {
 		bool equals_array(cp_array larr, cp_array rarr);
 		bool equals_struct(cp_struct* lstr, cp_struct* rstr);
 
-		std::string get_current_namespace();
-		std::string get_namespace(std::string = "") override;
-		std::string get_namespace(parser::ASTProgramNode*, std::string = "") override;
+		const std::string& get_current_namespace();
+		const std::string& get_namespace(const std::string& nmspace = "") const override;
+		const std::string& get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace = "") const override;
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;
 

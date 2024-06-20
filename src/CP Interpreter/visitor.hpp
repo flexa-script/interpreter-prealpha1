@@ -142,8 +142,8 @@ namespace visitor {
 		Visitor(std::map<std::string, parser::ASTProgramNode*> programs, parser::ASTProgramNode* main_program, std::string current_name)
 			: programs(programs), main_program(main_program), current_program(main_program), curr_row(0), curr_col(0) { };
 
-		virtual std::string get_namespace(std::string = "") = 0;
-		virtual std::string get_namespace(parser::ASTProgramNode*, std::string = "") = 0;
+		virtual const std::string& get_namespace(const std::string& nmspace = "") const = 0;
+		virtual const std::string& get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace = "") const = 0;
 
 		virtual void set_curr_pos(unsigned int row, unsigned int col) = 0;
 		virtual std::string msg_header() = 0;

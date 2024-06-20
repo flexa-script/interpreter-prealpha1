@@ -70,8 +70,8 @@ namespace visitor {
 		unsigned int hash(parser::ASTLiteralNode<cp_char>*) override;
 		unsigned int hash(parser::ASTLiteralNode<cp_string>*) override;
 
-		std::string get_namespace(std::string = "") override;
-		std::string get_namespace(parser::ASTProgramNode*, std::string = "") override;
+		const std::string& get_namespace(const std::string& nmspace = "") const override;
+		const std::string& get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace = "") const override;
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;
 	};

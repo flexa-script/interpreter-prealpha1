@@ -50,28 +50,15 @@ bool InterpreterScope::already_declared_function_name(std::string identifier) {
 	}
 }
 
-Value* InterpreterScope::declare_undef_variable(std::string identifier, parser::Type type) {
+Value* InterpreterScope::declare_empty_variable(std::string identifier, parser::Type type, parser::Type empty_type) {
 	Value* value = new Value(type);
-	value->set_undefined();
+	value->set_empty(empty_type);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value* InterpreterScope::declare_undef_struct_variable(std::string identifier, std::string type_name) {
-	Value* value = declare_undef_variable(identifier, parser::Type::T_STRUCT);
-	value->str->first = type_name;
-	return value;
-}
-
-Value* InterpreterScope::declare_null_variable(std::string identifier, parser::Type type) {
-	Value* value = new Value(type);
-	value->set_null();
-	variable_symbol_table[identifier] = value;
-	return value;
-}
-
-Value* InterpreterScope::declare_null_struct_variable(std::string identifier, std::string type_name) {
-	Value* value = declare_null_variable(identifier, parser::Type::T_STRUCT);
+Value* InterpreterScope::declare_empty_struct_variable(std::string identifier, std::string type_name, parser::Type empty_type) {
+	Value* value = declare_empty_variable(identifier, parser::Type::T_STRUCT, empty_type);
 	value->str->first = type_name;
 	return value;
 }
@@ -111,8 +98,8 @@ Value* InterpreterScope::declare_variable(std::string identifier, cp_string stri
 	return value;
 }
 
-Value* InterpreterScope::declare_variable(std::string identifier, cp_array arrValue) {
-	Value* value = new Value(parser::Type::T_ARRAY);
+Value* InterpreterScope::declare_variable(std::string identifier, cp_array arrValue, Type arr_type) {
+	Value* value = new Value(parser::Type::T_ARRAY, arr_type);
 	value->set(arrValue);
 	variable_symbol_table[identifier] = value;
 	return value;

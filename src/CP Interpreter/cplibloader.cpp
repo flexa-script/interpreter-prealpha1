@@ -111,7 +111,7 @@ unsigned int LibFinder::hash(ASTLiteralNode<cp_char>*) { return 0; }
 unsigned int LibFinder::hash(ASTLiteralNode<cp_string>*) { return 0; }
 unsigned int LibFinder::hash(ASTIdentifierNode*) { return 0; }
 
-std::string LibFinder::get_namespace(std::string) { return ""; }
-std::string LibFinder::get_namespace(ASTProgramNode*, std::string) { return ""; }
+const std::string& LibFinder::get_namespace(const std::string&) const { return ""; }
+const std::string& LibFinder::get_namespace(const ASTProgramNode*, const std::string&)const { return ""; }
 void LibFinder::set_curr_pos(unsigned int, unsigned int) {}
 std::string LibFinder::msg_header() { return ""; }

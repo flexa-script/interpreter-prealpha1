@@ -21,11 +21,11 @@ void SemanticAnalyser::start() {
 	visit(current_program);
 }
 
-std::string SemanticAnalyser::get_namespace(std::string nmspace) {
+const std::string& SemanticAnalyser::get_namespace(const std::string& nmspace)const {
 	return get_namespace(current_program, nmspace);
 }
 
-std::string SemanticAnalyser::get_namespace(ASTProgramNode* program, std::string nmspace) {
+const std::string& SemanticAnalyser::get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace)const {
 	return nmspace.empty() ? (program->alias.empty() ? default_namespace : program->alias) : nmspace;
 }
 
@@ -41,10 +41,8 @@ void SemanticAnalyser::visit(ASTProgramNode* astnode) {
 			if (exception) {
 				throw std::runtime_error(ex.what());
 			}
-			else {
-				exception = true;
-				throw std::runtime_error(msg_header() + ex.what());
-			}
+			exception = true;
+			throw std::runtime_error(msg_header() + ex.what());
 		}
 	}
 }
