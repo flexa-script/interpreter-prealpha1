@@ -1527,31 +1527,31 @@ std::string SemanticAnalyser::msg_header() {
 	return "(SERR) " + current_program->name + '[' + std::to_string(curr_row) + ':' + std::to_string(curr_col) + "]: ";
 }
 
-unsigned int SemanticAnalyser::hash(ASTExprNode* astnode) {
+long long SemanticAnalyser::hash(ASTExprNode* astnode) {
 	return 0;
 }
 
-unsigned int SemanticAnalyser::hash(ASTLiteralNode<cp_bool>* astnode) {
-	return static_cast<unsigned int>(astnode->val);
+long long SemanticAnalyser::hash(ASTLiteralNode<cp_bool>* astnode) {
+	return static_cast<long long>(astnode->val);
 }
 
-unsigned int SemanticAnalyser::hash(ASTLiteralNode<cp_int>* astnode) {
-	return static_cast<unsigned int>(astnode->val);
+long long SemanticAnalyser::hash(ASTLiteralNode<cp_int>* astnode) {
+	return static_cast<long long>(astnode->val);
 }
 
-unsigned int SemanticAnalyser::hash(ASTLiteralNode<cp_float>* astnode) {
-	return static_cast<unsigned int>(astnode->val);
+long long SemanticAnalyser::hash(ASTLiteralNode<cp_float>* astnode) {
+	return static_cast<long long>(astnode->val);
 }
 
-unsigned int SemanticAnalyser::hash(ASTLiteralNode<cp_char>* astnode) {
-	return static_cast<unsigned int>(astnode->val);
+long long SemanticAnalyser::hash(ASTLiteralNode<cp_char>* astnode) {
+	return static_cast<long long>(astnode->val);
 }
 
-unsigned int SemanticAnalyser::hash(ASTLiteralNode<cp_string>* astnode) {
+long long SemanticAnalyser::hash(ASTLiteralNode<cp_string>* astnode) {
 	return axe::Util::hashcode(astnode->val);
 }
 
-unsigned int SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
+long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 	SemanticScope* curr_scope;
 	try {
 		auto nmspace = get_namespace(astnode->nmspace);

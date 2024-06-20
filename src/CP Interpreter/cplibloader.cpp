@@ -103,13 +103,13 @@ void LibFinder::visit(ASTTypingNode*) {}
 void LibFinder::visit(ASTNullNode*) {}
 void LibFinder::visit(ASTThisNode*) {}
 
-unsigned int LibFinder::hash(ASTExprNode*) { return 0; }
-unsigned int LibFinder::hash(ASTLiteralNode<cp_bool>*) { return 0; }
-unsigned int LibFinder::hash(ASTLiteralNode<cp_int>*) { return 0; }
-unsigned int LibFinder::hash(ASTLiteralNode<cp_float>*) { return 0; }
-unsigned int LibFinder::hash(ASTLiteralNode<cp_char>*) { return 0; }
-unsigned int LibFinder::hash(ASTLiteralNode<cp_string>*) { return 0; }
-unsigned int LibFinder::hash(ASTIdentifierNode*) { return 0; }
+long long LibFinder::hash(ASTExprNode*) { return 0; }
+long long LibFinder::hash(ASTLiteralNode<cp_bool>*) { return 0; }
+long long LibFinder::hash(ASTLiteralNode<cp_int>*) { return 0; }
+long long LibFinder::hash(ASTLiteralNode<cp_float>*) { return 0; }
+long long LibFinder::hash(ASTLiteralNode<cp_char>*) { return 0; }
+long long LibFinder::hash(ASTLiteralNode<cp_string>*) { return 0; }
+long long LibFinder::hash(ASTIdentifierNode*) { return 0; }
 
 const std::string& LibFinder::get_namespace(const std::string&) const { return ""; }
 const std::string& LibFinder::get_namespace(const ASTProgramNode*, const std::string&)const { return ""; }

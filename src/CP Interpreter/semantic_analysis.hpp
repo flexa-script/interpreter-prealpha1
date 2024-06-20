@@ -101,13 +101,13 @@ namespace visitor {
 		void visit(parser::ASTThisNode*) override;
 		void visit(parser::ASTTypingNode*) override;
 
-		unsigned int hash(parser::ASTExprNode*) override;
-		unsigned int hash(parser::ASTIdentifierNode*) override;
-		unsigned int hash(parser::ASTLiteralNode<cp_bool>*) override;
-		unsigned int hash(parser::ASTLiteralNode<cp_int>*) override;
-		unsigned int hash(parser::ASTLiteralNode<cp_float>*) override;
-		unsigned int hash(parser::ASTLiteralNode<cp_char>*) override;
-		unsigned int hash(parser::ASTLiteralNode<cp_string>*) override;
+		long long hash(parser::ASTExprNode*) override;
+		long long hash(parser::ASTIdentifierNode*) override;
+		long long hash(parser::ASTLiteralNode<cp_bool>*) override;
+		long long hash(parser::ASTLiteralNode<cp_int>*) override;
+		long long hash(parser::ASTLiteralNode<cp_float>*) override;
+		long long hash(parser::ASTLiteralNode<cp_char>*) override;
+		long long hash(parser::ASTLiteralNode<cp_string>*) override;
 	};
 }
 

@@ -139,7 +139,7 @@ namespace visitor {
 		int curr_row;
 		int curr_col;
 
-		Visitor(std::map<std::string, parser::ASTProgramNode*> programs, parser::ASTProgramNode* main_program, std::string current_name)
+		Visitor(const std::map<std::string, parser::ASTProgramNode*>& programs, parser::ASTProgramNode* main_program, const std::string& current_name)
 			: programs(programs), main_program(main_program), current_program(main_program), curr_row(0), curr_col(0) { };
 
 		virtual const std::string& get_namespace(const std::string& nmspace = "") const = 0;
@@ -189,13 +189,13 @@ namespace visitor {
 		virtual void visit(parser::ASTThisNode*) = 0;
 		virtual void visit(parser::ASTTypingNode*) = 0;
 
-		virtual unsigned int hash(parser::ASTExprNode*) = 0;
-		virtual unsigned int hash(parser::ASTIdentifierNode*) = 0;
-		virtual unsigned int hash(parser::ASTLiteralNode<cp_bool>*) = 0;
-		virtual unsigned int hash(parser::ASTLiteralNode<cp_int>*) = 0;
-		virtual unsigned int hash(parser::ASTLiteralNode<cp_float>*) = 0;
-		virtual unsigned int hash(parser::ASTLiteralNode<cp_char>*) = 0;
-		virtual unsigned int hash(parser::ASTLiteralNode<cp_string>*) = 0;
+		virtual long long hash(parser::ASTExprNode*) = 0;
+		virtual long long hash(parser::ASTIdentifierNode*) = 0;
+		virtual long long hash(parser::ASTLiteralNode<cp_bool>*) = 0;
+		virtual long long hash(parser::ASTLiteralNode<cp_int>*) = 0;
+		virtual long long hash(parser::ASTLiteralNode<cp_float>*) = 0;
+		virtual long long hash(parser::ASTLiteralNode<cp_char>*) = 0;
+		virtual long long hash(parser::ASTLiteralNode<cp_string>*) = 0;
 	};
 }
 

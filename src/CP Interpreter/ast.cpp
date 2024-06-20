@@ -29,7 +29,7 @@ TypeDefinition TypeDefinition::get_struct(Type type, const std::string& type_nam
 }
 
 SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*>&& dim,
-	const std::string& type_name, const std::string& type_name_space, unsigned int hash,
+	const std::string& type_name, const std::string& type_name_space, long long hash,
 	bool is_const, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space),
 	hash(hash), is_const(is_const) {}
@@ -157,7 +157,7 @@ ASTAsNamespaceNode::ASTAsNamespaceNode(const std::string& nmspace, unsigned int 
 	: ASTStatementNode(row, col), nmspace(nmspace) {}
 
 ASTDeclarationNode::ASTDeclarationNode(const std::string& identifier, Type type, Type array_type, std::vector<ASTExprNode*>&& dim,
-	const std::string& type_name, const std::string& type_name_space, ASTExprNode* expr, bool is_const,	unsigned int row, unsigned int col)
+	const std::string& type_name, const std::string& type_name_space, ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space),
 	identifier(identifier), expr(expr), is_const(is_const) {}
 
@@ -229,7 +229,7 @@ ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(const std::string& identifi
 	identifier(identifier), parameters(parameters), block(block) {
 	// generate signature
 	this->signature = std::vector<TypeDefinition>();
-
+	
 	for (const auto& param : this->parameters) {
 		variable_names.push_back(param.identifier);
 		auto dim_copy = param.dim;
@@ -281,7 +281,7 @@ void ASTLiteralNode<cp_bool>::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTLiteralNode<cp_bool>::hash(Visitor* v) {
+long long ASTLiteralNode<cp_bool>::hash(Visitor* v) {
 	return v->hash(this);
 }
 
@@ -289,7 +289,7 @@ void ASTLiteralNode<cp_int>::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTLiteralNode<cp_int>::hash(Visitor* v) {
+long long ASTLiteralNode<cp_int>::hash(Visitor* v) {
 	return v->hash(this);
 }
 
@@ -297,7 +297,7 @@ void ASTLiteralNode<cp_float>::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTLiteralNode<cp_float>::hash(Visitor* v) {
+long long ASTLiteralNode<cp_float>::hash(Visitor* v) {
 	return v->hash(this);
 }
 
@@ -305,7 +305,7 @@ void ASTLiteralNode<cp_char>::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTLiteralNode<cp_char>::hash(Visitor* v) {
+long long ASTLiteralNode<cp_char>::hash(Visitor* v) {
 	return v->hash(this);
 }
 
@@ -313,7 +313,7 @@ void ASTLiteralNode<cp_string>::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTLiteralNode<cp_string>::hash(Visitor* v) {
+long long ASTLiteralNode<cp_string>::hash(Visitor* v) {
 	return v->hash(this);
 }
 
@@ -321,31 +321,31 @@ void ASTArrayConstructorNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTArrayConstructorNode::hash(Visitor* v) { return 0; }
+long long ASTArrayConstructorNode::hash(Visitor* v) { return 0; }
 
 void ASTStructConstructorNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTStructConstructorNode::hash(Visitor* v) { return 0; }
+long long ASTStructConstructorNode::hash(Visitor* v) { return 0; }
 
 void ASTBinaryExprNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTBinaryExprNode::hash(Visitor* v) { return 0; }
+long long ASTBinaryExprNode::hash(Visitor* v) { return 0; }
 
 void ASTInNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTInNode::hash(Visitor* v) { return 0; }
+long long ASTInNode::hash(Visitor* v) { return 0; }
 
 void ASTFunctionCallNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTFunctionCallNode::hash(Visitor* v) { return 0; }
+long long ASTFunctionCallNode::hash(Visitor* v) { return 0; }
 
 void ASTIdentifierNode::accept(Visitor* v) {
 	v->visit(this);
@@ -355,9 +355,9 @@ void ASTTypingNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTTypingNode::hash(Visitor* v) { return 0; }
+long long ASTTypingNode::hash(Visitor* v) { return 0; }
 
-unsigned int ASTIdentifierNode::hash(Visitor* v) {
+long long ASTIdentifierNode::hash(Visitor* v) {
 	return v->hash(this);
 }
 
@@ -365,31 +365,31 @@ void ASTUnaryExprNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTUnaryExprNode::hash(Visitor* v) { return 0; }
+long long ASTUnaryExprNode::hash(Visitor* v) { return 0; }
 
 void ASTTernaryNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTTernaryNode::hash(Visitor* v) { return 0; }
+long long ASTTernaryNode::hash(Visitor* v) { return 0; }
 
 void ASTTypeParseNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTTypeParseNode::hash(Visitor* v) { return 0; }
+long long ASTTypeParseNode::hash(Visitor* v) { return 0; }
 
 void ASTNullNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTNullNode::hash(Visitor* v) { return 0; }
+long long ASTNullNode::hash(Visitor* v) { return 0; }
 
 void ASTThisNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-unsigned int ASTThisNode::hash(Visitor* v) { return 0; }
+long long ASTThisNode::hash(Visitor* v) { return 0; }
 
 void ASTDeclarationNode::accept(Visitor* v) {
 	v->visit(this);

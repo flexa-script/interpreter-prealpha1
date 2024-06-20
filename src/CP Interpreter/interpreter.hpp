@@ -54,34 +54,34 @@ namespace visitor {
 		modules::Console* cpconsole;
 
 
-		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
-		std::vector<unsigned int> calculate_array_dim_size(cp_array);
+		std::vector<unsigned int> evaluate_access_vector(const std::vector<parser::ASTExprNode*>& expr_access_vector);
+		std::vector<unsigned int> calculate_array_dim_size(const cp_array& arr);
 
-		std::vector<Value*> build_array(std::vector<parser::ASTExprNode*>, Value*, long long);
+		std::vector<Value*> build_array(const std::vector<parser::ASTExprNode*>& dim, Value* init_value, long long i);
 
-		void declare_structure(cp_struct*, std::string);
+		void declare_structure(cp_struct* str, const std::string& nmspace);
 
-		cp_int do_operation(cp_int, cp_int, std::string);
-		cp_float do_operation(cp_float, cp_float, std::string);
-		cp_string do_operation(cp_string, cp_string, std::string);
-		std::string parse_value_to_string(Value);
-		std::string parse_array_to_string(cp_array);
-		std::string parse_struct_to_string(cp_struct);
+		cp_int do_operation(cp_int lval, cp_int rval, const std::string& op);
+		cp_float do_operation(cp_float lval, cp_float rval, const std::string& op);
+		cp_string do_operation(const cp_string& lval, const cp_string& rval, const std::string& op);
+		std::string parse_value_to_string(const Value* value);
+		std::string parse_array_to_string(const cp_array& arr_value);
+		std::string parse_struct_to_string(const cp_struct& str_value);
 
-		InterpreterScope* get_inner_most_variable_scope(std::string, std::string);
-		InterpreterScope* get_inner_most_function_scope(std::string, std::string, std::vector<parser::TypeDefinition>);
-		InterpreterScope* get_inner_most_struct_definition_scope(std::string, std::string);
+		InterpreterScope* get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
+		InterpreterScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
+		InterpreterScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<parser::TypeDefinition>& signature);
 
-		Value* access_value(InterpreterScope*, Value*, std::vector<parser::Identifier>, size_t i = 0);
+		Value* access_value(const InterpreterScope* scope, Value* value, const std::vector<parser::Identifier>& identifier_vector, size_t i = 0);
 
-		void call_builtin_function(std::string identifier);
-		void declare_function_block_parameters(std::string nmspace);
+		void call_builtin_function(const std::string& identifier);
+		void declare_function_block_parameters(const std::string& nmspace);
 		void register_built_in_functions();
-		void register_built_in_lib(std::string libname);
+		void register_built_in_lib(const std::string& libname);
 
-		bool equals_value(Value* lval, Value* rval);
-		bool equals_array(cp_array larr, cp_array rarr);
-		bool equals_struct(cp_struct* lstr, cp_struct* rstr);
+		bool equals_value(const Value* lval, const Value* rval);
+		bool equals_array(const cp_array& larr, const cp_array& rarr);
+		bool equals_struct(const cp_struct* lstr, const cp_struct* rstr);
 
 		const std::string& get_current_namespace();
 		const std::string& get_namespace(const std::string& nmspace = "") const override;
@@ -90,7 +90,7 @@ namespace visitor {
 		std::string msg_header() override;
 
 	public:
-		Interpreter(InterpreterScope*, parser::ASTProgramNode*, std::map<std::string, parser::ASTProgramNode*>);
+		Interpreter(InterpreterScope* global_scope, parser::ASTProgramNode* main_program, const std::map<std::string, parser::ASTProgramNode*>& programs);
 		Interpreter() = default;
 		~Interpreter() = default;
 
@@ -137,13 +137,13 @@ namespace visitor {
 		void visit(parser::ASTThisNode*) override;
 		void visit(parser::ASTTypingNode*) override;
 
-		unsigned int hash(parser::ASTExprNode*) override;
-		unsigned int hash(parser::ASTIdentifierNode*) override;
-		unsigned int hash(parser::ASTLiteralNode<cp_bool>*) override;
-		unsigned int hash(parser::ASTLiteralNode<cp_int>*) override;
-		unsigned int hash(parser::ASTLiteralNode<cp_float>*) override;
-		unsigned int hash(parser::ASTLiteralNode<cp_char>*) override;
-		unsigned int hash(parser::ASTLiteralNode<cp_string>*) override;
+		long long hash(parser::ASTExprNode*) override;
+		long long hash(parser::ASTIdentifierNode*) override;
+		long long hash(parser::ASTLiteralNode<cp_bool>*) override;
+		long long hash(parser::ASTLiteralNode<cp_int>*) override;
+		long long hash(parser::ASTLiteralNode<cp_float>*) override;
+		long long hash(parser::ASTLiteralNode<cp_char>*) override;
+		long long hash(parser::ASTLiteralNode<cp_string>*) override;
 
 	};
 }

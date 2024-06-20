@@ -15,7 +15,7 @@ namespace axe {
 		static bool contains(std::string, std::string);
 		static bool contains(std::vector<std::string>, std::string);
 		static std::string join(std::vector<std::string>, const char* const);
-		static unsigned int hashcode(const std::string&);
+		static long long hashcode(const std::string&);
 		static std::string replace(std::string, const std::string, const std::string);
 		static std::string get_current_path();
 		static std::string normalize_path_sep(std::string);

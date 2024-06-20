@@ -38,12 +38,12 @@ namespace parser {
 
 	class SemanticValue : public TypeDefinition, public CodePosition {
 	public:
-		unsigned int hash;
+		long long hash;
 		bool is_const;
 
 		// complete constructor
 		SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*>&& dim,
-			const std::string& type_name, const std::string& type_name_space, unsigned int hash,
+			const std::string& type_name, const std::string& type_name_space, long long hash,
 			bool is_const, unsigned int row, unsigned int col);
 
 		// simplified constructor
@@ -153,7 +153,7 @@ namespace parser {
 			: ASTNode(row, col) {}
 
 		void accept(visitor::Visitor*) override = 0;
-		virtual unsigned int hash(visitor::Visitor*) = 0;
+		virtual long long hash(visitor::Visitor*) = 0;
 	};
 
 	class ASTProgramNode : public ASTNode {
@@ -402,7 +402,7 @@ namespace parser {
 		ASTLiteralNode(T val, unsigned int row, unsigned int col) : ASTExprNode(col, row), val(val) {};
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
 	};
 
 	class ASTArrayConstructorNode : public ASTExprNode {
@@ -412,7 +412,7 @@ namespace parser {
 		ASTArrayConstructorNode(const std::vector<ASTExprNode*>& values, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
 	};
 
 	class ASTStructConstructorNode : public ASTExprNode {
@@ -425,7 +425,7 @@ namespace parser {
 			const std::map<std::string, ASTExprNode*>& values, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
 	};
 
 	class ASTNullNode : public ASTExprNode {
@@ -433,7 +433,7 @@ namespace parser {
 		ASTNullNode(unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
 	};
 
 	class ASTThisNode : public ASTExprNode {
@@ -441,7 +441,7 @@ namespace parser {
 		ASTThisNode(unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
 	};
 
 	class ASTBinaryExprNode : public ASTExprNode {
@@ -453,7 +453,7 @@ namespace parser {
 		ASTBinaryExprNode(const std::string& op, ASTExprNode* left, ASTExprNode* right, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
 	};
 
 	class ASTUnaryExprNode : public ASTExprNode {
@@ -464,7 +464,7 @@ namespace parser {
 		ASTUnaryExprNode(const std::string& unary_op, ASTExprNode* expr, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
 	};
 
 	class ASTIdentifierNode : public ASTExprNode {
@@ -475,7 +475,7 @@ namespace parser {
 		explicit ASTIdentifierNode(std::vector<Identifier>&& identifier_vector, std::string nmspace, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
 	};
 
 	class ASTTernaryNode : public ASTExprNode {
@@ -487,7 +487,7 @@ namespace parser {
 		ASTTernaryNode(ASTExprNode* condition, ASTExprNode* value_if_true, ASTExprNode* value_if_false, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
 	};
 
 	class ASTInNode : public ASTExprNode {
@@ -499,7 +499,7 @@ namespace parser {
 		ASTInNode(ASTExprNode* value, ASTExprNode* collection, bool vbv, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
 	};
 
 	class ASTFunctionCallNode : public ASTExprNode {
@@ -513,7 +513,7 @@ namespace parser {
 			std::vector<std::pair<bool, ASTExprNode*>>&& parameters, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
 	};
 
 	class ASTTypeParseNode : public ASTExprNode {
@@ -524,7 +524,7 @@ namespace parser {
 		ASTTypeParseNode(Type type, ASTExprNode* expr, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
 	};
 
 	class ASTTypingNode : public ASTExprNode {
@@ -535,7 +535,7 @@ namespace parser {
 		ASTTypingNode(const std::string& image, ASTExprNode* expr, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
-		virtual unsigned int hash(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
 	};
 
 }

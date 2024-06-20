@@ -14,7 +14,7 @@ using namespace visitor;
 using namespace parser;
 
 
-Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
+Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
 	: current_expression_value(Value(Type::T_UNDEFINED)), is_function_context(false), current_name(std::stack<std::string>()),
 	Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
 	if (main_program) {
@@ -1183,7 +1183,7 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 		break;
 
 	case Type::T_STRING:
-		current_expression_value.set(cp_string(parse_value_to_string(current_expression_value)));
+		current_expression_value.set(cp_string(parse_value_to_string(&current_expression_value)));
 
 	}
 
@@ -1253,7 +1253,7 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 	}
 }
 
-bool Interpreter::equals_value(Value* lval, Value* rval) {
+bool Interpreter::equals_value(const Value* lval, const Value* rval) {
 	switch (lval->curr_type) {
 	case Type::T_BOOL:
 		if (lval->b == rval->b) {
@@ -1296,7 +1296,7 @@ bool Interpreter::equals_value(Value* lval, Value* rval) {
 	return false;
 }
 
-bool Interpreter::equals_struct(cp_struct* lstr, cp_struct* rstr) {
+bool Interpreter::equals_struct(const cp_struct* lstr, const cp_struct* rstr) {
 	if (lstr->first != rstr->first
 		|| lstr->second.size() != rstr->second.size()) {
 		return false;
@@ -1306,7 +1306,7 @@ bool Interpreter::equals_struct(cp_struct* lstr, cp_struct* rstr) {
 		if (rstr->second.find(lval.first) == rstr->second.end()) {
 			return false;
 		}
-		if (!equals_value(lval.second, rstr->second[lval.first])) {
+		if (!equals_value(lval.second, rstr->second.at(lval.first))) {
 			return false;
 		}
 	}
@@ -1314,7 +1314,7 @@ bool Interpreter::equals_struct(cp_struct* lstr, cp_struct* rstr) {
 	return true;
 }
 
-bool Interpreter::equals_array(cp_array larr, cp_array rarr) {
+bool Interpreter::equals_array(const cp_array& larr, const cp_array& rarr) {
 	if (larr.size() != rarr.size()) {
 		return false;
 	}
@@ -1328,7 +1328,7 @@ bool Interpreter::equals_array(cp_array larr, cp_array rarr) {
 	return true;
 }
 
-InterpreterScope* Interpreter::get_inner_most_variable_scope(std::string nmspace, std::string identifier) {
+InterpreterScope* Interpreter::get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
 		if (i <= 0) {
@@ -1349,7 +1349,7 @@ InterpreterScope* Interpreter::get_inner_most_variable_scope(std::string nmspace
 	return scopes[nmspace][i];
 }
 
-InterpreterScope* Interpreter::get_inner_most_struct_definition_scope(std::string nmspace, std::string identifier) {
+InterpreterScope* Interpreter::get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); i--) {
 		if (i <= 0) {
@@ -1371,7 +1371,7 @@ InterpreterScope* Interpreter::get_inner_most_struct_definition_scope(std::strin
 	return scopes[nmspace][i];
 }
 
-InterpreterScope* Interpreter::get_inner_most_function_scope(std::string nmspace, std::string identifier, std::vector<TypeDefinition> signature) {
+InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); --i) {
 		if (i <= 0) {
@@ -1392,7 +1392,7 @@ InterpreterScope* Interpreter::get_inner_most_function_scope(std::string nmspace
 	return scopes[nmspace][i];
 }
 
-Value* Interpreter::access_value(InterpreterScope* scope, Value* value, std::vector<Identifier> identifier_vector, size_t i) {
+Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i) {
 	Value* next_value = value;
 
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
@@ -1435,7 +1435,7 @@ Value* Interpreter::access_value(InterpreterScope* scope, Value* value, std::vec
 	return next_value;
 }
 
-std::vector<Value*> Interpreter::build_array(std::vector<ASTExprNode*> dim, Value* init_value, long long i) {
+std::vector<Value*> Interpreter::build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i) {
 	auto arr = std::vector<Value*>();
 
 	auto crr_acc = dim[i];
@@ -1451,8 +1451,7 @@ std::vector<Value*> Interpreter::build_array(std::vector<ASTExprNode*> dim, Valu
 	--i;
 
 	if (i >= 0) {
-		auto val = new Value(Type::T_ARRAY);
-		val->arr_type = init_value->type;
+		auto val = new Value(Type::T_ARRAY, init_value->type);
 		val->set(arr);
 		return build_array(dim, val, i);
 	}
@@ -1460,7 +1459,7 @@ std::vector<Value*> Interpreter::build_array(std::vector<ASTExprNode*> dim, Valu
 	return arr;
 }
 
-std::vector<unsigned int> Interpreter::calculate_array_dim_size(cp_array arr) {
+std::vector<unsigned int> Interpreter::calculate_array_dim_size(const cp_array& arr) {
 	auto dim = std::vector<unsigned int>();
 
 	dim.push_back(arr.size());
@@ -1473,7 +1472,7 @@ std::vector<unsigned int> Interpreter::calculate_array_dim_size(cp_array arr) {
 	return dim;
 }
 
-void Interpreter::declare_function_block_parameters(std::string nmspace) {
+void Interpreter::declare_function_block_parameters(const std::string& nmspace) {
 	auto curr_scope = scopes[nmspace].back();
 	auto rest_name = std::string();
 	auto arr = cp_array();
@@ -1542,7 +1541,7 @@ void Interpreter::declare_function_block_parameters(std::string nmspace) {
 	last_function_arguments.clear();
 }
 
-void Interpreter::declare_structure(cp_struct* str, std::string nmspace) {
+void Interpreter::declare_structure(cp_struct* str, const std::string& nmspace) {
 	std::string actnmspace = get_namespace(nmspace);
 	InterpreterScope* curr_scope;
 	try {
@@ -1565,16 +1564,16 @@ void Interpreter::declare_structure(cp_struct* str, std::string nmspace) {
 	}
 }
 
-std::vector<unsigned int> Interpreter::evaluate_access_vector(std::vector<ASTExprNode*> exprAcessVector) {
+std::vector<unsigned int> Interpreter::evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector) {
 	auto access_vector = std::vector<unsigned int>();
-	for (auto expr : exprAcessVector) {
+	for (auto expr : expr_access_vector) {
 		expr->accept(this);
 		access_vector.push_back(current_expression_value.i);
 	}
 	return access_vector;
 }
 
-cp_int Interpreter::do_operation(cp_int lval, cp_int rval, std::string op) {
+cp_int Interpreter::do_operation(cp_int lval, cp_int rval, const std::string& op) {
 	if (op == "=") {
 		return rval;
 	}
@@ -1596,7 +1595,7 @@ cp_int Interpreter::do_operation(cp_int lval, cp_int rval, std::string op) {
 	return rval;
 }
 
-cp_float Interpreter::do_operation(cp_float lval, cp_float rval, std::string op) {
+cp_float Interpreter::do_operation(cp_float lval, cp_float rval, const std::string& op) {
 	if (op == "=") {
 		return rval;
 	}
@@ -1615,7 +1614,7 @@ cp_float Interpreter::do_operation(cp_float lval, cp_float rval, std::string op)
 	return rval;
 }
 
-cp_string Interpreter::do_operation(cp_string lval, cp_string rval, std::string op) {
+cp_string Interpreter::do_operation(const cp_string& lval, const cp_string& rval, const std::string& op) {
 	if (op == "=") {
 		return rval;
 	}
@@ -1625,26 +1624,26 @@ cp_string Interpreter::do_operation(cp_string lval, cp_string rval, std::string 
 	return rval;
 }
 
-std::string Interpreter::parse_value_to_string(Value value) {
-	switch (value.curr_type) {
+std::string Interpreter::parse_value_to_string(const Value* value) {
+	switch (value->curr_type) {
 	case Type::T_VOID:
 		return "null";
 	case Type::T_BOOL:
-		return ((value.b) ? "true" : "false");
+		return ((value->b) ? "true" : "false");
 	case Type::T_INT:
-		return std::to_string(value.i);
+		return std::to_string(value->i);
 	case Type::T_FLOAT:
-		return std::to_string(value.f);
+		return std::to_string(value->f);
 	case Type::T_CHAR:
-		return cp_string(std::string{ value.c });
+		return cp_string(std::string{ value->c });
 	case Type::T_STRING:
-		return value.s;
+		return value->s;
 	case Type::T_STRUCT:
-		return parse_struct_to_string(*value.str);
+		return parse_struct_to_string(*value->str);
 	case Type::T_ARRAY:
-		return parse_array_to_string(value.arr);
+		return parse_array_to_string(value->arr);
 	case Type::T_FUNCTION: {
-		auto funcs = ((InterpreterScope*)value.fun.first)->find_declared_functions(value.fun.second);
+		auto funcs = ((InterpreterScope*)value->fun.first)->find_declared_functions(value->fun.second);
 		for (auto& it = funcs.first; it != funcs.second; ++it) {
 			auto& func_name = it->first;
 			auto& func_sig = std::get<0>(it->second);
@@ -1668,12 +1667,12 @@ std::string Interpreter::parse_value_to_string(Value value) {
 	}
 }
 
-std::string Interpreter::parse_array_to_string(cp_array value) {
+std::string Interpreter::parse_array_to_string(const cp_array& arr_value) {
 	std::stringstream s = std::stringstream();
 	s << "[";
-	for (auto i = 0; i < value.size(); ++i) {
-		s << parse_value_to_string(*value.at(i));
-		if (i < value.size() - 1) {
+	for (auto i = 0; i < arr_value.size(); ++i) {
+		s << parse_value_to_string(arr_value.at(i));
+		if (i < arr_value.size() - 1) {
 			s << ",";
 		}
 	}
@@ -1681,13 +1680,13 @@ std::string Interpreter::parse_array_to_string(cp_array value) {
 	return s.str();
 }
 
-std::string Interpreter::parse_struct_to_string(cp_struct value) {
+std::string Interpreter::parse_struct_to_string(const cp_struct& str_value) {
 	std::stringstream s = std::stringstream();
-	s << value.first + "{";
-	for (auto const& [key, val] : value.second) {
+	s << str_value.first + "{";
+	for (auto const& [key, val] : str_value.second) {
 		if (key != modules::Module::INSTANCE_ID_NAME) {
 			s << key + ":";
-			s << parse_value_to_string(*val);
+			s << parse_value_to_string(val);
 			s << ",";
 		}
 	}
@@ -1707,31 +1706,31 @@ std::string Interpreter::msg_header() {
 	return "(IERR) " + current_program->name + '[' + std::to_string(curr_row) + ':' + std::to_string(curr_col) + "]: ";
 }
 
-unsigned int Interpreter::hash(ASTExprNode* astnode) {
+long long Interpreter::hash(ASTExprNode* astnode) {
 	return 0;
 }
 
-unsigned int Interpreter::hash(ASTLiteralNode<cp_bool>* astnode) {
-	return static_cast<unsigned int>(astnode->val);
+long long Interpreter::hash(ASTLiteralNode<cp_bool>* astnode) {
+	return static_cast<long long>(astnode->val);
 }
 
-unsigned int Interpreter::hash(ASTLiteralNode<cp_int>* astnode) {
-	return static_cast<unsigned int>(astnode->val);
+long long Interpreter::hash(ASTLiteralNode<cp_int>* astnode) {
+	return static_cast<long long>(astnode->val);
 }
 
-unsigned int Interpreter::hash(ASTLiteralNode<cp_float>* astnode) {
-	return static_cast<unsigned int>(astnode->val);
+long long Interpreter::hash(ASTLiteralNode<cp_float>* astnode) {
+	return static_cast<long long>(astnode->val);
 }
 
-unsigned int Interpreter::hash(ASTLiteralNode<cp_char>* astnode) {
-	return static_cast<unsigned int>(astnode->val);
+long long Interpreter::hash(ASTLiteralNode<cp_char>* astnode) {
+	return static_cast<long long>(astnode->val);
 }
 
-unsigned int Interpreter::hash(ASTLiteralNode<cp_string>* astnode) {
+long long Interpreter::hash(ASTLiteralNode<cp_string>* astnode) {
 	return axe::Util::hashcode(astnode->val);
 }
 
-unsigned int Interpreter::hash(ASTIdentifierNode* astnode) {
+long long Interpreter::hash(ASTIdentifierNode* astnode) {
 	std::string nmspace = get_namespace(astnode->nmspace);
 
 	InterpreterScope* id_scope;
@@ -1746,19 +1745,19 @@ unsigned int Interpreter::hash(ASTIdentifierNode* astnode) {
 
 	switch (value->curr_type) {
 	case Type::T_BOOL:
-		return static_cast<unsigned int>(value->b);
+		return static_cast<long long>(value->b);
 	case Type::T_INT:
-		return static_cast<unsigned int>(value->i);
+		return static_cast<long long>(value->i);
 	case Type::T_FLOAT:
-		return static_cast<unsigned int>(value->f);
+		return static_cast<long long>(value->f);
 	case Type::T_CHAR:
-		return static_cast<unsigned int>(value->c);
+		return static_cast<long long>(value->c);
 	case Type::T_STRING:
 		return axe::Util::hashcode(value->s);
 	}
 }
 
-void Interpreter::call_builtin_function(std::string identifier) {
+void Interpreter::call_builtin_function(const std::string& identifier) {
 	auto arr = cp_array();
 
 	for (size_t i = 0; i < last_function_arguments.size(); ++i) {
@@ -1795,7 +1794,7 @@ void Interpreter::register_built_in_functions() {
 
 	builtin_functions["print"] = [this]() {
 		for (auto arg : builtin_arguments[0]->arr) {
-			std::cout << parse_value_to_string(*arg);
+			std::cout << parse_value_to_string(arg);
 		}
 	};
 	params.clear();
@@ -1871,7 +1870,7 @@ void Interpreter::register_built_in_functions() {
 	scopes[default_namespace].back()->declare_function("system", params, nullptr);
 }
 
-void Interpreter::register_built_in_lib(std::string libname) {
+void Interpreter::register_built_in_lib(const std::string& libname) {
 	if (built_in_libs[0] == libname) {
 		cpgraphics = new modules::Graphics();
 		cpgraphics->register_functions(this);

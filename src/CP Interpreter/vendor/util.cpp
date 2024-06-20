@@ -61,10 +61,10 @@ namespace axe {
         return string;
     }
 
-    unsigned int Util::hashcode(const std::string& str) {
-        unsigned int h = 0;
+    long long Util::hashcode(const std::string& str) {
+        long long h = 0;
         for (size_t i = 0; i < str.size(); ++i){
-            h = h * 31 + static_cast<unsigned int>(str[i]);
+            h = h * 31 + static_cast<long long>(str[i]);
         }
         return h;
     }
