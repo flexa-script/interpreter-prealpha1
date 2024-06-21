@@ -30,7 +30,7 @@ int CPRepl::execute() {
 
 	while (true) {
 		std::string input_line;
-		std::string program;
+		std::string source;
 		bool file_load = false;
 		bool expr = false;
 
@@ -77,7 +77,7 @@ int CPRepl::execute() {
 
 			std::string line;
 			while (std::getline(file, line)) {
-				program.append(line + "\n");
+				source.append(line + "\n");
 			}
 			file_load = true;
 
@@ -87,7 +87,7 @@ int CPRepl::execute() {
 			clear_screen();
 		}
 		else {
-			program += input_line;
+			source += input_line;
 
 			unsigned int open_scopes = 0;
 			count_scopes(input_line, open_scopes);
@@ -96,12 +96,12 @@ int CPRepl::execute() {
 				input_line.clear();
 				input_line = read("... ");
 				count_scopes(input_line, open_scopes);
-				program += input_line + "\n";
+				source += input_line + "\n";
 			}
 		}
 
 		try {
-			lexer::Lexer lexer("__main", program);
+			lexer::Lexer lexer("__main", source);
 			parser::Parser parser("__main", &lexer);
 			parser::ASTProgramNode* program;
 			std::map<std::string, parser::ASTProgramNode*> programs;
@@ -127,11 +127,13 @@ int CPRepl::execute() {
 			visitor::Interpreter interpreter(&interpreter_global_scope, program, programs);
 			interpreter.visit(program);
 
-			if (file_load){
+			if (file_load) {
 				std::cout << "File loaded successfully." << std::endl;
 			}
 			else {
-				if (!parser::is_undefined(interpreter.current_expression_value.curr_type)) {
+				// not is undefined and it's an expression
+				if (!parser::is_undefined(interpreter.current_expression_value.curr_type)
+					&& source.find(';') == std::string::npos) {
 					std::cout << interpreter.parse_value_to_string(&interpreter.current_expression_value) << std::endl;
 				}
 			}

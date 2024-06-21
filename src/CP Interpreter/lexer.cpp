@@ -465,7 +465,7 @@ void Lexer::advance() {
 	before_char = current_char;
 	current_char = source[++current_index];
 	if (has_next()) {
-		next_char = source[current_index];
+		next_char = source[current_index + 1];
 	}
 }
 

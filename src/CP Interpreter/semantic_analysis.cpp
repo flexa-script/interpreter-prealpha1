@@ -1579,6 +1579,12 @@ void SemanticAnalyser::register_built_in_functions() {
 	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY, nullptr, true));
 	scopes[default_namespace].back()->declare_basic_function("print", Type::T_VOID, signature, parameters);
 
+	signature.clear();
+	parameters.clear();
+	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
+	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY, nullptr, true));
+	scopes[default_namespace].back()->declare_basic_function("println", Type::T_VOID, signature, parameters);
+
 
 	signature.clear();
 	parameters.clear();

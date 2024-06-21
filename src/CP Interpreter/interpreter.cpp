@@ -67,10 +67,6 @@ void Interpreter::visit(ASTProgramNode* astnode) {
 		|| !dynamic_cast<ASTExprNode*>(astnode->statements[0])) {
 		current_expression_value = Value(Type::T_UNDEFINED);
 	}
-	else if (auto fun = dynamic_cast<ASTFunctionCallNode*>(astnode->statements[0]);
-		fun && fun->identifier == "print") {
-		current_expression_value = Value(Type::T_UNDEFINED);
-	}
 }
 
 void Interpreter::visit(ASTUsingNode* astnode) {
@@ -1808,6 +1804,14 @@ void Interpreter::register_built_in_functions() {
 	params.clear();
 	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), nullptr, true));
 	scopes[default_namespace].back()->declare_function("print", params, nullptr);
+
+	builtin_functions["println"] = [this]() {
+		builtin_functions["print"]();
+		std::cout << std::endl;
+	};
+	params.clear();
+	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), nullptr, true));
+	scopes[default_namespace].back()->declare_function("println", params, nullptr);
 
 
 	builtin_functions["read"] = [this]() {
