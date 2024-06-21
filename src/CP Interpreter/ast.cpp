@@ -164,7 +164,7 @@ ASTDeclarationNode::ASTDeclarationNode(const std::string& identifier, Type type,
 ASTAssignmentNode::ASTAssignmentNode(std::vector<Identifier>&& identifier_vector, const std::string& nmspace,
 	const std::string& op, ASTExprNode* expr, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col),
-	identifier_vector(std::move(identifier_vector)), nmspace(nmspace), expr(expr), op(std::move(op)) {}
+	identifier_vector(std::move(identifier_vector)), nmspace(nmspace), expr(expr), op(op) {}
 
 ASTReturnNode::ASTReturnNode(ASTExprNode* expr, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), expr(expr) {}

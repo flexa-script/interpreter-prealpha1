@@ -44,7 +44,7 @@ std::vector<CPSource> CPInterpreter::load_programs(std::string root, std::vector
 void CPInterpreter::parse_programs(std::vector<CPSource> source_programs, parser::ASTProgramNode** main_program,
 	std::map<std::string, parser::ASTProgramNode*>* programs) {
 
-	for (auto source : source_programs) {
+	for (const auto& source : source_programs) {
 		// tokenise and initialise parser
 		lexer::Lexer lexer(source.name, source.source);
 		parser::Parser parser(source.name , &lexer);

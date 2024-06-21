@@ -9,6 +9,9 @@
 namespace axe {
 	class Util {
 	public:
+		static std::string& ltrim(std::string& s);
+		static std::string& rtrim(std::string& s);
+		static std::string& trim(std::string& s);
 		static std::string tolower(std::string);
 		static std::vector<std::string> split_vector(std::string, char);
 		static std::list<std::string> split_list(std::string, char);

@@ -15,7 +15,7 @@ Lexer::Lexer(const std::string& name, const std::string& source)
 Lexer::~Lexer() = default;
 
 void Lexer::tokenize() {
-	current_index = 0;
+	current_index = -1;
 	current_row = 1;
 	current_col = 0;
 
@@ -463,7 +463,7 @@ void Lexer::advance() {
 		++current_col;
 	}
 	before_char = current_char;
-	current_char = source[current_index++];
+	current_char = source[++current_index];
 	if (has_next()) {
 		next_char = source[current_index];
 	}

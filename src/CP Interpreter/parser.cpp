@@ -127,7 +127,7 @@ ASTNode* Parser::parse_block_statement() {
 		try {
 			parse_statement_expression();
 		}
-		catch (std::exception ex) {
+		catch (const std::exception& ex) {
 			throw std::runtime_error(msg_header() + "expected statement or expression");
 		}
 	}
@@ -148,7 +148,9 @@ ASTAsNamespaceNode* Parser::parse_as_namespace_statement() {
 
 ASTExprNode* Parser::parse_statement_expression() {
 	ASTExprNode* expr = parse_expression();
-	check_consume_semicolon();
+	if (next_token.type != lexer::TOK_EOF) {
+		check_consume_semicolon();
+	}
 	return expr;
 }
 

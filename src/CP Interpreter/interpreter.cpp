@@ -47,7 +47,7 @@ void Interpreter::start() {
 }
 
 void Interpreter::visit(ASTProgramNode* astnode) {
-	for (auto& statement : astnode->statements) {
+	for (const auto& statement : astnode->statements) {
 		try {
 			statement->accept(this);
 		}
@@ -62,7 +62,15 @@ void Interpreter::visit(ASTProgramNode* astnode) {
 			throw std::runtime_error(msg_header() + ex.what());
 		}
 	}
-	current_expression_value = Value(Type::T_UNDEFINED);
+
+	if (astnode->statements.size() > 1
+		|| !dynamic_cast<ASTExprNode*>(astnode->statements[0])) {
+		current_expression_value = Value(Type::T_UNDEFINED);
+	}
+	else if (auto fun = dynamic_cast<ASTFunctionCallNode*>(astnode->statements[0]);
+		fun && fun->identifier == "print") {
+		current_expression_value = Value(Type::T_UNDEFINED);
+	}
 }
 
 void Interpreter::visit(ASTUsingNode* astnode) {

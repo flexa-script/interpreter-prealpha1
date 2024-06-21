@@ -22,7 +22,7 @@ namespace lexer {
         char current_char;
         char next_char;
         unsigned int current_token = 0;
-        unsigned int current_index = 0;
+        long long current_index = 0;
         unsigned int current_row = 0;
         unsigned int start_col = 0;
         unsigned int current_col = 0;
