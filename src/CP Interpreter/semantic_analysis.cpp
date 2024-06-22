@@ -576,6 +576,10 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 	const auto& nmspace = get_namespace();
 
+	if (astnode->identifier == "add") {
+		int i = 10;
+	}
+
 	for (const auto& scope : scopes[nmspace]) {
 		if (scope->already_declared_function(astnode->identifier, astnode->signature)) {
 			std::string signature = "(";
@@ -1262,7 +1266,7 @@ bool SemanticAnalyser::namespace_exists(const std::string& nmspace) {
 	return scopes.find(nmspace) != scopes.end();
 }
 
-const VariableDefinition& SemanticAnalyser::access_struct_variable(std::vector<Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i) {
+VariableDefinition SemanticAnalyser::access_struct_variable(std::vector<Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i) {
 	SemanticScope* curr_scope;
 	try {
 		curr_scope = get_inner_most_struct_definition_scope(get_namespace(nmspace), type_name);

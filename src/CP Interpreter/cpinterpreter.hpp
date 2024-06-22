@@ -4,13 +4,20 @@
 #include "cpsource.hpp"
 
 class CPInterpreter {
+private:
+	std::string root;
+	std::vector<std::string> files;
+
 public:
-	int execute(int, const char*[]);
+	CPInterpreter(const std::string& root, std::vector<std::string>&& files);
 
-	std::vector<CPSource> load_programs(std::string root, std::vector<std::string>);
+	int execute();
 
-	void parse_programs(std::vector<CPSource>, parser::ASTProgramNode**,
-		std::map<std::string, parser::ASTProgramNode*>*);
+private:
+	std::vector<CPSource> load_programs(const std::string& root, const std::vector<std::string>& files);
+
+	void parse_programs(std::vector<CPSource> source_programs, parser::ASTProgramNode** main_program,
+		std::map<std::string, parser::ASTProgramNode*>* programs);
 
 	int interpreter(std::vector<CPSource>);
 

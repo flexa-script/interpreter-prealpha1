@@ -14,12 +14,10 @@
 #include "cplibloader.hpp"
 
 
-int CPInterpreter::execute(int argc, const char* argv[]) {
-	std::vector<std::string> files;
-	std::string root = argv[1];
-	for (size_t i = 2; i < argc; ++i) {
-		files.push_back(argv[i]);
-	}
+CPInterpreter::CPInterpreter(const std::string& root, std::vector<std::string>&& files)
+	: root(root), files(std::move(files)) {}
+
+int CPInterpreter::execute() {
 	if (files.size() > 0) {
 		auto programs = load_programs(root, files);
 		return interpreter(programs);
@@ -28,7 +26,7 @@ int CPInterpreter::execute(int argc, const char* argv[]) {
 	return 0;
 }
 
-std::vector<CPSource> CPInterpreter::load_programs(std::string root, std::vector<std::string> files) {
+std::vector<CPSource> CPInterpreter::load_programs(const std::string& root, const std::vector<std::string>& files) {
 	std::vector<CPSource> source_programs;
 	auto norm_root = axe::Util::normalize_path_sep(root);
 
