@@ -103,8 +103,8 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 	current_program->libs.push_back(libname);
 
 	// if can't parsed yet
-	if (!axe::Util::contains(libs, libname)) {
-		libs.push_back(libname);
+	if (!axe::Util::contains(parsed_libs, libname)) {
+		parsed_libs.push_back(libname);
 		auto prev_program = current_program;
 		current_program = program;
 		program_nmspaces[get_current_namespace()].push_back(default_namespace);

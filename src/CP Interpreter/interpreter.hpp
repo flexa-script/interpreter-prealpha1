@@ -27,7 +27,7 @@ namespace visitor {
 
 	private:
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
-		std::vector<std::string> libs;
+		std::vector<std::string> parsed_libs;
 		std::string function_call_name;
 		interpreter_parameter_list_t function_call_parameters;
 		std::stack<std::string> current_function_nmspace;
@@ -92,7 +92,7 @@ namespace visitor {
 	public:
 		Interpreter(InterpreterScope* global_scope, parser::ASTProgramNode* main_program, const std::map<std::string, parser::ASTProgramNode*>& programs);
 		Interpreter() = default;
-		~Interpreter() = default;
+		~Interpreter();
 
 		void start();
 

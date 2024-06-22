@@ -65,11 +65,11 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	current_program->libs.push_back(libname);
 
 	// if can't parsed yet
-	if (!axe::Util::contains(libs, libname)) {
+	if (!axe::Util::contains(parsed_libs, libname)) {
 		if (!program->alias.empty()) {
 			nmspaces.push_back(program->alias);
 		}
-		libs.push_back(libname);
+		parsed_libs.push_back(libname);
 		auto prev_program = current_program;
 		current_program = program;
 

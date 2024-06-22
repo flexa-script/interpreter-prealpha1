@@ -17,7 +17,7 @@ namespace visitor {
 	private:
 		std::map<std::string, std::vector<SemanticScope*>> scopes;
 		std::vector<std::string> nmspaces;
-		std::vector<std::string> libs;
+		std::vector<std::string> parsed_libs;
 		std::string current_namespace;
 		parser::SemanticValue current_expression;
 		std::stack<parser::FunctionDefinition> current_function;
