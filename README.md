@@ -64,17 +64,17 @@
     - [X] do while
 - [ ] Add expression:
     - [X] Add expression operators:
-        - [X] mod `%` operation support
-        - [X] `++`, `--` incrementor
-        - [X] `ref` and `unref` to handle variable references
-        - [X] `{ init_value }` to initilize all positions with same value
-        - [X] `in` operator to check if anything is in array/string
-        - [X] Add ternary (immediate) if `expr ? texpr : fexpr`
+        - [X] add: mod `%` operation support
+        - [X] add: `++`, `--` incrementor
+        - [X] add: `ref` and `unref` to handle variable references
+        - [X] add: `{ init_value }` to initilize all positions with same value
+        - [X] add: `in` operator to check if anything is in array/string
+        - [X] add: ternary (immediate) if `expr ? texpr : fexpr`
         - [X] `typeof`: returns type of object
-            - [X] add namespace to type name return
+            - [X] fix: add namespace to type name return
         - [X] `typeid`: returns hash of typeof
         - [ ] `isany`: returns if a variable is any
-        - [ ] add bitwise operators:
+        - [ ] add: bitwise operators:
             - [ ] &   bitwise AND
             - [ ] |   bitwise inclusive OR
             - [ ] ^   bitwise XOR (exclusive OR)
