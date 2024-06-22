@@ -29,6 +29,7 @@ namespace visitor {
 	private:
 		bool returns(parser::ASTNode* astnode);
 
+		void equals_value(const parser::SemanticValue& lval, const parser::SemanticValue& rval);
 		void validate_struct_assign(SemanticScope* curr_scope, parser::SemanticValue* expression, parser::ASTStructConstructorNode* expr);
 
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<parser::ASTExprNode*>& expr_access_vector);

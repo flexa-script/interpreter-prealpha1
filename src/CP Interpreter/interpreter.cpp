@@ -23,21 +23,6 @@ Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_pr
 	register_built_in_functions();
 }
 
-Interpreter::~Interpreter() {
-	for (auto& arg : builtin_arguments) {
-		delete arg;
-	}
-	builtin_arguments.clear();
-	for (auto& arg : last_function_arguments) {
-		delete arg.second;
-	}
-	last_function_arguments.clear();
-	delete current_variable;
-	delete cpgraphics;
-	delete cpfiles;
-	delete cpconsole;
-}
-
 const std::string& Interpreter::get_namespace(const std::string& nmspace) const {
 	return get_namespace(current_program, nmspace);
 }
@@ -721,19 +706,13 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 			value->set((cp_bool)((op == "==") ? match_type(l_value.curr_type, r_value.curr_type) : !match_type(l_value.curr_type, r_value.curr_type)));
 		}
 		else if (l_type == Type::T_BOOL) {
-			cp_bool l = l_value.b;
-			cp_bool r = r_value.b;
-
 			value->set((cp_bool)((op == "==") ? l_value.b == r_value.b : l_value.b != r_value.b));
 		}
 		else if (l_type == Type::T_STRING) {
 			value->set((cp_bool)((op == "==") ? l_value.s == r_value.s : l_value.s != r_value.s));
 		}
-		else if (l_type == Type::T_ARRAY) {
-			value->set((cp_bool)((op == "==") ? l_value.arr == r_value.arr : l_value.arr != r_value.arr));
-		}
-		else if (l_type == Type::T_STRUCT) {
-			value->set((cp_bool)((op == "==") ? l_value.str == r_value.str : l_value.str != r_value.str));
+		else if (l_type == Type::T_ARRAY || l_type == Type::T_STRUCT) {
+			value->set((cp_bool)(op == "==" ? equals_value(&l_value, &r_value) : !equals_value(&l_value, &r_value)));
 		}
 		else {
 			cp_float l = l_value.f, r = r_value.f;
@@ -769,46 +748,101 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 	current_expression_value = *value;
 }
 
+void Interpreter::visit(ASTTernaryNode* astnode) {
+	astnode->condition->accept(this);
+	if (current_expression_value.b) {
+		astnode->value_if_true->accept(this);
+	}
+	else {
+		astnode->value_if_false->accept(this);
+	}
+}
+
+void Interpreter::visit(ASTInNode* astnode) {
+	astnode->value->accept(this);
+	auto expr_val = current_expression_value;
+	astnode->collection->accept(this);
+	bool res = false;
+
+	if (is_array(current_expression_value.curr_type)) {
+		auto expr_col = current_expression_value.arr;
+
+		for (auto it : expr_col) {
+			res = equals_value(&expr_val, it);
+			if (res) {
+				break;
+			}
+		}
+	}
+	else {
+		auto expr_col = current_expression_value.s;
+
+		if (is_char(expr_val.curr_type)) {
+			res = current_expression_value.s.find(expr_val.c) != std::string::npos;
+		}
+		else {
+			res = current_expression_value.s.find(expr_val.s) != std::string::npos;
+		}
+	}
+
+	auto value = Value(Type::T_BOOL);
+	value.set(res);
+	current_expression_value = value;
+}
+
 void Interpreter::visit(ASTUnaryExprNode* astnode) {
 	bool has_assign = false;
 
 	astnode->expr->accept(this);
-	switch (current_expression_value.curr_type) {
-	case Type::T_INT:
-		if (astnode->unary_op == "-") {
-			current_expression_value.set(cp_int(current_expression_value.i * -1));
+
+
+	if (dynamic_cast<parser::ASTIdentifierNode*>(astnode->expr)
+		&& astnode->unary_op == "ref" || astnode->unary_op == "unref") {
+		if (astnode->unary_op == "unref") {
+			current_expression_value.ref = false;
 		}
-		else if (astnode->unary_op == "--") {
-			current_expression_value.set(cp_int(--current_expression_value.i));
-			has_assign = true;
+		else if (astnode->unary_op == "ref") {
+			current_expression_value.ref = true;
 		}
-		else if (astnode->unary_op == "++") {
-			current_expression_value.set(cp_int(++current_expression_value.i));
-			has_assign = true;
+	}
+	else {
+		switch (current_expression_value.curr_type) {
+		case Type::T_INT:
+			if (astnode->unary_op == "-") {
+				current_expression_value.set(cp_int(current_expression_value.i * -1));
+			}
+			else if (astnode->unary_op == "--") {
+				current_expression_value.set(cp_int(--current_expression_value.i));
+				has_assign = true;
+			}
+			else if (astnode->unary_op == "++") {
+				current_expression_value.set(cp_int(++current_expression_value.i));
+				has_assign = true;
+			}
+			break;
+		case Type::T_FLOAT:
+			if (astnode->unary_op == "-") {
+				current_expression_value.set(cp_float(current_expression_value.f * -1));
+			}
+			else if (astnode->unary_op == "--") {
+				current_expression_value.set(cp_float(--current_expression_value.f));
+				has_assign = true;
+			}
+			else if (astnode->unary_op == "++") {
+				current_expression_value.set(cp_float(++current_expression_value.f));
+				has_assign = true;
+			}
+			break;
+		case Type::T_BOOL:
+			current_expression_value.set(cp_bool(!current_expression_value.b));
+			break;
 		}
-		break;
-	case Type::T_FLOAT:
-		if (astnode->unary_op == "-") {
-			current_expression_value.set(cp_float(current_expression_value.f * -1));
-		}
-		else if (astnode->unary_op == "--") {
-			current_expression_value.set(cp_float(--current_expression_value.f));
-			has_assign = true;
-		}
-		else if (astnode->unary_op == "++") {
-			current_expression_value.set(cp_float(++current_expression_value.f));
-			has_assign = true;
-		}
-		break;
-	case Type::T_BOOL:
-		current_expression_value.set(cp_bool(!current_expression_value.b));
-		break;
 	}
 
 	if (has_assign) {
-		auto id = static_cast<ASTIdentifierNode*>(astnode->expr);
+		const auto id = static_cast<ASTIdentifierNode*>(astnode->expr);
 
-		std::string nmspace = get_namespace(id->nmspace);;
+		const std::string& nmspace = get_namespace(id->nmspace);;
 		InterpreterScope* id_scope;
 		try {
 			id_scope = get_inner_most_variable_scope(nmspace, id->identifier_vector[0].identifier);
@@ -898,9 +932,8 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	auto root = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	auto sub_val = access_value(id_scope, root, astnode->identifier_vector);
 	current_expression_value = *sub_val;
-	if ((is_reference || is_struct(root->curr_type)) && (!sub_val || sub_val == root)) {
-		current_variable = root;
-	}
+	current_expression_value.def_ref();
+	current_param_ref = is_struct(root->curr_type) || !sub_val || sub_val == root ? root : nullptr;
 
 	if (is_struct(current_expression_value.curr_type)) {
 		current_expression_nmspace = nmspace;
@@ -918,76 +951,25 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	}
 }
 
-void Interpreter::visit(ASTTernaryNode* astnode) {
-	astnode->condition->accept(this);
-	if (current_expression_value.b) {
-		astnode->value_if_true->accept(this);
-	}
-	else {
-		astnode->value_if_false->accept(this);
-	}
-}
-
-void Interpreter::visit(ASTInNode* astnode) {
-	astnode->value->accept(this);
-	auto expr_val = current_expression_value;
-	astnode->collection->accept(this);
-	bool res = false;
-
-	if (is_array(current_expression_value.curr_type)) {
-		auto expr_col = current_expression_value.arr;
-
-		is_vbv = astnode->vbv;
-		for (auto it : expr_col) {
-			res = equals_value(&expr_val, it);
-			if (res) {
-				break;
-			}
-		}
-	}
-	else {
-		auto expr_col = current_expression_value.s;
-
-		if (is_char(expr_val.curr_type)) {
-			res = current_expression_value.s.find(expr_val.c) != std::string::npos;
-		}
-		else {
-			res = current_expression_value.s.find(expr_val.s) != std::string::npos;
-		}
-	}
-	is_vbv = false;
-
-	auto value = Value(Type::T_BOOL);
-	value.set(res);
-	current_expression_value = value;
-}
-
-void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
-	interpreter_parameter_list_t params;
-	for (size_t i = 0; i < astnode->parameters.size(); ++i) {
-		interpreter_parameter_t param = std::make_tuple(astnode->variable_names[i], astnode->signature[i], astnode->parameters[i].default_value, astnode->parameters[i].is_rest);
-		params.push_back(param);
-	}
-	scopes[get_namespace()].back()->declare_function(astnode->identifier, params, astnode->block);
-}
-
 void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	const auto& nmspace = get_namespace(astnode->nmspace);
 
 	std::vector<TypeDefinition> signature;
-	std::vector<std::pair<bool, Value*>> function_arguments;
+	std::vector<Value*> function_arguments;
 
 	for (auto& param : astnode->parameters) {
-		is_reference = param.first;
-		param.second->accept(this);
-		Value* reference_value = dynamic_cast<parser::ASTIdentifierNode*>(param.second) ? current_variable : nullptr;
-		current_variable = nullptr;
+		param->accept(this);
 
 		auto td = TypeDefinition(current_expression_value.curr_type, current_expression_value.arr_type,
 			std::vector<ASTExprNode*>(), "", "");
 		signature.push_back(td);
 
-		std::pair<bool, Value*> pvalue = std::pair(is_reference, is_reference ? reference_value : new Value(&current_expression_value));
+		Value* pvalue = new Value(&current_expression_value);
+		if (current_expression_value.ref && current_param_ref) {
+			pvalue = current_param_ref;
+			pvalue->ref = true;
+		}
+
 		function_arguments.push_back(pvalue);
 	}
 
@@ -1015,6 +997,15 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	current_function_nmspace.pop();
 	current_name.pop();
 	is_function_context = false;
+}
+
+void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
+	interpreter_parameter_list_t params;
+	for (size_t i = 0; i < astnode->parameters.size(); ++i) {
+		interpreter_parameter_t param = std::make_tuple(astnode->variable_names[i], astnode->signature[i], astnode->parameters[i].default_value, astnode->parameters[i].is_rest);
+		params.push_back(param);
+	}
+	scopes[get_namespace()].back()->declare_function(astnode->identifier, params, astnode->block);
 }
 
 void Interpreter::visit(ASTBlockNode* astnode) {
@@ -1223,43 +1214,26 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 bool Interpreter::equals_value(const Value* lval, const Value* rval) {
 	switch (lval->curr_type) {
 	case Type::T_BOOL:
-		if (lval->b == rval->b) {
-			return true;
-		}
-		break;
+		return lval->b == rval->b;
 	case Type::T_INT:
-		if (lval->i == rval->i) {
-			return true;
-		}
-		break;
+		return lval->i == rval->i;
 	case Type::T_FLOAT:
-		if (lval->f == rval->f) {
-			return true;
-		}
-		break;
+		return lval->f == rval->f;
 	case Type::T_CHAR:
-		if (lval->c == rval->c) {
-			return true;
-		}
-		break;
+		return lval->c == rval->c;
 	case Type::T_STRING:
-		if (lval->s == rval->s) {
-			return true;
-		}
-		break;
+		return lval->s == rval->s;
 	case Type::T_ARRAY:
-		if (equals_array(lval->arr, rval->arr)) {
-			return true;
+		if (lval->ref) {
+			return lval->arr == rval->arr;
 		}
-		break;
+		return equals_array(lval->arr, rval->arr);
 	case Type::T_STRUCT:
-		if (is_vbv && equals_struct(lval->str, rval->str)
-			|| !is_vbv && lval->str == rval->str) {
-			return true;
+		if (!lval->ref) {
+			return equals_struct(lval->str, rval->str);
 		}
-		break;
+		return lval->str == rval->str;
 	}
-
 	return false;
 }
 
@@ -1482,7 +1456,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 	// adds function arguments
 	for (i = 0; i < last_function_arguments.size(); ++i) {
 		// is reference : not reference
-		Value* current_value = last_function_arguments[i].first ? last_function_arguments[i].second : new Value(last_function_arguments[i].second);
+		Value* current_value = last_function_arguments[i]->ref ? last_function_arguments[i] : new Value(last_function_arguments[i]);
 
 		if (i >= function_call_parameters.size()) {
 			arr.push_back(current_value);
@@ -1490,8 +1464,8 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		else {
 			const auto& pname = std::get<0>(function_call_parameters[i]);
 
-			if (is_function(last_function_arguments[i].second->curr_type)) {
-				auto funcs = ((InterpreterScope*)last_function_arguments[i].second->fun.first)->find_declared_functions(last_function_arguments[i].second->fun.second);
+			if (is_function(last_function_arguments[i]->curr_type)) {
+				auto funcs = ((InterpreterScope*)last_function_arguments[i]->fun.first)->find_declared_functions(last_function_arguments[i]->fun.second);
 				for (auto& it = funcs.first; it != funcs.second; ++it) {
 					auto& func_params = it->second.first;
 					auto& func_block = it->second.second;
@@ -1764,7 +1738,7 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 
 	for (size_t i = 0; i < last_function_arguments.size(); ++i) {
 		// is reference : not reference
-		Value* current_value = last_function_arguments[i].first ? last_function_arguments[i].second : new Value(last_function_arguments[i].second);
+		Value* current_value = last_function_arguments[i]->ref ? last_function_arguments[i] : new Value(last_function_arguments[i]);
 
 		if (i >= function_call_parameters.size()) {
 			arr.push_back(current_value);

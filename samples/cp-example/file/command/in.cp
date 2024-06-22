@@ -43,7 +43,7 @@ print("\n");
 print(str1 in {Foo{a=10, s="str"}, Foo{a=10, s="str"}, Foo{a=10, s="str"}});
 print("\n");
 // has value
-print($str1 in {Foo{a=10, s="str"}, Foo{a=10, s="str"}, Foo{a=10, s="str"}});
+print(unref str1 in {Foo{a=10, s="str"}, Foo{a=10, s="str"}, Foo{a=10, s="str"}});
 print("\n");
 
 // strings

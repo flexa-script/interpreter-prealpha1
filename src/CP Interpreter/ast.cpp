@@ -32,15 +32,15 @@ SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, std::ve
 	const std::string& type_name, const std::string& type_name_space, long long hash,
 	bool is_const, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space),
-	hash(hash), is_const(is_const) {}
+	hash(hash), is_const(is_const), ref(is_struct(type) || is_struct(array_type)) {}
 
 SemanticValue::SemanticValue(Type type, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
-	hash(0), is_const(false) {}
+	hash(0), is_const(false), ref(is_struct(type)) {}
 
 SemanticValue::SemanticValue()
 	: CodePosition(0, 0), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
-	hash(0), is_const(false) {}
+	hash(0), is_const(false), ref(false) {}
 
 void SemanticValue::copy_from(SemanticValue* value) {
 	type = value->type;
@@ -266,11 +266,11 @@ ASTIdentifierNode::ASTIdentifierNode(std::vector<Identifier>&& identifier_vector
 ASTTernaryNode::ASTTernaryNode(ASTExprNode* condition, ASTExprNode* value_if_true, ASTExprNode* value_if_false, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), condition(condition), value_if_true(value_if_true), value_if_false(value_if_false) {}
 
-ASTInNode::ASTInNode(ASTExprNode* value, ASTExprNode* collection, bool vbv, unsigned int row, unsigned int col)
-	: ASTExprNode(row, col), value(value), collection(collection), vbv(vbv) {}
+ASTInNode::ASTInNode(ASTExprNode* value, ASTExprNode* collection, unsigned int row, unsigned int col)
+	: ASTExprNode(row, col), value(value), collection(collection) {}
 
 ASTFunctionCallNode::ASTFunctionCallNode(const std::string& identifier, const std::string& nmspace, std::vector<ASTExprNode*>&& access_vector,
-	std::vector<std::pair<bool, ASTExprNode*>>&& parameters, unsigned int row, unsigned int col)
+	std::vector<ASTExprNode*>&& parameters, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), identifier(identifier), nmspace(nmspace), access_vector(std::move(access_vector)), parameters(std::move(parameters)) {}
 
 ASTTypeParseNode::ASTTypeParseNode(Type type, ASTExprNode* expr, unsigned int row, unsigned int col)

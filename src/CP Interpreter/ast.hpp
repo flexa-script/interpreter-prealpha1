@@ -40,6 +40,7 @@ namespace parser {
 	public:
 		long long hash;
 		bool is_const;
+		bool ref;
 
 		// complete constructor
 		SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*>&& dim,
@@ -496,9 +497,8 @@ namespace parser {
 	public:
 		ASTExprNode* value;
 		ASTExprNode* collection;
-		bool vbv;
 
-		ASTInNode(ASTExprNode* value, ASTExprNode* collection, bool vbv, unsigned int row, unsigned int col);
+		ASTInNode(ASTExprNode* value, ASTExprNode* collection, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
 		virtual long long hash(visitor::Visitor*) override;
@@ -509,10 +509,10 @@ namespace parser {
 		std::string identifier;
 		std::string nmspace;
 		std::vector<ASTExprNode*> access_vector;
-		std::vector<std::pair<bool, ASTExprNode*>> parameters;
+		std::vector<ASTExprNode*> parameters;
 
 		ASTFunctionCallNode(const std::string& identifier, const std::string& nmspace, std::vector<ASTExprNode*>&& access_vector,
-			std::vector<std::pair<bool, ASTExprNode*>>&& parameters, unsigned int row, unsigned int col);
+			std::vector<ASTExprNode*>&& parameters, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
 		virtual long long hash(visitor::Visitor*) override;

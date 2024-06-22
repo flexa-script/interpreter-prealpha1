@@ -13,14 +13,6 @@ Parser::Parser(const std::string& name, Lexer* lex) : name(name), lex(lex) {
 	next_token = lex->next_token();
 }
 
-Parser::Parser(const std::string& name, Lexer* lex, unsigned int tokens) : name(name), lex(lex) {
-	next_token = lex->next_token();
-
-	for (unsigned int i = 0; i < tokens; i++) {
-		consume_token();
-	}
-}
-
 void Parser::consume_token() {
 	current_token = next_token;
 	next_token = lex->next_token();
@@ -728,11 +720,6 @@ ASTExprNode* Parser::parse_ternary_expression() {
 }
 
 ASTExprNode* Parser::parse_in_expression() {
-	bool vbv = current_token.type == TOK_DSIGN;
-	if (vbv) {
-		consume_token();
-	}
-
 	auto expr = parse_logical_or_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
@@ -742,7 +729,7 @@ ASTExprNode* Parser::parse_in_expression() {
 		consume_token();
 		consume_token();
 		collection = parse_expression();
-		return new ASTInNode(expr, collection, vbv, row, col);
+		return new ASTInNode(expr, collection, row, col);
 	}
 
 	return expr;
@@ -833,25 +820,24 @@ ASTExprNode* Parser::parse_factor() {
 	unsigned int col = current_token.col;
 
 	switch (current_token.type) {
+		
 		// literal cases
 	case TOK_BOOL_LITERAL:
 		return new ASTLiteralNode<cp_bool>(parse_bool_literal(), row, col);
-
 	case TOK_INT_LITERAL:
 		return new ASTLiteralNode<cp_int>(parse_int_literal(), row, col);
-
 	case TOK_FLOAT_LITERAL:
 		return new ASTLiteralNode<cp_float>(parse_float_literal(), row, col);
-
 	case TOK_CHAR_LITERAL:
 		return new ASTLiteralNode<cp_char>(parse_char_literal(), row, col);
-
 	case TOK_STRING_LITERAL:
 		return new ASTLiteralNode<cp_string>(parse_string_literal(), row, col);
 
+		// array constructor
 	case TOK_LEFT_CURLY:
 		return parse_array_constructor_node();
 
+		// type parsing
 	case TOK_BOOL_TYPE:
 	case TOK_INT_TYPE:
 	case TOK_FLOAT_TYPE:
@@ -872,14 +858,18 @@ ASTExprNode* Parser::parse_factor() {
 	case TOK_IDENTIFIER:
 		return parse_identifier_expression();
 
-	case TOK_LEFT_BRACKET: { // subexpression case
+		// subexpression case
+	case TOK_LEFT_BRACKET: {
 		consume_token();
 		ASTExprNode* sub_expr = parse_expression();
 		consume_token(TOK_RIGHT_BRACKET);
 		return sub_expr;
 	}
-
-	case TOK_ADDITIVE_OP: // unary expression case
+	
+		// unary expression case
+	case TOK_REF:
+	case TOK_UNREF:
+	case TOK_ADDITIVE_OP:
 	case TOK_NOT: {
 		std::string current_token_value = current_token.value;
 		consume_token();
@@ -939,7 +929,7 @@ ASTFunctionCallNode* Parser::parse_function_call_node(ASTIdentifierNode* idnode)
 	std::string identifier = std::move(idnode->identifier_vector[0].identifier);
 	std::string nmspace = std::move(idnode->nmspace);
 	std::vector<ASTExprNode*> access_vector = std::vector<ASTExprNode*>();
-	auto* parameters = new std::vector<std::pair<bool, ASTExprNode*>>();
+	auto* parameters = new std::vector<ASTExprNode*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1275,17 +1265,12 @@ VariableDefinition* Parser::parse_formal_param() {
 		type_name_space, array_type, std::move(dim), def_expr, is_rest, row, col);
 };
 
-std::vector<std::pair<bool, ASTExprNode*>>* Parser::parse_actual_params() {
-	auto parameters = new std::vector<std::pair<bool, ASTExprNode*>>();
+std::vector<ASTExprNode*>* Parser::parse_actual_params() {
+	auto parameters = new std::vector<ASTExprNode*>();
 
 	do {
 		consume_token();
-		bool isref = false;
-		if (current_token.type == TOK_REF) {
-			consume_token();
-			isref = true;
-		}
-		parameters->emplace_back(isref, parse_expression());
+		parameters->push_back(parse_expression());
 		consume_token();
 	} while (current_token.type == TOK_COMMA);
 

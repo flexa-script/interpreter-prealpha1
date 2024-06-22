@@ -34,8 +34,8 @@ namespace visitor {
 		std::stack<std::string> current_name;
 		std::string return_from_function_name;
 		std::string current_expression_nmspace;
-		Value* current_variable;
-		std::vector<std::pair<bool, Value*>> last_function_arguments;
+		Value* current_param_ref;
+		std::vector<Value*> last_function_arguments;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		bool is_function_context = false;
 		bool return_from_function = false;
@@ -46,8 +46,6 @@ namespace visitor {
 		bool break_block = false;
 		bool executed_elif = false;
 		bool has_string_access = false;
-		bool is_reference = false;
-		bool is_vbv = false;
 		bool exception = false;
 
 		modules::Graphics* cpgraphics;
@@ -93,7 +91,7 @@ namespace visitor {
 	public:
 		Interpreter(InterpreterScope* global_scope, parser::ASTProgramNode* main_program, const std::map<std::string, parser::ASTProgramNode*>& programs);
 		Interpreter() = default;
-		~Interpreter();
+		~Interpreter() = default;
 
 		void start();
 

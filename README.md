@@ -125,10 +125,6 @@
         - [X] Set font
     - [ ] Web/API
 - [ ] Add CP library:
-    - [ ] JSON (use Dict)
-        - [ ] struct to json
-        - [ ] json_stringfy
-        - [ ] json_parse
     - [ ] String
         - [ ] size: size of string
         - [ ] contains: string is contained in other string
@@ -161,6 +157,10 @@
         - [ ] Queue
         - [ ] Stack
         - [ ] Dict
+    - [ ] JSON (use Dict)
+        - [ ] struct to json
+        - [ ] json_stringfy
+        - [ ] json_parse
     - [ ] Util?
 
 ## Known bugs
@@ -168,6 +168,7 @@
 - [X] Can't assing string position
 - [X] Parser can't handle unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))
 - [X] This does not always return the expected value, eg when its inside a function tha does not has in main file
+- [ ] If an statement is before include, it generate a semantic error
 
 ## Errors
 - Errors has CP prefix, eg. CP9999

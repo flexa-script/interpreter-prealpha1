@@ -96,6 +96,7 @@ public:
 	parser::Type type;
 	parser::Type curr_type;
 	parser::Type arr_type;
+	bool ref;
 
 	cp_bool b;
 	cp_int i;
@@ -122,6 +123,7 @@ public:
 	void set_type(parser::Type type);
 	void set_curr_type(parser::Type curr_type);
 	void set_arr_type(parser::Type arr_type);
+	void def_ref();
 
 	bool has_value();
 

@@ -528,12 +528,7 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	std::vector<TypeDefinition> signature = std::vector<TypeDefinition>();
 
 	for (const auto& param : astnode->parameters) {
-		param.second->accept(this);
-
-		if (param.first && !dynamic_cast<parser::ASTIdentifierNode*>(param.second)) {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("reference parameters must be variable");
-		}
+		param->accept(this);
 
 		auto td = TypeDefinition(current_expression.type, current_expression.array_type, current_expression.dim,
 			current_expression.type_name, current_expression.type_name_space);
@@ -575,10 +570,6 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 
 void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 	const auto& nmspace = get_namespace();
-
-	if (astnode->identifier == "add") {
-		int i = 10;
-	}
 
 	for (const auto& scope : scopes[nmspace]) {
 		if (scope->already_declared_function(astnode->identifier, astnode->signature)) {
@@ -1042,12 +1033,14 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 	std::string op = astnode->op;
 
 	astnode->left->accept(this);
+	auto lexpr = current_expression;
 	Type l_type = current_expression.type;
 	if (is_array(current_expression.type)) {
 		l_type = current_expression.array_type;
 	}
 
 	astnode->right->accept(this);
+	auto rexpr = current_expression;
 	Type r_type = current_expression.type;
 	if (is_array(current_expression.type)) {
 		r_type = current_expression.array_type;
@@ -1102,6 +1095,7 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("expected arguments of the same type '" + op + "' operator");
 		}
+		equals_value(lexpr, rexpr);
 		current_expression.type = Type::T_BOOL;
 	}
 	else {
@@ -1171,24 +1165,36 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
 	astnode->expr->accept(this);
 
-	switch (current_expression.type) {
-	case Type::T_INT:
-	case Type::T_FLOAT:
-		if (astnode->unary_op != "+" && astnode->unary_op != "-" && astnode->unary_op != "--" && astnode->unary_op != "++") {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("operator '" + astnode->unary_op + "' in front of numerical expression");
+	if (dynamic_cast<parser::ASTIdentifierNode*>(astnode->expr)
+		&& astnode->unary_op == "ref" || astnode->unary_op == "unref") {
+		if (astnode->unary_op == "ref") {
+			current_expression.ref = true;
 		}
-		break;
-	case Type::T_BOOL:
-		if (astnode->unary_op != "not") {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("operator '" + astnode->unary_op + "' in front of boolean expression");
+		if (astnode->unary_op == "unref") {
+			current_expression.ref = false;
 		}
-		break;
-	default:
-		set_curr_pos(astnode->row, astnode->col);
-		throw std::runtime_error("incompatible unary operator '" + astnode->unary_op +
-			"' in front of " + type_str(current_expression.type) + " expression");
+	}
+	else {
+		switch (current_expression.type) {
+		case Type::T_INT:
+		case Type::T_FLOAT:
+			if (astnode->unary_op != "+" && astnode->unary_op != "-"
+				&& astnode->unary_op != "--" && astnode->unary_op != "++") {
+				set_curr_pos(astnode->row, astnode->col);
+				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of numerical expression");
+			}
+			break;
+		case Type::T_BOOL:
+			if (astnode->unary_op != "not") {
+				set_curr_pos(astnode->row, astnode->col);
+				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of boolean expression");
+			}
+			break;
+		default:
+			set_curr_pos(astnode->row, astnode->col);
+			throw std::runtime_error("incompatible unary operator '" + astnode->unary_op +
+				"' in front of " + type_str(current_expression.type) + " expression");
+		}
 	}
 	current_expression.is_const = false;
 }
@@ -1362,6 +1368,15 @@ SemanticScope* SemanticAnalyser::get_inner_most_function_scope(const std::string
 		}
 	}
 	return scopes[nmspace][i];
+}
+
+void SemanticAnalyser::equals_value(const SemanticValue& lval, const SemanticValue& rval) {
+	if (lval.ref && !rval.ref) {
+		throw std::runtime_error("both values must be references");
+	}
+	if (!lval.ref && rval.ref) {
+		throw std::runtime_error("both values must be unreferenced");
+	}
 }
 
 void SemanticAnalyser::validate_struct_assign(SemanticScope* curr_scope, SemanticValue* expression, ASTStructConstructorNode* expr) {

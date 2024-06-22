@@ -20,12 +20,8 @@ namespace parser {
 
 	public:
 		explicit Parser(const std::string& name, lexer::Lexer* lex);
-		// TODO: check if it will be necessary on REPL refact
-		Parser(const std::string& name, lexer::Lexer* lex, unsigned int tokens);
 
 		ASTProgramNode* parse_program();
-		ASTExprNode* parse_expression(); // public for repl
-		ASTExprNode* parse_statement_expression(); // public for repl
 
 	private:
 		void consume_token();
@@ -68,16 +64,9 @@ namespace parser {
 		ASTFunctionDefinitionNode* parse_function_definition();
 		ASTStructDefinitionNode* parse_struct_definition();
 
-		// complex expression nodes
-		ASTNode* parse_identifier_statement();
-		ASTArrayConstructorNode* parse_array_constructor_node();
-		ASTStructConstructorNode* parse_struct_constructor_node(ASTIdentifierNode* idnode);
-		ASTFunctionCallNode* parse_function_call_node(ASTIdentifierNode* idnode);
-		ASTTypeParseNode* parse_type_parse_node();
-		ASTThisNode* parse_this_node();
-		ASTTypingNode* parse_typing_node();
-
 		// expression nodes
+		ASTExprNode* parse_statement_expression();
+		ASTExprNode* parse_expression();
 		ASTExprNode* parse_ternary_expression();
 		ASTExprNode* parse_in_expression();
 		ASTExprNode* parse_logical_or_expression();
@@ -87,8 +76,17 @@ namespace parser {
 		ASTExprNode* parse_term();
 		ASTExprNode* parse_factor();
 
+		// factor expression nodes
+		ASTNode* parse_identifier_statement();
+		ASTArrayConstructorNode* parse_array_constructor_node();
+		ASTStructConstructorNode* parse_struct_constructor_node(ASTIdentifierNode* idnode);
+		ASTFunctionCallNode* parse_function_call_node(ASTIdentifierNode* idnode);
+		ASTTypeParseNode* parse_type_parse_node();
+		ASTThisNode* parse_this_node();
+		ASTTypingNode* parse_typing_node();
+
 		// special
-		std::vector<std::pair<bool, ASTExprNode*>>* parse_actual_params();
+		std::vector<ASTExprNode*>* parse_actual_params();
 		VariableDefinition* parse_struct_var_def();
 		VariableDefinition* parse_formal_param();
 		ASTExprNode* parse_identifier_expression();

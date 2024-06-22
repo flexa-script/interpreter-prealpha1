@@ -155,6 +155,9 @@ Token Lexer::process_identifier() {
 	else if (identifier == "ref") {
 		type = TOK_REF;
 	}
+	else if (identifier == "unref") {
+		type = TOK_UNREF;
+	}
 	else if (identifier == "struct") {
 		type = TOK_STRUCT;
 	}

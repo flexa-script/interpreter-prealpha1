@@ -1,19 +1,10 @@
 #include "cprepl.hpp"
 #include "cpinterpreter.hpp"
 #include "vendor/axewatch.h"
-//#include "vendor/util.hpp"
-//#include "vendor/logging.hpp"
 
 
 int main(int argc, const char* argv[]) {
 	bool debug = false;
-	//auto logger = axe::Logger(axe::INFO, ".\\logs.log");
-	//std::string str = "";
-	//for (int i = 0; i < argc; ++i) {
-	//	str.append(argv[i]);
-	//}
-	//logger.debug(str);
-
 	int result = 0;
 
 	if (argc == 1) {

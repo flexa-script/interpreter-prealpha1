@@ -96,18 +96,29 @@ std::vector<std::string> built_in_libs = {
 };
 
 Value::Value()
-	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), fun(cp_function()), type(Type::T_UNDEFINED), curr_type(Type::T_UNDEFINED), arr_type(Type::T_UNDEFINED) {};
+	: b(0), i(0), f(0), c(0), s(""),
+	str(new cp_struct()), arr(cp_array()), fun(cp_function()),
+	type(Type::T_UNDEFINED), curr_type(Type::T_UNDEFINED), arr_type(Type::T_UNDEFINED),
+	ref(false) {};
 
 Value::Value(Type type)
-	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), fun(cp_function()), type(type), curr_type(type), arr_type(Type::T_UNDEFINED) {};
+	: b(0), i(0), f(0), c(0), s(""),
+	str(new cp_struct()), arr(cp_array()), fun(cp_function()),
+	type(type), curr_type(type), arr_type(Type::T_UNDEFINED) {
+	def_ref();
+};
 
 Value::Value(Type type, Type arr_type)
-	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), fun(cp_function()), type(type), curr_type(type), arr_type(arr_type) {};
+	: b(0), i(0), f(0), c(0), s(""),
+	str(new cp_struct()), arr(cp_array()), fun(cp_function()),
+	type(type), curr_type(type), arr_type(arr_type) {
+	def_ref();
+};
 
-Value::Value(Value* value)
-	: b(value->b), i(value->i), f(value->f), c(value->c), s(value->s), str(value->str), fun(value->fun),
-	type(value->type), curr_type(value->curr_type), arr_type(value->arr_type) {
-	copy_array(value->arr);
+Value::Value(Value* v)
+	: b(v->b), i(v->i), f(v->f), c(v->c), s(v->s), str(v->str), fun(v->fun),
+	type(v->type), curr_type(v->curr_type), arr_type(v->arr_type), ref(v->ref) {
+	copy_array(v->arr);
 };
 
 Value::~Value() = default;
@@ -150,6 +161,10 @@ void Value::set(cp_struct* str) {
 void Value::set(cp_function fun) {
 	this->fun = fun;
 	set_curr_type(Type::T_FUNCTION);
+}
+
+void Value::def_ref() {
+	ref = is_struct(type) || is_struct(arr_type);
 }
 
 void Value::set_type(Type type) {
