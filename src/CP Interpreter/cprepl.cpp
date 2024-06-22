@@ -1,6 +1,9 @@
 #include "cprepl.hpp"
 #include "vendor/util.hpp"
 
+const std::string CPRepl::NAME = "CPLang";
+const std::string CPRepl::VER = "v0.0.1";
+const std::string CPRepl::YEAR = "2024";
 
 void CPRepl::remove_header(std::string& err) {
 	size_t pos = err.rfind(':');
@@ -22,7 +25,7 @@ void CPRepl::count_scopes(const std::string& input_line, unsigned int& open_scop
 }
 
 int CPRepl::execute() {
-	std::cout << "CPLang v0.0.1 [2024]\n";
+	std::cout << NAME << " " << VER << " [" << YEAR << "]\n";
 	std::cout << "Type \"#help\" for more information.\n";
 
 	visitor::SemanticScope semantic_global_scope;
@@ -41,7 +44,7 @@ int CPRepl::execute() {
 			break;
 		}
 		else if (input_line == "#help") {
-			std::cout << "\n" << "Welcome to CPLang v0.0.1! \n";
+			std::cout << "\n" << "Welcome to " << NAME << " " << VER << "! \n";
 			std::cout << "To use this interactive REPL, just type in regular CP commands and hit\n";
 			std::cout << "enter. You can also make use of the following commands: \n\n";
 

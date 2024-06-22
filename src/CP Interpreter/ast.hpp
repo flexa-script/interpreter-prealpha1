@@ -115,7 +115,7 @@ namespace parser {
 		std::string identifier;
 		std::vector<VariableDefinition> variables;
 
-		StructureDefinition(const std::string& identifier, std::vector<VariableDefinition>& variables,
+		StructureDefinition(const std::string& identifier, const std::vector<VariableDefinition>& variables,
 			unsigned int row, unsigned int col);
 
 		StructureDefinition();

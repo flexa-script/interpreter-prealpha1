@@ -134,7 +134,7 @@ void FunctionDefinition::check_signature() const {
 	}
 }
 
-StructureDefinition::StructureDefinition(const std::string& identifier, std::vector<VariableDefinition>& variables,
+StructureDefinition::StructureDefinition(const std::string& identifier, const std::vector<VariableDefinition>& variables,
 	unsigned int row, unsigned int col)
 	: CodePosition(row, col), identifier(identifier), variables(variables) {}
 

@@ -19,6 +19,10 @@
 #endif // __unix__
 
 class CPRepl {
+private:
+	static const std::string NAME;
+	static const std::string VER;
+	static const std::string YEAR;
 public:
 	static void remove_header(std::string& err);
 	static void count_scopes(const std::string& input_line, unsigned int& open_scopes);

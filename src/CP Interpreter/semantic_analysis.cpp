@@ -11,8 +11,7 @@ using namespace parser;
 
 
 SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
-	: current_expression(SemanticValue()),
-	Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
+	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
 	scopes[default_namespace].push_back(global_scope);
 	register_built_in_functions();
 };
@@ -21,16 +20,16 @@ void SemanticAnalyser::start() {
 	visit(current_program);
 }
 
-const std::string& SemanticAnalyser::get_namespace(const std::string& nmspace)const {
+const std::string& SemanticAnalyser::get_namespace(const std::string& nmspace) const {
 	return get_namespace(current_program, nmspace);
 }
 
-const std::string& SemanticAnalyser::get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace)const {
+const std::string& SemanticAnalyser::get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace) const {
 	return nmspace.empty() ? (program->alias.empty() ? default_namespace : program->alias) : nmspace;
 }
 
 void SemanticAnalyser::visit(ASTProgramNode* astnode) {
-	for (auto& statement : astnode->statements) {
+	for (const auto& statement : astnode->statements) {
 		try {
 			statement->accept(this);
 		}
@@ -99,7 +98,7 @@ void SemanticAnalyser::visit(ASTAsNamespaceNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
-	auto nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 	SemanticScope* current_scope = scopes[nmspace].back();
 
 	if (current_scope->already_declared_variable(astnode->identifier)) {
@@ -202,7 +201,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 					throw std::runtime_error("expected array expression assigning '" + astnode->identifier + "'");
 				}
 
-				if (auto arr = dynamic_cast<ASTArrayConstructorNode*>(astnode->expr)) {
+				if (const auto arr = dynamic_cast<ASTArrayConstructorNode*>(astnode->expr)) {
 
 					auto expr_dim = calculate_array_dim_size(arr);
 					auto pars_dim = evaluate_access_vector(astnode->dim);
@@ -246,7 +245,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTEnumNode* astnode) {
-	auto nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		auto decl_current_expr = new SemanticValue();
 		decl_current_expr->type = Type::T_INT;
@@ -266,8 +265,8 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		throw std::runtime_error("invalid assignment operator '" + astnode->op + "'");
 	}
 
-	auto identifier = astnode->identifier_vector[0].identifier;
-	auto nmspace = get_namespace(astnode->nmspace);
+	const auto& identifier = astnode->identifier_vector[0].identifier;
+	const auto& nmspace = get_namespace(astnode->nmspace);
 	SemanticScope* curr_scope;
 	try {
 		curr_scope = get_inner_most_variable_scope(nmspace, identifier);
@@ -380,10 +379,10 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 				"' struct, expected '" + str_curr_var_type_name + "', found '" + assignment_expr.type_name + "'");
 		}
 
-		if (auto str_expr = dynamic_cast<ASTStructConstructorNode*>(astnode->expr)) {
+		if (const auto str_expr = dynamic_cast<ASTStructConstructorNode*>(astnode->expr)) {
 			validate_struct_assign(curr_scope, decl_var_expression, str_expr);
 		}
-		else if (auto str_expr = dynamic_cast<ASTIdentifierNode*>(astnode->expr)) {
+		else if (const auto str_expr = dynamic_cast<ASTIdentifierNode*>(astnode->expr)) {
 			SemanticScope* assng_scope;
 			try {
 				assng_scope = get_inner_most_variable_scope(get_namespace(str_expr->nmspace), str_expr->identifier_vector[0].identifier);
@@ -394,8 +393,8 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 					"' being reassigned was never declared");
 			}
 
-			auto expr_declared_variable = assng_scope->find_declared_variable(str_expr->identifier_vector[0].identifier);
-			auto expr_variable_expression = expr_declared_variable->value;
+			const auto& expr_declared_variable = assng_scope->find_declared_variable(str_expr->identifier_vector[0].identifier);
+			const auto& expr_variable_expression = expr_declared_variable->value;
 
 			curr_scope->declare_variable(astnode->identifier_vector[0].identifier, declared_variable->type, declared_variable->array_type,
 				declared_variable->dim, declared_variable->type_name, declared_variable->type_name_space, expr_variable_expression,
@@ -473,14 +472,14 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 			std::vector<unsigned int> expr_dim;
 			std::vector<unsigned int> pars_dim = evaluate_access_vector(current_function.top().dim);
 
-			if (auto arr_expr = dynamic_cast<ASTArrayConstructorNode*>(astnode->expr)) {
+			if (const auto arr_expr = dynamic_cast<ASTArrayConstructorNode*>(astnode->expr)) {
 				determine_array_type(arr_expr);
 				expr_dim = calculate_array_dim_size(arr_expr);
 			}
 			else if (auto id_expr = dynamic_cast<ASTIdentifierNode*>(astnode->expr)) {
 				SemanticScope* curr_scope;
 				try {
-					auto nmspace = get_namespace(id_expr->nmspace);
+					const auto& nmspace = get_namespace(id_expr->nmspace);
 					curr_scope = get_inner_most_variable_scope(nmspace, id_expr->identifier_vector[0].identifier);
 				}
 				catch (...) {
@@ -489,7 +488,7 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 						"' was not declared");
 				}
 
-				auto declared_variable = curr_scope->find_declared_variable(id_expr->identifier_vector[0].identifier);
+				const auto& declared_variable = curr_scope->find_declared_variable(id_expr->identifier_vector[0].identifier);
 				expr_dim = evaluate_access_vector(declared_variable->value->dim);
 				current_expression.array_type = declared_variable->value->array_type;
 			}
@@ -528,7 +527,7 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	std::vector<TypeDefinition> signature = std::vector<TypeDefinition>();
 
-	for (auto param : astnode->parameters) {
+	for (const auto& param : astnode->parameters) {
 		param.second->accept(this);
 
 		if (param.first && !dynamic_cast<parser::ASTIdentifierNode*>(param.second)) {
@@ -544,12 +543,12 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 
 	SemanticScope* curr_scope;
 	try {
-		auto nmspace = get_namespace(astnode->nmspace);
+		const auto& nmspace = get_namespace(astnode->nmspace);
 		curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
 	}
 	catch (...) {
 		std::string func_name = astnode->identifier + "(";
-		for (auto param : signature) {
+		for (const auto& param : signature) {
 			func_name += type_str(param.type) + ", ";
 		}
 		if (signature.size() > 0) {
@@ -562,7 +561,7 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 		throw std::runtime_error("function '" + func_name + "' was never declared");
 	}
 
-	auto curr_function = curr_scope->find_declared_function(astnode->identifier, signature);
+	const auto& curr_function = curr_scope->find_declared_function(astnode->identifier, signature);
 
 	current_expression = SemanticValue();
 	current_expression.type = curr_function.type;
@@ -575,12 +574,12 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
-	auto nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 
-	for (auto& scope : scopes[nmspace]) {
+	for (const auto& scope : scopes[nmspace]) {
 		if (scope->already_declared_function(astnode->identifier, astnode->signature)) {
 			std::string signature = "(";
-			for (auto param : astnode->signature) {
+			for (const auto& param : astnode->signature) {
 				signature += type_str(param.type) + ", ";
 			}
 			if (astnode->signature.size() > 0) {
@@ -625,12 +624,12 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTBlockNode* astnode) {
-	auto nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 
 	scopes[nmspace].push_back(new SemanticScope());
 
 	if (!current_function.empty()) {
-		for (auto param : current_function.top().parameters) {
+		for (const auto& param : current_function.top().parameters) {
 			if (is_function(param.type) || is_any(param.type)) {
 				scopes[nmspace].back()->declare_variable_function(param.identifier, param.row, param.row);
 			}
@@ -650,7 +649,7 @@ void SemanticAnalyser::visit(ASTBlockNode* astnode) {
 		}
 	}
 
-	for (auto& stmt : astnode->statements) {
+	for (const auto& stmt : astnode->statements) {
 		stmt->accept(this);
 	}
 
@@ -680,14 +679,14 @@ void SemanticAnalyser::visit(ASTExitNode* astnode) {
 void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 	is_switch = true;
 
-	auto nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 	scopes[nmspace].push_back(new SemanticScope());
 
 	astnode->parsed_case_blocks = std::map<unsigned int, unsigned int>();
 
 	astnode->condition->accept(this);
 
-	for (auto& expr : astnode->case_blocks) {
+	for (const auto& expr : astnode->case_blocks) {
 		expr.first->accept(this);
 		auto hash = expr.first->hash(this);
 		if (astnode->parsed_case_blocks.contains(hash)) {
@@ -720,7 +719,7 @@ void SemanticAnalyser::visit(ASTIfNode* astnode) {
 
 	astnode->if_block->accept(this);
 
-	for (auto& elif : astnode->else_ifs) {
+	for (const auto& elif : astnode->else_ifs) {
 		elif->accept(this);
 	}
 
@@ -731,7 +730,7 @@ void SemanticAnalyser::visit(ASTIfNode* astnode) {
 
 void SemanticAnalyser::visit(ASTForNode* astnode) {
 	is_loop = true;
-	auto nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 
 	scopes[nmspace].push_back(new SemanticScope());
 
@@ -754,7 +753,7 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 	is_loop = true;
 	Type decl_type;
 	Type col_type;
-	auto nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 
 	scopes[nmspace].push_back(new SemanticScope());
 
@@ -766,7 +765,7 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 
 	if (is_any(decl_type) || is_undefined(decl_type)) {
 		decl_type = col_type;
-		auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl);
+		const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl);
 
 		SemanticScope* curr_scope;
 		try {
@@ -801,7 +800,7 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
-	auto nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 
 	scopes[nmspace].push_back(new SemanticScope());
 	astnode->try_block->accept(this);
@@ -812,7 +811,7 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 	astnode->decl->accept(this);
 	Type decl_type = current_expression.type;
 	if (is_any(decl_type) || is_undefined(decl_type)) {
-		if (auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
+		if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
 			SemanticScope* curr_scope;
 			try {
 				curr_scope = get_inner_most_variable_scope(get_namespace(), idnode->identifier);
@@ -870,7 +869,7 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 	}
 
 	if (auto block = dynamic_cast<ASTBlockNode*>(astnode)) {
-		for (auto& blk_stmt : block->statements) {
+		for (const auto& blk_stmt : block->statements) {
 			if (returns(blk_stmt)) {
 				return true;
 			}
@@ -881,7 +880,7 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 		auto ifreturn = returns(ifstmt->if_block);
 		auto elifreturn = true;
 		auto elsereturn = true;
-		for (auto& elif : ifstmt->else_ifs) {
+		for (const auto& elif : ifstmt->else_ifs) {
 			if (!returns(elif->block)) {
 				elifreturn = false;
 				break;
@@ -893,27 +892,27 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 		return ifreturn && elifreturn && elsereturn;
 	}
 
-	if (auto switchstmt = dynamic_cast<ASTSwitchNode*>(astnode)) {
-		for (auto& blk_stmt : switchstmt->statements) {
+	if (const auto switchstmt = dynamic_cast<ASTSwitchNode*>(astnode)) {
+		for (const auto& blk_stmt : switchstmt->statements) {
 			if (returns(blk_stmt)) {
 				return true;
 			}
 		}
 	}
 
-	if (auto forstmt = dynamic_cast<ASTForNode*>(astnode)) {
+	if (const auto forstmt = dynamic_cast<ASTForNode*>(astnode)) {
 		return returns(forstmt->block);
 	}
 
-	if (auto forstmt = dynamic_cast<ASTForEachNode*>(astnode)) {
+	if (const auto forstmt = dynamic_cast<ASTForEachNode*>(astnode)) {
 		return returns(forstmt->block);
 	}
 
-	if (auto forstmt = dynamic_cast<ASTForEachNode*>(astnode)) {
+	if (const auto forstmt = dynamic_cast<ASTForEachNode*>(astnode)) {
 		return returns(forstmt->block);
 	}
 
-	if (auto whilestmt = dynamic_cast<ASTWhileNode*>(astnode)) {
+	if (const auto whilestmt = dynamic_cast<ASTWhileNode*>(astnode)) {
 		return returns(whilestmt->block);
 	}
 
@@ -921,7 +920,7 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTStructDefinitionNode* astnode) {
-	auto nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 
 	try {
 		SemanticScope* curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->identifier);
@@ -993,7 +992,7 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 	SemanticScope* curr_scope;
 	try {
-		auto nmspace = get_namespace(astnode->nmspace);
+		const auto& nmspace = get_namespace(astnode->nmspace);
 		curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->type_name);
 	}
 	catch (...) {
@@ -1003,7 +1002,7 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 	}
 	auto type_struct = curr_scope->find_declared_structure_definition(astnode->type_name);
 
-	for (auto& expr : astnode->values) {
+	for (const auto& expr : astnode->values) {
 		bool found = false;
 		VariableDefinition var_type_struct;
 		for (size_t i = 0; i < type_struct.variables.size(); ++i) {
@@ -1033,8 +1032,6 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 	current_expression.type_name_space = astnode->nmspace;
 	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = false;
-
-	declare_structure();
 }
 
 void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
@@ -1110,10 +1107,10 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
-	auto identifier = astnode->identifier_vector[0].identifier;
+	const auto& identifier = astnode->identifier_vector[0].identifier;
 	SemanticScope* curr_scope;
 
-	auto nmspace = get_namespace(astnode->nmspace);
+	const auto& nmspace = get_namespace(astnode->nmspace);
 	try {
 		curr_scope = get_inner_most_variable_scope(nmspace, identifier);
 	}
@@ -1261,11 +1258,11 @@ void SemanticAnalyser::visit(ASTTypingNode* astnode) {
 	current_expression.is_const = false;
 }
 
-bool SemanticAnalyser::namespace_exists(std::string nmspace) {
+bool SemanticAnalyser::namespace_exists(const std::string& nmspace) {
 	return scopes.find(nmspace) != scopes.end();
 }
 
-VariableDefinition SemanticAnalyser::access_struct_variable(std::vector<Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i) {
+const VariableDefinition& SemanticAnalyser::access_struct_variable(std::vector<Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i) {
 	SemanticScope* curr_scope;
 	try {
 		curr_scope = get_inner_most_struct_definition_scope(get_namespace(nmspace), type_name);
@@ -1275,7 +1272,7 @@ VariableDefinition SemanticAnalyser::access_struct_variable(std::vector<Identifi
 	}
 	auto type_struct = curr_scope->find_declared_structure_definition(type_name);
 
-	for (auto& var_type_struct : type_struct.variables) {
+	for (const auto& var_type_struct : type_struct.variables) {
 		if (identifier_vector[i].identifier == var_type_struct.identifier) {
 			if ((is_struct(var_type_struct.type) || is_any(var_type_struct.type)) && identifier_vector.size() - 1 > i) {
 				return access_struct_variable(identifier_vector, var_type_struct.type_name, var_type_struct.type_name_space, ++i);
@@ -1291,14 +1288,14 @@ VariableDefinition SemanticAnalyser::access_struct_variable(std::vector<Identifi
 	throw std::runtime_error("can't determine type of '(" + type_name + ")" + identifier_vector[i].identifier + "'");
 }
 
-SemanticScope* SemanticAnalyser::get_inner_most_variable_scope(std::string nmspace, std::string identifier) {
+SemanticScope* SemanticAnalyser::get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier) {
 	if (!namespace_exists(nmspace)) {
 		throw std::runtime_error("namespace '" + nmspace + "' was not declared");
 	}
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
 		if (i <= 0) {
-			for (auto prgnmspace : program_nmspaces[get_namespace()]) {
+			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
 				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_variable(identifier); --i) {
 					if (i <= 0) {
 						i = -1;
@@ -1315,14 +1312,14 @@ SemanticScope* SemanticAnalyser::get_inner_most_variable_scope(std::string nmspa
 	return scopes[nmspace][i];
 }
 
-SemanticScope* SemanticAnalyser::get_inner_most_struct_definition_scope(std::string nmspace, std::string identifier) {
+SemanticScope* SemanticAnalyser::get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier) {
 	if (!namespace_exists(nmspace)) {
 		throw std::runtime_error("namespace '" + nmspace + "' was not declared");
 	}
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); i--) {
 		if (i <= 0) {
-			for (auto prgnmspace : program_nmspaces[get_namespace()]) {
+			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
 				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_structure_definition(identifier); --i) {
 					if (i <= 0) {
 						i = -1;
@@ -1339,14 +1336,14 @@ SemanticScope* SemanticAnalyser::get_inner_most_struct_definition_scope(std::str
 	return scopes[nmspace][i];
 }
 
-SemanticScope* SemanticAnalyser::get_inner_most_function_scope(std::string nmspace, std::string identifier, std::vector<TypeDefinition> signature) {
+SemanticScope* SemanticAnalyser::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature) {
 	if (!namespace_exists(nmspace)) {
 		throw std::runtime_error("namespace '" + nmspace + "' was not declared");
 	}
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); --i) {
 		if (i <= 0) {
-			for (auto prgnmspace : program_nmspaces[get_namespace()]) {
+			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
 				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function(identifier, signature); --i) {
 					if (i <= 0) {
 						i = -1;
@@ -1363,25 +1360,10 @@ SemanticScope* SemanticAnalyser::get_inner_most_function_scope(std::string nmspa
 	return scopes[nmspace][i];
 }
 
-void SemanticAnalyser::declare_structure() {
-	SemanticScope* curr_scope;
-	try {
-		curr_scope = get_inner_most_struct_definition_scope(get_namespace(current_expression.type_name_space), current_expression.type_name);
-	}
-	catch (...) {
-		throw std::runtime_error("can't find struct");
-	}
-	auto type_struct = curr_scope->find_declared_structure_definition(current_expression.type_name);
-
-	for (auto& var_type_struct : type_struct.variables) {
-
-	}
-}
-
 void SemanticAnalyser::validate_struct_assign(SemanticScope* curr_scope, SemanticValue* expression, ASTStructConstructorNode* expr) {
 	SemanticScope* tn_scope;
 	try {
-		auto nmspace = get_namespace(expr->nmspace);
+		const auto& nmspace = get_namespace(expr->nmspace);
 		tn_scope = get_inner_most_struct_definition_scope(nmspace, expr->type_name);
 	}
 	catch (...) {
@@ -1489,9 +1471,9 @@ void SemanticAnalyser::check_array_type(ASTExprNode* astnode, unsigned int row, 
 	current_expression.type = aux_curr_type;
 }
 
-std::vector<unsigned int> SemanticAnalyser::evaluate_access_vector(std::vector<ASTExprNode*> exprAcessVector) {
+std::vector<unsigned int> SemanticAnalyser::evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector) {
 	auto access_vector = std::vector<unsigned int>();
-	for (auto& expr : exprAcessVector) {
+	for (const auto& expr : expr_access_vector) {
 		unsigned int val = 0;
 		if (expr) {
 			expr->accept(this);
@@ -1554,7 +1536,7 @@ long long SemanticAnalyser::hash(ASTLiteralNode<cp_string>* astnode) {
 long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 	SemanticScope* curr_scope;
 	try {
-		auto nmspace = get_namespace(astnode->nmspace);
+		const auto& nmspace = get_namespace(astnode->nmspace);
 		curr_scope = get_inner_most_variable_scope(nmspace, astnode->identifier_vector[0].identifier);
 	}
 	catch (...) {

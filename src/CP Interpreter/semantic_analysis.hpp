@@ -27,27 +27,25 @@ namespace visitor {
 		bool is_loop = false;
 
 	private:
-		bool returns(parser::ASTNode*);
+		bool returns(parser::ASTNode* astnode);
 
-		void validate_struct_assign(SemanticScope*, parser::SemanticValue*, parser::ASTStructConstructorNode*);
-		void declare_structure();
+		void validate_struct_assign(SemanticScope* curr_scope, parser::SemanticValue* expression, parser::ASTStructConstructorNode* expr);
 
-		std::vector<unsigned int> evaluate_access_vector(std::vector<parser::ASTExprNode*>);
+		std::vector<unsigned int> evaluate_access_vector(const std::vector<parser::ASTExprNode*>& expr_access_vector);
 		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);
 
-		bool namespace_exists(std::string nmspace);
-		SemanticScope* get_inner_most_variable_scope(std::string, std::string);
-		SemanticScope* get_inner_most_function_scope(std::string, std::string, std::vector<parser::TypeDefinition>);
-		SemanticScope* get_inner_most_struct_definition_scope(std::string, std::string);
+		SemanticScope* get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
+		SemanticScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
+		SemanticScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<parser::TypeDefinition>& signature);
 
-		void determine_array_type(parser::ASTArrayConstructorNode*);
-		void check_array_type(parser::ASTExprNode*, unsigned int, unsigned int);
+		void determine_array_type(parser::ASTArrayConstructorNode* astnode);
+		void check_array_type(parser::ASTExprNode* astnode, unsigned int row, unsigned int col);
 
-		parser::VariableDefinition access_struct_variable(std::vector<parser::Identifier>, std::string, std::string, unsigned int = 0);
+		const parser::VariableDefinition& access_struct_variable(std::vector<parser::Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i = 0);
 
 		void register_built_in_functions();
-		void register_built_in_lib(std::string libname);
 
+		bool namespace_exists(const std::string& nmspace);
 		const std::string& get_namespace(const std::string& nmspace = "") const override;
 		const std::string& get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace = "") const override;
 
@@ -55,7 +53,7 @@ namespace visitor {
 		std::string msg_header() override;
 
 	public:
-		SemanticAnalyser(SemanticScope*, parser::ASTProgramNode*, std::map<std::string, parser::ASTProgramNode*>);
+		SemanticAnalyser(SemanticScope* global_scope, parser::ASTProgramNode* main_program, std::map<std::string, parser::ASTProgramNode*> programs);
 		~SemanticAnalyser() = default;
 
 		void start();

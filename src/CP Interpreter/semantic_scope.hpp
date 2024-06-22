@@ -21,37 +21,37 @@ namespace visitor {
 		SemanticScope();
 		~SemanticScope();
 
-		bool already_declared_structure_definition(std::string);
-		bool already_declared_variable(std::string);
-		bool already_declared_function(std::string, std::vector<parser::TypeDefinition>);
+		bool already_declared_structure_definition(const std::string& identifier);
+		bool already_declared_variable(const std::string& identifier);
+		bool already_declared_function(const std::string& identifier, const std::vector<parser::TypeDefinition>& signature);
 
-		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition>, unsigned int, unsigned int);
+		void declare_structure_definition(const std::string& name, const std::vector<parser::VariableDefinition>& variables, unsigned int row, unsigned int col);
 
-		void declare_variable(std::string identifier, parser::Type type, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,
-			std::string type_name, std::string type_name_space, parser::SemanticValue* value, bool is_const, unsigned int row, unsigned int col);
+		void declare_variable(const std::string& identifier, parser::Type type, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,
+			const std::string& type_name, const std::string&, parser::SemanticValue* value, bool is_const, unsigned int row, unsigned int col);
 
-		void declare_function(std::string identifier, parser::Type type, std::string type_name, std::string type_name_space,
-			parser::Type array_type, std::vector<parser::ASTExprNode*> dim, std::vector<parser::TypeDefinition> signature,
-			std::vector<parser::VariableDefinition> parameters, unsigned int row, unsigned int col);
+		void declare_function(const std::string& identifier, parser::Type type, const std::string& type_name, const std::string& type_name_space,
+			parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim, const std::vector<parser::TypeDefinition>& signature,
+			const std::vector<parser::VariableDefinition>& parameters, unsigned int row, unsigned int col);
 
-		void declare_variable_function(std::string identifier, unsigned int row, unsigned int col);
+		void declare_variable_function(const std::string& identifier, unsigned int row, unsigned int col);
 
-		void declare_basic_function(std::string identifier, parser::Type type, std::vector<parser::TypeDefinition> signature,
+		void declare_basic_function(const std::string& identifier, parser::Type type, std::vector<parser::TypeDefinition> signature,
 			std::vector<parser::VariableDefinition> parameters, unsigned int row = 0, unsigned int col = 0);
 
-		void declare_array_function(std::string identifier, parser::Type type, parser::Type array_type, std::vector<parser::ASTExprNode*> dim,
-			std::vector<parser::TypeDefinition> signature, std::vector<parser::VariableDefinition> parameters,
+		void declare_array_function(const std::string& identifier, parser::Type type, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,
+			const std::vector<parser::TypeDefinition>& signature, const std::vector<parser::VariableDefinition>& parameters,
 			unsigned int row = 0, unsigned int col = 0);
 
-		void declare_struct_function(std::string identifier, parser::Type type, std::string type_name, std::string type_name_space,
-			std::vector<parser::TypeDefinition> signature, std::vector<parser::VariableDefinition> parameters, unsigned int row = 0, unsigned int col = 0);
+		void declare_struct_function(const std::string& identifier, parser::Type type, const std::string& type_name, const std::string& type_name_space,
+			const std::vector<parser::TypeDefinition>& signature, const std::vector<parser::VariableDefinition>& parameters, unsigned int row = 0, unsigned int col = 0);
 
-		void change_current_variable_type(std::string, parser::Type);
-		void change_variable_type_name(std::string, std::string);
+		void change_current_variable_type(const std::string& identifier, parser::Type type);
+		void change_variable_type_name(const std::string& identifier, const std::string& type_name);
 
-		parser::StructureDefinition find_declared_structure_definition(std::string);
-		parser::FunctionDefinition find_declared_function(std::string, std::vector<parser::TypeDefinition>);
-		parser::SemanticVariable* find_declared_variable(std::string);
+		parser::StructureDefinition find_declared_structure_definition(const std::string& identifier);
+		parser::FunctionDefinition find_declared_function(const std::string& identifier, const std::vector<parser::TypeDefinition>& signature);
+		parser::SemanticVariable* find_declared_variable(const std::string& identifier);
 
 	};
 }
