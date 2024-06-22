@@ -117,7 +117,7 @@ int CPRepl::execute() {
 				continue;
 			}
 
-			// check if it's all ok in a temp global scope
+			// check if it's all ok using a temp global scope
 			visitor::SemanticScope temp = semantic_global_scope;
 			visitor::SemanticAnalyser temp_semantic_analyser(&temp, program, programs);
 			temp_semantic_analyser.start();

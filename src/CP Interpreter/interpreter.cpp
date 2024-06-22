@@ -15,13 +15,34 @@ using namespace parser;
 
 
 Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
-	: current_expression_value(Value(Type::T_UNDEFINED)), is_function_context(false), current_name(std::stack<std::string>()),
-	Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
+	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
 	if (main_program) {
 		current_name.push(main_program->name);
 	}
 	scopes[default_namespace].push_back(global_scope);
 	register_built_in_functions();
+}
+
+Interpreter::~Interpreter() {
+	for (auto& pscope : scopes) {
+		for (auto& scope : pscope.second) {
+			delete scope;
+		}
+		pscope.second.clear();
+	}
+	scopes.clear();
+	for (auto& arg : builtin_arguments) {
+		delete arg;
+	}
+	builtin_arguments.clear();
+	for (auto& arg : last_function_arguments) {
+		delete arg.second;
+	}
+	last_function_arguments.clear();
+	delete current_variable;
+	delete cpgraphics;
+	delete cpfiles;
+	delete cpconsole;
 }
 
 const std::string& Interpreter::get_namespace(const std::string& nmspace) const {

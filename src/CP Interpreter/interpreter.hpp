@@ -17,13 +17,13 @@ namespace modules {
 }
 
 namespace visitor {
-
 	class Interpreter : public Visitor {
 	public:
 		std::map<std::string, std::function<void()>> builtin_functions;
 		std::vector<Value*> builtin_arguments;
-		std::string parse_value_to_string(const Value* value);
 		Value current_expression_value;
+
+		std::string parse_value_to_string(const Value* value);
 
 	private:
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;

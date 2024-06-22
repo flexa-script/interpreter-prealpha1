@@ -14,6 +14,13 @@ InterpreterScope::InterpreterScope(std::string name) : name(name) {}
 
 InterpreterScope::InterpreterScope() : name("") { }
 
+InterpreterScope::~InterpreterScope() {
+	for (auto& val : variable_symbol_table) {
+		delete val.second;
+	}
+	variable_symbol_table.clear();
+}
+
 std::string InterpreterScope::get_name() {
 	return name;
 }

@@ -5,6 +5,12 @@
 using namespace axe;
 
 
+Image::~Image() {
+	if (bitmap) {
+		DeleteObject(bitmap);
+	}
+}
+
 Image* Image::load_image(const std::string& filename) {
 	std::wstring wfilename(filename.begin(), filename.end());
 
@@ -26,6 +32,9 @@ Window::Window()
 	hdc_back_buffer(nullptr), screen_width(0), screen_height(0) {}
 
 Window::~Window() {
+	if (hdc) {
+		DeleteObject(hdc);
+	}
 	if (hbm_back_buffer) {
 		DeleteObject(hbm_back_buffer);
 	}
@@ -35,7 +44,10 @@ Window::~Window() {
 	if (hwnd) {
 		DestroyWindow(hwnd);
 	}
-	hwnd_map.erase(hwnd);
+	auto it = hwnd_map.find(hwnd);
+	if (it != hwnd_map.end()) {
+		hwnd_map.erase(it);
+	}
 }
 
 bool Window::initialize(const std::string& title, int width, int height) {

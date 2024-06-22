@@ -14,6 +14,7 @@ namespace modules {
 
 	public:
 		Graphics();
+		~Graphics();
 
 		void register_functions(visitor::Interpreter* interpreter) override;
 	};

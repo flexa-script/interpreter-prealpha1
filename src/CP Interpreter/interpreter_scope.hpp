@@ -31,6 +31,7 @@ namespace visitor {
 	public:
 		InterpreterScope();
 		InterpreterScope(std::string);
+		~InterpreterScope();
 
 		bool already_declared_structure_definition(std::string);
 		bool already_declared_variable(std::string);

@@ -11,6 +11,7 @@ namespace modules {
 
 	public:
 		Module() = default;
+		~Module() = default;
 
 		virtual void register_functions(visitor::Interpreter* interpreter) = 0;
 	};

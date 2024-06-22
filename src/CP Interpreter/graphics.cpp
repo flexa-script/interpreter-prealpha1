@@ -4,7 +4,18 @@
 using namespace modules;
 
 
-Graphics::Graphics() : windows(std::vector<axe::Window*>()) {}
+Graphics::Graphics() {}
+
+Graphics::~Graphics() {
+	for (auto& val : images) {
+		delete val;
+	}
+	images.clear();
+	for (auto& val : windows) {
+		delete val;
+	}
+	windows.clear();
+}
 
 void Graphics::register_functions(visitor::Interpreter* interpreter) {
 

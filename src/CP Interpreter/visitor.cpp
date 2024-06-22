@@ -95,6 +95,9 @@ std::vector<std::string> built_in_libs = {
 	"cp.core.console"
 };
 
+Value::Value()
+	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), fun(cp_function()), type(Type::T_UNDEFINED), curr_type(Type::T_UNDEFINED), arr_type(Type::T_UNDEFINED) {};
+
 Value::Value(Type type)
 	: b(0), i(0), f(0), c(0), s(""), str(new cp_struct()), arr(cp_array()), fun(cp_function()), type(type), curr_type(type), arr_type(Type::T_UNDEFINED) {};
 
@@ -106,6 +109,17 @@ Value::Value(Value* value)
 	type(value->type), curr_type(value->curr_type), arr_type(value->arr_type) {
 	copy_array(value->arr);
 };
+
+Value::~Value() {
+	for (auto& val : arr) {
+		delete val;
+	}
+	arr.clear();
+	for (auto& val : str->second) {
+		delete val.second;
+	}
+	str->second.clear();
+}
 
 void Value::set(cp_bool b) {
 	this->b = b;

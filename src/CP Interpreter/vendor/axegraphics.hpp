@@ -18,7 +18,7 @@ namespace axe {
 		HBITMAP bitmap;
 		int width;
 		int height;
-
+		~Image();
 		static Image* load_image(const std::string& filename);
 	};
 

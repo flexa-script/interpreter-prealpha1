@@ -87,9 +87,11 @@ extern std::vector<std::string> built_in_libs;
 
 class Value {
 public:
+	Value();
 	Value(parser::Type type);
 	Value(parser::Type type, parser::Type arr_type);
 	Value(Value*);
+	~Value();
 
 	parser::Type type;
 	parser::Type curr_type;
