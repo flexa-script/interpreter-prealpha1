@@ -119,9 +119,9 @@ public:
 	void set_undefined();
 	void set_empty(parser::Type empty_type);
 
-	void set_type(parser::Type);
-	void set_curr_type(parser::Type);
-	void set_arr_type(parser::Type);
+	void set_type(parser::Type type);
+	void set_curr_type(parser::Type curr_type);
+	void set_arr_type(parser::Type arr_type);
 
 	bool has_value();
 
