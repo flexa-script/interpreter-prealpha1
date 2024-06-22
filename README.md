@@ -6,9 +6,6 @@
 - [X] Rewrite EBNF
 - [X] Change expression evaluation to left to right
 - [X] Add and precedence
-- [X] Add void support to function
-- [X] Add void return
-- [X] Add mod (%) operation support
 - [X] Add library support
 - [X] Add collum on errors
 - [X] Add 'this' token to get current function name
@@ -28,6 +25,8 @@
 - [X] Improve cp dependencies/libs loader
 - [X] Add string array-like accessor
 - [ ] Function improvements:
+    - [X] Add void support to function
+    - [X] Add void return
     - [X] Pass parameter by reference
     - [X] Change builtin functions to ASTFunctionDefinitionNode
     - [X] Add callback as type function
@@ -65,15 +64,16 @@
     - [X] do while
 - [ ] Add expression:
     - [X] Add expression operators:
-        - [X] Add ++,-- incrementor
-        - [X] Add { init_value } to initilize all positions with same value
-        - [X] Add 'in' operator to check if anything is in array/string
-            - [X] Add $ operator to compare struct values instead of pointer
-        - [X] Add ternary (immediate) if
-        - [X] typeof: returns type of object
+        - [X] mod `%` operation support
+        - [X] `++`, `--` incrementor
+        - [X] `ref` and `unref` to handle variable references
+        - [X] `{ init_value }` to initilize all positions with same value
+        - [X] `in` operator to check if anything is in array/string
+        - [X] Add ternary (immediate) if `expr ? texpr : fexpr`
+        - [X] `typeof`: returns type of object
             - [X] add namespace to type name return
-        - [X] typeid: returns hash of typeof
-        - [ ] isany: returns if a variable is any
+        - [X] `typeid`: returns hash of typeof
+        - [ ] `isany`: returns if a variable is any
         - [ ] add bitwise operators:
             - [ ] &   bitwise AND
             - [ ] |   bitwise inclusive OR
