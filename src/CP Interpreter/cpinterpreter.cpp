@@ -8,10 +8,10 @@
 #include "parser.hpp"
 #include "semantic_analysis.hpp"
 #include "interpreter.hpp"
-#include "vendor/util.hpp"
+#include "vendor/axeutils.hpp"
 #include "cputil.hpp"
 #include "cpinterpreter.hpp"
-#include "cplibloader.hpp"
+#include "libfinder.hpp"
 
 
 CPInterpreter::CPInterpreter(const std::string& root, std::vector<std::string>&& files)
@@ -28,10 +28,10 @@ int CPInterpreter::execute() {
 
 std::vector<CPSource> CPInterpreter::load_programs(const std::string& root, const std::vector<std::string>& files) {
 	std::vector<CPSource> source_programs;
-	auto norm_root = axe::Util::normalize_path_sep(root);
+	auto norm_root = axe::PathUtils::normalize_path_sep(root);
 
 	for (size_t i = 0; i < files.size(); ++i) {
-		auto program_path = norm_root + std::string{ std::filesystem::path::preferred_separator } + axe::Util::normalize_path_sep(files[i]);
+		auto program_path = norm_root + std::string{ std::filesystem::path::preferred_separator } + axe::PathUtils::normalize_path_sep(files[i]);
 		auto program = CPSource(CPUtil::get_lib_name(files[i]), CPUtil::load_source(program_path));
 		source_programs.push_back(program);
 	}
@@ -39,17 +39,15 @@ std::vector<CPSource> CPInterpreter::load_programs(const std::string& root, cons
 	return source_programs;
 }
 
-void CPInterpreter::parse_programs(std::vector<CPSource> source_programs, parser::ASTProgramNode** main_program,
+void CPInterpreter::parse_programs(const std::vector<CPSource>& source_programs, parser::ASTProgramNode** main_program,
 	std::map<std::string, parser::ASTProgramNode*>* programs) {
 
 	for (const auto& source : source_programs) {
-		// tokenise and initialise parser
 		lexer::Lexer lexer(source.name, source.source);
 		parser::Parser parser(source.name , &lexer);
 
 		parser::ASTProgramNode* program = parser.parse_program();
 
-		// check if the parsed program is null
 		if (!program) {
 			std::cerr << "Failed to parse program: " << source.name << std::endl;
 			continue;
@@ -59,12 +57,11 @@ void CPInterpreter::parse_programs(std::vector<CPSource> source_programs, parser
 			*main_program = program;
 		}
 
-		// try to parse as program
 		(*programs)[program->name] = program;
 	}
 }
 
-int CPInterpreter::interpreter(std::vector<CPSource> source_programs) {
+int CPInterpreter::interpreter(const std::vector<CPSource>& source_programs) {
 	visitor::SemanticScope semantic_global_scope;
 	visitor::InterpreterScope interpreter_global_scope;
 
@@ -85,11 +82,9 @@ int CPInterpreter::interpreter(std::vector<CPSource> source_programs) {
 			}
 		} while (cplibs_size > 0);
 
-		// if this succeeds, perform semantic analysis modifying global scope
 		visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, main_program, programs);
 		semantic_analyser.start();
 
-		// interpreter
 		visitor::Interpreter interpreter(&interpreter_global_scope, main_program, programs);
 		interpreter.start();
 

@@ -4,8 +4,8 @@
  * v1.0.0
  */
 
-#ifndef LOGGING_HPP
-#define LOGGING_HPP
+#ifndef AXELOGGING_HPP
+#define AXELOGGING_HPP
 
 #include <string>
 #include <map>
@@ -66,4 +66,4 @@ namespace axe {
 	};
 }
 
-#endif // !LOGGING_HPP
+#endif // !AXELOGGING_HPP

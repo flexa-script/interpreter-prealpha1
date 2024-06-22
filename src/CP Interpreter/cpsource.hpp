@@ -8,7 +8,8 @@ class CPSource {
 public:
 	std::string name;
 	std::string source;
-	CPSource(std::string name, std::string source) : name(name), source(source) {}
+	CPSource(std::string name, std::string source)
+		: name(name), source(source) {}
 };
 
 #endif // !CPSOURCE_CPP

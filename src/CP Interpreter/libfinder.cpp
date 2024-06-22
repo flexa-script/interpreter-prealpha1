@@ -1,7 +1,7 @@
 #include <filesystem>
 
-#include "cplibloader.hpp"
-#include "vendor/util.hpp"
+#include "libfinder.hpp"
+#include "vendor/axeutils.hpp"
 #include "cputil.hpp"
 
 
@@ -9,8 +9,8 @@ using namespace visitor;
 using namespace parser;
 
 
-LibFinder::LibFinder(ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
-	: cp_root(axe::Util::get_current_path() + std::string{ std::filesystem::path::preferred_separator } + "libs"),
+LibFinder::LibFinder(ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
+	: cp_root(axe::PathUtils::get_current_path() + std::string{ std::filesystem::path::preferred_separator } + "libs"),
 	libs(std::vector<std::string>()), lib_names(std::vector<std::string>()),
 	Visitor(programs, main_program, main_program->name) {};
 
@@ -28,14 +28,14 @@ void LibFinder::visit(ASTProgramNode* astnode) {
 }
 
 void LibFinder::visit(ASTUsingNode* astnode) {
-	std::string libname = axe::Util::join(astnode->library, ".");
+	std::string libname = axe::StringUtils::join(astnode->library, ".");
 
 	if (programs.find(libname) == programs.end()) {
-		if (!axe::Util::contains(built_in_libs, libname) && !axe::Util::contains(std_libs, libname)) {
+		if (!axe::StringUtils::contains(built_in_libs, libname) && !axe::StringUtils::contains(std_libs, libname)) {
 			throw std::exception(std::string{ "unable to find library '" + libname + "'" }.c_str());
 		}
 		// find in cp std libs
-		std::string path = axe::Util::replace(libname, ".", std::string{ std::filesystem::path::preferred_separator }) + ".cp";
+		std::string path = axe::StringUtils::replace(libname, ".", std::string{ std::filesystem::path::preferred_separator }) + ".cp";
 		if (std::find(lib_names.begin(), lib_names.end(), path) == lib_names.end()) {
 			lib_names.push_back(path);
 		}
@@ -45,7 +45,7 @@ void LibFinder::visit(ASTUsingNode* astnode) {
 	auto program = programs[libname];
 
 	// if was'nt parsed yet
-	if (!axe::Util::contains(libs, libname)) {
+	if (!axe::StringUtils::contains(libs, libname)) {
 		libs.push_back(libname);
 		auto prev_program = current_program;
 		current_program = program;

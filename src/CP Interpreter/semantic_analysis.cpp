@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "semantic_analysis.hpp"
-#include "vendor/util.hpp"
+#include "vendor/axeutils.hpp"
 #include "graphics.hpp"
 
 
@@ -47,7 +47,7 @@ void SemanticAnalyser::visit(ASTProgramNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTUsingNode* astnode) {
-	std::string libname = axe::Util::join(astnode->library, ".");
+	std::string libname = axe::StringUtils::join(astnode->library, ".");
 
 	if (programs.find(libname) == programs.end()) {
 		set_curr_pos(astnode->row, astnode->col);
@@ -57,14 +57,14 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	auto program = programs[libname];
 
 	// add lib to current program
-	if (axe::Util::contains(current_program->libs, libname)) {
+	if (axe::StringUtils::contains(current_program->libs, libname)) {
 		set_curr_pos(astnode->row, astnode->col);
 		throw std::runtime_error("lib '" + libname + "' already declared in " + current_program->name);
 	}
 	current_program->libs.push_back(libname);
 
 	// if can't parsed yet
-	if (!axe::Util::contains(parsed_libs, libname)) {
+	if (!axe::StringUtils::contains(parsed_libs, libname)) {
 		if (!program->alias.empty()) {
 			nmspaces.push_back(program->alias);
 		}
@@ -87,7 +87,7 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTAsNamespaceNode* astnode) {
-	if (!axe::Util::contains(nmspaces, astnode->nmspace)) {
+	if (!axe::StringUtils::contains(nmspaces, astnode->nmspace)) {
 		set_curr_pos(astnode->row, astnode->col);
 		throw std::runtime_error("namespace '" + astnode->nmspace + "' not found");
 	}
@@ -1534,7 +1534,7 @@ long long SemanticAnalyser::hash(ASTLiteralNode<cp_char>* astnode) {
 }
 
 long long SemanticAnalyser::hash(ASTLiteralNode<cp_string>* astnode) {
-	return axe::Util::hashcode(astnode->val);
+	return axe::StringUtils::hashcode(astnode->val);
 }
 
 long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {

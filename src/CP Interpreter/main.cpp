@@ -1,6 +1,6 @@
 #include "cprepl.hpp"
 #include "cpinterpreter.hpp"
-#include "vendor/watch.h"
+#include "vendor/axewatch.h"
 //#include "vendor/util.hpp"
 //#include "vendor/logging.hpp"
 
@@ -36,7 +36,7 @@ int main(int argc, const char* argv[]) {
 
 	auto interpreter = CPInterpreter(root, std::move(files));
 
-	auto sw = ChronoStopwatch();
+	auto sw = axe::ChronoStopwatch();
 	sw.start();
 	result = interpreter.execute();
 	sw.stop();

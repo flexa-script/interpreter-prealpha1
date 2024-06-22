@@ -3,8 +3,8 @@
 #include <conio.h>
 
 #include "interpreter.hpp"
-#include "vendor/util.hpp"
-#include "vendor/watch.h"
+#include "vendor/axeutils.hpp"
+#include "vendor/axewatch.h"
 #include "graphics.hpp"
 #include "files.hpp"
 #include "console.hpp"
@@ -84,9 +84,9 @@ void Interpreter::visit(ASTProgramNode* astnode) {
 }
 
 void Interpreter::visit(ASTUsingNode* astnode) {
-	std::string libname = axe::Util::join(astnode->library, ".");
+	std::string libname = axe::StringUtils::join(astnode->library, ".");
 
-	if (axe::Util::contains(built_in_libs, libname)) {
+	if (axe::StringUtils::contains(built_in_libs, libname)) {
 		register_built_in_lib(libname);
 	}
 
@@ -96,7 +96,7 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 	current_program->libs.push_back(libname);
 
 	// if can't parsed yet
-	if (!axe::Util::contains(parsed_libs, libname)) {
+	if (!axe::StringUtils::contains(parsed_libs, libname)) {
 		parsed_libs.push_back(libname);
 		auto prev_program = current_program;
 		current_program = program;
@@ -1210,7 +1210,7 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 
 	if (astnode->image == "typeid") {
 		auto value = Value(Type::T_INT);
-		value.set(cp_int(axe::Util::hashcode(str_type)));
+		value.set(cp_int(axe::StringUtils::hashcode(str_type)));
 		current_expression_value = value;
 	}
 	else {
@@ -1728,7 +1728,7 @@ long long Interpreter::hash(ASTLiteralNode<cp_char>* astnode) {
 }
 
 long long Interpreter::hash(ASTLiteralNode<cp_string>* astnode) {
-	return axe::Util::hashcode(astnode->val);
+	return axe::StringUtils::hashcode(astnode->val);
 }
 
 long long Interpreter::hash(ASTIdentifierNode* astnode) {
@@ -1755,7 +1755,7 @@ long long Interpreter::hash(ASTIdentifierNode* astnode) {
 	case Type::T_CHAR:
 		return static_cast<long long>(value->c);
 	case Type::T_STRING:
-		return axe::Util::hashcode(value->s);
+		return axe::StringUtils::hashcode(value->s);
 	}
 }
 

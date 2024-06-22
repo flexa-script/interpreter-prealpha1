@@ -9,8 +9,9 @@
 
 class CPUtil {
 public:
-	static std::string load_source(std::string);
-	static std::string get_lib_name(std::string);
+	static std::string load_source(const std::string& path);
+	static std::string get_lib_name(const std::string& libpath);
+	static std::string get_prog_name(const std::string& progpath);
 };
 
 #endif // !CPUTIL_H

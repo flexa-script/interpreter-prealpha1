@@ -1,5 +1,6 @@
 #include "cprepl.hpp"
-#include "vendor/util.hpp"
+#include "cputil.hpp"
+#include "vendor/axeutils.hpp"
 
 const std::string CPRepl::NAME = "CPLang";
 const std::string CPRepl::VER = "v0.0.1";
@@ -33,6 +34,7 @@ int CPRepl::execute() {
 
 	while (true) {
 		std::string input_line;
+		std::string prog_name = "main";
 		std::string source;
 		bool file_load = false;
 		bool expr = false;
@@ -61,30 +63,15 @@ int CPRepl::execute() {
 			std::cout << " #clear             Clears the terminal window.\n\n";
 		}
 		else if (input_line.substr(0, 5) == "#load") {
-			std::cout << input_line << std::endl;
-
 			if (input_line.size() <= 6) {
 				std::cout << "File path expected after '#load'." << std::endl;
 				continue;
 			}
 
-			std::string file_dir = input_line.substr(6);
-			file_dir = std::regex_replace(file_dir, std::regex("^ +| +$"), "$1");
-			std::ifstream file;
-			file.open(file_dir);
-
-			if (!file) {
-				std::cout << "Could not load file from \"" + file_dir + "\"." << std::endl;
-				continue;
-			}
-
-			std::string line;
-			while (std::getline(file, line)) {
-				source.append(line + "\n");
-			}
+			std::string file_path = input_line.substr(6);
+			source = CPUtil::load_source(file_path);
+			prog_name = CPUtil::get_prog_name(file_path);
 			file_load = true;
-
-			file.close();
 		}
 		else if (input_line == "#clear") {
 			clear_screen();
@@ -104,19 +91,19 @@ int CPRepl::execute() {
 		}
 
 		try {
-			lexer::Lexer lexer("__main", source);
-			parser::Parser parser("__main", &lexer);
+			lexer::Lexer lexer(prog_name, source);
+			parser::Parser parser(prog_name, &lexer);
 			parser::ASTProgramNode* program;
 			std::map<std::string, parser::ASTProgramNode*> programs;
 
 			try {
 				program = parser.parse_program();
-				programs = std::map<std::string, parser::ASTProgramNode*>({ std::pair("__main", program) });
+				programs = std::map<std::string, parser::ASTProgramNode*>({ std::pair(prog_name, program) });
 			}
 			catch (const std::exception& e) {
 				std::string err = e.what();
 				remove_header(err);
-				std::cerr << axe::Util::trim(err) << std::endl;
+				std::cerr << axe::StringUtils::trim(err) << std::endl;
 				continue;
 			}
 
@@ -131,7 +118,7 @@ int CPRepl::execute() {
 			interpreter.visit(program);
 
 			if (file_load) {
-				std::cout << "File loaded successfully." << std::endl;
+				std::cout << std::endl << "File loaded successfully." << std::endl;
 			}
 			else {
 				// not is undefined and it's an expression
@@ -144,7 +131,7 @@ int CPRepl::execute() {
 		catch (const std::exception& e) {
 			std::string err = e.what();
 			remove_header(err);
-			std::cerr << axe::Util::trim(err) << std::endl;
+			std::cerr << axe::StringUtils::trim(err) << std::endl;
 		}
 	}
 

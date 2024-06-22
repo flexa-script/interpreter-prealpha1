@@ -54,16 +54,16 @@
     <ClInclude Include="interpreter.hpp" />
     <ClInclude Include="interpreter_scope.hpp" />
     <ClInclude Include="lexer.hpp" />
-    <ClInclude Include="cplibloader.hpp" />
+    <ClInclude Include="libfinder.hpp" />
     <ClInclude Include="module.hpp" />
     <ClInclude Include="parser.hpp" />
     <ClInclude Include="semantic_analysis.hpp" />
     <ClInclude Include="semantic_scope.hpp" />
     <ClInclude Include="token.hpp" />
     <ClInclude Include="vendor\axegraphics.hpp" />
-    <ClInclude Include="vendor\logging.hpp" />
-    <ClInclude Include="vendor\util.hpp" />
-    <ClInclude Include="vendor\watch.h" />
+    <ClInclude Include="vendor\axelogging.hpp" />
+    <ClInclude Include="vendor\axeutils.hpp" />
+    <ClInclude Include="vendor\axewatch.h" />
     <ClInclude Include="visitor.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -78,7 +78,7 @@
     <ClCompile Include="interpreter.cpp" />
     <ClCompile Include="interpreter_scope.cpp" />
     <ClCompile Include="lexer.cpp" />
-    <ClCompile Include="cplibloader.cpp" />
+    <ClCompile Include="libfinder.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="module.cpp" />
     <ClCompile Include="parser.cpp" />
@@ -86,8 +86,8 @@
     <ClCompile Include="semantic_scope.cpp" />
     <ClCompile Include="token.cpp" />
     <ClCompile Include="vendor\axegraphics.cpp" />
-    <ClCompile Include="vendor\logging.cpp" />
-    <ClCompile Include="vendor\util.cpp" />
+    <ClCompile Include="vendor\axelogging.cpp" />
+    <ClCompile Include="vendor\axeutils.cpp" />
     <ClCompile Include="visitor.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

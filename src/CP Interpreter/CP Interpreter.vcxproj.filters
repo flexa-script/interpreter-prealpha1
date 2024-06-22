@@ -99,22 +99,19 @@
     <ClInclude Include="cputil.hpp">
       <Filter>Header Files\cp</Filter>
     </ClInclude>
-    <ClInclude Include="cplibloader.hpp">
-      <Filter>Header Files\cp</Filter>
-    </ClInclude>
     <ClInclude Include="cpsource.hpp">
       <Filter>Header Files\cp</Filter>
     </ClInclude>
     <ClInclude Include="vendor\axegraphics.hpp">
       <Filter>Header Files\vendor</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\logging.hpp">
+    <ClInclude Include="vendor\axelogging.hpp">
       <Filter>Header Files\vendor</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\util.hpp">
+    <ClInclude Include="vendor\axeutils.hpp">
       <Filter>Header Files\vendor</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\watch.h">
+    <ClInclude Include="vendor\axewatch.h">
       <Filter>Header Files\vendor</Filter>
     </ClInclude>
     <ClInclude Include="graphics.hpp">
@@ -128,6 +125,9 @@
     </ClInclude>
     <ClInclude Include="console.hpp">
       <Filter>Header Files\modules\cp.core</Filter>
+    </ClInclude>
+    <ClInclude Include="libfinder.hpp">
+      <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -170,16 +170,13 @@
     <ClCompile Include="cprepl.cpp">
       <Filter>Source Files\cp</Filter>
     </ClCompile>
-    <ClCompile Include="cplibloader.cpp">
-      <Filter>Source Files\cp</Filter>
-    </ClCompile>
     <ClCompile Include="cpsource.cpp">
       <Filter>Source Files\cp</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\util.cpp">
+    <ClCompile Include="vendor\axeutils.cpp">
       <Filter>Source Files\vendor</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\logging.cpp">
+    <ClCompile Include="vendor\axelogging.cpp">
       <Filter>Source Files\vendor</Filter>
     </ClCompile>
     <ClCompile Include="vendor\axegraphics.cpp">
@@ -196,6 +193,9 @@
     </ClCompile>
     <ClCompile Include="console.cpp">
       <Filter>Source Files\modules\cp.core</Filter>
+    </ClCompile>
+    <ClCompile Include="libfinder.cpp">
+      <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,5 +1,5 @@
-#ifndef LIBPREPROCESSOR_HPP
-#define LIBPREPROCESSOR_HPP
+#ifndef LIBFINDER_HPP
+#define LIBFINDER_HPP
 
 #include "ast.hpp"
 #include "cpsource.hpp"
@@ -16,7 +16,7 @@ namespace visitor {
 		std::vector<std::string> libs;
 
 	public:
-		LibFinder(parser::ASTProgramNode*, std::map<std::string, parser::ASTProgramNode*>);
+		LibFinder(parser::ASTProgramNode* main_program, const std::map<std::string, parser::ASTProgramNode*>& programs);
 
 		void start();
 
@@ -78,4 +78,4 @@ namespace visitor {
 
 }
 
-#endif // !LIBPREPROCESSOR_HPP
+#endif // !LIBFINDER_HPP
