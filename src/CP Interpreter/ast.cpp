@@ -144,6 +144,9 @@ StructureDefinition::StructureDefinition()
 Identifier::Identifier(const std::string& identifier, std::vector<ASTExprNode*>&& access_vector)
 	: identifier(identifier), access_vector(std::move(access_vector)) {}
 
+Identifier::Identifier(const std::string& identifier)
+	: identifier(identifier) {}
+
 Identifier::Identifier()
 	: identifier(""), access_vector(std::vector<ASTExprNode*>()) {}
 

@@ -128,6 +128,8 @@ namespace parser {
 
 		Identifier(const std::string& identifier, std::vector<ASTExprNode*>&& access_vector);
 
+		Identifier(const std::string& identifier);
+
 		Identifier();
 	};
 

@@ -110,16 +110,7 @@ Value::Value(Value* value)
 	copy_array(value->arr);
 };
 
-Value::~Value() {
-	for (auto& val : arr) {
-		delete val;
-	}
-	arr.clear();
-	for (auto& val : str->second) {
-		delete val.second;
-	}
-	str->second.clear();
-}
+Value::~Value() = default;
 
 void Value::set(cp_bool b) {
 	this->b = b;

@@ -4,6 +4,13 @@ using namespace modules;
 
 Files::Files() {}
 
+Files::~Files() {
+	for (auto& val : files) {
+		delete val;
+	}
+	files.clear();
+}
+
 void Files::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["open"] = [this, interpreter]() {

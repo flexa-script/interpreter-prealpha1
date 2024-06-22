@@ -15,6 +15,7 @@ namespace modules {
 
 	public:
 		Files();
+		~Files();
 
 		void register_functions(visitor::Interpreter* interpreter) override;
 	};

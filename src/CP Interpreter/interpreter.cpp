@@ -24,13 +24,6 @@ Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_pr
 }
 
 Interpreter::~Interpreter() {
-	for (auto& pscope : scopes) {
-		for (auto& scope : pscope.second) {
-			delete scope;
-		}
-		pscope.second.clear();
-	}
-	scopes.clear();
 	for (auto& arg : builtin_arguments) {
 		delete arg;
 	}
@@ -121,7 +114,7 @@ void Interpreter::visit(ASTAsNamespaceNode* astnode) {
 }
 
 void Interpreter::visit(ASTDeclarationNode* astnode) {
-	auto& nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 
 	if (astnode->expr) {
 		astnode->expr->accept(this);
@@ -181,7 +174,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 }
 
 void Interpreter::visit(ASTEnumNode* astnode) {
-	auto& nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], (cp_int)i);
 	}
@@ -190,7 +183,7 @@ void Interpreter::visit(ASTEnumNode* astnode) {
 void Interpreter::visit(ASTAssignmentNode* astnode) {
 	InterpreterScope* astscope;
 	try {
-		auto& nmspace = get_namespace(astnode->nmspace);
+		const auto& nmspace = get_namespace(astnode->nmspace);
 		astscope = get_inner_most_variable_scope(nmspace, astnode->identifier_vector[0].identifier);
 	}
 	catch (std::exception ex) {
@@ -252,7 +245,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 }
 
 void Interpreter::visit(ASTReturnNode* astnode) {
-	auto& nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 	astnode->expr->accept(this);
 	for (long long i = scopes[nmspace].size() - 1; i >= 0; --i) {
 		if (!scopes[nmspace][i]->get_name().empty()) {
@@ -278,7 +271,7 @@ void Interpreter::visit(ASTBreakNode* astnode) {
 }
 
 void Interpreter::visit(ASTSwitchNode* astnode) {
-	auto& nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 	is_switch = true;
 
 	scopes[nmspace].push_back(new InterpreterScope(""));
@@ -360,7 +353,7 @@ void Interpreter::visit(ASTIfNode* astnode) {
 }
 
 void Interpreter::visit(ASTForNode* astnode) {
-	auto& nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 	is_loop = true;
 	scopes[nmspace].push_back(new InterpreterScope(""));
 
@@ -413,7 +406,7 @@ void Interpreter::visit(ASTForNode* astnode) {
 }
 
 void Interpreter::visit(ASTForEachNode* astnode) {
-	auto& nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 	is_loop = true;
 
 	astnode->collection->accept(this);
@@ -426,33 +419,8 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 
 		auto itdecl = static_cast<ASTDeclarationNode*>(astnode->itdecl);
 
-		Value* value = access_value(scopes[nmspace].back(), scopes[nmspace].back()->find_declared_variable(itdecl->identifier),
-			std::vector<Identifier>{Identifier(itdecl->identifier, std::vector<ASTExprNode*>())});
-
-		switch (val->curr_type) {
-		case Type::T_BOOL:
-			value->set(val->b);
-			break;
-		case Type::T_INT:
-			value->set(val->i);
-			break;
-		case Type::T_FLOAT:
-			value->set(val->f);
-			break;
-		case Type::T_CHAR:
-			value->set(val->c);
-			break;
-		case Type::T_STRING:
-			value->set(val->s);
-			break;
-		case Type::T_ARRAY:
-			value->set(val->arr);
-			break;
-		case Type::T_STRUCT:
-			value->set(val->str);
-			break;
-		}
-
+		set_value(scopes[nmspace].back(), std::vector<Identifier>{Identifier(itdecl->identifier)}, val);
+		
 		astnode->block->accept(this);
 
 		scopes[nmspace].pop_back();
@@ -476,7 +444,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 }
 
 void Interpreter::visit(ASTTryCatchNode* astnode) {
-	auto& nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 
 	try {
 		scopes[nmspace].push_back(new InterpreterScope(""));
@@ -489,15 +457,13 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 		astnode->decl->accept(this);
 
 		if (auto itdecl = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
-			Value* value = access_value(scopes[nmspace].back(), scopes[nmspace].back()->find_declared_variable(itdecl->identifier),
-				std::vector<Identifier>{Identifier(itdecl->identifier, std::vector<ASTExprNode*>())});
-
-			value->set_type(Type::T_STRUCT);
-			value->set_curr_type(Type::T_STRUCT);
+			Value* value = new Value(Type::T_STRUCT);
 			value->str = new cp_struct();
 			value->str->first = "Exception";
 			value->str->second["error"] = new Value(Type::T_STRING);
 			value->str->second["error"]->s = ex.what();
+
+			set_value(scopes[nmspace].back(), std::vector<Identifier>{Identifier(itdecl->identifier)}, value);
 		}
 
 		astnode->catch_block->accept(this);
@@ -851,43 +817,19 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 			throw std::runtime_error(ex.what());
 		}
 
-		Value* value = access_value(id_scope, id_scope->find_declared_variable(id->identifier_vector[0].identifier), id->identifier_vector);
-
-		switch (value->curr_type) {
-		case Type::T_BOOL:
-			value->set(current_expression_value.b);
-			break;
-		case Type::T_INT:
-			value->set(current_expression_value.i);
-			break;
-		case Type::T_FLOAT:
-			value->set(current_expression_value.f);
-			break;
-		case Type::T_CHAR:
-			value->set(current_expression_value.c);
-			break;
-		case Type::T_STRING:
-			value->set(current_expression_value.s);
-			break;
-		case Type::T_ARRAY:
-			value->set(current_expression_value.arr);
-			break;
-		case Type::T_STRUCT:
-			value->set(current_expression_value.str);
-			break;
-		}
+		set_value(id_scope, id->identifier_vector, &current_expression_value);
 	}
 }
 
 void Interpreter::visit(ASTIdentifierNode* astnode) {
-	auto& identifier = astnode->identifier_vector[0].identifier;
-	auto& nmspace = get_namespace(astnode->nmspace);
+	const auto& identifier = astnode->identifier_vector[0].identifier;
+	const auto& nmspace = get_namespace(astnode->nmspace);
 	InterpreterScope* id_scope;
 	try {
 		id_scope = get_inner_most_variable_scope(nmspace, identifier);
 	}
 	catch (...) {
-		auto& dim = astnode->identifier_vector[0].access_vector;
+		const auto& dim = astnode->identifier_vector[0].access_vector;
 		auto type = Type::T_UNDEFINED;
 		auto expression_value = new Value(Type::T_UNDEFINED);
 
@@ -1030,7 +972,7 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 }
 
 void Interpreter::visit(ASTFunctionCallNode* astnode) {
-	auto& nmspace = get_namespace(astnode->nmspace);
+	const auto& nmspace = get_namespace(astnode->nmspace);
 
 	std::vector<TypeDefinition> signature;
 	std::vector<std::pair<bool, Value*>> function_arguments;
@@ -1076,7 +1018,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 }
 
 void Interpreter::visit(ASTBlockNode* astnode) {
-	auto& nmspace = get_namespace();
+	const auto& nmspace = get_namespace();
 	scopes[nmspace].push_back(new InterpreterScope(function_call_name));
 	function_call_name = "";
 
@@ -1357,7 +1299,7 @@ InterpreterScope* Interpreter::get_inner_most_variable_scope(const std::string& 
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
 		if (i <= 0) {
-			for (auto prgnmspace : program_nmspaces[get_current_namespace()]) {
+			for (const auto& prgnmspace : program_nmspaces[get_current_namespace()]) {
 				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_variable(identifier); --i) {
 					if (i <= 0) {
 						i = -1;
@@ -1379,7 +1321,7 @@ InterpreterScope* Interpreter::get_inner_most_struct_definition_scope(const std:
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); i--) {
 		if (i <= 0) {
 			bool found = false;
-			for (auto prgnmspace : program_nmspaces[get_current_namespace()]) {
+			for (const auto& prgnmspace : program_nmspaces[get_current_namespace()]) {
 				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_structure_definition(identifier); --i) {
 					if (i <= 0) {
 						i = -1;
@@ -1400,7 +1342,7 @@ InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& 
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); --i) {
 		if (i <= 0) {
-			for (auto prgnmspace : program_nmspaces[get_current_namespace()]) {
+			for (const auto& prgnmspace : program_nmspaces[get_current_namespace()]) {
 				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function(identifier, signature); --i) {
 					if (i <= 0) {
 						i = -1;
@@ -1415,6 +1357,40 @@ InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& 
 		}
 	}
 	return scopes[nmspace][i];
+}
+
+Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser::Identifier>& identifier_vector, Value* new_value) {
+	auto root = scope->find_declared_variable(identifier_vector[0].identifier);
+	auto value = access_value(scope, root, identifier_vector);
+
+	switch (new_value->curr_type) {
+	case Type::T_BOOL:
+		value->set(new_value->b);
+		break;
+	case Type::T_INT:
+		value->set(new_value->i);
+		break;
+	case Type::T_FLOAT:
+		value->set(new_value->f);
+		break;
+	case Type::T_CHAR:
+		value->set(new_value->c);
+		break;
+	case Type::T_STRING:
+		value->set(new_value->s);
+		break;
+	case Type::T_ARRAY:
+		value->set(new_value->arr);
+		break;
+	case Type::T_STRUCT:
+		value->set(new_value->str);
+		break;
+	case Type::T_FUNCTION:
+		value->set(new_value->fun);
+		break;
+	}
+
+	return value;
 }
 
 Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i) {
@@ -1766,7 +1742,8 @@ long long Interpreter::hash(ASTIdentifierNode* astnode) {
 		throw std::runtime_error(ex.what());
 	}
 
-	Value* value = access_value(id_scope, id_scope->find_declared_variable(astnode->identifier_vector[0].identifier), astnode->identifier_vector);
+	auto root = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
+	auto value = access_value(id_scope, root, astnode->identifier_vector);
 
 	switch (value->curr_type) {
 	case Type::T_BOOL:
