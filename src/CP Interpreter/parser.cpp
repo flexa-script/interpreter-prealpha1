@@ -896,11 +896,27 @@ ASTExprNode* Parser::parse_simple_expression() {
 }
 
 ASTExprNode* Parser::parse_term() {
-	ASTExprNode* lhs = parse_factor();
+	ASTExprNode* lhs = parse_exponentiation();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
 	while (next_token.type == TOK_MULTIPLICATIVE_OP) {
+		consume_token();
+		std::string current_token_value = current_token.value;
+		consume_token();
+		auto rhs = parse_exponentiation();
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+	}
+
+	return lhs;
+}
+
+ASTExprNode* Parser::parse_exponentiation() {
+	ASTExprNode* lhs = parse_factor();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+
+	while (next_token.type == TOK_EXPONENTIATION_OP) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
@@ -941,6 +957,7 @@ ASTExprNode* Parser::parse_factor() {
 	case TOK_STRING_TYPE:
 		return parse_type_parse_node();
 
+		// TODO: change for literal void
 	case TOK_NULL:
 		return new ASTNullNode(row, col);
 
@@ -964,12 +981,15 @@ ASTExprNode* Parser::parse_factor() {
 	
 		// unary expression case
 	case TOK_REF:
-	case TOK_UNREF:
-	case TOK_ADDITIVE_OP:
-	case TOK_NOT: {
+	case TOK_UNREF: {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		return new ASTUnaryExprNode(current_token_value, parse_factor(), row, col);
+	}
+	case TOK_NOT: {
+		std::string current_token_value = current_token.value;
+		consume_token();
+		return new ASTUnaryExprNode(current_token_value, parse_exponentiation(), row, col);
 	}
 
 	default:

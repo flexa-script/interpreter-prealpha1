@@ -51,9 +51,9 @@
     - [X] continue
     - [X] assignment
         - [X] +=, -=
-        - [X] *=, /=, %= 
-        - [ ] <<=, >>=
-        - [ ] &=, ^=, |=
+        - [X] *=, /=, %=, %/=, **=
+        - [x] <<=, >>=
+        - [x] &=, ^=, |=
     - [X] namespace
     - [X] as namespace
     - [X] exit
@@ -64,7 +64,11 @@
     - [X] do while
 - [ ] Add expression:
     - [X] Add expression operators:
-        - [X] add: mod `%` operation support
+        - [X] binary operators 
+            - [X] mod `%` operation
+            - [X] floor `/%` division
+            - [X] pow `**` operation
+            - [X] spaceship `<=>` operation
         - [X] add: `++`, `--` incrementor
         - [X] add: `ref` and `unref` to handle variable references
         - [X] add: `{ init_value }` to initilize all positions with same value
@@ -74,19 +78,20 @@
             - [X] fix: add namespace to type name return
         - [X] `typeid`: returns hash of typeof
         - [ ] `isany`: returns if a variable is any
-        - [ ] add: bitwise operators:
-            - [ ] &   bitwise AND
-            - [ ] |   bitwise inclusive OR
-            - [ ] ^   bitwise XOR (exclusive OR)
-            - [ ] <<  left shift
-            - [ ] >>  right shift
-            - [ ] ~	  bitwise NOT (ones' complement) (unary)
+    - [ ] add: bitwise operators:
+        - [x] &   bitwise AND
+        - [x] |   bitwise inclusive OR
+        - [x] ^   bitwise XOR (exclusive OR)
+        - [x] <<  left shift
+        - [x] >>  right shift
+        - [x] ~	  bitwise NOT (ones' complement) (unary)
     - [ ] Add expression literal:
         - [ ] base literals:
             - [ ] bin
             - [ ] oct
             - [ ] dec
             - [ ] hex
+            - [ ] 10e1 notation
 - [X] Let functions return array
 - [X] Add namespace scope nmspace::(method|variable|struct)
 - [X] Guanrantee that a lib is loaded once

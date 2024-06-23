@@ -311,6 +311,8 @@ Token Lexer::process_symbol() {
 	std::string str_symbol;
 	TokenType type;
 	bool is_unary = false;
+	bool found = false;
+	bool left_c = false;
 
 	symbol = current_char;
 	str_symbol = current_char;
@@ -323,7 +325,7 @@ Token Lexer::process_symbol() {
 			str_symbol += current_char;
 			advance();
 		}
-	case '+':
+	case '+': // let fallthrough
 		if (current_char == '+') {
 			is_unary = true;
 			str_symbol += current_char;
@@ -333,12 +335,25 @@ Token Lexer::process_symbol() {
 			str_symbol += current_char;
 			advance();
 		}
-		type = is_unary ? TOK_ADDITIVE_UN_OP : TOK_ADDITIVE_OP;
+		type = is_unary ? TOK_INCREMENT_OP : TOK_ADDITIVE_OP;
+		break;
+
+	case '~':
+		type = TOK_NOT;
 		break;
 
 	case '*':
-	case '/':
-	case '%':
+		if (current_char == '*') {
+			found = true;
+			str_symbol += current_char;
+			advance();
+		}
+	case '/': // let fallthrough
+		if (current_char == '%' && !found) {
+			str_symbol += current_char;
+			advance();
+		}
+	case '%': // let fallthrough
 		if (current_char == '=') {
 			str_symbol += current_char;
 			advance();
@@ -346,20 +361,61 @@ Token Lexer::process_symbol() {
 		type = TOK_MULTIPLICATIVE_OP;
 		break;
 
-	case '<':
-	case '>':
+	case '&':
 		if (current_char == '=') {
 			str_symbol += current_char;
 			advance();
 		}
-		type = TOK_RELATIONAL_OP;
+		type = TOK_BITWISE_AND;
+		break;
+
+	case '^':
+		if (current_char == '=') {
+			str_symbol += current_char;
+			advance();
+		}
+		type = TOK_BITWISE_XOR;
+		break;
+
+	case '|':
+		if (current_char == '=') {
+			str_symbol += current_char;
+			advance();
+		}
+		type = TOK_BITWISE_OR;
+		break;
+
+	case '<':
+		left_c = true;
+		if (current_char == '<') {
+			found = true;
+			str_symbol += current_char;
+			advance();
+		}
+	case '>': // let fallthrough
+		if (current_char == '>' && !found) {
+			found = true;
+			str_symbol += current_char;
+			advance();
+		}
+		if (current_char == '=') {
+			str_symbol += current_char;
+			advance();
+			if (current_char == '>' && left_c && !found) {
+				str_symbol += current_char;
+				advance();
+				type = TOK_THREE_WAY_OP;
+				break;
+			}
+		}
+		type = found ? TOK_BITWISE_SHIFT : TOK_RELATIONAL_OP;
 		break;
 
 	case '=':
 		if (current_char == '=') {
 			str_symbol += current_char;
 			advance();
-			type = TOK_RELATIONAL_OP;
+			type = TOK_EQUALITY_OP;
 		}
 		else {
 			type = TOK_EQUALS;
@@ -372,7 +428,7 @@ Token Lexer::process_symbol() {
 		}
 		str_symbol += current_char;
 		advance();
-		type = TOK_RELATIONAL_OP;
+		type = TOK_EQUALITY_OP;
 		break;
 
 	case '{':

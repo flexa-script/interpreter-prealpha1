@@ -80,6 +80,7 @@ namespace parser {
 		ASTExprNode* parse_bitwise_shift_expression();
 		ASTExprNode* parse_simple_expression();
 		ASTExprNode* parse_term();
+		ASTExprNode* parse_exponentiation();
 		ASTExprNode* parse_factor();
 
 		// factor expression nodes

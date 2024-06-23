@@ -311,7 +311,9 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 				type_str(assignment_expr.type) + "' to '" + astnode->op + "' operation");
 		}
 	}
-	else if (astnode->op == "-=" || astnode->op == "*=" || astnode->op == "/=") {
+	else if (astnode->op == "-=" || astnode->op == "*=" || astnode->op == "/="
+		|| astnode->op == "**=" || astnode->op == "/%=" || astnode->op == "%="
+		|| astnode->op == "=") {
 		if (!is_int(assignment_expr.type) && !is_float(assignment_expr.type)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("invalid right value type '" +
@@ -323,7 +325,8 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 				type_str(decl_var_expression->type) + "' to execute '" + astnode->op + "' operation");
 		}
 	}
-	else if (astnode->op == "%=") {
+	else if (astnode->op == "|=" || astnode->op == "^=" || astnode->op == "&="
+		|| astnode->op == "<<=" || astnode->op == ">>=") {
 		if (!is_int(assignment_expr.type)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("invalid right value type '" +
@@ -1046,16 +1049,18 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 		r_type = current_expression.array_type;
 	}
 
-	if (op == "-" || op == "/" || op == "*" || op == "%") {
+	if (op == "-" || op == "/" || op == "*" || op == "**" || op == "%" || op == "/%"
+		|| op == "<<" || op == ">>" || op == "&" || op == "^" || op == "|" || op == "<=>") {
 		if (!is_int(l_type) && !is_float(l_type) || !is_int(r_type) && !is_float(r_type)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("expected numerical operands for '" + op + "' operator");
 		}
-		if (op == "%" && (is_float(l_type) || is_float(r_type))) {
+		if ((astnode->op == "|=" || astnode->op == "^=" || astnode->op == "&="
+			|| astnode->op == "<<=" || astnode->op == ">>=")
+			&& (is_float(l_type) || is_float(r_type))) {
 			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("invalid operands to mod expression ('" + type_str(l_type) + "' and '" + type_str(r_type) + "')");
+			throw std::runtime_error("invalid operands to " + astnode->op + " operation ('" + type_str(l_type) + "' and '" + type_str(r_type) + "')");
 		}
-
 		current_expression.type = (is_int(l_type) && is_int(r_type)) ? Type::T_INT : Type::T_FLOAT;
 	}
 	else if (op == "+") {
@@ -1179,7 +1184,8 @@ void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
 		case Type::T_INT:
 		case Type::T_FLOAT:
 			if (astnode->unary_op != "+" && astnode->unary_op != "-"
-				&& astnode->unary_op != "--" && astnode->unary_op != "++") {
+				&& astnode->unary_op != "--" && astnode->unary_op != "++"
+				&& astnode->unary_op != "~") {
 				set_curr_pos(astnode->row, astnode->col);
 				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of numerical expression");
 			}

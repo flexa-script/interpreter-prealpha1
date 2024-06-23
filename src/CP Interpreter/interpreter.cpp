@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <conio.h>
+#include <compare>
 
 #include "interpreter.hpp"
 #include "vendor/axeutils.hpp"
@@ -190,10 +191,20 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 			value->set(current_expression_value.b);
 			break;
 		case Type::T_INT:
-			value->set(do_operation(value->i, current_expression_value.i, astnode->op));
+			if (is_int(value->curr_type)) {
+				value->set(do_operation(value->i, current_expression_value.i, astnode->op));
+			}
+			else {
+				value->set(cp_int(do_operation(value->f, cp_float(current_expression_value.i), astnode->op)));
+			}
 			break;
 		case Type::T_FLOAT:
-			value->set(do_operation(value->f, current_expression_value.f, astnode->op));
+			if (is_float(value->curr_type)) {
+				value->set(do_operation(value->f, current_expression_value.f, astnode->op));
+			}
+			else {
+				value->set(do_operation(cp_float(value->i), current_expression_value.f, astnode->op));
+			}
 			break;
 		case Type::T_CHAR:
 			if (is_string(value->curr_type)) {
@@ -405,7 +416,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		auto itdecl = static_cast<ASTDeclarationNode*>(astnode->itdecl);
 
 		set_value(scopes[nmspace].back(), std::vector<Identifier>{Identifier(itdecl->identifier)}, val);
-		
+
 		astnode->block->accept(this);
 
 		scopes[nmspace].pop_back();
@@ -613,9 +624,9 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 
 	auto value = new Value(Type::T_UNDEFINED);
 
-	if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%") {
+	if (op == "+" || op == "-" || op == "*" || op == "/" || op == "**" || op == "%" || op == "/%"
+		|| op == "<<" || op == ">>" || op == "&" || op == "^" || op == "|" || op == "<=>") {
 		if (l_type == Type::T_INT && r_type == Type::T_INT) {
-			current_expression_value.curr_type = Type::T_INT;
 			if (op == "+") {
 				value->set((cp_int)(l_value.i + r_value.i));
 			}
@@ -635,16 +646,47 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 			else if (op == "%") {
 				value->set((cp_int)(l_value.i % r_value.i));
 			}
+			else if (op == "/%") {
+				if (r_value.i == 0) {
+					set_curr_pos(astnode->row, astnode->col);
+					throw std::runtime_error("division by zero encountered");
+				}
+				value->set((cp_int)std::floor(l_value.i / r_value.i));
+			}
+			else if (op == "**") {
+				value->set((cp_int)std::pow(l_value.i, r_value.i));
+			}
+			else if (op == ">>") {
+				value->set((cp_int)(l_value.i >> r_value.i));
+			}
+			else if (op == "<<") {
+				value->set((cp_int)(l_value.i << r_value.i));
+			}
+			else if (op == "|") {
+				value->set((cp_int)(l_value.i | r_value.i));
+			}
+			else if (op == "&") {
+				value->set((cp_int)(l_value.i & r_value.i));
+			}
+			else if (op == "^") {
+				value->set((cp_int)(l_value.i ^ r_value.i));
+			}
+			else if (op == "<=>") {
+				auto res = l_value.i <=> r_value.i;
+				if (res == std::strong_ordering::less) {
+					value->set((cp_int)(-1));
+				}
+				else if (res == std::strong_ordering::equal) {
+					value->set((cp_int)(0));
+				}
+				else if (res == std::strong_ordering::greater) {
+					value->set((cp_int)(1));
+				}
+			}
 		}
 		else if (l_type == Type::T_FLOAT || r_type == Type::T_FLOAT) {
-			current_expression_value.curr_type = Type::T_FLOAT;
-			cp_float l = l_value.f, r = r_value.f;
-			if (l_type == Type::T_INT) {
-				l = cp_float(l_value.i);
-			}
-			if (r_type == Type::T_INT) {
-				r = cp_float(r_value.i);
-			}
+			cp_float l = is_float(l_type) ? l_value.f : l_value.i;
+			cp_float r = is_float(r_type) ? r_value.f : r_value.i;
 			if (op == "+") {
 				value->set((cp_float)(l + r));
 			}
@@ -659,38 +701,50 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 					set_curr_pos(astnode->row, astnode->col);
 					throw std::runtime_error("division by zero encountered");
 				}
-				value->set((cp_float)l / r);
+				value->set((cp_float)(l / r));
+			}
+			else if (op == "%") {
+				value->set((cp_float)std::fmod(l, r));
+			}
+			else if (op == "/%") {
+				if (r == 0) {
+					set_curr_pos(astnode->row, astnode->col);
+					throw std::runtime_error("division by zero encountered");
+				}
+				value->set((cp_int)std::floor(l / r));
+			}
+			else if (op == "**") {
+				value->set((cp_int)std::pow(l, r));
+			}
+			else if (op == "<=>") {
+				auto res = l <=> r;
+				if (res == std::strong_ordering::less) {
+					value->set((cp_int)(-1));
+				}
+				else if (res == std::strong_ordering::equal) {
+					value->set((cp_int)(0));
+				}
+				else if (res == std::strong_ordering::greater) {
+					value->set((cp_int)(1));
+				}
 			}
 		}
 		else if (l_type == Type::T_CHAR && r_type == Type::T_STRING) {
-			current_expression_value.curr_type = Type::T_STRING;
 			value->set(cp_string(std::string{ l_value.c } + r_value.s));
 		}
 		else if (l_type == Type::T_STRING && r_type == Type::T_CHAR) {
-			current_expression_value.curr_type = Type::T_STRING;
 			value->set(cp_string(l_value.s + std::string{ r_value.c }));
 		}
 		else if (l_type == Type::T_CHAR && r_type == Type::T_CHAR) {
-			current_expression_value.curr_type = Type::T_STRING;
 			value->set(cp_string(std::string{ l_value.c } + std::string{ r_value.c }));
 		}
 		else {
-			current_expression_value.curr_type = Type::T_STRING;
 			value->set(cp_string(l_value.s + r_value.s));
 		}
 	}
 	else if (op == "and" || op == "or") {
-		current_expression_value.curr_type = Type::T_BOOL;
-
 		cp_bool l = l_value.b;
 		cp_bool r = r_value.b;
-
-		if (l_type == Type::T_STRUCT) {
-			l = l_value.has_value();
-		}
-		if (r_type == Type::T_STRUCT) {
-			r = r_value.has_value();
-		}
 
 		if (op == "and") {
 			value->set((cp_bool)(l && r));
@@ -700,8 +754,6 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 		}
 	}
 	else {
-		current_expression_value.curr_type = Type::T_BOOL;
-
 		if (l_type == Type::T_VOID || r_type == Type::T_VOID) {
 			value->set((cp_bool)((op == "==") ? match_type(l_value.curr_type, r_value.curr_type) : !match_type(l_value.curr_type, r_value.curr_type)));
 		}
@@ -818,6 +870,9 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 			else if (astnode->unary_op == "++") {
 				current_expression_value.set(cp_int(++current_expression_value.i));
 				has_assign = true;
+			}
+			else if (astnode->unary_op == "~") {
+				current_expression_value.set(cp_int(~current_expression_value.i));
 			}
 			break;
 		case Type::T_FLOAT:
@@ -1567,6 +1622,27 @@ cp_int Interpreter::do_operation(cp_int lval, cp_int rval, const std::string& op
 	else if (op == "%=") {
 		return lval % rval;
 	}
+	else if (op == "/%=") {
+		return cp_int(std::floor(lval / rval));
+	}
+	else if (op == "**=") {
+		return cp_int(std::pow(lval, rval));
+	}
+	else if (op == ">>=") {
+		return lval >> rval;
+	}
+	else if (op == "<<=") {
+		return lval << rval;
+	}
+	else if (op == "|=") {
+		return lval << rval;
+	}
+	else if (op == "&=") {
+		return lval << rval;
+	}
+	else if (op == "^=") {
+		return lval << rval;
+	}
 	return rval;
 }
 
@@ -1585,6 +1661,15 @@ cp_float Interpreter::do_operation(cp_float lval, cp_float rval, const std::stri
 	}
 	else if (op == "/=") {
 		return lval / rval;
+	}
+	else if (op == "%=") {
+		return std::fmod(lval, rval);
+	}
+	else if (op == "/%=") {
+		return std::floor(lval / rval);
+	}
+	else if (op == "**=") {
+		return cp_int(std::pow(lval, rval));
 	}
 	return rval;
 }
@@ -1772,7 +1857,7 @@ void Interpreter::register_built_in_functions() {
 		for (auto arg : builtin_arguments[0]->arr) {
 			std::cout << parse_value_to_string(arg);
 		}
-	};
+		};
 	params.clear();
 	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), nullptr, true));
 	scopes[default_namespace].back()->declare_function("print", params, nullptr);
@@ -1780,7 +1865,7 @@ void Interpreter::register_built_in_functions() {
 	builtin_functions["println"] = [this]() {
 		builtin_functions["print"]();
 		std::cout << std::endl;
-	};
+		};
 	params.clear();
 	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), nullptr, true));
 	scopes[default_namespace].back()->declare_function("println", params, nullptr);
@@ -1794,7 +1879,7 @@ void Interpreter::register_built_in_functions() {
 		std::getline(std::cin, line);
 		current_expression_value = Value(Type::T_STRING);
 		current_expression_value.set(cp_string(std::move(line)));
-	};
+		};
 	params.clear();
 	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), nullptr, true));
 	scopes[default_namespace].back()->declare_function("read", params, nullptr);
@@ -1805,7 +1890,7 @@ void Interpreter::register_built_in_functions() {
 		char ch = _getch();
 		current_expression_value = Value(Type::T_CHAR);
 		current_expression_value.set(cp_char(ch));
-	};
+		};
 	params.clear();
 	scopes[default_namespace].back()->declare_function("readch", params, nullptr);
 
@@ -1822,7 +1907,7 @@ void Interpreter::register_built_in_functions() {
 		}
 
 		current_expression_value = val;
-	};
+		};
 	params.clear();
 	params.push_back(std::make_tuple("arr", TypeDefinition::get_array(Type::T_ARRAY, Type::T_ANY), nullptr, false));
 	scopes[default_namespace].back()->declare_function("len", params, nullptr);
@@ -1839,7 +1924,7 @@ void Interpreter::register_built_in_functions() {
 		res.b = equals_struct(rval->str, lval->str);
 
 		current_expression_value = res;
-	};
+		};
 	params.clear();
 	params.push_back(std::make_tuple("lval", TypeDefinition::get_basic(Type::T_ANY), nullptr, false));
 	params.push_back(std::make_tuple("rval", TypeDefinition::get_basic(Type::T_ANY), nullptr, false));
@@ -1848,7 +1933,7 @@ void Interpreter::register_built_in_functions() {
 
 	builtin_functions["system"] = [this]() {
 		system(builtin_arguments[0]->s.c_str());
-	};
+		};
 	params.clear();
 	params.push_back(std::make_tuple("cmd", TypeDefinition::get_basic(Type::T_STRING), nullptr, false));
 	scopes[default_namespace].back()->declare_function("system", params, nullptr);
