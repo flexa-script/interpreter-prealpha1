@@ -861,7 +861,7 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 		switch (current_expression_value.curr_type) {
 		case Type::T_INT:
 			if (astnode->unary_op == "-") {
-				current_expression_value.set(cp_int(current_expression_value.i * -1));
+				current_expression_value.set(cp_int(-current_expression_value.i));
 			}
 			else if (astnode->unary_op == "--") {
 				current_expression_value.set(cp_int(--current_expression_value.i));
@@ -877,7 +877,7 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 			break;
 		case Type::T_FLOAT:
 			if (astnode->unary_op == "-") {
-				current_expression_value.set(cp_float(current_expression_value.f * -1));
+				current_expression_value.set(cp_float(-current_expression_value.f));
 			}
 			else if (astnode->unary_op == "--") {
 				current_expression_value.set(cp_float(--current_expression_value.f));
@@ -895,9 +895,13 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 	}
 
 	if (has_assign) {
-		const auto id = static_cast<ASTIdentifierNode*>(astnode->expr);
+		const auto id = dynamic_cast<ASTIdentifierNode*>(astnode->expr);
 
-		const std::string& nmspace = get_namespace(id->nmspace);;
+		if (!id) {
+			throw std::runtime_error("error unary assign");
+		}
+
+		const std::string& nmspace = get_namespace(id->nmspace);
 		InterpreterScope* id_scope;
 		try {
 			id_scope = get_inner_most_variable_scope(nmspace, id->identifier_vector[0].identifier);
