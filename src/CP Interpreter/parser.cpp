@@ -752,11 +752,75 @@ ASTExprNode* Parser::parse_logical_or_expression() {
 }
 
 ASTExprNode* Parser::parse_logical_and_expression() {
-	ASTExprNode* lhs = parse_relational_expression();
+	ASTExprNode* lhs = parse_bitwise_or_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
 	while (next_token.type == TOK_LOGICAL_AND_OP) {
+		consume_token();
+		std::string current_token_value = current_token.value;
+		consume_token();
+		auto rhs = parse_bitwise_or_expression();
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+	}
+
+	return lhs;
+}
+
+ASTExprNode* Parser::parse_bitwise_or_expression() {
+	ASTExprNode* lhs = parse_bitwise_xor_expression();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+
+	while (next_token.type == TOK_BITWISE_OR) {
+		consume_token();
+		std::string current_token_value = current_token.value;
+		consume_token();
+		auto rhs = parse_bitwise_xor_expression();
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+	}
+
+	return lhs;
+}
+
+ASTExprNode* Parser::parse_bitwise_xor_expression() {
+	ASTExprNode* lhs = parse_bitwise_and_expression();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+
+	while (next_token.type == TOK_BITWISE_XOR) {
+		consume_token();
+		std::string current_token_value = current_token.value;
+		consume_token();
+		auto rhs = parse_bitwise_and_expression();
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+	}
+
+	return lhs;
+}
+
+ASTExprNode* Parser::parse_bitwise_and_expression() {
+	ASTExprNode* lhs = parse_equality_expression();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+
+	while (next_token.type == TOK_BITWISE_AND) {
+		consume_token();
+		std::string current_token_value = current_token.value;
+		consume_token();
+		auto rhs = parse_equality_expression();
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+	}
+
+	return lhs;
+}
+
+ASTExprNode* Parser::parse_equality_expression() {
+	ASTExprNode* lhs = parse_relational_expression();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+
+	while (next_token.type == TOK_EQUALITY_OP) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
@@ -768,11 +832,43 @@ ASTExprNode* Parser::parse_logical_and_expression() {
 }
 
 ASTExprNode* Parser::parse_relational_expression() {
-	ASTExprNode* lhs = parse_simple_expression();
+	ASTExprNode* lhs = parse_spaceship_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
 	while (next_token.type == TOK_RELATIONAL_OP) {
+		consume_token();
+		std::string current_token_value = current_token.value;
+		consume_token();
+		auto rhs = parse_spaceship_expression();
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+	}
+
+	return lhs;
+}
+
+ASTExprNode* Parser::parse_spaceship_expression() {
+	ASTExprNode* lhs = parse_bitwise_shift_expression();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+
+	while (next_token.type == TOK_THREE_WAY_OP) {
+		consume_token();
+		std::string current_token_value = current_token.value;
+		consume_token();
+		auto rhs = parse_bitwise_shift_expression();
+		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+	}
+
+	return lhs;
+}
+
+ASTExprNode* Parser::parse_bitwise_shift_expression() {
+	ASTExprNode* lhs = parse_simple_expression();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+
+	while (next_token.type == TOK_BITWISE_SHIFT) {
 		consume_token();
 		std::string current_token_value = current_token.value;
 		consume_token();
@@ -891,7 +987,7 @@ ASTExprNode* Parser::parse_identifier_expression() {
 	case TOK_LEFT_CURLY:
 		return parse_struct_constructor_node(identifier);
 
-	case TOK_ADDITIVE_UN_OP: {
+	case TOK_INCREMENT_OP: {
 		consume_token();
 		std::string op = current_token.value;
 		return new ASTUnaryExprNode(op, identifier, identifier->row, identifier->col);
@@ -913,7 +1009,7 @@ ASTNode* Parser::parse_identifier_statement() {
 		check_consume_semicolon();
 		return expr;
 	}
-	case TOK_ADDITIVE_UN_OP:
+	case TOK_INCREMENT_OP:
 		return parse_increment_expression(identifier);
 
 	case TOK_ADDITIVE_OP:

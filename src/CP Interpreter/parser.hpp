@@ -71,7 +71,13 @@ namespace parser {
 		ASTExprNode* parse_in_expression();
 		ASTExprNode* parse_logical_or_expression();
 		ASTExprNode* parse_logical_and_expression();
+		ASTExprNode* parse_bitwise_or_expression(); 
+		ASTExprNode* parse_bitwise_xor_expression();
+		ASTExprNode* parse_bitwise_and_expression();
+		ASTExprNode* parse_equality_expression();
 		ASTExprNode* parse_relational_expression();
+		ASTExprNode* parse_spaceship_expression();
+		ASTExprNode* parse_bitwise_shift_expression();
 		ASTExprNode* parse_simple_expression();
 		ASTExprNode* parse_term();
 		ASTExprNode* parse_factor();
