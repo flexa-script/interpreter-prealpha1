@@ -73,7 +73,7 @@ ASTNode* Parser::parse_program_statement() {
 	case TOK_AS:
 		return parse_as_namespace_statement();
 	case TOK_DEF:
-		return parse_function_definition();
+		return parse_function_statement();
 	default:
 		consume_semicolon = true;
 		parse_block_statement();
@@ -599,8 +599,20 @@ ASTDoWhileNode* Parser::parse_do_while_statement() {
 	return new ASTDoWhileNode(condition, block, row, col);
 }
 
-ASTFunctionDefinitionNode* Parser::parse_function_definition() {
-	std::string identifier;
+ASTFunctionExpression* Parser::parse_function_expression() {
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+	return new ASTFunctionExpression(parse_function_definition(""), row, col);
+}
+
+ASTFunctionDefinitionNode* Parser::parse_function_statement() {
+	consume_token(TOK_IDENTIFIER);
+	consume_token(TOK_LEFT_BRACKET);
+	std::string identifier = current_token.value;
+	return parse_function_definition(identifier);
+}
+
+ASTFunctionDefinitionNode* Parser::parse_function_definition(const std::string& identifier) {
 	std::vector<VariableDefinition> parameters;
 	Type type;
 	Type array_type = parser::Type::T_UNDEFINED;
@@ -610,10 +622,6 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition() {
 	auto dim_vector = std::vector<ASTExprNode*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
-
-	consume_token(TOK_IDENTIFIER);
-	identifier = current_token.value;
-	consume_token(TOK_LEFT_BRACKET);
 
 	if (next_token.type != TOK_RIGHT_BRACKET) {
 		do {
@@ -945,7 +953,6 @@ ASTExprNode* Parser::parse_factor() {
 	case TOK_STRING_LITERAL:
 		return new ASTLiteralNode<cp_string>(parse_string_literal(), row, col);
 
-		// array constructor
 	case TOK_LEFT_CURLY:
 		return parse_array_constructor_node();
 
@@ -957,7 +964,6 @@ ASTExprNode* Parser::parse_factor() {
 	case TOK_STRING_TYPE:
 		return parse_type_parse_node();
 
-		// TODO: change for literal void
 	case TOK_NULL:
 		return new ASTNullNode(row, col);
 
@@ -973,6 +979,7 @@ ASTExprNode* Parser::parse_factor() {
 
 		// subexpression case
 	case TOK_LEFT_BRACKET: {
+		return parse_function_expression();
 		consume_token();
 		ASTExprNode* sub_expr = parse_expression();
 		consume_token(TOK_RIGHT_BRACKET);

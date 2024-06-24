@@ -408,6 +408,16 @@ namespace parser {
 		virtual long long hash(visitor::Visitor*) override;
 	};
 
+	class ASTFunctionExpression : public ASTExprNode, public TypeDefinition {
+	public:
+		ASTFunctionDefinitionNode* fun;
+
+		ASTFunctionExpression(ASTFunctionDefinitionNode* fun, unsigned int row, unsigned int col);
+
+		void accept(visitor::Visitor*) override;
+		virtual long long hash(visitor::Visitor*) override;
+	};
+
 	class ASTArrayConstructorNode : public ASTExprNode {
 	public:
 		std::vector<ASTExprNode*> values;

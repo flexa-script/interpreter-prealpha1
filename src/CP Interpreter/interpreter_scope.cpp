@@ -112,6 +112,13 @@ Value* InterpreterScope::declare_variable(std::string identifier, cp_struct* str
 	return value;
 }
 
+Value* InterpreterScope::declare_variable(std::string identifier, cp_function fun) {
+	Value* value = new Value(parser::Type::T_FUNCTION);
+	value->set(fun);
+	variable_symbol_table[identifier] = value;
+	return value;
+}
+
 Value* InterpreterScope::declare_value(std::string identifier, Value* value) {
 	variable_symbol_table[identifier] = value;
 	return value;

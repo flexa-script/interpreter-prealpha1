@@ -56,6 +56,7 @@ namespace parser {
 	class ASTFunctionDefinitionNode;
 	class ASTStructDefinitionNode;
 	template <typename T> class ASTLiteralNode;
+	class ASTFunctionExpression;
 	class ASTExprNode;
 	class ASTArrayConstructorNode;
 	class ASTStructConstructorNode;
@@ -180,6 +181,7 @@ namespace visitor {
 		virtual void visit(parser::ASTLiteralNode<cp_float>*) = 0;
 		virtual void visit(parser::ASTLiteralNode<cp_char>*) = 0;
 		virtual void visit(parser::ASTLiteralNode<cp_string>*) = 0;
+		virtual void visit(parser::ASTFunctionExpression*) = 0;
 		virtual void visit(parser::ASTArrayConstructorNode*) = 0;
 		virtual void visit(parser::ASTStructConstructorNode*) = 0;
 		virtual void visit(parser::ASTBinaryExprNode*) = 0;

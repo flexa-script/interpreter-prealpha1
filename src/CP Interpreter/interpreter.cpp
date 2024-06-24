@@ -103,7 +103,9 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	const auto& nmspace = get_namespace();
 
 	if (astnode->expr) {
+		identifier_call_name = astnode->identifier;
 		astnode->expr->accept(this);
+		identifier_call_name = "";
 	}
 
 	if (astnode->expr && current_expression_value.has_value()) {
@@ -147,6 +149,9 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		case Type::T_STRUCT:
 			scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.str);
 			break;
+		case Type::T_FUNCTION:
+			scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.fun);
+			break;
 		}
 	}
 	else {
@@ -179,7 +184,9 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	Value* root = astscope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	Value* value = access_value(astscope, root, astnode->identifier_vector);
 
+	identifier_call_name = astnode->identifier_vector[0].identifier;
 	astnode->expr->accept(this);
+	identifier_call_name = "";
 
 	if (is_undefined(value->curr_type)) {
 		value->set_curr_type(is_any(value->type) ? current_expression_value.curr_type : value->type);
@@ -233,6 +240,10 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 			break;
 		case Type::T_STRUCT:
 			value->set(current_expression_value.str);
+			break;
+		case Type::T_FUNCTION:
+			value->set(current_expression_value.fun);
+			break;
 		}
 	}
 	else {
@@ -1065,6 +1076,17 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 		params.push_back(param);
 	}
 	scopes[get_namespace()].back()->declare_function(astnode->identifier, params, astnode->block);
+}
+
+void Interpreter::visit(ASTFunctionExpression* astnode) {
+	const auto& nmspace = get_namespace();
+
+	astnode->fun->identifier = identifier_call_name;
+	astnode->fun->accept(this);
+
+	auto value = Value(Type::T_FUNCTION);
+	value.set(cp_function(scopes[nmspace].back(), astnode->fun->identifier));
+	current_expression_value = value;
 }
 
 void Interpreter::visit(ASTBlockNode* astnode) {

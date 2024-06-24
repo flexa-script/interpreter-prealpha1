@@ -28,6 +28,7 @@ namespace visitor {
 	private:
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
 		std::vector<std::string> parsed_libs;
+		std::string identifier_call_name;
 		std::string function_call_name;
 		interpreter_parameter_list_t function_call_parameters;
 		std::stack<std::string> current_function_nmspace;
@@ -123,6 +124,7 @@ namespace visitor {
 		void visit(parser::ASTLiteralNode<cp_float>*) override;
 		void visit(parser::ASTLiteralNode<cp_char>*) override;
 		void visit(parser::ASTLiteralNode<cp_string>*) override;
+		void visit(parser::ASTFunctionExpression*) override;
 		void visit(parser::ASTArrayConstructorNode*) override;
 		void visit(parser::ASTStructConstructorNode*) override;
 		void visit(parser::ASTBinaryExprNode*) override;

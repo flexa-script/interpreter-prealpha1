@@ -94,7 +94,7 @@ void LibFinder::visit(ASTIdentifierNode*) {}
 void LibFinder::visit(ASTInNode*) {}
 
 void LibFinder::visit(ASTStructDefinitionNode*) {}
-
+void LibFinder::visit(parser::ASTFunctionExpression*) {}
 void LibFinder::visit(ASTArrayConstructorNode*) {}
 void LibFinder::visit(ASTStructConstructorNode*) {}
 

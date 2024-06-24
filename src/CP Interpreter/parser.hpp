@@ -61,7 +61,9 @@ namespace parser {
 		ASTForEachNode* parse_foreach_statement();
 		ASTWhileNode* parse_while_statement();
 		ASTDoWhileNode* parse_do_while_statement();
-		ASTFunctionDefinitionNode* parse_function_definition();
+		ASTFunctionExpression* parse_function_expression();
+		ASTFunctionDefinitionNode* parse_function_statement();
+		ASTFunctionDefinitionNode* parse_function_definition(const std::string& identifier);
 		ASTStructDefinitionNode* parse_struct_definition();
 
 		// expression nodes

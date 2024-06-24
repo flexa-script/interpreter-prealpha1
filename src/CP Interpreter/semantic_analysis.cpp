@@ -621,6 +621,19 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 	}
 }
 
+void SemanticAnalyser::visit(ASTFunctionExpression* astnode) {
+	const auto& nmspace = get_namespace();
+
+	astnode->fun->identifier = identifier_call_name;
+	astnode->fun->accept(this);
+
+	current_expression = SemanticValue();
+	current_expression.type = Type::T_FUNCTION;
+	current_expression.dim = astnode->fun->dim;
+	current_expression.row = astnode->fun->row;
+	current_expression.col = astnode->fun->col;
+}
+
 void SemanticAnalyser::visit(ASTBlockNode* astnode) {
 	const auto& nmspace = get_namespace();
 

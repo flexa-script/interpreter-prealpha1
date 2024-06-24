@@ -16,6 +16,7 @@ namespace visitor {
 	class SemanticAnalyser : Visitor {
 	private:
 		std::map<std::string, std::vector<SemanticScope*>> scopes;
+		std::string identifier_call_name;
 		std::vector<std::string> nmspaces;
 		std::vector<std::string> parsed_libs;
 		std::string current_namespace;
@@ -87,6 +88,7 @@ namespace visitor {
 		void visit(parser::ASTLiteralNode<cp_float>*) override;
 		void visit(parser::ASTLiteralNode<cp_char>*) override;
 		void visit(parser::ASTLiteralNode<cp_string>*) override;
+		void visit(parser::ASTFunctionExpression*) override;
 		void visit(parser::ASTArrayConstructorNode*) override;
 		void visit(parser::ASTStructConstructorNode*) override;
 		void visit(parser::ASTBinaryExprNode*) override;

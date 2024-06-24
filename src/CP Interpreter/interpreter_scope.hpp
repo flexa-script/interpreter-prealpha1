@@ -47,6 +47,7 @@ namespace visitor {
 		Value* declare_variable(std::string, cp_string);
 		Value* declare_variable(std::string, cp_array, parser::Type arr_type);
 		Value* declare_variable(std::string, cp_struct*);
+		Value* declare_variable(std::string, cp_function);
 		Value* declare_value(std::string, Value*);
 
 		void declare_function(std::string identifier, interpreter_parameter_list_t variables, parser::ASTBlockNode* block);
