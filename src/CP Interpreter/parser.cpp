@@ -602,13 +602,14 @@ ASTDoWhileNode* Parser::parse_do_while_statement() {
 ASTFunctionExpression* Parser::parse_function_expression() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
+	consume_token();
 	return new ASTFunctionExpression(parse_function_definition(""), row, col);
 }
 
 ASTFunctionDefinitionNode* Parser::parse_function_statement() {
 	consume_token(TOK_IDENTIFIER);
-	consume_token(TOK_LEFT_BRACKET);
 	std::string identifier = current_token.value;
+	consume_token(TOK_LEFT_BRACKET);
 	return parse_function_definition(identifier);
 }
 
@@ -977,9 +978,11 @@ ASTExprNode* Parser::parse_factor() {
 	case TOK_IDENTIFIER:
 		return parse_identifier_expression();
 
+	case TOK_DEF:
+		return parse_function_expression();
+
 		// subexpression case
 	case TOK_LEFT_BRACKET: {
-		return parse_function_expression();
 		consume_token();
 		ASTExprNode* sub_expr = parse_expression();
 		consume_token(TOK_RIGHT_BRACKET);

@@ -112,7 +112,9 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	}
 
 	if (astnode->expr) {
+		identifier_call_name = astnode->identifier;
 		astnode->expr->accept(this);
+		identifier_call_name = "";
 	}
 	else {
 		current_expression = SemanticValue(Type::T_UNDEFINED, astnode->row, astnode->col);
@@ -297,7 +299,9 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		throw std::runtime_error("'" + identifier + "' constant being reassigned");
 	}
 
+	identifier_call_name = astnode->identifier_vector[0].identifier;
 	astnode->expr->accept(this);
+	identifier_call_name = "";
 	auto assignment_expr = current_expression;
 
 	if (astnode->op == "+=") {

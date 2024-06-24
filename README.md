@@ -32,7 +32,7 @@
     - [X] Add callback as type function
     - [X] Add rest parameters, like `def foo(...args: any)`
     - [X] Add optional parameters `def foo(arg: any = 10)`
-    - [ ] Add arrow function `(arg): void {}`, `(arg) {}`, `() {}`
+    - [X] Add arrow function `def (arg): void {}`, `def (arg) {}`, `def () {}`
 - [X] Add built in funcs:
     - [X] print:
         - [X] Improve to accept multiple values
