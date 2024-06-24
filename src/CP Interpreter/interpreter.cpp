@@ -1256,7 +1256,9 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 		}
 	}
 
-	str_type = current_expression_nmspace + "::" + str_type;
+	if (!current_expression_nmspace.empty()) {
+		str_type = current_expression_nmspace + "::" + str_type;
+	}
 
 	if (astnode->image == "typeid") {
 		auto value = Value(Type::T_INT);

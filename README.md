@@ -91,7 +91,7 @@
             - [ ] oct
             - [ ] dec
             - [ ] hex
-            - [ ] 10e1 notation
+            - [ ] scientific notation `10e-1`, `10e0`, `10e1`
 - [X] Let functions return array
 - [X] Add namespace scope nmspace::(method|variable|struct)
 - [X] Guanrantee that a lib is loaded once

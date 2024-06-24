@@ -1182,12 +1182,18 @@ void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
 	else {
 		switch (current_expression.type) {
 		case Type::T_INT:
-		case Type::T_FLOAT:
 			if (astnode->unary_op != "+" && astnode->unary_op != "-"
 				&& astnode->unary_op != "--" && astnode->unary_op != "++"
 				&& astnode->unary_op != "~") {
 				set_curr_pos(astnode->row, astnode->col);
-				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of numerical expression");
+				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of int expression");
+			}
+			break;
+		case Type::T_FLOAT:
+			if (astnode->unary_op != "+" && astnode->unary_op != "-"
+				&& astnode->unary_op != "--" && astnode->unary_op != "++") {
+				set_curr_pos(astnode->row, astnode->col);
+				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of float expression");
 			}
 			break;
 		case Type::T_BOOL:
