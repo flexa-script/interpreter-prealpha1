@@ -13,16 +13,15 @@ struct Foo {
 };
 
 var f = Foo{name="Carlos",age=29,bar=Bar{x=10,j=false}};
-// var f = Foo{name="Carlos", age = 29, bar = null};
 
 def print_str(f){
 	foreach (var it in f) {
 		if(typeof(it.value)=="Bar"){
 			print_str(it.value);
 		}
-		//else{
-			//print("key: ", it.key, "\nvalue: ", it.value, "\ntype: ", typeof(it), '\n');
-		//}
+		else{
+			print("key: ", it.key, "\nvalue: ", it.value, "\ntype: ", typeof(it), '\n');
+		}
 	}
 }
 

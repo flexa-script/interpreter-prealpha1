@@ -1088,7 +1088,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	auto sub_val = access_value(id_scope, root, astnode->identifier_vector);
 	current_expression_value = *sub_val;
 	current_expression_value.def_ref();
-	current_param_ref = is_struct(root->curr_type) || !sub_val || sub_val == root ? root : nullptr;
+	current_param_ref = sub_val;
 
 	if (current_expression_value.curr_type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
 		has_string_access = false;
