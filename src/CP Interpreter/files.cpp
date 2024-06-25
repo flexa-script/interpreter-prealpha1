@@ -16,8 +16,8 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 	interpreter->builtin_functions["open"] = [this, interpreter]() {
 		// initialize file struct values
 		Value* cpfile = interpreter->builtin_arguments[0];
-		cpfile->str->second["path"] = new Value(interpreter->builtin_arguments[1]);
-		cpfile->str->second["mode"] = new Value(interpreter->builtin_arguments[2]);
+		std::get<2>(*cpfile->str)["path"] = new Value(interpreter->builtin_arguments[1]);
+		std::get<2>(*cpfile->str)["mode"] = new Value(interpreter->builtin_arguments[2]);
 
 		int parmode = interpreter->builtin_arguments[2]->i;
 		int mode = 0;
@@ -57,8 +57,8 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 		if (rval.b) {
 			// create a new file
 			files.push_back(fs);
-			cpfile->str->second[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
-			cpfile->str->second[INSTANCE_ID_NAME]->i = files.size() - 1;
+			std::get<2>(*cpfile->str)[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
+			std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i = files.size() - 1;
 		}
 		interpreter->current_expression_value = rval;
 	};
@@ -68,7 +68,7 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 		if (!parser::is_void(cpfile->curr_type)) {
 			auto rval = Value(parser::Type::T_STRING);
 			
-			std::fstream* fs = files[cpfile->str->second[INSTANCE_ID_NAME]->i];
+			std::fstream* fs = files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i];
 
 			fs->seekg(0);
 
@@ -88,7 +88,7 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 		if (!parser::is_void(cpfile->curr_type)) {
 			auto rval = Value(parser::Type::T_STRING);
 
-			std::fstream* fs = files[cpfile->str->second[INSTANCE_ID_NAME]->i];
+			std::fstream* fs = files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i];
 
 			std::string line;
 			std::getline(*fs, line);
@@ -104,7 +104,7 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 			auto rval = Value(parser::Type::T_ARRAY);
 			rval.set_arr_type(parser::Type::T_CHAR);
 
-			std::fstream* fs = files[cpfile->str->second[INSTANCE_ID_NAME]->i];
+			std::fstream* fs = files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i];
 
 			fs->seekg(0);
 
@@ -137,7 +137,7 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 	interpreter->builtin_functions["write"] = [this, interpreter]() {
 		Value* cpfile = interpreter->builtin_arguments[0];
 		if (!parser::is_void(cpfile->curr_type)) {
-			std::fstream* fs = files[cpfile->str->second[INSTANCE_ID_NAME]->i];
+			std::fstream* fs = files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i];
 			*fs << interpreter->builtin_arguments[1]->s;
 		}
 	};
@@ -145,7 +145,7 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 	interpreter->builtin_functions["write_bytes"] = [this, interpreter]() {
 		Value* cpfile = interpreter->builtin_arguments[0];
 		if (!parser::is_void(cpfile->curr_type)) {
-			std::fstream* fs = files[cpfile->str->second[INSTANCE_ID_NAME]->i];
+			std::fstream* fs = files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i];
 
 			auto arr = interpreter->builtin_arguments[1]->arr;
 
@@ -165,7 +165,7 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 		Value* cpfile = interpreter->builtin_arguments[0];
 		if (!parser::is_void(cpfile->curr_type)) {
 			auto rval = Value(parser::Type::T_BOOL);
-			rval.b = files[cpfile->str->second[INSTANCE_ID_NAME]->i]->is_open();
+			rval.b = files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i]->is_open();
 			interpreter->current_expression_value = rval;
 		}
 	};
@@ -173,10 +173,10 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 	interpreter->builtin_functions["close"] = [this, interpreter]() {
 		Value* cpfile = interpreter->builtin_arguments[0];
 		if (!parser::is_void(cpfile->curr_type)) {
-			if (files[cpfile->str->second[INSTANCE_ID_NAME]->i]) {
-				files[cpfile->str->second[INSTANCE_ID_NAME]->i]->close();
-				files[cpfile->str->second[INSTANCE_ID_NAME]->i]->~basic_fstream();
-				files[cpfile->str->second[INSTANCE_ID_NAME]->i] = nullptr;
+			if (files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i]) {
+				files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i]->close();
+				files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i]->~basic_fstream();
+				files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i] = nullptr;
 				cpfile->set_null();
 			}
 		}

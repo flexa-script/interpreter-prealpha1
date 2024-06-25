@@ -79,7 +79,7 @@ typedef char cp_char;
 typedef std::string cp_string;
 typedef std::vector<Value*> cp_array;
 typedef std::map<std::string, Value*> cp_struct_values;
-typedef std::pair<std::string, cp_struct_values> cp_struct;
+typedef std::tuple<std::string, std::string, cp_struct_values> cp_struct;
 typedef std::pair<void*, std::string> cp_function;
 
 extern std::string default_namespace;
@@ -89,6 +89,14 @@ extern std::vector<std::string> built_in_libs;
 class Value {
 public:
 	Value();
+	Value(cp_bool);
+	Value(cp_int);
+	Value(cp_float);
+	Value(cp_char);
+	Value(cp_string);
+	Value(cp_array);
+	Value(cp_struct*);
+	Value(cp_function);
 	Value(parser::Type type);
 	Value(parser::Type type, parser::Type arr_type);
 	Value(Value*);
@@ -97,12 +105,12 @@ public:
 	parser::Type type;
 	parser::Type curr_type;
 	parser::Type arr_type;
-	bool ref;
+	bool ref = false;
 
-	cp_bool b;
-	cp_int i;
-	cp_float f;
-	cp_char c;
+	cp_bool b = false;
+	cp_int i = 0;
+	cp_float f = 0;
+	cp_char c = '\0';
 	cp_string s;
 	cp_array arr;
 	cp_struct* str;
@@ -116,6 +124,15 @@ public:
 	void set(cp_array);
 	void set(cp_struct*);
 	void set(cp_function);
+
+	void tset(cp_bool);
+	void tset(cp_int);
+	void tset(cp_float);
+	void tset(cp_char);
+	void tset(cp_string);
+	void tset(cp_array);
+	void tset(cp_struct*);
+	void tset(cp_function);
 
 	void set_null();
 	void set_undefined();

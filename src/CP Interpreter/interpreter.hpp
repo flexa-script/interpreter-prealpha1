@@ -34,7 +34,7 @@ namespace visitor {
 		std::stack<std::string> current_function_nmspace;
 		std::stack<std::string> current_name;
 		std::string return_from_function_name;
-		std::string current_expression_nmspace;
+		//std::string current_expression_nmspace;
 		Value* current_param_ref;
 		std::vector<Value*> last_function_arguments;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;

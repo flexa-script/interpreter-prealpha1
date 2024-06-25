@@ -59,7 +59,7 @@ Value* InterpreterScope::declare_empty_variable(std::string identifier, parser::
 
 Value* InterpreterScope::declare_empty_struct_variable(std::string identifier, std::string type_name, parser::Type empty_type) {
 	Value* value = declare_empty_variable(identifier, parser::Type::T_STRUCT, empty_type);
-	value->str->first = type_name;
+	std::get<1>(*value->str) = type_name;
 	return value;
 }
 

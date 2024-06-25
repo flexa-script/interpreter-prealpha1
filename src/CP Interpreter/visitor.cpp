@@ -92,26 +92,63 @@ std::vector<std::string> built_in_libs = {
 	"cp.core.graphics",
 	"cp.core.files",
 	"cp.core.exception",
+	"cp.core.pair",
 	"cp.core.console"
 };
 
 Value::Value()
-	: b(0), i(0), f(0), c(0), s(""),
-	str(new cp_struct()), arr(cp_array()), fun(cp_function()),
-	type(Type::T_UNDEFINED), curr_type(Type::T_UNDEFINED), arr_type(Type::T_UNDEFINED),
-	ref(false) {};
+	: type(Type::T_UNDEFINED),
+	curr_type(Type::T_UNDEFINED),
+	arr_type(Type::T_UNDEFINED) {};
+
+Value::Value(cp_bool rawv) {
+	tset(rawv);
+	def_ref();
+};
+
+Value::Value(cp_int rawv){
+	tset(rawv);
+	def_ref();
+};
+
+Value::Value(cp_float rawv) {
+	tset(rawv);
+	def_ref();
+};
+
+Value::Value(cp_char rawv) {
+	tset(rawv);
+	def_ref();
+};
+
+Value::Value(cp_string rawv) {
+	tset(rawv);
+	def_ref();
+};
+
+Value::Value(cp_array rawv) {
+	tset(rawv);
+	def_ref();
+};
+
+Value::Value(cp_struct* rawv) {
+	tset(rawv);
+	def_ref();
+};
+
+Value::Value(cp_function rawv) {
+	tset(rawv);
+	def_ref();
+};
 
 Value::Value(Type type)
-	: b(0), i(0), f(0), c(0), s(""),
-	str(new cp_struct()), arr(cp_array()), fun(cp_function()),
-	type(type), curr_type(type), arr_type(Type::T_UNDEFINED) {
+	: type(type), curr_type(type),
+	arr_type(Type::T_UNDEFINED) {
 	def_ref();
 };
 
 Value::Value(Type type, Type arr_type)
-	: b(0), i(0), f(0), c(0), s(""),
-	str(new cp_struct()), arr(cp_array()), fun(cp_function()),
-	type(type), curr_type(type), arr_type(arr_type) {
+	: type(type), curr_type(type), arr_type(arr_type) {
 	def_ref();
 };
 
@@ -161,6 +198,46 @@ void Value::set(cp_struct* str) {
 void Value::set(cp_function fun) {
 	this->fun = fun;
 	set_curr_type(Type::T_FUNCTION);
+}
+
+void Value::tset(cp_bool b) {
+	set_type(Type::T_BOOL);
+	set(b);
+}
+
+void Value::tset(cp_int i) {
+	set_type(Type::T_INT);
+	set(i);
+}
+
+void Value::tset(cp_float f) {
+	set_type(Type::T_FLOAT);
+	set(f);
+}
+
+void Value::tset(cp_char c) {
+	set_type(Type::T_CHAR);
+	set(c);
+}
+
+void Value::tset(cp_string s) {
+	set_type(Type::T_STRING);
+	set(s);
+}
+
+void Value::tset(cp_array arr) {
+	set_type(Type::T_ARRAY);
+	set(arr);
+}
+
+void Value::tset(cp_struct* str) {
+	set_type(Type::T_STRUCT);
+	set(str);
+}
+
+void Value::tset(cp_function fun) {
+	set_type(Type::T_FUNCTION);
+	set(fun);
 }
 
 void Value::def_ref() {

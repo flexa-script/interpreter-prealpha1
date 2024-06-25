@@ -17,7 +17,7 @@
 - [X] Add struct support
     - [X] Add struct array-like constructor
     - [X] Add Java class pointer-like behavior
-    - [ ] Add struct as Dict by iterating over in foreach
+    - [X] Add struct as Dict by iterating over in foreach
 - [X] Add null support
 - [X] Add type convert support
     - [X] Add array and struct support (based on print)
@@ -99,8 +99,8 @@
 - [X] Remove struct as bool in expression and change this type of verification to void value comparation (eg: var == null)
 - [X] Move function body parser to caller node (as interpreter), to check parameters of each caller
 - [ ] Improve error system (based on C++)
-- [ ] Improve REPL:
-    - [ ] Now expressions can be executed in statements, dont need more to execute expression parser directly
+- [X] Improve REPL:
+    - [X] Now expressions can be executed in statements, dont need more to execute expression parser directly
 - [X] Add a default interface to implements built in functions
 - [X] Add a default interface to implements core libs
 - [ ] General otimizations:
@@ -174,6 +174,7 @@
 - [X] Parser can't handle unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))
 - [X] This does not always return the expected value, eg when its inside a function tha does not has in main file
 - [ ] If an statement is before include, it generate a semantic error
+- [ ] Assigning struct values on constructors is not checking types correctly
 
 ## Errors
 - Errors has CP prefix, eg. CP9999

@@ -180,6 +180,14 @@ void SemanticScope::change_variable_type_name(const std::string& identifier, con
 	variable_symbol_table[identifier]->value->type_name = type_name;
 }
 
-void SemanticScope::change_current_variable_type(const std::string& identifier, Type type) {
+void SemanticScope::change_variable_type(const std::string& identifier, Type type) {
+	variable_symbol_table[identifier]->value->type = type;
+}
+
+void SemanticScope::change_variable_value_type_name(const std::string& identifier, const std::string& type_name) {
+	variable_symbol_table[identifier]->value->type_name = type_name;
+}
+
+void SemanticScope::change_variable_value_type(const std::string& identifier, Type type) {
 	variable_symbol_table[identifier]->value->type = type;
 }

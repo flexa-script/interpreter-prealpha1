@@ -117,7 +117,7 @@ namespace axe {
 
 		std::filesystem::path path(this_process_path);
 
-		return path.remove_filename().generic_string();
+		return normalize_path_sep(path.remove_filename().generic_string());
 	}
 
 	std::string PathUtils::normalize_path_sep(const std::string& path) {

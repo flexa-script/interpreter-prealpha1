@@ -46,8 +46,10 @@ namespace visitor {
 		void declare_struct_function(const std::string& identifier, parser::Type type, const std::string& type_name, const std::string& type_name_space,
 			const std::vector<parser::TypeDefinition>& signature, const std::vector<parser::VariableDefinition>& parameters, unsigned int row = 0, unsigned int col = 0);
 
-		void change_current_variable_type(const std::string& identifier, parser::Type type);
+		void change_variable_type(const std::string& identifier, parser::Type type);
 		void change_variable_type_name(const std::string& identifier, const std::string& type_name);
+		void change_variable_value_type(const std::string& identifier, parser::Type type);
+		void change_variable_value_type_name(const std::string& identifier, const std::string& type_name);
 
 		parser::StructureDefinition find_declared_structure_definition(const std::string& identifier);
 		parser::FunctionDefinition find_declared_function(const std::string& identifier, const std::vector<parser::TypeDefinition>& signature);

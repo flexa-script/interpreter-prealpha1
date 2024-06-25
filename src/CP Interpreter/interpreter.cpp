@@ -412,39 +412,124 @@ void Interpreter::visit(ASTForNode* astnode) {
 	is_loop = false;
 }
 
+void foreacher() {
+
+}
+
 void Interpreter::visit(ASTForEachNode* astnode) {
 	const auto& nmspace = get_namespace();
 	is_loop = true;
 
 	astnode->collection->accept(this);
-	auto colletion = current_expression_value.arr;
 
-	for (auto val : colletion) {
-		scopes[nmspace].push_back(new InterpreterScope(""));
+	switch (current_expression_value.curr_type) {
+	case Type::T_ARRAY: {
+		auto colletion = current_expression_value.arr;
+		for (auto val : colletion) {
+			scopes[nmspace].push_back(new InterpreterScope(""));
 
-		astnode->itdecl->accept(this);
+			astnode->itdecl->accept(this);
 
-		auto itdecl = static_cast<ASTDeclarationNode*>(astnode->itdecl);
+			auto itdecl = static_cast<ASTDeclarationNode*>(astnode->itdecl);
 
-		set_value(scopes[nmspace].back(), std::vector<Identifier>{Identifier(itdecl->identifier)}, val);
+			set_value(scopes[nmspace].back(), std::vector<Identifier>{Identifier(itdecl->identifier)}, val);
 
-		astnode->block->accept(this);
+			astnode->block->accept(this);
 
-		scopes[nmspace].pop_back();
+			scopes[nmspace].pop_back();
 
-		if (exit_from_program) {
-			return;
+			if (exit_from_program) {
+				return;
+			}
+
+			if (continue_block) {
+				continue_block = false;
+				continue;
+			}
+
+			if (break_block) {
+				break_block = false;
+				break;
+			}
 		}
+		break;
+	}
+	case Type::T_STRING: {
+		auto colletion = current_expression_value.s;
+		for (auto val : colletion) {
+			scopes[nmspace].push_back(new InterpreterScope(""));
 
-		if (continue_block) {
-			continue_block = false;
-			continue;
-		}
+			astnode->itdecl->accept(this);
 
-		if (break_block) {
-			break_block = false;
-			break;
+			auto itdecl = static_cast<ASTDeclarationNode*>(astnode->itdecl);
+
+			set_value(
+				scopes[nmspace].back(),
+				std::vector<Identifier>{Identifier(itdecl->identifier)},
+				new Value(cp_char(val)));
+
+			astnode->block->accept(this);
+
+			scopes[nmspace].pop_back();
+
+			if (exit_from_program) {
+				return;
+			}
+
+			if (continue_block) {
+				continue_block = false;
+				continue;
+			}
+
+			if (break_block) {
+				break_block = false;
+				break;
+			}
 		}
+		break;
+	}
+	case Type::T_STRUCT: {
+		auto colletion = std::get<2>(*current_expression_value.str);
+		for (const auto& val : colletion) {
+			scopes[nmspace].push_back(new InterpreterScope(""));
+
+			astnode->itdecl->accept(this);
+
+			auto itdecl = static_cast<ASTDeclarationNode*>(astnode->itdecl);
+
+			auto str = new cp_struct();
+			std::get<0>(*str) = "cp";
+			std::get<1>(*str) = "Pair";
+			std::get<2>(*str)["key"] = new Value(cp_string(val.first));
+			std::get<2>(*str)["value"] = val.second;
+
+			set_value(
+				scopes[nmspace].back(),
+				std::vector<Identifier>{Identifier(itdecl->identifier)},
+				new Value(new Value(str)));
+
+			astnode->block->accept(this);
+
+			scopes[nmspace].pop_back();
+
+			if (exit_from_program) {
+				return;
+			}
+
+			if (continue_block) {
+				continue_block = false;
+				continue;
+			}
+
+			if (break_block) {
+				break_block = false;
+				break;
+			}
+		}
+		break;
+	}
+	default:
+		throw std::exception("invalid foreach iterable type");
 	}
 
 	is_loop = false;
@@ -466,9 +551,9 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 		if (auto itdecl = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
 			Value* value = new Value(Type::T_STRUCT);
 			value->str = new cp_struct();
-			value->str->first = "Exception";
-			value->str->second["error"] = new Value(Type::T_STRING);
-			value->str->second["error"]->s = ex.what();
+			std::get<0>(*value->str) = "cp";
+			std::get<1>(*value->str) = "Exception";
+			std::get<2>(*value->str)["error"] = new Value(cp_string(ex.what()));
 
 			set_value(scopes[nmspace].back(), std::vector<Identifier>{Identifier(itdecl->identifier)}, value);
 		}
@@ -480,7 +565,7 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 
 void Interpreter::visit(parser::ASTThrowNode* astnode) {
 	astnode->accept(this);
-	throw std::exception(current_expression_value.str->second["error"]->s.c_str());
+	throw std::exception(std::get<2>(*current_expression_value.str)["error"]->s.c_str());
 }
 
 void Interpreter::visit(parser::ASTReticencesNode* astnode) {
@@ -605,18 +690,18 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 	auto value = Value(Type::T_STRUCT);
 
 	auto str = new cp_struct();
-	str->first = astnode->type_name;
-	str->second = cp_struct_values();
+	std::get<0>(*str) = astnode->nmspace;
+	std::get<1>(*str) = astnode->type_name;
+	std::get<2>(*str) = cp_struct_values();
 
 	for (auto& expr : astnode->values) {
 		expr.second->accept(this);
 		auto str_alue = new Value(current_expression_value.curr_type);
 		str_alue->copy_from(&current_expression_value);
-		str->second[expr.first] = str_alue;
+		std::get<2>(*str)[expr.first] = str_alue;
 	}
 
 	declare_structure(str, astnode->nmspace);
-	current_expression_nmspace = astnode->nmspace;
 
 	value.set(str);
 	current_expression_value = value;
@@ -973,10 +1058,10 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 					throw std::runtime_error("identifier '" + identifier + "' was not declared");
 				}
 			}
-			current_expression_nmspace = nmspace;
 			type = Type::T_STRUCT;
 			auto str = new cp_struct();
-			str->first = identifier;
+			std::get<0>(*str) = nmspace;
+			std::get<1>(*str) = identifier;
 			expression_value->set(str);
 		}
 
@@ -1004,10 +1089,6 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	current_expression_value = *sub_val;
 	current_expression_value.def_ref();
 	current_param_ref = is_struct(root->curr_type) || !sub_val || sub_val == root ? root : nullptr;
-
-	if (is_struct(current_expression_value.curr_type)) {
-		current_expression_nmspace = nmspace;
-	}
 
 	if (current_expression_value.curr_type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
 		has_string_access = false;
@@ -1243,8 +1324,6 @@ void Interpreter::visit(ASTThisNode* astnode) {
 }
 
 void Interpreter::visit(ASTTypingNode* astnode) {
-	current_expression_nmspace = "";
-
 	astnode->expr->accept(this);
 
 	auto curr_value = current_expression_value;
@@ -1259,16 +1338,16 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 
 	str_type = type_str(type);
 
-	if (type == Type::T_STRUCT) {
+	if (is_struct(type)) {
 		if (dim.size() > 0) {
 			auto arr = curr_value.arr[0];
 			for (size_t i = 0; i < dim.size() - 1; ++i) {
 				arr = arr->arr[0];
 			}
-			str_type = arr->str->first;
+			str_type = std::get<1>(*arr->str);
 		}
 		else {
-			str_type = curr_value.str->first;
+			str_type = std::get<1>(*curr_value.str);
 		}
 	}
 
@@ -1278,8 +1357,8 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 		}
 	}
 
-	if (!current_expression_nmspace.empty()) {
-		str_type = current_expression_nmspace + "::" + str_type;
+	if (is_struct(type) && !std::get<0>(*curr_value.str).empty()) {
+		str_type = std::get<0>(*curr_value.str) + "::" + str_type;
 	}
 
 	if (astnode->image == "typeid") {
@@ -1321,16 +1400,17 @@ bool Interpreter::equals_value(const Value* lval, const Value* rval) {
 }
 
 bool Interpreter::equals_struct(const cp_struct* lstr, const cp_struct* rstr) {
-	if (lstr->first != rstr->first
-		|| lstr->second.size() != rstr->second.size()) {
+	if (std::get<0>(*lstr) != std::get<0>(*rstr)
+		|| std::get<1>(*lstr) != std::get<1>(*rstr)
+		|| std::get<2>(*lstr).size() != std::get<2>(*rstr).size()) {
 		return false;
 	}
 
-	for (auto& lval : lstr->second) {
-		if (rstr->second.find(lval.first) == rstr->second.end()) {
+	for (auto& lval : std::get<2>(*lstr)) {
+		if (std::get<2>(*rstr).find(lval.first) == std::get<2>(*rstr).end()) {
 			return false;
 		}
-		if (!equals_value(lval.second, rstr->second.at(lval.first))) {
+		if (!equals_value(lval.second, std::get<2>(*rstr).at(lval.first))) {
 			return false;
 		}
 	}
@@ -1483,7 +1563,7 @@ Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, co
 	++i;
 
 	if (i < identifier_vector.size()) {
-		next_value = next_value->str->second[identifier_vector[i].identifier];
+		next_value = std::get<2>(*next_value->str)[identifier_vector[i].identifier];
 
 		if (identifier_vector[i].access_vector.size() > 0 || i < identifier_vector.size()) {
 			return access_value(scope, next_value, identifier_vector, i);
@@ -1603,21 +1683,21 @@ void Interpreter::declare_structure(cp_struct* str, const std::string& nmspace) 
 	std::string actnmspace = get_namespace(nmspace);
 	InterpreterScope* curr_scope;
 	try {
-		curr_scope = get_inner_most_struct_definition_scope(get_namespace(actnmspace), str->first);
+		curr_scope = get_inner_most_struct_definition_scope(get_namespace(actnmspace), std::get<1>(*str));
 	}
 	catch (std::exception ex) {
 		throw std::runtime_error(ex.what());
 	}
-	auto struct_def = curr_scope->find_declared_structure_definition(str->first);
+	auto struct_def = curr_scope->find_declared_structure_definition(std::get<1>(*str));
 
 	for (auto& struct_var_def : struct_def.variables) {
-		if (str->second.find(struct_var_def.identifier) != str->second.end()) {
-			str->second[struct_var_def.identifier]->set_type(struct_var_def.type);
+		if (std::get<2>(*str).find(struct_var_def.identifier) != std::get<2>(*str).end()) {
+			std::get<2>(*str)[struct_var_def.identifier]->set_type(struct_var_def.type);
 		}
 		else {
 			Value* str_value = new Value(struct_var_def.type);
 			str_value->set_null();
-			str->second[struct_var_def.identifier] = str_value;
+			std::get<2>(*str)[struct_var_def.identifier] = str_value;
 		}
 	}
 }
@@ -1770,8 +1850,11 @@ std::string Interpreter::parse_array_to_string(const cp_array& arr_value) {
 
 std::string Interpreter::parse_struct_to_string(const cp_struct& str_value) {
 	std::stringstream s = std::stringstream();
-	s << str_value.first + "{";
-	for (auto const& [key, val] : str_value.second) {
+	if (!std::get<0>(str_value).empty()) {
+		s << std::get<0>(str_value) << "::";
+	}
+	s << std::get<1>(str_value) + "{";
+	for (auto const& [key, val] : std::get<2>(str_value)) {
 		if (key != modules::Module::INSTANCE_ID_NAME) {
 			s << key + ":";
 			s << parse_value_to_string(val);
