@@ -1026,8 +1026,10 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 		return;
 	}
 
-	if (op == "-" || op == "/" || op == "*" || op == "**" || op == "%" || op == "/%"
-		|| op == "<<" || op == ">>" || op == "&" || op == "^" || op == "|" || op == "<=>") {
+	if (op == "-" || op == "/" || op == "*"
+		|| op == "**" || op == "%" || op == "/%"
+		|| op == "<<" || op == ">>" || op == "&"
+		|| op == "^" || op == "|" || op == "<=>") {
 		if (!is_numeric(l_type) && !is_any(l_type)
 			|| !is_numeric(r_type) && !is_any(r_type)) {
 			set_curr_pos(astnode->row, astnode->col);
@@ -1080,7 +1082,7 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 	else if (op == "==" || op == "!=") {
 		if (match_type(l_type, r_type)
 			|| is_numeric(l_type) && is_numeric(r_type)
-			|| is_void(l_type) || !is_void(r_type)) {
+			|| is_void(l_type) || is_void(r_type)) {
 			equals_value(lexpr, rexpr);
 			current_expression.type = Type::T_BOOL;
 		}
