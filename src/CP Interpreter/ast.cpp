@@ -32,15 +32,19 @@ SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, std::ve
 	const std::string& type_name, const std::string& type_name_space, long long hash,
 	bool is_const, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space),
-	hash(hash), is_const(is_const), ref(is_struct(type) || is_struct(array_type)) {}
+	hash(hash), is_const(is_const), is_sub(false) {
+	resetref();
+}
 
 SemanticValue::SemanticValue(Type type, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
-	hash(0), is_const(false), ref(is_struct(type)) {}
+	hash(0), is_const(false), is_sub(false) {
+	resetref();
+}
 
 SemanticValue::SemanticValue()
 	: CodePosition(0, 0), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
-	hash(0), is_const(false), ref(false) {}
+	hash(0), is_const(false), ref(false), is_sub(false) {}
 
 void SemanticValue::copy_from(SemanticValue* value) {
 	type = value->type;
@@ -49,8 +53,14 @@ void SemanticValue::copy_from(SemanticValue* value) {
 	type_name = value->type_name;
 	hash = value->hash;
 	is_const = value->is_const;
+	ref = value->ref;
+	is_sub = value->is_sub;
 	row = value->row;
 	col = value->col;
+}
+
+void SemanticValue::resetref() {
+	ref = is_struct(type) || is_struct(array_type);
 }
 
 SemanticVariable::SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,

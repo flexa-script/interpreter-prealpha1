@@ -77,6 +77,22 @@ namespace parser {
 	bool is_function(Type type) {
 		return match_type(type, Type::T_FUNCTION);
 	}
+
+	bool is_text(Type type) {
+		return is_string(type) || is_char(type);
+	}
+
+	bool is_numeric(Type type) {
+		return is_int(type) || is_float(type);
+	}
+
+	bool is_collection(Type type) {
+		return is_string(type) || is_array(type);
+	}
+
+	bool is_iterable(Type type) {
+		return is_collection(type) || is_struct(type);
+	}
 }
 
 std::string default_namespace = "__main";

@@ -199,10 +199,10 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 			break;
 		case Type::T_INT:
 			if (is_int(value->curr_type)) {
-				value->set(do_operation(value->i, current_expression_value.i, astnode->op));
+				value->set(cp_float(do_operation(value->i, current_expression_value.i, astnode->op)));
 			}
 			else {
-				value->set(cp_int(do_operation(value->f, cp_float(current_expression_value.i), astnode->op)));
+				value->set(do_operation(value->f, cp_float(current_expression_value.i), astnode->op));
 			}
 			break;
 		case Type::T_FLOAT:
@@ -711,10 +711,12 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 	std::string op = astnode->op;
 
 	astnode->left->accept(this);
+	Type l_var_type = current_expression_value.type;
 	Type l_type = current_expression_value.curr_type;
 	Value l_value = current_expression_value;
 
 	astnode->right->accept(this);
+	Type r_var_type = current_expression_value.type;
 	Type r_type = current_expression_value.curr_type;
 	Value r_value = current_expression_value;
 

@@ -133,111 +133,74 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	auto astnode_array_type = is_undefined(astnode->array_type) && astnode->dim.size() > 0 ? Type::T_ANY : astnode->array_type;
 	auto astnode_type_name = astnode->type_name.empty() ? decl_current_expr->type_name : astnode->type_name;
 
-	if (is_float(astnode->type) && is_int(current_expression.type)
-		|| is_string(astnode->type) && is_char(current_expression.type)) {
+	if (is_float(astnode->type) && is_int(decl_current_expr->type)
+		|| is_string(astnode->type) && is_char(decl_current_expr->type)) {
 		current_scope->declare_variable(astnode->identifier, astnode_type, astnode_array_type,
 			astnode->dim, astnode_type_name, astnode->type_name_space, decl_current_expr, astnode->is_const, astnode->row, astnode->col);
 	}
-	else if (match_type(astnode->type, current_expression.type) // types match
-		|| is_array(current_expression.type) && match_type(astnode->type, current_expression.array_type) // array types match
-		|| is_any(astnode->type) || is_struct(astnode->type) || is_array(astnode->type) // variable special types
-		|| is_void(current_expression.type) || is_undefined(current_expression.type)) { // special expressions
+	else if (is_any(astnode->type)) {
+		current_scope->declare_variable(astnode->identifier, astnode_type, astnode_array_type,
+			astnode->dim, astnode_type_name, astnode->type_name_space, decl_current_expr, astnode->is_const, astnode->row, astnode->col);
+	}
+	else if (is_struct(astnode->type)) {
+		check_is_struct_exists(astnode->type, astnode->type_name_space, astnode->type_name);
+		check_is_struct_exists(current_expression.type, current_expression.type_name_space, current_expression.type_name);
 
-		if (is_struct(astnode->type) || is_struct(current_expression.type)) {
-
-			if (is_struct(astnode->type)) {
-				try {
-					get_inner_most_struct_definition_scope(get_namespace(astnode->type_name_space), astnode->type_name);
-				}
-				catch (...) {
-					set_curr_pos(astnode->row, astnode->col);
-					throw std::runtime_error("struct '" + astnode->type_name + "' was not defined");
-				}
-			}
-			if (is_struct(current_expression.type)) {
-				try {
-					get_inner_most_struct_definition_scope(get_namespace(current_expression.type_name_space), current_expression.type_name);
-				}
-				catch (...) {
-					set_curr_pos(astnode->row, astnode->col);
-					throw std::runtime_error("struct '" + current_expression.type_name + "' was not defined");
-				}
-			}
-
-			if (is_struct(current_expression.type) && !is_struct(astnode->type) && !is_any(astnode->type)) {
-				set_curr_pos(astnode->row, astnode->col);
-				throw std::runtime_error("cannot initialize '" + astnode->identifier +
-					"(" + type_str(astnode->type) + ")' with type '" + current_expression.type_name + "'");
-			}
-
-			if (is_struct(astnode->type) && is_struct(current_expression.type) && !is_any(current_expression.type) && astnode->type_name != current_expression.type_name) {
-				set_curr_pos(astnode->row, astnode->col);
-				throw std::runtime_error("cannot initialize '" + astnode->identifier +
-					"(" + astnode->type_name + ")' with type '" + current_expression.type_name + "'");
-			}
-
-			if (is_any(astnode->type)) {
-				decl_current_expr->type = current_expression.type;
-				decl_current_expr->type_name = current_expression.type_name;
-			}
-
-			current_scope->declare_variable(astnode->identifier, astnode_type, astnode_array_type,
-				astnode->dim, astnode_type_name, astnode->type_name_space, decl_current_expr, astnode->is_const, astnode->row, astnode->col);
-
+		if (!is_struct(current_expression.type)
+			&& !is_any(current_expression.type)
+			&& !is_void(current_expression.type)) {
+			set_curr_pos(astnode->row, astnode->col);
+			throw std::runtime_error("cannot initialize '" + astnode->identifier +
+				"(" + astnode->type_name + ")' with type '" + type_str(current_expression.type) + "'");
 		}
-		else if (is_array(astnode->type)) {
-			// testing viability to initiate arrays with non-constant values
-			//for (auto& d : astnode->dim) {
-			//	if (d) {
-			//		d->accept(this);
-			//		if (!current_expression.is_const) {
-			//			set_curr_lc(astnode->row, astnode->col);
-			//			throw std::runtime_error("array size must be a constant expression");
-			//		}
-			//	}
-			//}
 
-			if (astnode->expr) {
-				if (!is_array(decl_current_expr->type) && !is_void(decl_current_expr->type) && decl_current_expr->dim.size() == 0) {
-					set_curr_pos(astnode->row, astnode->col);
-					throw std::runtime_error("expected array expression assigning '" + astnode->identifier + "'");
-				}
+		if (is_struct(current_expression.type)
+			&& astnode->type_name != current_expression.type_name) {
+			set_curr_pos(astnode->row, astnode->col);
+			throw std::runtime_error("cannot initialize '" + astnode->identifier +
+				"(" + astnode->type_name + ")' with '" + current_expression.type_name + "' struct");
+		}
 
-				if (const auto arr = dynamic_cast<ASTArrayConstructorNode*>(astnode->expr)) {
+		current_scope->declare_variable(astnode->identifier, astnode_type, astnode_array_type,
+			astnode->dim, astnode_type_name, astnode->type_name_space, decl_current_expr, astnode->is_const, astnode->row, astnode->col);
 
-					auto expr_dim = calculate_array_dim_size(arr);
-					auto pars_dim = evaluate_access_vector(astnode->dim);
+	}
+	else if (is_array(astnode->type)) {
+		if (astnode->expr) {
+			if (!is_array(decl_current_expr->type) && !is_void(decl_current_expr->type) && decl_current_expr->dim.size() == 0) {
+				set_curr_pos(astnode->row, astnode->col);
+				throw std::runtime_error("expected array expression assigning '" + astnode->identifier + "'");
+			}
 
-					if (expr_dim.size() != 1) {
-						if (astnode->dim.size() != expr_dim.size()) {
+			if (const auto arr = dynamic_cast<ASTArrayConstructorNode*>(astnode->expr)) {
+
+				auto expr_dim = calculate_array_dim_size(arr);
+				auto pars_dim = evaluate_access_vector(astnode->dim);
+
+				if (expr_dim.size() != 1) {
+					if (astnode->dim.size() != expr_dim.size()) {
+						set_curr_pos(astnode->row, astnode->col);
+						throw std::runtime_error("invalid array dimension assigning '" + astnode->identifier + "'");
+					}
+
+					for (size_t dc = 0; dc < astnode->dim.size(); ++dc) {
+						if (astnode->dim.at(dc) && pars_dim.at(dc) != expr_dim.at(dc)) {
 							set_curr_pos(astnode->row, astnode->col);
-							throw std::runtime_error("invalid array dimension assigning '" + astnode->identifier + "'");
-						}
-
-						for (size_t dc = 0; dc < astnode->dim.size(); ++dc) {
-							if (astnode->dim.at(dc) && pars_dim.at(dc) != expr_dim.at(dc)) {
-								set_curr_pos(astnode->row, astnode->col);
-								throw std::runtime_error("invalid array size assigning '" + astnode->identifier + "'");
-							}
+							throw std::runtime_error("invalid array size assigning '" + astnode->identifier + "'");
 						}
 					}
 				}
-
 			}
-			current_scope->declare_variable(astnode->identifier, astnode_type, astnode_array_type,
-				astnode->dim, astnode_type_name, astnode->type_name_space, decl_current_expr, astnode->is_const, astnode->row, astnode->col);
+
 		}
-		else if (match_type(astnode->type, current_expression.type) || is_any(astnode->type)
-			|| is_array(current_expression.type) && match_type(astnode->type, current_expression.array_type) // array types match
-			|| is_void(current_expression.type) || is_undefined(current_expression.type)) {
-			current_scope->declare_variable(astnode->identifier, astnode_type, astnode_array_type,
-				astnode->dim, astnode_type_name, astnode->type_name_space, decl_current_expr, astnode->is_const, astnode->row, astnode->col);
-		}
-		else {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("found " + type_str(current_expression.type) + " defining '"
-				+ astnode->identifier + "', expected " + type_str(astnode->type) + "");
-		}
+		current_scope->declare_variable(astnode->identifier, astnode_type, astnode_array_type,
+			astnode->dim, astnode_type_name, astnode->type_name_space, decl_current_expr, astnode->is_const, astnode->row, astnode->col);
+	}
+	else if (match_type(astnode->type, current_expression.type)
+		|| is_array(current_expression.type) && match_type(astnode->type, current_expression.array_type) // array types match
+		|| is_void(current_expression.type) || is_undefined(current_expression.type)) {
+		current_scope->declare_variable(astnode->identifier, astnode_type, astnode_array_type,
+			astnode->dim, astnode_type_name, astnode->type_name_space, decl_current_expr, astnode->is_const, astnode->row, astnode->col);
 	}
 	else {
 		set_curr_pos(astnode->row, astnode->col);
@@ -246,18 +209,14 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTEnumNode* astnode) {
-	const auto& nmspace = get_namespace();
-	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
-		auto decl_current_expr = new SemanticValue();
-		decl_current_expr->type = Type::T_INT;
-		decl_current_expr->array_type = Type::T_UNDEFINED;
-		decl_current_expr->row = astnode->row;
-		decl_current_expr->col = astnode->col;
-		decl_current_expr->is_const = true;
-		decl_current_expr->hash = i;
-		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], Type::T_INT, Type::T_UNDEFINED,
-			std::vector<ASTExprNode*>(), "", "", decl_current_expr, true, astnode->row, astnode->col);
+void SemanticAnalyser::check_is_struct_exists(parser::Type type, const std::string& nmspace, const std::string& type_name) {
+	if (is_struct(type)) {
+		try {
+			get_inner_most_struct_definition_scope(get_namespace(nmspace), type_name);
+		}
+		catch (...) {
+			throw std::runtime_error("struct '" + type_name + "' was not defined");
+		}
 	}
 }
 
@@ -305,8 +264,9 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	auto assignment_expr = current_expression;
 
 	if (astnode->op == "+=") {
-		if (!is_int(assignment_expr.type) && !is_float(assignment_expr.type)
-			&& !is_int(decl_var_expression->type) && !is_float(decl_var_expression->type)
+		if (!is_int(assignment_expr.type) && !is_int(decl_var_expression->type)
+			&& !is_float(assignment_expr.type) && !is_float(decl_var_expression->type)
+			&& !is_any(assignment_expr.type) && !is_any(decl_var_expression->type)
 			&& !is_string(assignment_expr.type) && !is_string(decl_var_expression->type)
 			&& !is_string(decl_var_expression->type) && !is_char(assignment_expr.type)) {
 			set_curr_pos(astnode->row, astnode->col);
@@ -316,14 +276,17 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		}
 	}
 	else if (astnode->op == "-=" || astnode->op == "*=" || astnode->op == "/="
-		|| astnode->op == "**=" || astnode->op == "/%=" || astnode->op == "%="
-		|| astnode->op == "=") {
-		if (!is_int(assignment_expr.type) && !is_float(assignment_expr.type)) {
+		|| astnode->op == "**=" || astnode->op == "/%=" || astnode->op == "%=") {
+		if (!is_int(assignment_expr.type)
+			&& !is_float(assignment_expr.type)
+			&& !is_any(assignment_expr.type)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("invalid right value type '" +
 				type_str(assignment_expr.type) + "' to execute '" + astnode->op + "' operation");
 		}
-		if (!is_int(decl_var_expression->type) && !is_float(decl_var_expression->type)) {
+		if (!is_int(decl_var_expression->type)
+			&& !is_float(decl_var_expression->type)
+			&& !is_any(decl_var_expression->type)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("invalid left value type '" +
 				type_str(decl_var_expression->type) + "' to execute '" + astnode->op + "' operation");
@@ -331,12 +294,14 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	}
 	else if (astnode->op == "|=" || astnode->op == "^=" || astnode->op == "&="
 		|| astnode->op == "<<=" || astnode->op == ">>=") {
-		if (!is_int(assignment_expr.type)) {
+		if (!is_int(assignment_expr.type)
+			&& !is_any(assignment_expr.type)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("invalid right value type '" +
 				type_str(assignment_expr.type) + "' to execute '" + astnode->op + "' operation");
 		}
-		if (!is_int(decl_var_expression->type)) {
+		if (!is_int(decl_var_expression->type)
+			&& !is_any(decl_var_expression->type)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("invalid left value type '" +
 				type_str(decl_var_expression->type) + "' to execute '" + astnode->op + "' operation");
@@ -360,19 +325,10 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		}
 	}
 	else if (is_struct(declared_variable->type)) {
-
 		auto str_curr_var_type = decl_var_expression->type;
 		auto str_curr_var_type_name = decl_var_expression->type_name;
 
-		if (is_struct(str_curr_var_type)) {
-			try {
-				get_inner_most_struct_definition_scope(get_namespace(decl_var_expression->type_name_space), str_curr_var_type_name);
-			}
-			catch (...) {
-				set_curr_pos(astnode->row, astnode->col);
-				throw std::runtime_error("struct '" + str_curr_var_type_name + "' already defined");
-			}
-		}
+		check_is_struct_exists(str_curr_var_type, decl_var_expression->type_name_space, str_curr_var_type_name);
 
 		if (astnode->identifier_vector.size() > 1) {
 			auto sub_var = access_struct_variable(astnode->identifier_vector, decl_var_expression->type_name, decl_var_expression->type_name_space, 1);
@@ -459,7 +415,20 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		throw std::runtime_error("mismatched type for '" + astnode->identifier_vector[0].identifier +
 			"', expected " + type_str(declared_variable->type) + ", found " + type_str(assignment_expr.type) + "");
 	}
+}
 
+void SemanticAnalyser::visit(ASTEnumNode* astnode) {
+	const auto& nmspace = get_namespace();
+	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
+		auto decl_current_expr = new SemanticValue();
+		decl_current_expr->type = Type::T_INT;
+		decl_current_expr->row = astnode->row;
+		decl_current_expr->col = astnode->col;
+		decl_current_expr->is_const = true;
+		decl_current_expr->hash = i;
+		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], Type::T_INT, Type::T_UNDEFINED,
+			std::vector<ASTExprNode*>(), "", "", decl_current_expr, true, astnode->row, astnode->col);
+	}
 }
 
 void SemanticAnalyser::visit(ASTReturnNode* astnode) {
@@ -800,7 +769,7 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 		&& !is_struct(current_expression.type)
 		&& !is_any(current_expression.type)) {
 		set_curr_pos(astnode->row, astnode->col);
-		throw std::runtime_error("expected iterable (array|string|struct) in foreach");
+		throw std::runtime_error("expected iterable in foreach");
 	}
 
 	if (!match_type(decl_type, col_type) && !is_any(decl_type)) {
@@ -858,10 +827,6 @@ void SemanticAnalyser::visit(parser::ASTThrowNode* astnode) {
 
 void SemanticAnalyser::visit(ASTReticencesNode* astnode) {
 	current_expression = SemanticValue();
-	current_expression.type = Type::T_UNDEFINED;
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEFINED;
-	current_expression.is_const = true;
 }
 
 void SemanticAnalyser::visit(ASTWhileNode* astnode) {
@@ -951,40 +916,30 @@ void SemanticAnalyser::visit(ASTStructDefinitionNode* astnode) {
 void SemanticAnalyser::visit(ASTLiteralNode<cp_bool>*) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_BOOL;
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = true;
 }
 
 void SemanticAnalyser::visit(ASTLiteralNode<cp_int>*) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_INT;
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = true;
 }
 
 void SemanticAnalyser::visit(ASTLiteralNode<cp_float>*) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_FLOAT;
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = true;
 }
 
 void SemanticAnalyser::visit(ASTLiteralNode<cp_char>*) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_CHAR;
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = true;
 }
 
 void SemanticAnalyser::visit(ASTLiteralNode<cp_string>*) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_STRING;
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEFINED;
 	current_expression.is_const = true;
 }
 
@@ -1000,8 +955,6 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	current_expression = SemanticValue();
 	current_expression.array_type = current_expression_array_type;
 	current_expression.type = Type::T_ARRAY;
-	current_expression.type_name = "";
-	current_expression.is_const = false;
 }
 
 void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
@@ -1049,8 +1002,6 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 	current_expression.type = Type::T_STRUCT;
 	current_expression.type_name = astnode->type_name;
 	current_expression.type_name_space = astnode->nmspace;
-	current_expression.array_type = Type::T_UNDEFINED;
-	current_expression.is_const = false;
 }
 
 void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
@@ -1059,20 +1010,26 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 	astnode->left->accept(this);
 	auto lexpr = current_expression;
 	Type l_type = current_expression.type;
-	if (is_array(current_expression.type)) {
+	if (is_array(current_expression.type) && current_expression.is_sub) {
 		l_type = current_expression.array_type;
 	}
 
 	astnode->right->accept(this);
 	auto rexpr = current_expression;
 	Type r_type = current_expression.type;
-	if (is_array(current_expression.type)) {
+	if (is_array(current_expression.type) && current_expression.is_sub) {
 		r_type = current_expression.array_type;
+	}
+
+	if (is_any(l_type) && is_any(r_type)) {
+		current_expression.type = Type::T_ANY;
+		return;
 	}
 
 	if (op == "-" || op == "/" || op == "*" || op == "**" || op == "%" || op == "/%"
 		|| op == "<<" || op == ">>" || op == "&" || op == "^" || op == "|" || op == "<=>") {
-		if (!is_int(l_type) && !is_float(l_type) || !is_int(r_type) && !is_float(r_type)) {
+		if (!is_numeric(l_type) && !is_any(l_type)
+			|| !is_numeric(r_type) && !is_any(r_type)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("expected numerical operands for '" + op + "' operator");
 		}
@@ -1080,28 +1037,29 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 			|| astnode->op == "<<=" || astnode->op == ">>=")
 			&& (is_float(l_type) || is_float(r_type))) {
 			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("invalid operands to " + astnode->op + " operation ('" + type_str(l_type) + "' and '" + type_str(r_type) + "')");
+			throw std::runtime_error("invalid types '" + type_str(l_type) + "' and '"
+				+ type_str(r_type) + "' for '" + astnode->op + "' operator");
 		}
-		current_expression.type = (is_int(l_type) && is_int(r_type)) ? Type::T_INT : Type::T_FLOAT;
+		current_expression.type = is_int(l_type) && is_int(r_type) ? Type::T_INT : Type::T_FLOAT;
 	}
 	else if (op == "+") {
-		if (is_bool(l_type) || is_array(l_type) || is_struct(l_type) || is_bool(r_type) || is_array(r_type) || is_struct(r_type)) {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("invalid operand for '+' operator, expected numerical or string operand");
-		}
-		if ((is_string(l_type) || is_char(l_type)) && (is_string(r_type) || is_char(r_type))) {
+		if (is_text(l_type) && is_text(r_type)
+			|| is_text(l_type) && is_any(r_type)
+			|| is_any(l_type) && is_text(r_type)) {
 			current_expression.type = is_char(l_type) && is_char(r_type) ? Type::T_CHAR : Type::T_STRING;
 		}
-		else if (is_string(l_type) || is_char(l_type) || is_string(r_type) || is_char(r_type)) {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("mismatched operands for '+' operator, found " + type_str(l_type) + " on the left, but " + type_str(r_type) + " on the right");
+		else if ((is_numeric(l_type) || is_any(l_type))
+			&& (is_numeric(r_type) || is_any(r_type))) {
+			current_expression.type = is_int(l_type) && is_int(r_type) ? Type::T_INT : Type::T_FLOAT;
 		}
 		else {
-			current_expression.type = (is_int(l_type) && is_int(r_type)) ? Type::T_INT : Type::T_FLOAT;
+			set_curr_pos(astnode->row, astnode->col);
+			throw std::runtime_error("invalid types '" + type_str(l_type) + "' and '" + type_str(r_type) + "' for '+' operator");
 		}
 	}
 	else if (op == "and" || op == "or") {
-		if (is_bool(l_type) && is_bool(r_type)) {
+		if ((is_bool(l_type) || is_any(l_type))
+			&& (is_bool(r_type) || is_any(r_type))) {
 			current_expression.type = Type::T_BOOL;
 		}
 		else {
@@ -1110,19 +1068,26 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 		}
 	}
 	else if (op == "<" || op == ">" || op == "<=" || op == ">=") {
-		if ((!is_float(l_type) && !is_int(l_type)) || (!is_float(r_type) && !is_int(r_type))) {
+		if ((is_numeric(l_type) || is_any(l_type))
+			&& (is_numeric(r_type) || is_any(r_type))) {
+			current_expression.type = Type::T_BOOL;
+		}
+		else {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("expected two numerical operands for '" + op + "' operator");
 		}
-		current_expression.type = Type::T_BOOL;
 	}
 	else if (op == "==" || op == "!=") {
-		if (!match_type(l_type, r_type) && (!is_float(l_type) || !is_int(r_type)) && (!is_int(l_type) || !is_float(r_type)) && !is_void(l_type) && !is_void(r_type)) {
+		if (match_type(l_type, r_type)
+			|| is_numeric(l_type) && is_numeric(r_type)
+			|| is_void(l_type) || !is_void(r_type)) {
+			equals_value(lexpr, rexpr);
+			current_expression.type = Type::T_BOOL;
+		}
+		else {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("expected arguments of the same type '" + op + "' operator");
 		}
-		equals_value(lexpr, rexpr);
-		current_expression.type = Type::T_BOOL;
 	}
 	else {
 		set_curr_pos(astnode->row, astnode->col);
@@ -1140,23 +1105,35 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 	}
 	catch (...) {
 		current_expression = SemanticValue();
-		if (identifier == "bool" || identifier == "int" || identifier == "float"
-			|| identifier == "char" || identifier == "string") {
+		if (identifier == "bool") {
+			current_expression.type = Type::T_BOOL;
+			return;
+		}
+		else if (identifier == "int") {
+			current_expression.type = Type::T_INT;
+			return;
+		}
+		else if (identifier == "float") {
+			current_expression.type = Type::T_FLOAT;
+			return;
+		}
+		else if (identifier == "char") {
+			current_expression.type = Type::T_CHAR;
+			return;
+		}
+		else if (identifier == "string") {
+			current_expression.type = Type::T_STRING;
 			return;
 		}
 		try {
 			curr_scope = get_inner_most_struct_definition_scope(nmspace, identifier);
+			current_expression.type = Type::T_STRUCT;
 			return;
 		}
 		catch (...) {
 			try {
 				curr_scope = get_inner_most_function_scope(nmspace, identifier, std::vector<TypeDefinition>());
-				current_expression = SemanticValue();
 				current_expression.type = Type::T_FUNCTION;
-				current_expression.type_name = "";
-				current_expression.type_name_space = "";
-				current_expression.array_type = Type::T_UNDEFINED;
-				current_expression.is_const = true;
 				return;
 			}
 			catch (...) {
@@ -1177,6 +1154,8 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 
 	current_expression = *variable_expr;
 	current_expression.type = is_any(declared_variable->type) ? variable_expr->type : declared_variable->type;
+	current_expression.resetref();
+	current_expression.is_sub = astnode->identifier_vector[0].access_vector.size() > 1 || astnode->identifier_vector.size() > 1;
 
 	if (astnode->identifier_vector.size() > 1 && !is_any(variable_expr->type)) {
 		auto sub_var = access_struct_variable(astnode->identifier_vector, declared_variable->type_name, declared_variable->type_name_space, 1);
@@ -1242,16 +1221,29 @@ void SemanticAnalyser::visit(ASTInNode* astnode) {
 	astnode->value->accept(this);
 	auto valtype = current_expression.type;
 	astnode->collection->accept(this);
-	if (!match_type(valtype, current_expression.array_type) && !is_any(valtype) && !is_any(current_expression.array_type) && !is_any(current_expression.type)
+
+	current_expression = SemanticValue();
+	current_expression.type = Type::T_BOOL;
+
+	if (is_any(valtype)
+		&& (is_any(current_expression.type)
+			|| is_array(current_expression.type)
+			&& is_any(current_expression.array_type))) {
+		return;
+	}
+
+	if (!match_type(valtype, current_expression.array_type)
+		&& !is_any(valtype) && !is_any(current_expression.type) && !is_any(current_expression.array_type)
 		&& is_string(valtype) && !is_string(current_expression.type)
 		&& is_char(valtype) && !is_string(current_expression.type)) {
 		set_curr_pos(astnode->row, astnode->col);
 		throw std::runtime_error("types don't match '" + type_str(valtype) + "' and '" + type_str(current_expression.type) + "'");
 	}
-	if (!is_array(current_expression.type) && !is_string(current_expression.type)) {
+	if (!is_collection(current_expression.type) && !is_any(current_expression.type)) {
 		set_curr_pos(astnode->row, astnode->col);
 		throw std::runtime_error("invalid type '" + type_str(current_expression.type) + "', value must be a array or string");
 	}
+
 }
 
 void SemanticAnalyser::visit(ASTTypeParseNode* astnode) {
@@ -1266,25 +1258,16 @@ void SemanticAnalyser::visit(ASTTypeParseNode* astnode) {
 
 	current_expression = SemanticValue();
 	current_expression.type = astnode->type;
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEFINED;
-	current_expression.is_const = false;
 }
 
 void SemanticAnalyser::visit(ASTNullNode* astnode) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_VOID;
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEFINED;
-	current_expression.is_const = false;
 }
 
 void SemanticAnalyser::visit(ASTThisNode* astnode) {
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_STRING;
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEFINED;
-	current_expression.is_const = false;
 }
 
 void SemanticAnalyser::visit(ASTTypingNode* astnode) {
@@ -1296,9 +1279,6 @@ void SemanticAnalyser::visit(ASTTypingNode* astnode) {
 	else {
 		current_expression.type = Type::T_STRING;
 	}
-	current_expression.type_name = "";
-	current_expression.array_type = Type::T_UNDEFINED;
-	current_expression.is_const = false;
 }
 
 bool SemanticAnalyser::namespace_exists(const std::string& nmspace) {

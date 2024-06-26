@@ -41,6 +41,7 @@ namespace parser {
 		long long hash;
 		bool is_const;
 		bool ref;
+		bool is_sub;
 
 		// complete constructor
 		SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*>&& dim,
@@ -52,6 +53,7 @@ namespace parser {
 
 		SemanticValue();
 
+		void resetref();
 		void copy_from(SemanticValue* value);
 	};
 

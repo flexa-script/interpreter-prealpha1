@@ -51,6 +51,8 @@ namespace visitor {
 		const std::string& get_namespace(const std::string& nmspace = "") const override;
 		const std::string& get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace = "") const override;
 
+		void check_is_struct_exists(parser::Type type, const std::string& nmspace, const std::string& identifier);
+
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;
 

@@ -27,6 +27,10 @@ namespace parser {
 	bool is_array(parser::Type);
 	bool is_struct(parser::Type);
 	bool is_function(parser::Type);
+	bool is_text(parser::Type);
+	bool is_numeric(parser::Type);
+	bool is_collection(parser::Type);
+	bool is_iterable(parser::Type);
 
 	class TypeDefinition;
 

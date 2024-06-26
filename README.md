@@ -74,10 +74,13 @@
         - [X] add: `{ init_value }` to initilize all positions with same value
         - [X] add: `in` operator to check if anything is in array/string
         - [X] add: ternary (immediate) if `expr ? texpr : fexpr`
-        - [X] `typeof`: returns type of object
-            - [X] fix: add namespace to type name return
-        - [X] `typeid`: returns hash of typeof
-        - [ ] `isany`: returns if a variable is any
+        - [ ] add typing:
+            - [X] `typeof`: returns type of object
+                - [X] fix: add namespace to type name return
+            - [X] `typeid`: returns hash of typeof
+            - [ ] `isany`: returns if a variable is any
+            - [ ] `isarray`: returns if a variable is array
+            - [ ] `isstruct`: returns if a variable is struct
     - [ ] add: bitwise operators:
         - [x] &   bitwise AND
         - [x] |   bitwise inclusive OR
@@ -175,6 +178,7 @@
 - [X] This does not always return the expected value, eg when its inside a function tha does not has in main file
 - [ ] If an statement is before include, it generate a semantic error
 - [ ] Assigning struct values on constructors is not checking types correctly
+- [X] print({0,2} + {0,2}); is passing semantic analisys
 
 ## Errors
 - Errors has CP prefix, eg. CP9999
