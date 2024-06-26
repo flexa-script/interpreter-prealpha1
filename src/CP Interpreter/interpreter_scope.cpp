@@ -63,57 +63,57 @@ Value* InterpreterScope::declare_empty_struct_variable(std::string identifier, s
 	return value;
 }
 
-Value* InterpreterScope::declare_variable(std::string identifier, cp_bool boolValue) {
-	Value* value = new Value(parser::Type::T_BOOL);
+Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_bool boolValue) {
+	Value* value = new Value(type);
 	value->set(boolValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value* InterpreterScope::declare_variable(std::string identifier, cp_int intValue) {
-	Value* value = new Value(parser::Type::T_INT);
+Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_int intValue) {
+	Value* value = new Value(type);
 	value->set(intValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value* InterpreterScope::declare_variable(std::string identifier, cp_float floatValue) {
-	Value* value = new Value(parser::Type::T_FLOAT);
+Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_float floatValue) {
+	Value* value = new Value(type);
 	value->set(floatValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value* InterpreterScope::declare_variable(std::string identifier, cp_char charValue) {
-	Value* value = new Value(parser::Type::T_CHAR);
+Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_char charValue) {
+	Value* value = new Value(type);
 	value->set(charValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value* InterpreterScope::declare_variable(std::string identifier, cp_string stringValue) {
-	Value* value = new Value(parser::Type::T_STRING);
+Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_string stringValue) {
+	Value* value = new Value(type);
 	value->set(stringValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value* InterpreterScope::declare_variable(std::string identifier, cp_array arrValue, Type arr_type) {
-	Value* value = new Value(parser::Type::T_ARRAY, arr_type);
+Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_array arrValue, Type arr_type) {
+	Value* value = new Value(type, arr_type);
 	value->set(arrValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value* InterpreterScope::declare_variable(std::string identifier, cp_struct* strValue) {
-	Value* value = new Value(parser::Type::T_STRUCT);
+Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_struct* strValue) {
+	Value* value = new Value(type);
 	value->set(strValue);
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-Value* InterpreterScope::declare_variable(std::string identifier, cp_function fun) {
-	Value* value = new Value(parser::Type::T_FUNCTION);
+Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_function fun) {
+	Value* value = new Value(type);
 	value->set(fun);
 	variable_symbol_table[identifier] = value;
 	return value;

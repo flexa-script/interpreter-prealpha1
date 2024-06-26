@@ -1,18 +1,18 @@
-using cp.core.pair;
+// using cp.core.pair;
 
-struct Bar {
-	var x: int;
-	var j: bool;
-};
+// struct Bar {
+// 	var x: int;
+// 	var j: bool;
+// };
 
-struct Foo {
-	var name: string;
-	var age: int;
-	// var bar: bool;
-	var bar: Bar;
-};
+// struct Foo {
+// 	var name: string;
+// 	var age: int;
+// 	// var bar: bool;
+// 	var bar: Bar;
+// };
 
-var f = Foo{name="Carlos",age=29,bar=Bar{x=10,j=false}};
+// var f = Foo{name="Carlos",age=29,bar=Bar{x=10,j=false}};
 
 // def print_str(f){
 // 	foreach (var it in f) {
@@ -58,4 +58,6 @@ var f = Foo{name="Carlos",age=29,bar=Bar{x=10,j=false}};
 
 // print(to_json(f));
 
-// print(10 / 3);
+var a = 10;
+var b = 3;
+print(a / b);

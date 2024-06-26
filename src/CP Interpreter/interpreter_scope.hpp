@@ -40,14 +40,14 @@ namespace visitor {
 
 		Value* declare_empty_variable(std::string identifier, parser::Type type, parser::Type empty_type);
 		Value* declare_empty_struct_variable(std::string identifier, std::string type_name, parser::Type empty_type);
-		Value* declare_variable(std::string, cp_bool);
-		Value* declare_variable(std::string, cp_int);
-		Value* declare_variable(std::string, cp_float);
-		Value* declare_variable(std::string, cp_char);
-		Value* declare_variable(std::string, cp_string);
-		Value* declare_variable(std::string, cp_array, parser::Type arr_type);
-		Value* declare_variable(std::string, cp_struct*);
-		Value* declare_variable(std::string, cp_function);
+		Value* declare_variable(std::string identifier, parser::Type type, cp_bool);
+		Value* declare_variable(std::string identifier, parser::Type type, cp_int);
+		Value* declare_variable(std::string identifier, parser::Type type, cp_float);
+		Value* declare_variable(std::string identifier, parser::Type type, cp_char);
+		Value* declare_variable(std::string identifier, parser::Type type, cp_string);
+		Value* declare_variable(std::string identifier, parser::Type type, cp_array, parser::Type arr_type);
+		Value* declare_variable(std::string identifier, parser::Type type, cp_struct*);
+		Value* declare_variable(std::string identifier, parser::Type type, cp_function);
 		Value* declare_value(std::string, Value*);
 
 		void declare_function(std::string identifier, interpreter_parameter_list_t variables, parser::ASTBlockNode* block);

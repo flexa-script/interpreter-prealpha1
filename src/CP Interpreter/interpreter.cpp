@@ -109,48 +109,48 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	}
 
 	if (astnode->expr && current_expression_value.has_value()) {
-		auto type = astnode->type == Type::T_ANY ? current_expression_value.curr_type : astnode->type;
+		auto type = is_any(astnode->type) ? current_expression_value.curr_type : astnode->type;
 		switch (type) {
 		case Type::T_BOOL:
-			scopes[nmspace].back()->declare_variable(astnode->identifier, current_expression_value.b);
+			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.b);
 			break;
 		case Type::T_INT:
-			scopes[nmspace].back()->declare_variable(astnode->identifier, current_expression_value.i);
+			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.i);
 			break;
 		case Type::T_FLOAT:
-			if (current_expression_value.curr_type == Type::T_INT) {
-				scopes[nmspace].back()->declare_variable(astnode->identifier, (cp_float)current_expression_value.i);
+			if (is_int(current_expression_value.curr_type)) {
+				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, (cp_float)current_expression_value.i);
 			}
 			else {
-				scopes[nmspace].back()->declare_variable(astnode->identifier, current_expression_value.f);
+				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.f);
 			}
 			break;
 		case Type::T_CHAR:
-			scopes[nmspace].back()->declare_variable(astnode->identifier, current_expression_value.c);
+			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.c);
 			break;
 		case Type::T_STRING:
 			if (current_expression_value.curr_type == Type::T_CHAR) {
-				scopes[nmspace].back()->declare_variable(astnode->identifier, std::string{ current_expression_value.c });
+				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, std::string{ current_expression_value.c });
 			}
 			else {
-				scopes[nmspace].back()->declare_variable(astnode->identifier, current_expression_value.s);
+				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.s);
 			}
 			break;
 		case Type::T_ARRAY: {
 			if (current_expression_value.arr.size() == 1) {
 				auto arr = build_array(astnode->dim, current_expression_value.arr[0], astnode->dim.size() - 1);
-				scopes[nmspace].back()->declare_variable(astnode->identifier, arr, astnode->array_type);
+				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, arr, astnode->array_type);
 			}
 			else {
-				scopes[nmspace].back()->declare_variable(astnode->identifier, current_expression_value.arr, astnode->array_type);
+				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.arr, astnode->array_type);
 			}
 			break;
 		}
 		case Type::T_STRUCT:
-			scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.str);
+			scopes[get_namespace()].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.str);
 			break;
 		case Type::T_FUNCTION:
-			scopes[get_namespace()].back()->declare_variable(astnode->identifier, current_expression_value.fun);
+			scopes[get_namespace()].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.fun);
 			break;
 		}
 	}
@@ -167,7 +167,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 void Interpreter::visit(ASTEnumNode* astnode) {
 	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
-		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], (cp_int)i);
+		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], Type::T_INT, (cp_int)i);
 	}
 }
 
@@ -198,8 +198,11 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 			value->set(current_expression_value.b);
 			break;
 		case Type::T_INT:
-			if (is_int(value->curr_type)) {
-				value->set(cp_float(do_operation(value->i, current_expression_value.i, astnode->op)));
+			if (is_int(value->curr_type) && !is_any(value->type)) {
+				value->set(do_operation(cp_float(value->i), cp_float(current_expression_value.i), astnode->op));
+			}
+			else if (is_int(value->curr_type)) {
+				value->set(do_operation(value->i, current_expression_value.i, astnode->op));
 			}
 			else {
 				value->set(do_operation(value->f, cp_float(current_expression_value.i), astnode->op));
@@ -711,12 +714,12 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 	std::string op = astnode->op;
 
 	astnode->left->accept(this);
-	Type l_var_type = current_expression_value.type;
+	Type l_vtype = current_expression_value.type;
 	Type l_type = current_expression_value.curr_type;
 	Value l_value = current_expression_value;
 
 	astnode->right->accept(this);
-	Type r_var_type = current_expression_value.type;
+	Type r_vtype = current_expression_value.type;
 	Type r_type = current_expression_value.curr_type;
 	Value r_value = current_expression_value;
 
@@ -724,7 +727,8 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 
 	if (op == "+" || op == "-" || op == "*" || op == "/" || op == "**" || op == "%" || op == "/%"
 		|| op == "<<" || op == ">>" || op == "&" || op == "^" || op == "|" || op == "<=>") {
-		if (l_type == Type::T_INT && r_type == Type::T_INT) {
+		if (is_int(l_type) && is_int(r_type)
+			&& is_int(l_vtype) && is_int(r_vtype)) {
 			if (op == "+") {
 				value->set((cp_int)(l_value.i + r_value.i));
 			}
@@ -782,7 +786,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 				}
 			}
 		}
-		else if (l_type == Type::T_FLOAT || r_type == Type::T_FLOAT) {
+		else if (is_numeric(l_type) || is_numeric(r_type)) {
 			cp_float l = is_float(l_type) ? l_value.f : l_value.i;
 			cp_float r = is_float(r_type) ? r_value.f : r_value.i;
 			if (op == "+") {

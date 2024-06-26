@@ -63,6 +63,11 @@
         - [X] add ... to ignore catch error
     - [X] do while
 - [ ] Add expression:
+    - [ ] add: runtime type checking for any types
+    - [X] refact:
+        - [X] if real type is any change to float
+        - [X] if both real type is int trunc to int
+        - [X] if some real type is float expression is float
     - [X] Add expression operators:
         - [X] binary operators 
             - [X] mod `%` operation
