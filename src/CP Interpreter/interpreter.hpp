@@ -32,6 +32,7 @@ namespace visitor {
 		std::string function_call_name;
 		interpreter_parameter_list_t function_call_parameters;
 		std::stack<std::string> current_function_nmspace;
+		std::stack<parser::TypeDefinition> current_function_return_type;
 		std::stack<std::string> current_name;
 		std::string return_from_function_name;
 		Value* current_param_ref;

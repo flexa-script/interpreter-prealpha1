@@ -129,8 +129,8 @@ void InterpreterScope::declare_structure_definition(std::string name, std::vecto
 	structure_symbol_table[name] = (type);
 }
 
-void InterpreterScope::declare_function(std::string identifier, interpreter_parameter_list_t variables, parser::ASTBlockNode* block) {
-	function_symbol_table.insert(std::make_pair(identifier, std::make_pair(variables, block)));
+void InterpreterScope::declare_function(std::string identifier, interpreter_parameter_list_t variables, parser::ASTBlockNode* block, TypeDefinition type) {
+	function_symbol_table.insert(std::make_pair(identifier, std::make_tuple(variables, block, type)));
 }
 
 parser::StructureDefinition InterpreterScope::find_declared_structure_definition(std::string identifier) {
@@ -149,7 +149,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 	}
 
 	for (auto& it = funcs.first; it != funcs.second; ++it) {
-		auto& func_params = it->second.first;
+		auto& func_params = std::get<0>(it->second);
 		bool rest = false;
 		auto found = true;
 		bool is_arr = false;
@@ -186,7 +186,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 					ftype = is_arr ? std::get<1>(func_params.at(i)).array_type : std::get<1>(func_params.at(i)).type;
 
 					// store current rest function, and try to find an exactly signature match
-					if (std::get<3>(it->second.first[i])) {
+					if (std::get<3>(std::get<0>(it->second)[i])) {
 						rest = true;
 					}
 				}

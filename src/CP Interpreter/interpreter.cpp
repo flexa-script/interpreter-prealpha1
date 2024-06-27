@@ -113,33 +113,58 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 
 	if (astnode->expr && current_expression_value.has_value()) {
 		auto type = is_any(astnode->type) ? current_expression_value.curr_type : astnode->type;
-		switch (type) {
+		switch (current_expression_value.curr_type) {
 		case Type::T_BOOL:
+			if (!is_bool(astnode->type) && !is_any(astnode->type)) {
+				throw std::runtime_error("invalid types '" + type_str(astnode->type)
+					+ "' and '" + type_str(current_expression_value.curr_type)
+					+ "' for initializing");
+			}
 			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.b);
 			break;
 		case Type::T_INT:
+			if (!is_int(astnode->type) && !is_any(astnode->type)) {
+				throw std::runtime_error("invalid types '" + type_str(astnode->type)
+					+ "' and '" + type_str(current_expression_value.curr_type)
+					+ "' for initializing");
+			}
 			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.i);
 			break;
 		case Type::T_FLOAT:
-			if (is_int(current_expression_value.curr_type)) {
-				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, (cp_float)current_expression_value.i);
+			if (!is_numeric(astnode->type) && !is_any(astnode->type)) {
+				throw std::runtime_error("invalid types '" + type_str(astnode->type)
+					+ "' and '" + type_str(current_expression_value.curr_type)
+					+ "' for initializing");
 			}
-			else {
-				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.f);
-			}
+			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.f);
 			break;
 		case Type::T_CHAR:
-			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.c);
-			break;
-		case Type::T_STRING:
-			if (is_char(current_expression_value.curr_type)) {
-				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, std::string{ current_expression_value.c });
+			if (!is_text(astnode->type) && !is_any(astnode->type)) {
+				throw std::runtime_error("invalid types '" + type_str(astnode->type)
+					+ "' and '" + type_str(current_expression_value.curr_type)
+					+ "' for initializing");
+			}
+			if (is_char(astnode->type)) {
+				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.c);
 			}
 			else {
-				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.s);
+				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, std::string{ current_expression_value.c });
 			}
 			break;
+		case Type::T_STRING:
+			if (!is_string(astnode->type) && !is_any(astnode->type)) {
+				throw std::runtime_error("invalid types '" + type_str(astnode->type)
+					+ "' and '" + type_str(current_expression_value.curr_type)
+					+ "' for initializing");
+			}
+			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.s);
+			break;
 		case Type::T_ARRAY: {
+			if (!is_array(astnode->type) && !is_any(astnode->type)) {
+				throw std::runtime_error("invalid types '" + type_str(astnode->type)
+					+ "' and '" + type_str(current_expression_value.curr_type)
+					+ "' for initializing");
+			}
 			if (current_expression_value.arr.size() == 1) {
 				auto arr = build_array(astnode->dim, current_expression_value.arr[0], astnode->dim.size() - 1);
 				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, arr, astnode->array_type);
@@ -150,16 +175,26 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 			break;
 		}
 		case Type::T_STRUCT:
-			scopes[get_namespace()].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.str);
+			if (!is_struct(astnode->type) && !is_any(astnode->type)) {
+				throw std::runtime_error("invalid types '" + type_str(astnode->type)
+					+ "' and '" + type_str(current_expression_value.curr_type)
+					+ "' for initializing");
+			}
+			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.str);
 			break;
 		case Type::T_FUNCTION:
-			scopes[get_namespace()].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.fun);
+			if (!is_function(astnode->type) && !is_any(astnode->type)) {
+				throw std::runtime_error("invalid types '" + type_str(astnode->type)
+					+ "' and '" + type_str(current_expression_value.curr_type)
+					+ "' for initializing");
+			}
+			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.fun);
 			break;
 		}
 	}
 	else {
 		if (astnode->type == Type::T_STRUCT) {
-			scopes[get_namespace()].back()->declare_empty_struct_variable(astnode->identifier, astnode->type_name, current_expression_value.curr_type);
+			scopes[nmspace].back()->declare_empty_struct_variable(astnode->identifier, astnode->type_name, current_expression_value.curr_type);
 		}
 		else {
 			scopes[nmspace].back()->declare_empty_variable(astnode->identifier, astnode->type, current_expression_value.curr_type);
@@ -198,7 +233,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	if (current_expression_value.has_value()) {
 		switch (current_expression_value.curr_type) {
 		case Type::T_BOOL:
-			if (!is_bool(current_expression_value.curr_type)
+			if (!is_bool(value->curr_type) && !is_any(value->type)
 				|| astnode->op != "=") {
 				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
 					+ "' and '" + type_str(current_expression_value.curr_type)
@@ -207,11 +242,14 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 			value->set(current_expression_value.b);
 			break;
 		case Type::T_INT:
-			if (is_float(value->curr_type)) {
+			if (is_float(value->curr_type) && is_any(value->type)) {
 				value->set(do_operation(value->f, cp_float(current_expression_value.i), astnode->op));
 			}
 			else if (is_int(value->curr_type) && is_any(value->type)) {
 				value->set(do_operation(cp_float(value->i), cp_float(current_expression_value.i), astnode->op));
+			}
+			else if (is_int(value->curr_type)) {
+				value->set(do_operation(value->i, current_expression_value.i, astnode->op));
 			}
 			else {
 				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
@@ -311,7 +349,19 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 
 void Interpreter::visit(ASTReturnNode* astnode) {
 	const auto& nmspace = get_namespace();
+	const auto& curr_func_ret_type = current_function_return_type.top();
 	astnode->expr->accept(this);
+
+	if (!is_any(curr_func_ret_type.type) && !is_void(curr_func_ret_type.type)
+		&& !is_void(current_expression_value.curr_type)
+		&& !match_type(curr_func_ret_type.type, current_expression_value.curr_type)
+		|| match_type(curr_func_ret_type.type, current_expression_value.curr_type)
+		&& !match_type(curr_func_ret_type.type, current_expression_value.curr_type)) {
+		throw std::runtime_error("invalid types '" + type_str(curr_func_ret_type.type)
+			+ "' and '" + type_str(current_expression_value.curr_type)
+			+ "' for initializing");
+	}
+
 	for (long long i = scopes[nmspace].size() - 1; i >= 0; --i) {
 		if (!scopes[nmspace][i]->get_name().empty()) {
 			return_from_function_name = scopes[nmspace][i]->get_name();
@@ -1140,14 +1190,16 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 
 	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
 
-	function_call_parameters = func_scope->find_declared_function(astnode->identifier, signature).first;
+	auto declfun = func_scope->find_declared_function(astnode->identifier, signature);
 
+	function_call_parameters = std::get<0>(declfun);
 	is_function_context = true;
 	function_call_name = astnode->identifier;
 	current_name.push(astnode->identifier);
 	current_function_nmspace.push(nmspace);
+	current_function_return_type.push(std::get<2>(declfun));
 
-	auto block = func_scope->find_declared_function(astnode->identifier, signature).second;
+	auto block = std::get<1>(declfun);
 	if (block) {
 		block->accept(this);
 	}
@@ -1166,7 +1218,7 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 		interpreter_parameter_t param = std::make_tuple(astnode->variable_names[i], astnode->signature[i], astnode->parameters[i].default_value, astnode->parameters[i].is_rest);
 		params.push_back(param);
 	}
-	scopes[get_namespace()].back()->declare_function(astnode->identifier, params, astnode->block);
+	scopes[get_namespace()].back()->declare_function(astnode->identifier, params, astnode->block, *static_cast<TypeDefinition*>(astnode));
 }
 
 void Interpreter::visit(ASTFunctionExpression* astnode) {
@@ -1640,9 +1692,9 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			if (is_function(last_function_arguments[i]->curr_type)) {
 				auto funcs = ((InterpreterScope*)last_function_arguments[i]->fun.first)->find_declared_functions(last_function_arguments[i]->fun.second);
 				for (auto& it = funcs.first; it != funcs.second; ++it) {
-					auto& func_params = it->second.first;
-					auto& func_block = it->second.second;
-					scopes[nmspace].back()->declare_function(pname, func_params, func_block);
+					auto& func_params = std::get<0>(it->second);
+					auto& func_block = std::get<1>(it->second);
+					scopes[nmspace].back()->declare_function(pname, func_params, func_block, std::get<2>(it->second));
 				}
 			}
 			else {
@@ -1669,9 +1721,9 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		if (is_function(current_expression_value.curr_type)) {
 			auto funcs = ((InterpreterScope*)current_expression_value.fun.first)->find_declared_functions(current_expression_value.fun.second);
 			for (auto& it = funcs.first; it != funcs.second; ++it) {
-				auto& func_params = it->second.first;
-				auto& func_block = it->second.second;
-				scopes[nmspace].back()->declare_function(pname, func_params, func_block);
+				auto& func_params = std::get<0>(it->second);
+				auto& func_block = std::get<1>(it->second);
+				scopes[nmspace].back()->declare_function(pname, func_params, func_block, std::get<2>(it->second));
 			}
 		}
 		else {
@@ -2025,7 +2077,7 @@ void Interpreter::register_built_in_functions() {
 		};
 	params.clear();
 	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), nullptr, true));
-	scopes[default_namespace].back()->declare_function("print", params, nullptr);
+	scopes[default_namespace].back()->declare_function("print", params, nullptr, TypeDefinition::get_basic(Type::T_VOID));
 
 	builtin_functions["println"] = [this]() {
 		builtin_functions["print"]();
@@ -2033,7 +2085,7 @@ void Interpreter::register_built_in_functions() {
 		};
 	params.clear();
 	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), nullptr, true));
-	scopes[default_namespace].back()->declare_function("println", params, nullptr);
+	scopes[default_namespace].back()->declare_function("println", params, nullptr, TypeDefinition::get_basic(Type::T_VOID));
 
 
 	builtin_functions["read"] = [this]() {
@@ -2047,7 +2099,7 @@ void Interpreter::register_built_in_functions() {
 		};
 	params.clear();
 	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), nullptr, true));
-	scopes[default_namespace].back()->declare_function("read", params, nullptr);
+	scopes[default_namespace].back()->declare_function("read", params, nullptr, TypeDefinition::get_basic(Type::T_STRING));
 
 
 	builtin_functions["readch"] = [this]() {
@@ -2057,7 +2109,7 @@ void Interpreter::register_built_in_functions() {
 		current_expression_value.set(cp_char(ch));
 		};
 	params.clear();
-	scopes[default_namespace].back()->declare_function("readch", params, nullptr);
+	scopes[default_namespace].back()->declare_function("readch", params, nullptr, TypeDefinition::get_basic(Type::T_CHAR));
 
 
 	builtin_functions["len"] = [this]() {
@@ -2075,10 +2127,10 @@ void Interpreter::register_built_in_functions() {
 		};
 	params.clear();
 	params.push_back(std::make_tuple("arr", TypeDefinition::get_array(Type::T_ARRAY, Type::T_ANY), nullptr, false));
-	scopes[default_namespace].back()->declare_function("len", params, nullptr);
+	scopes[default_namespace].back()->declare_function("len", params, nullptr, TypeDefinition::get_basic(Type::T_INT));
 	params.clear();
 	params.push_back(std::make_tuple("str", TypeDefinition::get_basic(Type::T_STRING), nullptr, false));
-	scopes[default_namespace].back()->declare_function("len", params, nullptr);
+	scopes[default_namespace].back()->declare_function("len", params, nullptr, TypeDefinition::get_basic(Type::T_INT));
 
 
 	builtin_functions["equals"] = [this]() {
@@ -2093,7 +2145,7 @@ void Interpreter::register_built_in_functions() {
 	params.clear();
 	params.push_back(std::make_tuple("lval", TypeDefinition::get_basic(Type::T_ANY), nullptr, false));
 	params.push_back(std::make_tuple("rval", TypeDefinition::get_basic(Type::T_ANY), nullptr, false));
-	scopes[default_namespace].back()->declare_function("equals", params, nullptr);
+	scopes[default_namespace].back()->declare_function("equals", params, nullptr, TypeDefinition::get_basic(Type::T_BOOL));
 
 
 	builtin_functions["system"] = [this]() {
@@ -2101,7 +2153,7 @@ void Interpreter::register_built_in_functions() {
 		};
 	params.clear();
 	params.push_back(std::make_tuple("cmd", TypeDefinition::get_basic(Type::T_STRING), nullptr, false));
-	scopes[default_namespace].back()->declare_function("system", params, nullptr);
+	scopes[default_namespace].back()->declare_function("system", params, nullptr, TypeDefinition::get_basic(Type::T_VOID));
 }
 
 void Interpreter::register_built_in_lib(const std::string& libname) {
