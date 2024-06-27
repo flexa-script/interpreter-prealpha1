@@ -63,6 +63,7 @@ namespace visitor {
 		cp_int do_operation(cp_int lval, cp_int rval, const std::string& op);
 		cp_float do_operation(cp_float lval, cp_float rval, const std::string& op);
 		cp_string do_operation(const cp_string& lval, const cp_string& rval, const std::string& op);
+		cp_array do_operation(const cp_array& lval, const cp_array& rval, const std::string& op);
 		std::string parse_array_to_string(const cp_array& arr_value);
 		std::string parse_struct_to_string(const cp_struct& str_value);
 

@@ -264,9 +264,9 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	auto assignment_expr = current_expression;
 
 	if (astnode->op == "+=") {
-		if (!is_int(assignment_expr.type) && !is_int(decl_var_expression->type)
-			&& !is_float(assignment_expr.type) && !is_float(decl_var_expression->type)
+		if (!is_numeric(assignment_expr.type) && !is_numeric(decl_var_expression->type)
 			&& !is_any(assignment_expr.type) && !is_any(decl_var_expression->type)
+			&& !is_array(assignment_expr.type) && !is_array(decl_var_expression->type)
 			&& !is_string(assignment_expr.type) && !is_string(decl_var_expression->type)
 			&& !is_string(decl_var_expression->type) && !is_char(assignment_expr.type)) {
 			set_curr_pos(astnode->row, astnode->col);
@@ -277,15 +277,13 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	}
 	else if (astnode->op == "-=" || astnode->op == "*=" || astnode->op == "/="
 		|| astnode->op == "**=" || astnode->op == "/%=" || astnode->op == "%=") {
-		if (!is_int(assignment_expr.type)
-			&& !is_float(assignment_expr.type)
+		if (!is_numeric(assignment_expr.type)
 			&& !is_any(assignment_expr.type)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("invalid right value type '" +
 				type_str(assignment_expr.type) + "' to execute '" + astnode->op + "' operation");
 		}
-		if (!is_int(decl_var_expression->type)
-			&& !is_float(decl_var_expression->type)
+		if (!is_numeric(decl_var_expression->type)
 			&& !is_any(decl_var_expression->type)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("invalid left value type '" +
@@ -1010,14 +1008,16 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 	astnode->left->accept(this);
 	auto lexpr = current_expression;
 	Type l_type = current_expression.type;
-	if (is_array(current_expression.type) && current_expression.is_sub) {
+	if (is_array(current_expression.type)
+		&& current_expression.is_sub) {
 		l_type = current_expression.array_type;
 	}
 
 	astnode->right->accept(this);
 	auto rexpr = current_expression;
 	Type r_type = current_expression.type;
-	if (is_array(current_expression.type) && current_expression.is_sub) {
+	if (is_array(current_expression.type)
+		&& current_expression.is_sub) {
 		r_type = current_expression.array_type;
 	}
 
@@ -1030,54 +1030,65 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 		|| op == "**" || op == "%" || op == "/%"
 		|| op == "<<" || op == ">>" || op == "&"
 		|| op == "^" || op == "|" || op == "<=>") {
-		if (!is_numeric(l_type) && !is_any(l_type)
-			|| !is_numeric(r_type) && !is_any(r_type)) {
+		if (!is_numeric(l_type) && !is_array(l_type) && !is_any(l_type)
+			|| !is_numeric(r_type) && !is_array(r_type) && !is_any(r_type)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("expected numerical operands for '" + op + "' operator");
 		}
 		if ((astnode->op == "|=" || astnode->op == "^=" || astnode->op == "&="
 			|| astnode->op == "<<=" || astnode->op == ">>=")
-			&& (is_float(l_type) || is_float(r_type))) {
+			&& (is_float(l_type) || is_float(r_type)
+				|| is_array(l_type) || is_array(r_type))) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("invalid types '" + type_str(l_type) + "' and '"
 				+ type_str(r_type) + "' for '" + astnode->op + "' operator");
 		}
-		current_expression.type = is_int(l_type) && is_int(r_type) ? Type::T_INT : Type::T_FLOAT;
+		if ((is_array(l_type) || is_any(l_type))
+			&& (is_array(r_type) || is_any(r_type))) {
+			current_expression.type = Type::T_ARRAY;
+		}
+		else {
+			current_expression.type = is_int(l_type) && is_int(r_type) ? Type::T_INT : Type::T_FLOAT;
+		}
+		return;
 	}
 	else if (op == "+") {
 		if (is_text(l_type) && is_text(r_type)
 			|| is_text(l_type) && is_any(r_type)
 			|| is_any(l_type) && is_text(r_type)) {
 			current_expression.type = is_char(l_type) && is_char(r_type) ? Type::T_CHAR : Type::T_STRING;
+			return;
 		}
 		else if ((is_numeric(l_type) || is_any(l_type))
 			&& (is_numeric(r_type) || is_any(r_type))) {
 			current_expression.type = is_int(l_type) && is_int(r_type) ? Type::T_INT : Type::T_FLOAT;
+			return;
 		}
-		else {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("invalid types '" + type_str(l_type) + "' and '" + type_str(r_type) + "' for '+' operator");
+		else if ((is_array(l_type) || is_any(l_type))
+			&& (is_array(r_type) || is_any(r_type))) {
+			current_expression.type = Type::T_ARRAY;
+			return;
 		}
+		set_curr_pos(astnode->row, astnode->col);
+		throw std::runtime_error("invalid types '" + type_str(l_type) + "' and '" + type_str(r_type) + "' for '+' operator");
 	}
 	else if (op == "and" || op == "or") {
 		if ((is_bool(l_type) || is_any(l_type))
 			&& (is_bool(r_type) || is_any(r_type))) {
 			current_expression.type = Type::T_BOOL;
+			return;
 		}
-		else {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("expected two boolean operands for '" + op + "' operator");
-		}
+		set_curr_pos(astnode->row, astnode->col);
+		throw std::runtime_error("expected two boolean operands for '" + op + "' operator");
 	}
 	else if (op == "<" || op == ">" || op == "<=" || op == ">=") {
 		if ((is_numeric(l_type) || is_any(l_type))
 			&& (is_numeric(r_type) || is_any(r_type))) {
 			current_expression.type = Type::T_BOOL;
+			return;
 		}
-		else {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("expected two numerical operands for '" + op + "' operator");
-		}
+		set_curr_pos(astnode->row, astnode->col);
+		throw std::runtime_error("expected two numerical operands for '" + op + "' operator");
 	}
 	else if (op == "==" || op == "!=") {
 		if (match_type(l_type, r_type)
@@ -1085,16 +1096,13 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 			|| is_void(l_type) || is_void(r_type)) {
 			equals_value(lexpr, rexpr);
 			current_expression.type = Type::T_BOOL;
+			return;
 		}
-		else {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("expected arguments of the same type '" + op + "' operator");
-		}
-	}
-	else {
 		set_curr_pos(astnode->row, astnode->col);
-		throw std::runtime_error("unhandled semantic error in binary operator");
+		throw std::runtime_error("expected arguments of the same type '" + op + "' operator");
 	}
+	set_curr_pos(astnode->row, astnode->col);
+	throw std::runtime_error("unhandled semantic error in binary operator");
 }
 
 void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {

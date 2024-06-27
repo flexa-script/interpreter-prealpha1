@@ -1,9 +1,11 @@
 #include <iostream>
+#include <algorithm> 
 #include <cmath>
 #include <conio.h>
 #include <compare>
 
 #include "interpreter.hpp"
+#include "token.hpp"
 #include "vendor/axeutils.hpp"
 #include "vendor/axewatch.h"
 #include "graphics.hpp"
@@ -13,6 +15,7 @@
 
 using namespace visitor;
 using namespace parser;
+using namespace lexer;
 
 
 Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
@@ -195,8 +198,8 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	if (current_expression_value.has_value()) {
 		switch (current_expression_value.curr_type) {
 		case Type::T_BOOL:
-			// todo check operators
-			if (!is_bool(current_expression_value.curr_type)) {
+			if (!is_bool(current_expression_value.curr_type)
+				|| astnode->op != "=") {
 				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
 					+ "' and '" + type_str(current_expression_value.curr_type)
 					+ "' for '" + astnode->op + "' operator");
@@ -204,14 +207,11 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 			value->set(current_expression_value.b);
 			break;
 		case Type::T_INT:
-			if (is_int(value->curr_type) && is_any(value->type)) {
-				value->set(do_operation(cp_float(value->i), cp_float(current_expression_value.i), astnode->op));
-			}
-			else if (is_int(value->curr_type)) {
-				value->set(do_operation(value->i, current_expression_value.i, astnode->op));
-			}
-			else if (is_float(value->curr_type)) {
+			if (is_float(value->curr_type)) {
 				value->set(do_operation(value->f, cp_float(current_expression_value.i), astnode->op));
+			}
+			else if (is_int(value->curr_type) && is_any(value->type)) {
+				value->set(do_operation(cp_float(value->i), cp_float(current_expression_value.i), astnode->op));
 			}
 			else {
 				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
@@ -235,6 +235,12 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		case Type::T_CHAR:
 			if (is_string(value->curr_type)) {
 				if (astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
+					if (astnode->op != "=") {
+						throw std::runtime_error("invalid types '" + type_str(value->curr_type)
+							+ "' and '" + type_str(current_expression_value.curr_type)
+							+ "' for '" + astnode->op + "' operator");
+					}
+
 					has_string_access = false;
 					auto c = current_expression_value.c;
 					astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
@@ -247,20 +253,53 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 					value->set(do_operation(value->s, std::string{ current_expression_value.c }, astnode->op));
 				}
 			}
-			else {
+			else if (is_char(value->curr_type)) {
+				if (astnode->op != "=") {
+					throw std::runtime_error("invalid types '" + type_str(value->curr_type)
+						+ "' and '" + type_str(current_expression_value.curr_type)
+						+ "' for '" + astnode->op + "' operator");
+				}
+
 				value->set(current_expression_value.c);
+			}
+			else {
+				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
+					+ "' and '" + type_str(current_expression_value.curr_type)
+					+ "' for '" + astnode->op + "' operator");
 			}
 			break;
 		case Type::T_STRING:
+			if (!is_string(value->curr_type)) {
+				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
+					+ "' and '" + type_str(current_expression_value.curr_type)
+					+ "' for '" + astnode->op + "' operator");
+			}
 			value->set(do_operation(value->s, current_expression_value.s, astnode->op));
 			break;
 		case Type::T_ARRAY:
-			value->set(current_expression_value.arr);
+			if (!is_array(value->curr_type)) {
+				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
+					+ "' and '" + type_str(current_expression_value.curr_type)
+					+ "' for '" + astnode->op + "' operator");
+			}
+			value->set(do_operation(value->arr, current_expression_value.arr, astnode->op));
 			break;
 		case Type::T_STRUCT:
+			if (!is_struct(value->curr_type)
+				|| astnode->op != "=") {
+				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
+					+ "' and '" + type_str(current_expression_value.curr_type)
+					+ "' for '" + astnode->op + "' operator");
+			}
 			value->set(current_expression_value.str);
 			break;
 		case Type::T_FUNCTION:
+			if (!is_function(value->curr_type)
+				|| astnode->op != "=") {
+				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
+					+ "' and '" + type_str(current_expression_value.curr_type)
+					+ "' for '" + astnode->op + "' operator");
+			}
 			value->set(current_expression_value.fun);
 			break;
 		}
@@ -746,138 +785,35 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 		op == "/%" || op == "<<" || op == ">>" ||
 		op == "&" || op == "^" || op == "|"
 		|| op == "<=>") {
-		if (is_int(l_type) && is_int(r_type)
+		if (is_array(l_type) && is_array(r_type)) {
+			value->tset(do_operation(l_value.arr, r_value.arr, op));
+		}
+		else if (is_int(l_type) && is_int(r_type)
 			&& is_int(l_vtype) && is_int(r_vtype)) {
-			if (op == "+") {
-				value->tset((cp_int)(l_value.i + r_value.i));
-			}
-			else if (op == "-") {
-				value->tset((cp_int)(l_value.i - r_value.i));
-			}
-			else if (op == "*") {
-				value->tset((cp_int)(l_value.i * r_value.i));
-			}
-			else if (op == "/") {
-				if (r_value.i == 0) {
-					set_curr_pos(astnode->row, astnode->col);
-					throw std::runtime_error("division by zero encountered");
-				}
-				value->tset((cp_int)(l_value.i / r_value.i));
-			}
-			else if (op == "%") {
-				if (r_value.i == 0) {
-					set_curr_pos(astnode->row, astnode->col);
-					throw std::runtime_error("remainder by zero is undefined");
-				}
-				value->tset((cp_int)(l_value.i % r_value.i));
-			}
-			else if (op == "/%") {
-				if (r_value.i == 0) {
-					set_curr_pos(astnode->row, astnode->col);
-					throw std::runtime_error("floor division by zero encountered");
-				}
-				value->tset((cp_int)std::floor(l_value.i / r_value.i));
-			}
-			else if (op == "**") {
-				value->tset((cp_int)std::pow(l_value.i, r_value.i));
-			}
-			else if (op == ">>") {
-				value->tset((cp_int)(l_value.i >> r_value.i));
-			}
-			else if (op == "<<") {
-				value->tset((cp_int)(l_value.i << r_value.i));
-			}
-			else if (op == "|") {
-				value->tset((cp_int)(l_value.i | r_value.i));
-			}
-			else if (op == "&") {
-				value->tset((cp_int)(l_value.i & r_value.i));
-			}
-			else if (op == "^") {
-				value->tset((cp_int)(l_value.i ^ r_value.i));
-			}
-			else if (op == "<=>") {
-				auto res = l_value.i <=> r_value.i;
-				if (res == std::strong_ordering::less) {
-					value->tset((cp_int)(-1));
-				}
-				else if (res == std::strong_ordering::equal) {
-					value->tset((cp_int)(0));
-				}
-				else if (res == std::strong_ordering::greater) {
-					value->tset((cp_int)(1));
-				}
-			}
-			else {
-				throw std::runtime_error("invalid types '" + type_str(l_type)
-					+ "' and '" + type_str(r_type) + "' for '" + op + "' operator");
-			}
+			value->tset(do_operation(l_value.i, r_value.i, op));
 		}
 		else if (is_numeric(l_type) && is_numeric(r_type)) {
 			cp_float l = is_float(l_type) ? l_value.f : l_value.i;
 			cp_float r = is_float(r_type) ? r_value.f : r_value.i;
-
-			if (op == "+") {
-				value->tset((cp_float)(l + r));
+			value->tset(do_operation(l, r, op));
+		}
+		else if (op == "+") {
+			if (is_char(l_type) && is_string(r_type)) {
+				value->tset(cp_string(std::string{ l_value.c } + r_value.s));
 			}
-			else if (op == "-") {
-				value->tset((cp_float)(l - r));
+			else if (is_string(l_type) && is_char(r_type)) {
+				value->tset(cp_string(l_value.s + std::string{ r_value.c }));
 			}
-			else if (op == "*") {
-				value->tset((cp_float)(l * r));
+			else if (is_char(l_type) && is_char(r_type)) {
+				value->tset(cp_string(std::string{ l_value.c } + std::string{ r_value.c }));
 			}
-			else if (op == "/") {
-				if (int(r) == 0) {
-					set_curr_pos(astnode->row, astnode->col);
-					throw std::runtime_error("division by zero encountered");
-				}
-				value->tset((cp_float)(l / r));
-			}
-			else if (op == "%") {
-				if (int(r) == 0) {
-					set_curr_pos(astnode->row, astnode->col);
-					throw std::runtime_error("remainder by zero is undefined");
-				}
-				value->tset((cp_float)std::fmod(l, r));
-			}
-			else if (op == "/%") {
-				if (int(r) == 0) {
-					set_curr_pos(astnode->row, astnode->col);
-					throw std::runtime_error("floor division by zero encountered");
-				}
-				value->tset((cp_float)std::floor(l / r));
-			}
-			else if (op == "**") {
-				value->tset((cp_float)std::pow(l, r));
-			}
-			else if (op == "<=>") {
-				auto res = l <=> r;
-				if (res == std::strong_ordering::less) {
-					value->tset((cp_int)(-1));
-				}
-				else if (res == std::strong_ordering::equal) {
-					value->tset((cp_int)(0));
-				}
-				else if (res == std::strong_ordering::greater) {
-					value->tset((cp_int)(1));
-				}
+			else if (is_string(l_type) && is_string(r_type)) {
+				value->tset(cp_string(l_value.s + r_value.s));
 			}
 			else {
 				throw std::runtime_error("invalid types '" + type_str(l_type)
 					+ "' and '" + type_str(r_type) + "' for '" + op + "' operator");
 			}
-		}
-		else if (is_char(l_type) && is_string(r_type)) {
-			value->tset(cp_string(std::string{ l_value.c } + r_value.s));
-		}
-		else if (is_string(l_type) && is_char(r_type)) {
-			value->tset(cp_string(l_value.s + std::string{ r_value.c }));
-		}
-		else if (is_char(l_type) && is_char(r_type)) {
-			value->tset(cp_string(std::string{ l_value.c } + std::string{ r_value.c }));
-		}
-		else if (is_string(l_type) && is_string(r_type)) {
-			value->tset(cp_string(l_value.s + r_value.s));
 		}
 		else {
 			throw std::runtime_error("invalid types '" + type_str(l_type)
@@ -903,34 +839,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 	else if (op == "<" || op == ">"
 		|| op == "<=" || op == ">="
 		|| op == "==" || op == "!=") {
-		if (op == "==" || op == "!=") {
-			if (is_void(l_type) || is_void(r_type)) {
-				value->tset((cp_bool)((op == "==") ?
-					match_type(l_type, r_type)
-					: !match_type(l_type, r_type)));
-			}
-			else if (is_bool(l_type) && is_bool(r_type)) {
-				value->tset((cp_bool)((op == "==") ?
-					l_value.b == r_value.b
-					: l_value.b != r_value.b));
-			}
-			else if (is_string(l_type) && is_string(r_type)) {
-				value->tset((cp_bool)((op == "==") ?
-					l_value.s == r_value.s
-					: l_value.s != r_value.s));
-			}
-			else if (is_array(l_type) && is_array(r_type)
-				|| is_struct(l_type) && is_struct(r_type)) {
-				value->tset((cp_bool)(op == "==" ?
-					equals_value(&l_value, &r_value)
-					: !equals_value(&l_value, &r_value)));
-			}
-			else {
-				throw std::runtime_error("invalid types '" + type_str(l_type)
-					+ "' and '" + type_str(r_type) + "' for '" + op + "' operator");
-			}
-		}
-		else if (is_numeric(l_type) && is_numeric(r_type)) {
+		if (is_numeric(l_type) && is_numeric(r_type)) {
 			cp_float l = is_float(l_type) ? l_value.f : l_value.i;
 			cp_float r = is_float(r_type) ? r_value.f : r_value.i;
 
@@ -951,6 +860,33 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 			}
 			else if (op == "<=") {
 				value->tset((cp_bool)(l <= r));
+			}
+			else {
+				throw std::runtime_error("invalid types '" + type_str(l_type)
+					+ "' and '" + type_str(r_type) + "' for '" + op + "' operator");
+			}
+		}
+		else if (op == "==" || op == "!=") {
+			if (is_void(l_type) || is_void(r_type)) {
+				value->tset((cp_bool)((op == "==") ?
+					match_type(l_type, r_type)
+					: !match_type(l_type, r_type)));
+			}
+			else if (is_bool(l_type) && is_bool(r_type)) {
+				value->tset((cp_bool)((op == "==") ?
+					l_value.b == r_value.b
+					: l_value.b != r_value.b));
+			}
+			else if (is_string(l_type) && is_string(r_type)) {
+				value->tset((cp_bool)((op == "==") ?
+					l_value.s == r_value.s
+					: l_value.s != r_value.s));
+			}
+			else if (is_array(l_type) && is_array(r_type)
+				|| is_struct(l_type) && is_struct(r_type)) {
+				value->tset((cp_bool)(op == "==" ?
+					equals_value(&l_value, &r_value)
+					: !equals_value(&l_value, &r_value)));
 			}
 			else {
 				throw std::runtime_error("invalid types '" + type_str(l_type)
@@ -1785,105 +1721,6 @@ std::vector<unsigned int> Interpreter::evaluate_access_vector(const std::vector<
 	return access_vector;
 }
 
-cp_int Interpreter::do_operation(cp_int lval, cp_int rval, const std::string& op) {
-	if (op == "=") {
-		return rval;
-	}
-	else if (op == "+=") {
-		return lval + rval;
-	}
-	else if (op == "-=") {
-		return lval - rval;
-	}
-	else if (op == "*=") {
-		return lval * rval;
-	}
-	else if (op == "/=") {
-		if (rval == 0) {
-			throw std::runtime_error("division by zero encountered");
-		}
-		return lval / rval;
-	}
-	else if (op == "%=") {
-		if (rval == 0) {
-			throw std::runtime_error("remainder by zero is undefined");
-		}
-		return lval % rval;
-	}
-	else if (op == "/%=") {
-		if (rval == 0) {
-			throw std::runtime_error("floor division by zero encountered");
-		}
-		return cp_int(std::floor(lval / rval));
-	}
-	else if (op == "**=") {
-		return cp_int(std::pow(lval, rval));
-	}
-	else if (op == ">>=") {
-		return lval >> rval;
-	}
-	else if (op == "<<=") {
-		return lval << rval;
-	}
-	else if (op == "|=") {
-		return lval << rval;
-	}
-	else if (op == "&=") {
-		return lval << rval;
-	}
-	else if (op == "^=") {
-		return lval << rval;
-	}
-	return rval;
-}
-
-cp_float Interpreter::do_operation(cp_float lval, cp_float rval, const std::string& op) {
-	if (op == "=") {
-		return rval;
-	}
-	else if (op == "+=") {
-		return lval + rval;
-	}
-	else if (op == "-=") {
-		return lval - rval;
-	}
-	else if (op == "*=") {
-		return lval * rval;
-	}
-	else if (op == "/=") {
-		if (int(rval) == 0) {
-			throw std::runtime_error("division by zero encountered");
-		}
-		return lval / rval;
-	}
-	else if (op == "%=") {
-		if (int(rval) == 0) {
-			throw std::runtime_error("remainder by zero is undefined");
-		}
-		return std::fmod(lval, rval);
-	}
-	else if (op == "/%=") {
-		if (int(rval) == 0) {
-			throw std::runtime_error("floor division by zero encountered");
-		}
-		return std::floor(lval / rval);
-	}
-	else if (op == "**=") {
-		return cp_int(std::pow(lval, rval));
-	}
-	return rval;
-}
-
-cp_string Interpreter::do_operation(const cp_string& lval, const cp_string& rval, const std::string& op) {
-	if (op == "=") {
-		return rval;
-	}
-	else if (op == "+=") {
-		return lval + rval;
-	}
-	return rval;
-}
-
 std::string Interpreter::parse_value_to_string(const Value* value) {
 	switch (value->curr_type) {
 	case Type::T_VOID:
@@ -1960,13 +1797,138 @@ std::string Interpreter::parse_struct_to_string(const cp_struct& str_value) {
 	return s.str();
 }
 
-void Interpreter::set_curr_pos(unsigned int row, unsigned int col) {
-	curr_row = row;
-	curr_col = col;
+cp_int Interpreter::do_operation(cp_int lval, cp_int rval, const std::string& op) {
+	if (op == "=") {
+		return rval;
+	}
+	else if (op == "+=" || op == "+") {
+		return lval + rval;
+	}
+	else if (op == "-=" || op == "-") {
+		return lval - rval;
+	}
+	else if (op == "*=" || op == "*") {
+		return lval * rval;
+	}
+	else if (op == "/=" || op == "/") {
+		if (rval == 0) {
+			throw std::runtime_error("division by zero encountered");
+		}
+		return lval / rval;
+	}
+	else if (op == "%=" || op == "%") {
+		if (rval == 0) {
+			throw std::runtime_error("remainder by zero is undefined");
+		}
+		return lval % rval;
+	}
+	else if (op == "/%=" || op == "/%") {
+		if (rval == 0) {
+			throw std::runtime_error("floor division by zero encountered");
+		}
+		return cp_int(std::floor(lval / rval));
+	}
+	else if (op == "**=" || op == "**") {
+		return cp_int(std::pow(lval, rval));
+	}
+	else if (op == ">>=" || op == ">>") {
+		return lval >> rval;
+	}
+	else if (op == "<<=" || op == "<<") {
+		return lval << rval;
+	}
+	else if (op == "|=" || op == "|") {
+		return lval << rval;
+	}
+	else if (op == "&=" || op == "&") {
+		return lval << rval;
+	}
+	else if (op == "^=" || op == "^") {
+		return lval << rval;
+	}
+	else if (op == "<=>") {
+		auto res = lval <=> rval;
+		if (res == std::strong_ordering::less) {
+			return cp_int(-1);
+		}
+		else if (res == std::strong_ordering::equal) {
+			return cp_int(0);
+		}
+		else if (res == std::strong_ordering::greater) {
+			return cp_int(1);
+		}
+	}
+	throw std::runtime_error("invalid '" + op + "' operator for types 'int' and 'int'");
 }
 
-std::string Interpreter::msg_header() {
-	return "(IERR) " + current_program->name + '[' + std::to_string(curr_row) + ':' + std::to_string(curr_col) + "]: ";
+cp_float Interpreter::do_operation(cp_float lval, cp_float rval, const std::string& op) {
+	if (op == "=") {
+		return rval;
+	}
+	else if (op == "+=" || op == "+") {
+		return lval + rval;
+	}
+	else if (op == "-=" || op == "-") {
+		return lval - rval;
+	}
+	else if (op == "*=" || op == "*") {
+		return lval * rval;
+	}
+	else if (op == "/=" || op == "/") {
+		if (int(rval) == 0) {
+			throw std::runtime_error("division by zero encountered");
+		}
+		return lval / rval;
+	}
+	else if (op == "%=" || op == "%") {
+		if (int(rval) == 0) {
+			throw std::runtime_error("remainder by zero is undefined");
+		}
+		return std::fmod(lval, rval);
+	}
+	else if (op == "/%=" || op == "/%") {
+		if (int(rval) == 0) {
+			throw std::runtime_error("floor division by zero encountered");
+		}
+		return std::floor(lval / rval);
+	}
+	else if (op == "**=" || op == "**") {
+		return cp_int(std::pow(lval, rval));
+	}
+	else if (op == "<=>") {
+		auto res = lval <=> rval;
+		if (res == std::strong_ordering::less) {
+			return cp_float(-1);
+		}
+		else if (res == std::strong_ordering::equal) {
+			return cp_float(0);
+		}
+		else if (res == std::strong_ordering::greater) {
+			return cp_float(1);
+		}
+	}
+	throw std::runtime_error("invalid '" + op + "' operator");
+}
+
+cp_string Interpreter::do_operation(const cp_string& lval, const cp_string& rval, const std::string& op) {
+	if (op == "=") {
+		return rval;
+	}
+	else if (op == "+=" || op == "+") {
+		return lval + rval;
+	}
+	throw std::runtime_error("invalid '" + op + "' operator for types 'string' and 'string'");
+}
+
+cp_array Interpreter::do_operation(const cp_array& lval, const cp_array& rval, const std::string& op) {
+	if (op == "=") {
+		return rval;
+	}
+	else if (op == "+=" || op == "+") {
+		std::merge(lval.begin(), lval.end(), rval.begin(), rval.end(), lval.begin());
+		return lval;
+	}
+	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");
 }
 
 long long Interpreter::hash(ASTExprNode* astnode) {
@@ -2157,4 +2119,13 @@ void Interpreter::register_built_in_lib(const std::string& libname) {
 		cpconsole = new modules::Console();
 		cpconsole->register_functions(this);
 	}
+}
+
+void Interpreter::set_curr_pos(unsigned int row, unsigned int col) {
+	curr_row = row;
+	curr_col = col;
+}
+
+std::string Interpreter::msg_header() {
+	return "(IERR) " + current_program->name + '[' + std::to_string(curr_row) + ':' + std::to_string(curr_col) + "]: ";
 }

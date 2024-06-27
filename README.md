@@ -18,6 +18,7 @@
     - [X] Add struct array-like constructor
     - [X] Add Java class pointer-like behavior
     - [X] Add struct as Dict by iterating over in foreach
+        - [ ] add: builtin key, value like `foreach (var [key, value] in struct_var)`
 - [X] Add null support
 - [X] Add type convert support
     - [X] Add array and struct support (based on print)
@@ -61,13 +62,18 @@
     - [X] try catch throw
         - [X] Bring error header to a higher level
         - [X] add ... to ignore catch error
+        - [ ] add: throw a simple string as Exception to avoid Exception include `throw "string error";`, but how to get it in catch? maybe `[type, error]`?
     - [X] do while
 - [ ] Add expression:
     - [ ] add: runtime type checking for any types
-    - [X] refact:
+        - [X] assign operation
+        - [X] expressions
+        - [ ] other nodes
+    - [X] refact expression return type:
         - [X] if real type is any change to float
         - [X] if both real type is int trunc to int
         - [X] if some real type is float expression is float
+    - [X] refact: let `+` operator join arrays
     - [X] Add expression operators:
         - [X] binary operators 
             - [X] mod `%` operation
@@ -83,9 +89,9 @@
             - [X] `typeof`: returns type of object
                 - [X] fix: add namespace to type name return
             - [X] `typeid`: returns hash of typeof
-            - [ ] `isany`: returns if a variable is any
-            - [ ] `isarray`: returns if a variable is array
-            - [ ] `isstruct`: returns if a variable is struct
+            - [ ] `is_any`: returns if a variable is any
+            - [ ] `is_array`: returns if a variable is array
+            - [ ] `is_struct`: returns if a variable is struct
     - [ ] add: bitwise operators:
         - [x] &   bitwise AND
         - [x] |   bitwise inclusive OR
