@@ -347,6 +347,10 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	}
 }
 
+bool match_func_return_type() {
+
+}
+
 void Interpreter::visit(ASTReturnNode* astnode) {
 	const auto& nmspace = get_namespace();
 	const auto& curr_func_ret_type = current_function_return_type.top();
