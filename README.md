@@ -65,6 +65,7 @@
         - [ ] add: throw a simple string as Exception to avoid Exception include `throw "string error";`, but how to get it in catch? maybe `[type, error]`?
     - [X] do while
 - [ ] Add expression:
+    - [ ] native JSON and json style array constructor???
     - [ ] add: runtime type checking for any types
         - [X] assign operation
         - [X] expressions
