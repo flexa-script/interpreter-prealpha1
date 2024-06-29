@@ -1,6 +1,7 @@
 #include "files.hpp"
 
 using namespace modules;
+using namespace visitor;
 
 Files::Files() {}
 

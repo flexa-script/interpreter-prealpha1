@@ -1,11 +1,13 @@
 #include <iostream>
 
+#include "visitor.hpp"
 #include "parser.hpp"
 #include "vendor/axeutils.hpp"
 
 
 using namespace lexer;
 using namespace parser;
+using namespace visitor;
 
 
 Parser::Parser(const std::string& name, Lexer* lex) : name(name), lex(lex) {

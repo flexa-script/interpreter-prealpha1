@@ -9,11 +9,11 @@
 
 
 namespace visitor {
-	typedef std::map<std::string, parser::StructureDefinition> interpreter_struct_list_t;
+	typedef std::map<std::string, visitor::StructureDefinition> interpreter_struct_list_t;
 	typedef std::map<std::string, Value*> interpreter_variable_list_t;
-	typedef std::tuple<std::string, parser::TypeDefinition, parser::ASTExprNode*, bool> interpreter_parameter_t;
+	typedef std::tuple<std::string, visitor::TypeDefinition, parser::ASTExprNode*, bool> interpreter_parameter_t;
 	typedef std::vector<interpreter_parameter_t> interpreter_parameter_list_t;
-	typedef std::tuple<interpreter_parameter_list_t, parser::ASTBlockNode*, parser::TypeDefinition> interpreter_function_t;
+	typedef std::tuple<interpreter_parameter_list_t, parser::ASTBlockNode*, visitor::TypeDefinition> interpreter_function_t;
 	typedef std::multimap<std::string, interpreter_function_t> interpreter_function_list_t;
 
 	class Interpreter;
@@ -35,7 +35,7 @@ namespace visitor {
 
 		bool already_declared_structure_definition(std::string);
 		bool already_declared_variable(std::string);
-		bool already_declared_function(std::string, std::vector<parser::TypeDefinition>);
+		bool already_declared_function(std::string, std::vector<visitor::TypeDefinition>);
 		bool already_declared_function_name(std::string identifier);
 
 		Value* declare_empty_variable(std::string identifier, parser::Type type, parser::Type empty_type);
@@ -50,12 +50,12 @@ namespace visitor {
 		Value* declare_variable(std::string identifier, parser::Type type, cp_function);
 		Value* declare_value(std::string, Value*);
 
-		void declare_function(std::string identifier, interpreter_parameter_list_t variables, parser::ASTBlockNode* block, parser::TypeDefinition type);
-		void declare_structure_definition(std::string, std::vector<parser::VariableDefinition>, unsigned int, unsigned int);
+		void declare_function(std::string identifier, interpreter_parameter_list_t variables, parser::ASTBlockNode* block, visitor::TypeDefinition type);
+		void declare_structure_definition(std::string, std::vector<visitor::VariableDefinition>, unsigned int, unsigned int);
 
-		parser::StructureDefinition find_declared_structure_definition(std::string);
+		visitor::StructureDefinition find_declared_structure_definition(std::string);
 		Value* find_declared_variable(std::string);
-		interpreter_function_t find_declared_function(std::string, std::vector<parser::TypeDefinition>);
+		interpreter_function_t find_declared_function(std::string, std::vector<visitor::TypeDefinition>);
 		std::pair<interpreter_function_list_t::iterator, interpreter_function_list_t::iterator> find_declared_functions(std::string identifier);
 
 		std::string get_name();

@@ -7,8 +7,9 @@
 #include <stdexcept>
 #include <functional>
 
-
-class Value;
+namespace visitor {
+	class Value;
+}
 
 namespace parser {
 	enum class Type {
@@ -31,8 +32,6 @@ namespace parser {
 	bool is_numeric(parser::Type);
 	bool is_collection(parser::Type);
 	bool is_iterable(parser::Type);
-
-	class TypeDefinition;
 
 	class ASTProgramNode;
 
@@ -81,8 +80,8 @@ typedef int64_t cp_int;
 typedef long double cp_float;
 typedef char cp_char;
 typedef std::string cp_string;
-typedef std::vector<Value*> cp_array;
-typedef std::map<std::string, Value*> cp_struct_values;
+typedef std::vector<visitor::Value*> cp_array;
+typedef std::map<std::string, visitor::Value*> cp_struct_values;
 typedef std::tuple<std::string, std::string, cp_struct_values> cp_struct;
 typedef std::pair<void*, std::string> cp_function;
 
@@ -90,73 +89,185 @@ extern std::string default_namespace;
 extern std::vector<std::string> std_libs;
 extern std::vector<std::string> built_in_libs;
 
-class Value {
-public:
-	Value();
-	Value(cp_bool);
-	Value(cp_int);
-	Value(cp_float);
-	Value(cp_char);
-	Value(cp_string);
-	Value(cp_array);
-	Value(cp_struct*);
-	Value(cp_function);
-	Value(parser::Type type);
-	Value(parser::Type type, parser::Type arr_type);
-	Value(Value*);
-	~Value();
-
-	parser::Type type;
-	parser::Type curr_type;
-	parser::Type arr_type;
-	bool ref = false;
-
-	cp_bool b = false;
-	cp_int i = 0;
-	cp_float f = 0;
-	cp_char c = '\0';
-	cp_string s;
-	cp_array arr;
-	cp_struct* str;
-	cp_function fun;
-
-	void set(cp_bool);
-	void set(cp_int);
-	void set(cp_float);
-	void set(cp_char);
-	void set(cp_string);
-	void set(cp_array);
-	void set(cp_struct*);
-	void set(cp_function);
-
-	void tset(cp_bool);
-	void tset(cp_int);
-	void tset(cp_float);
-	void tset(cp_char);
-	void tset(cp_string);
-	void tset(cp_array);
-	void tset(cp_struct*);
-	void tset(cp_function);
-
-	void set_null();
-	void set_undefined();
-	void set_empty(parser::Type empty_type);
-
-	void set_type(parser::Type type);
-	void set_curr_type(parser::Type curr_type);
-	void set_arr_type(parser::Type arr_type);
-	void def_ref();
-
-	bool has_value();
-
-	void copy_array(cp_array arr);
-	void copy_from(Value* value);
-
-	bool equals_array(cp_array arr);
-	bool equals(Value* value);
-};
-
 namespace visitor {
+	class CodePosition {
+	public:
+		unsigned int row;
+		unsigned int col;
+
+		CodePosition(unsigned int row = 0, unsigned int col = 0) : row(row), col(col) {};
+	};
+
+	class TypeDefinition {
+	public:
+		parser::Type type;
+		std::string type_name;
+		std::string type_name_space;
+		parser::Type array_type;
+		std::vector<parser::ASTExprNode*> dim;
+
+		TypeDefinition(parser::Type type, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,
+			const std::string& type_name, const std::string& type_name_space);
+
+		TypeDefinition();
+
+		static TypeDefinition get_basic(parser::Type type);
+		static TypeDefinition get_array(parser::Type type, parser::Type array_type, std::vector<parser::ASTExprNode*>&& dim = std::vector<parser::ASTExprNode*>());
+		static TypeDefinition get_struct(parser::Type type, const std::string& type_name, const std::string& type_name_space);
+	};
+
+	class VariableDefinition : public TypeDefinition, public CodePosition {
+	public:
+		std::string identifier;
+		parser::ASTExprNode* default_value;
+		bool is_rest;
+
+		VariableDefinition(const std::string& identifier, parser::Type type, const std::string& type_name,
+			const std::string& type_name_space, parser::Type array_type, std::vector<parser::ASTExprNode*>&& dim,
+			parser::ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col);
+
+		VariableDefinition();
+
+		static VariableDefinition get_basic(const std::string& identifier, parser::Type type,
+			parser::ASTExprNode* default_value = nullptr, bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
+
+		static VariableDefinition get_array(const std::string& identifier, parser::Type type, parser::Type array_type,
+			std::vector<parser::ASTExprNode*>&& dim = std::vector<parser::ASTExprNode*>(), parser::ASTExprNode* default_value = nullptr,
+			bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
+
+		static VariableDefinition get_struct(const std::string& identifier, parser::Type type,
+			const std::string& type_name, const std::string& type_name_space, parser::ASTExprNode* default_value = nullptr,
+			bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
+	};
+
+	class FunctionDefinition : public TypeDefinition, public CodePosition {
+	public:
+		std::string identifier;
+		std::vector<TypeDefinition> signature;
+		std::vector<VariableDefinition> parameters;
+
+		FunctionDefinition(const std::string& identifier, parser::Type type, const std::string& type_name,
+			const std::string& type_name_space, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,
+			const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters,
+			unsigned int row, unsigned int col);
+
+		FunctionDefinition(const std::string& identifier, unsigned int row, unsigned int col);
+
+		FunctionDefinition();
+
+		void check_signature() const;
+	};
+
+	class StructureDefinition : public CodePosition {
+	public:
+		std::string identifier;
+		std::vector<VariableDefinition> variables;
+
+		StructureDefinition(const std::string& identifier, const std::vector<VariableDefinition>& variables,
+			unsigned int row, unsigned int col);
+
+		StructureDefinition();
+	};
+
+	class SemanticValue : public TypeDefinition, public CodePosition {
+	public:
+		long long hash;
+		bool is_const;
+		bool ref;
+		bool is_sub;
+
+		// complete constructor
+		SemanticValue(parser::Type type, parser::Type array_type, std::vector<parser::ASTExprNode*>&& dim,
+			const std::string& type_name, const std::string& type_name_space, long long hash,
+			bool is_const, unsigned int row, unsigned int col);
+
+		// simplified constructor
+		SemanticValue(parser::Type type, unsigned int row, unsigned int col);
+
+		SemanticValue();
+
+		void resetref();
+		void copy_from(SemanticValue* value);
+	};
+
+	class SemanticVariable : public TypeDefinition, public CodePosition {
+	public:
+		std::string identifier;
+		SemanticValue* value;
+		bool is_const;
+
+		SemanticVariable(const std::string& identifier, parser::Type type, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,
+			const std::string& type_name, const std::string& type_name_space, SemanticValue* value, bool is_const, unsigned int row, unsigned int col);
+
+		SemanticVariable();
+
+		void copy_from(SemanticVariable* var);
+	};
+
+	class Value : public TypeDefinition {
+	public:
+		Value();
+		Value(cp_bool);
+		Value(cp_int);
+		Value(cp_float);
+		Value(cp_char);
+		Value(cp_string);
+		Value(cp_array);
+		Value(cp_struct*);
+		Value(cp_function);
+		Value(parser::Type type);
+		Value(parser::Type type, parser::Type arr_type);
+		Value(Value*);
+		~Value();
+
+		parser::Type curr_type;
+		bool ref = false;
+
+		cp_bool b = false;
+		cp_int i = 0;
+		cp_float f = 0;
+		cp_char c = '\0';
+		cp_string s;
+		cp_array arr;
+		cp_struct* str;
+		cp_function fun;
+
+		void set(cp_bool);
+		void set(cp_int);
+		void set(cp_float);
+		void set(cp_char);
+		void set(cp_string);
+		void set(cp_array);
+		void set(cp_struct*);
+		void set(cp_function);
+
+		void tset(cp_bool);
+		void tset(cp_int);
+		void tset(cp_float);
+		void tset(cp_char);
+		void tset(cp_string);
+		void tset(cp_array);
+		void tset(cp_struct*);
+		void tset(cp_function);
+
+		void set_null();
+		void set_undefined();
+		void set_empty(parser::Type empty_type);
+
+		void set_type(parser::Type type);
+		void set_curr_type(parser::Type curr_type);
+		void set_arr_type(parser::Type arr_type);
+		void def_ref();
+
+		bool has_value();
+
+		void copy_array(cp_array arr);
+		void copy_from(Value* value);
+
+		bool equals_array(cp_array arr);
+		bool equals(Value* value);
+	};
+
 	class Visitor {
 	public:
 		std::map<std::string, parser::ASTProgramNode*> programs;

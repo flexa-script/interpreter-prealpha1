@@ -10,119 +10,6 @@
 
 
 namespace parser {
-	class CodePosition {
-	public:
-		unsigned int row;
-		unsigned int col;
-
-		CodePosition(unsigned int row = 0, unsigned int col = 0) : row(row), col(col) {};
-	};
-
-	class TypeDefinition {
-	public:
-		parser::Type type;
-		std::string type_name;
-		std::string type_name_space;
-		parser::Type array_type;
-		std::vector<ASTExprNode*> dim;
-
-		TypeDefinition(Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
-			const std::string& type_name, const std::string& type_name_space);
-
-		TypeDefinition();
-
-		static TypeDefinition get_basic(parser::Type type);
-		static TypeDefinition get_array(Type type, Type array_type, std::vector<ASTExprNode*>&& dim = std::vector<ASTExprNode*>());
-		static TypeDefinition get_struct(Type type, const std::string& type_name, const std::string& type_name_space);
-	};
-
-	class SemanticValue : public TypeDefinition, public CodePosition {
-	public:
-		long long hash;
-		bool is_const;
-		bool ref;
-		bool is_sub;
-
-		// complete constructor
-		SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*>&& dim,
-			const std::string& type_name, const std::string& type_name_space, long long hash,
-			bool is_const, unsigned int row, unsigned int col);
-
-		// simplified constructor
-		SemanticValue(Type type, unsigned int row, unsigned int col);
-
-		SemanticValue();
-
-		void resetref();
-		void copy_from(SemanticValue* value);
-	};
-
-	class SemanticVariable : public TypeDefinition, public CodePosition {
-	public:
-		std::string identifier;
-		SemanticValue* value;
-		bool is_const;
-
-		SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
-			const std::string& type_name, const std::string& type_name_space, SemanticValue* value, bool is_const, unsigned int row, unsigned int col);
-
-		SemanticVariable();
-
-		void copy_from(SemanticVariable* var);
-	};
-
-	class VariableDefinition : public TypeDefinition, public CodePosition {
-	public:
-		std::string identifier;
-		ASTExprNode* default_value;
-		bool is_rest;
-
-		VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,
-			const std::string& type_name_space, Type array_type, std::vector<ASTExprNode*>&& dim,
-			ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col);
-
-		VariableDefinition();
-
-		static VariableDefinition get_basic(const std::string& identifier, parser::Type type,
-			ASTExprNode* default_value = nullptr, bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
-
-		static VariableDefinition get_array(const std::string& identifier, parser::Type type, parser::Type array_type,
-			std::vector<ASTExprNode*>&& dim = std::vector<ASTExprNode*>(), ASTExprNode* default_value = nullptr,
-			bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
-
-		static VariableDefinition get_struct(const std::string& identifier, parser::Type type,
-			const std::string& type_name, const std::string& type_name_space, ASTExprNode* default_value = nullptr,
-			bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
-	};
-
-	class FunctionDefinition : public TypeDefinition, public CodePosition {
-	public:
-		std::string identifier;
-		std::vector<parser::TypeDefinition> signature;
-		std::vector<parser::VariableDefinition> parameters;
-
-		FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
-			const std::string& type_name_space, Type array_type, const std::vector<ASTExprNode*>& dim,
-			const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters,
-			unsigned int row, unsigned int col);
-
-		FunctionDefinition(const std::string& identifier, unsigned int row, unsigned int col);
-
-		FunctionDefinition();
-
-		void check_signature() const;
-	};
-
-	class StructureDefinition : public CodePosition {
-	public:
-		std::string identifier;
-		std::vector<VariableDefinition> variables;
-
-		StructureDefinition(const std::string& identifier, const std::vector<VariableDefinition>& variables,
-			unsigned int row, unsigned int col);
-
-		StructureDefinition();
-	};
 
 	class Identifier {
 	public:
@@ -136,10 +23,10 @@ namespace parser {
 		Identifier();
 	};
 
-	class ASTNode : public CodePosition {
+	class ASTNode : public visitor::CodePosition {
 	public:
 		ASTNode(unsigned int row, unsigned int col)
-			: CodePosition(row, col) {}
+			: visitor::CodePosition(row, col) {}
 
 		virtual void accept(visitor::Visitor*) = 0;
 	};
@@ -193,7 +80,7 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
-	class ASTDeclarationNode : public ASTStatementNode, public TypeDefinition {
+	class ASTDeclarationNode : public ASTStatementNode, public visitor::TypeDefinition {
 	public:
 		std::string identifier;
 		ASTExprNode* expr;
@@ -376,23 +263,23 @@ namespace parser {
 	class ASTStructDefinitionNode : public ASTStatementNode {
 	public:
 		std::string identifier;
-		std::vector<VariableDefinition> variables;
+		std::vector<visitor::VariableDefinition> variables;
 
-		ASTStructDefinitionNode(const std::string& identifier, std::vector<VariableDefinition>&& variables,
+		ASTStructDefinitionNode(const std::string& identifier, std::vector<visitor::VariableDefinition>&& variables,
 			unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
 	};
 
-	class ASTFunctionDefinitionNode : public ASTStatementNode, public TypeDefinition {
+	class ASTFunctionDefinitionNode : public ASTStatementNode, public visitor::TypeDefinition {
 	public:
 		std::string identifier;
-		std::vector<VariableDefinition> parameters;
+		std::vector<visitor::VariableDefinition> parameters;
 		std::vector<std::string> variable_names;
 		std::vector<TypeDefinition> signature;
 		ASTBlockNode* block;
 
-		ASTFunctionDefinitionNode(const std::string& identifier, std::vector<VariableDefinition>&& parameters,
+		ASTFunctionDefinitionNode(const std::string& identifier, std::vector<visitor::VariableDefinition>&& parameters,
 			Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, std::vector<ASTExprNode*>&& dim,
 			ASTBlockNode* block, unsigned int row, unsigned int col);
 
@@ -410,7 +297,7 @@ namespace parser {
 		virtual long long hash(visitor::Visitor*) override;
 	};
 
-	class ASTFunctionExpression : public ASTExprNode, public TypeDefinition {
+	class ASTFunctionExpression : public ASTExprNode, public visitor::TypeDefinition {
 	public:
 		ASTFunctionDefinitionNode* fun;
 

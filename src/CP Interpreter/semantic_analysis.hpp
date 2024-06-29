@@ -20,8 +20,8 @@ namespace visitor {
 		std::vector<std::string> nmspaces;
 		std::vector<std::string> parsed_libs;
 		std::string current_namespace;
-		parser::SemanticValue current_expression;
-		std::stack<parser::FunctionDefinition> current_function;
+		visitor::SemanticValue current_expression;
+		std::stack<visitor::FunctionDefinition> current_function;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		bool exception = false;
 		bool is_switch = false;
@@ -30,20 +30,20 @@ namespace visitor {
 	private:
 		bool returns(parser::ASTNode* astnode);
 
-		void equals_value(const parser::SemanticValue& lval, const parser::SemanticValue& rval);
-		void validate_struct_assign(SemanticScope* curr_scope, parser::SemanticValue* expression, parser::ASTStructConstructorNode* expr);
+		void equals_value(const visitor::SemanticValue& lval, const visitor::SemanticValue& rval);
+		void validate_struct_assign(SemanticScope* curr_scope, visitor::SemanticValue* expression, parser::ASTStructConstructorNode* expr);
 
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<parser::ASTExprNode*>& expr_access_vector);
 		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);
 
 		SemanticScope* get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
 		SemanticScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-		SemanticScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<parser::TypeDefinition>& signature);
+		SemanticScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<visitor::TypeDefinition>& signature);
 
 		void determine_array_type(parser::ASTArrayConstructorNode* astnode);
 		void check_array_type(parser::ASTExprNode* astnode, unsigned int row, unsigned int col);
 
-		parser::VariableDefinition access_struct_variable(std::vector<parser::Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i = 0);
+		visitor::VariableDefinition access_struct_variable(std::vector<parser::Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i = 0);
 
 		void register_built_in_functions();
 

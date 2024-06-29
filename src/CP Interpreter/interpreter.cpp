@@ -102,6 +102,13 @@ void Interpreter::visit(ASTAsNamespaceNode* astnode) {
 	program_nmspaces[get_namespace(current_program->alias)].push_back(astnode->nmspace);
 }
 
+void Interpreter::visit(ASTEnumNode* astnode) {
+	const auto& nmspace = get_namespace();
+	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
+		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], Type::T_INT, (cp_int)i);
+	}
+}
+
 void Interpreter::visit(ASTDeclarationNode* astnode) {
 	const auto& nmspace = get_namespace();
 
@@ -202,13 +209,6 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	}
 }
 
-void Interpreter::visit(ASTEnumNode* astnode) {
-	const auto& nmspace = get_namespace();
-	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
-		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], Type::T_INT, (cp_int)i);
-	}
-}
-
 void Interpreter::visit(ASTAssignmentNode* astnode) {
 	InterpreterScope* astscope;
 	try {
@@ -226,128 +226,30 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	astnode->expr->accept(this);
 	identifier_call_name = "";
 
+	if (current_expression_value.ref && astnode->op == "="
+		&& (match_type(value->curr_type, current_expression_value.curr_type)
+			|| is_any(value->type)
+			/*or is array....*/)) {
+		astscope->declare_value(astnode->identifier_vector[0].identifier, current_param_ref);
+		return;
+	}
+
+	auto new_value = new Value(current_expression_value);
+
 	if (is_undefined(value->curr_type)) {
-		value->set_curr_type(is_any(value->type) ? current_expression_value.curr_type : value->type);
+		value->set_curr_type(is_any(value->type) ? new_value->curr_type : value->type);
 	}
 
-	if (current_expression_value.has_value()) {
-		switch (current_expression_value.curr_type) {
-		case Type::T_BOOL:
-			if (!is_bool(value->curr_type) && !is_any(value->type)
-				|| astnode->op != "=") {
-				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for '" + astnode->op + "' operator");
-			}
-			value->set(current_expression_value.b);
-			break;
-		case Type::T_INT:
-			if (is_float(value->curr_type) && is_any(value->type)) {
-				value->set(do_operation(value->f, cp_float(current_expression_value.i), astnode->op));
-			}
-			else if (is_int(value->curr_type) && is_any(value->type)) {
-				value->set(do_operation(cp_float(value->i), cp_float(current_expression_value.i), astnode->op));
-			}
-			else if (is_int(value->curr_type)) {
-				value->set(do_operation(value->i, current_expression_value.i, astnode->op));
-			}
-			else {
-				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for '" + astnode->op + "' operator");
-			}
-			break;
-		case Type::T_FLOAT:
-			if (is_float(value->curr_type)) {
-				value->set(do_operation(value->f, current_expression_value.f, astnode->op));
-			}
-			else if (is_int(value->curr_type)) {
-				value->set(do_operation(cp_float(value->i), current_expression_value.f, astnode->op));
-			}
-			else {
-				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for '" + astnode->op + "' operator");
-			}
-			break;
-		case Type::T_CHAR:
-			if (is_string(value->curr_type)) {
-				if (astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
-					if (astnode->op != "=") {
-						throw std::runtime_error("invalid types '" + type_str(value->curr_type)
-							+ "' and '" + type_str(current_expression_value.curr_type)
-							+ "' for '" + astnode->op + "' operator");
-					}
-
-					has_string_access = false;
-					auto c = current_expression_value.c;
-					astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
-					auto pos = current_expression_value.i;
-					auto str = value->s;
-					str[pos] = c;
-					value->set(cp_string(str));
-				}
-				else {
-					value->set(do_operation(value->s, std::string{ current_expression_value.c }, astnode->op));
-				}
-			}
-			else if (is_char(value->curr_type)) {
-				if (astnode->op != "=") {
-					throw std::runtime_error("invalid types '" + type_str(value->curr_type)
-						+ "' and '" + type_str(current_expression_value.curr_type)
-						+ "' for '" + astnode->op + "' operator");
-				}
-
-				value->set(current_expression_value.c);
-			}
-			else {
-				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for '" + astnode->op + "' operator");
-			}
-			break;
-		case Type::T_STRING:
-			if (!is_string(value->curr_type)) {
-				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for '" + astnode->op + "' operator");
-			}
-			value->set(do_operation(value->s, current_expression_value.s, astnode->op));
-			break;
-		case Type::T_ARRAY:
-			if (!is_array(value->curr_type)) {
-				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for '" + astnode->op + "' operator");
-			}
-			value->set(do_operation(value->arr, current_expression_value.arr, astnode->op));
-			break;
-		case Type::T_STRUCT:
-			if (!is_struct(value->curr_type)
-				|| astnode->op != "=") {
-				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for '" + astnode->op + "' operator");
-			}
-			value->set(current_expression_value.str);
-			break;
-		case Type::T_FUNCTION:
-			if (!is_function(value->curr_type)
-				|| astnode->op != "=") {
-				throw std::runtime_error("invalid types '" + type_str(value->curr_type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for '" + astnode->op + "' operator");
-			}
-			value->set(current_expression_value.fun);
-			break;
-		}
+	cp_int pos = 0;
+	if (has_string_access) {
+		astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
+		pos = current_expression_value.i;
 	}
-	else {
-		value->set_null();
-	}
+
+	do_operation(astnode->op, value, new_value, pos);
 }
 
-bool match_func_return_type() {
+//bool match_func_return_type() {
 	//if (!is_any(true_type) && !is_void(current_expression.type)
 	//	&& current_expression.type != true_type) {
 	//	set_curr_pos(astnode->row, astnode->col);
@@ -406,7 +308,7 @@ bool match_func_return_type() {
 	//		throw std::runtime_error("invalid '" + current_function.top().identifier + "' function struct type return");
 	//	}
 	//}
-}
+//}
 
 void Interpreter::visit(ASTReturnNode* astnode) {
 	const auto& nmspace = get_namespace();
@@ -880,139 +782,12 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 	std::string op = astnode->op;
 
 	astnode->left->accept(this);
-	Type l_vtype = current_expression_value.type;
-	Type l_type = current_expression_value.curr_type;
 	Value l_value = current_expression_value;
 
 	astnode->right->accept(this);
-	Type r_vtype = current_expression_value.type;
-	Type r_type = current_expression_value.curr_type;
 	Value r_value = current_expression_value;
 
-	auto value = new Value(Type::T_UNDEFINED);
-
-	if (op == "+" || op == "-" || op == "*" ||
-		op == "/" || op == "**" || op == "%" ||
-		op == "/%" || op == "<<" || op == ">>" ||
-		op == "&" || op == "^" || op == "|"
-		|| op == "<=>") {
-		if (is_array(l_type) && is_array(r_type)) {
-			value->tset(do_operation(l_value.arr, r_value.arr, op));
-		}
-		else if (is_int(l_type) && is_int(r_type)
-			&& is_int(l_vtype) && is_int(r_vtype)) {
-			value->tset(do_operation(l_value.i, r_value.i, op));
-		}
-		else if (is_numeric(l_type) && is_numeric(r_type)) {
-			cp_float l = is_float(l_type) ? l_value.f : l_value.i;
-			cp_float r = is_float(r_type) ? r_value.f : r_value.i;
-			value->tset(do_operation(l, r, op));
-		}
-		else if (op == "+") {
-			if (is_char(l_type) && is_string(r_type)) {
-				value->tset(cp_string(std::string{ l_value.c } + r_value.s));
-			}
-			else if (is_string(l_type) && is_char(r_type)) {
-				value->tset(cp_string(l_value.s + std::string{ r_value.c }));
-			}
-			else if (is_char(l_type) && is_char(r_type)) {
-				value->tset(cp_string(std::string{ l_value.c } + std::string{ r_value.c }));
-			}
-			else if (is_string(l_type) && is_string(r_type)) {
-				value->tset(cp_string(l_value.s + r_value.s));
-			}
-			else {
-				throw std::runtime_error("invalid types '" + type_str(l_type)
-					+ "' and '" + type_str(r_type) + "' for '" + op + "' operator");
-			}
-		}
-		else {
-			throw std::runtime_error("invalid types '" + type_str(l_type)
-				+ "' and '" + type_str(r_type) + "' for '" + op + "' operator");
-		}
-	}
-	else if (op == "and" || op == "or") {
-		cp_bool l = l_value.b;
-		cp_bool r = r_value.b;
-
-		if (!is_bool(l_type) || !is_bool(r_type)) {
-			throw std::runtime_error("invalid types '" + type_str(l_type)
-				+ "' and '" + type_str(r_type) + "' for '" + op + "' operator");
-		}
-
-		if (op == "and") {
-			value->tset((cp_bool)(l && r));
-		}
-		else if (op == "or") {
-			value->tset((cp_bool)(l || r));
-		}
-	}
-	else if (op == "<" || op == ">"
-		|| op == "<=" || op == ">="
-		|| op == "==" || op == "!=") {
-		if (is_numeric(l_type) && is_numeric(r_type)) {
-			cp_float l = is_float(l_type) ? l_value.f : l_value.i;
-			cp_float r = is_float(r_type) ? r_value.f : r_value.i;
-
-			if (op == "==") {
-				value->tset((cp_bool)(l == r));
-			}
-			else if (op == "!=") {
-				value->tset((cp_bool)(l != r));
-			}
-			else if (op == "<") {
-				value->tset((cp_bool)(l < r));
-			}
-			else if (op == ">") {
-				value->tset((cp_bool)(l > r));
-			}
-			else if (op == ">=") {
-				value->tset((cp_bool)(l >= r));
-			}
-			else if (op == "<=") {
-				value->tset((cp_bool)(l <= r));
-			}
-			else {
-				throw std::runtime_error("invalid types '" + type_str(l_type)
-					+ "' and '" + type_str(r_type) + "' for '" + op + "' operator");
-			}
-		}
-		else if (op == "==" || op == "!=") {
-			if (is_void(l_type) || is_void(r_type)) {
-				value->tset((cp_bool)((op == "==") ?
-					match_type(l_type, r_type)
-					: !match_type(l_type, r_type)));
-			}
-			else if (is_bool(l_type) && is_bool(r_type)) {
-				value->tset((cp_bool)((op == "==") ?
-					l_value.b == r_value.b
-					: l_value.b != r_value.b));
-			}
-			else if (is_string(l_type) && is_string(r_type)) {
-				value->tset((cp_bool)((op == "==") ?
-					l_value.s == r_value.s
-					: l_value.s != r_value.s));
-			}
-			else if (is_array(l_type) && is_array(r_type)
-				|| is_struct(l_type) && is_struct(r_type)) {
-				value->tset((cp_bool)(op == "==" ?
-					equals_value(&l_value, &r_value)
-					: !equals_value(&l_value, &r_value)));
-			}
-			else {
-				throw std::runtime_error("invalid types '" + type_str(l_type)
-					+ "' and '" + type_str(r_type) + "' for '" + op + "' operator");
-			}
-		}
-		else {
-			throw std::runtime_error("invalid types '" + type_str(l_type)
-				+ "' and '" + type_str(r_type) + "' for '" + op + "' operator");
-		}
-	}
-	else {
-		throw std::runtime_error("invalid types '" + type_str(l_type)
-			+ "' and '" + type_str(r_type) + "' for '" + op + "' operator");
-	}
+	auto value = do_operation(astnode->op, &l_value, &r_value);
 
 	current_expression_value = *value;
 }
@@ -1029,12 +804,12 @@ void Interpreter::visit(ASTTernaryNode* astnode) {
 
 void Interpreter::visit(ASTInNode* astnode) {
 	astnode->value->accept(this);
-	auto expr_val = current_expression_value;
+	Value expr_val = current_expression_value;
 	astnode->collection->accept(this);
 	bool res = false;
 
 	if (is_array(current_expression_value.curr_type)) {
-		auto expr_col = current_expression_value.arr;
+		cp_array expr_col = current_expression_value.arr;
 
 		for (auto it : expr_col) {
 			res = equals_value(&expr_val, it);
@@ -1232,7 +1007,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
 
-		auto td = TypeDefinition(current_expression_value.curr_type, current_expression_value.arr_type,
+		auto td = TypeDefinition(current_expression_value.curr_type, current_expression_value.array_type,
 			std::vector<ASTExprNode*>(), "", "");
 		signature.push_back(td);
 
@@ -1456,7 +1231,7 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 
 	if (is_array(type)) {
 		dim = calculate_array_dim_size(curr_value.arr);
-		type = curr_value.arr_type;
+		type = curr_value.array_type;
 	}
 
 	str_type = type_str(type);
@@ -1922,24 +1697,34 @@ void Interpreter::throw_operation_err(const std::string op, Type ltype, Type rty
 
 Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval, cp_int str_pos) {
 	Type ltype = lval->curr_type;
-	Type rtype = rval->curr_type;
 	Type lrtype = lval->type;
+	Type rtype = rval->curr_type;
 	Type rrtype = rval->type;
 
-	switch (rval->curr_type) {
+	if (is_void(lrtype) && op == "=") {
+		lval->set_null();
+		return lval;
+	}
+
+	switch (rtype) {
 	case Type::T_BOOL: {
-		if (!is_bool(ltype) || !is_bool(rtype)) {
+		if (is_any(lrtype) && op == "=") {
+			lval->set(rval->b);
+			break;
+		}
+
+		if (!is_bool(ltype) || !is_bool(lrtype)) {
 			throw_type_err(op, ltype, rtype);
 		}
 
 		if (op == "=") {
-			lval->set(cp_bool(rval->b));
+			lval->set(rval->b);
 		}
 		else if (op == "and") {
-			lval->set(cp_bool(lval->b && rval->b));
+			lval->set(lval->b && rval->b);
 		}
 		else if (op == "or") {
-			lval->set(cp_bool(lval->b || rval->b));
+			lval->set(lval->b || rval->b);
 		}
 		else {
 			throw_operation_err(op, ltype, rtype);
@@ -1948,36 +1733,137 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		break;
 	}
 	case Type::T_INT: {
+		if (is_any(lrtype) && op == "=") {
+			lval->set(rval->i);
+			break;
+		}
+
+		if (is_float(ltype) && is_any(lrtype)) {
+			lval->set(do_operation(lval->f, cp_float(rval->i), op));
+		}
+		else if (is_int(ltype) && is_any(lrtype)) {
+			lval->set(do_operation(cp_float(lval->i), cp_float(rval->i), op));
+		}
+		else if (is_int(ltype)) {
+			lval->set(do_operation(lval->i, rval->i, op));
+		}
+		else {
+			throw_operation_err(op, ltype, rtype);
+		}
 
 		break;
 	}
 	case Type::T_FLOAT: {
+		if (is_any(lrtype) && op == "=") {
+			lval->set(rval->f);
+			break;
+		}
+
+		if (is_float(ltype)) {
+			lval->set(do_operation(lval->f, rval->f, op));
+		}
+		else if (is_int(ltype)) {
+			lval->set(do_operation(cp_float(lval->i), rval->f, op));
+		}
+		else {
+			throw_operation_err(op, ltype, rtype);
+		}
 
 		break;
 	}
 	case Type::T_CHAR: {
+		if (is_any(lrtype) && op == "=" && !has_string_access) {
+			lval->set(rval->c);
+			break;
+		}
+
+		if (is_string(ltype)) {
+			if (has_string_access) {
+				if (op != "=") {
+					throw_operation_err(op, ltype, rtype);
+				}
+				has_string_access = false;
+				lval->s[str_pos] = rval->c;
+			}
+			else {
+				lval->set(do_operation(lval->s, std::string{ rval->c }, op));
+			}
+		}
+		else if (is_char(ltype)) {
+			if (op != "=") {
+				throw_operation_err(op, ltype, rtype);
+			}
+
+			lval->set(rval->c);
+		}
+		else {
+			throw_operation_err(op, ltype, rtype);
+		}
 
 		break;
 	}
 	case Type::T_STRING: {
+		if (is_any(lrtype) && op == "=") {
+			lval->set(rval->s);
+			break;
+		}
+
+		if (!is_string(ltype)) {
+			throw_operation_err(op, ltype, rtype);
+		}
+
+		lval->set(do_operation(lval->s, rval->s, op));
 
 		break;
 	}
 	case Type::T_ARRAY: {
+		if (is_any(lrtype) && op == "=") {
+			lval->set(rval->arr);
+			break;
+		}
+
+		if (!is_array(ltype)) {
+			throw_operation_err(op, ltype, rtype);
+		}
+
+		lval->set(do_operation(lval->arr, rval->arr, op));
 
 		break;
 	}
 	case Type::T_STRUCT: {
+		if (is_any(lrtype) && op == "=") {
+			lval->set(rval->str);
+			break;
+		}
+
+		if (!is_struct(ltype) || op != "=") {
+			throw_operation_err(op, ltype, rtype);
+		}
+
+		lval->set(rval->str);
 
 		break;
 	}
 	case Type::T_FUNCTION: {
+		if (is_any(lrtype) && op == "=") {
+			lval->set(rval->str);
+			break;
+		}
+
+		if (!is_function(ltype) || op != "=") {
+			throw_operation_err(op, ltype, rtype);
+		}
+
+		lval->set(rval->fun);
 
 		break;
 	}
 	default:
 		throw std::runtime_error("cannot determine type of operation");
+
 	}
+
+	return lval;
 }
 
 cp_int Interpreter::do_operation(cp_int lval, cp_int rval, const std::string& op) {
@@ -2093,7 +1979,7 @@ cp_float Interpreter::do_operation(cp_float lval, cp_float rval, const std::stri
 	throw std::runtime_error("invalid '" + op + "' operator");
 }
 
-cp_string Interpreter::do_operation(const cp_string& lval, const cp_string& rval, const std::string& op) {
+cp_string Interpreter::do_operation(cp_string lval, cp_string rval, const std::string& op) {
 	if (op == "=") {
 		return rval;
 	}
@@ -2103,7 +1989,7 @@ cp_string Interpreter::do_operation(const cp_string& lval, const cp_string& rval
 	throw std::runtime_error("invalid '" + op + "' operator for types 'string' and 'string'");
 }
 
-cp_array Interpreter::do_operation(const cp_array& lval, const cp_array& rval, const std::string& op) {
+cp_array Interpreter::do_operation(cp_array lval, cp_array rval, const std::string& op) {
 	if (op == "=") {
 		return rval;
 	}

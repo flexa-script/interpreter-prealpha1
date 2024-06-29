@@ -32,7 +32,7 @@ namespace visitor {
 		std::string function_call_name;
 		interpreter_parameter_list_t function_call_parameters;
 		std::stack<std::string> current_function_nmspace;
-		std::stack<parser::TypeDefinition> current_function_return_type;
+		std::stack<visitor::TypeDefinition> current_function_return_type;
 		std::stack<std::string> current_name;
 		std::string return_from_function_name;
 		Value* current_param_ref;
@@ -61,18 +61,20 @@ namespace visitor {
 
 		void declare_structure(cp_struct* str, const std::string& nmspace);
 
+
+
 		Value* do_operation(const std::string& op, Value* lval, Value* rval, cp_int str_pos = 0);
 		cp_int do_operation(cp_int lval, cp_int rval, const std::string& op);
 		cp_float do_operation(cp_float lval, cp_float rval, const std::string& op);
-		cp_string do_operation(const cp_string& lval, const cp_string& rval, const std::string& op);
-		cp_array do_operation(const cp_array& lval, const cp_array& rval, const std::string& op);
+		cp_string do_operation(cp_string lval, cp_string rval, const std::string& op);
+		cp_array do_operation(cp_array lval, cp_array rval, const std::string& op);
 
 		std::string parse_array_to_string(const cp_array& arr_value);
 		std::string parse_struct_to_string(const cp_struct& str_value);
 
 		InterpreterScope* get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
 		InterpreterScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-		InterpreterScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<parser::TypeDefinition>& signature);
+		InterpreterScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<visitor::TypeDefinition>& signature);
 
 		Value* set_value(InterpreterScope* scope, const std::vector<parser::Identifier>& identifier_vector, Value* new_value);
 		Value* access_value(const InterpreterScope* scope, Value* value, const std::vector<parser::Identifier>& identifier_vector, size_t i = 0);
@@ -86,8 +88,8 @@ namespace visitor {
 		bool equals_array(const cp_array& larr, const cp_array& rarr);
 		bool equals_struct(const cp_struct* lstr, const cp_struct* rstr);
 
-		void throw_operation_err(const std::string op, Type ltype, Type rtype);
-		void throw_type_err(const std::string op, Type ltype, Type rtype);
+		void throw_operation_err(const std::string op, parser::Type ltype, parser::Type rtype);
+		void throw_type_err(const std::string op, parser::Type ltype, parser::Type rtype);
 
 		const std::string& get_current_namespace();
 		const std::string& get_namespace(const std::string& nmspace = "") const override;

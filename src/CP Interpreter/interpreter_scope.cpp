@@ -30,7 +30,7 @@ bool InterpreterScope::already_declared_structure_definition(std::string identif
 	return structure_symbol_table.find(identifier) != structure_symbol_table.end();
 }
 
-bool InterpreterScope::already_declared_function(std::string identifier, std::vector<parser::TypeDefinition> signature) {
+bool InterpreterScope::already_declared_function(std::string identifier, std::vector<TypeDefinition> signature) {
 	try {
 		find_declared_function(identifier, signature);
 		return true;
@@ -124,8 +124,8 @@ Value* InterpreterScope::declare_value(std::string identifier, Value* value) {
 	return value;
 }
 
-void InterpreterScope::declare_structure_definition(std::string name, std::vector<parser::VariableDefinition> variables, unsigned int row, unsigned int col) {
-	parser::StructureDefinition type(name, variables, row, col);
+void InterpreterScope::declare_structure_definition(std::string name, std::vector<VariableDefinition> variables, unsigned int row, unsigned int col) {
+	StructureDefinition type(name, variables, row, col);
 	structure_symbol_table[name] = (type);
 }
 
@@ -133,7 +133,7 @@ void InterpreterScope::declare_function(std::string identifier, interpreter_para
 	function_symbol_table.insert(std::make_pair(identifier, std::make_tuple(variables, block, type)));
 }
 
-parser::StructureDefinition InterpreterScope::find_declared_structure_definition(std::string identifier) {
+StructureDefinition InterpreterScope::find_declared_structure_definition(std::string identifier) {
 	return structure_symbol_table[identifier];
 }
 
@@ -141,7 +141,7 @@ Value* InterpreterScope::find_declared_variable(std::string identifier) {
 	return variable_symbol_table[identifier];
 }
 
-interpreter_function_t InterpreterScope::find_declared_function(std::string identifier, std::vector<parser::TypeDefinition> signature) {
+interpreter_function_t InterpreterScope::find_declared_function(std::string identifier, std::vector<TypeDefinition> signature) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
 	if (std::distance(funcs.first, funcs.second) == 0) {
