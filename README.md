@@ -69,6 +69,8 @@
     - [ ] add: runtime type checking for any types
         - [X] assign operation
         - [X] expressions
+        - [X] unify operations
+        - [ ] create equality functions
         - [ ] other nodes
     - [X] refact expression return type:
         - [X] if real type is any change to float
