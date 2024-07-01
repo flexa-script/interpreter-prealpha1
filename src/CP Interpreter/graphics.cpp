@@ -48,7 +48,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["clear_screen"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
-		if (!parser::is_void(win->curr_type)) {
+		if (!parser::is_void(win->type)) {
 			if (windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]) {
 				int r, g, b;
 				r = (int)std::get<2>(*interpreter->builtin_arguments[1]->str)["r"]->i;
@@ -61,7 +61,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["draw_pixel"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
-		if (!parser::is_void(win->curr_type)) {
+		if (!parser::is_void(win->type)) {
 			if (windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]) {
 				int x, y, r, g, b;
 				x = (int)interpreter->builtin_arguments[1]->i;
@@ -76,7 +76,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["draw_line"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
-		if (!parser::is_void(win->curr_type)) {
+		if (!parser::is_void(win->type)) {
 			if (windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]) {
 				int x1, y1, x2, y2, r, g, b;
 				x1 = (int)interpreter->builtin_arguments[1]->i;
@@ -93,7 +93,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["draw_rect"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
-		if (!parser::is_void(win->curr_type)) {
+		if (!parser::is_void(win->type)) {
 			if (windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]) {
 				int x, y, width, height, r, g, b;
 				x = (int)interpreter->builtin_arguments[1]->i;
@@ -110,7 +110,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["fill_rect"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
-		if (!parser::is_void(win->curr_type)) {
+		if (!parser::is_void(win->type)) {
 			if (windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]) {
 				int x, y, width, height, r, g, b;
 				x = (int)interpreter->builtin_arguments[1]->i;
@@ -127,7 +127,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["draw_circle"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
-		if (!parser::is_void(win->curr_type)) {
+		if (!parser::is_void(win->type)) {
 			if (windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]) {
 				int xc, yc, radius, r, g, b;
 				xc = (int)interpreter->builtin_arguments[1]->i;
@@ -143,7 +143,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["fill_circle"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
-		if (!parser::is_void(win->curr_type)) {
+		if (!parser::is_void(win->type)) {
 			if (windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]) {
 				int xc, yc, radius, r, g, b;
 				xc = (int)interpreter->builtin_arguments[1]->i;
@@ -183,7 +183,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["draw_image"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
-		if (parser::is_void(win->curr_type) ) {
+		if (parser::is_void(win->type) ) {
 			throw std::exception("window is null");
 		}
 		auto window = windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i];
@@ -191,7 +191,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 			throw std::runtime_error("there was an error handling window");
 		}
 		Value* img = interpreter->builtin_arguments[1];
-		if (parser::is_void(img->curr_type)) {
+		if (parser::is_void(img->type)) {
 			throw std::exception("window is null");
 		}
 		auto image = images[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i];
@@ -205,7 +205,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["update"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
-		if (!parser::is_void(win->curr_type)) {
+		if (!parser::is_void(win->type)) {
 			if (windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]) {
 				windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]->update();
 			}
@@ -214,7 +214,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["destroy_window"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
-		if (!parser::is_void(win->curr_type)) {
+		if (!parser::is_void(win->type)) {
 			if (windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]) {
 				windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]->~Window();
 				windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i] = nullptr;
@@ -226,7 +226,7 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 	interpreter->builtin_functions["is_quit"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
 		auto val = Value(parser::Type::T_BOOL);
-		if (!parser::is_void(win->curr_type)) {
+		if (!parser::is_void(win->type)) {
 			if (windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]) {
 				val.b = windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]->is_quit();
 			}

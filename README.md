@@ -34,6 +34,7 @@
     - [X] Add rest parameters, like `def foo(...args: any)`
     - [X] Add optional parameters `def foo(arg: any = 10)`
     - [X] Add arrow function `def (arg): void {}`, `def (arg) {}`, `def () {}`
+    - [ ] struct access from function call
 - [X] Add built in funcs:
     - [X] print:
         - [X] Improve to accept multiple values

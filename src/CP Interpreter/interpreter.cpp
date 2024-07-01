@@ -105,7 +105,9 @@ void Interpreter::visit(ASTAsNamespaceNode* astnode) {
 void Interpreter::visit(ASTEnumNode* astnode) {
 	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
-		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], Type::T_INT, (cp_int)i);
+		scopes[nmspace].back()->declare_variable(astnode->identifiers[i],
+			new Variable(Type::T_INT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(),
+				"", "", new Value(cp_int(i)), true, astnode->row, astnode->col));
 	}
 }
 
@@ -118,95 +120,102 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		identifier_call_name = "";
 	}
 
-	if (astnode->expr && current_expression_value.has_value()) {
-		auto type = is_any(astnode->type) ? current_expression_value.curr_type : astnode->type;
-		switch (current_expression_value.curr_type) {
-		case Type::T_BOOL:
-			if (!is_bool(astnode->type) && !is_any(astnode->type)) {
-				throw std::runtime_error("invalid types '" + type_str(astnode->type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for initializing");
-			}
-			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.b);
-			break;
-		case Type::T_INT:
-			if (!is_int(astnode->type) && !is_any(astnode->type)) {
-				throw std::runtime_error("invalid types '" + type_str(astnode->type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for initializing");
-			}
-			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.i);
-			break;
-		case Type::T_FLOAT:
-			if (!is_numeric(astnode->type) && !is_any(astnode->type)) {
-				throw std::runtime_error("invalid types '" + type_str(astnode->type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for initializing");
-			}
-			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.f);
-			break;
-		case Type::T_CHAR:
-			if (!is_text(astnode->type) && !is_any(astnode->type)) {
-				throw std::runtime_error("invalid types '" + type_str(astnode->type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for initializing");
-			}
-			if (is_char(astnode->type)) {
-				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.c);
-			}
-			else {
-				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, std::string{ current_expression_value.c });
-			}
-			break;
-		case Type::T_STRING:
-			if (!is_string(astnode->type) && !is_any(astnode->type)) {
-				throw std::runtime_error("invalid types '" + type_str(astnode->type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for initializing");
-			}
-			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.s);
-			break;
-		case Type::T_ARRAY: {
-			if (!is_array(astnode->type) && !is_any(astnode->type)) {
-				throw std::runtime_error("invalid types '" + type_str(astnode->type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for initializing");
-			}
-			if (current_expression_value.arr.size() == 1) {
-				auto arr = build_array(astnode->dim, current_expression_value.arr[0], astnode->dim.size() - 1);
-				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, arr, astnode->array_type);
-			}
-			else {
-				scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.arr, astnode->array_type);
-			}
-			break;
-		}
-		case Type::T_STRUCT:
-			if (!is_struct(astnode->type) && !is_any(astnode->type)) {
-				throw std::runtime_error("invalid types '" + type_str(astnode->type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for initializing");
-			}
-			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.str);
-			break;
-		case Type::T_FUNCTION:
-			if (!is_function(astnode->type) && !is_any(astnode->type)) {
-				throw std::runtime_error("invalid types '" + type_str(astnode->type)
-					+ "' and '" + type_str(current_expression_value.curr_type)
-					+ "' for initializing");
-			}
-			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.fun);
-			break;
-		}
-	}
-	else {
-		if (astnode->type == Type::T_STRUCT) {
-			scopes[nmspace].back()->declare_empty_struct_variable(astnode->identifier, astnode->type_name, current_expression_value.curr_type);
-		}
-		else {
-			scopes[nmspace].back()->declare_empty_variable(astnode->identifier, astnode->type, current_expression_value.curr_type);
-		}
-	}
+	scopes[nmspace].back()->declare_variable(astnode->identifier,
+		new Variable(astnode->type,
+			astnode->array_type, astnode->dim,
+			astnode->type_name, astnode->type_name_space,
+			new Value(current_expression_value),
+			astnode->is_const, astnode->row, astnode->col));
+
+	//if (astnode->expr && current_expression_value.has_value()) {
+	//	auto type = is_any(astnode->type) ? current_expression_value.curr_type : astnode->type;
+	//	switch (current_expression_value.curr_type) {
+	//	case Type::T_BOOL:
+	//		if (!is_bool(astnode->type) && !is_any(astnode->type)) {
+	//			throw std::runtime_error("invalid types '" + type_str(astnode->type)
+	//				+ "' and '" + type_str(current_expression_value.curr_type)
+	//				+ "' for initializing");
+	//		}
+	//		scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.b);
+	//		break;
+	//	case Type::T_INT:
+	//		if (!is_int(astnode->type) && !is_any(astnode->type)) {
+	//			throw std::runtime_error("invalid types '" + type_str(astnode->type)
+	//				+ "' and '" + type_str(current_expression_value.curr_type)
+	//				+ "' for initializing");
+	//		}
+	//		scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.i);
+	//		break;
+	//	case Type::T_FLOAT:
+	//		if (!is_numeric(astnode->type) && !is_any(astnode->type)) {
+	//			throw std::runtime_error("invalid types '" + type_str(astnode->type)
+	//				+ "' and '" + type_str(current_expression_value.curr_type)
+	//				+ "' for initializing");
+	//		}
+	//		scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.f);
+	//		break;
+	//	case Type::T_CHAR:
+	//		if (!is_text(astnode->type) && !is_any(astnode->type)) {
+	//			throw std::runtime_error("invalid types '" + type_str(astnode->type)
+	//				+ "' and '" + type_str(current_expression_value.curr_type)
+	//				+ "' for initializing");
+	//		}
+	//		if (is_char(astnode->type)) {
+	//			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.c);
+	//		}
+	//		else {
+	//			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, std::string{ current_expression_value.c });
+	//		}
+	//		break;
+	//	case Type::T_STRING:
+	//		if (!is_string(astnode->type) && !is_any(astnode->type)) {
+	//			throw std::runtime_error("invalid types '" + type_str(astnode->type)
+	//				+ "' and '" + type_str(current_expression_value.curr_type)
+	//				+ "' for initializing");
+	//		}
+	//		scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.s);
+	//		break;
+	//	case Type::T_ARRAY: {
+	//		if (!is_array(astnode->type) && !is_any(astnode->type)) {
+	//			throw std::runtime_error("invalid types '" + type_str(astnode->type)
+	//				+ "' and '" + type_str(current_expression_value.curr_type)
+	//				+ "' for initializing");
+	//		}
+	//		if (current_expression_value.arr.size() == 1) {
+	//			auto arr = build_array(astnode->dim, current_expression_value.arr[0], astnode->dim.size() - 1);
+	//			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, arr, astnode->array_type);
+	//		}
+	//		else {
+	//			scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.arr, astnode->array_type);
+	//		}
+	//		break;
+	//	}
+	//	case Type::T_STRUCT:
+	//		if (!is_struct(astnode->type) && !is_any(astnode->type)) {
+	//			throw std::runtime_error("invalid types '" + type_str(astnode->type)
+	//				+ "' and '" + type_str(current_expression_value.curr_type)
+	//				+ "' for initializing");
+	//		}
+	//		scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.str);
+	//		break;
+	//	case Type::T_FUNCTION:
+	//		if (!is_function(astnode->type) && !is_any(astnode->type)) {
+	//			throw std::runtime_error("invalid types '" + type_str(astnode->type)
+	//				+ "' and '" + type_str(current_expression_value.curr_type)
+	//				+ "' for initializing");
+	//		}
+	//		scopes[nmspace].back()->declare_variable(astnode->identifier, astnode->type, current_expression_value.fun);
+	//		break;
+	//	}
+	//}
+	//else {
+	//	if (astnode->type == Type::T_STRUCT) {
+	//		scopes[nmspace].back()->declare_empty_struct_variable(astnode->identifier, astnode->type_name, current_expression_value.curr_type);
+	//	}
+	//	else {
+	//		scopes[nmspace].back()->declare_empty_variable(astnode->identifier, astnode->type, current_expression_value.curr_type);
+	//	}
+	//}
 }
 
 void Interpreter::visit(ASTAssignmentNode* astnode) {
@@ -219,25 +228,27 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		throw std::runtime_error(ex.what());
 	}
 
-	Value* root = astscope->find_declared_variable(astnode->identifier_vector[0].identifier);
-	Value* value = access_value(astscope, root, astnode->identifier_vector);
+	Variable* variable = astscope->find_declared_variable(astnode->identifier_vector[0].identifier);
+	Value* value = access_value(astscope, variable->value, astnode->identifier_vector);
 
 	identifier_call_name = astnode->identifier_vector[0].identifier;
 	astnode->expr->accept(this);
 	identifier_call_name = "";
 
-	if (current_expression_value.ref && astnode->op == "="
-		&& (match_type(value->curr_type, current_expression_value.curr_type)
+	// TODO: fix ref by checking current variable reference
+	if (current_var_ref->ref && astnode->op == "="
+		&& (match_type(value->type, current_expression_value.type)
 			|| is_any(value->type)
 			/*or is array....*/)) {
-		astscope->declare_value(astnode->identifier_vector[0].identifier, current_param_ref);
+		//astscope->declare_value(astnode->identifier_vector[0].identifier, current_var_ref);
 		return;
 	}
 
 	auto new_value = new Value(current_expression_value);
 
-	if (is_undefined(value->curr_type)) {
-		value->set_curr_type(is_any(value->type) ? new_value->curr_type : value->type);
+	// TODO: set full type
+	if (is_undefined(value->type)) {
+		value->set_type(is_any(value->type) ? new_value->type : value->type);
 	}
 
 	cp_int pos = 0;
@@ -316,12 +327,12 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 	astnode->expr->accept(this);
 
 	if (!is_any(curr_func_ret_type.type) && !is_void(curr_func_ret_type.type)
-		&& !is_void(current_expression_value.curr_type)
-		&& !match_type(curr_func_ret_type.type, current_expression_value.curr_type)
-		|| match_type(curr_func_ret_type.type, current_expression_value.curr_type)
-		&& !match_type(curr_func_ret_type.type, current_expression_value.curr_type)) {
+		&& !is_void(current_expression_value.type)
+		&& !match_type(curr_func_ret_type.type, current_expression_value.type)
+		|| match_type(curr_func_ret_type.type, current_expression_value.type)
+		&& !match_type(curr_func_ret_type.type, current_expression_value.type)) {
 		throw std::runtime_error("invalid types '" + type_str(curr_func_ret_type.type)
-			+ "' and '" + type_str(current_expression_value.curr_type)
+			+ "' and '" + type_str(current_expression_value.type)
 			+ "' for initializing");
 	}
 
@@ -493,7 +504,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 
 	astnode->collection->accept(this);
 
-	switch (current_expression_value.curr_type) {
+	switch (current_expression_value.type) {
 	case Type::T_ARRAY: {
 		auto colletion = current_expression_value.arr;
 		for (auto val : colletion) {
@@ -743,16 +754,18 @@ void Interpreter::visit(ASTLiteralNode<cp_string>* lit) {
 
 void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	auto value = Value(Type::T_ARRAY);
+	Type arr_t = Type::T_ANY;
 	cp_array arr = cp_array();
 
 	for (auto& expr : astnode->values) {
 		expr->accept(this);
-		auto arr_value = new Value(current_expression_value.curr_type);
+		arr_t = current_expression_value.type;
+		auto arr_value = new Value(current_expression_value.type);
 		arr_value->copy_from(&current_expression_value);
 		arr.push_back(arr_value);
 	}
 
-	value.set(arr);
+	value.set(arr, arr_t);
 
 	current_expression_value = value;
 }
@@ -767,7 +780,7 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 
 	for (auto& expr : astnode->values) {
 		expr.second->accept(this);
-		auto str_alue = new Value(current_expression_value.curr_type);
+		auto str_alue = new Value(current_expression_value.type);
 		str_alue->copy_from(&current_expression_value);
 		std::get<2>(*str)[expr.first] = str_alue;
 	}
@@ -808,7 +821,7 @@ void Interpreter::visit(ASTInNode* astnode) {
 	astnode->collection->accept(this);
 	bool res = false;
 
-	if (is_array(current_expression_value.curr_type)) {
+	if (is_array(current_expression_value.type)) {
 		cp_array expr_col = current_expression_value.arr;
 
 		for (auto it : expr_col) {
@@ -821,7 +834,7 @@ void Interpreter::visit(ASTInNode* astnode) {
 	else {
 		auto expr_col = current_expression_value.s;
 
-		if (is_char(expr_val.curr_type)) {
+		if (is_char(expr_val.type)) {
 			res = current_expression_value.s.find(expr_val.c) != std::string::npos;
 		}
 		else {
@@ -843,14 +856,14 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 	if (dynamic_cast<parser::ASTIdentifierNode*>(astnode->expr)
 		&& astnode->unary_op == "ref" || astnode->unary_op == "unref") {
 		if (astnode->unary_op == "unref") {
-			current_expression_value.ref = false;
+			current_var_ref->ref = false;
 		}
 		else if (astnode->unary_op == "ref") {
-			current_expression_value.ref = true;
+			current_var_ref->ref = true;
 		}
 	}
 	else {
-		switch (current_expression_value.curr_type) {
+		switch (current_expression_value.type) {
 		case Type::T_INT:
 			if (astnode->unary_op == "-") {
 				current_expression_value.set(cp_int(-current_expression_value.i));
@@ -962,16 +975,14 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 		}
 
 		expression_value->set_type(type);
-		expression_value->set_curr_type(type);
 
 		if (dim.size() > 0) {
 			cp_array arr;
 
 			arr = build_array(dim, expression_value, dim.size() - 1);
 
-			current_expression_value = Value(Type::T_ARRAY);
-			current_expression_value.set_arr_type(type);
-			current_expression_value.set(arr);
+			current_expression_value = Value(Type::T_ARRAY, type, dim);
+			current_expression_value.set(arr, type);
 		}
 		else {
 			current_expression_value.copy_from(expression_value);
@@ -980,13 +991,13 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 		return;
 	}
 
-	auto root = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
-	auto sub_val = access_value(id_scope, root, astnode->identifier_vector);
+	Variable* variable = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
+	auto sub_val = access_value(id_scope, variable->value, astnode->identifier_vector);
 	current_expression_value = *sub_val;
 	current_expression_value.def_ref();
-	current_param_ref = sub_val;
+	current_var_ref = variable;
 
-	if (current_expression_value.curr_type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
+	if (current_expression_value.type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
 		has_string_access = false;
 		auto str = current_expression_value.s;
 		astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
@@ -1007,14 +1018,14 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
 
-		auto td = TypeDefinition(current_expression_value.curr_type, current_expression_value.array_type,
-			std::vector<ASTExprNode*>(), "", "");
-		signature.push_back(td);
+		signature.push_back(static_cast<TypeDefinition>(current_expression_value));
 
-		Value* pvalue = new Value(&current_expression_value);
-		if (current_expression_value.ref && current_param_ref) {
-			pvalue = current_param_ref;
-			pvalue->ref = true;
+		Value* pvalue = nullptr;
+		if (current_var_ref->ref && current_var_ref) {
+			pvalue = current_var_ref->value;
+		}
+		else {
+			pvalue = new Value(&current_expression_value);
 		}
 
 		function_arguments.push_back(pvalue);
@@ -1107,7 +1118,7 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 
 	switch (astnode->type) {
 	case Type::T_BOOL:
-		switch (current_expression_value.curr_type) {
+		switch (current_expression_value.type) {
 		case Type::T_BOOL:
 			break;
 		case Type::T_INT:
@@ -1126,7 +1137,7 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 		break;
 
 	case Type::T_INT:
-		switch (current_expression_value.curr_type) {
+		switch (current_expression_value.type) {
 		case Type::T_BOOL:
 			current_expression_value.set(cp_int(current_expression_value.b));
 			break;
@@ -1151,7 +1162,7 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 		break;
 
 	case Type::T_FLOAT:
-		switch (current_expression_value.curr_type) {
+		switch (current_expression_value.type) {
 		case Type::T_BOOL:
 			current_expression_value.set(cp_float(current_expression_value.b));
 			break;
@@ -1176,7 +1187,7 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 		break;
 
 	case Type::T_CHAR:
-		switch (current_expression_value.curr_type) {
+		switch (current_expression_value.type) {
 		case Type::T_BOOL:
 			current_expression_value.set(cp_char(current_expression_value.b));
 			break;
@@ -1206,7 +1217,6 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 	}
 
 	current_expression_value.set_type(astnode->type);
-	current_expression_value.set_curr_type(astnode->type);
 }
 
 void Interpreter::visit(ASTNullNode* astnode) {
@@ -1226,7 +1236,7 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 
 	auto curr_value = current_expression_value;
 	auto dim = std::vector<unsigned int>();
-	auto type = is_void(curr_value.curr_type) ? curr_value.type : curr_value.curr_type;
+	auto type = is_void(curr_value.type) ? curr_value.type : curr_value.type;
 	std::string str_type = "";
 
 	if (is_array(type)) {
@@ -1272,7 +1282,7 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 }
 
 bool Interpreter::equals_value(const Value* lval, const Value* rval) {
-	switch (lval->curr_type) {
+	switch (lval->type) {
 	case Type::T_BOOL:
 		return lval->b == rval->b;
 	case Type::T_INT:
@@ -1395,10 +1405,11 @@ InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& 
 }
 
 Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser::Identifier>& identifier_vector, Value* new_value) {
-	auto root = scope->find_declared_variable(identifier_vector[0].identifier);
-	auto value = access_value(scope, root, identifier_vector);
+	// todo: replace by do_operation
+	auto var = scope->find_declared_variable(identifier_vector[0].identifier);
+	auto value = access_value(scope, var->value, identifier_vector);
 
-	switch (new_value->curr_type) {
+	switch (new_value->type) {
 	case Type::T_BOOL:
 		value->set(new_value->b);
 		break;
@@ -1415,7 +1426,7 @@ Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser:
 		value->set(new_value->s);
 		break;
 	case Type::T_ARRAY:
-		value->set(new_value->arr);
+		value->set(new_value->arr, new_value->array_type);
 		break;
 	case Type::T_STRUCT:
 		value->set(new_value->str);
@@ -1441,7 +1452,7 @@ Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, co
 		for (s = 0; s < access_vector.size() - 1; ++s) {
 			access_pos = access_vector.at(s);
 			// break if it is a string, and the string access will be handled in identifier node evaluation
-			if (current_Val->at(access_pos)->curr_type == Type::T_STRING) {
+			if (current_Val->at(access_pos)->type == Type::T_STRING) {
 				has_string_access = true;
 				break;
 			}
@@ -1450,7 +1461,7 @@ Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, co
 			}
 			current_Val = &current_Val->at(access_pos)->arr;
 		}
-		if (is_string(next_value->curr_type)) {
+		if (is_string(next_value->type)) {
 			has_string_access = true;
 			return next_value;
 		}
@@ -1487,8 +1498,9 @@ std::vector<Value*> Interpreter::build_array(const std::vector<ASTExprNode*>& di
 	--i;
 
 	if (i >= 0) {
-		auto val = new Value(Type::T_ARRAY, init_value->type);
-		val->set(arr);
+		// todo: get current dimension to init correctly
+		auto val = new Value(Type::T_ARRAY, init_value->type, std::vector<ASTExprNode*>());
+		val->set(arr, init_value->type);
 		return build_array(dim, val, i);
 	}
 
@@ -1516,6 +1528,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 
 	// adds function arguments
 	for (i = 0; i < last_function_arguments.size(); ++i) {
+		// todo: fix reference, now reference will came from value
 		// is reference : not reference
 		Value* current_value = last_function_arguments[i]->ref ? last_function_arguments[i] : new Value(last_function_arguments[i]);
 
@@ -1525,7 +1538,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		else {
 			const auto& pname = std::get<0>(function_call_parameters[i]);
 
-			if (is_function(last_function_arguments[i]->curr_type)) {
+			if (is_function(last_function_arguments[i]->type)) {
 				auto funcs = ((InterpreterScope*)last_function_arguments[i]->fun.first)->find_declared_functions(last_function_arguments[i]->fun.second);
 				for (auto& it = funcs.first; it != funcs.second; ++it) {
 					auto& func_params = std::get<0>(it->second);
@@ -1534,7 +1547,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 				}
 			}
 			else {
-				scopes[nmspace].back()->declare_value(pname, current_value);
+				scopes[nmspace].back()->declare_variable(pname, new Variable(new Value(current_value)));
 			}
 
 			// is rest
@@ -1554,7 +1567,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		const auto& pname = std::get<0>(function_call_parameters[i]);
 		std::get<2>(function_call_parameters[i])->accept(this);
 
-		if (is_function(current_expression_value.curr_type)) {
+		if (is_function(current_expression_value.type)) {
 			auto funcs = ((InterpreterScope*)current_expression_value.fun.first)->find_declared_functions(current_expression_value.fun.second);
 			for (auto& it = funcs.first; it != funcs.second; ++it) {
 				auto& func_params = std::get<0>(it->second);
@@ -1563,14 +1576,14 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			}
 		}
 		else {
-			scopes[nmspace].back()->declare_value(pname, new Value(current_expression_value));
+			scopes[nmspace].back()->declare_variable(pname, new Variable(new Value(current_expression_value)));
 		}
 	}
 
 	if (arr.size() > 0) {
-		auto rest = new Value(Type::T_ARRAY);
-		rest->set(arr);
-		scopes[nmspace].back()->declare_value(rest_name, rest);
+		auto rest = new Value(Type::T_ARRAY, Type::T_ANY, std::vector<ASTExprNode*>());
+		rest->set(arr, Type::T_ANY);
+		scopes[nmspace].back()->declare_variable(rest_name, new Variable(new Value(rest)));
 	}
 
 	function_call_parameters.clear();
@@ -1610,7 +1623,7 @@ std::vector<unsigned int> Interpreter::evaluate_access_vector(const std::vector<
 }
 
 std::string Interpreter::parse_value_to_string(const Value* value) {
-	switch (value->curr_type) {
+	switch (value->type) {
 	case Type::T_VOID:
 		return "null";
 	case Type::T_BOOL:
@@ -1695,11 +1708,18 @@ void Interpreter::throw_operation_err(const std::string op, Type ltype, Type rty
 		+ "' and '" + type_str(rtype) + ")");
 }
 
+Variable* Interpreter::do_operation(const std::string& op, Variable* lvar, Variable* rvar, cp_int str_pos) {
+	Value* lval = lvar->value;
+	Value* rval = rvar->value;
+	do_operation(op, lval, rval, str_pos);
+	return lvar;
+}
+
 Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval, cp_int str_pos) {
-	Type ltype = lval->curr_type;
+	Type ltype = lval->type;
 	Type lrtype = lval->type;
-	Type rtype = rval->curr_type;
-	Type rrtype = rval->type;
+	Type rtype = lval->ref->type;
+	Type rrtype = rval->ref->type;
 
 	if (is_void(lrtype) && op == "=") {
 		lval->set_null();
@@ -1818,7 +1838,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	}
 	case Type::T_ARRAY: {
 		if (is_any(lrtype) && op == "=") {
-			lval->set(rval->arr);
+			lval->set(rval->arr, lval->array_type);
 			break;
 		}
 
@@ -1826,7 +1846,12 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			throw_operation_err(op, ltype, rtype);
 		}
 
-		lval->set(do_operation(lval->arr, rval->arr, op));
+		bool match_arr_t = lval->array_type == rval->array_type;
+		if (!match_arr_t && !is_any(rrtype)) {
+			throw_type_err(op, ltype, rtype);
+		}
+
+		lval->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
 
 		break;
 	}
@@ -2035,10 +2060,10 @@ long long Interpreter::hash(ASTIdentifierNode* astnode) {
 		throw std::runtime_error(ex.what());
 	}
 
-	auto root = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
-	auto value = access_value(id_scope, root, astnode->identifier_vector);
+	Variable* variable = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
+	auto value = access_value(id_scope, variable->value, astnode->identifier_vector);
 
-	switch (value->curr_type) {
+	switch (value->type) {
 	case Type::T_BOOL:
 		return static_cast<long long>(value->b);
 	case Type::T_INT:
@@ -2057,7 +2082,14 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 
 	for (size_t i = 0; i < last_function_arguments.size(); ++i) {
 		// is reference : not reference
-		Value* current_value = last_function_arguments[i]->ref ? last_function_arguments[i] : new Value(last_function_arguments[i]);
+		Value* current_value = nullptr;
+		if (last_function_arguments[i]->ref) {
+			current_value = last_function_arguments[i];
+		}
+		else {
+			current_value = new Value(last_function_arguments[i]);
+			current_value->ref = nullptr;
+		}
 
 		if (i >= function_call_parameters.size()) {
 			arr.push_back(current_value);
@@ -2073,8 +2105,8 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 	}
 
 	if (arr.size() > 0) {
-		auto rest = new Value(Type::T_ARRAY);
-		rest->set(arr);
+		auto rest = new Value(Type::T_ARRAY, Type::T_ANY, std::vector<ASTExprNode*>());
+		rest->set(arr, Type::T_ANY);
 		builtin_arguments.push_back(rest);
 	}
 
@@ -2133,7 +2165,7 @@ void Interpreter::register_built_in_functions() {
 		auto& curr_val = builtin_arguments[0];
 		auto val = Value(Type::T_INT);
 
-		if (is_array(curr_val->curr_type)) {
+		if (is_array(curr_val->type)) {
 			val.set(cp_int(curr_val->arr.size()));
 		}
 		else {

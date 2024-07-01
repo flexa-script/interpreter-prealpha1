@@ -1,7 +1,6 @@
 #include "visitor.hpp"
 
 using namespace visitor;
-using namespace parser;
 
 namespace parser {
 	std::string type_str(Type t) {
@@ -257,66 +256,75 @@ StructureDefinition::StructureDefinition()
 	: CodePosition(row, col), identifier(""), variables(std::vector<VariableDefinition>()) {}
 
 
+
+Value::Value(Type type, Type array_type, std::vector<ASTExprNode*> dim,
+	const std::string& type_name, const std::string& type_name_space,
+	unsigned int row, unsigned int col)
+	: TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space) {
+	def_ref();
+}
+
 Value::Value()
-	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
-	curr_type(Type::T_UNDEFINED) {};
+	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {};
 
 Value::Value(cp_bool rawv) {
-	tset(rawv);
+	set(rawv);
 	def_ref();
 };
 
 Value::Value(cp_int rawv){
-	tset(rawv);
+	set(rawv);
 	def_ref();
 };
 
 Value::Value(cp_float rawv) {
-	tset(rawv);
+	set(rawv);
 	def_ref();
 };
 
 Value::Value(cp_char rawv) {
-	tset(rawv);
+	set(rawv);
 	def_ref();
 };
 
 Value::Value(cp_string rawv) {
-	tset(rawv);
+	set(rawv);
 	def_ref();
 };
 
-Value::Value(cp_array rawv) {
-	tset(rawv);
+Value::Value(cp_array rawv, Type array_type) {
+	set(rawv, array_type);
 	def_ref();
 };
 
 Value::Value(cp_struct* rawv) {
-	tset(rawv);
+	set(rawv);
 	def_ref();
 };
 
 Value::Value(cp_function rawv) {
-	tset(rawv);
+	set(rawv);
+	def_ref();
+};
+
+Value::Value(Variable* rawv) {
+	set(rawv);
 	def_ref();
 };
 
 Value::Value(Type type)
-	: TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
-	curr_type(type) {
+	: TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {
 	def_ref();
 };
 
-Value::Value(Type type, Type arr_type)
-	: TypeDefinition(type, arr_type, std::vector<ASTExprNode*>(), "", ""),
-	curr_type(type) {
+Value::Value(Type type, Type arr_type, std::vector<ASTExprNode*> dim)
+	: TypeDefinition(type, arr_type, dim, "", "") {
 	def_ref();
 };
 
 Value::Value(Value* v)
 	: TypeDefinition(v->type, v->array_type, v->dim, v ->type_name, v->type_name_space),
-	b(v->b), i(v->i), f(v->f), c(v->c), s(v->s), str(v->str), fun(v->fun),
-	curr_type(v->curr_type), ref(v->ref) {
+	b(v->b), i(v->i), f(v->f), c(v->c), s(v->s), str(v->str), fun(v->fun) {
 	copy_array(v->arr);
 };
 
@@ -324,94 +332,62 @@ Value::~Value() = default;
 
 void Value::set(cp_bool b) {
 	this->b = b;
-	set_curr_type(Type::T_BOOL);
+	type = Type::T_BOOL;
+	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_int i) {
 	this->i = i;
-	set_curr_type(Type::T_INT);
+	type = Type::T_INT;
+	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_float f) {
 	this->f = f;
-	set_curr_type(Type::T_FLOAT);
+	type = Type::T_FLOAT;
+	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_char c) {
 	this->c = c;
-	set_curr_type(Type::T_CHAR);
+	type = Type::T_CHAR;
+	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_string s) {
 	this->s = s;
-	set_curr_type(Type::T_STRING);
+	type = Type::T_STRING;
+	array_type = Type::T_UNDEFINED;
 }
 
-void Value::set(cp_array arr) {
+void Value::set(cp_array arr, Type array_type) {
 	copy_array(arr);
-	set_curr_type(Type::T_ARRAY);
+	type = Type::T_ARRAY;
+	array_type = array_type;
 }
 
 void Value::set(cp_struct* str) {
 	this->str = str;
-	set_curr_type(Type::T_STRUCT);
+	type = Type::T_STRUCT;
+	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_function fun) {
 	this->fun = fun;
-	set_curr_type(Type::T_FUNCTION);
-}
-
-void Value::tset(cp_bool b) {
-	set_type(Type::T_BOOL);
-	set(b);
-}
-
-void Value::tset(cp_int i) {
-	set_type(Type::T_INT);
-	set(i);
-}
-
-void Value::tset(cp_float f) {
-	set_type(Type::T_FLOAT);
-	set(f);
-}
-
-void Value::tset(cp_char c) {
-	set_type(Type::T_CHAR);
-	set(c);
-}
-
-void Value::tset(cp_string s) {
-	set_type(Type::T_STRING);
-	set(s);
-}
-
-void Value::tset(cp_array arr) {
-	set_type(Type::T_ARRAY);
-	set(arr);
-}
-
-void Value::tset(cp_struct* str) {
-	set_type(Type::T_STRUCT);
-	set(str);
-}
-
-void Value::tset(cp_function fun) {
-	set_type(Type::T_FUNCTION);
-	set(fun);
+	type = Type::T_FUNCTION;
+	array_type = Type::T_UNDEFINED;
 }
 
 void Value::def_ref() {
-	ref = is_struct(type) || is_struct(array_type);
+	//ref = is_struct(type) || is_struct(array_type);
 }
 
 void Value::set_type(Type type) {
 	this->type = type;
 }
 
-void Value::set_curr_type(Type curr_type) {
-	this->curr_type = curr_type;
+void Value::set_curr_type(TypeDefinition curr_type) {
+	//this->curr_type = curr_type;
 }
 
 void Value::set_arr_type(Type arr_type) {
@@ -433,7 +409,8 @@ void Value::set_empty(Type empty_type) {
 }
 
 bool Value::has_value() {
-	return curr_type != Type::T_UNDEFINED && curr_type != Type::T_VOID;
+	return type != Type::T_UNDEFINED
+		&& type != Type::T_VOID;
 }
 
 void Value::copy_array(cp_array arr) {
@@ -446,7 +423,7 @@ void Value::copy_array(cp_array arr) {
 
 void Value::copy_from(Value* value) {
 	type = value->type;
-	curr_type = value->curr_type;
+	//curr_type = value->curr_type;
 	type_name = value->type_name;
 	type_name_space = value->type_name_space;
 	array_type = value->array_type;
@@ -476,7 +453,7 @@ bool Value::equals_array(cp_array arr) {
 
 bool Value::equals(Value* value) {
 	return type == value->type &&
-		curr_type == value->curr_type &&
+		//curr_type == value->curr_type &&
 		type_name == value->type_name &&
 		type_name_space == value->type_name_space &&
 		array_type == value->array_type &&
@@ -489,3 +466,17 @@ bool Value::equals(Value* value) {
 		equals_array(value->arr) &&
 		str == value->str;
 }
+
+Variable::Variable(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+	const std::string& type_name, const std::string& type_name_space, Value* value,
+	bool is_const, unsigned int row, unsigned int col)
+	: TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space) {}
+
+Variable::Variable()
+	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {};
+
+Variable::Variable(Value* v)
+	: TypeDefinition(v->type, v->array_type, v->dim, v ->type_name, v->type_name_space),
+	value(v) {};
+
+Variable::~Variable() = default;

@@ -50,76 +50,80 @@ bool InterpreterScope::already_declared_function_name(std::string identifier) {
 	}
 }
 
-Value* InterpreterScope::declare_empty_variable(std::string identifier, parser::Type type, parser::Type empty_type) {
-	Value* value = new Value(type);
-	value->set_empty(empty_type);
-	variable_symbol_table[identifier] = value;
-	return value;
-}
-
-Value* InterpreterScope::declare_empty_struct_variable(std::string identifier, std::string type_name, parser::Type empty_type) {
-	Value* value = declare_empty_variable(identifier, parser::Type::T_STRUCT, empty_type);
-	std::get<1>(*value->str) = type_name;
-	return value;
-}
-
-Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_bool boolValue) {
-	Value* value = new Value(type);
-	value->set(boolValue);
-	variable_symbol_table[identifier] = value;
-	return value;
-}
-
-Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_int intValue) {
-	Value* value = new Value(type);
-	value->set(intValue);
-	variable_symbol_table[identifier] = value;
-	return value;
-}
-
-Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_float floatValue) {
-	Value* value = new Value(type);
-	value->set(floatValue);
-	variable_symbol_table[identifier] = value;
-	return value;
-}
-
-Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_char charValue) {
-	Value* value = new Value(type);
-	value->set(charValue);
-	variable_symbol_table[identifier] = value;
-	return value;
-}
-
-Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_string stringValue) {
-	Value* value = new Value(type);
-	value->set(stringValue);
-	variable_symbol_table[identifier] = value;
-	return value;
-}
-
-Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_array arrValue, Type arr_type) {
-	Value* value = new Value(type, arr_type);
-	value->set(arrValue);
-	variable_symbol_table[identifier] = value;
-	return value;
-}
-
-Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_struct* strValue) {
-	Value* value = new Value(type);
-	value->set(strValue);
-	variable_symbol_table[identifier] = value;
-	return value;
-}
-
-Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_function fun) {
-	Value* value = new Value(type);
-	value->set(fun);
-	variable_symbol_table[identifier] = value;
-	return value;
-}
-
-Value* InterpreterScope::declare_value(std::string identifier, Value* value) {
+//Value* InterpreterScope::declare_empty_variable(std::string identifier, parser::Type type, parser::Type empty_type) {
+//	Value* value = new Value(type);
+//	value->set_empty(empty_type);
+//	variable_symbol_table[identifier] = value;
+//	return value;
+//}
+//
+//Value* InterpreterScope::declare_empty_struct_variable(std::string identifier, std::string type_name, parser::Type empty_type) {
+//	Value* value = declare_empty_variable(identifier, parser::Type::T_STRUCT, empty_type);
+//	std::get<1>(*value->str) = type_name;
+//	return value;
+//}
+//
+//Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_bool boolValue) {
+//	Value* value = new Value(type);
+//	value->set(boolValue);
+//	variable_symbol_table[identifier] = value;
+//	return value;
+//}
+//
+//Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_int intValue) {
+//	Value* value = new Value(type);
+//	value->set(intValue);
+//	variable_symbol_table[identifier] = value;
+//	return value;
+//}
+//
+//Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_float floatValue) {
+//	Value* value = new Value(type);
+//	value->set(floatValue);
+//	variable_symbol_table[identifier] = value;
+//	return value;
+//}
+//
+//Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_char charValue) {
+//	Value* value = new Value(type);
+//	value->set(charValue);
+//	variable_symbol_table[identifier] = value;
+//	return value;
+//}
+//
+//Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_string stringValue) {
+//	Value* value = new Value(type);
+//	value->set(stringValue);
+//	variable_symbol_table[identifier] = value;
+//	return value;
+//}
+//
+//Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_array arrValue, Type arr_type) {
+//	Value* value = new Value(type, arr_type);
+//	value->set(arrValue);
+//	variable_symbol_table[identifier] = value;
+//	return value;
+//}
+//
+//Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_struct* strValue) {
+//	Value* value = new Value(type);
+//	value->set(strValue);
+//	variable_symbol_table[identifier] = value;
+//	return value;
+//}
+//
+//Value* InterpreterScope::declare_variable(std::string identifier, Type type, cp_function fun) {
+//	Value* value = new Value(type);
+//	value->set(fun);
+//	variable_symbol_table[identifier] = value;
+//	return value;
+//}
+//
+//Value* InterpreterScope::declare_value(std::string identifier, Value* value) {
+//	variable_symbol_table[identifier] = value;
+//	return value;
+//}
+Variable* InterpreterScope::declare_variable(std::string identifier, Variable* value) {
 	variable_symbol_table[identifier] = value;
 	return value;
 }
@@ -137,7 +141,7 @@ StructureDefinition InterpreterScope::find_declared_structure_definition(std::st
 	return structure_symbol_table[identifier];
 }
 
-Value* InterpreterScope::find_declared_variable(std::string identifier) {
+Variable* InterpreterScope::find_declared_variable(std::string identifier) {
 	return variable_symbol_table[identifier];
 }
 

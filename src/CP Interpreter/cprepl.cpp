@@ -122,7 +122,7 @@ int CPRepl::execute() {
 			}
 			else {
 				// not is undefined and it's an expression
-				if (!parser::is_undefined(interpreter.current_expression_value.curr_type)
+				if (!parser::is_undefined(interpreter.current_expression_value.type)
 					&& source.find(';') == std::string::npos) {
 					std::cout << interpreter.parse_value_to_string(&interpreter.current_expression_value) << std::endl;
 				}

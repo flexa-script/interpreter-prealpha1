@@ -75,6 +75,8 @@ namespace parser {
 	class ASTTypingNode;
 }
 
+using namespace parser;
+
 typedef bool cp_bool;
 typedef int64_t cp_int;
 typedef long double cp_float;
@@ -90,6 +92,8 @@ extern std::vector<std::string> std_libs;
 extern std::vector<std::string> built_in_libs;
 
 namespace visitor {
+	class Variable;
+
 	class CodePosition {
 	public:
 		unsigned int row;
@@ -206,23 +210,6 @@ namespace visitor {
 
 	class Value : public TypeDefinition {
 	public:
-		Value();
-		Value(cp_bool);
-		Value(cp_int);
-		Value(cp_float);
-		Value(cp_char);
-		Value(cp_string);
-		Value(cp_array);
-		Value(cp_struct*);
-		Value(cp_function);
-		Value(parser::Type type);
-		Value(parser::Type type, parser::Type arr_type);
-		Value(Value*);
-		~Value();
-
-		parser::Type curr_type;
-		bool ref = false;
-
 		cp_bool b = false;
 		cp_int i = 0;
 		cp_float f = 0;
@@ -231,31 +218,41 @@ namespace visitor {
 		cp_array arr;
 		cp_struct* str;
 		cp_function fun;
+		Variable* ref;
+
+		Value(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+			const std::string& type_name, const std::string& type_name_space,
+			unsigned int row, unsigned int col);
+		Value();
+		Value(cp_bool);
+		Value(cp_int);
+		Value(cp_float);
+		Value(cp_char);
+		Value(cp_string);
+		Value(cp_array, Type);
+		Value(cp_struct*);
+		Value(cp_function);
+		Value(Variable*);
+		Value(Type type);
+		Value(Type type, parser::Type arr_type, std::vector<ASTExprNode*> dim);
+		Value(Value*);
+		~Value();
 
 		void set(cp_bool);
 		void set(cp_int);
 		void set(cp_float);
 		void set(cp_char);
 		void set(cp_string);
-		void set(cp_array);
+		void set(cp_array, Type);
 		void set(cp_struct*);
 		void set(cp_function);
-
-		void tset(cp_bool);
-		void tset(cp_int);
-		void tset(cp_float);
-		void tset(cp_char);
-		void tset(cp_string);
-		void tset(cp_array);
-		void tset(cp_struct*);
-		void tset(cp_function);
 
 		void set_null();
 		void set_undefined();
 		void set_empty(parser::Type empty_type);
 
 		void set_type(parser::Type type);
-		void set_curr_type(parser::Type curr_type);
+		void set_curr_type(TypeDefinition curr_type);
 		void set_arr_type(parser::Type arr_type);
 		void def_ref();
 
@@ -266,6 +263,22 @@ namespace visitor {
 
 		bool equals_array(cp_array arr);
 		bool equals(Value* value);
+	};
+
+	class Variable : public TypeDefinition {
+	public:
+		Value* value;
+		bool ref = false;
+
+		Variable(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+			const std::string& type_name, const std::string& type_name_space, Value* value,
+			bool is_const, unsigned int row, unsigned int col);
+		Variable(Value* value);
+		Variable();
+		~Variable();
+
+		void set(Value* value);
+		void tset(Value* value);
 	};
 
 	class Visitor {
