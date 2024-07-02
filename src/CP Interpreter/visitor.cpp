@@ -132,6 +132,226 @@ TypeDefinition TypeDefinition::get_struct(Type type, const std::string& type_nam
 	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), type_name, type_name_space);
 }
 
+bool TypeDefinition::validate_op(TypeDefinition ltype, TypeDefinition rtype, const std::string& op) {
+	Type l_type = ltype.type;
+	Type r_type = rtype.type;
+
+	if ((is_any(l_type) || is_any(r_type) || is_void(r_type)) && op == "=") {
+		return true;
+	}
+
+	switch (r_type) {
+	case Type::T_BOOL: {
+		if (!is_bool(l_type)
+			|| op != "="
+			&& op != "and"
+			&& op != "or") {
+			return false;
+		}
+
+		break;
+	}
+	case Type::T_INT: {
+		if (is_float(l_type) && is_any(l_var_type)) {
+			lval->set(do_operation(lval->f, cp_float(rval->i), op));
+		}
+		else if (is_int(l_type) && is_any(l_var_type)) {
+			lval->set(do_operation(cp_float(lval->i), cp_float(rval->i), op));
+		}
+		else if (is_int(l_type)) {
+			lval->set(do_operation(lval->i, rval->i, op));
+		}
+		else {
+			throw_operation_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	case Type::T_FLOAT: {
+		if (is_any(l_var_type) && op == "=") {
+			lval->set(rval->f);
+			break;
+		}
+
+		if (is_float(l_type)) {
+			lval->set(do_operation(lval->f, rval->f, op));
+		}
+		else if (is_int(l_type)) {
+			lval->set(do_operation(cp_float(lval->i), rval->f, op));
+		}
+		else {
+			throw_operation_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	case Type::T_CHAR: {
+		if (is_any(l_var_type) && op == "=" && !has_string_access) {
+			lval->set(rval->c);
+			break;
+		}
+
+		if (is_string(l_type)) {
+			if (has_string_access) {
+				if (op != "=") {
+					throw_operation_err(op, l_type, r_type);
+				}
+				has_string_access = false;
+				lval->s[str_pos] = rval->c;
+			}
+			else {
+				lval->set(do_operation(lval->s, std::string{ rval->c }, op));
+			}
+		}
+		else if (is_char(l_type)) {
+			if (op != "=") {
+				throw_operation_err(op, l_type, r_type);
+			}
+
+			lval->set(rval->c);
+		}
+		else if (is_any(l_var_type)) {
+			if (op != "=") {
+				throw_operation_err(op, l_type, r_type);
+			}
+
+			lval->set(rval->c);
+		}
+		else {
+			throw_operation_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	case Type::T_STRING: {
+		if (is_any(l_var_type) && op == "=") {
+			lval->set(rval->s);
+			break;
+		}
+
+		if (!is_string(l_type)) {
+			throw_operation_err(op, l_type, r_type);
+		}
+
+		lval->set(do_operation(lval->s, rval->s, op));
+
+		break;
+	}
+	case Type::T_ARRAY: {
+		if (is_any(l_var_type) && op == "=") {
+			lval->set(rval->arr, lval->array_type);
+			break;
+		}
+
+		if (!match_type_array(lval, rval)) {
+			throw_operation_err(op, l_type, r_type);
+		}
+
+		bool match_arr_t = lval->array_type == rval->array_type;
+		if (!match_arr_t && !is_any(r_var_type)) {
+			throw_type_err(op, l_type, r_type);
+		}
+
+		lval->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
+
+		break;
+	}
+	case Type::T_STRUCT: {
+		if (is_any(l_var_type) && op == "=") {
+			lval->set(rval->str);
+			break;
+		}
+
+		if (!is_struct(l_type) || op != "=") {
+			throw_operation_err(op, l_type, r_type);
+		}
+
+		lval->set(rval->str);
+
+		break;
+	}
+	case Type::T_FUNCTION: {
+		if (is_any(l_var_type) && op == "=") {
+			lval->set(rval->str);
+			break;
+		}
+
+		if (!is_function(l_type) || op != "=") {
+			throw_operation_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	default:
+		throw std::runtime_error("cannot determine type of operation");
+
+	}
+
+	return true;
+}
+
+bool TypeDefinition::is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype) {
+	if (is_any(ltype.type)) return true;
+	return match_type(ltype, rtype);
+}
+
+bool TypeDefinition::is_any_or_match_type(TypeDefinition vtype, TypeDefinition ltype, TypeDefinition rtype) {
+	if (is_any(vtype.type)) return true;
+	return match_type(ltype, rtype);
+}
+
+bool TypeDefinition::is_any_or_match_type(TypeDefinition lvtype, TypeDefinition rvtype, TypeDefinition ltype, TypeDefinition rtype) {
+	if (is_any(lvtype.type) || is_any(rvtype.type)) return true;
+	return match_type(ltype, rtype);
+}
+
+bool TypeDefinition::match_type(TypeDefinition ltype, TypeDefinition rtype) {
+	if (match_type_bool(ltype, rtype)) return true;
+	if (match_type_int(ltype, rtype)) return true;
+	if (match_type_float(ltype, rtype)) return true;
+	if (match_type_char(ltype, rtype)) return true;
+	if (match_type_string(ltype, rtype)) return true;
+	if (match_type_array(ltype, rtype)) return true;
+	if (match_type_struct(ltype, rtype)) return true;
+	if (match_type_function(ltype, rtype)) return true;
+	return false;
+}
+
+bool TypeDefinition::match_type_bool(TypeDefinition ltype, TypeDefinition rtype) {
+	return is_bool(ltype.type) && is_bool(rtype.type);
+}
+
+bool TypeDefinition::match_type_int(TypeDefinition ltype, TypeDefinition rtype) {
+	return is_int(ltype.type) && is_int(rtype.type);
+}
+
+bool TypeDefinition::match_type_float(TypeDefinition ltype, TypeDefinition rtype) {
+	return is_float(ltype.type)
+		&& (is_float(rtype.type) || is_int(rtype.type));
+}
+
+bool TypeDefinition::match_type_char(TypeDefinition ltype, TypeDefinition rtype) {
+	return is_char(ltype.type) && is_char(rtype.type);
+}
+
+bool TypeDefinition::match_type_string(TypeDefinition ltype, TypeDefinition rtype) {
+	return is_float(ltype.type)
+		&& (is_char(rtype.type) || is_string(rtype.type));
+}
+
+bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype) {
+	return is_array(ltype.type) && is_array(rtype.type);
+}
+
+bool TypeDefinition::match_type_struct(TypeDefinition ltype, TypeDefinition rtype) {
+	return is_struct(ltype.type) && is_struct(rtype.type);
+}
+
+bool TypeDefinition::match_type_function(TypeDefinition ltype, TypeDefinition rtype) {
+	return is_function(ltype.type) && is_function(rtype.type);
+}
+
+
 SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*>&& dim,
 	const std::string& type_name, const std::string& type_name_space, long long hash,
 	bool is_const, unsigned int row, unsigned int col)
@@ -272,7 +492,7 @@ Value::Value(cp_bool rawv) {
 	def_ref();
 };
 
-Value::Value(cp_int rawv){
+Value::Value(cp_int rawv) {
 	set(rawv);
 	def_ref();
 };
