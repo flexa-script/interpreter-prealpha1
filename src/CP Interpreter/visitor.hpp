@@ -119,10 +119,10 @@ namespace visitor {
 		static TypeDefinition get_array(parser::Type type, parser::Type array_type, std::vector<parser::ASTExprNode*>&& dim = std::vector<parser::ASTExprNode*>());
 		static TypeDefinition get_struct(parser::Type type, const std::string& type_name, const std::string& type_name_space);
 
-		static bool validate_op(TypeDefinition ltype, TypeDefinition rtype, const std::string& op);
+		static bool validate_op(TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition rvtype, TypeDefinition rtype, const std::string& op);
 		static bool is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype);
 		static bool is_any_or_match_type(TypeDefinition vtype, TypeDefinition ltype, TypeDefinition rtype);
-		static bool is_any_or_match_type(TypeDefinition lvtype, TypeDefinition rvtype, TypeDefinition ltype, TypeDefinition rtype);
+		static bool is_any_or_match_type(TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition rvtype, TypeDefinition rtype);
 		static bool match_type(TypeDefinition ltype, TypeDefinition rtype);
 		static bool match_type_bool(TypeDefinition ltype, TypeDefinition rtype);
 		static bool match_type_int(TypeDefinition ltype, TypeDefinition rtype);

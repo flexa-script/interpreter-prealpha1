@@ -94,9 +94,6 @@ namespace visitor {
 		bool equals_array(const cp_array& larr, const cp_array& rarr);
 		bool equals_struct(const cp_struct* lstr, const cp_struct* rstr);
 
-		void throw_operation_err(const std::string op, parser::Type ltype, parser::Type rtype);
-		void throw_type_err(const std::string op, parser::Type ltype, parser::Type rtype);
-
 		const std::string& get_current_namespace();
 		const std::string& get_namespace(const std::string& nmspace = "") const override;
 		const std::string& get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace = "") const override;

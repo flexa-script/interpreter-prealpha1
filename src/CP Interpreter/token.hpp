@@ -182,6 +182,7 @@ namespace lexer {
 
 		static bool is_collection_op(const std::string& op);
 		static bool is_int_op(const std::string& op);
+		static bool is_int_ex_op(const std::string& op);
 		static bool is_float_op(const std::string& op);
 	};
 };

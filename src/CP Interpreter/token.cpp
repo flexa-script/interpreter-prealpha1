@@ -15,7 +15,7 @@ const std::string& Token::token_image(TokenType type) {
 }
 
 bool Token::is_collection_op(const std::string& op) {
-	return op != "=" || op == "+=";
+	return op == "=" || op == "+=";
 }
 
 bool Token::is_float_op(const std::string& op) {
@@ -25,5 +25,10 @@ bool Token::is_float_op(const std::string& op) {
 
 bool Token::is_int_op(const std::string& op) {
 	return is_float_op(op) || op == "|=" || op == "^=" || op == "&="
+		|| op == "<<=" || op == ">>=";
+}
+
+bool Token::is_int_ex_op(const std::string& op) {
+	return op == "|=" || op == "^=" || op == "&="
 		|| op == "<<=" || op == ">>=";
 }

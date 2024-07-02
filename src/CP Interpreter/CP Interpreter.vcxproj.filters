@@ -129,6 +129,9 @@
     <ClInclude Include="libfinder.hpp">
       <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
+    <ClInclude Include="exception_handler.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -196,6 +199,9 @@
     </ClCompile>
     <ClCompile Include="libfinder.cpp">
       <Filter>Source Files\core\visitor</Filter>
+    </ClCompile>
+    <ClCompile Include="exception_handler.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

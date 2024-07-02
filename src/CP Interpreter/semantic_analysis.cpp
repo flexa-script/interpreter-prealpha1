@@ -20,14 +20,6 @@ void SemanticAnalyser::start() {
 	visit(current_program);
 }
 
-const std::string& SemanticAnalyser::get_namespace(const std::string& nmspace) const {
-	return get_namespace(current_program, nmspace);
-}
-
-const std::string& SemanticAnalyser::get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace) const {
-	return nmspace.empty() ? (program->alias.empty() ? default_namespace : program->alias) : nmspace;
-}
-
 void SemanticAnalyser::visit(ASTProgramNode* astnode) {
 	for (const auto& statement : astnode->statements) {
 		try {
@@ -132,6 +124,15 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	auto astnode_type = is_undefined(astnode->type) ? Type::T_ANY : astnode->type;
 	auto astnode_array_type = is_undefined(astnode->array_type) && astnode->dim.size() > 0 ? Type::T_ANY : astnode->array_type;
 	auto astnode_type_name = astnode->type_name.empty() ? decl_current_expr->type_name : astnode->type_name;
+
+	if (!TypeDefinition::is_any_or_match_type(
+		static_cast<TypeDefinition>(*new_var),
+		static_cast<TypeDefinition>(current_expression_value))) {
+		throw std::runtime_error("invalid type '" + type_str(new_var->type)
+			+ "' trying to assign '" + astnode->identifier
+			+ "' variable of '" + type_str(current_expression_value.type) + "' type");
+	}
+
 
 	if (is_float(astnode->type) && is_int(decl_current_expr->type)
 		|| is_string(astnode->type) && is_char(decl_current_expr->type)) {
@@ -433,68 +434,15 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 	astnode->expr->accept(this);
 
 	if (!current_function.empty()) {
-
-		auto true_type = is_array(current_function.top().type) ? current_function.top().array_type : current_function.top().type;
-
-		if (!is_any(true_type) && !is_void(current_expression.type)
-			&& current_expression.type != true_type) {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("invalid '" + current_function.top().identifier + "' function return type");
+		auto currfun = current_function.top();
+		if (!TypeDefinition::is_any_or_match_type(
+			static_cast<TypeDefinition>(currfun),
+			static_cast<TypeDefinition>(current_expression))) {
+			throw std::runtime_error("invalid '" + type_str(currfun.type)
+				+ "' return type for '" + currfun.identifier
+				+ "' function of '" + type_str(current_expression.type)
+				+ "' return type");
 		}
-		if (is_array(true_type)) {
-
-			std::vector<unsigned int> expr_dim;
-			std::vector<unsigned int> pars_dim = evaluate_access_vector(current_function.top().dim);
-
-			if (const auto arr_expr = dynamic_cast<ASTArrayConstructorNode*>(astnode->expr)) {
-				determine_array_type(arr_expr);
-				expr_dim = calculate_array_dim_size(arr_expr);
-			}
-			else if (auto id_expr = dynamic_cast<ASTIdentifierNode*>(astnode->expr)) {
-				SemanticScope* curr_scope;
-				try {
-					const auto& nmspace = get_namespace(id_expr->nmspace);
-					curr_scope = get_inner_most_variable_scope(nmspace, id_expr->identifier_vector[0].identifier);
-				}
-				catch (...) {
-					set_curr_pos(astnode->row, astnode->col);
-					throw std::runtime_error("identifier '" + id_expr->identifier_vector[0].identifier +
-						"' was not declared");
-				}
-
-				const auto& declared_variable = curr_scope->find_declared_variable(id_expr->identifier_vector[0].identifier);
-				expr_dim = evaluate_access_vector(declared_variable->value->dim);
-				current_expression.array_type = declared_variable->value->array_type;
-			}
-			else {
-				set_curr_pos(astnode->row, astnode->col);
-				throw std::runtime_error("invalid '" + current_function.top().identifier + "' function return expression");
-			}
-
-			if (current_function.top().array_type != Type::T_ANY && current_function.top().array_type != current_expression.array_type) {
-				set_curr_pos(astnode->row, astnode->col);
-				throw std::runtime_error("invalid '" + current_function.top().identifier + "' function array type return");
-			}
-
-			if (current_function.top().dim.size() != expr_dim.size()) {
-				set_curr_pos(astnode->row, astnode->col);
-				throw std::runtime_error("invalid '" + current_function.top().identifier + "' array dimension return");
-			}
-
-			for (size_t dc = 0; dc < current_function.top().dim.size(); ++dc) {
-				if (current_function.top().dim.at(dc) && pars_dim.at(dc) != expr_dim.at(dc)) {
-					set_curr_pos(astnode->row, astnode->col);
-					throw std::runtime_error("invalid '" + current_function.top().identifier + "' array size return");
-				}
-			}
-		}
-		if (is_struct(true_type)) {
-			if (current_function.top().type_name != current_expression.type_name) {
-				set_curr_pos(astnode->row, astnode->col);
-				throw std::runtime_error("invalid '" + current_function.top().identifier + "' function struct type return");
-			}
-		}
-
 	}
 }
 
@@ -1542,15 +1490,6 @@ std::vector<unsigned int> SemanticAnalyser::calculate_array_dim_size(ASTArrayCon
 	return dim;
 }
 
-void SemanticAnalyser::set_curr_pos(unsigned int row, unsigned int col) {
-	curr_row = row;
-	curr_col = col;
-}
-
-std::string SemanticAnalyser::msg_header() {
-	return "(SERR) " + current_program->name + '[' + std::to_string(curr_row) + ':' + std::to_string(curr_col) + "]: ";
-}
-
 long long SemanticAnalyser::hash(ASTExprNode* astnode) {
 	return 0;
 }
@@ -1650,4 +1589,21 @@ void SemanticAnalyser::register_built_in_functions() {
 	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
 	parameters.push_back(VariableDefinition::get_basic("cmd", Type::T_STRING));
 	scopes[default_namespace].back()->declare_basic_function("system", Type::T_VOID, signature, parameters);
+}
+
+const std::string& SemanticAnalyser::get_namespace(const std::string& nmspace) const {
+	return get_namespace(current_program, nmspace);
+}
+
+const std::string& SemanticAnalyser::get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace) const {
+	return nmspace.empty() ? (program->alias.empty() ? default_namespace : program->alias) : nmspace;
+}
+
+void SemanticAnalyser::set_curr_pos(unsigned int row, unsigned int col) {
+	curr_row = row;
+	curr_col = col;
+}
+
+std::string SemanticAnalyser::msg_header() {
+	return "(SERR) " + current_program->name + '[' + std::to_string(curr_row) + ':' + std::to_string(curr_col) + "]: ";
 }

@@ -5,6 +5,7 @@
 #include <compare>
 
 #include "interpreter.hpp"
+#include "exception_handler.hpp"
 #include "token.hpp"
 #include "vendor/axeutils.hpp"
 #include "vendor/axewatch.h"
@@ -12,8 +13,8 @@
 #include "files.hpp"
 #include "console.hpp"
 
-using namespace lexer;
 
+using namespace lexer;
 
 Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
 	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
@@ -22,24 +23,6 @@ Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_pr
 	}
 	scopes[default_namespace].push_back(global_scope);
 	register_built_in_functions();
-}
-
-const std::string& Interpreter::get_namespace(const std::string& nmspace) const {
-	return get_namespace(current_program, nmspace);
-}
-
-const std::string& Interpreter::get_namespace(const ASTProgramNode* program, const std::string& nmspace) const {
-	return nmspace.empty() ? (
-		current_function_nmspace.size() == 0 ? (
-			program->alias.empty() ? default_namespace : program->alias
-			) : current_function_nmspace.top()
-		) : nmspace;
-}
-
-const std::string& Interpreter::get_current_namespace() {
-	return current_function_nmspace.size() == 0 ? (
-		current_program->alias.empty() ? default_namespace : current_program->alias
-		) : current_function_nmspace.top();
 }
 
 void Interpreter::start() {
@@ -117,11 +100,13 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		identifier_call_name = "";
 	}
 
+	auto new_value = new Value(current_expression_value);
+
 	auto new_var = new Variable(astnode->type,
 		astnode->array_type, astnode->dim,
 		astnode->type_name, astnode->type_name_space,
-		new Value(current_expression_value),
-		astnode->is_const, astnode->row, astnode->col);
+		new_value, astnode->is_const, astnode->row, astnode->col);
+	new_value->ref = new_var;
 
 	if (!TypeDefinition::is_any_or_match_type(
 		static_cast<TypeDefinition>(*new_var),
@@ -153,14 +138,15 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 
 	// TODO: fix ref by checking current variable reference
 	if (current_var_ref->ref && astnode->op == "="
-		&& (match_type(value->type, current_expression_value.type)
-			|| is_any(value->type)
-			/*or is array....*/)) {
+		&& TypeDefinition::is_any_or_match_type(
+			static_cast<TypeDefinition>(*value),
+			static_cast<TypeDefinition>(current_expression_value))) {
 		//astscope->declare_value(astnode->identifier_vector[0].identifier, current_var_ref);
 		return;
 	}
 
 	auto new_value = new Value(current_expression_value);
+	new_value->ref = variable;
 
 	// TODO: set full type
 	if (is_undefined(value->type)) {
@@ -201,6 +187,10 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 
 void Interpreter::visit(ASTExitNode* astnode) {
 	astnode->exit_code->accept(this);
+	if (!is_int(current_expression_value.type)) {
+		set_curr_pos(astnode->row, astnode->col);
+		throw std::runtime_error("expected int value");
+	}
 	exit_from_program = true;
 }
 
@@ -1552,16 +1542,6 @@ std::string Interpreter::parse_struct_to_string(const cp_struct& str_value) {
 	return s.str();
 }
 
-void Interpreter::throw_type_err(const std::string op, Type ltype, Type rtype) {
-	throw std::runtime_error("invalid types '" + type_str(ltype)
-		+ "' and '" + type_str(rtype));
-}
-
-void Interpreter::throw_operation_err(const std::string op, Type ltype, Type rtype) {
-	throw std::runtime_error("invalid '" + op + "' operation ('" + type_str(ltype)
-		+ "' and '" + type_str(rtype) + ")");
-}
-
 bool Interpreter::match_type_array(Value* ltype, Value* rtype) {
 	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype->dim);
 	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype->dim);
@@ -1605,7 +1585,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (!is_bool(l_type)) {
-			throw_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_type_err(op, l_type, r_type);
 		}
 
 		if (op == "=") {
@@ -1618,7 +1598,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			lval->set(lval->b || rval->b);
 		}
 		else {
-			throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
 
 		break;
@@ -1632,14 +1612,14 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		if (is_float(l_type) && is_any(l_var_type)) {
 			lval->set(do_operation(lval->f, cp_float(rval->i), op));
 		}
-		else if (is_int(l_type) && is_any(l_var_type)) {
+		else if (is_int(l_type) && is_any(l_var_type) && !Token::is_int_ex_op(op)) {
 			lval->set(do_operation(cp_float(lval->i), cp_float(rval->i), op));
 		}
 		else if (is_int(l_type)) {
 			lval->set(do_operation(lval->i, rval->i, op));
 		}
 		else {
-			throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
 
 		break;
@@ -1657,7 +1637,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			lval->set(do_operation(cp_float(lval->i), rval->f, op));
 		}
 		else {
-			throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
 
 		break;
@@ -1671,7 +1651,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		if (is_string(l_type)) {
 			if (has_string_access) {
 				if (op != "=") {
-					throw_operation_err(op, l_type, r_type);
+					ExceptionHandler::throw_operation_err(op, l_type, r_type);
 				}
 				has_string_access = false;
 				lval->s[str_pos] = rval->c;
@@ -1682,20 +1662,20 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 		else if (is_char(l_type)) {
 			if (op != "=") {
-				throw_operation_err(op, l_type, r_type);
+				ExceptionHandler::throw_operation_err(op, l_type, r_type);
 			}
 
 			lval->set(rval->c);
 		}
 		else if (is_any(l_var_type)) {
 			if (op != "=") {
-				throw_operation_err(op, l_type, r_type);
+				ExceptionHandler::throw_operation_err(op, l_type, r_type);
 			}
 
 			lval->set(rval->c);
 		}
 		else {
-			throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
 
 		break;
@@ -1707,7 +1687,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (!is_string(l_type)) {
-			throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
 
 		lval->set(do_operation(lval->s, rval->s, op));
@@ -1721,12 +1701,12 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (!match_type_array(lval, rval)) {
-			throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
 
 		bool match_arr_t = lval->array_type == rval->array_type;
 		if (!match_arr_t && !is_any(r_var_type)) {
-			throw_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_type_err(op, l_type, r_type);
 		}
 
 		lval->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
@@ -1740,7 +1720,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (!is_struct(l_type) || op != "=") {
-			throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
 
 		lval->set(rval->str);
@@ -1754,7 +1734,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (!is_function(l_type) || op != "=") {
-			throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
 
 		lval->set(rval->fun);
@@ -2098,6 +2078,24 @@ void Interpreter::register_built_in_lib(const std::string& libname) {
 		cpconsole = new modules::Console();
 		cpconsole->register_functions(this);
 	}
+}
+
+const std::string& Interpreter::get_namespace(const std::string& nmspace) const {
+	return get_namespace(current_program, nmspace);
+}
+
+const std::string& Interpreter::get_namespace(const ASTProgramNode* program, const std::string& nmspace) const {
+	return nmspace.empty() ? (
+		current_function_nmspace.size() == 0 ? (
+			program->alias.empty() ? default_namespace : program->alias
+			) : current_function_nmspace.top()
+		) : nmspace;
+}
+
+const std::string& Interpreter::get_current_namespace() {
+	return current_function_nmspace.size() == 0 ? (
+		current_program->alias.empty() ? default_namespace : current_program->alias
+		) : current_function_nmspace.top();
 }
 
 void Interpreter::set_curr_pos(unsigned int row, unsigned int col) {

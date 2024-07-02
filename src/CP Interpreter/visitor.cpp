@@ -1,6 +1,8 @@
 #include "visitor.hpp"
+#include "token.hpp"
 
 using namespace visitor;
+using namespace lexer;
 
 namespace parser {
 	std::string type_str(Type t) {
@@ -132,11 +134,15 @@ TypeDefinition TypeDefinition::get_struct(Type type, const std::string& type_nam
 	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), type_name, type_name_space);
 }
 
-bool TypeDefinition::validate_op(TypeDefinition ltype, TypeDefinition rtype, const std::string& op) {
+bool TypeDefinition::validate_op(TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition rvtype, TypeDefinition rtype, const std::string& op) {
 	Type l_type = ltype.type;
+	Type l_var_type = lvtype.type;
 	Type r_type = rtype.type;
+	Type r_var_type = rvtype.type;
 
-	if ((is_any(l_type) || is_any(r_type) || is_void(r_type)) && op == "=") {
+	if ((is_any(l_var_type) || is_any(r_var_type)
+		|| is_any(l_type) || is_any(r_type)
+		|| is_void(r_type)) && op == "=") {
 		return true;
 	}
 
@@ -152,132 +158,60 @@ bool TypeDefinition::validate_op(TypeDefinition ltype, TypeDefinition rtype, con
 		break;
 	}
 	case Type::T_INT: {
-		if (is_float(l_type) && is_any(l_var_type)) {
-			lval->set(do_operation(lval->f, cp_float(rval->i), op));
-		}
-		else if (is_int(l_type) && is_any(l_var_type)) {
-			lval->set(do_operation(cp_float(lval->i), cp_float(rval->i), op));
+		if (is_float(l_type) && is_any(l_var_type)
+			|| is_int(l_type) && is_any(l_var_type) && !Token::is_int_ex_op(op)) {
+			return Token::is_float_op(op);
 		}
 		else if (is_int(l_type)) {
-			lval->set(do_operation(lval->i, rval->i, op));
+			return Token::is_int_op(op);
 		}
-		else {
-			throw_operation_err(op, l_type, r_type);
-		}
-
-		break;
+		return false;
 	}
 	case Type::T_FLOAT: {
-		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->f);
-			break;
+		if (is_float(l_type) || is_int(l_type)) {
+			return Token::is_float_op(op);
 		}
-
-		if (is_float(l_type)) {
-			lval->set(do_operation(lval->f, rval->f, op));
-		}
-		else if (is_int(l_type)) {
-			lval->set(do_operation(cp_float(lval->i), rval->f, op));
-		}
-		else {
-			throw_operation_err(op, l_type, r_type);
-		}
-
-		break;
+		return false;
 	}
 	case Type::T_CHAR: {
-		if (is_any(l_var_type) && op == "=" && !has_string_access) {
-			lval->set(rval->c);
-			break;
-		}
-
 		if (is_string(l_type)) {
-			if (has_string_access) {
-				if (op != "=") {
-					throw_operation_err(op, l_type, r_type);
-				}
-				has_string_access = false;
-				lval->s[str_pos] = rval->c;
-			}
-			else {
-				lval->set(do_operation(lval->s, std::string{ rval->c }, op));
-			}
+			return Token::is_collection_op(op);
 		}
 		else if (is_char(l_type)) {
 			if (op != "=") {
-				throw_operation_err(op, l_type, r_type);
+				return false;
 			}
-
-			lval->set(rval->c);
-		}
-		else if (is_any(l_var_type)) {
-			if (op != "=") {
-				throw_operation_err(op, l_type, r_type);
-			}
-
-			lval->set(rval->c);
 		}
 		else {
-			throw_operation_err(op, l_type, r_type);
+			return false;
 		}
-
-		break;
 	}
 	case Type::T_STRING: {
-		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->s);
-			break;
+		if (!is_string(l_type)
+			|| !Token::is_collection_op(op)) {
+			return false;
 		}
-
-		if (!is_string(l_type)) {
-			throw_operation_err(op, l_type, r_type);
-		}
-
-		lval->set(do_operation(lval->s, rval->s, op));
 
 		break;
 	}
 	case Type::T_ARRAY: {
-		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->arr, lval->array_type);
-			break;
+		if (!match_type_array(ltype, rtype)
+			|| !Token::is_collection_op(op)) {
+			return false;
 		}
-
-		if (!match_type_array(lval, rval)) {
-			throw_operation_err(op, l_type, r_type);
-		}
-
-		bool match_arr_t = lval->array_type == rval->array_type;
-		if (!match_arr_t && !is_any(r_var_type)) {
-			throw_type_err(op, l_type, r_type);
-		}
-
-		lval->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
 
 		break;
 	}
 	case Type::T_STRUCT: {
-		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->str);
-			break;
-		}
-
 		if (!is_struct(l_type) || op != "=") {
-			throw_operation_err(op, l_type, r_type);
+			return false;
 		}
-
-		lval->set(rval->str);
 
 		break;
 	}
 	case Type::T_FUNCTION: {
-		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->str);
-			break;
-		}
-
 		if (!is_function(l_type) || op != "=") {
-			throw_operation_err(op, l_type, r_type);
+			return false;
 		}
 
 		break;
@@ -300,7 +234,7 @@ bool TypeDefinition::is_any_or_match_type(TypeDefinition vtype, TypeDefinition l
 	return match_type(ltype, rtype);
 }
 
-bool TypeDefinition::is_any_or_match_type(TypeDefinition lvtype, TypeDefinition rvtype, TypeDefinition ltype, TypeDefinition rtype) {
+bool TypeDefinition::is_any_or_match_type(TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition rvtype, TypeDefinition rtype) {
 	if (is_any(lvtype.type) || is_any(rvtype.type)) return true;
 	return match_type(ltype, rtype);
 }
@@ -335,12 +269,14 @@ bool TypeDefinition::match_type_char(TypeDefinition ltype, TypeDefinition rtype)
 }
 
 bool TypeDefinition::match_type_string(TypeDefinition ltype, TypeDefinition rtype) {
-	return is_float(ltype.type)
+	return is_string(ltype.type)
 		&& (is_char(rtype.type) || is_string(rtype.type));
 }
 
 bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype) {
-	return is_array(ltype.type) && is_array(rtype.type);
+	return is_array(ltype.type) && is_array(rtype.type)
+		&& (is_any(ltype.array_type) || is_any(rtype.array_type)
+			|| ltype.array_type == rtype.array_type);
 }
 
 bool TypeDefinition::match_type_struct(TypeDefinition ltype, TypeDefinition rtype) {
