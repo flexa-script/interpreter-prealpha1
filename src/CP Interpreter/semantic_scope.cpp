@@ -145,6 +145,10 @@ void SemanticScope::declare_variable(const std::string& identifier, Type type, T
 	variable_symbol_table[identifier] = var;
 }
 
+void SemanticScope::declare_variable(const std::string& identifier, SemanticVariable* var) {
+	variable_symbol_table[identifier] = var;
+}
+
 void SemanticScope::declare_function(const std::string& identifier, Type type, const std::string& type_name, const std::string& type_name_space,
 	Type array_type, const std::vector<ASTExprNode*>& dim, const std::vector<TypeDefinition>& signature,
 	const std::vector<VariableDefinition>& parameters, unsigned int row, unsigned int col) {

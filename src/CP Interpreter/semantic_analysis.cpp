@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "semantic_analysis.hpp"
+#include "exception_handler.hpp"
 #include "vendor/axeutils.hpp"
 #include "graphics.hpp"
 
@@ -100,7 +101,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 
 	if (is_void(astnode->type)) {
 		set_curr_pos(astnode->row, astnode->col);
-		throw std::runtime_error("variables can not be assigned with void type '" + astnode->identifier + "'");
+		throw std::runtime_error("variables cannot be declared as void type: '" + astnode->identifier + "'");
 	}
 
 	if (astnode->expr) {
@@ -126,11 +127,12 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	auto astnode_type_name = astnode->type_name.empty() ? decl_current_expr->type_name : astnode->type_name;
 
 	if (!TypeDefinition::is_any_or_match_type(
-		static_cast<TypeDefinition>(*new_var),
-		static_cast<TypeDefinition>(current_expression_value))) {
+		static_cast<TypeDefinition>(*decl_current_expr),
+		static_cast<TypeDefinition>(current_expression))) {
 		throw std::runtime_error("invalid type '" + type_str(new_var->type)
 			+ "' trying to assign '" + astnode->identifier
 			+ "' variable of '" + type_str(current_expression_value.type) + "' type");
+		ExceptionHandler::throw_type_err(astnode->identifier, ltype, rtype);
 	}
 
 

@@ -66,7 +66,9 @@ namespace visitor {
 
 		void declare_structure(cp_struct* str, const std::string& nmspace);
 
-		bool match_type_array(Value* ltype, Value* rtype);
+		bool is_any_or_match_type(TypeDefinition vtype, TypeDefinition ltype, TypeDefinition rtype);
+		bool is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype);
+		bool match_type_array(TypeDefinition ltype, TypeDefinition rtype);
 
 		Variable* do_operation(const std::string& op, Variable* lval, Variable* rval, cp_int str_pos = 0);
 		Value* do_operation(const std::string& op, Value* lval, Value* rval, cp_int str_pos = 0);

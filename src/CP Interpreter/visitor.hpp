@@ -237,7 +237,6 @@ namespace visitor {
 		Value(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
 			const std::string& type_name, const std::string& type_name_space,
 			unsigned int row, unsigned int col);
-		Value();
 		Value(cp_bool);
 		Value(cp_int);
 		Value(cp_float);
@@ -250,6 +249,8 @@ namespace visitor {
 		Value(Type type);
 		Value(Type type, parser::Type arr_type, std::vector<ASTExprNode*> dim);
 		Value(Value*);
+		Value(TypeDefinition type);
+		Value();
 		~Value();
 
 		void set(cp_bool);

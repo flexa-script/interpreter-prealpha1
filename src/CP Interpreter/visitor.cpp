@@ -484,6 +484,9 @@ Value::Value(Value* v)
 	copy_array(v->arr);
 };
 
+Value::Value(TypeDefinition v)
+	: TypeDefinition(v.type, v.array_type, v.dim, v.type_name, v.type_name_space) {};
+
 Value::~Value() = default;
 
 void Value::set(cp_bool b) {

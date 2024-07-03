@@ -102,18 +102,20 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 
 	auto new_value = new Value(current_expression_value);
 
-	auto new_var = new Variable(astnode->type,
-		astnode->array_type, astnode->dim,
-		astnode->type_name, astnode->type_name_space,
+	auto astnode_type = is_undefined(astnode->type) ? Type::T_ANY : astnode->type;
+	auto astnode_array_type = is_undefined(astnode->array_type) && astnode->dim.size() > 0 ? Type::T_ANY : astnode->array_type;
+	auto astnode_type_name = astnode->type_name.empty() ? new_value->type_name : astnode->type_name;
+
+	auto new_var = new Variable(astnode_type,
+		astnode_array_type, astnode->dim,
+		astnode_type_name, astnode->type_name_space,
 		new_value, astnode->is_const, astnode->row, astnode->col);
 	new_value->ref = new_var;
 
-	if (!TypeDefinition::is_any_or_match_type(
+	if (!is_any_or_match_type(
 		static_cast<TypeDefinition>(*new_var),
 		static_cast<TypeDefinition>(current_expression_value))) {
-		throw std::runtime_error("invalid type '" + type_str(new_var->type)
-			+ "' trying to assign '" + astnode->identifier
-			+ "' variable of '" + type_str(current_expression_value.type) + "' type");
+		//ExceptionHandler::throw_type_err()
 	}
 
 	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
@@ -138,7 +140,8 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 
 	// TODO: fix ref by checking current variable reference
 	if (current_var_ref->ref && astnode->op == "="
-		&& TypeDefinition::is_any_or_match_type(
+		&& is_any_or_match_type(
+			static_cast<TypeDefinition>(*variable),
 			static_cast<TypeDefinition>(*value),
 			static_cast<TypeDefinition>(current_expression_value))) {
 		//astscope->declare_value(astnode->identifier_vector[0].identifier, current_var_ref);
@@ -167,7 +170,7 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 	const auto& curr_func_ret_type = current_function_return_type.top();
 	astnode->expr->accept(this);
 
-	if (!TypeDefinition::is_any_or_match_type(
+	if (!is_any_or_match_type(
 		curr_func_ret_type,
 		static_cast<TypeDefinition>(current_expression_value))) {
 		throw std::runtime_error("invalid '" + type_str(curr_func_ret_type.type)
@@ -1542,21 +1545,41 @@ std::string Interpreter::parse_struct_to_string(const cp_struct& str_value) {
 	return s.str();
 }
 
-bool Interpreter::match_type_array(Value* ltype, Value* rtype) {
-	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype->dim);
-	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype->dim);
+bool Interpreter::is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype) {
+	return TypeDefinition::is_any_or_match_type(
+		static_cast<TypeDefinition>(ltype),
+		static_cast<TypeDefinition>(ltype),
+		static_cast<TypeDefinition>(rtype))
+		&& (!is_array(ltype.type) ||
+			is_array(ltype.type)
+			&& match_type_array(ltype, rtype));
+}
+
+bool Interpreter::is_any_or_match_type(TypeDefinition vtype, TypeDefinition ltype, TypeDefinition rtype) {
+	return TypeDefinition::is_any_or_match_type(
+		static_cast<TypeDefinition>(vtype),
+		static_cast<TypeDefinition>(ltype),
+		static_cast<TypeDefinition>(rtype))
+		&& (!is_array(ltype.type) ||
+			is_array(ltype.type)
+			&& match_type_array(ltype, rtype));
+}
+
+bool Interpreter::match_type_array(TypeDefinition ltype, TypeDefinition rtype) {
+	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
+	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
 
 	if (var_dim.size() != expr_dim.size()) {
 		throw std::runtime_error("mismatch array dimension");
 	}
 
 	for (size_t dc = 0; dc < var_dim.size(); ++dc) {
-		if (ltype->dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
+		if (ltype.dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
 			throw std::runtime_error("mismatch array size ");
 		}
 	}
 
-	return TypeDefinition::match_type_array(static_cast<TypeDefinition>(*ltype), static_cast<TypeDefinition>(*rtype));
+	return TypeDefinition::match_type_array(ltype, rtype);
 }
 
 Variable* Interpreter::do_operation(const std::string& op, Variable* lvar, Variable* rvar, cp_int str_pos) {
@@ -1585,7 +1608,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (!is_bool(l_type)) {
-			ExceptionHandler::throw_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
 
 		if (op == "=") {
@@ -1700,13 +1723,13 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			break;
 		}
 
-		if (!match_type_array(lval, rval)) {
+		if (!match_type_array(static_cast<TypeDefinition>(*lval), static_cast<TypeDefinition>(*rval))) {
 			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
 
 		bool match_arr_t = lval->array_type == rval->array_type;
 		if (!match_arr_t && !is_any(r_var_type)) {
-			ExceptionHandler::throw_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
 
 		lval->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
