@@ -10,6 +10,8 @@
 #include "ast.hpp"
 #include "semantic_scope.hpp"
 
+using namespace visitor;
+using namespace parser;
 
 namespace visitor {
 
@@ -42,6 +44,10 @@ namespace visitor {
 
 		void determine_array_type(parser::ASTArrayConstructorNode* astnode);
 		void check_array_type(parser::ASTExprNode* astnode, unsigned int row, unsigned int col);
+
+		bool is_any_or_match_type(TypeDefinition rvtype, TypeDefinition ltype, TypeDefinition lvtype, TypeDefinition rtype);
+		bool is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype);
+		bool match_type_array(TypeDefinition ltype, TypeDefinition rtype);
 
 		visitor::VariableDefinition access_struct_variable(std::vector<parser::Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i = 0);
 

@@ -180,6 +180,17 @@ namespace lexer {
 
 		static const std::string& token_image(TokenType type);
 
+		static bool is_assignment_op(const std::string& op);
+		static bool is_assignment_collection_op(const std::string& op);
+		static bool is_assignment_int_op(const std::string& op);
+		static bool is_assignment_int_ex_op(const std::string& op);
+		static bool is_assignment_float_op(const std::string& op);
+
+		static bool is_expression_collection_op(const std::string& op);
+		static bool is_expression_int_op(const std::string& op);
+		static bool is_expression_int_ex_op(const std::string& op);
+		static bool is_expression_float_op(const std::string& op);
+
 		static bool is_collection_op(const std::string& op);
 		static bool is_int_op(const std::string& op);
 		static bool is_int_ex_op(const std::string& op);

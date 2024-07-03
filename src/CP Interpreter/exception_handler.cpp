@@ -11,8 +11,8 @@ void ExceptionHandler::throw_operation_err(const std::string op, Type ltype, Typ
 		+ "' and '" + type_str(rtype) + ")");
 }
 
-void ExceptionHandler::throw_type_err(const std::string& identifier, parser::Type ltype, parser::Type rtype) {
-	throw std::runtime_error("invalid type '" + type_str(ltype)
-		+ "' trying to assign '" + identifier
-		+ "' variable of '" + type_str(rtype) + "' type");
+void ExceptionHandler::throw_declaration_type_err(const std::string& identifier, parser::Type ltype, parser::Type rtype) {
+	throw std::runtime_error("found " + type_str(ltype)
+		+ " in definition of '" + identifier
+		+ "', expected " + type_str(rtype) + " type");
 }

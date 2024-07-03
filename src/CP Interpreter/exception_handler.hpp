@@ -9,7 +9,7 @@ class ExceptionHandler {
 public:
 	static void throw_operation_err(const std::string op, parser::Type ltype, parser::Type rtype);
 	static void throw_operation_type_err(const std::string op, parser::Type ltype, parser::Type rtype);
-	static void throw_type_err(const std::string& identifier, parser::Type ltype, parser::Type rtype);
+	static void throw_declaration_type_err(const std::string& identifier, parser::Type ltype, parser::Type rtype);
 };
 
 #endif // !EXCEPTION_HANDLER_HPP

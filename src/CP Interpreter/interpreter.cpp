@@ -109,13 +109,14 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	auto new_var = new Variable(astnode_type,
 		astnode_array_type, astnode->dim,
 		astnode_type_name, astnode->type_name_space,
-		new_value, astnode->is_const, astnode->row, astnode->col);
+		new_value, astnode->is_const,
+		astnode->row, astnode->col);
 	new_value->ref = new_var;
 
 	if (!is_any_or_match_type(
 		static_cast<TypeDefinition>(*new_var),
-		static_cast<TypeDefinition>(current_expression_value))) {
-		//ExceptionHandler::throw_type_err()
+		static_cast<TypeDefinition>(*new_value))) {
+		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
 
 	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
