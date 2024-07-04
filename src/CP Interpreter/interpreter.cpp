@@ -140,14 +140,16 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	identifier_call_name = "";
 
 	// TODO: fix ref by checking current variable reference
-	if (current_var_ref->ref && astnode->op == "="
-		&& is_any_or_match_type(
-			static_cast<TypeDefinition>(*variable),
-			static_cast<TypeDefinition>(*value),
-			static_cast<TypeDefinition>(current_expression_value))) {
-		//astscope->declare_value(astnode->identifier_vector[0].identifier, current_var_ref);
-		return;
-	}
+	//if (current_var_ref->ref && astnode->op == "=") {
+	//	if (!is_any_or_match_type(
+	//		static_cast<TypeDefinition>(*variable),
+	//		static_cast<TypeDefinition>(*value),
+	//		static_cast<TypeDefinition>(current_expression_value))) {
+
+	//	}
+	//	//astscope->declare_value(astnode->identifier_vector[0].identifier, current_var_ref);
+	//	return;
+	//}
 
 	auto new_value = new Value(current_expression_value);
 	new_value->ref = variable;
@@ -173,11 +175,10 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 
 	if (!is_any_or_match_type(
 		curr_func_ret_type,
-		static_cast<TypeDefinition>(current_expression_value))) {
-		throw std::runtime_error("invalid '" + type_str(curr_func_ret_type.type)
-			+ "' return type for '" + current_name.top()
-			+ "' function of '" + type_str(current_expression_value.type)
-			+ "' return type");
+		current_expression_value)) {
+		ExceptionHandler::throw_return_type_err(current_name.top(),
+			curr_func_ret_type.type,
+			current_expression_value.type);
 	}
 
 	for (long long i = scopes[nmspace].size() - 1; i >= 0; --i) {
@@ -187,6 +188,110 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 			break;
 		}
 	}
+}
+
+void Interpreter::visit(ASTFunctionCallNode* astnode) {
+	const auto& nmspace = get_namespace(astnode->nmspace);
+
+	std::vector<TypeDefinition> signature;
+	std::vector<Value*> function_arguments;
+
+	for (auto& param : astnode->parameters) {
+		param->accept(this);
+
+		signature.push_back(static_cast<TypeDefinition>(current_expression_value));
+
+		Value* pvalue = nullptr;
+		if (current_var_ref->ref && current_var_ref) {
+			pvalue = current_var_ref->value;
+		}
+		else {
+			pvalue = new Value(&current_expression_value);
+		}
+
+		function_arguments.push_back(pvalue);
+	}
+
+	for (size_t i = 0; i < function_arguments.size(); ++i) {
+		last_function_arguments.push_back(function_arguments[i]);
+	}
+
+	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
+
+	auto declfun = func_scope->find_declared_function(astnode->identifier, signature);
+
+	function_call_parameters = std::get<0>(declfun);
+	is_function_context = true;
+	function_call_name = astnode->identifier;
+	current_name.push(astnode->identifier);
+	current_function_nmspace.push(nmspace);
+	current_function_return_type.push(std::get<2>(declfun));
+
+	auto block = std::get<1>(declfun);
+	if (block) {
+		block->accept(this);
+	}
+	else {
+		call_builtin_function(astnode->identifier);
+	}
+
+	current_function_nmspace.pop();
+	current_name.pop();
+	is_function_context = false;
+}
+
+void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
+	interpreter_parameter_list_t params;
+	for (size_t i = 0; i < astnode->parameters.size(); ++i) {
+		interpreter_parameter_t param = std::make_tuple(astnode->variable_names[i], astnode->signature[i], astnode->parameters[i].default_value, astnode->parameters[i].is_rest);
+		params.push_back(param);
+	}
+	scopes[get_namespace()].back()->declare_function(astnode->identifier, params, astnode->block, *static_cast<TypeDefinition*>(astnode));
+}
+
+void Interpreter::visit(ASTFunctionExpression* astnode) {
+	const auto& nmspace = get_namespace();
+
+	astnode->fun->identifier = identifier_call_name;
+	astnode->fun->accept(this);
+
+	auto value = Value(Type::T_FUNCTION);
+	value.set(cp_function(scopes[nmspace].back(), astnode->fun->identifier));
+	current_expression_value = value;
+}
+
+void Interpreter::visit(ASTBlockNode* astnode) {
+	const auto& nmspace = get_namespace();
+	scopes[nmspace].push_back(new InterpreterScope(function_call_name));
+	function_call_name = "";
+
+	declare_function_block_parameters(nmspace);
+
+	for (auto& stmt : astnode->statements) {
+		stmt->accept(this);
+
+		if (exit_from_program) {
+			return;
+		}
+
+		if (continue_block && (is_loop || is_switch)) {
+			break;
+		}
+
+		if (break_block && (is_loop || is_switch)) {
+			break;
+		}
+
+		if (return_from_function) {
+			if (!return_from_function_name.empty() && return_from_function_name == scopes[nmspace].back()->get_name()) {
+				return_from_function_name = "";
+				return_from_function = false;
+			}
+			break;
+		}
+	}
+
+	scopes[nmspace].pop_back();
 }
 
 void Interpreter::visit(ASTExitNode* astnode) {
@@ -857,110 +962,6 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	}
 }
 
-void Interpreter::visit(ASTFunctionCallNode* astnode) {
-	const auto& nmspace = get_namespace(astnode->nmspace);
-
-	std::vector<TypeDefinition> signature;
-	std::vector<Value*> function_arguments;
-
-	for (auto& param : astnode->parameters) {
-		param->accept(this);
-
-		signature.push_back(static_cast<TypeDefinition>(current_expression_value));
-
-		Value* pvalue = nullptr;
-		if (current_var_ref->ref && current_var_ref) {
-			pvalue = current_var_ref->value;
-		}
-		else {
-			pvalue = new Value(&current_expression_value);
-		}
-
-		function_arguments.push_back(pvalue);
-	}
-
-	for (size_t i = 0; i < function_arguments.size(); ++i) {
-		last_function_arguments.push_back(function_arguments[i]);
-	}
-
-	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
-
-	auto declfun = func_scope->find_declared_function(astnode->identifier, signature);
-
-	function_call_parameters = std::get<0>(declfun);
-	is_function_context = true;
-	function_call_name = astnode->identifier;
-	current_name.push(astnode->identifier);
-	current_function_nmspace.push(nmspace);
-	current_function_return_type.push(std::get<2>(declfun));
-
-	auto block = std::get<1>(declfun);
-	if (block) {
-		block->accept(this);
-	}
-	else {
-		call_builtin_function(astnode->identifier);
-	}
-
-	current_function_nmspace.pop();
-	current_name.pop();
-	is_function_context = false;
-}
-
-void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
-	interpreter_parameter_list_t params;
-	for (size_t i = 0; i < astnode->parameters.size(); ++i) {
-		interpreter_parameter_t param = std::make_tuple(astnode->variable_names[i], astnode->signature[i], astnode->parameters[i].default_value, astnode->parameters[i].is_rest);
-		params.push_back(param);
-	}
-	scopes[get_namespace()].back()->declare_function(astnode->identifier, params, astnode->block, *static_cast<TypeDefinition*>(astnode));
-}
-
-void Interpreter::visit(ASTFunctionExpression* astnode) {
-	const auto& nmspace = get_namespace();
-
-	astnode->fun->identifier = identifier_call_name;
-	astnode->fun->accept(this);
-
-	auto value = Value(Type::T_FUNCTION);
-	value.set(cp_function(scopes[nmspace].back(), astnode->fun->identifier));
-	current_expression_value = value;
-}
-
-void Interpreter::visit(ASTBlockNode* astnode) {
-	const auto& nmspace = get_namespace();
-	scopes[nmspace].push_back(new InterpreterScope(function_call_name));
-	function_call_name = "";
-
-	declare_function_block_parameters(nmspace);
-
-	for (auto& stmt : astnode->statements) {
-		stmt->accept(this);
-
-		if (exit_from_program) {
-			return;
-		}
-
-		if (continue_block && (is_loop || is_switch)) {
-			break;
-		}
-
-		if (break_block && (is_loop || is_switch)) {
-			break;
-		}
-
-		if (return_from_function) {
-			if (!return_from_function_name.empty() && return_from_function_name == scopes[nmspace].back()->get_name()) {
-				return_from_function_name = "";
-				return_from_function = false;
-			}
-			break;
-		}
-	}
-
-	scopes[nmspace].pop_back();
-}
-
 void Interpreter::visit(ASTTypeParseNode* astnode) {
 	astnode->expr->accept(this);
 
@@ -1547,20 +1548,14 @@ std::string Interpreter::parse_struct_to_string(const cp_struct& str_value) {
 }
 
 bool Interpreter::is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype) {
-	return TypeDefinition::is_any_or_match_type(
-		static_cast<TypeDefinition>(ltype),
-		static_cast<TypeDefinition>(ltype),
-		static_cast<TypeDefinition>(rtype))
+	return TypeDefinition::is_any_or_match_type(ltype, rtype)
 		&& (!is_array(ltype.type) ||
 			is_array(ltype.type)
 			&& match_type_array(ltype, rtype));
 }
 
 bool Interpreter::is_any_or_match_type(TypeDefinition vtype, TypeDefinition ltype, TypeDefinition rtype) {
-	return TypeDefinition::is_any_or_match_type(
-		static_cast<TypeDefinition>(vtype),
-		static_cast<TypeDefinition>(ltype),
-		static_cast<TypeDefinition>(rtype))
+	return TypeDefinition::is_any_or_match_type(vtype, ltype, rtype)
 		&& (!is_array(ltype.type) ||
 			is_array(ltype.type)
 			&& match_type_array(ltype, rtype));

@@ -92,6 +92,7 @@ extern std::vector<std::string> std_libs;
 extern std::vector<std::string> built_in_libs;
 
 namespace visitor {
+	class SemanticVariable;
 	class Variable;
 
 	class CodePosition {
@@ -189,14 +190,20 @@ namespace visitor {
 
 	class SemanticValue : public TypeDefinition, public CodePosition {
 	public:
+		SemanticVariable* ref;
 		long long hash;
 		bool is_const;
-		bool ref;
 		bool is_sub;
 
 		// complete constructor
-		SemanticValue(parser::Type type, parser::Type array_type, std::vector<parser::ASTExprNode*>&& dim,
+		SemanticValue(parser::Type type, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,
 			const std::string& type_name, const std::string& type_name_space, long long hash,
+			bool is_const, unsigned int row, unsigned int col);
+
+		SemanticValue(TypeDefinition type_definition, long long hash,
+			bool is_const, unsigned int row, unsigned int col);
+
+		SemanticValue(VariableDefinition variable_definition, long long hash,
 			bool is_const, unsigned int row, unsigned int col);
 
 		// simplified constructor

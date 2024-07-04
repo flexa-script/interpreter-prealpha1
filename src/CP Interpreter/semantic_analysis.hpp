@@ -33,7 +33,6 @@ namespace visitor {
 		bool returns(parser::ASTNode* astnode);
 
 		void equals_value(const visitor::SemanticValue& lval, const visitor::SemanticValue& rval);
-		void validate_struct_assign(SemanticScope* curr_scope, visitor::SemanticValue* expression, parser::ASTStructConstructorNode* expr);
 
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<parser::ASTExprNode*>& expr_access_vector);
 		std::vector<unsigned int> calculate_array_dim_size(parser::ASTArrayConstructorNode*);
@@ -45,7 +44,8 @@ namespace visitor {
 		void determine_array_type(parser::ASTArrayConstructorNode* astnode);
 		void check_array_type(parser::ASTExprNode* astnode, unsigned int row, unsigned int col);
 
-		bool is_any_or_match_type(TypeDefinition rvtype, TypeDefinition ltype, TypeDefinition lvtype, TypeDefinition rtype);
+		bool validate_op(TypeDefinition rvtype, TypeDefinition ltype, TypeDefinition* lvtype, TypeDefinition rtype, const std::string& op);
+		bool is_any_or_match_type(TypeDefinition rvtype, TypeDefinition ltype, TypeDefinition* lvtype, TypeDefinition rtype);
 		bool is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype);
 		bool match_type_array(TypeDefinition ltype, TypeDefinition rtype);
 
