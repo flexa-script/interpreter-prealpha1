@@ -408,22 +408,45 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 
 	astnode->condition->accept(this);
 
+	auto cond_type = static_cast<TypeDefinition>(current_expression);
+	auto case_type = TypeDefinition::get_basic(Type::T_UNDEFINED);
+
 	for (const auto& expr : astnode->case_blocks) {
 		expr.first->accept(this);
-		// TODO: validate case types among they
+
+		if (!current_expression.is_const) {
+			set_curr_pos(astnode->row, astnode->col);
+			throw std::runtime_error("case expression is not an constant expression");
+		}
+		
+		if (is_undefined(case_type.type)) {
+			if (is_undefined(current_expression.type)
+				|| is_void(current_expression.type)
+				|| is_any(current_expression.type)) {
+				set_curr_pos(astnode->row, astnode->col);
+				throw std::runtime_error("case values cannot be undefined");
+			}
+			case_type = current_expression;
+		}
+		
+		if (!TypeDefinition::match_type(case_type, current_expression)) {
+			set_curr_pos(astnode->row, astnode->col);
+			ExceptionHandler::throw_mismatched_type_err(case_type.type, current_expression.type);
+		}
+
 		auto hash = expr.first->hash(this);
 		if (astnode->parsed_case_blocks.contains(hash)) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("duplicated case value: '" + std::to_string(hash) + "'");
 		}
-		if (!current_expression.is_const) {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("expression is not an constant expression");
-		}
+
 		astnode->parsed_case_blocks.emplace(hash, expr.second);
 	}
 
-	// TODO: validate type of condition with case type
+	if (!TypeDefinition::match_type(cond_type, case_type)) {
+		set_curr_pos(astnode->row, astnode->col);
+		ExceptionHandler::throw_mismatched_type_err(cond_type.type, case_type.type);
+	}
 
 	for (auto& stmt : astnode->statements) {
 		stmt->accept(this);
@@ -436,11 +459,23 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 void SemanticAnalyser::visit(ASTElseIfNode* astnode) {
 	astnode->condition->accept(this);
 
+	if (!is_bool(current_expression.type)
+		&& !is_any(current_expression.type)) {
+		set_curr_pos(astnode->row, astnode->col);
+		ExceptionHandler::throw_condition_type_err();
+	}
+
 	astnode->block->accept(this);
 }
 
 void SemanticAnalyser::visit(ASTIfNode* astnode) {
 	astnode->condition->accept(this);
+
+	if (!is_bool(current_expression.type)
+		&& !is_any(current_expression.type)) {
+		set_curr_pos(astnode->row, astnode->col);
+		ExceptionHandler::throw_condition_type_err();
+	}
 
 	astnode->if_block->accept(this);
 
@@ -464,8 +499,14 @@ void SemanticAnalyser::visit(ASTForNode* astnode) {
 	}
 	if (astnode->dci[1]) {
 		astnode->dci[1]->accept(this);
+
+		if (!is_bool(current_expression.type)
+			&& !is_any(current_expression.type)) {
+			set_curr_pos(astnode->row, astnode->col);
+			ExceptionHandler::throw_condition_type_err();
+		}
 	}
-	if (astnode->dci[1]) {
+	if (astnode->dci[2]) {
 		astnode->dci[2]->accept(this);
 	}
 	astnode->block->accept(this);
@@ -573,6 +614,13 @@ void SemanticAnalyser::visit(ASTReticencesNode* astnode) {
 void SemanticAnalyser::visit(ASTWhileNode* astnode) {
 	is_loop = true;
 	astnode->condition->accept(this);
+
+	if (!is_bool(current_expression.type)
+		&& !is_any(current_expression.type)) {
+		set_curr_pos(astnode->row, astnode->col);
+		ExceptionHandler::throw_condition_type_err();
+	}
+
 	astnode->block->accept(this);
 	is_loop = false;
 }
@@ -580,64 +628,15 @@ void SemanticAnalyser::visit(ASTWhileNode* astnode) {
 void SemanticAnalyser::visit(ASTDoWhileNode* astnode) {
 	is_loop = true;
 	astnode->condition->accept(this);
+
+	if (!is_bool(current_expression.type)
+		&& !is_any(current_expression.type)) {
+		set_curr_pos(astnode->row, astnode->col);
+		ExceptionHandler::throw_condition_type_err();
+	}
+
 	astnode->block->accept(this);
 	is_loop = false;
-}
-
-bool SemanticAnalyser::returns(ASTNode* astnode) {
-	if (dynamic_cast<ASTReturnNode*>(astnode)) {
-		return true;
-	}
-
-	if (auto block = dynamic_cast<ASTBlockNode*>(astnode)) {
-		for (const auto& blk_stmt : block->statements) {
-			if (returns(blk_stmt)) {
-				return true;
-			}
-		}
-	}
-
-	if (auto ifstmt = dynamic_cast<ASTIfNode*>(astnode)) {
-		auto ifreturn = returns(ifstmt->if_block);
-		auto elifreturn = true;
-		auto elsereturn = true;
-		for (const auto& elif : ifstmt->else_ifs) {
-			if (!returns(elif->block)) {
-				elifreturn = false;
-				break;
-			}
-		}
-		if (ifstmt->else_block) {
-			elsereturn = returns(ifstmt->else_block);
-		}
-		return ifreturn && elifreturn && elsereturn;
-	}
-
-	if (const auto switchstmt = dynamic_cast<ASTSwitchNode*>(astnode)) {
-		for (const auto& blk_stmt : switchstmt->statements) {
-			if (returns(blk_stmt)) {
-				return true;
-			}
-		}
-	}
-
-	if (const auto forstmt = dynamic_cast<ASTForNode*>(astnode)) {
-		return returns(forstmt->block);
-	}
-
-	if (const auto forstmt = dynamic_cast<ASTForEachNode*>(astnode)) {
-		return returns(forstmt->block);
-	}
-
-	if (const auto forstmt = dynamic_cast<ASTForEachNode*>(astnode)) {
-		return returns(forstmt->block);
-	}
-
-	if (const auto whilestmt = dynamic_cast<ASTWhileNode*>(astnode)) {
-		return returns(whilestmt->block);
-	}
-
-	return false;
 }
 
 void SemanticAnalyser::visit(ASTStructDefinitionNode* astnode) {
@@ -1252,8 +1251,74 @@ std::vector<unsigned int> SemanticAnalyser::calculate_array_dim_size(ASTArrayCon
 	return dim;
 }
 
+bool SemanticAnalyser::returns(ASTNode* astnode) {
+	if (dynamic_cast<ASTReturnNode*>(astnode)) {
+		return true;
+	}
+
+	if (auto block = dynamic_cast<ASTBlockNode*>(astnode)) {
+		for (const auto& blk_stmt : block->statements) {
+			if (returns(blk_stmt)) {
+				return true;
+			}
+		}
+	}
+
+	if (auto ifstmt = dynamic_cast<ASTIfNode*>(astnode)) {
+		auto ifreturn = returns(ifstmt->if_block);
+		auto elifreturn = true;
+		auto elsereturn = true;
+		for (const auto& elif : ifstmt->else_ifs) {
+			if (!returns(elif->block)) {
+				elifreturn = false;
+				break;
+			}
+		}
+		if (ifstmt->else_block) {
+			elsereturn = returns(ifstmt->else_block);
+		}
+		return ifreturn && elifreturn && elsereturn;
+	}
+
+	if (const auto switchstmt = dynamic_cast<ASTSwitchNode*>(astnode)) {
+		for (const auto& blk_stmt : switchstmt->statements) {
+			if (returns(blk_stmt)) {
+				return true;
+			}
+		}
+	}
+
+	if (const auto forstmt = dynamic_cast<ASTForNode*>(astnode)) {
+		return returns(forstmt->block);
+	}
+
+	if (const auto forstmt = dynamic_cast<ASTForEachNode*>(astnode)) {
+		return returns(forstmt->block);
+	}
+
+	if (const auto forstmt = dynamic_cast<ASTForEachNode*>(astnode)) {
+		return returns(forstmt->block);
+	}
+
+	if (const auto whilestmt = dynamic_cast<ASTWhileNode*>(astnode)) {
+		return returns(whilestmt->block);
+	}
+
+	return false;
+}
+
 long long SemanticAnalyser::hash(ASTExprNode* astnode) {
-	return 0;
+	astnode->accept(this);
+	switch (current_expression.type) {
+	case Type::T_BOOL:
+	case Type::T_INT:
+	case Type::T_FLOAT:
+	case Type::T_CHAR:
+	case Type::T_STRING:
+		return 0;
+	default:
+		throw std::runtime_error("cannot determine type");
+	}
 }
 
 long long SemanticAnalyser::hash(ASTLiteralNode<cp_bool>* astnode) {
@@ -1291,7 +1356,17 @@ long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 	auto declared_variable = curr_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	auto variable_expression = declared_variable->value;
 
-	return variable_expression->hash;
+	switch (variable_expression->type) {
+	case Type::T_BOOL:
+	case Type::T_INT:
+	case Type::T_FLOAT:
+	case Type::T_CHAR:
+	case Type::T_STRING:
+		return variable_expression->hash;
+	default:
+		throw std::runtime_error("cannot determine type");
+	}
+
 }
 
 void SemanticAnalyser::register_built_in_functions() {

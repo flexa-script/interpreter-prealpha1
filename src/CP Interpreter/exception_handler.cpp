@@ -23,3 +23,12 @@ void ExceptionHandler::throw_return_type_err(const std::string& identifier, pars
 		+ "' function with " + type_str(rtype)
 		+ " return type");
 }
+
+void ExceptionHandler::throw_mismatched_type_err(parser::Type ltype, parser::Type rtype) {
+	throw std::runtime_error("mismatched types " + type_str(ltype)
+		+ " and " + type_str(rtype));
+}
+
+void ExceptionHandler::throw_condition_type_err() {
+	throw std::runtime_error("conditions must be boolean expression");
+}

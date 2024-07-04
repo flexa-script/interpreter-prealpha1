@@ -11,6 +11,8 @@ public:
 	static void throw_operation_type_err(const std::string op, parser::Type ltype, parser::Type rtype);
 	static void throw_declaration_type_err(const std::string& identifier, parser::Type ltype, parser::Type rtype);
 	static void throw_return_type_err(const std::string& identifier, parser::Type ltype, parser::Type rtype);
+	static void throw_mismatched_type_err(parser::Type ltype, parser::Type rtype);
+	static void throw_condition_type_err();
 };
 
 #endif // !EXCEPTION_HANDLER_HPP

@@ -319,8 +319,19 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 	scopes[nmspace].push_back(new InterpreterScope(""));
 
 	long long pos = -1;
+	if (astnode->case_blocks.size() > 0) {
+		astnode->condition->accept(this);
+		auto cond_type = static_cast<TypeDefinition>(current_expression_value);
+		for (const auto& expr : astnode->case_blocks) {
+			expr.first->accept(this);
+			break;
+		}
+		auto case_type = static_cast<TypeDefinition>(current_expression_value);
 
-	astnode->condition->accept(this);
+		if (!TypeDefinition::match_type(cond_type, case_type)) {
+			ExceptionHandler::throw_mismatched_type_err(cond_type.type, case_type.type);
+		}
+	}
 
 	try {
 		auto hash = astnode->condition->hash(this);
@@ -365,6 +376,11 @@ void Interpreter::visit(ASTElseIfNode* astnode) {
 
 	astnode->condition->accept(this);
 
+	if (!is_bool(current_expression_value.type)) {
+		set_curr_pos(astnode->row, astnode->col);
+		ExceptionHandler::throw_condition_type_err();
+	}
+
 	bool result = current_expression_value.b;
 
 	if (result) {
@@ -375,6 +391,11 @@ void Interpreter::visit(ASTElseIfNode* astnode) {
 
 void Interpreter::visit(ASTIfNode* astnode) {
 	astnode->condition->accept(this);
+
+	if (!is_bool(current_expression_value.type)) {
+		set_curr_pos(astnode->row, astnode->col);
+		ExceptionHandler::throw_condition_type_err();
+	}
 
 	bool result = current_expression_value.b;
 
@@ -404,6 +425,11 @@ void Interpreter::visit(ASTForNode* astnode) {
 	}
 	if (astnode->dci[1]) {
 		astnode->dci[1]->accept(this);
+
+		if (!is_bool(current_expression_value.type)) {
+			set_curr_pos(astnode->row, astnode->col);
+			ExceptionHandler::throw_condition_type_err();
+		}
 	}
 	else {
 		current_expression_value = Value(Type::T_BOOL);
@@ -434,6 +460,11 @@ void Interpreter::visit(ASTForNode* astnode) {
 
 		if (astnode->dci[1]) {
 			astnode->dci[1]->accept(this);
+
+			if (!is_bool(current_expression_value.type)) {
+				set_curr_pos(astnode->row, astnode->col);
+				ExceptionHandler::throw_condition_type_err();
+			}
 		}
 		else {
 			current_expression_value = Value(Type::T_BOOL);
@@ -445,10 +476,6 @@ void Interpreter::visit(ASTForNode* astnode) {
 
 	scopes[nmspace].pop_back();
 	is_loop = false;
-}
-
-void foreacher() {
-
 }
 
 void Interpreter::visit(ASTForEachNode* astnode) {
@@ -614,6 +641,11 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 
 	astnode->condition->accept(this);
 
+	if (!is_bool(current_expression_value.type)) {
+		set_curr_pos(astnode->row, astnode->col);
+		ExceptionHandler::throw_condition_type_err();
+	}
+
 	bool result = current_expression_value.b;
 
 	while (result) {
@@ -634,6 +666,11 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 		}
 
 		astnode->condition->accept(this);
+
+		if (!is_bool(current_expression_value.type)) {
+			set_curr_pos(astnode->row, astnode->col);
+			ExceptionHandler::throw_condition_type_err();
+		}
 
 		result = current_expression_value.b;
 	}
@@ -664,6 +701,11 @@ void Interpreter::visit(ASTDoWhileNode* astnode) {
 		}
 
 		astnode->condition->accept(this);
+
+		if (!is_bool(current_expression_value.type)) {
+			set_curr_pos(astnode->row, astnode->col);
+			ExceptionHandler::throw_condition_type_err();
+		}
 
 		result = current_expression_value.b;
 	} while (result);
@@ -1903,7 +1945,21 @@ cp_array Interpreter::do_operation(cp_array lval, cp_array rval, const std::stri
 }
 
 long long Interpreter::hash(ASTExprNode* astnode) {
-	return 0;
+	astnode->accept(this);
+	switch (current_expression_value.type) {
+	case Type::T_BOOL:
+		return static_cast<long long>(current_expression_value.b);
+	case Type::T_INT:
+		return static_cast<long long>(current_expression_value.i);
+	case Type::T_FLOAT:
+		return static_cast<long long>(current_expression_value.f);
+	case Type::T_CHAR:
+		return static_cast<long long>(current_expression_value.c);
+	case Type::T_STRING:
+		return axe::StringUtils::hashcode(current_expression_value.s);
+	default:
+		throw std::runtime_error("cannot determine type");
+	}
 }
 
 long long Interpreter::hash(ASTLiteralNode<cp_bool>* astnode) {
@@ -1951,6 +2007,8 @@ long long Interpreter::hash(ASTIdentifierNode* astnode) {
 		return static_cast<long long>(value->c);
 	case Type::T_STRING:
 		return axe::StringUtils::hashcode(value->s);
+	default:
+		throw std::runtime_error("cannot determine type");
 	}
 }
 

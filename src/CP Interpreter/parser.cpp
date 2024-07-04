@@ -12,7 +12,7 @@ using namespace visitor;
 
 Parser::Parser(const std::string& name, Lexer* lex) : name(name), lex(lex) {
 	current_token = lex->next_token();
-	next_token = lex->next_token();
+	next_token = lex->next_token()
 }
 
 void Parser::consume_token() {
