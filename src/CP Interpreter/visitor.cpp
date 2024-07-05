@@ -424,14 +424,12 @@ void FunctionDefinition::check_signature() const {
 	}
 }
 
-StructureDefinition::StructureDefinition(const std::string& identifier, const std::vector<VariableDefinition>& variables,
+StructureDefinition::StructureDefinition(const std::string& identifier, const std::map<std::string, VariableDefinition>& variables,
 	unsigned int row, unsigned int col)
 	: CodePosition(row, col), identifier(identifier), variables(variables) {}
 
 StructureDefinition::StructureDefinition()
-	: CodePosition(row, col), identifier(""), variables(std::vector<VariableDefinition>()) {}
-
-
+	: CodePosition(row, col), identifier(""), variables(std::map<std::string, VariableDefinition>()) {}
 
 Value::Value(Type type, Type array_type, std::vector<ASTExprNode*> dim,
 	const std::string& type_name, const std::string& type_name_space,

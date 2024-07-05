@@ -12,7 +12,7 @@ using namespace visitor;
 
 Parser::Parser(const std::string& name, Lexer* lex) : name(name), lex(lex) {
 	current_token = lex->next_token();
-	next_token = lex->next_token()
+	next_token = lex->next_token();
 }
 
 void Parser::consume_token() {
@@ -683,7 +683,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition(const std::string& 
 
 ASTStructDefinitionNode* Parser::parse_struct_definition() {
 	std::string identifier;
-	std::vector<VariableDefinition> variables;
+	std::map<std::string, VariableDefinition> variables;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -694,7 +694,8 @@ ASTStructDefinitionNode* Parser::parse_struct_definition() {
 	do {
 		consume_token(TOK_VAR);
 		consume_token(TOK_IDENTIFIER);
-		variables.push_back(*parse_struct_var_def());
+		auto struct_var_def = parse_struct_var_def();
+		variables.emplace(struct_var_def->identifier, *struct_var_def);
 		consume_token();
 
 	} while (current_token.type == TOK_SEMICOLON && next_token.type != TOK_RIGHT_CURLY);
@@ -703,7 +704,7 @@ ASTStructDefinitionNode* Parser::parse_struct_definition() {
 
 	check_consume_semicolon();
 
-	return new ASTStructDefinitionNode(identifier, std::move(variables), row, col);
+	return new ASTStructDefinitionNode(identifier, variables, row, col);
 }
 
 ASTExprNode* Parser::parse_expression() {

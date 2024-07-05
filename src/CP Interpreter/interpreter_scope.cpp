@@ -128,7 +128,7 @@ Variable* InterpreterScope::declare_variable(std::string identifier, Variable* v
 	return value;
 }
 
-void InterpreterScope::declare_structure_definition(std::string name, std::vector<VariableDefinition> variables, unsigned int row, unsigned int col) {
+void InterpreterScope::declare_structure_definition(std::string name, std::map<std::string, VariableDefinition> variables, unsigned int row, unsigned int col) {
 	StructureDefinition type(name, variables, row, col);
 	structure_symbol_table[name] = (type);
 }

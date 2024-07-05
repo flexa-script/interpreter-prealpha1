@@ -32,3 +32,12 @@ void ExceptionHandler::throw_mismatched_type_err(parser::Type ltype, parser::Typ
 void ExceptionHandler::throw_condition_type_err() {
 	throw std::runtime_error("conditions must be boolean expression");
 }
+
+void ExceptionHandler::throw_struct_type_err(const std::string& type_name, parser::Type type) {
+	throw std::runtime_error("invalid type " + type_str(type) +
+		" trying to assign '" + type_name + "' struct");
+}
+
+void ExceptionHandler::throw_struct_member_err(const std::string& type_name, const std::string& variable) {
+	throw std::runtime_error("'" + variable + "' is not a member of '" + type_name + "'");
+}

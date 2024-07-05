@@ -180,9 +180,9 @@ namespace visitor {
 	class StructureDefinition : public CodePosition {
 	public:
 		std::string identifier;
-		std::vector<VariableDefinition> variables;
+		std::map<std::string, VariableDefinition> variables;
 
-		StructureDefinition(const std::string& identifier, const std::vector<VariableDefinition>& variables,
+		StructureDefinition(const std::string& identifier, const std::map<std::string, VariableDefinition>& variables,
 			unsigned int row, unsigned int col);
 
 		StructureDefinition();

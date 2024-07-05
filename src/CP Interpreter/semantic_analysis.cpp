@@ -711,30 +711,15 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 	auto type_struct = curr_scope->find_declared_structure_definition(astnode->type_name);
 
 	for (const auto& expr : astnode->values) {
-		bool found = false;
-		VariableDefinition var_type_struct;
-		for (size_t i = 0; i < type_struct.variables.size(); ++i) {
-			var_type_struct = type_struct.variables[i];
-			if (var_type_struct.identifier == expr.first) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
+		if (type_struct.variables.find(expr.first) == type_struct.variables.end()) {
 			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("'" + expr.first + "' is not a member of '" + astnode->type_name + "'");
+			ExceptionHandler::throw_struct_member_err(astnode->type_name, expr.first);
 		}
-
+		VariableDefinition var_type_struct = type_struct.variables[expr.first];
 		expr.second->accept(this);
 
-		if (!is_any(var_type_struct.type)
-			&& !is_any(current_expression.type)
-			&& !is_void(current_expression.type)
-			&& !is_struct(current_expression.type)
-			&& !match_type(var_type_struct.type, current_expression.type)) {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("invalid type " + type_str(var_type_struct.type) +
-				" trying to assign '" + astnode->type_name + "' struct");
+		if (!is_any_or_match_type(var_type_struct, current_expression)) {
+			ExceptionHandler::throw_struct_type_err(astnode->type_name, var_type_struct.type);
 		}
 	}
 
@@ -742,109 +727,6 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 	current_expression.type = Type::T_STRUCT;
 	current_expression.type_name = astnode->type_name;
 	current_expression.type_name_space = astnode->nmspace;
-}
-
-void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
-	std::string op = astnode->op;
-
-	astnode->left->accept(this);
-	auto lexpr = current_expression;
-	Type l_type = current_expression.type;
-	if (is_array(current_expression.type)
-		&& current_expression.is_sub) {
-		l_type = current_expression.array_type;
-	}
-
-	astnode->right->accept(this);
-	auto rexpr = current_expression;
-	Type r_type = current_expression.type;
-	if (is_array(current_expression.type)
-		&& current_expression.is_sub) {
-		r_type = current_expression.array_type;
-	}
-
-	if (is_any(l_type) && is_any(r_type)) {
-		current_expression.type = Type::T_ANY;
-		return;
-	}
-
-	if (op == "-" || op == "/" || op == "*"
-		|| op == "**" || op == "%" || op == "/%"
-		|| op == "<<" || op == ">>" || op == "&"
-		|| op == "^" || op == "|" || op == "<=>") {
-		if (!is_numeric(l_type) && !is_array(l_type) && !is_any(l_type)
-			|| !is_numeric(r_type) && !is_array(r_type) && !is_any(r_type)) {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("expected numerical operands for '" + op + "' operator");
-		}
-		if ((astnode->op == "|=" || astnode->op == "^=" || astnode->op == "&="
-			|| astnode->op == "<<=" || astnode->op == ">>=")
-			&& (is_float(l_type) || is_float(r_type)
-				|| is_array(l_type) || is_array(r_type))) {
-			set_curr_pos(astnode->row, astnode->col);
-			throw std::runtime_error("invalid types '" + type_str(l_type) + "' and '"
-				+ type_str(r_type) + "' for '" + astnode->op + "' operator");
-		}
-		if ((is_array(l_type) || is_any(l_type))
-			&& (is_array(r_type) || is_any(r_type))) {
-			current_expression.type = Type::T_ARRAY;
-		}
-		else {
-			current_expression.type = is_int(l_type) && is_int(r_type) ? Type::T_INT : Type::T_FLOAT;
-		}
-		return;
-	}
-	else if (op == "+") {
-		if (is_text(l_type) && is_text(r_type)
-			|| is_text(l_type) && is_any(r_type)
-			|| is_any(l_type) && is_text(r_type)) {
-			current_expression.type = is_char(l_type) && is_char(r_type) ? Type::T_CHAR : Type::T_STRING;
-			return;
-		}
-		else if ((is_numeric(l_type) || is_any(l_type))
-			&& (is_numeric(r_type) || is_any(r_type))) {
-			current_expression.type = is_int(l_type) && is_int(r_type) ? Type::T_INT : Type::T_FLOAT;
-			return;
-		}
-		else if ((is_array(l_type) || is_any(l_type))
-			&& (is_array(r_type) || is_any(r_type))) {
-			current_expression.type = Type::T_ARRAY;
-			return;
-		}
-		set_curr_pos(astnode->row, astnode->col);
-		throw std::runtime_error("invalid types '" + type_str(l_type) + "' and '" + type_str(r_type) + "' for '+' operator");
-	}
-	else if (op == "and" || op == "or") {
-		if ((is_bool(l_type) || is_any(l_type))
-			&& (is_bool(r_type) || is_any(r_type))) {
-			current_expression.type = Type::T_BOOL;
-			return;
-		}
-		set_curr_pos(astnode->row, astnode->col);
-		throw std::runtime_error("expected two boolean operands for '" + op + "' operator");
-	}
-	else if (op == "<" || op == ">" || op == "<=" || op == ">=") {
-		if ((is_numeric(l_type) || is_any(l_type))
-			&& (is_numeric(r_type) || is_any(r_type))) {
-			current_expression.type = Type::T_BOOL;
-			return;
-		}
-		set_curr_pos(astnode->row, astnode->col);
-		throw std::runtime_error("expected two numerical operands for '" + op + "' operator");
-	}
-	else if (op == "==" || op == "!=") {
-		if (match_type(l_type, r_type)
-			|| is_numeric(l_type) && is_numeric(r_type)
-			|| is_void(l_type) || is_void(r_type)) {
-			equals_value(lexpr, rexpr);
-			current_expression.type = Type::T_BOOL;
-			return;
-		}
-		set_curr_pos(astnode->row, astnode->col);
-		throw std::runtime_error("expected arguments of the same type '" + op + "' operator");
-	}
-	set_curr_pos(astnode->row, astnode->col);
-	throw std::runtime_error("unhandled semantic error in binary operator");
 }
 
 void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
@@ -917,6 +799,18 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 		current_expression.dim = sub_var.dim;
 	}
 
+}
+
+void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
+	astnode->left->accept(this);
+	auto lexpr = current_expression;
+
+	astnode->right->accept(this);
+	auto rexpr = current_expression;
+
+	if (!TypeDefinition::validate_op(lexpr, lexpr, rexpr, rexpr, astnode->op)) {
+		ExceptionHandler::throw_operation_type_err(astnode->op, lexpr.type, rexpr.type);
+	}
 }
 
 void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
@@ -1047,20 +941,20 @@ VariableDefinition SemanticAnalyser::access_struct_variable(std::vector<Identifi
 	}
 	auto type_struct = curr_scope->find_declared_structure_definition(type_name);
 
-	for (const auto& var_type_struct : type_struct.variables) {
-		if (identifier_vector[i].identifier == var_type_struct.identifier) {
-			if ((is_struct(var_type_struct.type) || is_any(var_type_struct.type)) && identifier_vector.size() - 1 > i) {
-				return access_struct_variable(identifier_vector, var_type_struct.type_name, var_type_struct.type_name_space, ++i);
-			}
-			else {
-				if (identifier_vector.size() - 1 > i) {
-					throw std::runtime_error("member '" + var_type_struct.identifier + "' of '" + type_name + "' is not a struct");
-				}
-				return var_type_struct;
-			}
-		}
+	if (type_struct.variables.find(identifier_vector[i].identifier) == type_struct.variables.end()) {
+		ExceptionHandler::throw_struct_member_err(type_name, identifier_vector[i].identifier);
 	}
-	throw std::runtime_error("can't determine type of '(" + type_name + ")" + identifier_vector[i].identifier + "'");
+	VariableDefinition var_type_struct = type_struct.variables[identifier_vector[i].identifier];
+
+	if ((is_struct(var_type_struct.type) || is_any(var_type_struct.type)) && identifier_vector.size() - 1 > i) {
+		return access_struct_variable(identifier_vector, var_type_struct.type_name, var_type_struct.type_name_space, ++i);
+	}
+	else {
+		if (identifier_vector.size() - 1 > i) {
+			throw std::runtime_error("member '" + var_type_struct.identifier + "' of '" + type_name + "' is not a struct");
+		}
+		return var_type_struct;
+	}
 }
 
 SemanticScope* SemanticAnalyser::get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier) {

@@ -263,9 +263,9 @@ namespace parser {
 	class ASTStructDefinitionNode : public ASTStatementNode {
 	public:
 		std::string identifier;
-		std::vector<visitor::VariableDefinition> variables;
+		std::map<std::string, visitor::VariableDefinition> variables;
 
-		ASTStructDefinitionNode(const std::string& identifier, std::vector<visitor::VariableDefinition>&& variables,
+		ASTStructDefinitionNode(const std::string& identifier, const std::map<std::string, visitor::VariableDefinition>& variables,
 			unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;

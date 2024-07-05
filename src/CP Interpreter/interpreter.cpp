@@ -113,9 +113,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		astnode->row, astnode->col);
 	new_value->ref = new_var;
 
-	if (!is_any_or_match_type(
-		static_cast<TypeDefinition>(*new_var),
-		static_cast<TypeDefinition>(*new_value))) {
+	if (!is_any_or_match_type(*new_var,*new_value)) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
 
@@ -627,6 +625,10 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 
 void Interpreter::visit(parser::ASTThrowNode* astnode) {
 	astnode->accept(this);
+	if (current_expression_value.type_name != "Exception") {
+		set_curr_pos(astnode->row, astnode->col);
+		throw std::runtime_error("expected Exception struct in throw");
+	}
 	throw std::exception(std::get<2>(*current_expression_value.str)["error"]->s.c_str());
 }
 
@@ -766,6 +768,16 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 }
 
 void Interpreter::visit(ASTStructConstructorNode* astnode) {
+	InterpreterScope* curr_scope;
+	try {
+		const auto& nmspace = get_namespace(astnode->nmspace);
+		curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->type_name);
+	}
+	catch (...) {
+		throw std::runtime_error("error trying to find struct definition");
+	}
+	auto type_struct = curr_scope->find_declared_structure_definition(astnode->type_name);
+
 	auto value = Value(Type::T_STRUCT);
 
 	auto str = new cp_struct();
@@ -774,7 +786,18 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 	std::get<2>(*str) = cp_struct_values();
 
 	for (auto& expr : astnode->values) {
+		if (type_struct.variables.find(expr.first) == type_struct.variables.end()) {
+			set_curr_pos(astnode->row, astnode->col);
+			ExceptionHandler::throw_struct_member_err(astnode->type_name, expr.first);
+		}
+		VariableDefinition var_type_struct = type_struct.variables[expr.first];
+
 		expr.second->accept(this);
+
+		if (!is_any_or_match_type(var_type_struct, current_expression_value)) {
+			ExceptionHandler::throw_struct_type_err(astnode->type_name, var_type_struct.type);
+		}
+
 		auto str_alue = new Value(current_expression_value.type);
 		str_alue->copy_from(&current_expression_value);
 		std::get<2>(*str)[expr.first] = str_alue;
@@ -784,6 +807,96 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 
 	value.set(str);
 	current_expression_value = value;
+}
+
+void Interpreter::visit(ASTIdentifierNode* astnode) {
+	const auto& identifier = astnode->identifier_vector[0].identifier;
+	const auto& nmspace = get_namespace(astnode->nmspace);
+	InterpreterScope* id_scope;
+	try {
+		id_scope = get_inner_most_variable_scope(nmspace, identifier);
+	}
+	catch (...) {
+		const auto& dim = astnode->identifier_vector[0].access_vector;
+		auto type = Type::T_UNDEFINED;
+		auto expression_value = new Value(Type::T_UNDEFINED);
+
+		if (identifier == "bool") {
+			type = Type::T_BOOL;
+		}
+		else if (identifier == "int") {
+			type = Type::T_INT;
+		}
+		else if (identifier == "float") {
+			type = Type::T_FLOAT;
+		}
+		else if (identifier == "char") {
+			type = Type::T_CHAR;
+		}
+		else if (identifier == "string") {
+			type = Type::T_STRING;
+		}
+
+		if (is_undefined(type)) {
+			InterpreterScope* curr_scope;
+			try {
+				curr_scope = get_inner_most_struct_definition_scope(nmspace, identifier);
+			}
+			catch (...) {
+				try {
+					curr_scope = get_inner_most_function_scope(nmspace, identifier, std::vector<TypeDefinition>());
+					auto fun = cp_function();
+					fun.first = curr_scope;
+					fun.second = identifier;
+					current_expression_value = Value(Type::T_FUNCTION);
+					current_expression_value.set(fun);
+					return;
+				}
+				catch (...) {
+					set_curr_pos(astnode->row, astnode->col);
+					throw std::runtime_error("identifier '" + identifier + "' was not declared");
+				}
+			}
+			type = Type::T_STRUCT;
+			auto str = new cp_struct();
+			std::get<0>(*str) = nmspace;
+			std::get<1>(*str) = identifier;
+			expression_value->set(str);
+		}
+
+		expression_value->set_type(type);
+
+		if (dim.size() > 0) {
+			cp_array arr;
+
+			arr = build_array(dim, expression_value, dim.size() - 1);
+
+			current_expression_value = Value(Type::T_ARRAY, type, dim);
+			current_expression_value.set(arr, type);
+		}
+		else {
+			current_expression_value.copy_from(expression_value);
+		}
+
+		return;
+	}
+
+	Variable* variable = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
+	auto sub_val = access_value(id_scope, variable->value, astnode->identifier_vector);
+	current_expression_value = *sub_val;
+	current_expression_value.def_ref();
+	current_var_ref = variable;
+
+	if (current_expression_value.type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
+		has_string_access = false;
+		auto str = current_expression_value.s;
+		astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
+		auto pos = current_expression_value.i;
+
+		auto char_value = Value(Type::T_CHAR);
+		char_value.set(cp_char(str[pos]));
+		current_expression_value = char_value;
+	}
 }
 
 void Interpreter::visit(ASTBinaryExprNode* astnode) {
@@ -911,96 +1024,6 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 		}
 
 		set_value(id_scope, id->identifier_vector, &current_expression_value);
-	}
-}
-
-void Interpreter::visit(ASTIdentifierNode* astnode) {
-	const auto& identifier = astnode->identifier_vector[0].identifier;
-	const auto& nmspace = get_namespace(astnode->nmspace);
-	InterpreterScope* id_scope;
-	try {
-		id_scope = get_inner_most_variable_scope(nmspace, identifier);
-	}
-	catch (...) {
-		const auto& dim = astnode->identifier_vector[0].access_vector;
-		auto type = Type::T_UNDEFINED;
-		auto expression_value = new Value(Type::T_UNDEFINED);
-
-		if (identifier == "bool") {
-			type = Type::T_BOOL;
-		}
-		else if (identifier == "int") {
-			type = Type::T_INT;
-		}
-		else if (identifier == "float") {
-			type = Type::T_FLOAT;
-		}
-		else if (identifier == "char") {
-			type = Type::T_CHAR;
-		}
-		else if (identifier == "string") {
-			type = Type::T_STRING;
-		}
-
-		if (is_undefined(type)) {
-			InterpreterScope* curr_scope;
-			try {
-				curr_scope = get_inner_most_struct_definition_scope(nmspace, identifier);
-			}
-			catch (...) {
-				try {
-					curr_scope = get_inner_most_function_scope(nmspace, identifier, std::vector<TypeDefinition>());
-					auto fun = cp_function();
-					fun.first = curr_scope;
-					fun.second = identifier;
-					current_expression_value = Value(Type::T_FUNCTION);
-					current_expression_value.set(fun);
-					return;
-				}
-				catch (...) {
-					set_curr_pos(astnode->row, astnode->col);
-					throw std::runtime_error("identifier '" + identifier + "' was not declared");
-				}
-			}
-			type = Type::T_STRUCT;
-			auto str = new cp_struct();
-			std::get<0>(*str) = nmspace;
-			std::get<1>(*str) = identifier;
-			expression_value->set(str);
-		}
-
-		expression_value->set_type(type);
-
-		if (dim.size() > 0) {
-			cp_array arr;
-
-			arr = build_array(dim, expression_value, dim.size() - 1);
-
-			current_expression_value = Value(Type::T_ARRAY, type, dim);
-			current_expression_value.set(arr, type);
-		}
-		else {
-			current_expression_value.copy_from(expression_value);
-		}
-
-		return;
-	}
-
-	Variable* variable = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
-	auto sub_val = access_value(id_scope, variable->value, astnode->identifier_vector);
-	current_expression_value = *sub_val;
-	current_expression_value.def_ref();
-	current_var_ref = variable;
-
-	if (current_expression_value.type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
-		has_string_access = false;
-		auto str = current_expression_value.s;
-		astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
-		auto pos = current_expression_value.i;
-
-		auto char_value = Value(Type::T_CHAR);
-		char_value.set(cp_char(str[pos]));
-		current_expression_value = char_value;
 	}
 }
 
@@ -1493,13 +1516,13 @@ void Interpreter::declare_structure(cp_struct* str, const std::string& nmspace) 
 	auto struct_def = curr_scope->find_declared_structure_definition(std::get<1>(*str));
 
 	for (auto& struct_var_def : struct_def.variables) {
-		if (std::get<2>(*str).find(struct_var_def.identifier) != std::get<2>(*str).end()) {
-			std::get<2>(*str)[struct_var_def.identifier]->set_type(struct_var_def.type);
+		if (std::get<2>(*str).find(struct_var_def.first) != std::get<2>(*str).end()) {
+			std::get<2>(*str)[struct_var_def.first]->set_type(struct_var_def.second.type);
 		}
 		else {
-			Value* str_value = new Value(struct_var_def.type);
+			Value* str_value = new Value(struct_var_def.second.type);
 			str_value->set_null();
-			std::get<2>(*str)[struct_var_def.identifier] = str_value;
+			std::get<2>(*str)[struct_var_def.first] = str_value;
 		}
 	}
 }

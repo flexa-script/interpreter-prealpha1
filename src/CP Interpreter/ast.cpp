@@ -89,9 +89,9 @@ ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned
 ASTDoWhileNode::ASTDoWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: ASTWhileNode(condition, block, row, col) {}
 
-ASTStructDefinitionNode::ASTStructDefinitionNode(const std::string& identifier, std::vector<VariableDefinition>&& variables,
+ASTStructDefinitionNode::ASTStructDefinitionNode(const std::string& identifier, const std::map<std::string, VariableDefinition>& variables,
 	unsigned int row, unsigned int col)
-	: ASTStatementNode(row, col), identifier(identifier), variables(std::move(variables)) {}
+	: ASTStatementNode(row, col), identifier(identifier), variables(variables) {}
 
 ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(const std::string& identifier, std::vector<VariableDefinition>&& parameters,
 	Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, std::vector<ASTExprNode*>&& dim,

@@ -56,7 +56,7 @@ namespace visitor {
 		Variable* declare_variable(std::string, Variable*);
 
 		void declare_function(std::string identifier, interpreter_parameter_list_t variables, parser::ASTBlockNode* block, visitor::TypeDefinition type);
-		void declare_structure_definition(std::string, std::vector<visitor::VariableDefinition>, unsigned int, unsigned int);
+		void declare_structure_definition(std::string, std::map<std::string, visitor::VariableDefinition>, unsigned int, unsigned int);
 
 		visitor::StructureDefinition find_declared_structure_definition(std::string);
 		Variable* find_declared_variable(std::string);

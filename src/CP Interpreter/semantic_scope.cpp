@@ -133,7 +133,7 @@ bool SemanticScope::already_declared_function(const std::string& identifier, con
 	}
 }
 
-void SemanticScope::declare_structure_definition(const std::string& name, const std::vector<VariableDefinition>& variables, unsigned int row, unsigned int col) {
+void SemanticScope::declare_structure_definition(const std::string& name, const std::map<std::string, VariableDefinition>& variables, unsigned int row, unsigned int col) {
 	StructureDefinition str_def(name, variables, row, col);
 	structure_symbol_table[name] = str_def;
 }
