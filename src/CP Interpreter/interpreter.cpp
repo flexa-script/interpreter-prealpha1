@@ -87,7 +87,7 @@ void Interpreter::visit(ASTEnumNode* astnode) {
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		scopes[nmspace].back()->declare_variable(astnode->identifiers[i],
 			new Variable(Type::T_INT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(),
-				"", "", new Value(cp_int(i)), true, astnode->row, astnode->col));
+				"", "", new Value(cp_int(i))));
 	}
 }
 
@@ -109,8 +109,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	auto new_var = new Variable(astnode_type,
 		astnode_array_type, astnode->dim,
 		astnode_type_name, astnode->type_name_space,
-		new_value, astnode->is_const,
-		astnode->row, astnode->col);
+		new_value);
 	new_value->ref = new_var;
 
 	if (!is_any_or_match_type(*new_var,*new_value)) {
@@ -1652,8 +1651,8 @@ Variable* Interpreter::do_operation(const std::string& op, Variable* lvar, Varia
 
 Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval, cp_int str_pos) {
 	Type l_type = lval->type;
-	Type l_var_type = lval->type;
-	Type r_type = lval->ref->type;
+	Type l_var_type = lval->ref->type;
+	Type r_type = rval->type;
 	Type r_var_type = rval->ref->type;
 
 	if (is_void(l_var_type) && op == "=") {

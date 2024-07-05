@@ -645,9 +645,9 @@ bool Value::equals(Value* value) {
 }
 
 Variable::Variable(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
-	const std::string& type_name, const std::string& type_name_space, Value* value,
-	bool is_const, unsigned int row, unsigned int col)
-	: TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space) {}
+	const std::string& type_name, const std::string& type_name_space, Value* value)
+	: TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space),
+	value(value) {}
 
 Variable::Variable()
 	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {};

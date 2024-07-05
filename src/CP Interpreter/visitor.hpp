@@ -293,8 +293,7 @@ namespace visitor {
 		bool ref = false;
 
 		Variable(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
-			const std::string& type_name, const std::string& type_name_space, Value* value,
-			bool is_const, unsigned int row, unsigned int col);
+			const std::string& type_name, const std::string& type_name_space, Value* value);
 		Variable(Value* value);
 		Variable();
 		~Variable();

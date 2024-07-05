@@ -50,7 +50,7 @@ bool Token::is_expression_collection_op(const std::string& op) {
 }
 
 bool Token::is_expression_int_op(const std::string& op) {
-	return is_assignment_float_op(op)
+	return is_expression_float_op(op)
 		|| is_expression_int_ex_op(op);
 }
 
