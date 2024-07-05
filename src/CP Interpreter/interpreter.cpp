@@ -1661,6 +1661,18 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	}
 
 	switch (r_type) {
+	case Type::T_VOID: {
+		if (op != "=="
+			&& op != "!=") {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
+
+		lval->set((cp_bool)((op == "==") ?
+			match_type(l_type, r_type)
+			: !match_type(l_type, r_type)));
+
+		break;
+	}
 	case Type::T_BOOL: {
 		if (is_any(l_var_type) && op == "=") {
 			lval->set(rval->b);

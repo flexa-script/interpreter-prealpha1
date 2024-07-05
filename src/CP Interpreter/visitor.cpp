@@ -147,6 +147,14 @@ bool TypeDefinition::validate_op(TypeDefinition lvtype, TypeDefinition ltype, Ty
 	}
 
 	switch (r_type) {
+	case Type::T_VOID: {
+		if (op != "=="
+			&& op != "!=") {
+			return false;
+		}
+
+		break;
+	}
 	case Type::T_BOOL: {
 		if (!is_bool(l_type)
 			|| op != "="
@@ -185,6 +193,8 @@ bool TypeDefinition::validate_op(TypeDefinition lvtype, TypeDefinition ltype, Ty
 		else {
 			return false;
 		}
+
+		break;
 	}
 	case Type::T_STRING: {
 		if (!is_string(l_type)

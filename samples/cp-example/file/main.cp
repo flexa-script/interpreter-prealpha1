@@ -27,37 +27,37 @@
 
 // print_str(f);
 
-// def substr(str, s, n = null){
-// 	var ss = "";
-// 	if(n == null) {
-// 		n = len(str);
-// 	}
-// 	for(var i = s; i < n; i++){
-// 		ss += str[i];
-// 	}
-// 	return ss;
-// }
+def substr(str, s, n = null){
+	var ss = "";
+	if(n == null) {
+		n = len(str);
+	}
+	for(var i = s; i < n; i++){
+		ss += str[i];
+	}
+	return ss;
+}
 
-// def to_json(f){
-// 	var json = "{";
-// 	foreach (var it in f) {
-// 		if(typeof(it.value)=="Bar"){
-// 			json += to_json(it.value);
-// 		}
-// 		else{
-// 			json += '"' + it.key + "\":" + string(it.value);
-// 		}
-// 		json += ",";
-// 	}
-// 	if(json != "{") {
-// 		json = substr(json, len(json)-2);
-// 	}
-// 	json += ';';
-// 	return json;
-// }
+def to_json(f){
+	var json = "{";
+	foreach (var it in f) {
+		if(typeof(it.value)=="Bar"){
+			json += to_json(it.value);
+		}
+		else{
+			json += '"' + it.key + "\":" + string(it.value);
+		}
+		json += ",";
+	}
+	if(json != "{") {
+		json = substr(json, len(json)-2);
+	}
+	json += ';';
+	return json;
+}
 
-// print(to_json(f));
+print(to_json(f));
 
-var a = 10;
-var b = 3;
-print(a / b);
+// var a = 10;
+// var b = 3;
+// print(a / b);
