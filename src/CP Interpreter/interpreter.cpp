@@ -1681,20 +1681,21 @@ Variable* Interpreter::do_operation(const std::string& op, Variable* lvar, Varia
 //	}
 //}
 
-cp_bool Interpreter::do_relational_operation(const std::string& op, Value* lval, Value* rval) {
-
+cp_int Interpreter::do_relational_operation(const std::string& op, Value* lval, Value* rval) {
+	cp_float l = is_float(lval->type) ? lval->f : lval->i;
+	cp_float r = is_float(rval->type) ? rval->f : rval->i;
 
 	if (op == "<") {
-		return lval < rval;
+		return l < r;
 	}
 	else if (op == ">") {
-		return lval > rval;
+		return l > r;
 	}
 	else if (op == "<=") {
-		return lval <= rval;
+		return l <= r;
 	}
 	else if (op == ">=") {
-		return lval >= rval;
+		return l >= r;
 	}
 	else if (op == "<=>") {
 		auto res = lval <=> rval;
