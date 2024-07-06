@@ -44,7 +44,7 @@ namespace visitor {
 		void determine_array_type(parser::ASTArrayConstructorNode* astnode);
 		void check_array_type(parser::ASTExprNode* astnode, unsigned int row, unsigned int col);
 
-		bool validate_op(TypeDefinition rvtype, TypeDefinition ltype, TypeDefinition* lvtype, TypeDefinition rtype, const std::string& op);
+		TypeDefinition do_operation(TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, const std::string& op);
 		bool is_any_or_match_type(TypeDefinition rvtype, TypeDefinition ltype, TypeDefinition* lvtype, TypeDefinition rtype);
 		bool is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype);
 		bool match_type_array(TypeDefinition ltype, TypeDefinition rtype);

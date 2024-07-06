@@ -191,6 +191,8 @@ namespace lexer {
 		static bool is_expression_int_ex_op(const std::string& op);
 		static bool is_expression_float_op(const std::string& op);
 
+		static bool is_equality_op(const std::string& op);
+		static bool is_relational_op(const std::string& op);
 		static bool is_collection_op(const std::string& op);
 		static bool is_int_op(const std::string& op);
 		static bool is_int_ex_op(const std::string& op);

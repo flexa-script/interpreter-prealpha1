@@ -112,7 +112,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		new_value);
 	new_value->ref = new_var;
 
-	if (!is_any_or_match_type(*new_var,*new_value)) {
+	if (!is_any_or_match_type(*new_var, *new_value)) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
 
@@ -1645,11 +1645,81 @@ bool Interpreter::match_type_array(TypeDefinition ltype, TypeDefinition rtype) {
 Variable* Interpreter::do_operation(const std::string& op, Variable* lvar, Variable* rvar, cp_int str_pos) {
 	Value* lval = lvar->value;
 	Value* rval = rvar->value;
-	do_operation(op, lval, rval, str_pos);
+	do_operation(op, lval, rval, false, str_pos);
 	return lvar;
 }
 
-Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval, cp_int str_pos) {
+
+//else if (op == "<") {
+//	return lval < rval;
+//}
+//else if (op == ">") {
+//	return lval > rval;
+//}
+//else if (op == "<=") {
+//	return lval <= rval;
+//}
+//else if (op == ">=") {
+//	return lval >= rval;
+//}
+//else if (op == "==") {
+//	return lval == rval;
+//}
+//else if (op == "!=") {
+//	return lval != rval;
+//}
+//else if (op == "<=>") {
+//	auto res = lval <=> rval;
+//	if (res == std::strong_ordering::less) {
+//		return cp_int(-1);
+//	}
+//	else if (res == std::strong_ordering::equal) {
+//		return cp_int(0);
+//	}
+//	else if (res == std::strong_ordering::greater) {
+//		return cp_int(1);
+//	}
+//}
+
+cp_bool Interpreter::do_relational_operation(const std::string& op, Value* lval, Value* rval) {
+
+
+	if (op == "<") {
+		return lval < rval;
+	}
+	else if (op == ">") {
+		return lval > rval;
+	}
+	else if (op == "<=") {
+		return lval <= rval;
+	}
+	else if (op == ">=") {
+		return lval >= rval;
+	}
+	else if (op == "<=>") {
+		auto res = lval <=> rval;
+		if (res == std::strong_ordering::less) {
+			return cp_int(-1);
+		}
+		else if (res == std::strong_ordering::equal) {
+			return cp_int(0);
+		}
+		else if (res == std::strong_ordering::greater) {
+			return cp_int(1);
+		}
+	}
+}
+
+cp_bool Interpreter::do_equality_operation(const std::string& op, Value* lval, Value* rval) {
+	if (op == "==") {
+		lval->set(lval->b == rval->b);
+	}
+	else if (op == "!=") {
+		lval->set(lval->b != rval->b);
+	}
+}
+
+Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr, cp_int str_pos) {
 	Type l_type = lval->type;
 	Type l_var_type = lval->ref->type;
 	Type r_type = rval->type;
@@ -1662,8 +1732,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 
 	switch (r_type) {
 	case Type::T_VOID: {
-		if (op != "=="
-			&& op != "!=") {
+		if (Token::is_equality_op(op)) {
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
 
@@ -1692,6 +1761,12 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		else if (op == "or") {
 			lval->set(lval->b || rval->b);
 		}
+		else if (op == "==") {
+			lval->set(lval->b == rval->b);
+		}
+		else if (op == "!=") {
+			lval->set(lval->b != rval->b);
+		}
 		else {
 			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
@@ -1702,6 +1777,13 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		if (is_any(l_var_type) && op == "=") {
 			lval->set(rval->i);
 			break;
+		}
+
+		if (op == "==") {
+			lval->set(lval->b == rval->b);
+		}
+		else if (op == "!=") {
+			lval->set(lval->b != rval->b);
 		}
 
 		if (is_float(l_type) && is_any(l_var_type)) {
@@ -1893,18 +1975,6 @@ cp_int Interpreter::do_operation(cp_int lval, cp_int rval, const std::string& op
 	else if (op == "^=" || op == "^") {
 		return lval << rval;
 	}
-	else if (op == "<=>") {
-		auto res = lval <=> rval;
-		if (res == std::strong_ordering::less) {
-			return cp_int(-1);
-		}
-		else if (res == std::strong_ordering::equal) {
-			return cp_int(0);
-		}
-		else if (res == std::strong_ordering::greater) {
-			return cp_int(1);
-		}
-	}
 	throw std::runtime_error("invalid '" + op + "' operator for types 'int' and 'int'");
 }
 
@@ -1941,18 +2011,6 @@ cp_float Interpreter::do_operation(cp_float lval, cp_float rval, const std::stri
 	}
 	else if (op == "**=" || op == "**") {
 		return cp_int(std::pow(lval, rval));
-	}
-	else if (op == "<=>") {
-		auto res = lval <=> rval;
-		if (res == std::strong_ordering::less) {
-			return cp_float(-1);
-		}
-		else if (res == std::strong_ordering::equal) {
-			return cp_float(0);
-		}
-		else if (res == std::strong_ordering::greater) {
-			return cp_float(1);
-		}
 	}
 	throw std::runtime_error("invalid '" + op + "' operator");
 }

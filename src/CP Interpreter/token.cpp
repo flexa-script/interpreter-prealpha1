@@ -67,6 +67,16 @@ bool Token::is_expression_float_op(const std::string& op) {
 
 // is operator
 
+bool Token::is_equality_op(const std::string& op) {
+	return op == "==" || op == "!=";
+}
+
+bool Token::is_relational_op(const std::string& op) {
+	return op == "<=" || op == ">="
+		|| op == "<" || op == ">"
+		|| op == "<=>";
+}
+
 bool Token::is_int_op(const std::string& op) {
 	return is_assignment_int_op(op)
 		|| is_expression_int_op(op);

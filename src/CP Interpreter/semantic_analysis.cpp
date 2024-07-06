@@ -418,7 +418,7 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("case expression is not an constant expression");
 		}
-		
+
 		if (is_undefined(case_type.type)) {
 			if (is_undefined(current_expression.type)
 				|| is_void(current_expression.type)
@@ -428,7 +428,7 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 			}
 			case_type = current_expression;
 		}
-		
+
 		if (!TypeDefinition::match_type(case_type, current_expression)) {
 			set_curr_pos(astnode->row, astnode->col);
 			ExceptionHandler::throw_mismatched_type_err(case_type.type, current_expression.type);
@@ -1029,8 +1029,120 @@ SemanticScope* SemanticAnalyser::get_inner_most_function_scope(const std::string
 	return scopes[nmspace][i];
 }
 
-bool SemanticAnalyser::validate_op(TypeDefinition rvtype, TypeDefinition ltype, TypeDefinition* lvtype, TypeDefinition rtype, const std::string& op) {
-	return TypeDefinition::validate_op(rvtype, ltype, lvtype ? *lvtype : rtype, rtype, op);
+TypeDefinition SemanticAnalyser::do_operation(TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, const std::string& op) {
+	Type l_type = ltype.type;
+	Type l_var_type = lvtype.type;
+	Type r_type = rtype.type;
+	Type r_var_type = rvtype ? rvtype->type : rtype.type;
+
+	if ((is_any(l_var_type) || is_any(r_var_type)
+		|| is_any(l_type) || is_any(r_type)
+		|| is_void(r_type)) && op == "=") {
+		return rtype;
+	}
+
+	switch (r_type) {
+	case Type::T_VOID: {
+		if (op != "=="
+			&& op != "!=") {
+			return TypeDefinition::get_basic(Type::T_BOOL);
+		}
+		ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+	}
+	case Type::T_BOOL: {
+		if (!is_bool(l_type)
+			|| op != "="
+			&& op != "and"
+			&& op != "or"
+			&& !Token::is_equality_op(op)) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	case Type::T_INT: {
+		if (is_float(l_type) && is_any(l_var_type)
+			|| is_int(l_type) && is_any(l_var_type)
+			&& !Token::is_int_ex_op(op)) {
+			if (!Token::is_float_op(op)
+				&& !Token::is_relational_op(op)
+				&& !Token::is_equality_op(op)) {
+				ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			}
+		}
+		else if (is_int(l_type)
+			&& !Token::is_int_op(op)
+			&& !Token::is_relational_op(op)
+			&& !Token::is_equality_op(op)) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
+		
+		break;
+	}
+	case Type::T_FLOAT: {
+		if ((is_float(l_type) || is_int(l_type))
+			&& !Token::is_float_op(op)
+			&& !Token::is_relational_op(op)
+			&& !Token::is_equality_op(op)) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	case Type::T_CHAR: {
+		if (is_string(l_type) && !Token::is_collection_op(op)) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
+		else if (is_char(l_type)) {
+			if (op != "=" && !Token::is_equality_op(op)) {
+				ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			}
+		}
+
+		break;
+	}
+	case Type::T_STRING: {
+		if (!is_string(l_type)
+			|| (!Token::is_collection_op(op)
+			&& !Token::is_equality_op(op))) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	case Type::T_ARRAY: {
+		if (!match_type_array(ltype, rtype)
+			|| (!Token::is_collection_op(op)
+			&& !Token::is_equality_op(op))) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	case Type::T_STRUCT: {
+		if (!is_struct(l_type) || (!Token::is_equality_op(op) && op != "=")) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	case Type::T_FUNCTION: {
+		if (!is_function(l_type) || (!Token::is_equality_op(op) && op != "=")) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	default:
+		throw std::runtime_error("cannot determine type of operation");
+
+	}
+
+	if (Token::is_relational_op(op)) {
+		return TypeDefinition::get_basic(Type::T_BOOL);
+	}
+
+	return rtype;
 }
 
 bool SemanticAnalyser::is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype) {
