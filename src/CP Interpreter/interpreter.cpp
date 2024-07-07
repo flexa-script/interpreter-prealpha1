@@ -1651,9 +1651,9 @@ Variable* Interpreter::do_operation(const std::string& op, Variable* lvar, Varia
 
 Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr, cp_int str_pos) {
 	Type l_type = lval->type;
-	Type l_var_type = lval->ref->type;
+	Type l_var_type = lval->ref ? lval->ref->type : l_type;
 	Type r_type = rval->type;
-	Type r_var_type = rval->ref->type;
+	Type r_var_type = rval->ref ? rval->ref->type : r_type;
 
 	auto value = new Value(Type::T_UNDEFINED);
 
@@ -1662,7 +1662,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		return value;
 	}
 
-	if ((is_void(l_type) || is_any(r_type))
+	if ((is_void(l_type) || is_void(r_type))
 		&& Token::is_equality_op(op)) {
 
 		value->set((cp_bool)((op == "==") ?
