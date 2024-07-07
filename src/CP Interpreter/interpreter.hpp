@@ -72,8 +72,8 @@ namespace visitor {
 
 		Variable* do_operation(const std::string& op, Variable* lval, Variable* rval, cp_int str_pos = 0);
 		Value* do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr = false, cp_int str_pos = 0);
-		cp_int do_relational_operation(const std::string& op, Value* lval, Value* rval);
-		cp_bool do_equality_operation(const std::string& op, Value* lval, Value* rval);
+		cp_int do_spaceship_operation(const std::string& op, Value* lval, Value* rval);
+		cp_bool do_relational_operation(const std::string& op, Value* lval, Value* rval);
 		cp_int do_operation(cp_int lval, cp_int rval, const std::string& op);
 		cp_float do_operation(cp_float lval, cp_float rval, const std::string& op);
 		cp_string do_operation(cp_string lval, cp_string rval, const std::string& op);

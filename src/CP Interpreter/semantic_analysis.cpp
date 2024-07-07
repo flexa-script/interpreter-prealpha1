@@ -213,14 +213,8 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	}
 	check_is_struct_exists(assignment_expr.type, decl_var_expression->type_name_space, assignment_expr.type_name);
 
-	if (!validate_op(*declared_variable, *decl_var_expression,
-		assignment_expr.ref, assignment_expr, astnode->op)) {
-		set_curr_pos(astnode->row, astnode->col);
-		throw std::runtime_error("mismatched type for '"
-			+ astnode->identifier_vector[0].identifier +
-			"', expected " + type_str(declared_variable->type)
-			+ ", found " + type_str(assignment_expr.type) + "");
-	}
+	do_operation(*declared_variable, *decl_var_expression,
+		assignment_expr.ref, assignment_expr, astnode->op);
 
 	declared_variable->value = new SemanticValue();
 	declared_variable->value->copy_from(&assignment_expr);
@@ -808,9 +802,7 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 	astnode->right->accept(this);
 	auto rexpr = current_expression;
 
-	if (!TypeDefinition::validate_op(lexpr, lexpr, rexpr, rexpr, astnode->op)) {
-		ExceptionHandler::throw_operation_type_err(astnode->op, lexpr.type, rexpr.type);
-	}
+	do_operation(lexpr, lexpr, nullptr, rexpr, astnode->op);
 }
 
 void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
@@ -1041,14 +1033,12 @@ TypeDefinition SemanticAnalyser::do_operation(TypeDefinition lvtype, TypeDefinit
 		return rtype;
 	}
 
-	switch (r_type) {
-	case Type::T_VOID: {
-		if (op != "=="
-			&& op != "!=") {
-			return TypeDefinition::get_basic(Type::T_BOOL);
-		}
-		ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+	if ((is_void(l_type) || is_any(r_type))
+		&& Token::is_equality_op(op)) {
+		return TypeDefinition::get_basic(Type::T_BOOL);
 	}
+
+	switch (r_type) {
 	case Type::T_BOOL: {
 		if (!is_bool(l_type)
 			|| op != "="

@@ -1649,39 +1649,285 @@ Variable* Interpreter::do_operation(const std::string& op, Variable* lvar, Varia
 	return lvar;
 }
 
+Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr, cp_int str_pos) {
+	Type l_type = lval->type;
+	Type l_var_type = lval->ref->type;
+	Type r_type = rval->type;
+	Type r_var_type = rval->ref->type;
 
-//else if (op == "<") {
-//	return lval < rval;
-//}
-//else if (op == ">") {
-//	return lval > rval;
-//}
-//else if (op == "<=") {
-//	return lval <= rval;
-//}
-//else if (op == ">=") {
-//	return lval >= rval;
-//}
-//else if (op == "==") {
-//	return lval == rval;
-//}
-//else if (op == "!=") {
-//	return lval != rval;
-//}
-//else if (op == "<=>") {
-//	auto res = lval <=> rval;
-//	if (res == std::strong_ordering::less) {
-//		return cp_int(-1);
-//	}
-//	else if (res == std::strong_ordering::equal) {
-//		return cp_int(0);
-//	}
-//	else if (res == std::strong_ordering::greater) {
-//		return cp_int(1);
-//	}
-//}
+	auto value = new Value(Type::T_UNDEFINED);
 
-cp_int Interpreter::do_relational_operation(const std::string& op, Value* lval, Value* rval) {
+	if (is_void(l_var_type) && op == "=") {
+		value->set_null();
+		return value;
+	}
+
+	if ((is_void(l_type) || is_any(r_type))
+		&& Token::is_equality_op(op)) {
+
+		value->set((cp_bool)((op == "==") ?
+			match_type(l_type, r_type)
+			: !match_type(l_type, r_type)));
+
+		return value;
+	}
+
+	switch (r_type) {
+	case Type::T_BOOL: {
+		if (is_any(l_var_type) && op == "=") {
+			value->set(rval->b);
+			break;
+		}
+
+		if (!is_bool(l_type)) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
+
+		if (op == "=") {
+			value->set(rval->b);
+		}
+		else if (op == "and") {
+			value->set(lval->b && rval->b);
+		}
+		else if (op == "or") {
+			value->set(lval->b || rval->b);
+		}
+		else if (op == "==") {
+			value->set(lval->b == rval->b);
+		}
+		else if (op == "!=") {
+			value->set(lval->b != rval->b);
+		}
+		else {
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	case Type::T_INT: {
+		if (is_any(l_var_type) && op == "=") {
+			value->set(rval->i);
+			break;
+		}
+
+		if (is_expr
+			&& is_numeric(l_type)
+			&& op == "<=>") {
+			value->set(do_spaceship_operation(op, lval, rval));
+		}
+
+		if (is_expr
+			&& is_numeric(l_type)
+			&& Token::is_equality_op(op)) {
+			cp_float l = is_float(lval->type) ? lval->f : lval->i;
+			cp_float r = is_float(rval->type) ? rval->f : rval->i;
+
+			value->set((cp_bool)(op == "==" ?
+				l == r : l != l));
+
+			break;
+		}
+
+		if (is_float(l_type) && is_any(l_var_type)) {
+			value->set(do_operation(lval->f, cp_float(rval->i), op));
+		}
+		else if (is_int(l_type) && is_any(l_var_type) && !Token::is_int_ex_op(op)) {
+			value->set(do_operation(cp_float(lval->i), cp_float(rval->i), op));
+		}
+		else if (is_int(l_type)) {
+			value->set(do_operation(lval->i, rval->i, op));
+		}
+		else {
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	case Type::T_FLOAT: {
+		if (is_any(l_var_type) && op == "=") {
+			value->set(rval->f);
+			break;
+		}
+
+		if (is_expr
+			&& is_numeric(l_type)
+			&& op == "<=>") {
+			value->set(do_spaceship_operation(op, lval, rval));
+		}
+
+		if (is_expr
+			&& is_numeric(l_type)
+			&& Token::is_equality_op(op)) {
+			cp_float l = is_float(lval->type) ? lval->f : lval->i;
+			cp_float r = is_float(rval->type) ? rval->f : rval->i;
+
+			value->set((cp_bool)(op == "==" ?
+				l == r : l != l));
+
+			break;
+		}
+
+		if (is_float(l_type)) {
+			value->set(do_operation(lval->f, rval->f, op));
+		}
+		else if (is_int(l_type)) {
+			value->set(do_operation(cp_float(lval->i), rval->f, op));
+		}
+		else {
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	case Type::T_CHAR: {
+		if (is_any(l_var_type) && op == "=" && !has_string_access) {
+			value->set(rval->c);
+			break;
+		}
+
+		if (is_expr
+			&& is_char(l_type)
+			&& Token::is_equality_op(op)) {
+			value->set((cp_bool)(op == "==" ?
+				lval->c == rval->c
+				: lval->c != lval->c));
+
+			break;
+		}
+
+		if (is_string(l_type)) {
+			if (has_string_access) {
+				if (op != "=") {
+					ExceptionHandler::throw_operation_err(op, l_type, r_type);
+				}
+				has_string_access = false;
+				lval->s[str_pos] = rval->c;
+				value->set(lval->s);
+			}
+			else {
+				value->set(do_operation(lval->s, std::string{ rval->c }, op));
+			}
+		}
+		else if (is_char(l_type)) {
+			if (op != "=") {
+				ExceptionHandler::throw_operation_err(op, l_type, r_type);
+			}
+
+			value->set(rval->c);
+		}
+		else if (is_any(l_var_type)) {
+			if (op != "=") {
+				ExceptionHandler::throw_operation_err(op, l_type, r_type);
+			}
+
+			value->set(rval->c);
+		}
+		else {
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+		}
+
+		break;
+	}
+	case Type::T_STRING: {
+		if (is_any(l_var_type) && op == "=") {
+			value->set(rval->s);
+			break;
+		}
+
+		if (is_expr
+			&& is_string(l_type)
+			&& Token::is_equality_op(op)) {
+			value->set((cp_bool)(op == "==" ?
+				lval->s == rval->s
+				: lval->s != lval->s));
+
+			break;
+		}
+
+		if (!is_string(l_type)) {
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+		}
+
+		value->set(do_operation(lval->s, rval->s, op));
+
+		break;
+	}
+	case Type::T_ARRAY: {
+		if (is_any(l_var_type) && op == "=") {
+			value->set(rval->arr, lval->array_type);
+			break;
+		}
+
+		if (is_expr
+			&& is_array(l_type)
+			&& Token::is_equality_op(op)) {
+			value->set((cp_bool)(op == "==" ?
+				equals_value(lval, rval)
+				: !equals_value(lval, rval)));
+
+			break;
+		}
+
+		if (!match_type_array(static_cast<TypeDefinition>(*lval), static_cast<TypeDefinition>(*rval))) {
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+		}
+
+		bool match_arr_t = lval->array_type == rval->array_type;
+		if (!match_arr_t && !is_any(r_var_type)) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
+
+		value->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
+
+		break;
+	}
+	case Type::T_STRUCT: {
+		if (is_any(l_var_type) && op == "=") {
+			value->set(rval->str);
+			break;
+		}
+
+		if (is_expr
+			&& is_struct(l_type)
+			&& Token::is_equality_op(op)) {
+			value->set((cp_bool)(op == "==" ?
+				equals_value(lval, rval)
+				: !equals_value(lval, rval)));
+
+			break;
+		}
+
+		if (!is_struct(l_type) || op != "=") {
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+		}
+
+		value->set(rval->str);
+
+		break;
+	}
+	case Type::T_FUNCTION: {
+		if (is_any(l_var_type) && op == "=") {
+			value->set(rval->str);
+			break;
+		}
+
+		if (!is_function(l_type) || op != "=") {
+			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+		}
+
+		value->set(rval->fun);
+
+		break;
+	}
+	default:
+		throw std::runtime_error("cannot determine type of operation");
+
+	}
+
+	return value;
+}
+
+cp_bool Interpreter::do_relational_operation(const std::string& op, Value* lval, Value* rval) {
 	cp_float l = is_float(lval->type) ? lval->f : lval->i;
 	cp_float r = is_float(rval->type) ? rval->f : rval->i;
 
@@ -1697,234 +1943,23 @@ cp_int Interpreter::do_relational_operation(const std::string& op, Value* lval, 
 	else if (op == ">=") {
 		return l >= r;
 	}
-	else if (op == "<=>") {
-		auto res = lval <=> rval;
-		if (res == std::strong_ordering::less) {
-			return cp_int(-1);
-		}
-		else if (res == std::strong_ordering::equal) {
-			return cp_int(0);
-		}
-		else if (res == std::strong_ordering::greater) {
-			return cp_int(1);
-		}
-	}
+	ExceptionHandler::throw_operation_type_err(op, lval->type, rval->type);
 }
 
-cp_bool Interpreter::do_equality_operation(const std::string& op, Value* lval, Value* rval) {
-	if (op == "==") {
-		lval->set(lval->b == rval->b);
+cp_int Interpreter::do_spaceship_operation(const std::string& op, Value* lval, Value* rval) {
+	cp_float l = is_float(lval->type) ? lval->f : lval->i;
+	cp_float r = is_float(rval->type) ? rval->f : rval->i;
+
+	auto res = l <=> r;
+	if (res == std::strong_ordering::less) {
+		return cp_int(-1);
 	}
-	else if (op == "!=") {
-		lval->set(lval->b != rval->b);
+	else if (res == std::strong_ordering::equal) {
+		return cp_int(0);
 	}
-}
-
-Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr, cp_int str_pos) {
-	Type l_type = lval->type;
-	Type l_var_type = lval->ref->type;
-	Type r_type = rval->type;
-	Type r_var_type = rval->ref->type;
-
-	if (is_void(l_var_type) && op == "=") {
-		lval->set_null();
-		return lval;
+	else if (res == std::strong_ordering::greater) {
+		return cp_int(1);
 	}
-
-	switch (r_type) {
-	case Type::T_VOID: {
-		if (Token::is_equality_op(op)) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
-		}
-
-		lval->set((cp_bool)((op == "==") ?
-			match_type(l_type, r_type)
-			: !match_type(l_type, r_type)));
-
-		break;
-	}
-	case Type::T_BOOL: {
-		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->b);
-			break;
-		}
-
-		if (!is_bool(l_type)) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
-		}
-
-		if (op == "=") {
-			lval->set(rval->b);
-		}
-		else if (op == "and") {
-			lval->set(lval->b && rval->b);
-		}
-		else if (op == "or") {
-			lval->set(lval->b || rval->b);
-		}
-		else if (op == "==") {
-			lval->set(lval->b == rval->b);
-		}
-		else if (op == "!=") {
-			lval->set(lval->b != rval->b);
-		}
-		else {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
-		}
-
-		break;
-	}
-	case Type::T_INT: {
-		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->i);
-			break;
-		}
-
-		if (op == "==") {
-			lval->set(lval->b == rval->b);
-		}
-		else if (op == "!=") {
-			lval->set(lval->b != rval->b);
-		}
-
-		if (is_float(l_type) && is_any(l_var_type)) {
-			lval->set(do_operation(lval->f, cp_float(rval->i), op));
-		}
-		else if (is_int(l_type) && is_any(l_var_type) && !Token::is_int_ex_op(op)) {
-			lval->set(do_operation(cp_float(lval->i), cp_float(rval->i), op));
-		}
-		else if (is_int(l_type)) {
-			lval->set(do_operation(lval->i, rval->i, op));
-		}
-		else {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
-		}
-
-		break;
-	}
-	case Type::T_FLOAT: {
-		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->f);
-			break;
-		}
-
-		if (is_float(l_type)) {
-			lval->set(do_operation(lval->f, rval->f, op));
-		}
-		else if (is_int(l_type)) {
-			lval->set(do_operation(cp_float(lval->i), rval->f, op));
-		}
-		else {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
-		}
-
-		break;
-	}
-	case Type::T_CHAR: {
-		if (is_any(l_var_type) && op == "=" && !has_string_access) {
-			lval->set(rval->c);
-			break;
-		}
-
-		if (is_string(l_type)) {
-			if (has_string_access) {
-				if (op != "=") {
-					ExceptionHandler::throw_operation_err(op, l_type, r_type);
-				}
-				has_string_access = false;
-				lval->s[str_pos] = rval->c;
-			}
-			else {
-				lval->set(do_operation(lval->s, std::string{ rval->c }, op));
-			}
-		}
-		else if (is_char(l_type)) {
-			if (op != "=") {
-				ExceptionHandler::throw_operation_err(op, l_type, r_type);
-			}
-
-			lval->set(rval->c);
-		}
-		else if (is_any(l_var_type)) {
-			if (op != "=") {
-				ExceptionHandler::throw_operation_err(op, l_type, r_type);
-			}
-
-			lval->set(rval->c);
-		}
-		else {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
-		}
-
-		break;
-	}
-	case Type::T_STRING: {
-		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->s);
-			break;
-		}
-
-		if (!is_string(l_type)) {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
-		}
-
-		lval->set(do_operation(lval->s, rval->s, op));
-
-		break;
-	}
-	case Type::T_ARRAY: {
-		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->arr, lval->array_type);
-			break;
-		}
-
-		if (!match_type_array(static_cast<TypeDefinition>(*lval), static_cast<TypeDefinition>(*rval))) {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
-		}
-
-		bool match_arr_t = lval->array_type == rval->array_type;
-		if (!match_arr_t && !is_any(r_var_type)) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
-		}
-
-		lval->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
-
-		break;
-	}
-	case Type::T_STRUCT: {
-		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->str);
-			break;
-		}
-
-		if (!is_struct(l_type) || op != "=") {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
-		}
-
-		lval->set(rval->str);
-
-		break;
-	}
-	case Type::T_FUNCTION: {
-		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->str);
-			break;
-		}
-
-		if (!is_function(l_type) || op != "=") {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
-		}
-
-		lval->set(rval->fun);
-
-		break;
-	}
-	default:
-		throw std::runtime_error("cannot determine type of operation");
-
-	}
-
-	return lval;
 }
 
 cp_int Interpreter::do_operation(cp_int lval, cp_int rval, const std::string& op) {
