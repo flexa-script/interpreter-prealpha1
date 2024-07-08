@@ -152,7 +152,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		astnode->row, astnode->col);
 	new_value->ref = new_var;
 
-	if (!TypeDefinition::is_any_or_match_type(*new_var, current_expression)) {
+	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, current_expression, match_array_dim_ptr)) {
 		set_curr_pos(astnode->row, astnode->col);
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
@@ -231,7 +231,7 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 
 	if (!current_function.empty()) {
 		auto& currfun = current_function.top();
-		if (!is_any_or_match_type(currfun, current_expression)) {
+		if (!TypeDefinition::is_any_or_match_type(&currfun, currfun, nullptr, current_expression, match_array_dim_ptr)) {
 			ExceptionHandler::throw_return_type_err(currfun.identifier,
 				currfun.type,
 				current_expression.type);
@@ -431,7 +431,7 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 			case_type = current_expression;
 		}
 
-		if (!TypeDefinition::match_type(case_type, current_expression)) {
+		if (!TypeDefinition::match_type(case_type, current_expression, match_array_dim_ptr)) {
 			set_curr_pos(astnode->row, astnode->col);
 			ExceptionHandler::throw_mismatched_type_err(case_type.type, current_expression.type);
 		}
@@ -445,7 +445,7 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 		astnode->parsed_case_blocks.emplace(hash, expr.second);
 	}
 
-	if (!TypeDefinition::match_type(cond_type, case_type)) {
+	if (!TypeDefinition::match_type(cond_type, case_type, match_array_dim_ptr)) {
 		set_curr_pos(astnode->row, astnode->col);
 		ExceptionHandler::throw_mismatched_type_err(cond_type.type, case_type.type);
 	}
@@ -720,7 +720,7 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 		VariableDefinition var_type_struct = type_struct.variables[expr.first];
 		expr.second->accept(this);
 
-		if (!is_any_or_match_type(var_type_struct, current_expression)) {
+		if (!TypeDefinition::is_any_or_match_type(nullptr, var_type_struct, nullptr, current_expression, match_array_dim_ptr)) {
 			set_curr_pos(astnode->row, astnode->col);
 			ExceptionHandler::throw_struct_type_err(astnode->type_name, var_type_struct.type);
 		}
@@ -1131,7 +1131,7 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 		break;
 	}
 	case Type::T_ARRAY: {
-		if (!match_type_array(ltype, rtype)
+		if (!TypeDefinition::match_type_array(ltype, rtype, match_array_dim_ptr)
 			|| (!Token::is_collection_op(op)
 			&& !Token::is_equality_op(op))) {
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
@@ -1165,38 +1165,56 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 	return rtype;
 }
 
-bool SemanticAnalyser::is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype) {
-	return TypeDefinition::is_any_or_match_type(
-		static_cast<TypeDefinition>(ltype),
-		static_cast<TypeDefinition>(ltype),
-		static_cast<TypeDefinition>(rtype))
-		&& (!is_array(ltype.type) ||
-			is_array(ltype.type)
-			&& match_type_array(ltype, rtype));
-}
+//bool SemanticAnalyser::is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype) {
+//	return TypeDefinition::is_any_or_match_type(
+//		nullptr,
+//		static_cast<TypeDefinition>(ltype),
+//		nullptr,
+//		static_cast<TypeDefinition>(rtype))
+//		&& (!is_array(ltype.type) ||
+//			is_array(ltype.type)
+//			&& match_type_array(ltype, rtype));
+//}
+//
+//bool SemanticAnalyser::is_any_or_match_type(TypeDefinition rvtype, TypeDefinition ltype, TypeDefinition* lvtype, TypeDefinition rtype) {
+//	return TypeDefinition::is_any_or_match_type(rvtype, ltype, lvtype ? *lvtype : rtype, rtype)
+//		&& (!is_array(ltype.type) ||
+//			is_array(ltype.type)
+//			&& match_type_array(ltype, rtype));
+//}
+//
+//bool SemanticAnalyser::match_type_array(TypeDefinition ltype, TypeDefinition rtype) {
+//	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
+//	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
+//
+//	if (var_dim.size() != expr_dim.size()) {
+//		throw std::runtime_error("mismatch array dimension");
+//	}
+//
+//	for (size_t dc = 0; dc < var_dim.size(); ++dc) {
+//		if (ltype.dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
+//			throw std::runtime_error("mismatch array size ");
+//		}
+//	}
+//
+//	return TypeDefinition::match_type_array(ltype, rtype);
+//}
 
-bool SemanticAnalyser::is_any_or_match_type(TypeDefinition rvtype, TypeDefinition ltype, TypeDefinition* lvtype, TypeDefinition rtype) {
-	return TypeDefinition::is_any_or_match_type(rvtype, ltype, lvtype ? *lvtype : rtype, rtype)
-		&& (!is_array(ltype.type) ||
-			is_array(ltype.type)
-			&& match_type_array(ltype, rtype));
-}
-
-bool SemanticAnalyser::match_type_array(TypeDefinition ltype, TypeDefinition rtype) {
+bool SemanticAnalyser::match_array_dim(TypeDefinition ltype, TypeDefinition rtype) {
 	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
 	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
 
 	if (var_dim.size() != expr_dim.size()) {
-		throw std::runtime_error("mismatch array dimension");
+		return false;
 	}
 
 	for (size_t dc = 0; dc < var_dim.size(); ++dc) {
 		if (ltype.dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
-			throw std::runtime_error("mismatch array size ");
+			return false;
 		}
 	}
 
-	return TypeDefinition::match_type_array(ltype, rtype);
+	return true;
 }
 
 void SemanticAnalyser::equals_value(const SemanticValue& lval, const SemanticValue& rval) {

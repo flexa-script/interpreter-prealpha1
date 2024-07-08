@@ -3,6 +3,7 @@
 #include <cmath>
 #include <conio.h>
 #include <compare>
+#include <functional>
 
 #include "interpreter.hpp"
 #include "exception_handler.hpp"
@@ -112,7 +113,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		new_value);
 	new_value->ref = new_var;
 
-	if (!is_any_or_match_type(*new_var, *new_value)) {
+	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, match_array_dim_ptr)) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
 
@@ -170,9 +171,12 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 	const auto& curr_func_ret_type = current_function_return_type.top();
 	astnode->expr->accept(this);
 
-	if (!is_any_or_match_type(
+	if (!TypeDefinition::is_any_or_match_type(
+		nullptr,
 		curr_func_ret_type,
-		current_expression_value)) {
+		nullptr,
+		current_expression_value,
+		match_array_dim_ptr)) {
 		ExceptionHandler::throw_return_type_err(current_name.top(),
 			curr_func_ret_type.type,
 			current_expression_value.type);
@@ -325,7 +329,7 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 		}
 		auto case_type = static_cast<TypeDefinition>(current_expression_value);
 
-		if (!TypeDefinition::match_type(cond_type, case_type)) {
+		if (!TypeDefinition::match_type(cond_type, case_type, match_array_dim_ptr)) {
 			ExceptionHandler::throw_mismatched_type_err(cond_type.type, case_type.type);
 		}
 	}
@@ -793,7 +797,7 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 
 		expr.second->accept(this);
 
-		if (!is_any_or_match_type(var_type_struct, current_expression_value)) {
+		if (!TypeDefinition::is_any_or_match_type(nullptr, var_type_struct, nullptr, current_expression_value, match_array_dim_ptr)) {
 			ExceptionHandler::throw_struct_type_err(astnode->type_name, var_type_struct.type);
 		}
 
@@ -1889,7 +1893,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			break;
 		}
 
-		if (!match_type_array(static_cast<TypeDefinition>(*lval), static_cast<TypeDefinition>(*rval))) {
+		if (!TypeDefinition::match_type_array(*lval, *rval, match_array_dim_ptr)) {
 			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
 

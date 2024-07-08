@@ -1,16 +1,16 @@
 // using cp.core.pair;
 
-// struct Bar {
-// 	var x: int;
-// 	var j: bool;
-// };
+struct Bar {
+	var x: int;
+	var j: bool;
+};
 
-// struct Foo {
-// 	var name: string;
-// 	var age: int;
-// 	// var bar: bool;
-// 	var bar: Bar;
-// };
+struct Foo {
+	var name: string;
+	var age: int;
+	// var bar: bool;
+	var bar: Bar;
+};
 
 var f = Foo{name="Carlos",age=29,bar=Bar{x=10,j=false}};
 

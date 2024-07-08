@@ -30,6 +30,7 @@ namespace visitor {
 		std::string parse_value_to_string(const Value* value);
 
 	private:
+		std::function<bool(TypeDefinition, TypeDefinition)> match_array_dim_ptr = std::bind(&Interpreter::match_array_dim, this, std::placeholders::_1, std::placeholders::_2);
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
 		std::vector<std::string> parsed_libs;
 		std::string identifier_call_name;
