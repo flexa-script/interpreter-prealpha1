@@ -12,7 +12,7 @@
 // 	var bar: Bar;
 // };
 
-// var f = Foo{name="Carlos",age=29,bar=Bar{x=10,j=false}};
+var f = Foo{name="Carlos",age=29,bar=Bar{x=10,j=false}};
 
 // def print_str(f){
 // 	foreach (var it in f) {
@@ -28,6 +28,7 @@
 // print_str(f);
 
 def substr(str, s, n = null){
+	print("called " + this);
 	var ss = "";
 	if(n == null) {
 		n = len(str);
@@ -39,6 +40,7 @@ def substr(str, s, n = null){
 }
 
 def to_json(f){
+	print("called " + this);
 	var json = "{";
 	foreach (var it in f) {
 		if(typeof(it.value)=="Bar"){

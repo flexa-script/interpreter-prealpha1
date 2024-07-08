@@ -43,7 +43,6 @@ void SemanticAnalyser::visit(ASTProgramNode* astnode) {
 }
 
 void SemanticAnalyser::visit(ASTUsingNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
 	std::string libname = axe::StringUtils::join(astnode->library, ".");
 
 	if (programs.find(libname) == programs.end()) {
@@ -220,8 +219,8 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	}
 	check_is_struct_exists(assignment_expr.type, decl_var_expression->type_name_space, assignment_expr.type_name);
 
-	do_operation(*declared_variable, *decl_var_expression,
-		assignment_expr.ref, assignment_expr, astnode->op);
+	do_operation(astnode->op, *declared_variable, *decl_var_expression,
+		nullptr, assignment_expr, false);
 
 	declared_variable->value = new SemanticValue();
 	declared_variable->value->copy_from(&assignment_expr);
@@ -812,7 +811,7 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 	astnode->right->accept(this);
 	auto rexpr = current_expression;
 
-	current_expression = SemanticValue(do_operation(lexpr, lexpr, nullptr, rexpr, astnode->op), 0, false, 0, 0);
+	current_expression = SemanticValue(do_operation(astnode->op, lexpr, lexpr, nullptr, rexpr, true), 0, false, 0, 0);
 }
 
 void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
@@ -846,6 +845,14 @@ void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
 			break;
 		case Type::T_BOOL:
 			if (astnode->unary_op != "not") {
+				set_curr_pos(astnode->row, astnode->col);
+				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of boolean expression");
+			}
+			break;
+		case Type::T_ANY:
+			if (astnode->unary_op != "not" && astnode->unary_op != "~"
+				&& astnode->unary_op != "+" && astnode->unary_op != "-"
+				&& astnode->unary_op != "--" && astnode->unary_op != "++") {
 				set_curr_pos(astnode->row, astnode->col);
 				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of boolean expression");
 			}
@@ -1031,7 +1038,7 @@ SemanticScope* SemanticAnalyser::get_inner_most_function_scope(const std::string
 	return scopes[nmspace][i];
 }
 
-TypeDefinition SemanticAnalyser::do_operation(TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, const std::string& op) {
+TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, bool is_expr) {
 	Type l_type = ltype.type;
 	Type l_var_type = lvtype.type;
 	Type r_type = rtype.type;
@@ -1052,12 +1059,11 @@ TypeDefinition SemanticAnalyser::do_operation(TypeDefinition lvtype, TypeDefinit
 		if (Token::is_relational_op(op)) {
 			return TypeDefinition::get_basic(Type::T_BOOL);
 		}
-		return
-			!is_any(r_type) ?
-				rvtype &&!is_any(r_var_type) ?
-					!is_any(l_type) ? lvtype : ltype
-					: *rvtype
-				: rtype;
+		return is_any(r_type) ?
+					!rvtype || is_any(r_var_type) ?
+						is_any(l_type) ? lvtype : ltype
+						: *rvtype
+					: rtype;
 	}
 
 	switch (r_type) {
@@ -1114,9 +1120,11 @@ TypeDefinition SemanticAnalyser::do_operation(TypeDefinition lvtype, TypeDefinit
 		break;
 	}
 	case Type::T_STRING: {
-		if (!is_string(l_type)
+		if ((!is_string(l_type)
 			|| (!Token::is_collection_op(op)
-			&& !Token::is_equality_op(op))) {
+			&& !Token::is_equality_op(op)))
+			&& (is_expr && (!is_char(l_type)
+			|| !Token::is_expression_collection_op(op)))) {
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
 
@@ -1150,7 +1158,7 @@ TypeDefinition SemanticAnalyser::do_operation(TypeDefinition lvtype, TypeDefinit
 
 	}
 
-	if (Token::is_relational_op(op)) {
+	if (Token::is_equality_op(op)) {
 		return TypeDefinition::get_basic(Type::T_BOOL);
 	}
 

@@ -1003,6 +1003,10 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 		case Type::T_BOOL:
 			current_expression_value.set(cp_bool(!current_expression_value.b));
 			break;
+		default:
+			set_curr_pos(astnode->row, astnode->col);
+			throw std::runtime_error("incompatible unary operator '" + astnode->unary_op +
+				"' in front of " + type_str(current_expression_value.type) + " expression");
 		}
 	}
 
@@ -1611,35 +1615,52 @@ std::string Interpreter::parse_struct_to_string(const cp_struct& str_value) {
 	return s.str();
 }
 
-bool Interpreter::is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype) {
-	return TypeDefinition::is_any_or_match_type(ltype, rtype)
-		&& (!is_array(ltype.type) ||
-			is_array(ltype.type)
-			&& match_type_array(ltype, rtype));
-}
+//bool Interpreter::is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype) {
+//	return TypeDefinition::is_any_or_match_type(ltype, rtype)
+//		&& (!is_array(ltype.type) ||
+//			is_array(ltype.type)
+//			&& match_type_array(ltype, rtype));
+//}
+//
+//bool Interpreter::is_any_or_match_type(TypeDefinition vtype, TypeDefinition ltype, TypeDefinition rtype) {
+//	return TypeDefinition::is_any_or_match_type(vtype, ltype, rtype)
+//		&& (!is_array(ltype.type) ||
+//			is_array(ltype.type)
+//			&& match_type_array(ltype, rtype));
+//}
 
-bool Interpreter::is_any_or_match_type(TypeDefinition vtype, TypeDefinition ltype, TypeDefinition rtype) {
-	return TypeDefinition::is_any_or_match_type(vtype, ltype, rtype)
-		&& (!is_array(ltype.type) ||
-			is_array(ltype.type)
-			&& match_type_array(ltype, rtype));
-}
+//bool Interpreter::match_type_array(TypeDefinition ltype, TypeDefinition rtype) {
+//	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
+//	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
+//
+//	if (var_dim.size() != expr_dim.size()) {
+//		throw std::runtime_error("mismatch array dimension");
+//	}
+//
+//	for (size_t dc = 0; dc < var_dim.size(); ++dc) {
+//		if (ltype.dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
+//			throw std::runtime_error("mismatch array size ");
+//		}
+//	}
+//
+//	return TypeDefinition::match_type_array(ltype, rtype);
+//}
 
-bool Interpreter::match_type_array(TypeDefinition ltype, TypeDefinition rtype) {
+bool Interpreter::match_array_dim(TypeDefinition ltype, TypeDefinition rtype) {
 	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
 	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
 
 	if (var_dim.size() != expr_dim.size()) {
-		throw std::runtime_error("mismatch array dimension");
+		return false;
 	}
 
 	for (size_t dc = 0; dc < var_dim.size(); ++dc) {
 		if (ltype.dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
-			throw std::runtime_error("mismatch array size ");
+			return false;
 		}
 	}
 
-	return TypeDefinition::match_type_array(ltype, rtype);
+	return true;
 }
 
 Variable* Interpreter::do_operation(const std::string& op, Variable* lvar, Variable* rvar, cp_int str_pos) {

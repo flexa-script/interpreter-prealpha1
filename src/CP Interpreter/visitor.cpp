@@ -134,28 +134,18 @@ TypeDefinition TypeDefinition::get_struct(Type type, const std::string& type_nam
 	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), type_name, type_name_space);
 }
 
-bool TypeDefinition::is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype) {
-	if (is_any(ltype.type)) return true;
-	return match_type(ltype, rtype);
+bool TypeDefinition::is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, std::function<bool(std::vector<parser::ASTExprNode*>, std::vector<parser::ASTExprNode*>)> array_dim_check) {
+	if (lvtype && is_any(lvtype->type) || rvtype && is_any(rvtype->type)) return true;
+	return match_type(ltype, rtype, array_dim_check);
 }
 
-bool TypeDefinition::is_any_or_match_type(TypeDefinition vtype, TypeDefinition ltype, TypeDefinition rtype) {
-	if (is_any(vtype.type)) return true;
-	return match_type(ltype, rtype);
-}
-
-bool TypeDefinition::is_any_or_match_type(TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition rvtype, TypeDefinition rtype) {
-	if (is_any(lvtype.type) || is_any(rvtype.type)) return true;
-	return match_type(ltype, rtype);
-}
-
-bool TypeDefinition::match_type(TypeDefinition ltype, TypeDefinition rtype) {
+bool TypeDefinition::match_type(TypeDefinition ltype, TypeDefinition rtype, std::function<bool(std::vector<parser::ASTExprNode*>, std::vector<parser::ASTExprNode*>)> array_dim_check) {
 	if (match_type_bool(ltype, rtype)) return true;
 	if (match_type_int(ltype, rtype)) return true;
 	if (match_type_float(ltype, rtype)) return true;
 	if (match_type_char(ltype, rtype)) return true;
 	if (match_type_string(ltype, rtype)) return true;
-	if (match_type_array(ltype, rtype)) return true;
+	if (match_type_array(ltype, rtype, array_dim_check)) return true;
 	if (match_type_struct(ltype, rtype)) return true;
 	if (match_type_function(ltype, rtype)) return true;
 	return false;
@@ -183,10 +173,11 @@ bool TypeDefinition::match_type_string(TypeDefinition ltype, TypeDefinition rtyp
 		&& (is_char(rtype.type) || is_string(rtype.type));
 }
 
-bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype) {
+bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype, std::function<bool(std::vector<parser::ASTExprNode*>, std::vector<parser::ASTExprNode*>)> array_dim_check) {
 	return is_array(ltype.type) && is_array(rtype.type)
 		&& (is_any(ltype.array_type) || is_any(rtype.array_type)
-			|| ltype.array_type == rtype.array_type);
+			|| ltype.array_type == rtype.array_type)
+		&& array_dim_check(ltype.dim, rtype.dim);
 }
 
 bool TypeDefinition::match_type_struct(TypeDefinition ltype, TypeDefinition rtype) {
