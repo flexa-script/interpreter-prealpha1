@@ -54,6 +54,8 @@ void Interpreter::visit(ASTProgramNode* astnode) {
 }
 
 void Interpreter::visit(ASTUsingNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	std::string libname = axe::StringUtils::join(astnode->library, ".");
 
 	if (axe::StringUtils::contains(built_in_libs, libname)) {
@@ -80,10 +82,14 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 }
 
 void Interpreter::visit(ASTAsNamespaceNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	program_nmspaces[get_namespace(current_program->alias)].push_back(astnode->nmspace);
 }
 
 void Interpreter::visit(ASTEnumNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		scopes[nmspace].back()->declare_variable(astnode->identifiers[i],
@@ -93,6 +99,8 @@ void Interpreter::visit(ASTEnumNode* astnode) {
 }
 
 void Interpreter::visit(ASTDeclarationNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	const auto& nmspace = get_namespace();
 
 	if (astnode->expr) {
@@ -121,6 +129,8 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 }
 
 void Interpreter::visit(ASTAssignmentNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	InterpreterScope* astscope;
 	try {
 		const auto& nmspace = get_namespace(astnode->nmspace);
@@ -161,6 +171,8 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 }
 
 void Interpreter::visit(ASTReturnNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	const auto& nmspace = get_namespace();
 	auto& curr_func_ret_type = current_function_return_type.top();
 	astnode->expr->accept(this);
@@ -186,6 +198,8 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 }
 
 void Interpreter::visit(ASTFunctionCallNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	const auto& nmspace = get_namespace(astnode->nmspace);
 
 	std::vector<TypeDefinition> signature;
@@ -242,6 +256,8 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 }
 
 void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	interpreter_parameter_list_t params;
 	for (size_t i = 0; i < astnode->parameters.size(); ++i) {
 		interpreter_parameter_t param = std::make_tuple(astnode->variable_names[i], astnode->signature[i], astnode->parameters[i].default_value, astnode->parameters[i].is_rest);
@@ -251,6 +267,8 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 }
 
 void Interpreter::visit(ASTFunctionExpression* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	const auto& nmspace = get_namespace();
 
 	astnode->fun->identifier = identifier_call_name;
@@ -262,6 +280,8 @@ void Interpreter::visit(ASTFunctionExpression* astnode) {
 }
 
 void Interpreter::visit(ASTBlockNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	const auto& nmspace = get_namespace();
 	scopes[nmspace].push_back(new InterpreterScope(function_call_name));
 	function_call_name = "";
@@ -296,24 +316,31 @@ void Interpreter::visit(ASTBlockNode* astnode) {
 }
 
 void Interpreter::visit(ASTExitNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	astnode->exit_code->accept(this);
 	if (!is_int(current_expression_value.type)) {
-		set_curr_pos(astnode->row, astnode->col);
 		throw std::runtime_error("expected int value");
 	}
 	exit_from_program = true;
 }
 
 void Interpreter::visit(ASTContinueNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	astnode->accept(this);
 	continue_block = true;
 }
 
 void Interpreter::visit(ASTBreakNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	break_block = true;
 }
 
 void Interpreter::visit(ASTSwitchNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	const auto& nmspace = get_namespace();
 	is_switch = true;
 
@@ -373,12 +400,13 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 }
 
 void Interpreter::visit(ASTElseIfNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	executed_elif = false;
 
 	astnode->condition->accept(this);
 
 	if (!is_bool(current_expression_value.type)) {
-		set_curr_pos(astnode->row, astnode->col);
 		ExceptionHandler::throw_condition_type_err();
 	}
 
@@ -391,10 +419,11 @@ void Interpreter::visit(ASTElseIfNode* astnode) {
 }
 
 void Interpreter::visit(ASTIfNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	astnode->condition->accept(this);
 
 	if (!is_bool(current_expression_value.type)) {
-		set_curr_pos(astnode->row, astnode->col);
 		ExceptionHandler::throw_condition_type_err();
 	}
 
@@ -417,6 +446,8 @@ void Interpreter::visit(ASTIfNode* astnode) {
 }
 
 void Interpreter::visit(ASTForNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	const auto& nmspace = get_namespace();
 	is_loop = true;
 	scopes[nmspace].push_back(new InterpreterScope(""));
@@ -428,7 +459,6 @@ void Interpreter::visit(ASTForNode* astnode) {
 		astnode->dci[1]->accept(this);
 
 		if (!is_bool(current_expression_value.type)) {
-			set_curr_pos(astnode->row, astnode->col);
 			ExceptionHandler::throw_condition_type_err();
 		}
 	}
@@ -463,7 +493,6 @@ void Interpreter::visit(ASTForNode* astnode) {
 			astnode->dci[1]->accept(this);
 
 			if (!is_bool(current_expression_value.type)) {
-				set_curr_pos(astnode->row, astnode->col);
 				ExceptionHandler::throw_condition_type_err();
 			}
 		}
@@ -480,6 +509,8 @@ void Interpreter::visit(ASTForNode* astnode) {
 }
 
 void Interpreter::visit(ASTForEachNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	const auto& nmspace = get_namespace();
 	is_loop = true;
 
@@ -599,6 +630,8 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 }
 
 void Interpreter::visit(ASTTryCatchNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	const auto& nmspace = get_namespace();
 
 	try {
@@ -627,27 +660,31 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 }
 
 void Interpreter::visit(parser::ASTThrowNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	astnode->accept(this);
 	if (current_expression_value.type_name != "Exception") {
-		set_curr_pos(astnode->row, astnode->col);
 		throw std::runtime_error("expected Exception struct in throw");
 	}
 	throw std::exception(std::get<2>(*current_expression_value.str)["error"]->s.c_str());
 }
 
 void Interpreter::visit(parser::ASTReticencesNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	auto value = Value(Type::T_UNDEFINED);
 	value.set_undefined();
 	current_expression_value = value;
 }
 
 void Interpreter::visit(ASTWhileNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	is_loop = true;
 
 	astnode->condition->accept(this);
 
 	if (!is_bool(current_expression_value.type)) {
-		set_curr_pos(astnode->row, astnode->col);
 		ExceptionHandler::throw_condition_type_err();
 	}
 
@@ -673,7 +710,6 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 		astnode->condition->accept(this);
 
 		if (!is_bool(current_expression_value.type)) {
-			set_curr_pos(astnode->row, astnode->col);
 			ExceptionHandler::throw_condition_type_err();
 		}
 
@@ -684,6 +720,8 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 }
 
 void Interpreter::visit(ASTDoWhileNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	is_loop = true;
 
 	bool result = false;
@@ -708,7 +746,6 @@ void Interpreter::visit(ASTDoWhileNode* astnode) {
 		astnode->condition->accept(this);
 
 		if (!is_bool(current_expression_value.type)) {
-			set_curr_pos(astnode->row, astnode->col);
 			ExceptionHandler::throw_condition_type_err();
 		}
 
@@ -719,40 +756,54 @@ void Interpreter::visit(ASTDoWhileNode* astnode) {
 }
 
 void Interpreter::visit(ASTStructDefinitionNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	scopes[get_namespace()].back()->declare_structure_definition(astnode->identifier, astnode->variables, astnode->row, astnode->col);
 }
 
-void Interpreter::visit(ASTLiteralNode<cp_bool>* lit) {
+void Interpreter::visit(ASTLiteralNode<cp_bool>* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	auto value = Value(Type::T_BOOL);
-	value.set(lit->val);
+	value.set(astnode->val);
 	current_expression_value = value;
 }
 
-void Interpreter::visit(ASTLiteralNode<cp_int>* lit) {
+void Interpreter::visit(ASTLiteralNode<cp_int>* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	auto value = Value(Type::T_INT);
-	value.set(lit->val);
+	value.set(astnode->val);
 	current_expression_value = value;
 }
 
-void Interpreter::visit(ASTLiteralNode<cp_float>* lit) {
+void Interpreter::visit(ASTLiteralNode<cp_float>* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	auto value = Value(Type::T_FLOAT);
-	value.set(lit->val);
+	value.set(astnode->val);
 	current_expression_value = value;
 }
 
-void Interpreter::visit(ASTLiteralNode<cp_char>* lit) {
+void Interpreter::visit(ASTLiteralNode<cp_char>* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	auto value = Value(Type::T_CHAR);
-	value.set(lit->val);
+	value.set(astnode->val);
 	current_expression_value = value;
 }
 
-void Interpreter::visit(ASTLiteralNode<cp_string>* lit) {
+void Interpreter::visit(ASTLiteralNode<cp_string>* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	auto value = Value(Type::T_STRING);
-	value.set(lit->val);
+	value.set(astnode->val);
 	current_expression_value = value;
 }
 
 void Interpreter::visit(ASTArrayConstructorNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	auto value = Value(Type::T_ARRAY);
 	Type arr_t = Type::T_ANY;
 	cp_array arr = cp_array();
@@ -771,6 +822,8 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 }
 
 void Interpreter::visit(ASTStructConstructorNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	InterpreterScope* curr_scope;
 	try {
 		const auto& nmspace = get_namespace(astnode->nmspace);
@@ -790,7 +843,6 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 
 	for (auto& expr : astnode->values) {
 		if (type_struct.variables.find(expr.first) == type_struct.variables.end()) {
-			set_curr_pos(astnode->row, astnode->col);
 			ExceptionHandler::throw_struct_member_err(astnode->type_name, expr.first);
 		}
 		VariableDefinition var_type_struct = type_struct.variables[expr.first];
@@ -814,6 +866,8 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 }
 
 void Interpreter::visit(ASTIdentifierNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	const auto& identifier = astnode->identifier_vector[0].identifier;
 	const auto& nmspace = get_namespace(astnode->nmspace);
 	InterpreterScope* id_scope;
@@ -857,7 +911,6 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 					return;
 				}
 				catch (...) {
-					set_curr_pos(astnode->row, astnode->col);
 					throw std::runtime_error("identifier '" + identifier + "' was not declared");
 				}
 			}
@@ -904,6 +957,8 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 }
 
 void Interpreter::visit(ASTBinaryExprNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	std::string op = astnode->op;
 
 	astnode->left->accept(this);
@@ -916,6 +971,8 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 }
 
 void Interpreter::visit(ASTTernaryNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	astnode->condition->accept(this);
 	if (current_expression_value.b) {
 		astnode->value_if_true->accept(this);
@@ -926,6 +983,8 @@ void Interpreter::visit(ASTTernaryNode* astnode) {
 }
 
 void Interpreter::visit(ASTInNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	astnode->value->accept(this);
 	Value expr_val = current_expression_value;
 	astnode->collection->accept(this);
@@ -958,6 +1017,8 @@ void Interpreter::visit(ASTInNode* astnode) {
 }
 
 void Interpreter::visit(ASTUnaryExprNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	bool has_assign = false;
 
 	astnode->expr->accept(this);
@@ -1007,7 +1068,6 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 			current_expression_value.set(cp_bool(!current_expression_value.b));
 			break;
 		default:
-			set_curr_pos(astnode->row, astnode->col);
 			throw std::runtime_error("incompatible unary operator '" + astnode->unary_op +
 				"' in front of " + type_str(current_expression_value.type) + " expression");
 		}
@@ -1034,6 +1094,8 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 }
 
 void Interpreter::visit(ASTTypeParseNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	astnode->expr->accept(this);
 
 	switch (astnode->type) {
@@ -1074,7 +1136,6 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 				current_expression_value.set(cp_int(std::stoll(current_expression_value.s)));
 			}
 			catch (...) {
-				set_curr_pos(astnode->row, astnode->col);
 				throw std::runtime_error("'" + current_expression_value.s + "' is not a valid value to parse int");
 			}
 			break;
@@ -1099,7 +1160,6 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 				current_expression_value.set(cp_float(std::stold(current_expression_value.s)));
 			}
 			catch (...) {
-				set_curr_pos(astnode->row, astnode->col);
 				throw std::runtime_error("'" + current_expression_value.s + "' is not a valid value to parse float");
 			}
 			break;
@@ -1121,7 +1181,6 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 			break;
 		case Type::T_STRING:
 			if (current_expression_value.s.size() > 1) {
-				set_curr_pos(astnode->row, astnode->col);
 				throw std::runtime_error("'" + current_expression_value.s + "' is not a valid value to parse char");
 			}
 			else {
@@ -1140,18 +1199,24 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 }
 
 void Interpreter::visit(ASTNullNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	auto value = Value(Type::T_VOID);
 	value.set_null();
 	current_expression_value = value;
 }
 
 void Interpreter::visit(ASTThisNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	auto value = Value(Type::T_STRING);
 	value.set(cp_string(current_this_name.top()));
 	current_expression_value = value;
 }
 
 void Interpreter::visit(ASTTypingNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
 	astnode->expr->accept(this);
 
 	auto curr_value = current_expression_value;

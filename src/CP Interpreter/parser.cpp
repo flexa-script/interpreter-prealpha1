@@ -960,7 +960,7 @@ ASTExprNode* Parser::parse_factor() {
 	case TOK_LEFT_CURLY:
 		return parse_array_constructor_node();
 
-		// type parsing
+		// type parsing cases
 	case TOK_BOOL_TYPE:
 	case TOK_INT_TYPE:
 	case TOK_FLOAT_TYPE:
@@ -992,7 +992,7 @@ ASTExprNode* Parser::parse_factor() {
 		return sub_expr;
 	}
 	
-		// unary expression case
+		// unary expression cases
 	case TOK_REF:
 	case TOK_UNREF: {
 		std::string current_token_value = current_token.value;

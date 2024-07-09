@@ -43,17 +43,20 @@ def to_json(f){
 	// print("called " + this, '\n');
 	var json = "{";
 	foreach (var it in f) {
+		json += '"' + it.key + "\":";
 		if(typeof(it.value)=="Bar"){
 			json += to_json(it.value);
 		}
 		else{
 			// print("key: ", it.key, "\nvalue: ", it.value, "\ntype: ", typeof(it), '\n');
-			json += '"' + it.key + "\":\"" + string(it.value) + '"';
+			json += '"' + string(it.value) + '"';
 		}
 		json += ",";
+		// print(json, '\n');
 	}
+	// print("json depois : ",json, '\n');
 	if(json != "{") {
-		json = substr(json, len(json)-2);
+		json = substr(json, 0, len(json)-1);
 	}
 	json += '}';
 	return json;
