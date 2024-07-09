@@ -235,9 +235,9 @@ namespace visitor {
 		cp_char c = '\0';
 		cp_string s;
 		cp_array arr;
-		cp_struct* str;
+		cp_struct* str = nullptr;
 		cp_function fun;
-		Variable* ref;
+		Variable* ref = nullptr;
 
 		Value(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
 			const std::string& type_name, const std::string& type_name_space,
