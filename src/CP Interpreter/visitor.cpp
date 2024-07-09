@@ -338,66 +338,53 @@ StructureDefinition::StructureDefinition()
 Value::Value(Type type, Type array_type, std::vector<ASTExprNode*> dim,
 	const std::string& type_name, const std::string& type_name_space,
 	unsigned int row, unsigned int col)
-	: TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space) {
-	def_ref();
-}
+	: TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space) {}
 
 Value::Value()
 	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {};
 
 Value::Value(cp_bool rawv) {
 	set(rawv);
-	def_ref();
 };
 
 Value::Value(cp_int rawv) {
 	set(rawv);
-	def_ref();
 };
 
 Value::Value(cp_float rawv) {
 	set(rawv);
-	def_ref();
 };
 
 Value::Value(cp_char rawv) {
 	set(rawv);
-	def_ref();
 };
 
 Value::Value(cp_string rawv) {
 	set(rawv);
-	def_ref();
 };
 
 Value::Value(cp_array rawv, Type array_type) {
 	set(rawv, array_type);
-	def_ref();
 };
 
 Value::Value(cp_struct* rawv) {
 	set(rawv);
-	def_ref();
 };
 
 Value::Value(cp_function rawv) {
 	set(rawv);
-	def_ref();
 };
 
 Value::Value(Variable* rawv) {
 	set(rawv);
-	def_ref();
 };
 
 Value::Value(Type type)
 	: TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {
-	def_ref();
 };
 
 Value::Value(Type type, Type arr_type, std::vector<ASTExprNode*> dim)
 	: TypeDefinition(type, arr_type, dim, "", "") {
-	def_ref();
 };
 
 Value::Value(Value* v)
@@ -457,10 +444,6 @@ void Value::set(cp_function fun) {
 	this->fun = fun;
 	type = Type::T_FUNCTION;
 	array_type = Type::T_UNDEFINED;
-}
-
-void Value::def_ref() {
-	//ref = is_struct(type) || is_struct(array_type);
 }
 
 void Value::set_type(Type type) {

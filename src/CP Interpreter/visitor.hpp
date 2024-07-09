@@ -216,6 +216,7 @@ namespace visitor {
 	public:
 		std::string identifier;
 		SemanticValue* value;
+		bool use_ref;
 		bool is_const;
 
 		SemanticVariable(const std::string& identifier, parser::Type type, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,
@@ -272,7 +273,6 @@ namespace visitor {
 		void set_type(parser::Type type);
 		void set_curr_type(TypeDefinition curr_type);
 		void set_arr_type(parser::Type arr_type);
-		void def_ref();
 
 		bool has_value();
 
@@ -286,7 +286,7 @@ namespace visitor {
 	class Variable : public TypeDefinition {
 	public:
 		Value* value;
-		bool ref = false;
+		bool use_ref = false;
 
 		Variable(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
 			const std::string& type_name, const std::string& type_name_space, Value* value);

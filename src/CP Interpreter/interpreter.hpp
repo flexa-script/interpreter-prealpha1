@@ -42,7 +42,7 @@ namespace visitor {
 		std::stack<visitor::TypeDefinition> current_function_return_type;
 		std::stack<std::string> current_this_name;
 		//Value* current_param_ref;
-		Variable* current_var_ref;
+		//Variable* current_var_ref;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		bool is_function_context = false;
 		bool return_from_function = false;

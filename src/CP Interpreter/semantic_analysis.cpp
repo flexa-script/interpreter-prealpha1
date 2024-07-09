@@ -817,13 +817,12 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
 	astnode->expr->accept(this);
 
-	if (dynamic_cast<parser::ASTIdentifierNode*>(astnode->expr)
-		&& astnode->unary_op == "ref" || astnode->unary_op == "unref") {
+	if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
 		if (astnode->unary_op == "ref") {
-			//current_expression.ref = true;
+			current_expression.ref->use_ref = true;
 		}
 		if (astnode->unary_op == "unref") {
-			//current_expression.ref = false;
+			current_expression.ref->use_ref = false;
 		}
 	}
 	else {

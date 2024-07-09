@@ -142,7 +142,9 @@ StructureDefinition InterpreterScope::find_declared_structure_definition(std::st
 }
 
 Variable* InterpreterScope::find_declared_variable(std::string identifier) {
-	return variable_symbol_table[identifier];
+	auto var = variable_symbol_table[identifier];
+	var->use_ref = false;
+	return var;
 }
 
 interpreter_function_t InterpreterScope::find_declared_function(std::string identifier, std::vector<TypeDefinition> signature) {

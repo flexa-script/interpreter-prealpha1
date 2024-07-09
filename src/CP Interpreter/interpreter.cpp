@@ -147,17 +147,13 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	astnode->expr->accept(this);
 	identifier_call_name = "";
 
-	// TODO: fix ref by checking current variable reference
-	//if (current_var_ref->ref && astnode->op == "=") {
-	//	if (!is_any_or_match_type(
-	//		static_cast<TypeDefinition>(*variable),
-	//		static_cast<TypeDefinition>(*value),
-	//		static_cast<TypeDefinition>(current_expression_value))) {
-
-	//	}
-	//	//astscope->declare_value(astnode->identifier_vector[0].identifier, current_var_ref);
-	//	return;
-	//}
+	if (current_expression_value.ref && current_expression_value.ref->use_ref && astnode->op == "=") {
+		if (!TypeDefinition::is_any_or_match_type(variable, *variable, nullptr, current_expression_value, match_array_dim_ptr)) {
+			ExceptionHandler::throw_mismatched_type_err(variable->type, current_expression_value.type);
+		}
+		astscope->declare_variable(astnode->identifier_vector[0].identifier, current_expression_value.ref);
+		return;
+	}
 
 	auto new_value = new Value(current_expression_value);
 
@@ -211,8 +207,8 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		signature.push_back(static_cast<TypeDefinition>(current_expression_value));
 
 		Value* pvalue = nullptr;
-		if (current_var_ref->ref && current_var_ref) {
-			pvalue = current_var_ref->value;
+		if (current_expression_value.ref && current_expression_value.ref->use_ref) {
+			pvalue = current_expression_value.ref->value;
 		}
 		else {
 			pvalue = new Value(&current_expression_value);
@@ -220,10 +216,6 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 
 		function_arguments.push_back(pvalue);
 	}
-
-	//for (size_t i = 0; i < function_arguments.size(); ++i) {
-	//	last_function_arguments.push_back(function_arguments[i]);
-	//}
 
 	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
 
@@ -246,8 +238,6 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		call_builtin_function(astnode->identifier);
 	}
 
-	//current_function_defined_parameters.pop();
-	//current_function_calling_arguments.pop();
 	current_function_return_type.pop();
 	current_function_nmspace.pop();
 	current_this_name.pop();
@@ -941,8 +931,6 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	Variable* variable = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	auto sub_val = access_value(id_scope, variable->value, astnode->identifier_vector);
 	current_expression_value = *sub_val;
-	current_expression_value.def_ref();
-	current_var_ref = variable;
 
 	if (current_expression_value.type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
 		has_string_access = false;
@@ -1024,13 +1012,12 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 	astnode->expr->accept(this);
 
 
-	if (dynamic_cast<parser::ASTIdentifierNode*>(astnode->expr)
-		&& astnode->unary_op == "ref" || astnode->unary_op == "unref") {
+	if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
 		if (astnode->unary_op == "unref") {
-			current_var_ref->ref = false;
+			current_expression_value.ref->use_ref = false;
 		}
 		else if (astnode->unary_op == "ref") {
-			current_var_ref->ref = true;
+			current_expression_value.ref->use_ref = true;
 		}
 	}
 	else {
