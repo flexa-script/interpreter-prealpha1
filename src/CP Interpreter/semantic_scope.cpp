@@ -87,7 +87,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 		// if function signature is greater than signature call, handle default value cases
 		found = true;
 		for (size_t i = 0; i < func_sig_size; ++i) {
-			if (func_sig_size <= call_sig_size) {
+			if (i < call_sig_size) {
 				is_arr = is_array(func_sig.at(i).type) && is_array(signature.at(i).type);
 				ftype = is_arr ? func_sig.at(i).array_type : func_sig.at(i).type;
 				stype = is_arr ? signature.at(i).array_type : signature.at(i).type;

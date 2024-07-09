@@ -28,7 +28,7 @@ var f = Foo{name="Carlos",age=29,bar=Bar{x=10,j=false}};
 // print_str(f);
 
 def substr(str, s, n = null){
-	print("called " + this);
+	// print("called " + this, '\n');
 	var ss = "";
 	if(n == null) {
 		n = len(str);
@@ -40,21 +40,22 @@ def substr(str, s, n = null){
 }
 
 def to_json(f){
-	print("called " + this);
+	// print("called " + this, '\n');
 	var json = "{";
 	foreach (var it in f) {
 		if(typeof(it.value)=="Bar"){
 			json += to_json(it.value);
 		}
 		else{
-			json += '"' + it.key + "\":" + string(it.value);
+			// print("key: ", it.key, "\nvalue: ", it.value, "\ntype: ", typeof(it), '\n');
+			json += '"' + it.key + "\":\"" + string(it.value) + '"';
 		}
 		json += ",";
 	}
 	if(json != "{") {
 		json = substr(json, len(json)-2);
 	}
-	json += ';';
+	json += '}';
 	return json;
 }
 

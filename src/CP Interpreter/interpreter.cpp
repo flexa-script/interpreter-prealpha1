@@ -20,7 +20,7 @@ using namespace lexer;
 Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
 	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
 	if (main_program) {
-		current_name.push(main_program->name);
+		current_this_name.push(main_program->name);
 	}
 	scopes[default_namespace].push_back(global_scope);
 	register_built_in_functions();
@@ -103,12 +103,12 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 
 	auto new_value = new Value(current_expression_value);
 
-	auto astnode_type = is_undefined(astnode->type) ? Type::T_ANY : astnode->type;
-	auto astnode_array_type = is_undefined(astnode->array_type) && astnode->dim.size() > 0 ? Type::T_ANY : astnode->array_type;
+	//auto astnode_type = is_undefined(astnode->type) ? Type::T_ANY : astnode->type;
+	//auto astnode_array_type = is_undefined(astnode->array_type) && astnode->dim.size() > 0 ? Type::T_ANY : astnode->array_type;
 	auto astnode_type_name = astnode->type_name.empty() ? new_value->type_name : astnode->type_name;
 
-	auto new_var = new Variable(astnode_type,
-		astnode_array_type, astnode->dim,
+	auto new_var = new Variable(astnode->type,
+		astnode->array_type, astnode->dim,
 		astnode_type_name, astnode->type_name_space,
 		new_value);
 	new_value->ref = new_var;
@@ -150,12 +150,6 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	//}
 
 	auto new_value = new Value(current_expression_value);
-	new_value->ref = variable;
-
-	// TODO: set full type
-	if (is_undefined(value->type)) {
-		value->set_type(is_any(value->type) ? new_value->type : value->type);
-	}
 
 	cp_int pos = 0;
 	if (has_string_access) {
@@ -163,21 +157,21 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		pos = current_expression_value.i;
 	}
 
-	do_operation(astnode->op, value, new_value, pos);
+	variable->set(do_operation(astnode->op, value, new_value, false, pos));
 }
 
 void Interpreter::visit(ASTReturnNode* astnode) {
 	const auto& nmspace = get_namespace();
-	const auto& curr_func_ret_type = current_function_return_type.top();
+	auto& curr_func_ret_type = current_function_return_type.top();
 	astnode->expr->accept(this);
 
 	if (!TypeDefinition::is_any_or_match_type(
-		nullptr,
+		&curr_func_ret_type,
 		curr_func_ret_type,
 		nullptr,
 		current_expression_value,
 		match_array_dim_ptr)) {
-		ExceptionHandler::throw_return_type_err(current_name.top(),
+		ExceptionHandler::throw_return_type_err(current_this_name.top(),
 			curr_func_ret_type.type,
 			current_expression_value.type);
 	}
@@ -213,20 +207,22 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		function_arguments.push_back(pvalue);
 	}
 
-	for (size_t i = 0; i < function_arguments.size(); ++i) {
-		last_function_arguments.push_back(function_arguments[i]);
-	}
+	//for (size_t i = 0; i < function_arguments.size(); ++i) {
+	//	last_function_arguments.push_back(function_arguments[i]);
+	//}
 
 	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
 
 	auto declfun = func_scope->find_declared_function(astnode->identifier, signature);
 
-	function_call_parameters = std::get<0>(declfun);
+	current_function_defined_parameters.push(std::get<0>(declfun));
 	is_function_context = true;
 	function_call_name = astnode->identifier;
-	current_name.push(astnode->identifier);
+
+	current_this_name.push(astnode->identifier);
 	current_function_nmspace.push(nmspace);
 	current_function_return_type.push(std::get<2>(declfun));
+	current_function_calling_arguments.push(function_arguments);
 
 	auto block = std::get<1>(declfun);
 	if (block) {
@@ -236,8 +232,12 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		call_builtin_function(astnode->identifier);
 	}
 
+	//current_function_defined_parameters.pop();
+	//current_function_calling_arguments.pop();
+	current_function_return_type.pop();
 	current_function_nmspace.pop();
-	current_name.pop();
+	current_this_name.pop();
+
 	is_function_context = false;
 }
 
@@ -801,14 +801,15 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 			ExceptionHandler::throw_struct_type_err(astnode->type_name, var_type_struct.type);
 		}
 
-		auto str_alue = new Value(current_expression_value.type);
-		str_alue->copy_from(&current_expression_value);
-		std::get<2>(*str)[expr.first] = str_alue;
+		auto str_value = new Value(current_expression_value.type);
+		str_value->copy_from(&current_expression_value);
+		std::get<2>(*str)[expr.first] = str_value;
 	}
 
 	declare_structure(str, astnode->nmspace);
 
 	value.set(str);
+	value.type_name = astnode->type_name;
 	current_expression_value = value;
 }
 
@@ -911,9 +912,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 	astnode->right->accept(this);
 	Value r_value = current_expression_value;
 
-	auto value = do_operation(astnode->op, &l_value, &r_value);
-
-	current_expression_value = *value;
+	current_expression_value = *do_operation(astnode->op, &l_value, &r_value, true, 0);
 }
 
 void Interpreter::visit(ASTTernaryNode* astnode) {
@@ -1148,7 +1147,7 @@ void Interpreter::visit(ASTNullNode* astnode) {
 
 void Interpreter::visit(ASTThisNode* astnode) {
 	auto value = Value(Type::T_STRING);
-	value.set(cp_string(current_name.top()));
+	value.set(cp_string(current_this_name.top()));
 	current_expression_value = value;
 }
 
@@ -1447,32 +1446,36 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 	auto arr = cp_array();
 	size_t i;
 
+	if (current_function_calling_arguments.size() == 0 || current_function_defined_parameters.size() == 0) {
+		return;
+	}
+
 	// adds function arguments
-	for (i = 0; i < last_function_arguments.size(); ++i) {
+	for (i = 0; i < current_function_calling_arguments.top().size(); ++i) {
 		// todo: fix reference, now reference will came from value
 		// is reference : not reference
-		Value* current_value = last_function_arguments[i]->ref ? last_function_arguments[i] : new Value(last_function_arguments[i]);
+		Value* current_value = current_function_calling_arguments.top()[i]->ref ? current_function_calling_arguments.top()[i] : new Value(current_function_calling_arguments.top()[i]);
 
-		if (i >= function_call_parameters.size()) {
+		if (i >= current_function_defined_parameters.top().size()) {
 			arr.push_back(current_value);
 		}
 		else {
-			const auto& pname = std::get<0>(function_call_parameters[i]);
+			const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
 
-			if (is_function(last_function_arguments[i]->type)) {
-				auto funcs = ((InterpreterScope*)last_function_arguments[i]->fun.first)->find_declared_functions(last_function_arguments[i]->fun.second);
+			if (is_function(current_function_calling_arguments.top()[i]->type)) {
+				auto funcs = ((InterpreterScope*)current_function_calling_arguments.top()[i]->fun.first)->find_declared_functions(current_function_calling_arguments.top()[i]->fun.second);
 				for (auto& it = funcs.first; it != funcs.second; ++it) {
 					auto& func_params = std::get<0>(it->second);
 					auto& func_block = std::get<1>(it->second);
-					scopes[nmspace].back()->declare_function(pname, func_params, func_block, std::get<2>(it->second));
+					curr_scope->declare_function(pname, func_params, func_block, std::get<2>(it->second));
 				}
 			}
 			else {
-				scopes[nmspace].back()->declare_variable(pname, new Variable(new Value(current_value)));
+				curr_scope->declare_variable(pname, new Variable(new Value(current_value)));
 			}
 
 			// is rest
-			if (std::get<3>(function_call_parameters[i])) {
+			if (std::get<3>(current_function_defined_parameters.top()[i])) {
 				rest_name = pname;
 				arr.push_back(current_value);
 			}
@@ -1480,35 +1483,36 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 	}
 
 	// adds default values
-	for (; i < function_call_parameters.size(); ++i) {
-		if (std::get<3>(function_call_parameters[i])) {
+	for (; i < current_function_defined_parameters.top().size(); ++i) {
+		if (std::get<3>(current_function_defined_parameters.top()[i])) {
 			break;
 		}
 
-		const auto& pname = std::get<0>(function_call_parameters[i]);
-		std::get<2>(function_call_parameters[i])->accept(this);
+		const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
+		std::get<2>(current_function_defined_parameters.top()[i])->accept(this);
 
 		if (is_function(current_expression_value.type)) {
 			auto funcs = ((InterpreterScope*)current_expression_value.fun.first)->find_declared_functions(current_expression_value.fun.second);
 			for (auto& it = funcs.first; it != funcs.second; ++it) {
 				auto& func_params = std::get<0>(it->second);
 				auto& func_block = std::get<1>(it->second);
-				scopes[nmspace].back()->declare_function(pname, func_params, func_block, std::get<2>(it->second));
+				curr_scope->declare_function(pname, func_params, func_block, std::get<2>(it->second));
 			}
 		}
 		else {
-			scopes[nmspace].back()->declare_variable(pname, new Variable(new Value(current_expression_value)));
+			curr_scope->declare_variable(pname, new Variable(new Value(current_expression_value)));
 		}
 	}
 
 	if (arr.size() > 0) {
 		auto rest = new Value(Type::T_ARRAY, Type::T_ANY, std::vector<ASTExprNode*>());
 		rest->set(arr, Type::T_ANY);
-		scopes[nmspace].back()->declare_variable(rest_name, new Variable(new Value(rest)));
+		curr_scope->declare_variable(rest_name, new Variable(new Value(rest)));
 	}
 
-	function_call_parameters.clear();
-	last_function_arguments.clear();
+	current_function_defined_parameters.pop();
+	current_function_calling_arguments.pop();
+	//current_function_return_type.pop();
 }
 
 void Interpreter::declare_structure(cp_struct* str, const std::string& nmspace) {
@@ -1667,12 +1671,12 @@ bool Interpreter::match_array_dim(TypeDefinition ltype, TypeDefinition rtype) {
 	return true;
 }
 
-Variable* Interpreter::do_operation(const std::string& op, Variable* lvar, Variable* rvar, cp_int str_pos) {
-	Value* lval = lvar->value;
-	Value* rval = rvar->value;
-	do_operation(op, lval, rval, false, str_pos);
-	return lvar;
-}
+//Variable* Interpreter::do_operation(const std::string& op, Variable* lvar, Variable* rvar, cp_int str_pos) {
+//	Value* lval = lvar->value;
+//	Value* rval = rvar->value;
+//	lvar->value = do_operation(op, lval, rval, false, str_pos);
+//	return lvar;
+//}
 
 Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr, cp_int str_pos) {
 	Type l_type = lval->type;
@@ -1682,8 +1686,13 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 
 	auto value = new Value(Type::T_UNDEFINED);
 
-	if (is_void(l_var_type) && op == "=") {
+	if (is_void(r_type) && op == "=") {
 		value->set_null();
+		return value;
+	}
+
+	if (is_void(l_type) && op == "=") {
+		value->copy_from(rval);
 		return value;
 	}
 
@@ -1743,6 +1752,14 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 
 		if (is_expr
 			&& is_numeric(l_type)
+			&& Token::is_relational_op(op)) {
+			value->set(do_relational_operation(op, lval, rval));
+
+			break;
+		}
+
+		if (is_expr
+			&& is_numeric(l_type)
 			&& Token::is_equality_op(op)) {
 			cp_float l = is_float(lval->type) ? lval->f : lval->i;
 			cp_float r = is_float(rval->type) ? rval->f : rval->i;
@@ -1778,6 +1795,14 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			&& is_numeric(l_type)
 			&& op == "<=>") {
 			value->set(do_spaceship_operation(op, lval, rval));
+		}
+
+		if (is_expr
+			&& is_numeric(l_type)
+			&& Token::is_relational_op(op)) {
+			value->set(do_relational_operation(op, lval, rval));
+
+			break;
 		}
 
 		if (is_expr
@@ -1864,16 +1889,20 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			&& Token::is_equality_op(op)) {
 			value->set((cp_bool)(op == "==" ?
 				lval->s == rval->s
-				: lval->s != lval->s));
+				: lval->s != rval->s));
 
 			break;
 		}
 
-		if (!is_string(l_type)) {
+		if (is_string(l_type)) {
+			value->set(do_operation(lval->s, rval->s, op));
+		}
+		else if (is_expr && is_char(l_type)) {
+			value->set(do_operation(cp_string{ lval->c }, rval->s, op));
+		}
+		else {
 			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
-
-		value->set(do_operation(lval->s, rval->s, op));
 
 		break;
 	}
@@ -2168,22 +2197,22 @@ long long Interpreter::hash(ASTIdentifierNode* astnode) {
 void Interpreter::call_builtin_function(const std::string& identifier) {
 	auto arr = cp_array();
 
-	for (size_t i = 0; i < last_function_arguments.size(); ++i) {
+	for (size_t i = 0; i < current_function_calling_arguments.top().size(); ++i) {
 		// is reference : not reference
 		Value* current_value = nullptr;
-		if (last_function_arguments[i]->ref) {
-			current_value = last_function_arguments[i];
+		if (current_function_calling_arguments.top()[i]->ref) {
+			current_value = current_function_calling_arguments.top()[i];
 		}
 		else {
-			current_value = new Value(last_function_arguments[i]);
+			current_value = new Value(current_function_calling_arguments.top()[i]);
 			current_value->ref = nullptr;
 		}
 
-		if (i >= function_call_parameters.size()) {
+		if (i >= current_function_defined_parameters.top().size()) {
 			arr.push_back(current_value);
 		}
 		else {
-			if (std::get<3>(function_call_parameters[i])) {
+			if (std::get<3>(current_function_defined_parameters.top()[i])) {
 				arr.push_back(current_value);
 			}
 			else {
@@ -2198,7 +2227,9 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 		builtin_arguments.push_back(rest);
 	}
 
-	last_function_arguments.clear();
+	current_function_defined_parameters.pop();
+	current_function_calling_arguments.pop();
+	//current_function_return_type.pop();
 
 	builtin_functions[identifier]();
 	builtin_arguments.clear();

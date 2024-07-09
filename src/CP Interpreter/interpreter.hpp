@@ -35,14 +35,14 @@ namespace visitor {
 		std::vector<std::string> parsed_libs;
 		std::string identifier_call_name;
 		std::string function_call_name;
-		interpreter_parameter_list_t function_call_parameters;
-		std::stack<std::string> current_function_nmspace;
-		std::stack<visitor::TypeDefinition> current_function_return_type;
-		std::stack<std::string> current_name;
 		std::string return_from_function_name;
+		std::stack<std::string> current_function_nmspace;
+		std::stack<interpreter_parameter_list_t> current_function_defined_parameters;
+		std::stack<std::vector<Value*>> current_function_calling_arguments;
+		std::stack<visitor::TypeDefinition> current_function_return_type;
+		std::stack<std::string> current_this_name;
 		//Value* current_param_ref;
 		Variable* current_var_ref;
-		std::vector<Value*> last_function_arguments;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		bool is_function_context = false;
 		bool return_from_function = false;
@@ -72,7 +72,7 @@ namespace visitor {
 		//bool match_type_array(TypeDefinition ltype, TypeDefinition rtype);
 		bool match_array_dim(TypeDefinition ltype, TypeDefinition rtype);
 
-		Variable* do_operation(const std::string& op, Variable* lval, Variable* rval, cp_int str_pos = 0);
+		//Variable* do_operation(const std::string& op, Variable* lval, Variable* rval, cp_int str_pos = 0);
 		Value* do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr = false, cp_int str_pos = 0);
 		cp_int do_spaceship_operation(const std::string& op, Value* lval, Value* rval);
 		cp_bool do_relational_operation(const std::string& op, Value* lval, Value* rval);

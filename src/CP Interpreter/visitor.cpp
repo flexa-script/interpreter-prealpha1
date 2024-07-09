@@ -135,7 +135,10 @@ TypeDefinition TypeDefinition::get_struct(Type type, const std::string& type_nam
 }
 
 bool TypeDefinition::is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, std::function<bool(TypeDefinition ltype, TypeDefinition rtype)> match_array_dim) {
-	if (lvtype && is_any(lvtype->type) || rvtype && is_any(rvtype->type)) return true;
+	if (lvtype && is_any(lvtype->type)
+		|| rvtype && is_any(rvtype->type)
+		|| is_void(ltype.type)
+		|| is_void(rtype.type)) return true;
 	return match_type(ltype, rtype, match_array_dim);
 }
 
@@ -473,17 +476,11 @@ void Value::set_arr_type(Type arr_type) {
 }
 
 void Value::set_null() {
-	set_empty(Type::T_VOID);
+	copy_from(new Value(Type::T_VOID));
 }
 
 void Value::set_undefined() {
-	set_empty(Type::T_UNDEFINED);
-}
-
-void Value::set_empty(Type empty_type) {
-	auto aux_type = type;
-	copy_from(new Value(empty_type));
-	type = aux_type;
+	copy_from(new Value(Type::T_UNDEFINED));
 }
 
 bool Value::has_value() {
@@ -547,14 +544,36 @@ bool Value::equals(Value* value) {
 
 Variable::Variable(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
 	const std::string& type_name, const std::string& type_name_space, Value* value)
-	: TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space),
+	: TypeDefinition(def_type(type), def_array_type(array_type, dim),
+		std::move(dim), type_name, type_name_space),
 	value(value) {}
 
 Variable::Variable()
 	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {};
 
 Variable::Variable(Value* v)
-	: TypeDefinition(v->type, v->array_type, v->dim, v ->type_name, v->type_name_space),
+	: TypeDefinition(def_type(v->type), def_array_type(v->array_type, dim),
+		v->dim, v ->type_name, v->type_name_space),
 	value(v) {};
 
 Variable::~Variable() = default;
+
+void Variable::set(Value* val) {
+	value = new Value(val);
+	//if (is_any(type) || is_void(type) || is_undefined(type)) {
+	//	type = val->type;
+	//	type_name = val->type_name;
+	//	type_name_space = val->type_name_space;
+	//	array_type = val->array_type;
+	//	dim = val->dim;
+	//}
+	value->ref = this;
+}
+
+Type Variable::def_type(Type type) {
+	return is_void(type) || is_undefined(type) ? Type::T_ANY : type;
+}
+
+Type Variable::def_array_type(Type array_type, const std::vector<ASTExprNode*>& dim) {
+	return is_void(array_type) || is_undefined(array_type) && dim.size() > 0 ? Type::T_ANY : array_type;
+}

@@ -268,7 +268,6 @@ namespace visitor {
 
 		void set_null();
 		void set_undefined();
-		void set_empty(parser::Type empty_type);
 
 		void set_type(parser::Type type);
 		void set_curr_type(TypeDefinition curr_type);
@@ -296,7 +295,9 @@ namespace visitor {
 		~Variable();
 
 		void set(Value* value);
-		void tset(Value* value);
+
+		Type def_type(Type type);
+		Type def_array_type(Type array_type, const std::vector<ASTExprNode*>& dim);
 	};
 
 	class Visitor {
@@ -307,7 +308,7 @@ namespace visitor {
 		int curr_row;
 		int curr_col;
 
-		Visitor(const std::map<std::string, parser::ASTProgramNode*>& programs, parser::ASTProgramNode* main_program, const std::string& current_name)
+		Visitor(const std::map<std::string, parser::ASTProgramNode*>& programs, parser::ASTProgramNode* main_program, const std::string& current_this_name)
 			: programs(programs), main_program(main_program), current_program(main_program), curr_row(0), curr_col(0) { };
 
 		virtual const std::string& get_namespace(const std::string& nmspace = "") const = 0;
