@@ -86,29 +86,31 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 
 		// if function signature is greater than signature call, handle default value cases
 		found = true;
-		for (size_t i = 0; i < func_sig_size; ++i) {
-			if (i < call_sig_size) {
-				is_arr = is_array(func_sig.at(i).type) && is_array(signature.at(i).type);
-				ftype = is_arr ? func_sig.at(i).array_type : func_sig.at(i).type;
-				stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+		if (func_sig_size > call_sig_size) {
+			for (size_t i = 0; i < func_sig_size; ++i) {
+				if (i < call_sig_size) {
+					is_arr = is_array(func_sig.at(i).type) && is_array(signature.at(i).type);
+					ftype = is_arr ? func_sig.at(i).array_type : func_sig.at(i).type;
+					stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
 
-				if (!match_type(ftype, stype) && !is_any(ftype)
-					&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
-					found = false;
-					break;
+					if (!match_type(ftype, stype) && !is_any(ftype)
+						&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+						found = false;
+						break;
+					}
+				}
+				else {
+					if (!it->second.parameters[i].default_value) {
+						found = false;
+						break;
+					}
 				}
 			}
-			else {
-				if (!it->second.parameters[i].default_value) {
-					found = false;
-					break;
-				}
-			}
-		}
 
-		// if found and exactly signature size (not rest)
-		if (found) {
-			return it->second;
+			// if found and exactly signature size (not rest)
+			if (found) {
+				return it->second;
+			}
 		}
 	}
 

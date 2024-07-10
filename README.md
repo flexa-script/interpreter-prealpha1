@@ -66,13 +66,13 @@
         - [ ] add: throw a simple string as Exception to avoid Exception include `throw "string error";`, but how to get it in catch? maybe `[type, error]`?
     - [X] do while
 - [ ] Add expression:
-    - [ ] native JSON and json style array constructor???
+    - [ ] add: multiline string using ``
     - [ ] add: runtime type checking for any types
         - [X] assign operation
         - [X] expressions
         - [X] unify operations
-        - [ ] create equality functions
-        - [ ] other nodes
+        - [X] create equality functions
+        - [X] other nodes
     - [X] refact expression return type:
         - [X] if real type is any change to float
         - [X] if both real type is int trunc to int

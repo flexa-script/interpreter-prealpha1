@@ -2246,12 +2246,15 @@ void Interpreter::register_built_in_functions() {
 	interpreter_parameter_list_t params;
 
 	builtin_functions["print"] = [this]() {
+		if (builtin_arguments.size() == 0) {
+			return;
+		}
 		for (auto arg : builtin_arguments[0]->arr) {
 			std::cout << parse_value_to_string(arg);
 		}
-		};
+	};
 	params.clear();
-	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), nullptr, true));
+	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), new ASTNullNode(0, 0), true));
 	scopes[default_namespace].back()->declare_function("print", params, nullptr, TypeDefinition::get_basic(Type::T_VOID));
 
 	builtin_functions["println"] = [this]() {
@@ -2259,7 +2262,7 @@ void Interpreter::register_built_in_functions() {
 		std::cout << std::endl;
 		};
 	params.clear();
-	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), nullptr, true));
+	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), new ASTNullNode(0, 0), true));
 	scopes[default_namespace].back()->declare_function("println", params, nullptr, TypeDefinition::get_basic(Type::T_VOID));
 
 
@@ -2273,7 +2276,7 @@ void Interpreter::register_built_in_functions() {
 		current_expression_value.set(cp_string(std::move(line)));
 		};
 	params.clear();
-	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), nullptr, true));
+	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), new ASTNullNode(0, 0), true));
 	scopes[default_namespace].back()->declare_function("read", params, nullptr, TypeDefinition::get_basic(Type::T_STRING));
 
 

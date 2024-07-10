@@ -1422,13 +1422,13 @@ void SemanticAnalyser::register_built_in_functions() {
 	signature.clear();
 	parameters.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
-	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY, nullptr, true));
+	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true));
 	scopes[default_namespace].back()->declare_basic_function("print", Type::T_VOID, signature, parameters);
 
 	signature.clear();
 	parameters.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
-	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY, nullptr, true));
+	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true));
 	scopes[default_namespace].back()->declare_basic_function("println", Type::T_VOID, signature, parameters);
 
 
@@ -1436,7 +1436,7 @@ void SemanticAnalyser::register_built_in_functions() {
 	parameters.clear();
 	scopes[default_namespace].back()->declare_basic_function("read", Type::T_STRING, signature, parameters);
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
-	parameters.push_back(VariableDefinition::get_basic("msg", Type::T_ANY));
+	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true));
 	scopes[default_namespace].back()->declare_basic_function("read", Type::T_STRING, signature, parameters);
 
 

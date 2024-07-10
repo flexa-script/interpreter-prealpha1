@@ -18,3 +18,12 @@ print(test6);
 print('\n');
 
 array_decl();
+
+var a = 10;
+var b = null;
+print();
+println();
+println(10 != null);
+println(null == null);
+println(a != null);
+println(b == null);
