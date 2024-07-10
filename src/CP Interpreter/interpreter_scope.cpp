@@ -212,26 +212,28 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 
 		// if function signature is greater than signature call, handle default value cases
 		found = true;
-		for (size_t i = 0; i < func_sig_size; ++i) {
-			if (func_sig_size <= call_sig_size) {
-				is_arr = is_array(std::get<1>(func_params.at(i)).type) && is_array(signature.at(i).type);
-				ftype = is_arr ? std::get<1>(func_params.at(i)).array_type : std::get<1>(func_params.at(i)).type;
-				stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+		if (func_sig_size > call_sig_size) {
+			for (size_t i = 0; i < func_sig_size; ++i) {
+				if (func_sig_size <= call_sig_size) {
+					is_arr = is_array(std::get<1>(func_params.at(i)).type) && is_array(signature.at(i).type);
+					ftype = is_arr ? std::get<1>(func_params.at(i)).array_type : std::get<1>(func_params.at(i)).type;
+					stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
 
-				if (!match_type(ftype, stype) && !is_any(ftype)
-					&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
-					found = false;
+					if (!match_type(ftype, stype) && !is_any(ftype)
+						&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+						found = false;
+						break;
+					}
+				}
+				else {
 					break;
 				}
 			}
-			else {
-				break;
-			}
-		}
 
-		// if found and exactly signature size (not rest)
-		if (found) {
-			return it->second;
+			// if found and exactly signature size (not rest)
+			if (found) {
+				return it->second;
+			}
 		}
 	}
 
