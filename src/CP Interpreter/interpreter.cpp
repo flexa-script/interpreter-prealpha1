@@ -121,7 +121,8 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		new_value);
 	new_value->ref = new_var;
 
-	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, match_array_dim_ptr)) {
+	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, match_array_dim_ptr)
+		&& !is_undefined(current_expression_value.type)) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
 
@@ -163,7 +164,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		pos = current_expression_value.i;
 	}
 
-	variable->set(do_operation(astnode->op, value, new_value, false, pos));
+	do_operation(astnode->op, value, new_value, false, pos);
 }
 
 void Interpreter::visit(ASTReturnNode* astnode) {
@@ -839,7 +840,7 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 
 		expr.second->accept(this);
 
-		if (!TypeDefinition::is_any_or_match_type(nullptr, var_type_struct, nullptr, current_expression_value, match_array_dim_ptr)) {
+		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct, nullptr, current_expression_value, match_array_dim_ptr)) {
 			ExceptionHandler::throw_struct_type_err(astnode->type_name, var_type_struct.type);
 		}
 
@@ -946,8 +947,6 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 
 void Interpreter::visit(ASTBinaryExprNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-
-	std::string op = astnode->op;
 
 	astnode->left->accept(this);
 	Value l_value = current_expression_value;
@@ -1564,7 +1563,6 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 
 	current_function_defined_parameters.pop();
 	current_function_calling_arguments.pop();
-	//current_function_return_type.pop();
 }
 
 void Interpreter::declare_structure(cp_struct* str, const std::string& nmspace) {
@@ -1580,7 +1578,7 @@ void Interpreter::declare_structure(cp_struct* str, const std::string& nmspace) 
 
 	for (auto& struct_var_def : struct_def.variables) {
 		if (std::get<2>(*str).find(struct_var_def.first) != std::get<2>(*str).end()) {
-			std::get<2>(*str)[struct_var_def.first]->set_type(struct_var_def.second.type);
+			//std::get<2>(*str)[struct_var_def.first]->set_type(struct_var_def.second.type);
 		}
 		else {
 			Value* str_value = new Value(struct_var_def.second.type);
@@ -1675,37 +1673,6 @@ std::string Interpreter::parse_struct_to_string(const cp_struct& str_value) {
 	return s.str();
 }
 
-//bool Interpreter::is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype) {
-//	return TypeDefinition::is_any_or_match_type(ltype, rtype)
-//		&& (!is_array(ltype.type) ||
-//			is_array(ltype.type)
-//			&& match_type_array(ltype, rtype));
-//}
-//
-//bool Interpreter::is_any_or_match_type(TypeDefinition vtype, TypeDefinition ltype, TypeDefinition rtype) {
-//	return TypeDefinition::is_any_or_match_type(vtype, ltype, rtype)
-//		&& (!is_array(ltype.type) ||
-//			is_array(ltype.type)
-//			&& match_type_array(ltype, rtype));
-//}
-
-//bool Interpreter::match_type_array(TypeDefinition ltype, TypeDefinition rtype) {
-//	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
-//	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
-//
-//	if (var_dim.size() != expr_dim.size()) {
-//		throw std::runtime_error("mismatch array dimension");
-//	}
-//
-//	for (size_t dc = 0; dc < var_dim.size(); ++dc) {
-//		if (ltype.dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
-//			throw std::runtime_error("mismatch array size ");
-//		}
-//	}
-//
-//	return TypeDefinition::match_type_array(ltype, rtype);
-//}
-
 bool Interpreter::match_array_dim(TypeDefinition ltype, TypeDefinition rtype) {
 	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
 	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
@@ -1723,45 +1690,36 @@ bool Interpreter::match_array_dim(TypeDefinition ltype, TypeDefinition rtype) {
 	return true;
 }
 
-//Variable* Interpreter::do_operation(const std::string& op, Variable* lvar, Variable* rvar, cp_int str_pos) {
-//	Value* lval = lvar->value;
-//	Value* rval = rvar->value;
-//	lvar->value = do_operation(op, lval, rval, false, str_pos);
-//	return lvar;
-//}
-
 Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr, cp_int str_pos) {
-	Type l_type = lval->type;
-	Type l_var_type = lval->ref ? lval->ref->type : l_type;
+	Type l_var_type = lval->ref ? lval->ref->type : lval->type;
+	Type l_type = is_undefined(lval->type) ? l_var_type : lval->type;
+	Type r_var_type = rval->ref ? rval->ref->type : rval->type;
 	Type r_type = rval->type;
-	Type r_var_type = rval->ref ? rval->ref->type : r_type;
-
-	auto value = new Value(Type::T_UNDEFINED);
 
 	if (is_void(r_type) && op == "=") {
-		value->set_null();
-		return value;
+		lval->set_null();
+		return lval;
 	}
 
 	if (is_void(l_type) && op == "=") {
-		value->copy_from(rval);
-		return value;
+		lval->copy_from(rval);
+		return lval;
 	}
 
 	if ((is_void(l_type) || is_void(r_type))
 		&& Token::is_equality_op(op)) {
 
-		value->set((cp_bool)((op == "==") ?
+		lval->set((cp_bool)((op == "==") ?
 			match_type(l_type, r_type)
 			: !match_type(l_type, r_type)));
 
-		return value;
+		return lval;
 	}
 
 	switch (r_type) {
 	case Type::T_BOOL: {
 		if (is_any(l_var_type) && op == "=") {
-			value->set(rval->b);
+			lval->set(rval->b);
 			break;
 		}
 
@@ -1770,19 +1728,19 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (op == "=") {
-			value->set(rval->b);
+			lval->set(rval->b);
 		}
 		else if (op == "and") {
-			value->set(lval->b && rval->b);
+			lval->set(lval->b && rval->b);
 		}
 		else if (op == "or") {
-			value->set(lval->b || rval->b);
+			lval->set(lval->b || rval->b);
 		}
 		else if (op == "==") {
-			value->set(lval->b == rval->b);
+			lval->set(lval->b == rval->b);
 		}
 		else if (op == "!=") {
-			value->set(lval->b != rval->b);
+			lval->set(lval->b != rval->b);
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, l_type, r_type);
@@ -1792,20 +1750,20 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	}
 	case Type::T_INT: {
 		if (is_any(l_var_type) && op == "=") {
-			value->set(rval->i);
+			lval->set(rval->i);
 			break;
 		}
 
 		if (is_expr
 			&& is_numeric(l_type)
 			&& op == "<=>") {
-			value->set(do_spaceship_operation(op, lval, rval));
+			lval->set(do_spaceship_operation(op, lval, rval));
 		}
 
 		if (is_expr
 			&& is_numeric(l_type)
 			&& Token::is_relational_op(op)) {
-			value->set(do_relational_operation(op, lval, rval));
+			lval->set(do_relational_operation(op, lval, rval));
 
 			break;
 		}
@@ -1816,20 +1774,20 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			cp_float l = is_float(lval->type) ? lval->f : lval->i;
 			cp_float r = is_float(rval->type) ? rval->f : rval->i;
 
-			value->set((cp_bool)(op == "==" ?
+			lval->set((cp_bool)(op == "==" ?
 				l == r : l != l));
 
 			break;
 		}
 
 		if (is_float(l_type) && is_any(l_var_type)) {
-			value->set(do_operation(lval->f, cp_float(rval->i), op));
+			lval->set(do_operation(lval->f, cp_float(rval->i), op));
 		}
 		else if (is_int(l_type) && is_any(l_var_type) && !Token::is_int_ex_op(op)) {
-			value->set(do_operation(cp_float(lval->i), cp_float(rval->i), op));
+			lval->set(do_operation(cp_float(lval->i), cp_float(rval->i), op));
 		}
 		else if (is_int(l_type)) {
-			value->set(do_operation(lval->i, rval->i, op));
+			lval->set(do_operation(lval->i, rval->i, op));
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, l_type, r_type);
@@ -1839,20 +1797,20 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	}
 	case Type::T_FLOAT: {
 		if (is_any(l_var_type) && op == "=") {
-			value->set(rval->f);
+			lval->set(rval->f);
 			break;
 		}
 
 		if (is_expr
 			&& is_numeric(l_type)
 			&& op == "<=>") {
-			value->set(do_spaceship_operation(op, lval, rval));
+			lval->set(do_spaceship_operation(op, lval, rval));
 		}
 
 		if (is_expr
 			&& is_numeric(l_type)
 			&& Token::is_relational_op(op)) {
-			value->set(do_relational_operation(op, lval, rval));
+			lval->set(do_relational_operation(op, lval, rval));
 
 			break;
 		}
@@ -1863,17 +1821,17 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			cp_float l = is_float(lval->type) ? lval->f : lval->i;
 			cp_float r = is_float(rval->type) ? rval->f : rval->i;
 
-			value->set((cp_bool)(op == "==" ?
+			lval->set((cp_bool)(op == "==" ?
 				l == r : l != l));
 
 			break;
 		}
 
 		if (is_float(l_type)) {
-			value->set(do_operation(lval->f, rval->f, op));
+			lval->set(do_operation(lval->f, rval->f, op));
 		}
 		else if (is_int(l_type)) {
-			value->set(do_operation(cp_float(lval->i), rval->f, op));
+			lval->set(do_operation(cp_float(lval->i), rval->f, op));
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, l_type, r_type);
@@ -1883,14 +1841,14 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	}
 	case Type::T_CHAR: {
 		if (is_any(l_var_type) && op == "=" && !has_string_access) {
-			value->set(rval->c);
+			lval->set(rval->c);
 			break;
 		}
 
 		if (is_expr
 			&& is_char(l_type)
 			&& Token::is_equality_op(op)) {
-			value->set((cp_bool)(op == "==" ?
+			lval->set((cp_bool)(op == "==" ?
 				lval->c == rval->c
 				: lval->c != lval->c));
 
@@ -1904,10 +1862,10 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 				}
 				has_string_access = false;
 				lval->s[str_pos] = rval->c;
-				value->set(lval->s);
+				lval->set(lval->s);
 			}
 			else {
-				value->set(do_operation(lval->s, std::string{ rval->c }, op));
+				lval->set(do_operation(lval->s, std::string{ rval->c }, op));
 			}
 		}
 		else if (is_char(l_type)) {
@@ -1915,14 +1873,14 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 				ExceptionHandler::throw_operation_err(op, l_type, r_type);
 			}
 
-			value->set(rval->c);
+			lval->set(rval->c);
 		}
 		else if (is_any(l_var_type)) {
 			if (op != "=") {
 				ExceptionHandler::throw_operation_err(op, l_type, r_type);
 			}
 
-			value->set(rval->c);
+			lval->set(rval->c);
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, l_type, r_type);
@@ -1932,14 +1890,14 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	}
 	case Type::T_STRING: {
 		if (is_any(l_var_type) && op == "=") {
-			value->set(rval->s);
+			lval->set(rval->s);
 			break;
 		}
 
 		if (is_expr
 			&& is_string(l_type)
 			&& Token::is_equality_op(op)) {
-			value->set((cp_bool)(op == "==" ?
+			lval->set((cp_bool)(op == "==" ?
 				lval->s == rval->s
 				: lval->s != rval->s));
 
@@ -1947,10 +1905,10 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (is_string(l_type)) {
-			value->set(do_operation(lval->s, rval->s, op));
+			lval->set(do_operation(lval->s, rval->s, op));
 		}
 		else if (is_expr && is_char(l_type)) {
-			value->set(do_operation(cp_string{ lval->c }, rval->s, op));
+			lval->set(do_operation(cp_string{ lval->c }, rval->s, op));
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, l_type, r_type);
@@ -1960,14 +1918,14 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	}
 	case Type::T_ARRAY: {
 		if (is_any(l_var_type) && op == "=") {
-			value->set(rval->arr, lval->array_type);
+			lval->set(rval->arr, lval->array_type);
 			break;
 		}
 
 		if (is_expr
 			&& is_array(l_type)
 			&& Token::is_equality_op(op)) {
-			value->set((cp_bool)(op == "==" ?
+			lval->set((cp_bool)(op == "==" ?
 				equals_value(lval, rval)
 				: !equals_value(lval, rval)));
 
@@ -1983,20 +1941,20 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
 
-		value->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
+		lval->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
 
 		break;
 	}
 	case Type::T_STRUCT: {
 		if (is_any(l_var_type) && op == "=") {
-			value->set(rval->str);
+			lval->set(rval->str);
 			break;
 		}
 
 		if (is_expr
 			&& is_struct(l_type)
 			&& Token::is_equality_op(op)) {
-			value->set((cp_bool)(op == "==" ?
+			lval->set((cp_bool)(op == "==" ?
 				equals_value(lval, rval)
 				: !equals_value(lval, rval)));
 
@@ -2007,13 +1965,13 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
 
-		value->set(rval->str);
+		lval->set(rval->str);
 
 		break;
 	}
 	case Type::T_FUNCTION: {
 		if (is_any(l_var_type) && op == "=") {
-			value->set(rval->str);
+			lval->set(rval->str);
 			break;
 		}
 
@@ -2021,7 +1979,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
 
-		value->set(rval->fun);
+		lval->set(rval->fun);
 
 		break;
 	}
@@ -2030,7 +1988,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 
 	}
 
-	return value;
+	return lval;
 }
 
 cp_bool Interpreter::do_relational_operation(const std::string& op, Value* lval, Value* rval) {
@@ -2281,7 +2239,6 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 
 	current_function_defined_parameters.pop();
 	current_function_calling_arguments.pop();
-	//current_function_return_type.pop();
 
 	builtin_functions[identifier]();
 	builtin_arguments.clear();

@@ -151,7 +151,8 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		astnode->row, astnode->col);
 	new_value->ref = new_var;
 
-	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, current_expression, match_array_dim_ptr)) {
+	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, current_expression, match_array_dim_ptr)
+		&& !is_undefined(current_expression.type)) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
 
@@ -743,7 +744,7 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 		VariableDefinition var_type_struct = type_struct.variables[expr.first];
 		expr.second->accept(this);
 
-		if (!TypeDefinition::is_any_or_match_type(nullptr, var_type_struct, nullptr, current_expression, match_array_dim_ptr)) {
+		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct, nullptr, current_expression, match_array_dim_ptr)) {
 			ExceptionHandler::throw_struct_type_err(astnode->type_name, var_type_struct.type);
 		}
 	}
@@ -1067,16 +1068,16 @@ SemanticScope* SemanticAnalyser::get_inner_most_function_scope(const std::string
 	return scopes[nmspace][i];
 }
 
-TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, bool is_expr) {
-	Type l_type = ltype.type;
-	Type l_var_type = lvtype.type;
-	Type r_type = rtype.type;
-	Type r_var_type = rvtype ? rvtype->type : rtype.type;
+TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinition lvar, TypeDefinition lvalue, TypeDefinition* rvar, TypeDefinition rvalue, bool is_expr) {
+	Type l_var_type = lvar.type;
+	Type l_type = is_undefined(lvalue.type) ? l_var_type : lvalue.type;
+	Type r_var_type = rvar ? rvar->type : rvalue.type;
+	Type r_type = rvalue.type;
 
 	if ((is_any(l_var_type) || is_any(r_var_type)
 		|| is_any(l_type) || is_any(r_type)
 		|| is_void(r_type)) && op == "=") {
-		return rtype;
+		return rvalue;
 	}
 
 	if ((is_void(l_type) || is_void(r_type))
@@ -1089,10 +1090,10 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 			return TypeDefinition::get_basic(Type::T_BOOL);
 		}
 		return is_any(r_type) ?
-					!rvtype || is_any(r_var_type) ?
-						is_any(l_type) ? lvtype : ltype
-						: *rvtype
-					: rtype;
+					!rvar || is_any(r_var_type) ?
+						is_any(l_type) ? lvar : lvalue
+						: *rvar
+					: rvalue;
 	}
 
 	switch (r_type) {
@@ -1160,7 +1161,7 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 		break;
 	}
 	case Type::T_ARRAY: {
-		if (!TypeDefinition::match_type_array(ltype, rtype, match_array_dim_ptr)
+		if (!TypeDefinition::match_type_array(lvalue, rvalue, match_array_dim_ptr)
 			|| (!Token::is_collection_op(op)
 			&& !Token::is_equality_op(op))) {
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
@@ -1191,7 +1192,7 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 		return TypeDefinition::get_basic(Type::T_BOOL);
 	}
 
-	return rtype;
+	return rvalue;
 }
 
 bool SemanticAnalyser::match_array_dim(TypeDefinition ltype, TypeDefinition rtype) {
