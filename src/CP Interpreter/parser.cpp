@@ -74,7 +74,7 @@ ASTNode* Parser::parse_program_statement() {
 		return parse_using_statement();
 	case TOK_AS:
 		return parse_as_namespace_statement();
-	case TOK_DEF:
+	case TOK_FUN:
 		return parse_function_statement();
 	default:
 		consume_semicolon = true;
@@ -981,7 +981,7 @@ ASTExprNode* Parser::parse_factor() {
 	case TOK_IDENTIFIER:
 		return parse_identifier_expression();
 
-	case TOK_DEF:
+	case TOK_FUN:
 		return parse_function_expression();
 
 		// subexpression case

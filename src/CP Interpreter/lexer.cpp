@@ -161,8 +161,8 @@ Token Lexer::process_identifier() {
 	else if (identifier == "struct") {
 		type = TOK_STRUCT;
 	}
-	else if (identifier == "def") {
-		type = TOK_DEF;
+	else if (identifier == "fun") {
+		type = TOK_FUN;
 	}
 	else if (identifier == "this") {
 		type = TOK_THIS;
