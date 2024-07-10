@@ -407,11 +407,12 @@ namespace parser {
 	public:
 		std::string identifier;
 		std::string nmspace;
-		std::vector<ASTExprNode*> access_vector;
+		std::vector<Identifier> identifier_vector;
 		std::vector<ASTExprNode*> parameters;
 
-		ASTFunctionCallNode(const std::string& identifier, const std::string& nmspace, std::vector<ASTExprNode*>&& access_vector,
-			std::vector<ASTExprNode*>&& parameters, unsigned int row, unsigned int col);
+		ASTFunctionCallNode(const std::string& nmspace,
+			const std::vector<Identifier>& identifier_vector,
+			const std::vector<ASTExprNode*>& parameters, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
 		virtual long long hash(visitor::Visitor*) override;

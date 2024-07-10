@@ -672,7 +672,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition(const std::string& 
 		block = parse_block();
 	}
 	else {
-		if (current_token.type == TOK_COMMA) {
+		if (current_token.type != TOK_SEMICOLON) {
 			throw std::runtime_error(msg_header() + "expected { or ;");
 		}
 	}
@@ -1057,7 +1057,7 @@ ASTNode* Parser::parse_identifier_statement() {
 ASTFunctionCallNode* Parser::parse_function_call_node(ASTIdentifierNode* idnode) {
 	std::string identifier = std::move(idnode->identifier_vector[0].identifier);
 	std::string nmspace = std::move(idnode->nmspace);
-	std::vector<ASTExprNode*> access_vector = std::vector<ASTExprNode*>();
+	auto identifier_vector = std::vector<Identifier>();
 	auto* parameters = new std::vector<ASTExprNode*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
@@ -1073,12 +1073,24 @@ ASTFunctionCallNode* Parser::parse_function_call_node(ASTIdentifierNode* idnode)
 
 	check_current_token(TOK_RIGHT_BRACKET);
 
+	Identifier id;
 	if (next_token.type == TOK_LEFT_BRACE) {
-		consume_token();
-		access_vector = parse_dimension_vector();
+		id = parse_identifier();
+		id.identifier = identifier;
+	}
+	else {
+		id = Identifier(identifier);
 	}
 
-	return new ASTFunctionCallNode(identifier, nmspace, std::move(access_vector), std::move(*parameters), row, col);
+	if (next_token.type == TOK_DOT) {
+		consume_token();
+		consume_token();
+		identifier_vector = parse_identifier_vector();
+	}
+
+	identifier_vector.emplace(identifier_vector.begin(), id);
+
+	return new ASTFunctionCallNode(nmspace, identifier_vector, *parameters, row, col);
 }
 
 ASTUnaryExprNode* Parser::parse_increment_expression(ASTIdentifierNode* identifier) {

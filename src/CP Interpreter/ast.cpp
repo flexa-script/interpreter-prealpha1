@@ -137,9 +137,11 @@ ASTTernaryNode::ASTTernaryNode(ASTExprNode* condition, ASTExprNode* value_if_tru
 ASTInNode::ASTInNode(ASTExprNode* value, ASTExprNode* collection, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), value(value), collection(collection) {}
 
-ASTFunctionCallNode::ASTFunctionCallNode(const std::string& identifier, const std::string& nmspace, std::vector<ASTExprNode*>&& access_vector,
-	std::vector<ASTExprNode*>&& parameters, unsigned int row, unsigned int col)
-	: ASTExprNode(row, col), identifier(identifier), nmspace(nmspace), access_vector(std::move(access_vector)), parameters(std::move(parameters)) {}
+ASTFunctionCallNode::ASTFunctionCallNode(const std::string& nmspace,
+	const std::vector<Identifier>& identifier_vector,
+	const std::vector<ASTExprNode*>& parameters, unsigned int row, unsigned int col)
+	: ASTExprNode(row, col), identifier(identifier_vector[0].identifier),
+	nmspace(nmspace), identifier_vector(identifier_vector), parameters(parameters) {}
 
 ASTTypeParseNode::ASTTypeParseNode(Type type, ASTExprNode* expr, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), type(type), expr(expr) {}
