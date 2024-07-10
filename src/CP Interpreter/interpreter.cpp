@@ -111,9 +111,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 
 	auto new_value = new Value(current_expression_value);
 
-	//auto astnode_type = is_undefined(astnode->type) ? Type::T_ANY : astnode->type;
-	//auto astnode_array_type = is_undefined(astnode->array_type) && astnode->dim.size() > 0 ? Type::T_ANY : astnode->array_type;
-	auto astnode_type_name = astnode->type_name.empty() ? new_value->type_name : astnode->type_name;
+	auto& astnode_type_name = astnode->type_name.empty() ? new_value->type_name : astnode->type_name;
 
 	auto new_var = new Variable(astnode->type,
 		astnode->array_type, astnode->dim,
