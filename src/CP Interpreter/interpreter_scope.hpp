@@ -42,17 +42,6 @@ namespace visitor {
 		bool already_declared_function(std::string, std::vector<visitor::TypeDefinition>);
 		bool already_declared_function_name(std::string identifier);
 
-		//Value* declare_empty_variable(std::string identifier, parser::Type type, parser::Type empty_type);
-		//Value* declare_empty_struct_variable(std::string identifier, std::string type_name, parser::Type empty_type);
-		//Value* declare_variable(std::string identifier, parser::Type type, cp_bool);
-		//Value* declare_variable(std::string identifier, parser::Type type, cp_int);
-		//Value* declare_variable(std::string identifier, parser::Type type, cp_float);
-		//Value* declare_variable(std::string identifier, parser::Type type, cp_char);
-		//Value* declare_variable(std::string identifier, parser::Type type, cp_string);
-		//Value* declare_variable(std::string identifier, parser::Type type, cp_array, parser::Type arr_type);
-		//Value* declare_variable(std::string identifier, parser::Type type, cp_struct*);
-		//Value* declare_variable(std::string identifier, parser::Type type, cp_function);
-		//Value* declare_value(std::string, Value*);
 		Variable* declare_variable(std::string, Variable*);
 
 		void declare_function(std::string identifier, interpreter_parameter_list_t variables, parser::ASTBlockNode* block, visitor::TypeDefinition type);
