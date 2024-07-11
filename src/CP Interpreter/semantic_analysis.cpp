@@ -166,7 +166,7 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		throw std::runtime_error("expected assignment operator, but found '" + astnode->op + "'");
 	}
 
-	const auto& identifier = astnode->identifier_vector[0].identifier;
+	const auto& identifier = astnode->identifier;
 	const auto& nmspace = get_namespace(astnode->nmspace);
 	SemanticScope* curr_scope;
 	try {
@@ -196,7 +196,7 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		throw std::runtime_error("'" + identifier + "' constant being reassigned");
 	}
 
-	identifier_call_name = astnode->identifier_vector[0].identifier;
+	identifier_call_name = astnode->identifier;
 	astnode->expr->accept(this);
 	identifier_call_name = "";
 	auto assignment_expr = current_expression;
@@ -744,7 +744,8 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 		VariableDefinition var_type_struct = type_struct.variables[expr.first];
 		expr.second->accept(this);
 
-		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct, nullptr, current_expression, match_array_dim_ptr)) {
+		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct,
+			nullptr, current_expression, match_array_dim_ptr)) {
 			ExceptionHandler::throw_struct_type_err(astnode->type_name, var_type_struct.type);
 		}
 	}
@@ -758,58 +759,58 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	const auto& identifier = astnode->identifier_vector[0].identifier;
 	SemanticScope* curr_scope;
-
 	const auto& nmspace = get_namespace(astnode->nmspace);
 	try {
-		curr_scope = get_inner_most_variable_scope(nmspace, identifier);
+		curr_scope = get_inner_most_variable_scope(nmspace, astnode->identifier);
 	}
 	catch (...) {
 		current_expression = SemanticValue();
-		if (identifier == "bool") {
+		if (astnode->identifier == "bool") {
 			current_expression.type = Type::T_BOOL;
 			return;
 		}
-		else if (identifier == "int") {
+		else if (astnode->identifier == "int") {
 			current_expression.type = Type::T_INT;
 			return;
 		}
-		else if (identifier == "float") {
+		else if (astnode->identifier == "float") {
 			current_expression.type = Type::T_FLOAT;
 			return;
 		}
-		else if (identifier == "char") {
+		else if (astnode->identifier == "char") {
 			current_expression.type = Type::T_CHAR;
 			return;
 		}
-		else if (identifier == "string") {
+		else if (astnode->identifier == "string") {
 			current_expression.type = Type::T_STRING;
 			return;
 		}
 		try {
-			curr_scope = get_inner_most_struct_definition_scope(nmspace, identifier);
+			curr_scope = get_inner_most_struct_definition_scope(
+				nmspace, astnode->identifier);
 			current_expression.type = Type::T_STRUCT;
 			return;
 		}
 		catch (...) {
 			try {
-				curr_scope = get_inner_most_function_scope(nmspace, identifier, std::vector<TypeDefinition>());
+				curr_scope = get_inner_most_function_scope(nmspace,
+					astnode->identifier, std::vector<TypeDefinition>());
 				current_expression.type = Type::T_FUNCTION;
 				return;
 			}
 			catch (...) {
-				throw std::runtime_error("identifier '" + identifier +
+				throw std::runtime_error("identifier '" + astnode->identifier +
 					"' was not declared");
 			}
 		}
 	}
 
-	auto declared_variable = curr_scope->find_declared_variable(identifier);
+	auto declared_variable = curr_scope->find_declared_variable(astnode->identifier);
 	auto variable_expr = declared_variable->value;
 
 	if (is_undefined(variable_expr->type)) {
-		throw std::runtime_error("variable '" + identifier + "' is undefined");
+		throw std::runtime_error("variable '" + astnode->identifier + "' is undefined");
 	}
 
 	current_expression = *variable_expr;

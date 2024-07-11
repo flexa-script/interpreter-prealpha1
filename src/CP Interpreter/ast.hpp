@@ -96,8 +96,9 @@ namespace parser {
 
 	class ASTAssignmentNode : public ASTStatementNode {
 	public:
-		std::vector<Identifier> identifier_vector;
+		std::string identifier;
 		std::string nmspace;
+		std::vector<Identifier> identifier_vector;
 		std::string op;
 		ASTExprNode* expr;
 
@@ -371,8 +372,9 @@ namespace parser {
 
 	class ASTIdentifierNode : public ASTExprNode {
 	public:
-		std::vector<Identifier> identifier_vector;
+		std::string identifier;
 		std::string nmspace;
+		std::vector<Identifier> identifier_vector;
 
 		explicit ASTIdentifierNode(std::vector<Identifier>&& identifier_vector, std::string nmspace, unsigned int row, unsigned int col);
 

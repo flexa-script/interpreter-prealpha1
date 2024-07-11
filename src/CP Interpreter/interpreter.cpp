@@ -133,16 +133,16 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	InterpreterScope* astscope;
 	try {
 		const auto& nmspace = get_namespace(astnode->nmspace);
-		astscope = get_inner_most_variable_scope(nmspace, astnode->identifier_vector[0].identifier);
+		astscope = get_inner_most_variable_scope(nmspace, astnode->identifier);
 	}
 	catch (std::exception ex) {
 		throw std::runtime_error(ex.what());
 	}
 
-	Variable* variable = astscope->find_declared_variable(astnode->identifier_vector[0].identifier);
+	Variable* variable = astscope->find_declared_variable(astnode->identifier);
 	Value* value = access_value(astscope, variable->value, astnode->identifier_vector);
 
-	identifier_call_name = astnode->identifier_vector[0].identifier;
+	identifier_call_name = astnode->identifier;
 	astnode->expr->accept(this);
 	identifier_call_name = "";
 
@@ -150,7 +150,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		if (!TypeDefinition::is_any_or_match_type(variable, *variable, nullptr, current_expression_value, match_array_dim_ptr)) {
 			ExceptionHandler::throw_mismatched_type_err(variable->type, current_expression_value.type);
 		}
-		astscope->declare_variable(astnode->identifier_vector[0].identifier, current_expression_value.ref);
+		astscope->declare_variable(astnode->identifier, current_expression_value.ref);
 		return;
 	}
 
@@ -857,56 +857,55 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 void Interpreter::visit(ASTIdentifierNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	const auto& identifier = astnode->identifier_vector[0].identifier;
 	const auto& nmspace = get_namespace(astnode->nmspace);
 	InterpreterScope* id_scope;
 	try {
-		id_scope = get_inner_most_variable_scope(nmspace, identifier);
+		id_scope = get_inner_most_variable_scope(nmspace, astnode->identifier);
 	}
 	catch (...) {
 		const auto& dim = astnode->identifier_vector[0].access_vector;
 		auto type = Type::T_UNDEFINED;
 		auto expression_value = new Value(Type::T_UNDEFINED);
 
-		if (identifier == "bool") {
+		if (astnode->identifier == "bool") {
 			type = Type::T_BOOL;
 		}
-		else if (identifier == "int") {
+		else if (astnode->identifier == "int") {
 			type = Type::T_INT;
 		}
-		else if (identifier == "float") {
+		else if (astnode->identifier == "float") {
 			type = Type::T_FLOAT;
 		}
-		else if (identifier == "char") {
+		else if (astnode->identifier == "char") {
 			type = Type::T_CHAR;
 		}
-		else if (identifier == "string") {
+		else if (astnode->identifier == "string") {
 			type = Type::T_STRING;
 		}
 
 		if (is_undefined(type)) {
 			InterpreterScope* curr_scope;
 			try {
-				curr_scope = get_inner_most_struct_definition_scope(nmspace, identifier);
+				curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->identifier);
 			}
 			catch (...) {
 				try {
-					curr_scope = get_inner_most_function_scope(nmspace, identifier, std::vector<TypeDefinition>());
+					curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, std::vector<TypeDefinition>());
 					auto fun = cp_function();
 					fun.first = curr_scope;
-					fun.second = identifier;
+					fun.second = astnode->identifier;
 					current_expression_value = Value(Type::T_FUNCTION);
 					current_expression_value.set(fun);
 					return;
 				}
 				catch (...) {
-					throw std::runtime_error("identifier '" + identifier + "' was not declared");
+					throw std::runtime_error("identifier '" + astnode->identifier + "' was not declared");
 				}
 			}
 			type = Type::T_STRUCT;
 			auto str = new cp_struct();
 			std::get<0>(*str) = nmspace;
-			std::get<1>(*str) = identifier;
+			std::get<1>(*str) = astnode->identifier;
 			expression_value->set(str);
 		}
 

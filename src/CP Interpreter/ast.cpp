@@ -34,7 +34,7 @@ ASTDeclarationNode::ASTDeclarationNode(const std::string& identifier, Type type,
 
 ASTAssignmentNode::ASTAssignmentNode(std::vector<Identifier>&& identifier_vector, const std::string& nmspace,
 	const std::string& op, ASTExprNode* expr, unsigned int row, unsigned int col)
-	: ASTStatementNode(row, col),
+	: ASTStatementNode(row, col), identifier(identifier_vector[0].identifier),
 	identifier_vector(std::move(identifier_vector)), nmspace(nmspace), expr(expr), op(op) {}
 
 ASTReturnNode::ASTReturnNode(ASTExprNode* expr, unsigned int row, unsigned int col)
@@ -129,7 +129,8 @@ ASTUnaryExprNode::ASTUnaryExprNode(const std::string& unary_op, ASTExprNode* exp
 	: ASTExprNode(row, col), unary_op(unary_op), expr(expr) {}
 
 ASTIdentifierNode::ASTIdentifierNode(std::vector<Identifier>&& identifier_vector, std::string nmspace, unsigned int row, unsigned int col)
-	: ASTExprNode(row, col), identifier_vector(std::move(identifier_vector)), nmspace(nmspace) {}
+	: ASTExprNode(row, col), identifier(identifier_vector[0].identifier),
+	identifier_vector(std::move(identifier_vector)), nmspace(nmspace) {}
 
 ASTTernaryNode::ASTTernaryNode(ASTExprNode* condition, ASTExprNode* value_if_true, ASTExprNode* value_if_false, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), condition(condition), value_if_true(value_if_true), value_if_false(value_if_false) {}
