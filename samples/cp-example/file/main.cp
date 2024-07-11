@@ -1,28 +1,30 @@
-// //not working
-// struct Foo {
-// 	var bar: int;
-// };
-// fun foo() {
-// 	return Foo{bar=10};
-// }
-// print(foo().bar);
+//not working
+struct Foo {
+	var str: string;
+	var bar: int;
+};
+fun foo() {
+	return Foo{str="asda", bar=10};
+}
+println(foo().bar);
+println(foo().str);
+println(foo().str[0]);
 
-// // not working
-// fun arr() {
-// 	return {10,11,21};
-// }
-// print(arr()[1]);
+fun arr() {
+	return {10,11,21};
+}
+println(arr()[1]);
 
-// fun string_val(){
-// 	return "test";
-// }
-// print(string_val());
-// print(string_val()[1]); // not working
+fun string_val(){
+	return "test";
+}
+println(string_val());
+println(string_val()[1]); // not working
 
-// not generating correct error
+// // not generating correct error
 // fun test();
 // test();
 
-var a;
-a = 10;
-println(a);
+// var a;
+// a = 10;
+// println(a);

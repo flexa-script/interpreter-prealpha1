@@ -193,7 +193,7 @@
 - [X] This does not always return the expected value, eg when its inside a function tha does not has in main file
 - [ ] If an statement is before include, it generate a semantic error
 - [ ] Assigning struct values on constructors is not checking types correctly
-- [ ] Function call strcut, string and array acessors is not working
+- [X] Function call strcut, string and array acessors is not working
 - [X] print({0,2} + {0,2}); is passing semantic analisys
 
 ## Errors

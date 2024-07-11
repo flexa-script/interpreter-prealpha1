@@ -36,6 +36,8 @@ namespace visitor {
 		std::string identifier_call_name;
 		std::string function_call_name;
 		std::string return_from_function_name;
+		std::stack<std::vector<TypeDefinition>> current_function_signature;
+		std::stack<std::vector<Identifier>> current_function_call_identifier_vector;
 		std::stack<std::string> current_function_nmspace;
 		std::stack<interpreter_parameter_list_t> current_function_defined_parameters;
 		std::stack<std::vector<Value*>> current_function_calling_arguments;

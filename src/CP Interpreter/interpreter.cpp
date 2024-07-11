@@ -172,6 +172,22 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 	auto& curr_func_ret_type = current_function_return_type.top();
 	astnode->expr->accept(this);
 
+	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, current_function_signature.top());
+	auto root = new Value(current_expression_value);
+	Value* value = access_value(func_scope, root, current_function_call_identifier_vector.top());
+	current_expression_value = *value;
+
+	if (current_expression_value.type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
+		has_string_access = false;
+		auto str = current_expression_value.s;
+		current_function_call_identifier_vector.top().back().access_vector[current_function_call_identifier_vector.top().back().access_vector.size() - 1]->accept(this);
+		auto pos = current_expression_value.i;
+
+		auto char_value = Value(Type::T_CHAR);
+		char_value.set(cp_char(str[pos]));
+		current_expression_value = char_value;
+	}
+
 	if (!TypeDefinition::is_any_or_match_type(
 		&curr_func_ret_type,
 		curr_func_ret_type,
@@ -225,6 +241,8 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	function_call_name = astnode->identifier;
 
 	current_this_name.push(astnode->identifier);
+	current_function_signature.push(signature);
+	current_function_call_identifier_vector.push(astnode->identifier_vector);
 	current_function_nmspace.push(nmspace);
 	current_function_return_type.push(std::get<2>(declfun));
 	current_function_calling_arguments.push(function_arguments);
@@ -238,6 +256,8 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	}
 
 	current_function_return_type.pop();
+	current_function_call_identifier_vector.pop();
+	current_function_signature.pop();
 	current_function_nmspace.pop();
 	current_this_name.pop();
 
