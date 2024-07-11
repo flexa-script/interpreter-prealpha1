@@ -34,7 +34,7 @@
     - [X] Add rest parameters, like `def foo(...args: any)`
     - [X] Add optional parameters `def foo(arg: any = 10)`
     - [X] Add arrow function `def (arg): void {}`, `def (arg) {}`, `def () {}`
-    - [ ] struct access from function call
+    - [X] struct access from function call
 - [X] Add built in funcs:
     - [X] print:
         - [X] Improve to accept multiple values
@@ -67,7 +67,7 @@
     - [X] do while
 - [ ] Add expression:
     - [ ] add: multiline string using ``
-    - [ ] add: runtime type checking for any types
+    - [X] add: runtime type checking for any types
         - [X] assign operation
         - [X] expressions
         - [X] unify operations
@@ -96,7 +96,7 @@
             - [ ] `is_any`: returns if a variable is any
             - [ ] `is_array`: returns if a variable is array
             - [ ] `is_struct`: returns if a variable is struct
-    - [ ] add: bitwise operators:
+    - [X] add: bitwise operators:
         - [x] &   bitwise AND
         - [x] |   bitwise inclusive OR
         - [x] ^   bitwise XOR (exclusive OR)
@@ -116,17 +116,16 @@
 - [X] Flex function return, remove mandatory type definition in return
 - [X] Remove struct as bool in expression and change this type of verification to void value comparation (eg: var == null)
 - [X] Move function body parser to caller node (as interpreter), to check parameters of each caller
-- [ ] Improve error system (based on C++)
+- [ ] Improve error system messages
 - [X] Improve REPL:
     - [X] Now expressions can be executed in statements, dont need more to execute expression parser directly
 - [X] Add a default interface to implements built in functions
 - [X] Add a default interface to implements core libs
 - [ ] General otimizations:
     - [ ] Remove duplicate codes
-        - [ ] Organize semantic duplicated checks
-    - [ ] Implement detructors
-    - [X] Move some verifications to semantic analisys:
-        - [X] Array size check from interpreter
+        - [X] Organize semantic duplicated checks
+        - [ ] ...
+    - [X] Implement detructors
 - [ ] Projects to implement in CP:
     - [ ] https://github.com/drmenguin/minilang-interpreter
     - [ ] https://github.com/univesity-projects/sort-algorithms

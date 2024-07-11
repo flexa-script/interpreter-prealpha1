@@ -1,12 +1,9 @@
-//C:\Users\Carlos\repos\cp-lang\interpreter\samples\cp-example\file\2048.cp
-
 using cp.std.random;
-using cp.std.print;
 
 const PRINT_TOP_LINE = "+---------------------------------------+";
 const PRINT_BLK_LINE = "                                       ";
 
-def print_board(board[4][4]: int) {
+fun print_board(board[4][4]: int) {
     system("cls");
     print(PRINT_TOP_LINE);
     for (var i: int = 0; i < 4; i++) {
@@ -20,7 +17,7 @@ def print_board(board[4][4]: int) {
     print(PRINT_TOP_LINE);
 }
 
-def moves_up(board[4][4]: int) {
+fun moves_up(board[4][4]: int) {
     for (var j: int = 0; j < 4; j++) {
         // moves everything close together
         for (var l: int = 0; l < 3; l++) {
@@ -56,7 +53,7 @@ def moves_up(board[4][4]: int) {
     }
 }
 
-def moves_down(board[4][4]: int) {
+fun moves_down(board[4][4]: int) {
     for (var j: int = 0; j < 4; j++) {
         // moves everything close together
         for (var l: int = 0; l < 3; l++) {
@@ -92,7 +89,7 @@ def moves_down(board[4][4]: int) {
     }
 }
 
-def moves_left(board[4][4]: int) {
+fun moves_left(board[4][4]: int) {
     for (var i: int = 0; i < 4; i++) {
         // moves everything close together
         for (var l: int = 0; l < 3; l++) {
@@ -128,7 +125,7 @@ def moves_left(board[4][4]: int) {
     }
 }
 
-def moves_right(board[4][4]: int) {
+fun moves_right(board[4][4]: int) {
     for (var i: int = 0; i < 4; i++) {
         // moves everything close together
         for (var l: int = 0; l < 3; l++) {
@@ -164,7 +161,7 @@ def moves_right(board[4][4]: int) {
     }
 }
 
-def is_valid_move(v: bool, board[4][4]: int, boardcopy[4][4]: int): bool {
+fun is_valid_move(v: bool, board[4][4]: int, boardcopy[4][4]: int): bool {
     for (var i: int = 0; i < 4; i++) {
         for (var j: int = 0; j < 4; j++) {
             if (board[i][j] != boardcopy[i][j]) {
@@ -176,7 +173,7 @@ def is_valid_move(v: bool, board[4][4]: int, boardcopy[4][4]: int): bool {
     return v;
 }
 
-def counts_zero(board[4][4]: int): int {
+fun counts_zero(board[4][4]: int): int {
     var n: int = 0;
     for (var i: int = 0; i < 4; i++) {
         for (var j: int = 0; j < 4; j++) {
@@ -187,7 +184,7 @@ def counts_zero(board[4][4]: int): int {
     return n;
 }
 
-def spawn_random(n: int, board[4][4]: int) {
+fun spawn_random(n: int, board[4][4]: int) {
     var spawn: int = 1 + (cp::randi() % n);
     var p: int = 0;
     var spawn2: bool = true;
@@ -204,7 +201,7 @@ def spawn_random(n: int, board[4][4]: int) {
     }
 }
 
-def is_end_game(c1: bool, c2: bool, board[4][4]: int): bool {
+fun is_end_game(c1: bool, c2: bool, board[4][4]: int): bool {
     c1 = false;
     c2 = true;
     for (var i: int = 0; i < 4; i++) {
@@ -285,3 +282,4 @@ if (this == "main") {
     }
 
 }
+

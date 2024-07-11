@@ -28,3 +28,5 @@ println(string_val()[1]); // not working
 // var a;
 // a = 10;
 // println(a);
+
+C:\Users\Carlos\repos\cp-lang\interpreter\samples\cp-example\file\2048.cp
