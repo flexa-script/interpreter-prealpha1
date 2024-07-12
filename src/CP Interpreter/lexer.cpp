@@ -37,6 +37,10 @@ void Lexer::tokenize() {
 			start_col = current_col;
 			tokens.push_back(process_string());
 		}
+		else if (current_char == '`') {
+			start_col = current_col;
+			tokens.push_back(process_multiline_string());
+		}
 		else if (std::isalpha(current_char) || current_char == '_') {
 			start_col = current_col;
 			tokens.push_back(process_identifier());
@@ -86,12 +90,49 @@ Token Lexer::process_string() {
 	advance();
 
 	do {
+		if (current_char == '\n') {
+			throw std::runtime_error(msg_header() + "missing terminating '\"' character");
+		}
+
 		if (!spec) {
 			if (current_char == '\\') {
 				spec = true;
 				str += current_char;
 			}
 			else if (current_char == '"') {
+				break;
+			}
+			else {
+				str += current_char;
+			}
+		}
+		else {
+			str += current_char;
+			spec = false;
+		}
+		advance();
+	} while (has_next());
+
+	str += current_char;
+	advance();
+
+	return Token(TokenType::TOK_STRING_LITERAL, str, current_row, start_col);
+}
+
+Token Lexer::process_multiline_string() {
+	std::string str;
+	bool spec = false;
+
+	str += current_char;
+	advance();
+
+	do {
+		if (!spec) {
+			if (current_char == '\\') {
+				spec = true;
+				str += current_char;
+			}
+			else if (current_char == '`') {
 				break;
 			}
 			else {
@@ -123,7 +164,7 @@ Token Lexer::process_char() {
 	chr += current_char;
 	advance();
 	if (has_next() && current_char != '\'') {
-		throw std::runtime_error(msg_header() + "expected \"'\" closing character constant");
+		throw std::runtime_error(msg_header() + "missing terminating ' character");
 	}
 	chr += current_char;
 	advance();

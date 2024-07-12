@@ -38,6 +38,7 @@ namespace lexer {
         Token process_number();
         Token process_char();
         Token process_string();
+        Token process_multiline_string();
         Token process_symbol();
         Token process_comment();
 

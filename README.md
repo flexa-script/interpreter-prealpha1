@@ -25,7 +25,7 @@
 - [X] Remove mandatory variable type definition
 - [X] Improve cp dependencies/libs loader
 - [X] Add string array-like accessor
-- [ ] Function improvements:
+- [X] Function improvements:
     - [X] Add void support to function
     - [X] Add void return
     - [X] Pass parameter by reference
@@ -63,7 +63,7 @@
     - [X] try catch throw
         - [X] Bring error header to a higher level
         - [X] add ... to ignore catch error
-        - [ ] add: throw a simple string as Exception to avoid Exception include `throw "string error";`, but how to get it in catch? maybe `[type, error]`?
+        - [ ] add: throw a simple string as Exception to avoid Exception include `throw "string error";`, and `[type, error]` in catch
     - [X] do while
 - [ ] Add expression:
     - [ ] add: multiline string using ``
@@ -124,7 +124,7 @@
 - [ ] General otimizations:
     - [ ] Remove duplicate codes
         - [X] Organize semantic duplicated checks
-        - [ ] ...
+        - [ ] ...?
     - [X] Implement detructors
 - [ ] Projects to implement in CP:
     - [ ] https://github.com/drmenguin/minilang-interpreter
