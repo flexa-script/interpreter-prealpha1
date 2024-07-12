@@ -712,17 +712,20 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_string>* astnode) {
 
 void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
+	cp_int arr_size = 0;
 
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
 		astnode->values.at(i)->accept(this);
-		auto new_val = new SemanticValue();
-		new_val->copy_from(&current_expression);
+		//auto new_val = new SemanticValue();
+		//new_val->copy_from(&current_expression);
+		++arr_size;
 	}
 
 	determine_array_type(astnode);
 	auto current_expression_array_type = current_expression.array_type;
 	current_expression = SemanticValue();
 	current_expression.array_type = current_expression_array_type;
+	current_expression.dim = std::vector<ASTExprNode*>{ new ASTLiteralNode<cp_int>(arr_size, astnode->row, astnode->col) };
 	current_expression.type = Type::T_ARRAY;
 }
 
@@ -1255,7 +1258,6 @@ void SemanticAnalyser::check_array_type(ASTExprNode* astnode, unsigned int row, 
 		current_expression.array_type = current_expression.type;
 	}
 	if (!match_type(current_expression.array_type, current_expression.type)) {
-		set_curr_pos(row, col);
 		throw std::runtime_error("mismatched type in array definition");
 	}
 	current_expression.type = aux_curr_type;
@@ -1367,7 +1369,6 @@ long long SemanticAnalyser::hash(ASTExprNode* astnode) {
 	case Type::T_STRING:
 		return 0;
 	default:
-		set_curr_pos(astnode->row, astnode->col);
 		throw std::runtime_error("cannot determine type");
 	}
 }
@@ -1399,7 +1400,6 @@ long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 		curr_scope = get_inner_most_variable_scope(nmspace, astnode->identifier_vector[0].identifier);
 	}
 	catch (...) {
-		set_curr_pos(astnode->row, astnode->col);
 		throw std::runtime_error("identifier '" + astnode->identifier_vector[0].identifier +
 			"' was not declared");
 	}
@@ -1416,7 +1416,6 @@ long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 	case Type::T_ANY:
 		return variable_expression->hash;
 	default:
-		set_curr_pos(astnode->row, astnode->col);
 		throw std::runtime_error("cannot determine type");
 	}
 

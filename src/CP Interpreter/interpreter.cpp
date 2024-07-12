@@ -827,7 +827,11 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 
 	value.set(arr, arr_t);
 
+	determine_array_type(astnode);
+	value.array_type = current_expression_value.array_type;
+
 	current_expression_value = value;
+	current_expression_value.dim = std::vector<ASTExprNode*>{ new ASTLiteralNode<cp_int>(arr.size(), astnode->row, astnode->col)};
 }
 
 void Interpreter::visit(ASTStructConstructorNode* astnode) {
@@ -1224,19 +1228,22 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 
 	if (astnode->image == "is_any") {
 		auto value = Value(Type::T_BOOL);
-		value.set(cp_bool(current_expression_value.ref && is_any(current_expression_value.ref->type)));
+		value.set(cp_bool(
+			(current_expression_value.ref
+				&& (is_any(current_expression_value.ref->type))
+				|| is_any(current_expression_value.ref->array_type))));
 		current_expression_value = value;
 		return;
 	}
 	else if (astnode->image == "is_array") {
 		auto value = Value(Type::T_BOOL);
-		value.set(cp_bool(is_array(current_expression_value.type)));
+		value.set(cp_bool(is_array(current_expression_value.type) || current_expression_value.dim.size() > 0));
 		current_expression_value = value;
 		return;
 	}
 	else if (astnode->image == "is_struct") {
 		auto value = Value(Type::T_BOOL);
-		value.set(cp_bool(is_struct(current_expression_value.type)));
+		value.set(cp_bool(is_struct(current_expression_value.type) || is_struct(current_expression_value.array_type)));
 		current_expression_value = value;
 		return;
 	}
@@ -1345,6 +1352,38 @@ bool Interpreter::equals_array(const cp_array& larr, const cp_array& rarr) {
 	}
 
 	return true;
+}
+
+void Interpreter::determine_array_type(ASTArrayConstructorNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
+	auto aux_curr_type = current_expression_value.type;
+	for (size_t i = 0; i < astnode->values.size(); ++i) {
+		astnode->values.at(i)->accept(this);
+
+		if (auto expr = dynamic_cast<ASTArrayConstructorNode*>(astnode->values.at(i))) {
+			determine_array_type(expr);
+		}
+		else {
+			check_array_type(astnode->values.at(i));
+		}
+	}
+	current_expression_value.type = aux_curr_type;
+}
+
+void Interpreter::check_array_type(ASTExprNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
+	auto aux_curr_type = current_expression_value.type;
+	astnode->accept(this);
+
+	if (is_any(current_expression_value.array_type) || is_undefined(current_expression_value.array_type) || is_void(current_expression_value.array_type)) {
+		current_expression_value.array_type = current_expression_value.type;
+	}
+	if (!match_type(current_expression_value.array_type, current_expression_value.type)) {
+		throw std::runtime_error("mismatched type in array definition");
+	}
+	current_expression_value.type = aux_curr_type;
 }
 
 InterpreterScope* Interpreter::get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier) {
