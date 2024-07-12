@@ -1222,6 +1222,25 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 
 	astnode->expr->accept(this);
 
+	if (astnode->image == "is_any") {
+		auto value = Value(Type::T_BOOL);
+		value.set(cp_bool(current_expression_value.ref && is_any(current_expression_value.ref->type)));
+		current_expression_value = value;
+		return;
+	}
+	else if (astnode->image == "is_array") {
+		auto value = Value(Type::T_BOOL);
+		value.set(cp_bool(is_array(current_expression_value.type)));
+		current_expression_value = value;
+		return;
+	}
+	else if (astnode->image == "is_struct") {
+		auto value = Value(Type::T_BOOL);
+		value.set(cp_bool(is_struct(current_expression_value.type)));
+		current_expression_value = value;
+		return;
+	}
+
 	auto curr_value = current_expression_value;
 	auto dim = std::vector<unsigned int>();
 	auto type = is_void(curr_value.type) ? curr_value.type : curr_value.type;

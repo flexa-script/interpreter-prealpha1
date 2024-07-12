@@ -93,9 +93,9 @@
             - [X] `typeof`: returns type of object
                 - [X] fix: add namespace to type name return
             - [X] `typeid`: returns hash of typeof
-            - [ ] `is_any`: returns if a variable is any
-            - [ ] `is_array`: returns if a variable is array
-            - [ ] `is_struct`: returns if a variable is struct
+            - [X] `is_any`: returns if a variable is any
+            - [X] `is_array`: returns if a variable is array
+            - [X] `is_struct`: returns if a variable is struct
     - [X] add: bitwise operators:
         - [x] &   bitwise AND
         - [x] |   bitwise inclusive OR
@@ -194,6 +194,7 @@
 - [ ] Assigning struct values on constructors is not checking types correctly
 - [X] Function call strcut, string and array acessors is not working
 - [X] print({0,2} + {0,2}); is passing semantic analisys
+- [ ] functions with no block are not checked (check if is builtin)
 
 ## Errors
 - Errors has CP prefix, eg. CP9999

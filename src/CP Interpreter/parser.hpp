@@ -90,8 +90,8 @@ namespace parser {
 		ASTArrayConstructorNode* parse_array_constructor_node();
 		ASTStructConstructorNode* parse_struct_constructor_node(ASTIdentifierNode* idnode);
 		ASTFunctionCallNode* parse_function_call_node(ASTIdentifierNode* idnode);
-		ASTTypeParseNode* parse_type_parse_node();
 		ASTThisNode* parse_this_node();
+		ASTTypeParseNode* parse_type_parse_node();
 		ASTTypingNode* parse_typing_node();
 
 		// special

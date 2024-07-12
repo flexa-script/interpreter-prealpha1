@@ -325,6 +325,9 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 		current_function.pop();
 	}
 	else {
+		if (!astnode->block) {
+			// todo: check if is builtin
+		}
 		scopes[nmspace].back()->declare_function(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
 			astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->row, astnode->row);
 	}
@@ -962,8 +965,11 @@ void SemanticAnalyser::visit(ASTTypingNode* astnode) {
 	if (astnode->image == "typeid") {
 		current_expression.type = Type::T_INT;
 	}
-	else {
+	else if (astnode->image == "typeof") {
 		current_expression.type = Type::T_STRING;
+	}
+	else {
+		current_expression.type = Type::T_BOOL;
 	}
 }
 
@@ -1091,10 +1097,10 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 			return TypeDefinition::get_basic(Type::T_BOOL);
 		}
 		return is_any(r_type) ?
-					!rvar || is_any(r_var_type) ?
-						is_any(l_type) ? lvar : lvalue
-						: *rvar
-					: rvalue;
+			!rvar || is_any(r_var_type) ?
+			is_any(l_type) ? lvar : lvalue
+			: *rvar
+			: rvalue;
 	}
 
 	switch (r_type) {
@@ -1125,7 +1131,7 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 			&& !Token::is_equality_op(op)) {
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
-		
+
 		break;
 	}
 	case Type::T_FLOAT: {
@@ -1153,9 +1159,9 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 	case Type::T_STRING: {
 		if ((!is_string(l_type)
 			|| (!Token::is_collection_op(op)
-			&& !Token::is_equality_op(op)))
+				&& !Token::is_equality_op(op)))
 			&& (is_expr && (!is_char(l_type)
-			|| !Token::is_expression_collection_op(op)))) {
+				|| !Token::is_expression_collection_op(op)))) {
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
 
@@ -1164,7 +1170,7 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 	case Type::T_ARRAY: {
 		if (!TypeDefinition::match_type_array(lvalue, rvalue, match_array_dim_ptr)
 			|| (!Token::is_collection_op(op)
-			&& !Token::is_equality_op(op))) {
+				&& !Token::is_equality_op(op))) {
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
 

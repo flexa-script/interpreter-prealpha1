@@ -254,6 +254,15 @@ Token Lexer::process_identifier() {
 	else if (identifier == "typeid") {
 		type = TOK_TYPEID;
 	}
+	else if (identifier == "is_any") {
+		type = TOK_IS_ANY;
+	}
+	else if (identifier == "is_array") {
+		type = TOK_IS_ARRAY;
+	}
+	else if (identifier == "is_struct") {
+		type = TOK_IS_STRUCT;
+	}
 	else if (identifier == "true" || identifier == "false") {
 		type = TOK_BOOL_LITERAL;
 	}

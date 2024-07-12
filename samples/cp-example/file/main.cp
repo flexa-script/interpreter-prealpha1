@@ -1,32 +1,17 @@
-//not working
-struct Foo {
-	var str: string;
-	var bar: int;
-};
-fun foo() {
-	return Foo{str="asda", bar=10};
-}
-println(foo().bar);
-println(foo().str);
-println(foo().str[0]);
+var a = 10;
 
-fun arr() {
-	return {10,11,21};
-}
-println(arr()[1]);
+println("is_any: ", is_any(a));
+println("is_array: ", is_array(a));
+println("is_struct: ", is_struct(a));
 
-fun string_val(){
-	return "test";
-}
-println(string_val());
-println(string_val()[1]); // not working
+var b: int = 10;
 
-// // not generating correct error
-// fun test();
-// test();
+println("is_any: ", is_any(b));
+println("is_array: ", is_array(b));
+println("is_struct: ", is_struct(b));
 
-// var a;
-// a = 10;
-// println(a);
+var c[3]: int = {10,9,8};
 
-C:\Users\Carlos\repos\cp-lang\interpreter\samples\cp-example\file\2048.cp
+println("is_any: ", is_any(c));
+println("is_array: ", is_array(c));
+println("is_struct: ", is_struct(c));
