@@ -38,11 +38,13 @@ namespace lexer {
         Token process_number();
         Token process_char();
         Token process_string();
-        Token process_multiline_string();
+        void process_multiline_string();
         Token process_symbol();
         Token process_comment();
 
         std::string msg_header();
+
+        static size_t find_mlv_closer(const std::string expr);
     };
 };
 

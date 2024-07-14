@@ -39,7 +39,7 @@ void Lexer::tokenize() {
 		}
 		else if (current_char == '`') {
 			start_col = current_col;
-			tokens.push_back(process_multiline_string());
+			process_multiline_string();
 		}
 		else if (std::isalpha(current_char) || current_char == '_') {
 			start_col = current_col;
@@ -119,11 +119,27 @@ Token Lexer::process_string() {
 	return Token(TokenType::TOK_STRING_LITERAL, str, current_row, start_col);
 }
 
-Token Lexer::process_multiline_string() {
+size_t Lexer::find_mlv_closer(const std::string expr) {
+	size_t level = 0;
+	for (size_t i = 0; i < expr.size(); ++i) {
+		if (level == 0 && expr[i] == '}') {
+			return i;
+		}
+		if (expr[i] == '{') {
+			++level;
+		}
+		if (expr[i] == '}') {
+			--level;
+		}
+	}
+	throw std::runtime_error("unterminated string literal");
+}
+
+void Lexer::process_multiline_string() {
 	std::string str;
 	bool spec = false;
 
-	str += current_char;
+	str = '"';
 	advance();
 
 	do {
@@ -134,6 +150,32 @@ Token Lexer::process_multiline_string() {
 			}
 			else if (current_char == '`') {
 				break;
+			}
+			else if (current_char == '$'
+				&& next_char == '{') {
+				str += '"';
+				tokens.push_back(Token(TokenType::TOK_STRING_LITERAL, str, current_row, start_col));
+				advance();
+				advance();
+				auto new_idx = current_index;
+				auto sub_src = source.substr(current_index);
+				auto lidx = find_mlv_closer(sub_src);
+				new_idx += lidx;
+				auto sub_lex = Lexer("", sub_src.substr(0, lidx));
+				tokens.push_back(Token(TOK_ADDITIVE_OP, "+", current_row, start_col));
+				tokens.push_back(Token(TOK_STRING_TYPE, "string", current_row, start_col));
+				tokens.push_back(Token(TOK_LEFT_BRACKET, "(", current_row, start_col));
+				for (auto t : sub_lex.tokens) {
+					if (t.type != TOK_EOF) {
+						tokens.push_back(t);
+					}
+				}
+				tokens.push_back(Token(TOK_RIGHT_BRACKET, ")", current_row, start_col));
+				tokens.push_back(Token(TOK_ADDITIVE_OP, "+", current_row, start_col));
+				while (current_index < new_idx) {
+					advance();
+				}
+				str = '"';
 			}
 			else {
 				str += current_char;
@@ -146,10 +188,11 @@ Token Lexer::process_multiline_string() {
 		advance();
 	} while (has_next());
 
-	str += current_char;
-	advance();
+	str += '"';
 
-	return Token(TokenType::TOK_STRING_LITERAL, str, current_row, start_col);
+	tokens.push_back(Token(TokenType::TOK_STRING_LITERAL, str, current_row, start_col));
+
+	advance();
 }
 
 Token Lexer::process_char() {

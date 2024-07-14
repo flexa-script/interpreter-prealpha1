@@ -66,7 +66,8 @@
         - [ ] add: throw a simple string as Exception to avoid Exception include `throw "string error";`, and `[type, error]` in catch
     - [X] do while
 - [ ] Add expression:
-    - [ ] add: multiline string using ``
+    - [X] add: multiline string using ``
+        - [X] add: expression inside `This is a expression ${10 + 5} inside`
     - [X] add: runtime type checking for any types
         - [X] assign operation
         - [X] expressions

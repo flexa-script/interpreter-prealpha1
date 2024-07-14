@@ -30,16 +30,27 @@ namespace axe {
 		return ltrim(rtrim(s));
 	}
 
-	std::string StringUtils::replace(std::string str, const std::string from, const std::string to) {
-		if (from.empty()) {
-			return str;
-		}
-		size_t start_pos = 0;
-		while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
-			str.replace(start_pos, from.length(), to);
-			start_pos += to.length();
+	std::string StringUtils::replace(std::string str, const std::string& from, const std::string& to) {
+		size_t pos = 0;
+		while ((pos = str.find(from, pos)) != std::string::npos) {
+			str.replace(pos, from.length(), to);
+			pos += to.length();
 		}
 		return str;
+	}
+
+	void StringUtils::replace_inline(std::string& str, const std::string& from, const std::string& to) {
+		size_t pos = 0;
+		while ((pos = str.find(from, pos)) != std::string::npos) {
+			str.replace(pos, from.length(), to);
+			pos += to.length();
+		}
+	}
+
+	void StringUtils::replace_first(std::string& str, const std::string& from, const std::string& to) {
+		std::size_t pos = str.find(from);
+		if (pos == std::string::npos) return;
+		str.replace(pos, from.length(), to);
 	}
 
 	std::string StringUtils::tolower(std::string str) {
@@ -59,7 +70,7 @@ namespace axe {
 		if (!string.empty()) string.pop_back();
 		return string;
 	}
-	
+
 	template<typename OutputIterator>
 	void StringUtils::split(const std::string& str, char sep, OutputIterator result) {
 		std::istringstream iss(str);

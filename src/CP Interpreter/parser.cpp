@@ -944,7 +944,7 @@ ASTExprNode* Parser::parse_factor() {
 	unsigned int col = current_token.col;
 
 	switch (current_token.type) {
-		
+
 		// literal cases
 	case TOK_BOOL_LITERAL:
 		return new ASTLiteralNode<cp_bool>(parse_bool_literal(), row, col);
@@ -994,7 +994,7 @@ ASTExprNode* Parser::parse_factor() {
 		consume_token(TOK_RIGHT_BRACKET);
 		return sub_expr;
 	}
-	
+
 		// unary expression cases
 	case TOK_REF:
 	case TOK_UNREF: {

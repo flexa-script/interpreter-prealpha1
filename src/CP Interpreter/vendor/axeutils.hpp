@@ -12,7 +12,9 @@ namespace axe {
 		static std::string ltrim(std::string s);
 		static std::string rtrim(std::string s);
 		static std::string trim(std::string s);
-		static std::string replace(std::string str, const std::string from, const std::string to);
+		static std::string replace(std::string str, const std::string& from, const std::string& to);
+		static void replace_inline(std::string& str, const std::string& from, const std::string& to);
+		static void replace_first(std::string& str, const std::string& from, const std::string& to);
 		static std::string tolower(std::string str);
 		static bool contains(const std::string& string, const std::string& cont);
 
