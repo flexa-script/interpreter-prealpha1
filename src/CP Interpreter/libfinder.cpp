@@ -44,7 +44,7 @@ void LibFinder::visit(ASTUsingNode* astnode) {
 
 	auto program = programs[libname];
 
-	// if was'nt parsed yet
+	// if wasn't parsed yet
 	if (!axe::StringUtils::contains(libs, libname)) {
 		libs.push_back(libname);
 		auto prev_program = current_program;
@@ -57,6 +57,7 @@ void LibFinder::visit(ASTUsingNode* astnode) {
 void LibFinder::visit(ASTAsNamespaceNode*) {}
 
 void LibFinder::visit(ASTDeclarationNode*) {}
+void LibFinder::visit(ASTUndefDeclarationNode*) {}
 void LibFinder::visit(ASTAssignmentNode*) {}
 
 void LibFinder::visit(ASTFunctionCallNode*) {}

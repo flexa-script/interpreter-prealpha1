@@ -321,6 +321,7 @@ namespace visitor {
 		virtual void visit(parser::ASTUsingNode*) = 0;
 		virtual void visit(parser::ASTAsNamespaceNode*) = 0;
 		virtual void visit(parser::ASTDeclarationNode*) = 0;
+		virtual void visit(parser::ASTUndefDeclarationNode*) = 0;
 		virtual void visit(parser::ASTAssignmentNode*) = 0;
 		virtual void visit(parser::ASTReturnNode*) = 0;
 		virtual void visit(parser::ASTBlockNode*) = 0;

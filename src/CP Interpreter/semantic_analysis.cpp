@@ -159,6 +159,17 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	current_scope->declare_variable(astnode->identifier, new_var);
 }
 
+void SemanticAnalyser::visit(ASTUndefDeclarationNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
+	const auto& nmspace = get_namespace();
+	SemanticScope* current_scope = scopes[nmspace].back();
+
+	for (const auto& declaration : astnode->declarations) {
+		declaration->accept(this);
+	}
+}
+
 void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 

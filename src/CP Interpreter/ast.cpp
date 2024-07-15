@@ -30,7 +30,11 @@ ASTAsNamespaceNode::ASTAsNamespaceNode(const std::string& nmspace, unsigned int 
 ASTDeclarationNode::ASTDeclarationNode(const std::string& identifier, Type type, Type array_type, std::vector<ASTExprNode*>&& dim,
 	const std::string& type_name, const std::string& type_name_space, ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space),
-	identifier(identifier), expr(expr), is_const(is_const) {}
+	identifier(identifier), is_const(is_const) {}
+
+ASTUndefDeclarationNode::ASTUndefDeclarationNode(const std::vector<ASTDeclarationNode*>& declarations,
+	unsigned int row, unsigned int col)
+	: ASTStatementNode(row, col), declarations(declarations) {}
 
 ASTAssignmentNode::ASTAssignmentNode(std::vector<Identifier>&& identifier_vector, const std::string& nmspace,
 	const std::string& op, ASTExprNode* expr, unsigned int row, unsigned int col)
@@ -80,7 +84,7 @@ ASTReticencesNode::ASTReticencesNode(unsigned int row, unsigned int col)
 ASTForNode::ASTForNode(std::array<ASTNode*, 3>&& dci, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), dci(std::move(dci)), block(block) {}
 
-ASTForEachNode::ASTForEachNode(ASTDeclarationNode* itdecl, ASTNode* collection, ASTBlockNode* block, unsigned int row, unsigned int col)
+ASTForEachNode::ASTForEachNode(ASTStatementNode* itdecl, ASTNode* collection, ASTBlockNode* block, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), itdecl(itdecl), collection(collection), block(block) {}
 
 ASTWhileNode::ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col)
@@ -274,6 +278,10 @@ void ASTFunctionExpression::accept(Visitor* v) {
 long long ASTFunctionExpression::hash(Visitor* v) { return 0; }
 
 void ASTDeclarationNode::accept(Visitor* v) {
+	v->visit(this);
+}
+
+void ASTUndefDeclarationNode::accept(Visitor* v) {
 	v->visit(this);
 }
 

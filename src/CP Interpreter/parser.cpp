@@ -476,6 +476,7 @@ ASTTryCatchNode* Parser::parse_try_catch_statement() {
 		decl = new ASTReticencesNode(row, col);
 	}
 	else {
+		check_current_token(TOK_VAR);
 		consume_semicolon = false;
 		decl = parse_undef_declaration_statement();
 	}
@@ -544,7 +545,7 @@ ASTNode* Parser::parse_foreach_collection() {
 }
 
 ASTForEachNode* Parser::parse_foreach_statement() {
-	ASTDeclarationNode* itdecl;
+	ASTStatementNode* itdecl;
 	ASTNode* collection;
 	ASTBlockNode* block;
 	unsigned int row = current_token.row;
@@ -554,6 +555,7 @@ ASTForEachNode* Parser::parse_foreach_statement() {
 	consume_token(TOK_LEFT_BRACKET);
 	consume_token();
 	consume_semicolon = false;
+	check_current_token(TOK_VAR);
 	itdecl = parse_undef_declaration_statement();
 	consume_token(TOK_IN);
 	consume_token();
@@ -1264,62 +1266,9 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 	return new ASTDeclarationNode(identifier, type, current_array_type, std::move(dim_vector), type_name, type_name_space, expr, is_const, row, col);
 }
 
-ASTDeclarationNode* Parser::parse_undef_declaration_statement() {
-	Type type = Type::T_UNDEFINED;
-	current_array_type = Type::T_UNDEFINED;
-	std::string identifier;
-	std::string type_name = "";
-	std::string type_name_space = "";
-	ASTExprNode* expr;
-	auto dim_vector = std::vector<ASTExprNode*>();
+ASTStatementNode* Parser::parse_undef_declaration_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
-	bool is_const = current_token.type == TOK_CONST;
-
-	consume_token(TOK_IDENTIFIER);
-	auto id = parse_identifier();
-	identifier = id.identifier;
-	dim_vector = id.access_vector;
-
-	if (dim_vector.size() > 0) {
-		type = Type::T_ARRAY;
-	}
-
-	if (next_token.type == TOK_COLON) {
-		consume_token();
-		consume_token();
-
-		if (next_token.type == TOK_LIB_ACESSOR_OP) {
-			type_name_space = current_token.value;
-			consume_token();
-			consume_token();
-		}
-
-		if (type == Type::T_UNDEFINED) {
-			type = parse_type();
-		}
-		else if (type == Type::T_ARRAY) {
-			current_array_type = parse_type();
-
-			if (current_array_type == parser::Type::T_UNDEFINED
-				|| current_array_type == parser::Type::T_VOID
-				|| current_array_type == parser::Type::T_ARRAY) {
-				current_array_type = parser::Type::T_ANY;
-			}
-		}
-
-		if (current_token.type == TOK_IDENTIFIER) {
-			type_name = current_token.value;
-		}
-	}
-
-	expr = nullptr;
-
-	check_consume_semicolon();
-
-	if (type == Type::T_UNDEFINED) {
-		type = Type::T_ANY;
-	}
 
 	return new ASTDeclarationNode(identifier, type, current_array_type, std::move(dim_vector),
 		type_name, type_name_space, expr, is_const, row, col);

@@ -40,7 +40,7 @@ namespace parser {
 		ASTUsingNode* parse_using_statement();
 		ASTNode* parse_block_statement();
 		ASTDeclarationNode* parse_declaration_statement();
-		ASTDeclarationNode* parse_undef_declaration_statement();
+		ASTStatementNode* parse_undef_declaration_statement();
 		ASTAssignmentNode* parse_assignment_statement(ASTIdentifierNode* idnode);
 		ASTUnaryExprNode* parse_increment_expression(ASTIdentifierNode* idnode);
 		ASTReturnNode* parse_return_statement();

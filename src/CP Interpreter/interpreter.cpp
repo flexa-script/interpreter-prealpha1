@@ -127,6 +127,14 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
 }
 
+void Interpreter::visit(ASTUndefDeclarationNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
+	for (const auto& declaration : astnode->declarations) {
+		declaration->accept(this);
+	}
+}
+
 void Interpreter::visit(ASTAssignmentNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 

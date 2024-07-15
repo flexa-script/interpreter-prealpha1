@@ -94,6 +94,16 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
+	class ASTUndefDeclarationNode : public ASTStatementNode {
+	public:
+		std::vector<ASTDeclarationNode*> declarations;
+
+		ASTUndefDeclarationNode(const std::vector<ASTDeclarationNode*>& identifier_nodes,
+			unsigned int row, unsigned int col);
+
+		void accept(visitor::Visitor*) override;
+	};
+
 	class ASTAssignmentNode : public ASTStatementNode {
 	public:
 		std::string identifier;
@@ -235,11 +245,11 @@ namespace parser {
 
 	class ASTForEachNode : public ASTStatementNode {
 	public:
-		ASTDeclarationNode* itdecl;
+		ASTStatementNode* itdecl;
 		ASTNode* collection;
 		ASTBlockNode* block;
 
-		ASTForEachNode(ASTDeclarationNode* itdecl, ASTNode* collection, ASTBlockNode* block, unsigned int row, unsigned int col);
+		ASTForEachNode(ASTStatementNode* itdecl, ASTNode* collection, ASTBlockNode* block, unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
 	};
