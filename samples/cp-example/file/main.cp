@@ -1,29 +1,35 @@
-// var smls = `test`;
-// println(smls);
+// using cp.core.exception;
+using cp.core.pair;
 
-// var t = true;
-// var als = `This ${t} value`;
-// println('<', als, '>');
+// try {
+// 	var a = 10/0;
+// } catch (var ex: cp::Exception) {
+// 	print("generated error: " + ex.error);
+// }
 
-var b = true;
-var i = 10;
-var s = "this is a string in a variable";
+// // try {
+// // 	var a = 10/0;
+// // } catch (var [error]) {
+// // 	print("generated error: " + error);
+// // }
 
-var mls = `
-This is a multiline string!
-This is a new line.
-- Boolean:\t${b}
-- Integer:\t${i}
-- String:\t${s}
-- Integer expr:\t${i + 10 * 5}
-- Boolean expr:\t${b or false}
-`;
+// try {
+// 	var a = 10/0;
+// } catch (...) {
+// 	print("generated error: ");
+// }
 
-println('<', mls, '>');
+struct Foo {
+	var name: string;
+	var age: int;
+};
 
+var f = Foo{name="Carlos",age=29};
 
-// var x = true;
-// var bls = `This ${x}`;
-// println('<', bls, '>');
-// bls = `${x}`;
-// println('<', bls, '>');
+foreach(var i: cp::Pair in f){
+  println("", i.key, ":", i.value);
+}
+
+// foreach(var [key, value] in f){
+//   println("", key, ":", value);
+// }

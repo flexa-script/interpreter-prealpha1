@@ -30,7 +30,7 @@ ASTAsNamespaceNode::ASTAsNamespaceNode(const std::string& nmspace, unsigned int 
 ASTDeclarationNode::ASTDeclarationNode(const std::string& identifier, Type type, Type array_type, std::vector<ASTExprNode*>&& dim,
 	const std::string& type_name, const std::string& type_name_space, ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space),
-	identifier(identifier), is_const(is_const) {}
+	identifier(identifier), expr(expr), is_const(is_const) {}
 
 ASTUndefDeclarationNode::ASTUndefDeclarationNode(const std::vector<ASTDeclarationNode*>& declarations,
 	unsigned int row, unsigned int col)

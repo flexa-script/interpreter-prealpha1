@@ -126,12 +126,12 @@ TypeDefinition TypeDefinition::get_basic(Type type) {
 	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "");
 }
 
-TypeDefinition TypeDefinition::get_array(Type type, Type array_type, std::vector<ASTExprNode*>&& dim) {
-	return TypeDefinition(type, array_type, std::move(dim), "", "");
+TypeDefinition TypeDefinition::get_array(Type array_type, std::vector<ASTExprNode*>&& dim) {
+	return TypeDefinition(Type::T_ARRAY, array_type, std::move(dim), "", "");
 }
 
-TypeDefinition TypeDefinition::get_struct(Type type, const std::string& type_name, const std::string& type_name_space) {
-	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), type_name, type_name_space);
+TypeDefinition TypeDefinition::get_struct(const std::string& type_name, const std::string& type_name_space) {
+	return TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), type_name, type_name_space);
 }
 
 bool TypeDefinition::is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, std::function<bool(TypeDefinition ltype, TypeDefinition rtype)> match_array_dim) {

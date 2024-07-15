@@ -1267,11 +1267,31 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 }
 
 ASTStatementNode* Parser::parse_undef_declaration_statement() {
-	unsigned int row = current_token.row;
-	unsigned int col = current_token.col;
+	if (current_token.type == TOK_CONST || next_token.type == TOK_IDENTIFIER) {
+		return parse_declaration_statement();
+	}
+	else if (current_token.type == TOK_VAR && next_token.type == TOK_LEFT_BRACE) {
+		std::vector<ASTDeclarationNode*> declarations;
+		unsigned int row = current_token.row;
+		unsigned int col = current_token.col;
 
-	return new ASTDeclarationNode(identifier, type, current_array_type, std::move(dim_vector),
-		type_name, type_name_space, expr, is_const, row, col);
+		consume_token();
+
+		while (next_token.type == TOK_IDENTIFIER) {
+			consume_semicolon = false;
+			declarations.push_back(parse_declaration_statement());
+			if (next_token.type == TOK_COMMA) {
+				consume_token();
+			}
+		}
+
+		consume_token(TOK_RIGHT_BRACE);
+
+		return new ASTUndefDeclarationNode(declarations, row, col);
+	}
+	else {
+		throw std::runtime_error(msg_header() + "expected identifier or [");
+	}
 }
 
 VariableDefinition* Parser::parse_formal_param() {

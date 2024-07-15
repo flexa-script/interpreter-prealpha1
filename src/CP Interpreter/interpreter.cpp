@@ -108,6 +108,9 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		astnode->expr->accept(this);
 		identifier_call_name = "";
 	}
+	else {
+		current_expression_value = Value(Type::T_UNDEFINED);
+	}
 
 	auto new_value = new Value(current_expression_value);
 
@@ -120,7 +123,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	new_value->ref = new_var;
 
 	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, match_array_dim_ptr)
-		&& !is_undefined(current_expression_value.type)) {
+		&& !is_undefined(new_value->type)) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
 
@@ -533,21 +536,22 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 
 	astnode->collection->accept(this);
 
+	scopes[nmspace].push_back(new InterpreterScope(""));
+
+	auto itdecl = static_cast<ASTDeclarationNode*>(astnode->itdecl);
+
 	switch (current_expression_value.type) {
 	case Type::T_ARRAY: {
 		auto colletion = current_expression_value.arr;
 		for (auto val : colletion) {
-			scopes[nmspace].push_back(new InterpreterScope(""));
-
 			astnode->itdecl->accept(this);
 
-			auto itdecl = static_cast<ASTDeclarationNode*>(astnode->itdecl);
-
-			set_value(scopes[nmspace].back(), std::vector<Identifier>{Identifier(itdecl->identifier)}, val);
+			set_value(
+				scopes[nmspace].back(),
+				std::vector<Identifier>{Identifier(itdecl->identifier)},
+				val);
 
 			astnode->block->accept(this);
-
-			scopes[nmspace].pop_back();
 
 			if (exit_from_program) {
 				return;
@@ -568,11 +572,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 	case Type::T_STRING: {
 		auto colletion = current_expression_value.s;
 		for (auto val : colletion) {
-			scopes[nmspace].push_back(new InterpreterScope(""));
-
 			astnode->itdecl->accept(this);
-
-			auto itdecl = static_cast<ASTDeclarationNode*>(astnode->itdecl);
 
 			set_value(
 				scopes[nmspace].back(),
@@ -580,8 +580,6 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 				new Value(cp_char(val)));
 
 			astnode->block->accept(this);
-
-			scopes[nmspace].pop_back();
 
 			if (exit_from_program) {
 				return;
@@ -602,11 +600,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 	case Type::T_STRUCT: {
 		auto colletion = std::get<2>(*current_expression_value.str);
 		for (const auto& val : colletion) {
-			scopes[nmspace].push_back(new InterpreterScope(""));
-
 			astnode->itdecl->accept(this);
-
-			auto itdecl = static_cast<ASTDeclarationNode*>(astnode->itdecl);
 
 			auto str = new cp_struct();
 			std::get<0>(*str) = "cp";
@@ -620,8 +614,6 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 				new Value(new Value(str)));
 
 			astnode->block->accept(this);
-
-			scopes[nmspace].pop_back();
 
 			if (exit_from_program) {
 				return;
@@ -642,6 +634,8 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 	default:
 		throw std::exception("invalid foreach iterable type");
 	}
+
+	scopes[nmspace].pop_back();
 
 	is_loop = false;
 }

@@ -123,6 +123,13 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		throw std::runtime_error("variables cannot be declared as void type: '" + astnode->identifier + "'");
 	}
 
+	try {
+		SemanticScope* curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->type_name);
+	}
+	catch (...) {
+		throw std::runtime_error("struct '" + astnode->type_name + "' not found");
+	}
+
 	if (astnode->expr) {
 		identifier_call_name = astnode->identifier;
 		astnode->expr->accept(this);
@@ -540,44 +547,73 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	is_loop = true;
-	Type decl_type;
-	Type col_type;
+	TypeDefinition decl_type;
+	TypeDefinition col_type;
 	const auto& nmspace = get_namespace();
 
 	scopes[nmspace].push_back(new SemanticScope());
 
 	astnode->itdecl->accept(this);
-	decl_type = current_expression.type;
+	decl_type = *current_expression.ref;
 
 	astnode->collection->accept(this);
-	col_type = is_array(current_expression.type) ? current_expression.array_type : current_expression.type;
+	col_type = current_expression;
 
-	if (is_any(decl_type) || is_undefined(decl_type)) {
-		decl_type = col_type;
-		const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl);
-		SemanticScope* curr_scope = scopes[nmspace].back();
-		auto declared_variable = curr_scope->find_declared_variable(idnode->identifier);
-		if (is_undefined(decl_type) || is_struct(decl_type)) {
-			declared_variable->type = col_type;
-			declared_variable->type_name = is_struct(col_type) ? "Pair" : current_expression.type_name;
-			declared_variable->type_name_space = is_struct(col_type) ? "cp" : current_expression.type_name_space;
-			declared_variable->array_type = current_expression.array_type;
+	if (const auto idnode = dynamic_cast<ASTUndefDeclarationNode*>(astnode->itdecl)) {
+		if (!is_struct(col_type.type)) {
+			throw std::runtime_error("[key, value] can only be used with struct");
 		}
-		declared_variable->value->type = col_type;
-		declared_variable->value->type_name = is_struct(col_type) ? "Pair" : current_expression.type_name;
-		declared_variable->value->type_name_space = is_struct(col_type) ? "cp" : current_expression.type_name_space;
-		declared_variable->value->array_type = current_expression.array_type;
-	}
 
-	if (!is_array(current_expression.type)
-		&& !is_string(current_expression.type)
-		&& !is_struct(current_expression.type)
-		&& !is_any(current_expression.type)) {
-		throw std::runtime_error("expected iterable in foreach");
-	}
+		if (idnode->declarations.size() != 2) {
+			throw std::runtime_error("invalid number of values");
+		}
 
-	if (!match_type(decl_type, col_type) && !is_any(decl_type)) {
-		throw std::runtime_error("mismatched types");
+		SemanticScope* curr_scope = scopes[nmspace].back();
+		auto decl_key = curr_scope->find_declared_variable(idnode->declarations[0]->identifier);
+		decl_key->value = new SemanticValue(Type::T_STRING, astnode->row, astnode->col);
+
+		SemanticScope* curr_scope = scopes[nmspace].back();
+		auto decl_val = curr_scope->find_declared_variable(idnode->declarations[1]->identifier);
+		decl_val->value = new SemanticValue(Type::T_ANY, astnode->row, astnode->col);
+	}
+	else {
+		if (!is_array(col_type.type)
+			&& !is_string(col_type.type)
+			&& !is_struct(col_type.type)
+			&& !is_any(col_type.type)) {
+			throw std::runtime_error("expected iterable in foreach");
+		}
+
+		if (!TypeDefinition::is_any_or_match_type(&decl_type, decl_type, nullptr, col_type, match_array_dim_ptr)) {
+			throw std::runtime_error("mismatched types");
+		}
+
+		if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl)) {
+			SemanticScope* curr_scope = scopes[nmspace].back();
+			auto declared_variable = curr_scope->find_declared_variable(idnode->identifier);
+			declared_variable->value->type = col_type.type;
+			declared_variable->value->type_name = is_struct(col_type.type) ?
+				"Pair" : current_expression.type_name;
+			declared_variable->value->type_name_space = is_struct(col_type.type) ?
+				"cp" : current_expression.type_name_space;
+			declared_variable->value->array_type = current_expression.array_type;
+
+			if (is_struct(col_type.type)) {
+				try {
+					auto s = get_inner_most_struct_definition_scope(
+						declared_variable->value->type_name_space,
+						declared_variable->value->type_name);
+				}
+				catch (...) {
+					throw std::runtime_error("struct '" +
+						declared_variable->value->type_name +
+						"' not found");
+				}
+			}
+		}
+		else{
+			throw std::runtime_error("expected declaration");
+		}
 	}
 
 	astnode->block->accept(this);
@@ -1464,7 +1500,7 @@ void SemanticAnalyser::register_built_in_functions() {
 
 	signature.clear();
 	parameters.clear();
-	signature.push_back(TypeDefinition::get_array(Type::T_ARRAY, Type::T_ANY));
+	signature.push_back(TypeDefinition::get_array(Type::T_ANY));
 	parameters.push_back(VariableDefinition::get_array("arr", Type::T_ARRAY, Type::T_ANY));
 	scopes[default_namespace].back()->declare_basic_function("len", Type::T_INT, signature, parameters);
 

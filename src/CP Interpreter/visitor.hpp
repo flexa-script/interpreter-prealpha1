@@ -38,6 +38,7 @@ namespace parser {
 	class ASTUsingNode;
 	class ASTAsNamespaceNode;
 	class ASTDeclarationNode;
+	class ASTUndefDeclarationNode;
 	class ASTAssignmentNode;
 	class ASTFunctionCallNode;
 	class ASTReturnNode;
@@ -117,8 +118,8 @@ namespace visitor {
 		TypeDefinition();
 
 		static TypeDefinition get_basic(parser::Type type);
-		static TypeDefinition get_array(parser::Type type, parser::Type array_type, std::vector<parser::ASTExprNode*>&& dim = std::vector<parser::ASTExprNode*>());
-		static TypeDefinition get_struct(parser::Type type, const std::string& type_name, const std::string& type_name_space);
+		static TypeDefinition get_array(parser::Type array_type, std::vector<parser::ASTExprNode*>&& dim = std::vector<parser::ASTExprNode*>());
+		static TypeDefinition get_struct(const std::string& type_name, const std::string& type_name_space);
 
 		static bool is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, std::function<bool(TypeDefinition ltype, TypeDefinition rtype)> match_array_dim);
 		static bool match_type(TypeDefinition ltype, TypeDefinition rtype, std::function<bool(TypeDefinition ltype, TypeDefinition rtype)> match_array_dim);
