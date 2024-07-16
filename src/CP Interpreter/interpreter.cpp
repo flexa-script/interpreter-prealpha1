@@ -602,17 +602,40 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		auto colletion = std::get<2>(*current_expression_value.str);
 		for (const auto& val : colletion) {
 			astnode->itdecl->accept(this);
+			
+			if (const auto idnode = dynamic_cast<ASTUndefDeclarationNode*>(astnode->itdecl)) {
+				if (idnode->declarations.size() != 2) {
+					throw std::runtime_error("invalid number of values");
+				}
 
-			auto str = new cp_struct();
-			std::get<0>(*str) = "cp";
-			std::get<1>(*str) = "Pair";
-			std::get<2>(*str)["key"] = new Value(cp_string(val.first));
-			std::get<2>(*str)["value"] = val.second;
+				InterpreterScope* back_scope = scopes[nmspace].back();
+				auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
+				decl_key->value = new Value(cp_string(val.first));
 
-			set_value(
-				scopes[nmspace].back(),
-				std::vector<Identifier>{Identifier(itdecl->identifier)},
-				new Value(str));
+				back_scope = scopes[nmspace].back();
+				auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
+				decl_val->value = val.second;
+			}
+			else {
+				if (!is_any(current_expression_value.ref->type)
+					&& current_expression_value.ref->type_name_space != "cp"
+					&& current_expression_value.ref->type_name != "Pair") {
+					throw std::runtime_error("invalid struct '"
+						+ current_expression_value.ref->type_name
+						+ "' declaration in foreach loop");
+				}
+
+				auto str = new cp_struct();
+				std::get<0>(*str) = "cp";
+				std::get<1>(*str) = "Pair";
+				std::get<2>(*str)["key"] = new Value(cp_string(val.first));
+				std::get<2>(*str)["value"] = val.second;
+
+				set_value(
+					scopes[nmspace].back(),
+					std::vector<Identifier>{Identifier(itdecl->identifier)},
+					new Value(str));
+			}
 
 			astnode->block->accept(this);
 

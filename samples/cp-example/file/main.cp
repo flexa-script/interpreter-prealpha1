@@ -30,6 +30,6 @@ foreach(var i: cp::Pair in f){
   println("", i.key, ":", i.value);
 }
 
-// foreach(var [key, value] in f){
-//   println("", key, ":", value);
-// }
+foreach(var [key, value] in f){
+  println("", key, ":", value);
+}
