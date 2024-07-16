@@ -123,11 +123,13 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		throw std::runtime_error("variables cannot be declared as void type: '" + astnode->identifier + "'");
 	}
 
-	try {
-		SemanticScope* curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->type_name);
-	}
-	catch (...) {
-		throw std::runtime_error("struct '" + astnode->type_name + "' not found");
+	if (is_struct(astnode->type)) {
+		try {
+			SemanticScope* curr_scope = get_inner_most_struct_definition_scope(get_namespace(astnode->type_name_space), astnode->type_name);
+		}
+		catch (...) {
+			throw std::runtime_error("struct '" + astnode->type_name + "' not found");
+		}
 	}
 
 	if (astnode->expr) {
@@ -157,6 +159,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		new_value, astnode->is_const,
 		astnode->row, astnode->col);
 	new_value->ref = new_var;
+	current_expression = *new_value;
 
 	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, current_expression, match_array_dim_ptr)
 		&& !is_undefined(current_expression.type)) {
@@ -430,7 +433,6 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	is_switch = true;
-
 	const auto& nmspace = get_namespace();
 	scopes[nmspace].push_back(new SemanticScope());
 
@@ -568,12 +570,12 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 			throw std::runtime_error("invalid number of values");
 		}
 
-		SemanticScope* curr_scope = scopes[nmspace].back();
-		auto decl_key = curr_scope->find_declared_variable(idnode->declarations[0]->identifier);
+		SemanticScope* back_scope = scopes[nmspace].back();
+		auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
 		decl_key->value = new SemanticValue(Type::T_STRING, astnode->row, astnode->col);
 
-		SemanticScope* curr_scope = scopes[nmspace].back();
-		auto decl_val = curr_scope->find_declared_variable(idnode->declarations[1]->identifier);
+		back_scope = scopes[nmspace].back();
+		auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
 		decl_val->value = new SemanticValue(Type::T_ANY, astnode->row, astnode->col);
 	}
 	else {
@@ -582,6 +584,16 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 			&& !is_struct(col_type.type)
 			&& !is_any(col_type.type)) {
 			throw std::runtime_error("expected iterable in foreach");
+		}
+
+		if (is_struct(col_type.type)) {
+			try {
+				auto s = get_inner_most_struct_definition_scope("cp", "Pair");
+			}
+			catch (...) {
+				throw std::runtime_error("struct 'cp::Pair' not found");
+			}
+			col_type = TypeDefinition::get_struct("Pair", "cp");
 		}
 
 		if (!TypeDefinition::is_any_or_match_type(&decl_type, decl_type, nullptr, col_type, match_array_dim_ptr)) {
@@ -598,18 +610,18 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 				"cp" : current_expression.type_name_space;
 			declared_variable->value->array_type = current_expression.array_type;
 
-			if (is_struct(col_type.type)) {
-				try {
-					auto s = get_inner_most_struct_definition_scope(
-						declared_variable->value->type_name_space,
-						declared_variable->value->type_name);
-				}
-				catch (...) {
-					throw std::runtime_error("struct '" +
-						declared_variable->value->type_name +
-						"' not found");
-				}
-			}
+			//if (is_struct(col_type.type)) {
+			//	try {
+			//		auto s = get_inner_most_struct_definition_scope(
+			//			declared_variable->value->type_name_space,
+			//			declared_variable->value->type_name);
+			//	}
+			//	catch (...) {
+			//		throw std::runtime_error("struct '" +
+			//			declared_variable->value->type_name +
+			//			"' not found");
+			//	}
+			//}
 		}
 		else{
 			throw std::runtime_error("expected declaration");
@@ -1501,7 +1513,7 @@ void SemanticAnalyser::register_built_in_functions() {
 	signature.clear();
 	parameters.clear();
 	signature.push_back(TypeDefinition::get_array(Type::T_ANY));
-	parameters.push_back(VariableDefinition::get_array("arr", Type::T_ARRAY, Type::T_ANY));
+	parameters.push_back(VariableDefinition::get_array("arr", Type::T_ANY));
 	scopes[default_namespace].back()->declare_basic_function("len", Type::T_INT, signature, parameters);
 
 	signature.clear();

@@ -148,11 +148,11 @@ namespace visitor {
 		static VariableDefinition get_basic(const std::string& identifier, parser::Type type,
 			parser::ASTExprNode* default_value = nullptr, bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 
-		static VariableDefinition get_array(const std::string& identifier, parser::Type type, parser::Type array_type,
+		static VariableDefinition get_array(const std::string& identifier, parser::Type array_type,
 			std::vector<parser::ASTExprNode*>&& dim = std::vector<parser::ASTExprNode*>(), parser::ASTExprNode* default_value = nullptr,
 			bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 
-		static VariableDefinition get_struct(const std::string& identifier, parser::Type type,
+		static VariableDefinition get_struct(const std::string& identifier,
 			const std::string& type_name, const std::string& type_name_space, parser::ASTExprNode* default_value = nullptr,
 			bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 	};

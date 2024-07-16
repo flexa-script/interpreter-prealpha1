@@ -286,15 +286,15 @@ VariableDefinition VariableDefinition::get_basic(const std::string& identifier, 
 	return VariableDefinition(identifier, type, "", "", Type::T_UNDEFINED, std::vector<ASTExprNode*>(), default_value, is_rest, row, col);
 }
 
-VariableDefinition VariableDefinition::get_array(const std::string& identifier, parser::Type type, parser::Type array_type,
+VariableDefinition VariableDefinition::get_array(const std::string& identifier, parser::Type array_type,
 	std::vector<ASTExprNode*>&& dim, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col) {
-	return VariableDefinition(identifier, type, "", "", array_type, std::move(dim), default_value, is_rest, row, col);
+	return VariableDefinition(identifier, Type::T_ARRAY, "", "", array_type, std::move(dim), default_value, is_rest, row, col);
 }
 
-VariableDefinition VariableDefinition::get_struct(const std::string& identifier, parser::Type type,
+VariableDefinition VariableDefinition::get_struct(const std::string& identifier,
 	const std::string& type_name, const std::string& type_name_space,
 	ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col) {
-	return VariableDefinition(identifier, type, type_name, type_name_space, Type::T_UNDEFINED,
+	return VariableDefinition(identifier, Type::T_STRUCT, type_name, type_name_space, Type::T_UNDEFINED,
 		std::vector<ASTExprNode*>(), default_value, is_rest, row, col);
 }
 

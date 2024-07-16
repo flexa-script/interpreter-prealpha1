@@ -121,6 +121,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		astnode_type_name, astnode->type_name_space,
 		new_value);
 	new_value->ref = new_var;
+	current_expression_value = *new_value;
 
 	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, match_array_dim_ptr)
 		&& !is_undefined(new_value->type)) {
@@ -611,7 +612,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 			set_value(
 				scopes[nmspace].back(),
 				std::vector<Identifier>{Identifier(itdecl->identifier)},
-				new Value(new Value(str)));
+				new Value(str));
 
 			astnode->block->accept(this);
 
@@ -2383,7 +2384,7 @@ void Interpreter::register_built_in_functions() {
 		current_expression_value = val;
 		};
 	params.clear();
-	params.push_back(std::make_tuple("arr", TypeDefinition::get_array(Type::T_ARRAY, Type::T_ANY), nullptr, false));
+	params.push_back(std::make_tuple("arr", TypeDefinition::get_array(Type::T_ANY), nullptr, false));
 	scopes[default_namespace].back()->declare_function("len", params, nullptr, TypeDefinition::get_basic(Type::T_INT));
 	params.clear();
 	params.push_back(std::make_tuple("str", TypeDefinition::get_basic(Type::T_STRING), nullptr, false));
