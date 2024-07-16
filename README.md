@@ -18,7 +18,7 @@
     - [X] Add struct array-like constructor
     - [X] Add Java class pointer-like behavior
     - [X] Add struct as Dict by iterating over in foreach
-        - [ ] add: builtin key, value like `foreach (var [key, value] in struct_var)`
+        - [X] add: builtin key, value like `foreach (var [key, value] in struct_var)`
 - [X] Add null support
 - [X] Add type convert support
     - [X] Add array and struct support (based on print)
@@ -63,7 +63,8 @@
     - [X] try catch throw
         - [X] Bring error header to a higher level
         - [X] add ... to ignore catch error
-        - [ ] add: throw a simple string as Exception to avoid Exception include `throw "string error";`, and `[type, error]` in catch
+        - [P] add unpacked declaration `[type, error]` in catch to not include exception lib
+        - [ ] add: throw a simple string as Exception to avoid Exception include `throw "string error";`
     - [X] do while
 - [ ] Add expression:
     - [X] add: multiline string using ``
