@@ -57,7 +57,7 @@ void LibFinder::visit(ASTUsingNode* astnode) {
 void LibFinder::visit(ASTAsNamespaceNode*) {}
 
 void LibFinder::visit(ASTDeclarationNode*) {}
-void LibFinder::visit(ASTUndefDeclarationNode*) {}
+void LibFinder::visit(ASTUnpackedDeclarationNode*) {}
 void LibFinder::visit(ASTAssignmentNode*) {}
 
 void LibFinder::visit(ASTFunctionCallNode*) {}

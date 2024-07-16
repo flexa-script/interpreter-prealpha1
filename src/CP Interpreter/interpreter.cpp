@@ -131,7 +131,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
 }
 
-void Interpreter::visit(ASTUndefDeclarationNode* astnode) {
+void Interpreter::visit(ASTUnpackedDeclarationNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	for (const auto& declaration : astnode->declarations) {
@@ -603,7 +603,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		for (const auto& val : colletion) {
 			astnode->itdecl->accept(this);
 			
-			if (const auto idnode = dynamic_cast<ASTUndefDeclarationNode*>(astnode->itdecl)) {
+			if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
 				if (idnode->declarations.size() != 2) {
 					throw std::runtime_error("invalid number of values");
 				}

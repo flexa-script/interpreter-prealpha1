@@ -1287,7 +1287,7 @@ ASTStatementNode* Parser::parse_undef_declaration_statement() {
 
 		consume_token(TOK_RIGHT_BRACE);
 
-		return new ASTUndefDeclarationNode(declarations, row, col);
+		return new ASTUnpackedDeclarationNode(declarations, row, col);
 	}
 	else {
 		throw std::runtime_error(msg_header() + "expected identifier or [");

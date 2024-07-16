@@ -32,7 +32,7 @@ ASTDeclarationNode::ASTDeclarationNode(const std::string& identifier, Type type,
 	: ASTStatementNode(row, col), TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space),
 	identifier(identifier), expr(expr), is_const(is_const) {}
 
-ASTUndefDeclarationNode::ASTUndefDeclarationNode(const std::vector<ASTDeclarationNode*>& declarations,
+ASTUnpackedDeclarationNode::ASTUnpackedDeclarationNode(const std::vector<ASTDeclarationNode*>& declarations,
 	unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), declarations(declarations) {}
 
@@ -281,7 +281,7 @@ void ASTDeclarationNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTUndefDeclarationNode::accept(Visitor* v) {
+void ASTUnpackedDeclarationNode::accept(Visitor* v) {
 	v->visit(this);
 }
 

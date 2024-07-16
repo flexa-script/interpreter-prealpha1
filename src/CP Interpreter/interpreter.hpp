@@ -119,7 +119,7 @@ namespace visitor {
 		void visit(parser::ASTUsingNode*) override;
 		void visit(parser::ASTAsNamespaceNode*) override;
 		void visit(parser::ASTDeclarationNode*) override;
-		void visit(parser::ASTUndefDeclarationNode*) override;
+		void visit(parser::ASTUnpackedDeclarationNode*) override;
 		void visit(parser::ASTAssignmentNode*) override;
 		void visit(parser::ASTReturnNode*) override;
 		void visit(parser::ASTExitNode*) override;

@@ -94,11 +94,11 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
-	class ASTUndefDeclarationNode : public ASTStatementNode {
+	class ASTUnpackedDeclarationNode : public ASTStatementNode {
 	public:
 		std::vector<ASTDeclarationNode*> declarations;
 
-		ASTUndefDeclarationNode(const std::vector<ASTDeclarationNode*>& identifier_nodes,
+		ASTUnpackedDeclarationNode(const std::vector<ASTDeclarationNode*>& identifier_nodes,
 			unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;

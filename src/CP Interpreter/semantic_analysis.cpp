@@ -169,7 +169,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	current_scope->declare_variable(astnode->identifier, new_var);
 }
 
-void SemanticAnalyser::visit(ASTUndefDeclarationNode* astnode) {
+void SemanticAnalyser::visit(ASTUnpackedDeclarationNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -561,7 +561,7 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 	astnode->collection->accept(this);
 	col_type = current_expression;
 
-	if (const auto idnode = dynamic_cast<ASTUndefDeclarationNode*>(astnode->itdecl)) {
+	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
 		if (!is_struct(col_type.type)) {
 			throw std::runtime_error("[key, value] can only be used with struct");
 		}
