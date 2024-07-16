@@ -549,14 +549,14 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	is_loop = true;
-	TypeDefinition decl_type;
+	SemanticVariable* declared_variable;
 	TypeDefinition col_type;
 	const auto& nmspace = get_namespace();
 
 	scopes[nmspace].push_back(new SemanticScope());
 
 	astnode->itdecl->accept(this);
-	decl_type = *current_expression.ref;
+	declared_variable = current_expression.ref;
 
 	astnode->collection->accept(this);
 	col_type = current_expression;
@@ -596,13 +596,11 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 			col_type = TypeDefinition::get_struct("Pair", "cp");
 		}
 
-		if (!TypeDefinition::is_any_or_match_type(&decl_type, decl_type, nullptr, col_type, match_array_dim_ptr)) {
+		if (!TypeDefinition::is_any_or_match_type(declared_variable, *declared_variable, nullptr, col_type, match_array_dim_ptr)) {
 			throw std::runtime_error("mismatched types");
 		}
 
 		if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl)) {
-			SemanticScope* curr_scope = scopes[nmspace].back();
-			auto declared_variable = curr_scope->find_declared_variable(idnode->identifier);
 			declared_variable->value->type = col_type.type;
 			declared_variable->value->type_name = is_struct(col_type.type) ?
 				"Pair" : current_expression.type_name;
@@ -610,18 +608,6 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 				"cp" : current_expression.type_name_space;
 			declared_variable->value->array_type = current_expression.array_type;
 
-			//if (is_struct(col_type.type)) {
-			//	try {
-			//		auto s = get_inner_most_struct_definition_scope(
-			//			declared_variable->value->type_name_space,
-			//			declared_variable->value->type_name);
-			//	}
-			//	catch (...) {
-			//		throw std::runtime_error("struct '" +
-			//			declared_variable->value->type_name +
-			//			"' not found");
-			//	}
-			//}
 		}
 		else{
 			throw std::runtime_error("expected declaration");
@@ -646,24 +632,42 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 	scopes[nmspace].push_back(new SemanticScope());
 
 	astnode->decl->accept(this);
-	Type decl_type = current_expression.type;
-	if (is_any(decl_type) || is_undefined(decl_type)) {
+
+	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
+		if (idnode->declarations.size() != 2) {
+			throw std::runtime_error("invalid number of values");
+		}
+
+		SemanticScope* back_scope = scopes[nmspace].back();
+		auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
+		decl_key->value = new SemanticValue(Type::T_STRING, astnode->row, astnode->col);
+
+		back_scope = scopes[nmspace].back();
+		auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
+		decl_val->value = new SemanticValue(Type::T_STRING, astnode->row, astnode->col);
+	}
+	else if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
+		try {
+			get_inner_most_struct_definition_scope("cp", "Exception");
+		}
+		catch (...) {
+			throw std::runtime_error("struct 'cp::Exception' not found");
+		}
+
 		if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
-			SemanticScope* curr_scope;
-			try {
-				curr_scope = get_inner_most_variable_scope(get_namespace(), idnode->identifier);
-			}
-			catch (...) {
-				throw std::runtime_error("identifier '" + idnode->identifier +
-					"' was not declared");
-			}
-
-			auto declared_variable = curr_scope->find_declared_variable(idnode->identifier);
-
-			curr_scope->change_variable_type(idnode->identifier, Type::T_STRUCT);
-			curr_scope->change_variable_type_name(idnode->identifier, "Exception");
+			auto declared_variable = current_expression.ref;
+			declared_variable->value->type = Type::T_STRUCT;
+			declared_variable->value->type_name = "Exception";
+			declared_variable->value->type_name_space = "cp";
+		}
+		else {
+			throw std::runtime_error("expected declaration");
 		}
 	}
+	else if (!dynamic_cast<ASTReticencesNode*>(astnode->decl)) {
+		throw std::runtime_error("expected declaration");
+	}
+
 	astnode->catch_block->accept(this);
 
 	scopes[nmspace].pop_back();

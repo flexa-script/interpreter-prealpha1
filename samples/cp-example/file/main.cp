@@ -9,7 +9,7 @@ try {
 
 try {
 	var a = 10/0;
-} catch (var [error]) {
+} catch (var [type, error]) {
 	print("generated error: " + error);
 }
 
