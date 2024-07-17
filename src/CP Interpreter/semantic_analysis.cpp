@@ -634,7 +634,7 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 	astnode->decl->accept(this);
 
 	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
-		if (idnode->declarations.size() != 2) {
+		if (idnode->declarations.size() != 1) {
 			throw std::runtime_error("invalid number of values");
 		}
 
@@ -642,9 +642,6 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 		auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
 		decl_key->value = new SemanticValue(Type::T_STRING, astnode->row, astnode->col);
 
-		back_scope = scopes[nmspace].back();
-		auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
-		decl_val->value = new SemanticValue(Type::T_STRING, astnode->row, astnode->col);
 	}
 	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
 		try {
@@ -671,9 +668,19 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 void SemanticAnalyser::visit(parser::ASTThrowNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	astnode->accept(this);
-	if (current_expression.type_name != "Exception") {
-		throw std::runtime_error("expected Exception struct in throw");
+	astnode->error->accept(this);
+
+	if (is_struct(current_expression.type)
+		&& current_expression.type_name == "Exception") {
+		try {
+			get_inner_most_struct_definition_scope("cp", "Exception");
+		}
+		catch (...) {
+			throw std::runtime_error("struct 'cp::Exception' not found");
+		}
+	}
+	else if (!is_string(current_expression.type)) {
+		throw std::runtime_error("expected Exception struct or in throw");
 	}
 }
 

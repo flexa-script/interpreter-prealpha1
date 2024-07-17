@@ -680,16 +680,12 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 		astnode->decl->accept(this);
 
 		if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
-			if (idnode->declarations.size() != 2) {
+			if (idnode->declarations.size() != 1) {
 				throw std::runtime_error("invalid number of values");
 			}
 
 			InterpreterScope* back_scope = scopes[nmspace].back();
-			auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
-			decl_key->value = new Value(cp_string("default"));
-
-			back_scope = scopes[nmspace].back();
-			auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
+			auto decl_val = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
 			decl_val->value = new Value(cp_string(ex.what()));
 		}
 		else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
@@ -705,7 +701,6 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 			value->str = new cp_struct();
 			std::get<0>(*value->str) = "cp";
 			std::get<1>(*value->str) = "Exception";
-			std::get<2>(*value->str)["type"] = new Value(cp_string("default"));
 			std::get<2>(*value->str)["error"] = new Value(cp_string(ex.what()));
 
 			current_expression_value.ref->value = value;
@@ -722,11 +717,26 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 void Interpreter::visit(parser::ASTThrowNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	astnode->accept(this);
-	if (current_expression_value.type_name != "Exception") {
-		throw std::runtime_error("expected Exception struct in throw");
+	astnode->error->accept(this);
+	
+	if (is_struct(current_expression_value.type)
+		&& current_expression_value.type_name == "Exception") {
+		try {
+			get_inner_most_struct_definition_scope("cp", "Exception");
+		}
+		catch (...) {
+			throw std::runtime_error("struct 'cp::Exception' not found");
+		}
+
+		throw std::exception(std::get<2>(*current_expression_value.str)["error"]->s.c_str());
 	}
-	throw std::exception(std::get<2>(*current_expression_value.str)["error"]->s.c_str());
+	else if (is_string(current_expression_value.type)) {
+		throw std::runtime_error(current_expression_value.s);
+	}
+	else {
+		throw std::runtime_error("expected Exception cp::Exception struct or string in throw");
+	}
+
 }
 
 void Interpreter::visit(parser::ASTReticencesNode* astnode) {
