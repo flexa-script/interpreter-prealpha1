@@ -909,6 +909,7 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 	auto rexpr = current_expression;
 
 	current_expression = SemanticValue(do_operation(astnode->op, lexpr, lexpr, nullptr, rexpr, true), 0, false, 0, 0);
+	current_expression.is_const = lexpr.is_const && rexpr.is_const;
 }
 
 void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
@@ -1263,11 +1264,11 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 
 	}
 
-	if (Token::is_equality_op(op)) {
+	if (Token::is_equality_op(op) || Token::is_relational_op(op)) {
 		return TypeDefinition::get_basic(Type::T_BOOL);
 	}
 
-	return rvalue;
+	return is_float(lvalue.type) ? lvalue : rvalue;
 }
 
 bool SemanticAnalyser::match_array_dim(TypeDefinition ltype, TypeDefinition rtype) {
