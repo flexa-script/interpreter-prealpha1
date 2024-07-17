@@ -1004,6 +1004,7 @@ ASTExprNode* Parser::parse_factor() {
 		consume_token();
 		return new ASTUnaryExprNode(current_token_value, parse_factor(), row, col);
 	}
+	case TOK_ADDITIVE_OP:
 	case TOK_NOT: {
 		std::string current_token_value = current_token.value;
 		consume_token();

@@ -197,6 +197,7 @@
 - [X] Function call strcut, string and array acessors is not working
 - [X] print({0,2} + {0,2}); is passing semantic analisys
 - [ ] functions with no block are not checked (check if is builtin)
+- [ ] some expression nodes aren't cleaning return type like void funcions
 
 ## Errors
 - Errors has CP prefix, eg. CP9999
