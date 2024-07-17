@@ -1,37 +1,39 @@
 using cp.core.exception;
-// using cp.core.pair;
+using cp.core.pair;
 
 try {
 	var a = 10/0;
 } catch (var ex: cp::Exception) {
-	print("generated error: " + ex.error);
+	println("generated error: " + ex.error);
 }
 
 try {
 	var a = 10/0;
 } catch (var [type, error]) {
-	print("generated error: " + error);
+	println("generated unpacked error: " + error);
 }
 
 try {
 	var a = 10/0;
 } catch (...) {
-	print("generated error: ");
+	println("error ignored");
 }
 
-// struct Foo {
-// 	var name: string;
-// 	var age: int;
-// };
+struct Foo {
+	var name: string;
+	var age: int;
+};
 
-// var f = Foo{name="Carlos",age=29};
+var f = Foo{name="Carlos",age=29};
 
-// println("foreach struct as cp::Pair");
-// foreach(var i: cp::Pair in f){
-//   println("", i.key, ":", i.value);
-// }
+println("foreach struct as cp::Pair");
+foreach(var i: cp::Pair in f){
+  println("", i.key, ":", i.value);
+}
 
-// println("foreach struct as unpack declaration");
-// foreach(var [key, value] in f){
-//   println("", key, ":", value);
-// }
+var u = Foo{name="Nati",age=34};
+
+println("foreach struct as unpack declaration");
+foreach(var [key, value] in u){
+  println("", key, ":", value);
+}

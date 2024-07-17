@@ -646,7 +646,7 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 		auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
 		decl_val->value = new SemanticValue(Type::T_STRING, astnode->row, astnode->col);
 	}
-	else if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
+	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
 		try {
 			get_inner_most_struct_definition_scope("cp", "Exception");
 		}
@@ -654,15 +654,10 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 			throw std::runtime_error("struct 'cp::Exception' not found");
 		}
 
-		if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
-			auto declared_variable = current_expression.ref;
-			declared_variable->value->type = Type::T_STRUCT;
-			declared_variable->value->type_name = "Exception";
-			declared_variable->value->type_name_space = "cp";
-		}
-		else {
-			throw std::runtime_error("expected declaration");
-		}
+		auto declared_variable = current_expression.ref;
+		declared_variable->value->type = Type::T_STRUCT;
+		declared_variable->value->type_name = "Exception";
+		declared_variable->value->type_name_space = "cp";
 	}
 	else if (!dynamic_cast<ASTReticencesNode*>(astnode->decl)) {
 		throw std::runtime_error("expected declaration");

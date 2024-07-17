@@ -63,7 +63,7 @@
     - [X] try catch throw
         - [X] Bring error header to a higher level
         - [X] add ... to ignore catch error
-        - [P] add unpacked declaration `[type, error]` in catch to not include exception lib
+        - [X] add unpacked declaration `[type, error]` in catch to not include exception lib
         - [ ] add: throw a simple string as Exception to avoid Exception include `throw "string error";`
     - [X] do while
 - [ ] Add expression:

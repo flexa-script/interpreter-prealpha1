@@ -692,7 +692,7 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 			auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
 			decl_val->value = new Value(cp_string(ex.what()));
 		}
-		else if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
+		else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
 			if (!is_any(current_expression_value.ref->type)
 				&& current_expression_value.ref->type_name_space != "cp"
 				&& current_expression_value.ref->type_name != "Pair") {
@@ -713,16 +713,6 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 		else if (!dynamic_cast<ASTReticencesNode*>(astnode->decl)) {
 			throw std::runtime_error("expected declaration");
 		}
-
-		//if (auto itdecl = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
-		//	Value* value = new Value(Type::T_STRUCT);
-		//	value->str = new cp_struct();
-		//	std::get<0>(*value->str) = "cp";
-		//	std::get<1>(*value->str) = "Exception";
-		//	std::get<2>(*value->str)["error"] = new Value(cp_string(ex.what()));
-
-		//	set_value(scopes[nmspace].back(), std::vector<Identifier>{Identifier(itdecl->identifier)}, value);
-		//}
 
 		astnode->catch_block->accept(this);
 		scopes[nmspace].pop_back();
