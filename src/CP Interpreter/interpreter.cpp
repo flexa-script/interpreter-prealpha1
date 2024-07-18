@@ -1848,7 +1848,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			cp_float r = is_float(rval->type) ? rval->f : rval->i;
 
 			lval->set((cp_bool)(op == "==" ?
-				l == r : l != l));
+				l == r : l != r));
 
 			break;
 		}
@@ -1896,7 +1896,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			cp_float r = is_float(rval->type) ? rval->f : rval->i;
 
 			lval->set((cp_bool)(op == "==" ?
-				l == r : l != l));
+				l == r : l != r));
 
 			break;
 		}
