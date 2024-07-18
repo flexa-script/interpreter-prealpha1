@@ -198,6 +198,7 @@
 - [X] print({0,2} + {0,2}); is passing semantic analisys
 - [ ] functions with no block are not checked (check if is builtin)
 - [ ] some expression nodes aren't cleaning return type like void funcions
+- [ ] reference is not working properly
 
 ## Errors
 - Errors has CP prefix, eg. CP9999
