@@ -1634,87 +1634,6 @@ std::vector<unsigned int> Interpreter::calculate_array_dim_size(const cp_array& 
 	return dim;
 }
 
-void Interpreter::declare_function_block_parameters(const std::string& nmspace) {
-	auto curr_scope = scopes[nmspace].back();
-	auto rest_name = std::string();
-	auto arr = cp_array();
-	size_t i;
-
-	if (current_function_calling_arguments.size() == 0 || current_function_defined_parameters.size() == 0) {
-		return;
-	}
-
-	// adds function arguments
-	for (i = 0; i < current_function_calling_arguments.top().size(); ++i) {
-		// todo: fix reference, now reference will came from value
-		// is reference : not reference
-		Value* current_value = current_function_calling_arguments.top()[i]->ref ? current_function_calling_arguments.top()[i] : new Value(current_function_calling_arguments.top()[i]);
-
-		if (i >= current_function_defined_parameters.top().size()) {
-			arr.push_back(current_value);
-		}
-		else {
-			const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
-
-			if (is_function(current_function_calling_arguments.top()[i]->type)) {
-				auto funcs = ((InterpreterScope*)current_function_calling_arguments.top()[i]->fun.first)->find_declared_functions(current_function_calling_arguments.top()[i]->fun.second);
-				for (auto& it = funcs.first; it != funcs.second; ++it) {
-					auto& func_params = std::get<0>(it->second);
-					auto& func_block = std::get<1>(it->second);
-					curr_scope->declare_function(pname, func_params, func_block, std::get<2>(it->second));
-				}
-			}
-			else {
-				curr_scope->declare_variable(pname, new Variable(new Value(current_value)));
-			}
-
-			// is rest
-			if (std::get<3>(current_function_defined_parameters.top()[i])) {
-				rest_name = pname;
-				// if is last parameter and is array
-				if (current_function_defined_parameters.top().size() - 1 == i
-					&& is_array(current_value->type)) {
-					arr = current_value->arr;
-				}
-				else {
-					arr.push_back(current_value);
-				}
-			}
-		}
-	}
-
-	// adds default values
-	for (; i < current_function_defined_parameters.top().size(); ++i) {
-		if (std::get<3>(current_function_defined_parameters.top()[i])) {
-			break;
-		}
-
-		const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
-		std::get<2>(current_function_defined_parameters.top()[i])->accept(this);
-
-		if (is_function(current_expression_value.type)) {
-			auto funcs = ((InterpreterScope*)current_expression_value.fun.first)->find_declared_functions(current_expression_value.fun.second);
-			for (auto& it = funcs.first; it != funcs.second; ++it) {
-				auto& func_params = std::get<0>(it->second);
-				auto& func_block = std::get<1>(it->second);
-				curr_scope->declare_function(pname, func_params, func_block, std::get<2>(it->second));
-			}
-		}
-		else {
-			curr_scope->declare_variable(pname, new Variable(new Value(current_expression_value)));
-		}
-	}
-
-	if (arr.size() > 0) {
-		auto rest = new Value(Type::T_ARRAY, Type::T_ANY, std::vector<ASTExprNode*>());
-		rest->set(arr, Type::T_ANY);
-		curr_scope->declare_variable(rest_name, new Variable(new Value(rest)));
-	}
-
-	current_function_defined_parameters.pop();
-	current_function_calling_arguments.pop();
-}
-
 void Interpreter::declare_structure(cp_struct* str, const std::string& nmspace) {
 	std::string actnmspace = get_namespace(nmspace);
 	InterpreterScope* curr_scope;
@@ -1937,7 +1856,8 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		if (is_float(l_type) && is_any(l_var_type)) {
 			lval->set(do_operation(lval->f, cp_float(rval->i), op));
 		}
-		else if (is_int(l_type) && is_any(l_var_type) && !Token::is_int_ex_op(op)) {
+		else if (is_int(l_type) && is_any(l_var_type)
+			&& (op == "/=" || op == "/%=" || op == "/" || op == "/%")) {
 			lval->set(do_operation(cp_float(lval->i), cp_float(rval->i), op));
 		}
 		else if (is_int(l_type)) {
@@ -2362,6 +2282,98 @@ long long Interpreter::hash(ASTIdentifierNode* astnode) {
 	default:
 		throw std::runtime_error("cannot determine type");
 	}
+}
+
+void Interpreter::declare_function_block_parameters(const std::string& nmspace) {
+	auto curr_scope = scopes[nmspace].back();
+	auto rest_name = std::string();
+	auto arr = cp_array();
+	size_t i;
+
+	if (current_function_calling_arguments.size() == 0 || current_function_defined_parameters.size() == 0) {
+		return;
+	}
+
+	// adds function arguments
+	for (i = 0; i < current_function_calling_arguments.top().size(); ++i) {
+		// is reference : not reference
+		Value* current_value = nullptr;
+		if (current_function_calling_arguments.top()[i]->ref) {
+			current_value = current_function_calling_arguments.top()[i];
+		}
+		else {
+			current_value = new Value(current_function_calling_arguments.top()[i]);
+			current_value->ref = nullptr;
+		}
+
+		if (i >= current_function_defined_parameters.top().size()) {
+			arr.push_back(current_value);
+		}
+		else {
+			const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
+
+			if (is_function(current_function_calling_arguments.top()[i]->type)) {
+				auto funcs = ((InterpreterScope*)current_function_calling_arguments.top()[i]->fun.first)->find_declared_functions(current_function_calling_arguments.top()[i]->fun.second);
+				for (auto& it = funcs.first; it != funcs.second; ++it) {
+					auto& func_params = std::get<0>(it->second);
+					auto& func_block = std::get<1>(it->second);
+					curr_scope->declare_function(pname, func_params, func_block, std::get<2>(it->second));
+				}
+			}
+			else {
+				if (current_function_calling_arguments.top()[i]->ref) {
+					curr_scope->declare_variable(pname, current_value->ref);
+				}
+				else {
+					curr_scope->declare_variable(pname, new Variable(current_value));
+				}
+			}
+
+			// is rest
+			if (std::get<3>(current_function_defined_parameters.top()[i])) {
+				rest_name = pname;
+				// if is last parameter and is array
+				if (current_function_defined_parameters.top().size() - 1 == i
+					&& is_array(current_value->type)) {
+					arr = current_value->arr;
+				}
+				else {
+					arr.push_back(current_value);
+				}
+			}
+		}
+	}
+
+	// adds default values
+	for (; i < current_function_defined_parameters.top().size(); ++i) {
+		if (std::get<3>(current_function_defined_parameters.top()[i])) {
+			break;
+		}
+
+		const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
+		std::get<2>(current_function_defined_parameters.top()[i])->accept(this);
+
+		if (is_function(current_expression_value.type)) {
+			auto funcs = ((InterpreterScope*)current_expression_value.fun.first)->find_declared_functions(current_expression_value.fun.second);
+			for (auto& it = funcs.first; it != funcs.second; ++it) {
+				auto& func_params = std::get<0>(it->second);
+				auto& func_block = std::get<1>(it->second);
+				curr_scope->declare_function(pname, func_params, func_block, std::get<2>(it->second));
+			}
+		}
+		else {
+			curr_scope->declare_variable(pname, new Variable(new Value(current_expression_value)));
+		}
+	}
+
+	if (arr.size() > 0) {
+		auto rest = new Value(Type::T_ARRAY, Type::T_ANY, std::vector<ASTExprNode*>());
+		rest->set(arr, Type::T_ANY);
+		curr_scope->declare_variable(rest_name, new Variable(new Value(rest)));
+	}
+
+	current_function_defined_parameters.pop();
+	current_function_calling_arguments.pop();
 }
 
 void Interpreter::call_builtin_function(const std::string& identifier) {

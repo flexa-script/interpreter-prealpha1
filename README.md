@@ -199,6 +199,7 @@
 - [ ] functions with no block are not checked (check if is builtin)
 - [ ] some expression nodes aren't cleaning return type like void funcions
 - [ ] reference is not working properly
+- [ ] searching functions in scope, it will not handle struct type
 
 ## Errors
 - Errors has CP prefix, eg. CP9999
