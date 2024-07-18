@@ -596,7 +596,12 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 			col_type = TypeDefinition::get_struct("Pair", "cp");
 		}
 
-		if (!TypeDefinition::is_any_or_match_type(declared_variable, *declared_variable, nullptr, col_type, match_array_dim_ptr)) {
+		//if (!TypeDefinition::is_any_or_match_type(declared_variable, *declared_variable, nullptr, col_type, match_array_dim_ptr)) {
+		if (!match_type(declared_variable->type, col_type.type)
+			&& !match_type(declared_variable->type, col_type.array_type)
+			&& !is_any(declared_variable->type)
+			&& !is_any(col_type.type)
+			&& !is_any(col_type.array_type)) {
 			throw std::runtime_error("mismatched types");
 		}
 
@@ -897,6 +902,10 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 		current_expression.dim = sub_var.dim;
 	}
 
+	if (astnode->identifier_vector[astnode->identifier_vector.size() - 1].access_vector.size() > 0
+		&& !is_any(variable_expr->type)) {
+		current_expression = SemanticValue(declared_variable->array_type, astnode->row, astnode->col);
+	}
 }
 
 void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
@@ -919,10 +928,14 @@ void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
 
 	if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
 		if (astnode->unary_op == "ref") {
-			current_expression.ref->use_ref = true;
+			if (current_expression.ref) {
+				current_expression.ref->use_ref = true;
+			}
 		}
 		if (astnode->unary_op == "unref") {
-			current_expression.ref->use_ref = false;
+			if (current_expression.ref) {
+				current_expression.ref->use_ref = false;
+			}
 		}
 	}
 	else {
@@ -1275,6 +1288,10 @@ bool SemanticAnalyser::match_array_dim(TypeDefinition ltype, TypeDefinition rtyp
 	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
 	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
 
+	if (expr_dim.size() == 1) {
+		return true;
+	}
+
 	if (var_dim.size() != expr_dim.size()) {
 		return false;
 	}
@@ -1427,16 +1444,17 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 
 long long SemanticAnalyser::hash(ASTExprNode* astnode) {
 	astnode->accept(this);
-	switch (current_expression.type) {
-	case Type::T_BOOL:
-	case Type::T_INT:
-	case Type::T_FLOAT:
-	case Type::T_CHAR:
-	case Type::T_STRING:
+	//switch (current_expression.type) {
+	//case Type::T_BOOL:
+	//case Type::T_INT:
+	//case Type::T_FLOAT:
+	//case Type::T_CHAR:
+	//case Type::T_STRING:
+	//case Type::T_ANY:
 		return 0;
-	default:
-		throw std::runtime_error("cannot determine type");
-	}
+	//default:
+	//	throw std::runtime_error("cannot determine type");
+	//}
 }
 
 long long SemanticAnalyser::hash(ASTLiteralNode<cp_bool>* astnode) {
@@ -1473,17 +1491,17 @@ long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 	auto declared_variable = curr_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	auto variable_expression = declared_variable->value;
 
-	switch (variable_expression->type) {
-	case Type::T_BOOL:
-	case Type::T_INT:
-	case Type::T_FLOAT:
-	case Type::T_CHAR:
-	case Type::T_STRING:
-	case Type::T_ANY:
+	//switch (variable_expression->type) {
+	//case Type::T_BOOL:
+	//case Type::T_INT:
+	//case Type::T_FLOAT:
+	//case Type::T_CHAR:
+	//case Type::T_STRING:
+	//case Type::T_ANY:
 		return variable_expression->hash;
-	default:
-		throw std::runtime_error("cannot determine type");
-	}
+	//default:
+	//	throw std::runtime_error("cannot determine type");
+	//}
 
 }
 

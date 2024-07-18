@@ -128,7 +128,14 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
 
-	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
+	if (new_value->arr.size() == 1) {
+		auto arr = build_array(astnode->dim, new_value->arr[0], astnode->dim.size() - 1);
+		new_value->arr = arr;
+		scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
+	}
+	else {
+		scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
+	}
 }
 
 void Interpreter::visit(ASTUnpackedDeclarationNode* astnode) {
@@ -1664,7 +1671,14 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			// is rest
 			if (std::get<3>(current_function_defined_parameters.top()[i])) {
 				rest_name = pname;
-				arr.push_back(current_value);
+				// if is last parameter and is array
+				if (current_function_defined_parameters.top().size() - 1 == i
+					&& is_array(current_value->type)) {
+					arr = current_value->arr;
+				}
+				else {
+					arr.push_back(current_value);
+				}
 			}
 		}
 	}
@@ -1812,6 +1826,10 @@ std::string Interpreter::parse_struct_to_string(const cp_struct& str_value) {
 bool Interpreter::match_array_dim(TypeDefinition ltype, TypeDefinition rtype) {
 	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
 	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
+
+	if (expr_dim.size() == 1) {
+		return true;
+	}
 
 	if (var_dim.size() != expr_dim.size()) {
 		return false;
@@ -2077,7 +2095,13 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
 
-		lval->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
+		//if (rval->arr.size() == 1 && op == "=") {
+		//	auto arr = build_array(rval->dim, rval->arr[0], rval->dim.size() - 1);
+		//	lval->set(do_operation(lval->arr, arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
+		//}
+		//else {
+			lval->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
+		//}
 
 		break;
 	}
