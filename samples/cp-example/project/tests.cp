@@ -1,5 +1,5 @@
 using tests2;
 
-def foo() {
+fun foo() {
   asd();
 }

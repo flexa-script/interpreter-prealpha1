@@ -200,6 +200,7 @@
 - [ ] some expression nodes aren't cleaning return type like void funcions
 - [ ] reference is not working properly
 - [ ] searching functions in scope, it will not handle struct type
+- [ ] struct assign seems not working in semantical analisys
 
 ## Errors
 - Errors has CP prefix, eg. CP9999

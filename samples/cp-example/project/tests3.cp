@@ -1,4 +1,4 @@
 
-def bar(v: string){
+fun bar(v: string){
 	print(v);
 }

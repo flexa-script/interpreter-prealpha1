@@ -17,15 +17,15 @@ struct List {
 };
 
 
-def create(): List {
+fun create(): List {
     return List{first=null, size=0};
 }
 
-def init(list: List) {
+fun init(list: List) {
     list = create();
 }
 
-def add(list: List, value: any) {
+fun add(list: List, value: any) {
     if (list.first == null) {
         list.first = Node{value=value, next=null};
         list.size = 1;
@@ -46,7 +46,7 @@ def add(list: List, value: any) {
     }
 }
 
-// def add(list: List, index: int, value: any): bool {
+// fun add(list: List, index: int, value: any): bool {
 //     if (index >= list.size) {
 //         return false;
 //     }
@@ -71,7 +71,7 @@ def add(list: List, value: any) {
 //     return true;
 // }
 
-def remove(list: List, index: int): bool {
+fun remove(list: List, index: int): bool {
     // print("curr list: "+string(list)+"\n");
     // print("list.first="+string(list.first)+"\n");
     // print("list.first.next="+string(list.first.next)+"\n");
@@ -110,7 +110,7 @@ def remove(list: List, index: int): bool {
     return true;
 }
 
-def get(list: List, index: int): any {
+fun get(list: List, index: int): any {
     if (index >= list.size) {
         return null;
     }
@@ -124,15 +124,15 @@ def get(list: List, index: int): any {
     return node.value;
 }
 
-def clear(list: List) {
+fun clear(list: List) {
     list = create();
 }
 
-def is_empty(list: List): bool {
+fun is_empty(list: List): bool {
     return list.size == 0;
 }
 
-def to_array(list: List): any[] {
+fun to_array(list: List): any[] {
     // print("\nto_array:\n");
     var arr[list.size]: any = {null};
     // print(arr);
@@ -150,7 +150,7 @@ def to_array(list: List): any[] {
     return arr;
 }
 
-def to_string(list: List): string {
+fun to_string(list: List): string {
     if (list.first == null) {
         return "[]";
     }

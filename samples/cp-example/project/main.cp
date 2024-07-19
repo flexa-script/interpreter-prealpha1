@@ -4,7 +4,7 @@ using util.println;
 
 // as namespace io;
 
-def new_person(name, age): axe::Person {
+fun new_person(name, age): axe::Person {
     return axe::Person{name=name, age=age};
 }
 

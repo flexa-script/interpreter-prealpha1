@@ -2,10 +2,10 @@ using tests3;
 
 // as namespace cp;
 
-def aaa(){
+fun aaa(){
 bar(this);
 }
 
-def asd(){
+fun asd(){
 	aaa();
 }
