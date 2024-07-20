@@ -190,6 +190,7 @@ bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype
 bool TypeDefinition::match_type_struct(TypeDefinition ltype, TypeDefinition rtype) {
 	return is_struct(ltype.type) && is_struct(rtype.type)
 		&& ltype.type_name == rtype.type_name
+		// todo: check why it is not possible use typename namespace
 		//&& ltype.type_name_space == rtype.type_name_space
 		;
 }

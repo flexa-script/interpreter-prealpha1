@@ -62,5 +62,4 @@ if (this == "main") {
     print("\n");
 
     print("\n\nto_array return: \n" + string(list::to_array(numbers)));
-    println("\n\nto_array return: \n", list::to_array(numbers));
 }

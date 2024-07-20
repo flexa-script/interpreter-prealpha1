@@ -214,10 +214,6 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 			}
 		}
 	}
-	//debug
-	if (astnode->identifier == "direction") {
-		int a = 0;
-	}
 
 	identifier_call_name = astnode->identifier;
 	astnode->expr->accept(this);
@@ -231,25 +227,10 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		throw std::runtime_error("'" + identifier + "' constant being reassigned");
 	}
 
-	//if (is_struct(declared_variable->type)
-	//	&& astnode->identifier_vector.size() > 1) {
-	//	auto sub_var = access_struct_variable(astnode->identifier_vector, decl_var_expression->type_name, decl_var_expression->type_name_space, 1);
-	//	decl_var_expression = new SemanticValue(sub_var, 0, false, astnode->row, astnode->col);
-	//	decl_var_expression->ref = declared_variable;
-	//}
-	//else if (is_array(declared_variable->type) && astnode->identifier_vector[0].access_vector.size() > 0) {
-	//	decl_var_expression = new SemanticValue(declared_variable->array_type, Type::T_UNDEFINED,
-	//		std::vector<ASTExprNode*>(), declared_variable->type_name, declared_variable->type_name_space,
-	//		0, false, astnode->row, astnode->col);
-	//	decl_var_expression->ref = declared_variable;
-	//}
-	//check_is_struct_exists(assignment_expr.type, decl_var_expression->type_name_space, assignment_expr.type_name);
-
 	assignment_expr = SemanticValue(do_operation(astnode->op, *declared_variable, *decl_var_expression,
 		nullptr, assignment_expr, false), 0, false, astnode->row, astnode->col);
 
 	if (declared_variable->value == decl_var_expression) {
-		//declared_variable->value = new SemanticValue();
 		declared_variable->value->copy_from(&assignment_expr);
 	}
 }
@@ -606,7 +587,6 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 	SemanticScope* back_scope = scopes[nmspace].back();
 
 	astnode->itdecl->accept(this);
-	//declared_variable = current_expression.ref;
 
 	astnode->collection->accept(this);
 	col_type = current_expression;
@@ -647,7 +627,6 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 
 		SemanticVariable* declared_variable = back_scope->find_declared_variable(idnode->identifier);
 
-		//if (!TypeDefinition::is_any_or_match_type(declared_variable, *declared_variable, nullptr, col_type, match_array_dim_ptr)) {
 		if (!match_type(declared_variable->type, col_type.type)
 			&& !match_type(declared_variable->type, col_type.array_type)
 			&& !is_any(declared_variable->type)
@@ -853,8 +832,6 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
 		astnode->values.at(i)->accept(this);
-		//auto new_val = new SemanticValue();
-		//new_val->copy_from(&current_expression);
 		++arr_size;
 	}
 
@@ -950,7 +927,6 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 	}
 
 	auto declared_variable = curr_scope->find_declared_variable(astnode->identifier);
-	//auto variable_expr = declared_variable->value;
 	auto variable_expr = access_value(declared_variable->value, astnode->identifier_vector);
 
 	if (is_undefined(variable_expr->type)) {
@@ -958,23 +934,9 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 	}
 
 	current_expression = *variable_expr;
-	//current_expression.type = is_any(declared_variable->type) ? variable_expr->type : declared_variable->type;
 	current_expression.resetref();
-	//current_expression.is_sub = astnode->identifier_vector[0].access_vector.size() > 1 || astnode->identifier_vector.size() > 1;
 	current_expression.is_sub = declared_variable->value != variable_expr;
 
-	//if (astnode->identifier_vector.size() > 1 && !is_any(variable_expr->type)) {
-	//	auto sub_var = access_struct_variable(astnode->identifier_vector, declared_variable->type_name, declared_variable->type_name_space, 1);
-	//	current_expression.type = sub_var.type;
-	//	current_expression.type_name = sub_var.type_name;
-	//	current_expression.array_type = sub_var.array_type;
-	//	current_expression.dim = sub_var.dim;
-	//}
-
-	//if (astnode->identifier_vector[astnode->identifier_vector.size() - 1].access_vector.size() > 0
-	//	&& !is_any(variable_expr->type)) {
-	//	current_expression = SemanticValue(declared_variable->array_type, astnode->row, astnode->col);
-	//}
 }
 
 void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
@@ -1516,17 +1478,7 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 
 long long SemanticAnalyser::hash(ASTExprNode* astnode) {
 	astnode->accept(this);
-	//switch (current_expression.type) {
-	//case Type::T_BOOL:
-	//case Type::T_INT:
-	//case Type::T_FLOAT:
-	//case Type::T_CHAR:
-	//case Type::T_STRING:
-	//case Type::T_ANY:
-		return 0;
-	//default:
-	//	throw std::runtime_error("cannot determine type");
-	//}
+	return 0;
 }
 
 long long SemanticAnalyser::hash(ASTLiteralNode<cp_bool>* astnode) {
@@ -1563,18 +1515,7 @@ long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 	auto declared_variable = curr_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	auto variable_expression = declared_variable->value;
 
-	//switch (variable_expression->type) {
-	//case Type::T_BOOL:
-	//case Type::T_INT:
-	//case Type::T_FLOAT:
-	//case Type::T_CHAR:
-	//case Type::T_STRING:
-	//case Type::T_ANY:
-		return variable_expression->hash;
-	//default:
-	//	throw std::runtime_error("cannot determine type");
-	//}
-
+	return variable_expression->hash;
 }
 
 void SemanticAnalyser::register_built_in_functions() {
