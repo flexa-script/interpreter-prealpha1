@@ -932,7 +932,7 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 	}
 
 	current_expression = *variable_expr;
-	current_expression.type = is_any(declared_variable->type) ? variable_expr->type : declared_variable->type;
+	//current_expression.type = is_any(declared_variable->type) ? variable_expr->type : declared_variable->type;
 	current_expression.resetref();
 	//current_expression.is_sub = astnode->identifier_vector[0].access_vector.size() > 1 || astnode->identifier_vector.size() > 1;
 	current_expression.is_sub = declared_variable->value != variable_expr;
@@ -1208,7 +1208,7 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 
 	if ((is_any(l_var_type) || is_any(r_var_type)
 		|| is_any(l_type) || is_any(r_type)
-		|| is_void(r_type)) && op == "=") {
+		|| is_void(l_type) || is_void(r_type)) && op == "=") {
 		return rvalue;
 	}
 

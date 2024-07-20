@@ -137,6 +137,8 @@ TypeDefinition TypeDefinition::get_struct(const std::string& type_name, const st
 bool TypeDefinition::is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, std::function<bool(TypeDefinition ltype, TypeDefinition rtype)> match_array_dim) {
 	if (lvtype && is_any(lvtype->type)
 		|| rvtype && is_any(rvtype->type)
+		|| is_any(ltype.type)
+		|| is_any(rtype.type)
 		|| is_void(ltype.type)
 		|| is_void(rtype.type)) return true;
 	return match_type(ltype, rtype, match_array_dim);
