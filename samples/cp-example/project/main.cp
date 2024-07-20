@@ -11,9 +11,9 @@ fun new_person(name, age): axe::Person {
 if (this == "main") {
     var numbers: list::List = list::create();
     
-    print(new_person("Carlos", 29), "\n");
+    // print(new_person("Carlos", 29), "\n");
 
-    io::println("numbers: " + string(numbers));
+    // io::println("numbers: " + string(numbers));
     print("List init: size: " + string(numbers.size) + io::NEW_LINE);
 
     list::add(numbers, 10);
@@ -62,4 +62,5 @@ if (this == "main") {
     print("\n");
 
     print("\n\nto_array return: \n" + string(list::to_array(numbers)));
+    println("\n\nto_array return: \n", list::to_array(numbers));
 }

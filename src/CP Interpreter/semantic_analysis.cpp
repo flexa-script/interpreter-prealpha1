@@ -145,7 +145,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	new_value->copy_from(&current_expression);
 	new_value->hash = astnode->expr ? astnode->expr->hash(this) : 0;
 
-	if (astnode->is_const && !current_expression.is_const) {
+	if (astnode->is_const && !new_value->is_const) {
 		throw std::runtime_error("initializer of '" + astnode->identifier + "' is not a constant");
 	}
 
@@ -159,12 +159,17 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		new_value, astnode->is_const,
 		astnode->row, astnode->col);
 	new_value->ref = new_var;
-	current_expression = *new_value;
 
-	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, current_expression, match_array_dim_ptr)
-		&& !is_undefined(current_expression.type)) {
+	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, match_array_dim_ptr)
+		&& !is_undefined(new_value->type)) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
+
+	if (new_value->dim.size() < new_var->dim.size() && new_value->dim.size() == 1) {
+		new_value->dim = new_var->dim;
+	}
+
+	//current_expression = *new_value;
 
 	current_scope->declare_variable(astnode->identifier, new_var);
 }
@@ -209,6 +214,10 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 			}
 		}
 	}
+	//debug
+	if (astnode->identifier == "direction") {
+		int a = 0;
+	}
 
 	identifier_call_name = astnode->identifier;
 	astnode->expr->accept(this);
@@ -236,11 +245,11 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	//}
 	//check_is_struct_exists(assignment_expr.type, decl_var_expression->type_name_space, assignment_expr.type_name);
 
-	do_operation(astnode->op, *declared_variable, *decl_var_expression,
-		nullptr, assignment_expr, false);
+	assignment_expr = SemanticValue(do_operation(astnode->op, *declared_variable, *decl_var_expression,
+		nullptr, assignment_expr, false), 0, false, astnode->row, astnode->col);
 
 	if (declared_variable->value == decl_var_expression) {
-		declared_variable->value = new SemanticValue();
+		//declared_variable->value = new SemanticValue();
 		declared_variable->value->copy_from(&assignment_expr);
 	}
 }
@@ -590,14 +599,14 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	is_loop = true;
-	SemanticVariable* declared_variable;
 	TypeDefinition col_type;
 	const auto& nmspace = get_namespace();
 
 	scopes[nmspace].push_back(new SemanticScope());
+	SemanticScope* back_scope = scopes[nmspace].back();
 
 	astnode->itdecl->accept(this);
-	declared_variable = current_expression.ref;
+	//declared_variable = current_expression.ref;
 
 	astnode->collection->accept(this);
 	col_type = current_expression;
@@ -611,7 +620,6 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 			throw std::runtime_error("invalid number of values");
 		}
 
-		SemanticScope* back_scope = scopes[nmspace].back();
 		auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
 		decl_key->value = new SemanticValue(Type::T_STRING, astnode->row, astnode->col);
 
@@ -619,7 +627,7 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 		auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
 		decl_val->value = new SemanticValue(Type::T_ANY, astnode->row, astnode->col);
 	}
-	else {
+	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl)) {
 		if (!is_array(col_type.type)
 			&& !is_string(col_type.type)
 			&& !is_struct(col_type.type)
@@ -637,6 +645,8 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 			col_type = TypeDefinition::get_struct("Pair", "cp");
 		}
 
+		SemanticVariable* declared_variable = back_scope->find_declared_variable(idnode->identifier);
+
 		//if (!TypeDefinition::is_any_or_match_type(declared_variable, *declared_variable, nullptr, col_type, match_array_dim_ptr)) {
 		if (!match_type(declared_variable->type, col_type.type)
 			&& !match_type(declared_variable->type, col_type.array_type)
@@ -646,18 +656,34 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 			throw std::runtime_error("mismatched types");
 		}
 
-		if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl)) {
+		if (is_struct(col_type.type)) {
+			declared_variable->value->type = Type::T_STRUCT;
+			declared_variable->value->type_name = "Pair";
+			declared_variable->value->type_name_space = "cp";
+			declared_variable->value->array_type = Type::T_UNDEFINED;
+		}
+		else if (is_string(col_type.type)) {
+			declared_variable->value->type = Type::T_CHAR;
+			declared_variable->value->type_name = "";
+			declared_variable->value->type_name_space = "";
+			declared_variable->value->array_type = Type::T_UNDEFINED;
+		}
+		else if (col_type.dim.size() > 1) {
 			declared_variable->value->type = col_type.type;
-			declared_variable->value->type_name = is_struct(col_type.type) ?
-				"Pair" : current_expression.type_name;
-			declared_variable->value->type_name_space = is_struct(col_type.type) ?
-				"cp" : current_expression.type_name_space;
+			declared_variable->value->type_name = current_expression.type_name;
+			declared_variable->value->type_name_space = current_expression.type_name_space;
 			declared_variable->value->array_type = current_expression.array_type;
-
 		}
-		else{
-			throw std::runtime_error("expected declaration");
+		else {
+			declared_variable->value->type = col_type.array_type;
+			declared_variable->value->type_name = current_expression.type_name;
+			declared_variable->value->type_name_space = current_expression.type_name_space;
+			declared_variable->value->array_type = current_expression.array_type;
 		}
+		
+	}
+	else {
+		throw std::runtime_error("expected declaration");
 	}
 
 	astnode->block->accept(this);
@@ -1202,7 +1228,8 @@ SemanticScope* SemanticAnalyser::get_inner_most_function_scope(const std::string
 
 TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinition lvar, TypeDefinition lvalue, TypeDefinition* rvar, TypeDefinition rvalue, bool is_expr) {
 	Type l_var_type = lvar.type;
-	Type l_type = is_undefined(lvalue.type) ? l_var_type : lvalue.type;
+	lvalue = is_undefined(lvalue.type) ? lvar : lvalue;
+	Type l_type = lvalue.type;
 	Type r_var_type = rvar ? rvar->type : rvalue.type;
 	Type r_type = rvalue.type;
 
@@ -1324,14 +1351,16 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 		return TypeDefinition::get_basic(Type::T_BOOL);
 	}
 
-	return is_float(lvalue.type) ? lvalue : rvalue;
+	return is_float(lvalue.type) || is_string(lvalue.type) ? lvalue : rvalue;
 }
 
 bool SemanticAnalyser::match_array_dim(TypeDefinition ltype, TypeDefinition rtype) {
 	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
 	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
 
-	if (expr_dim.size() == 1) {
+	if (expr_dim.size() == 1
+		|| var_dim.size() == 0
+		|| expr_dim.size() == 0) {
 		return true;
 	}
 

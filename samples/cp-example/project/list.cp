@@ -147,6 +147,7 @@ fun to_array(list: List): any[] {
         }
         curr_node = curr_node.next;
     }
+    println("array: ", arr);
     return arr;
 }
 

@@ -121,7 +121,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		astnode_type_name, astnode->type_name_space,
 		new_value);
 	new_value->ref = new_var;
-	current_expression_value = *new_value;
+	//current_expression_value = *new_value;
 
 	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, match_array_dim_ptr)
 		&& !is_undefined(new_value->type)) {
@@ -131,11 +131,9 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	if (new_value->arr.size() == 1) {
 		auto arr = build_array(astnode->dim, new_value->arr[0], astnode->dim.size() - 1);
 		new_value->arr = arr;
-		scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
 	}
-	else {
-		scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
-	}
+	
+	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
 }
 
 void Interpreter::visit(ASTUnpackedDeclarationNode* astnode) {
@@ -189,34 +187,35 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 
 	const auto& nmspace = get_namespace();
 	auto& curr_func_ret_type = current_function_return_type.top();
-	astnode->expr->accept(this);
-
 	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, current_function_signature.top());
+
+	astnode->expr->accept(this);
 	auto root = new Value(current_expression_value);
 	Value* value = access_value(func_scope, root, current_function_call_identifier_vector.top());
-	current_expression_value = *value;
 
-	if (current_expression_value.type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
+	if (value->type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
 		has_string_access = false;
-		auto str = current_expression_value.s;
+		auto str = value->s;
 		current_function_call_identifier_vector.top().back().access_vector[current_function_call_identifier_vector.top().back().access_vector.size() - 1]->accept(this);
-		auto pos = current_expression_value.i;
+		auto pos = value->i;
 
-		auto char_value = Value(Type::T_CHAR);
-		char_value.set(cp_char(str[pos]));
-		current_expression_value = char_value;
+		auto char_value = new Value(Type::T_CHAR);
+		char_value->set(cp_char(str[pos]));
+		value = char_value;
 	}
 
 	if (!TypeDefinition::is_any_or_match_type(
 		&curr_func_ret_type,
 		curr_func_ret_type,
 		nullptr,
-		current_expression_value,
+		*value,
 		match_array_dim_ptr)) {
 		ExceptionHandler::throw_return_type_err(current_this_name.top(),
 			curr_func_ret_type.type,
-			current_expression_value.type);
+			value->type);
 	}
+
+	current_expression_value = *value;
 
 	for (long long i = scopes[nmspace].size() - 1; i >= 0; --i) {
 		if (!scopes[nmspace][i]->get_name().empty()) {
@@ -249,6 +248,11 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		}
 
 		function_arguments.push_back(pvalue);
+	}
+
+	// DEBUG
+	if (astnode->identifier == "to_array") {
+		int i = 0;
 	}
 
 	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
@@ -1604,6 +1608,10 @@ std::vector<Value*> Interpreter::build_array(const std::vector<ASTExprNode*>& di
 
 	size_t size = current_expression_value.i;
 
+	if (size == 0) {
+		//throw std::runtime_error("an array cannot be initialized with 0");
+	}
+
 	for (size_t j = 0; j < size; ++j) {
 		auto val = new Value(init_value);
 		arr.push_back(val);
@@ -1659,9 +1667,16 @@ void Interpreter::declare_structure(cp_struct* str, const std::string& nmspace) 
 
 std::vector<unsigned int> Interpreter::evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector) {
 	auto access_vector = std::vector<unsigned int>();
-	for (auto expr : expr_access_vector) {
-		expr->accept(this);
-		access_vector.push_back(current_expression_value.i);
+	for (const auto& expr : expr_access_vector) {
+		unsigned int val = 0;
+		if (expr) {
+			expr->accept(this);
+			if (!is_int(current_expression_value.type)) {
+				throw std::runtime_error("array index access must be a integer value");
+			}
+			val = current_expression_value.i;
+		}
+		access_vector.push_back(val);
 	}
 	return access_vector;
 }
@@ -1746,7 +1761,9 @@ bool Interpreter::match_array_dim(TypeDefinition ltype, TypeDefinition rtype) {
 	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
 	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
 
-	if (expr_dim.size() == 1) {
+	if (expr_dim.size() == 1
+		|| var_dim.size() == 0
+		|| expr_dim.size() == 0) {
 		return true;
 	}
 

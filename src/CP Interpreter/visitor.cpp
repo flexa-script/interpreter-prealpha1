@@ -179,16 +179,19 @@ bool TypeDefinition::match_type_string(TypeDefinition ltype, TypeDefinition rtyp
 }
 
 bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype, std::function<bool(TypeDefinition ltype, TypeDefinition rtype)> match_array_dim) {
+	TypeDefinition latype = TypeDefinition(ltype.array_type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), ltype.type_name, ltype.type_name_space);
+	TypeDefinition ratype = TypeDefinition(rtype.array_type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), rtype.type_name, rtype.type_name_space);
+
 	return is_array(ltype.type) && is_array(rtype.type)
-		&& (is_any(ltype.array_type) || is_any(rtype.array_type)
-			|| ltype.array_type == rtype.array_type)
+		&& is_any_or_match_type(&latype, latype, nullptr, ratype, match_array_dim)
 		&& match_array_dim(ltype, rtype);
 }
 
 bool TypeDefinition::match_type_struct(TypeDefinition ltype, TypeDefinition rtype) {
 	return is_struct(ltype.type) && is_struct(rtype.type)
 		&& ltype.type_name == rtype.type_name
-		&& ltype.type_name_space == rtype.type_name_space;
+		//&& ltype.type_name_space == rtype.type_name_space
+		;
 }
 
 bool TypeDefinition::match_type_function(TypeDefinition ltype, TypeDefinition rtype) {
@@ -237,6 +240,7 @@ void SemanticValue::copy_from(SemanticValue* value) {
 	array_type = value->array_type;
 	dim = value->dim;
 	type_name = value->type_name;
+	type_name_space = value->type_name_space;
 	hash = value->hash;
 	is_const = value->is_const;
 	ref = value->ref;

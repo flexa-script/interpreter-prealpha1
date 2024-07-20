@@ -242,16 +242,16 @@ if (this == "main") {
 
         direction = readch();
 
-        if (direction == "w") {
+        if (direction == 'w') {
             moves_up(ref grid);
         }
-        else if (direction == "s") {
+        else if (direction == 's') {
             moves_down(ref grid);
         }
-        else if (direction == "a") {
+        else if (direction == 'a') {
             moves_left(ref grid);
         }
-        else if (direction == "d") {
+        else if (direction == 'd') {
             moves_right(ref grid);
         }
 
