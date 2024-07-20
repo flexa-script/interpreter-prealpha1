@@ -169,8 +169,6 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		new_value->dim = new_var->dim;
 	}
 
-	//current_expression = *new_value;
-
 	current_scope->declare_variable(astnode->identifier, new_var);
 }
 
@@ -233,45 +231,6 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	if (declared_variable->value == decl_var_expression) {
 		declared_variable->value->copy_from(&assignment_expr);
 	}
-}
-
-SemanticValue* SemanticAnalyser::access_value(SemanticValue* value, const std::vector<Identifier>& identifier_vector, size_t i) {
-	SemanticValue* next_value = value;
-
-	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
-
-	if (access_vector.size() > 0) {
-		if (access_vector.size() == value->dim.size()) {
-			next_value= new SemanticValue(next_value->array_type, Type::T_UNDEFINED,
-				std::vector<ASTExprNode*>(), next_value->type_name, next_value->type_name_space,
-				0, false, next_value->row, next_value->col);
-		}
-	}
-
-	++i;
-
-	if (i < identifier_vector.size()) {
-		SemanticScope* curr_scope;
-		try {
-			curr_scope = get_inner_most_struct_definition_scope(get_namespace(next_value->type_name_space), next_value->type_name);
-		}
-		catch (...) {
-			throw std::runtime_error("can't find struct");
-		}
-		auto type_struct = curr_scope->find_declared_structure_definition(next_value->type_name);
-
-		if (type_struct.variables.find(identifier_vector[i].identifier) == type_struct.variables.end()) {
-			ExceptionHandler::throw_struct_member_err(next_value->type_name, identifier_vector[i].identifier);
-		}
-		
-		next_value = new SemanticValue(type_struct.variables[identifier_vector[i].identifier], 0, false, next_value->row, next_value->col);
-
-		if (identifier_vector[i].access_vector.size() > 0 || i < identifier_vector.size()) {
-			return access_value(next_value, identifier_vector, i);
-		}
-	}
-
-	return next_value;
 }
 
 void SemanticAnalyser::visit(ASTReturnNode* astnode) {
@@ -1378,6 +1337,45 @@ void SemanticAnalyser::check_array_type(ASTExprNode* astnode, unsigned int row, 
 		throw std::runtime_error("mismatched type in array definition");
 	}
 	current_expression.type = aux_curr_type;
+}
+
+SemanticValue* SemanticAnalyser::access_value(SemanticValue* value, const std::vector<Identifier>& identifier_vector, size_t i) {
+	SemanticValue* next_value = value;
+
+	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
+
+	if (access_vector.size() > 0) {
+		if (access_vector.size() == value->dim.size()) {
+			next_value = new SemanticValue(next_value->array_type, Type::T_UNDEFINED,
+				std::vector<ASTExprNode*>(), next_value->type_name, next_value->type_name_space,
+				0, false, next_value->row, next_value->col);
+		}
+	}
+
+	++i;
+
+	if (i < identifier_vector.size()) {
+		SemanticScope* curr_scope;
+		try {
+			curr_scope = get_inner_most_struct_definition_scope(get_namespace(next_value->type_name_space), next_value->type_name);
+		}
+		catch (...) {
+			throw std::runtime_error("can't find struct");
+		}
+		auto type_struct = curr_scope->find_declared_structure_definition(next_value->type_name);
+
+		if (type_struct.variables.find(identifier_vector[i].identifier) == type_struct.variables.end()) {
+			ExceptionHandler::throw_struct_member_err(next_value->type_name, identifier_vector[i].identifier);
+		}
+
+		next_value = new SemanticValue(type_struct.variables[identifier_vector[i].identifier], 0, false, next_value->row, next_value->col);
+
+		if (identifier_vector[i].access_vector.size() > 0 || i < identifier_vector.size()) {
+			return access_value(next_value, identifier_vector, i);
+		}
+	}
+
+	return next_value;
 }
 
 void SemanticAnalyser::check_is_struct_exists(parser::Type type, const std::string& nmspace, const std::string& type_name) {
