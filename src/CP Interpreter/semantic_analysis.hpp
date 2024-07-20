@@ -48,6 +48,7 @@ namespace visitor {
 		TypeDefinition do_operation(const std::string& op, TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, bool is_expr = true);
 		bool match_array_dim(TypeDefinition ltype, TypeDefinition rtype);
 
+		SemanticValue* access_value(SemanticValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
 		visitor::VariableDefinition access_struct_variable(std::vector<parser::Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i = 0);
 
 		void register_built_in_functions();

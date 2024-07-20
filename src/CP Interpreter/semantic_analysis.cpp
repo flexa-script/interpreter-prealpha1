@@ -210,37 +210,78 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		}
 	}
 
-	auto declared_variable = curr_scope->find_declared_variable(identifier);
-	auto decl_var_expression = declared_variable->value;
-
-	if (declared_variable->is_const) {
-		throw std::runtime_error("'" + identifier + "' constant being reassigned");
-	}
-
 	identifier_call_name = astnode->identifier;
 	astnode->expr->accept(this);
 	identifier_call_name = "";
 	auto assignment_expr = current_expression;
 
-	if (is_struct(declared_variable->type)
-		&& astnode->identifier_vector.size() > 1) {
-		auto sub_var = access_struct_variable(astnode->identifier_vector, decl_var_expression->type_name, decl_var_expression->type_name_space, 1);
-		decl_var_expression = new SemanticValue(sub_var, 0, false, astnode->row, astnode->col);
-		decl_var_expression->ref = declared_variable;
+	auto declared_variable = curr_scope->find_declared_variable(identifier);
+	auto decl_var_expression = access_value(declared_variable->value, astnode->identifier_vector);
+
+	if (declared_variable->is_const) {
+		throw std::runtime_error("'" + identifier + "' constant being reassigned");
 	}
-	else if (is_array(declared_variable->type) && astnode->identifier_vector[0].access_vector.size() > 0) {
-		decl_var_expression = new SemanticValue(declared_variable->array_type, Type::T_UNDEFINED,
-			std::vector<ASTExprNode*>(), declared_variable->type_name, declared_variable->type_name_space,
-			0, false, astnode->row, astnode->col);
-		decl_var_expression->ref = declared_variable;
-	}
-	check_is_struct_exists(assignment_expr.type, decl_var_expression->type_name_space, assignment_expr.type_name);
+
+	//if (is_struct(declared_variable->type)
+	//	&& astnode->identifier_vector.size() > 1) {
+	//	auto sub_var = access_struct_variable(astnode->identifier_vector, decl_var_expression->type_name, decl_var_expression->type_name_space, 1);
+	//	decl_var_expression = new SemanticValue(sub_var, 0, false, astnode->row, astnode->col);
+	//	decl_var_expression->ref = declared_variable;
+	//}
+	//else if (is_array(declared_variable->type) && astnode->identifier_vector[0].access_vector.size() > 0) {
+	//	decl_var_expression = new SemanticValue(declared_variable->array_type, Type::T_UNDEFINED,
+	//		std::vector<ASTExprNode*>(), declared_variable->type_name, declared_variable->type_name_space,
+	//		0, false, astnode->row, astnode->col);
+	//	decl_var_expression->ref = declared_variable;
+	//}
+	//check_is_struct_exists(assignment_expr.type, decl_var_expression->type_name_space, assignment_expr.type_name);
 
 	do_operation(astnode->op, *declared_variable, *decl_var_expression,
 		nullptr, assignment_expr, false);
 
-	declared_variable->value = new SemanticValue();
-	declared_variable->value->copy_from(&assignment_expr);
+	if (declared_variable->value == decl_var_expression) {
+		declared_variable->value = new SemanticValue();
+		declared_variable->value->copy_from(&assignment_expr);
+	}
+}
+
+SemanticValue* SemanticAnalyser::access_value(SemanticValue* value, const std::vector<Identifier>& identifier_vector, size_t i) {
+	SemanticValue* next_value = value;
+
+	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
+
+	if (access_vector.size() > 0) {
+		if (access_vector.size() == value->dim.size()) {
+			next_value= new SemanticValue(next_value->array_type, Type::T_UNDEFINED,
+				std::vector<ASTExprNode*>(), next_value->type_name, next_value->type_name_space,
+				0, false, next_value->row, next_value->col);
+		}
+	}
+
+	++i;
+
+	if (i < identifier_vector.size()) {
+		SemanticScope* curr_scope;
+		try {
+			curr_scope = get_inner_most_struct_definition_scope(get_namespace(next_value->type_name_space), next_value->type_name);
+		}
+		catch (...) {
+			throw std::runtime_error("can't find struct");
+		}
+		auto type_struct = curr_scope->find_declared_structure_definition(next_value->type_name);
+
+		if (type_struct.variables.find(identifier_vector[i].identifier) == type_struct.variables.end()) {
+			ExceptionHandler::throw_struct_member_err(next_value->type_name, identifier_vector[i].identifier);
+		}
+		
+		next_value = new SemanticValue(type_struct.variables[identifier_vector[i].identifier], 0, false, next_value->row, next_value->col);
+
+		if (identifier_vector[i].access_vector.size() > 0 || i < identifier_vector.size()) {
+			return access_value(next_value, identifier_vector, i);
+		}
+	}
+
+	return next_value;
 }
 
 void SemanticAnalyser::visit(ASTReturnNode* astnode) {
