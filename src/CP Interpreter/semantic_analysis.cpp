@@ -924,7 +924,8 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 	}
 
 	auto declared_variable = curr_scope->find_declared_variable(astnode->identifier);
-	auto variable_expr = declared_variable->value;
+	//auto variable_expr = declared_variable->value;
+	auto variable_expr = access_value(declared_variable->value, astnode->identifier_vector);
 
 	if (is_undefined(variable_expr->type)) {
 		throw std::runtime_error("variable '" + astnode->identifier + "' is undefined");
@@ -933,20 +934,21 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 	current_expression = *variable_expr;
 	current_expression.type = is_any(declared_variable->type) ? variable_expr->type : declared_variable->type;
 	current_expression.resetref();
-	current_expression.is_sub = astnode->identifier_vector[0].access_vector.size() > 1 || astnode->identifier_vector.size() > 1;
+	//current_expression.is_sub = astnode->identifier_vector[0].access_vector.size() > 1 || astnode->identifier_vector.size() > 1;
+	current_expression.is_sub = declared_variable->value != variable_expr;
 
-	if (astnode->identifier_vector.size() > 1 && !is_any(variable_expr->type)) {
-		auto sub_var = access_struct_variable(astnode->identifier_vector, declared_variable->type_name, declared_variable->type_name_space, 1);
-		current_expression.type = sub_var.type;
-		current_expression.type_name = sub_var.type_name;
-		current_expression.array_type = sub_var.array_type;
-		current_expression.dim = sub_var.dim;
-	}
+	//if (astnode->identifier_vector.size() > 1 && !is_any(variable_expr->type)) {
+	//	auto sub_var = access_struct_variable(astnode->identifier_vector, declared_variable->type_name, declared_variable->type_name_space, 1);
+	//	current_expression.type = sub_var.type;
+	//	current_expression.type_name = sub_var.type_name;
+	//	current_expression.array_type = sub_var.array_type;
+	//	current_expression.dim = sub_var.dim;
+	//}
 
-	if (astnode->identifier_vector[astnode->identifier_vector.size() - 1].access_vector.size() > 0
-		&& !is_any(variable_expr->type)) {
-		current_expression = SemanticValue(declared_variable->array_type, astnode->row, astnode->col);
-	}
+	//if (astnode->identifier_vector[astnode->identifier_vector.size() - 1].access_vector.size() > 0
+	//	&& !is_any(variable_expr->type)) {
+	//	current_expression = SemanticValue(declared_variable->array_type, astnode->row, astnode->col);
+	//}
 }
 
 void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
