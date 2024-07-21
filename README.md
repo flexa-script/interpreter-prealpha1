@@ -1,30 +1,27 @@
 # CP Interpreter
 
 ## TODO
-- [X] Add load file from param
-- [X] Rewrite the lexer
 - [X] Rewrite EBNF
+- [X] Add load file from arguments
+- [X] Rewrite the lexer
 - [X] Change expression evaluation to left to right
 - [X] Add and precedence
 - [X] Add library support
-- [X] Add collum on errors
+- [X] Add collum on throwed errors
 - [X] Add 'this' token to get current function name
 - [X] Add const support
 - [X] Add char type
 - [X] Add any type
 - [X] Add array type
-  - [X] Make array accessor accepts expression
 - [X] Add struct support
     - [X] Add struct array-like constructor
     - [X] Add Java class pointer-like behavior
-    - [X] Add struct as Dict by iterating over in foreach
+    - [X] Add struct iterating over in foreach
         - [X] add: builtin key, value like `foreach (var [key, value] in struct_var)`
 - [X] Add null support
 - [X] Add type convert support
-    - [X] Add array and struct support (based on print)
 - [X] Remove mandatory variable type definition
-- [X] Improve cp dependencies/libs loader
-- [X] Add string array-like accessor
+- [X] Add string array-like accessor/assign
 - [X] Function improvements:
     - [X] Add void support to function
     - [X] Add void return
@@ -36,10 +33,8 @@
     - [X] Add arrow function `def (arg): void {}`, `def (arg) {}`, `def () {}`
     - [X] struct access from function call
 - [X] Add built in funcs:
-    - [X] print:
-        - [X] Improve to accept multiple values
-    - [X] read:
-        - [X] Improve to accept prompt
+    - [X] print
+    - [X] read
     - [X] len: returns size of array/string
     - [X] readch: read 1 single char
     - [X] equals: compare values, if struct, compare struct values and not struct pointer
@@ -193,6 +188,7 @@
 - [X] Can't assing string position
 - [X] Parser can't handle unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))
 - [X] This does not always return the expected value, eg when its inside a function tha does not has in main file
+- [ ] If file is empty, it throw error
 - [ ] If an statement is before include, it generate a semantic error
 - [ ] Assigning struct values on constructors is not checking types correctly
 - [X] Function call strcut, string and array acessors is not working

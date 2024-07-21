@@ -20,10 +20,9 @@ void LibFinder::start() {
 
 void LibFinder::visit(ASTProgramNode* astnode) {
 	for (auto& statement : astnode->statements) {
-		if (!dynamic_cast<ASTUsingNode*>(statement)) {
-			return;
+		if (dynamic_cast<ASTUsingNode*>(statement)) {
+			statement->accept(this);
 		}
-		statement->accept(this);
 	}
 }
 
