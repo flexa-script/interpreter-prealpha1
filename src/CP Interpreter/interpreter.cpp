@@ -250,11 +250,6 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		function_arguments.push_back(pvalue);
 	}
 
-	// DEBUG
-	if (astnode->identifier == "to_array") {
-		int i = 0;
-	}
-
 	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
 
 	auto declfun = func_scope->find_declared_function(astnode->identifier, signature);
@@ -2164,13 +2159,13 @@ cp_int Interpreter::do_operation(cp_int lval, cp_int rval, const std::string& op
 		return lval << rval;
 	}
 	else if (op == "|=" || op == "|") {
-		return lval << rval;
+		return lval | rval;
 	}
 	else if (op == "&=" || op == "&") {
-		return lval << rval;
+		return lval & rval;
 	}
 	else if (op == "^=" || op == "^") {
-		return lval << rval;
+		return lval ^ rval;
 	}
 	throw std::runtime_error("invalid '" + op + "' operator for types 'int' and 'int'");
 }
