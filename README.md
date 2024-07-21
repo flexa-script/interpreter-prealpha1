@@ -91,7 +91,7 @@
         - [X] add: `{ init_value }` to initilize all positions with same value
         - [X] add: `in` operator to check if anything is in array/string
         - [X] add: ternary (immediate) if `expr ? texpr : fexpr`
-        - [ ] add typing:
+        - [X] add typing:
             - [X] `typeof`: returns type of object
                 - [X] fix: add namespace to type name return
             - [X] `typeid`: returns hash of typeof
