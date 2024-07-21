@@ -35,6 +35,7 @@ namespace lexer {
         bool is_space();
         void advance();
         Token process_identifier();
+        Token process_special_number();
         Token process_number();
         Token process_char();
         Token process_string();

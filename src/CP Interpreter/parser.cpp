@@ -997,7 +997,7 @@ ASTExprNode* Parser::parse_factor() {
 		return sub_expr;
 	}
 
-		// unary expression cases
+						 // unary expression cases
 	case TOK_REF:
 	case TOK_UNREF: {
 		std::string current_token_value = current_token.value;
@@ -1476,7 +1476,21 @@ cp_bool Parser::parse_bool_literal() {
 }
 
 cp_int Parser::parse_int_literal() {
-	return std::stoll(current_token.value);
+	if (current_token.value.starts_with("0b")) {
+		return std::stoll(current_token.value.substr(2), 0, 2);
+	}
+	else if (current_token.value.starts_with("0o")) {
+		return std::stoll(current_token.value.substr(2), 0, 8);
+	}
+	else if (current_token.value.starts_with("0d")) {
+		return std::stoll(current_token.value.substr(2));
+	}
+	else if (current_token.value.starts_with("0x")) {
+		return std::stoll(current_token.value.substr(2), 0, 16);
+	}
+	else {
+		return std::stoll(current_token.value);
+	}
 }
 
 cp_float Parser::parse_float_literal() {

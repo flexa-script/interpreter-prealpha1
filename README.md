@@ -107,10 +107,10 @@
         - [x] ~	  bitwise NOT (ones' complement) (unary)
     - [ ] Add expression literal:
         - [ ] base literals:
-            - [ ] bin
-            - [ ] oct
-            - [ ] dec
-            - [ ] hex
+            - [X] bin
+            - [X] oct
+            - [X] dec
+            - [X] hex
             - [ ] scientific notation `10e-1`, `10e0`, `10e1`
 - [X] Let functions return array
 - [X] Add namespace scope nmspace::(method|variable|struct)

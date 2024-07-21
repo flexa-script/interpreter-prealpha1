@@ -215,6 +215,60 @@ Token Lexer::process_char() {
 	return Token(TokenType::TOK_CHAR_LITERAL, chr, current_row, start_col);
 }
 
+Token Lexer::process_special_number() {
+	std::string number;
+
+	number += current_char;
+	advance();
+	number += current_char;
+	advance();
+
+	while (has_next() && std::isdigit(current_char)) {
+		number += current_char;
+		advance();
+	}
+
+	return Token(TOK_INT_LITERAL, number, current_row, start_col);
+}
+
+Token Lexer::process_number() {
+	std::string number;
+	TokenType type;
+	bool has_dot = false;
+
+	if (current_char == '0'
+		&& (next_char == 'b'
+			|| next_char == 'o'
+			|| next_char == 'd'
+			|| next_char == 'x')) {
+		return process_special_number();
+	}
+
+	while (has_next() && (std::isdigit(current_char) || current_char == '.')) {
+		if (current_char == '.') {
+			if (has_dot) {
+				throw std::runtime_error(msg_header() + "found '" + current_char + "' defining float");
+			}
+			has_dot = true;
+		}
+		number += current_char;
+		advance();
+	}
+
+	if (has_dot) {
+		type = TOK_FLOAT_LITERAL;
+	}
+	else if (current_char == 'f') {
+		type = TOK_FLOAT_LITERAL;
+		advance();
+	}
+	else {
+		type = TOK_INT_LITERAL;
+	}
+
+	return Token(type, number, current_row, start_col);
+}
+
 Token Lexer::process_identifier() {
 	std::string identifier;
 	TokenType type;
@@ -367,36 +421,6 @@ Token Lexer::process_identifier() {
 	}
 
 	return Token(type, identifier, current_row, start_col);
-}
-
-Token Lexer::process_number() {
-	std::string number;
-	TokenType type;
-	bool has_dot = false;
-
-	while (has_next() && (std::isdigit(current_char) || current_char == '.')) {
-		if (current_char == '.') {
-			if (has_dot) {
-				throw std::runtime_error(msg_header() + "found '" + current_char + "' defining float");
-			}
-			has_dot = true;
-		}
-		number += current_char;
-		advance();
-	}
-
-	if (has_dot) {
-		type = TOK_FLOAT_LITERAL;
-	}
-	else if (current_char == 'f') {
-		type = TOK_FLOAT_LITERAL;
-		advance();
-	}
-	else {
-		type = TOK_INT_LITERAL;
-	}
-
-	return Token(type, number, current_row, start_col);
 }
 
 Token Lexer::process_symbol() {
