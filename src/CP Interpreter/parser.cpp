@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 
 #include "visitor.hpp"
 #include "parser.hpp"
@@ -1479,18 +1480,16 @@ cp_int Parser::parse_int_literal() {
 	if (current_token.value.starts_with("0b")) {
 		return std::stoll(current_token.value.substr(2), 0, 2);
 	}
-	else if (current_token.value.starts_with("0o")) {
+	if (current_token.value.starts_with("0o")) {
 		return std::stoll(current_token.value.substr(2), 0, 8);
 	}
-	else if (current_token.value.starts_with("0d")) {
+	if (current_token.value.starts_with("0d")) {
 		return std::stoll(current_token.value.substr(2));
 	}
-	else if (current_token.value.starts_with("0x")) {
+	if (current_token.value.starts_with("0x")) {
 		return std::stoll(current_token.value.substr(2), 0, 16);
 	}
-	else {
-		return std::stoll(current_token.value);
-	}
+	return std::stoll(current_token.value);
 }
 
 cp_float Parser::parse_float_literal() {

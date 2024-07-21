@@ -255,6 +255,20 @@ Token Lexer::process_number() {
 		advance();
 	}
 
+	if (current_char == 'e') {
+		has_dot = true;
+		number += current_char;
+		advance();
+		if (current_char == '+' || current_char == '-') {
+			number += current_char;
+			advance();
+		}
+		while (has_next() && std::isdigit(current_char)) {
+			number += current_char;
+			advance();
+		}
+	}
+
 	if (has_dot) {
 		type = TOK_FLOAT_LITERAL;
 	}

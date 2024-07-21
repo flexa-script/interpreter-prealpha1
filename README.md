@@ -66,7 +66,7 @@
         - [X] add unpacked declaration `[type, error]` in catch to not include exception lib
         - [X] add: throw a simple string as Exception to avoid Exception include `throw "string error";`
     - [X] do while
-- [ ] Add expression:
+- [X] Add expression:
     - [X] add: multiline string using ``
         - [X] add: expression inside `This is a expression ${10 + 5} inside`
     - [X] add: runtime type checking for any types
@@ -105,13 +105,13 @@
         - [x] <<  left shift
         - [x] >>  right shift
         - [x] ~	  bitwise NOT (ones' complement) (unary)
-    - [ ] Add expression literal:
-        - [ ] base literals:
+    - [X] Add expression literal:
+        - [X] base literals:
             - [X] bin
             - [X] oct
             - [X] dec
             - [X] hex
-            - [ ] scientific notation `10e-1`, `10e0`, `10e1`
+        - [X] scientific notation `10e-1`, `10e0`, `10e1`
 - [X] Let functions return array
 - [X] Add namespace scope nmspace::(method|variable|struct)
 - [X] Guanrantee that a lib is loaded once
