@@ -217,13 +217,42 @@ Token Lexer::process_char() {
 
 Token Lexer::process_special_number() {
 	std::string number;
+	bool bin = false;
+	bool oct = false;
+	bool dec = false;
+	bool hex = false;
 
 	number += current_char;
 	advance();
+
+	switch (std::tolower(current_char))
+	{
+	case 'b':
+		bin = true;
+		break;
+	case 'o':
+		oct = true;
+		break;
+	case 'd':
+		dec = true;
+		break;
+	case 'x':
+		hex = true;
+		break;
+	default:
+		break;
+	}
+
 	number += current_char;
 	advance();
 
-	while (has_next() && std::isdigit(current_char)) {
+	while (has_next() &&
+		((bin && (current_char == '0' || current_char == '1'))
+		|| (oct && current_char >= '0' && current_char <= '7')
+		|| (dec && std::isdigit(current_char))
+		|| (hex && (std::isdigit(current_char)
+			|| current_char >= 'a' && current_char <= 'f'
+			|| current_char >= 'A' && current_char <= 'F')))) {
 		number += current_char;
 		advance();
 	}
@@ -237,10 +266,10 @@ Token Lexer::process_number() {
 	bool has_dot = false;
 
 	if (current_char == '0'
-		&& (next_char == 'b'
-			|| next_char == 'o'
-			|| next_char == 'd'
-			|| next_char == 'x')) {
+		&& (std::tolower(next_char) == 'b'
+			|| std::tolower(next_char) == 'o'
+			|| std::tolower(next_char) == 'd'
+			|| std::tolower(next_char) == 'x')) {
 		return process_special_number();
 	}
 
@@ -255,7 +284,7 @@ Token Lexer::process_number() {
 		advance();
 	}
 
-	if (current_char == 'e') {
+	if (std::tolower(current_char) == 'e') {
 		has_dot = true;
 		number += current_char;
 		advance();
@@ -272,7 +301,7 @@ Token Lexer::process_number() {
 	if (has_dot) {
 		type = TOK_FLOAT_LITERAL;
 	}
-	else if (current_char == 'f') {
+	else if (std::tolower(current_char) == 'f') {
 		type = TOK_FLOAT_LITERAL;
 		advance();
 	}

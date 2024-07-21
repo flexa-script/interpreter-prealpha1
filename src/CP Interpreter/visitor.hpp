@@ -112,23 +112,30 @@ namespace visitor {
 		parser::Type array_type;
 		std::vector<parser::ASTExprNode*> dim;
 
-		TypeDefinition(parser::Type type, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,
+		TypeDefinition(parser::Type type, parser::Type array_type,
+			const std::vector<parser::ASTExprNode*>& dim,
 			const std::string& type_name, const std::string& type_name_space);
 
 		TypeDefinition();
 
 		static TypeDefinition get_basic(parser::Type type);
-		static TypeDefinition get_array(parser::Type array_type, std::vector<parser::ASTExprNode*>&& dim = std::vector<parser::ASTExprNode*>());
-		static TypeDefinition get_struct(const std::string& type_name, const std::string& type_name_space);
+		static TypeDefinition get_array(parser::Type array_type,
+			std::vector<parser::ASTExprNode*>&& dim = std::vector<parser::ASTExprNode*>());
+		static TypeDefinition get_struct(const std::string& type_name,
+			const std::string& type_name_space);
 
-		static bool is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, std::function<bool(TypeDefinition ltype, TypeDefinition rtype)> match_array_dim);
-		static bool match_type(TypeDefinition ltype, TypeDefinition rtype, std::function<bool(TypeDefinition ltype, TypeDefinition rtype)> match_array_dim);
+		static bool is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype,
+			TypeDefinition* rvtype, TypeDefinition rtype,
+			std::function<bool(TypeDefinition ltype, TypeDefinition rtype)> match_array_dim);
+		static bool match_type(TypeDefinition ltype, TypeDefinition rtype,
+			std::function<bool(TypeDefinition ltype, TypeDefinition rtype)> match_array_dim);
 		static bool match_type_bool(TypeDefinition ltype, TypeDefinition rtype);
 		static bool match_type_int(TypeDefinition ltype, TypeDefinition rtype);
 		static bool match_type_float(TypeDefinition ltype, TypeDefinition rtype);
 		static bool match_type_char(TypeDefinition ltype, TypeDefinition rtype);
 		static bool match_type_string(TypeDefinition ltype, TypeDefinition rtype);
-		static bool match_type_array(TypeDefinition ltype, TypeDefinition rtype, std::function<bool(TypeDefinition ltype, TypeDefinition rtype)> match_array_dim);
+		static bool match_type_array(TypeDefinition ltype, TypeDefinition rtype,
+			std::function<bool(TypeDefinition ltype, TypeDefinition rtype)> match_array_dim);
 		static bool match_type_struct(TypeDefinition ltype, TypeDefinition rtype);
 		static bool match_type_function(TypeDefinition ltype, TypeDefinition rtype);
 	};

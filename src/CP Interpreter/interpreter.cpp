@@ -2027,13 +2027,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
 
-		//if (rval->arr.size() == 1 && op == "=") {
-		//	auto arr = build_array(rval->dim, rval->arr[0], rval->dim.size() - 1);
-		//	lval->set(do_operation(lval->arr, arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
-		//}
-		//else {
-			lval->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
-		//}
+		lval->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
 
 		break;
 	}

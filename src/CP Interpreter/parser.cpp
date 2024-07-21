@@ -1477,23 +1477,33 @@ cp_bool Parser::parse_bool_literal() {
 }
 
 cp_int Parser::parse_int_literal() {
-	if (current_token.value.starts_with("0b")) {
-		return std::stoll(current_token.value.substr(2), 0, 2);
+	try {
+		if (current_token.value.starts_with("0b")) {
+			return std::stoll(current_token.value.substr(2), 0, 2);
+		}
+		if (current_token.value.starts_with("0o")) {
+			return std::stoll(current_token.value.substr(2), 0, 8);
+		}
+		if (current_token.value.starts_with("0d")) {
+			return std::stoll(current_token.value.substr(2));
+		}
+		if (current_token.value.starts_with("0x")) {
+			return std::stoll(current_token.value.substr(2), 0, 16);
+		}
+		return std::stoll(current_token.value);
 	}
-	if (current_token.value.starts_with("0o")) {
-		return std::stoll(current_token.value.substr(2), 0, 8);
+	catch (...) {
+		throw std::runtime_error(msg_header() + "invalid literal: '" + current_token.value + "'");
 	}
-	if (current_token.value.starts_with("0d")) {
-		return std::stoll(current_token.value.substr(2));
-	}
-	if (current_token.value.starts_with("0x")) {
-		return std::stoll(current_token.value.substr(2), 0, 16);
-	}
-	return std::stoll(current_token.value);
 }
 
 cp_float Parser::parse_float_literal() {
-	return std::stold(current_token.value);
+	try {
+		return std::stold(current_token.value);
+	}
+	catch (...) {
+		throw std::runtime_error(msg_header() + "invalid literal: '" + current_token.value + "'");
+	}
 }
 
 cp_char Parser::parse_char_literal() {
