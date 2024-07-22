@@ -189,13 +189,13 @@
 - [X] Parser can't handle unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))
 - [X] This does not always return the expected value, eg when its inside a function tha does not has in main file
 - [ ] If file is empty, it throw error
-- [ ] If an statement is before include, it generate a semantic error
+- [X] If an statement is before include, it generate a semantic error
 - [ ] Assigning struct values on constructors is not checking types correctly
 - [X] Function call strcut, string and array acessors is not working
 - [X] print({0,2} + {0,2}); is passing semantic analisys
-- [ ] functions with no block are not checked (check if is builtin)
+- [ ] functions with no block are not checked (should check if is builtin)
 - [ ] some expression nodes aren't cleaning return type like void funcions
-- [ ] reference is not working properly
+- [X] reference is not working properly
 - [ ] searching functions in scope, it will not handle struct type
 - [ ] struct assign seems not working in semantical analisys
 
