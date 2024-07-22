@@ -1715,6 +1715,8 @@ std::string Interpreter::parse_value_to_string(const Value* value) {
 		}
 		break;
 	}
+	case Type::T_UNDEFINED:
+		throw std::runtime_error("undefined expression");
 	default:
 		throw std::runtime_error("can't determine value type on parsing");
 	}
@@ -2427,6 +2429,7 @@ void Interpreter::register_built_in_functions() {
 	interpreter_parameter_list_t params;
 
 	builtin_functions["print"] = [this]() {
+		current_expression_value = Value(Type::T_UNDEFINED);
 		if (builtin_arguments.size() == 0) {
 			return;
 		}
@@ -2508,6 +2511,7 @@ void Interpreter::register_built_in_functions() {
 
 
 	builtin_functions["system"] = [this]() {
+		current_expression_value = Value(Type::T_UNDEFINED);
 		system(builtin_arguments[0]->s.c_str());
 		};
 	params.clear();

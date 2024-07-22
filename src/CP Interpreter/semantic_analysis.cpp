@@ -135,6 +135,9 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	if (astnode->expr) {
 		identifier_call_name = astnode->identifier;
 		astnode->expr->accept(this);
+		if (is_undefined(current_expression.type)) {
+			throw std::runtime_error("undefined expression");
+		}
 		identifier_call_name = "";
 	}
 	else {
@@ -215,6 +218,9 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 
 	identifier_call_name = astnode->identifier;
 	astnode->expr->accept(this);
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
 	identifier_call_name = "";
 	auto assignment_expr = current_expression;
 
@@ -237,6 +243,9 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->expr->accept(this);
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
 
 	if (!current_function.empty()) {
 		auto& currfun = current_function.top();
@@ -255,6 +264,9 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 
 	for (const auto& param : astnode->parameters) {
 		param->accept(this);
+		if (is_undefined(current_expression.type)) {
+			throw std::runtime_error("undefined expression");
+		}
 
 		auto td = TypeDefinition(current_expression.type, current_expression.array_type, current_expression.dim,
 			current_expression.type_name, current_expression.type_name_space);
@@ -283,13 +295,18 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 
 	const auto& curr_function = curr_scope->find_declared_function(astnode->identifier, signature);
 
-	current_expression = SemanticValue(curr_function.type,
-		curr_function.array_type, curr_function.dim,
-		curr_function.type_name,
-		curr_function.type_name_space.empty() ?
-		astnode->nmspace : curr_function.type_name_space,
-		0, false, curr_function.row, curr_function.col
-	);
+	if (is_void(curr_function.type)) {
+		current_expression = SemanticValue(Type::T_UNDEFINED, 0, 0);
+	}
+	else {
+		current_expression = SemanticValue(curr_function.type,
+			curr_function.array_type, curr_function.dim,
+			curr_function.type_name,
+			curr_function.type_name_space.empty() ?
+			astnode->nmspace : curr_function.type_name_space,
+			0, false, curr_function.row, curr_function.col
+		);
+	}
 }
 
 void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
@@ -461,7 +478,7 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 		astnode->parsed_case_blocks.emplace(hash, expr.second);
 	}
 
-	if (!TypeDefinition::match_type(cond_type, case_type, match_array_dim_ptr)) {
+	if (!TypeDefinition::is_any_or_match_type(&cond_type, cond_type, nullptr, case_type, match_array_dim_ptr)) {
 		ExceptionHandler::throw_mismatched_type_err(cond_type.type, case_type.type);
 	}
 
