@@ -188,9 +188,9 @@
 - [X] Can't assing string position
 - [X] Parser can't handle unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))
 - [X] This does not always return the expected value, eg when its inside a function tha does not has in main file
-- [ ] If file is empty, it throw error
+- [X] If file is empty, it throw error
 - [X] If an statement is before include, it generate a semantic error
-- [ ] Assigning struct values on constructors is not checking types correctly
+- [X] Assigning struct values on constructors is not checking types correctly
 - [X] Function call strcut, string and array acessors is not working
 - [X] print({0,2} + {0,2}); is passing semantic analisys
 - [ ] functions with no block are not checked (should check if is builtin)

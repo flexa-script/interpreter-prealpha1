@@ -48,7 +48,8 @@ void Interpreter::visit(ASTProgramNode* astnode) {
 	}
 
 	if (astnode->statements.size() > 1
-		|| !dynamic_cast<ASTExprNode*>(astnode->statements[0])) {
+		|| astnode->statements.size() > 0
+		&& !dynamic_cast<ASTExprNode*>(astnode->statements[0])) {
 		current_expression_value = Value(Type::T_UNDEFINED);
 	}
 }
