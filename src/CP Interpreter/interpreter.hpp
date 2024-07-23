@@ -30,7 +30,6 @@ namespace visitor {
 		std::string parse_value_to_string(const Value* value);
 
 	private:
-		//std::function<bool(TypeDefinition, TypeDefinition)> match_array_dim_ptr = std::bind(&Interpreter::match_array_dim, this, std::placeholders::_1, std::placeholders::_2);
 		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector_ptr = std::bind(&Interpreter::evaluate_access_vector, this, std::placeholders::_1);
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
 		std::vector<std::string> parsed_libs;
@@ -70,12 +69,6 @@ namespace visitor {
 
 		void declare_structure(cp_struct* str, const std::string& nmspace);
 
-		//bool is_any_or_match_type(TypeDefinition vtype, TypeDefinition ltype, TypeDefinition rtype);
-		//bool is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype);
-		//bool match_type_array(TypeDefinition ltype, TypeDefinition rtype);
-		bool match_array_dim(TypeDefinition ltype, TypeDefinition rtype);
-
-		//Variable* do_operation(const std::string& op, Variable* lval, Variable* rval, cp_int str_pos = 0);
 		Value* do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr = false, cp_int str_pos = 0);
 		cp_int do_spaceship_operation(const std::string& op, Value* lval, Value* rval);
 		cp_bool do_relational_operation(const std::string& op, Value* lval, Value* rval);

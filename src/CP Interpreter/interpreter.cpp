@@ -1766,29 +1766,6 @@ std::string Interpreter::parse_struct_to_string(const cp_struct& str_value) {
 	return s.str();
 }
 
-bool Interpreter::match_array_dim(TypeDefinition ltype, TypeDefinition rtype) {
-	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
-	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
-
-	if (expr_dim.size() == 1
-		|| var_dim.size() == 0
-		|| expr_dim.size() == 0) {
-		return true;
-	}
-
-	if (var_dim.size() != expr_dim.size()) {
-		return false;
-	}
-
-	for (size_t dc = 0; dc < var_dim.size(); ++dc) {
-		if (ltype.dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
 Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr, cp_int str_pos) {
 	Type l_var_type = lval->ref ? lval->ref->type : lval->type;
 	Type l_type = is_undefined(lval->type) ? l_var_type : lval->type;

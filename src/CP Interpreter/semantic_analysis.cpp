@@ -163,7 +163,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		astnode->row, astnode->col);
 	new_value->ref = new_var;
 
-	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, match_array_dim_ptr)
+	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, evaluate_access_vector_ptr)
 		&& !is_undefined(new_value->type)) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
@@ -249,7 +249,7 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 
 	if (!current_function.empty()) {
 		auto& currfun = current_function.top();
-		if (!TypeDefinition::is_any_or_match_type(&currfun, currfun, nullptr, current_expression, match_array_dim_ptr)) {
+		if (!TypeDefinition::is_any_or_match_type(&currfun, currfun, nullptr, current_expression, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_return_type_err(currfun.identifier,
 				currfun.type,
 				current_expression.type);
@@ -293,7 +293,7 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 		throw std::runtime_error("function '" + func_name + "' was never declared");
 	}
 
-	const auto& curr_function = curr_scope->find_declared_function(astnode->identifier, signature);
+	const auto& curr_function = curr_scope->find_declared_function(astnode->identifier, signature, evaluate_access_vector_ptr);
 
 	if (is_void(curr_function.type)) {
 		current_expression = SemanticValue(Type::T_UNDEFINED, 0, 0);
@@ -315,7 +315,7 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 	const auto& nmspace = get_namespace();
 
 	for (const auto& scope : scopes[nmspace]) {
-		if (scope->already_declared_function(astnode->identifier, astnode->signature)) {
+		if (scope->already_declared_function(astnode->identifier, astnode->signature, evaluate_access_vector_ptr)) {
 			std::string signature = "(";
 			for (const auto& param : astnode->signature) {
 				signature += type_str(param.type) + ", ";
@@ -338,7 +338,7 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 		scopes[nmspace].back()->declare_function(astnode->identifier, type, astnode->type_name, astnode->type_name_space,
 			array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->row, astnode->row);
 
-		auto curr_function = scopes[nmspace].back()->find_declared_function(astnode->identifier, astnode->signature);
+		auto curr_function = scopes[nmspace].back()->find_declared_function(astnode->identifier, astnode->signature, evaluate_access_vector_ptr);
 
 		current_function.push(curr_function);
 
@@ -479,7 +479,7 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 			case_type = current_expression;
 		}
 
-		if (!TypeDefinition::match_type(case_type, current_expression, match_array_dim_ptr)) {
+		if (!TypeDefinition::match_type(case_type, current_expression, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_mismatched_type_err(case_type.type, current_expression.type);
 		}
 
@@ -491,7 +491,7 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 		astnode->parsed_case_blocks.emplace(hash, expr.second);
 	}
 
-	if (!TypeDefinition::is_any_or_match_type(&cond_type, cond_type, nullptr, case_type, match_array_dim_ptr)) {
+	if (!TypeDefinition::is_any_or_match_type(&cond_type, cond_type, nullptr, case_type, evaluate_access_vector_ptr)) {
 		ExceptionHandler::throw_mismatched_type_err(cond_type.type, case_type.type);
 	}
 
@@ -877,7 +877,7 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 		expr.second->accept(this);
 
 		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct,
-			nullptr, current_expression, match_array_dim_ptr)) {
+			nullptr, current_expression, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_struct_type_err(astnode->type_name, var_type_struct.type);
 		}
 	}
@@ -1237,10 +1237,10 @@ SemanticScope* SemanticAnalyser::get_inner_most_function_scope(const std::string
 		throw std::runtime_error("namespace '" + nmspace + "' was not declared");
 	}
 	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); --i) {
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr); --i) {
 		if (i <= 0) {
 			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
-				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function(identifier, signature); --i) {
+				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr); --i) {
 					if (i <= 0) {
 						i = -1;
 						break;
@@ -1350,7 +1350,7 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 		break;
 	}
 	case Type::T_ARRAY: {
-		if (!TypeDefinition::match_type_array(lvalue, rvalue, match_array_dim_ptr)
+		if (!TypeDefinition::match_type_array(lvalue, rvalue, evaluate_access_vector_ptr)
 			|| (!Token::is_collection_op(op)
 				&& !Token::is_equality_op(op))) {
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
@@ -1382,29 +1382,6 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 	}
 
 	return is_float(lvalue.type) || is_string(lvalue.type) ? lvalue : rvalue;
-}
-
-bool SemanticAnalyser::match_array_dim(TypeDefinition ltype, TypeDefinition rtype) {
-	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
-	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
-
-	if (expr_dim.size() == 1
-		|| var_dim.size() == 0
-		|| expr_dim.size() == 0) {
-		return true;
-	}
-
-	if (var_dim.size() != expr_dim.size()) {
-		return false;
-	}
-
-	for (size_t dc = 0; dc < var_dim.size(); ++dc) {
-		if (ltype.dim.at(dc) && var_dim.at(dc) != expr_dim.at(dc)) {
-			return false;
-		}
-	}
-
-	return true;
 }
 
 void SemanticAnalyser::equals_value(const SemanticValue& lval, const SemanticValue& rval) {

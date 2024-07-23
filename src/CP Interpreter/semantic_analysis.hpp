@@ -17,7 +17,7 @@ namespace visitor {
 
 	class SemanticAnalyser : Visitor {
 	private:
-		std::function<bool(TypeDefinition, TypeDefinition)> match_array_dim_ptr = std::bind(&SemanticAnalyser::match_array_dim, this, std::placeholders::_1, std::placeholders::_2);
+		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector_ptr = std::bind(&SemanticAnalyser::evaluate_access_vector, this, std::placeholders::_1);
 		std::map<std::string, std::vector<SemanticScope*>> scopes;
 		std::string identifier_call_name;
 		std::vector<std::string> nmspaces;
@@ -46,7 +46,6 @@ namespace visitor {
 		void check_array_type(parser::ASTExprNode* astnode, unsigned int row, unsigned int col);
 
 		TypeDefinition do_operation(const std::string& op, TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, bool is_expr = true);
-		bool match_array_dim(TypeDefinition ltype, TypeDefinition rtype);
 
 		SemanticValue* access_value(SemanticValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
 		visitor::VariableDefinition access_struct_variable(std::vector<parser::Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i = 0);

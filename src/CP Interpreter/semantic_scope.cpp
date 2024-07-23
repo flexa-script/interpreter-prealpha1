@@ -21,7 +21,7 @@ SemanticVariable* SemanticScope::find_declared_variable(const std::string& ident
 	return variable_symbol_table[identifier];
 }
 
-FunctionDefinition SemanticScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature) {
+FunctionDefinition SemanticScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
 	if (std::distance(funcs.first, funcs.second) == 0) {
@@ -32,21 +32,18 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 		auto& func_sig = it->second.signature;
 		bool rest = false;
 		auto found = true;
-		bool is_arr = false;
-		Type stype = Type::T_UNDEFINED;
-		Type ftype = Type::T_UNDEFINED;
+		TypeDefinition stype;
+		TypeDefinition ftype;
 		size_t func_sig_size = func_sig.size();
 		size_t call_sig_size = signature.size();
 
 		// if signatures size match, handle normal cases
 		if (func_sig_size == call_sig_size) {
 			for (size_t i = 0; i < call_sig_size; ++i) {
-				is_arr = is_array(func_sig.at(i).type) && is_array(signature.at(i).type);
-				ftype = is_arr ? func_sig.at(i).array_type : func_sig.at(i).type;
-				stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+				ftype = func_sig.at(i);
+				stype = signature.at(i);
 
-				if (!match_type(ftype, stype) && !is_any(ftype)
-					&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector)) {
 					found = false;
 					break;
 				}
@@ -62,17 +59,15 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 		if (func_sig_size < call_sig_size) {
 			for (size_t i = 0; i < call_sig_size; ++i) {
 				if (!rest) {
-					is_arr = is_array(func_sig.at(i).type) && is_array(signature.at(i).type);
-					ftype = is_arr ? func_sig.at(i).array_type : func_sig.at(i).type;
+					ftype = func_sig.at(i);
 
 					if (it->second.parameters[i].is_rest) {
 						rest = true;
 					}
 				}
-				stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+				stype = signature.at(i);
 
-				if (!match_type(ftype, stype) && !is_any(ftype)
-					&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector)) {
 					found = false;
 					break;
 				}
@@ -88,12 +83,10 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 		if (func_sig_size > call_sig_size) {
 			for (size_t i = 0; i < func_sig_size; ++i) {
 				if (i < call_sig_size) {
-					is_arr = is_array(func_sig.at(i).type) && is_array(signature.at(i).type);
-					ftype = is_arr ? func_sig.at(i).array_type : func_sig.at(i).type;
-					stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+					ftype = func_sig.at(i);
+					stype = signature.at(i);
 
-					if (!match_type(ftype, stype) && !is_any(ftype)
-						&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+					if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector)) {
 						found = false;
 						break;
 					}
@@ -124,9 +117,9 @@ bool SemanticScope::already_declared_variable(const std::string& identifier) {
 	return variable_symbol_table.find(identifier) != variable_symbol_table.end();
 }
 
-bool SemanticScope::already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature) {
+bool SemanticScope::already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector) {
 	try {
-		find_declared_function(identifier, signature);
+		find_declared_function(identifier, signature, evaluate_access_vector);
 		return true;
 	}
 	catch (...) {
