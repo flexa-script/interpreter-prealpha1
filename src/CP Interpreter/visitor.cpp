@@ -114,16 +114,16 @@ std::vector<std::string> built_in_libs = {
 	"cp.core.console"
 };
 
-Ref::Ref() {
+TypeDefinition::TypeDefinition(Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
+	const std::string& type_name, const std::string& type_name_space)
+	: type(type), array_type(array_type), dim(dim), type_name(type_name), type_name_space(type_name_space) {
 	reset_ref();
 }
 
-TypeDefinition::TypeDefinition(Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
-	const std::string& type_name, const std::string& type_name_space)
-	: type(type), array_type(array_type), dim(dim), type_name(type_name), type_name_space(type_name_space) {}
-
 TypeDefinition::TypeDefinition()
-	: type(Type::T_UNDEFINED), array_type(Type::T_UNDEFINED), dim(std::vector<ASTExprNode*>()), type_name(""), type_name_space("") {}
+	: type(Type::T_UNDEFINED), array_type(Type::T_UNDEFINED), dim(std::vector<ASTExprNode*>()), type_name(""), type_name_space("") {
+	reset_ref();
+}
 
 TypeDefinition TypeDefinition::get_basic(Type type) {
 	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "");

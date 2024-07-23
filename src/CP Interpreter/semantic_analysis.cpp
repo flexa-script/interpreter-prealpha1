@@ -941,6 +941,9 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 	auto declared_variable = curr_scope->find_declared_variable(astnode->identifier);
 	auto variable_expr = access_value(declared_variable->value, astnode->identifier_vector);
 
+	declared_variable->reset_ref();
+	variable_expr->reset_ref();
+
 	if (is_undefined(variable_expr->type)) {
 		throw std::runtime_error("variable '" + astnode->identifier + "' is undefined");
 	}

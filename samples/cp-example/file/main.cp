@@ -45,18 +45,18 @@ struct Bar {
 // println(any_fun(2));
 // println(int_fun());
 
-// println("struct value:");
-// println(unref Foo{} in {Foo{}, Foo{}});
-// println(ref Foo{} in {Foo{}, Foo{}});
+println("struct value:");
+println(unref Foo{} in {Foo{}, Foo{}});
+println(ref Foo{} in {Foo{}, Foo{}});
 println(Foo{} in {Foo{}, Foo{}});
-// var str: Foo = Foo{};
-// println("var value:");
-// println(unref str in {Foo{}, Foo{}});
-// println(ref str in {Foo{}, Foo{}});
-// println(str in {Foo{}, Foo{}});
-// println(unref str in {str, Foo{}});
-// println(ref str in {str, Foo{}});
-// println(str in {str, Foo{}});
+var str: Foo = Foo{};
+println("var value:");
+println(unref str in {Foo{}, Foo{}});
+println(ref str in {Foo{}, Foo{}});
+println(str in {Foo{}, Foo{}});
+println(unref str in {str, Foo{}});
+println(ref str in {str, Foo{}});
+println(str in {str, Foo{}});
 
 // println("\nothers:");
 // println(10 in {0,1,2,10});

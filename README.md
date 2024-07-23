@@ -194,8 +194,8 @@
 - [X] Function call strcut, string and array acessors is not working
 - [X] print({0,2} + {0,2}); is passing semantic analisys
 - [ ] functions with no block are not checked (should check if is builtin)
-- [ ] some expression nodes aren't cleaning return type like void funcions
-    - [ ] add undefined checks after expression semantical analysis
+- [X] some expression nodes aren't cleaning return type like void funcions
+    - [X] add undefined checks after expression semantical analysis
 - [X] reference is not working properly
 - [ ] searching functions in scope, it will not handle struct type
 - [ ] struct assign seems not working in semantical analisys

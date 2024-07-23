@@ -1020,6 +1020,10 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 
 	Variable* variable = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	auto sub_val = access_value(id_scope, variable->value, astnode->identifier_vector);
+
+	variable->reset_ref();
+	sub_val->reset_ref();
+
 	current_expression_value = *sub_val;
 
 	if (current_expression_value.type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
@@ -1098,7 +1102,6 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 	bool has_assign = false;
 
 	astnode->expr->accept(this);
-
 
 	if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
 		if (astnode->unary_op == "unref") {
