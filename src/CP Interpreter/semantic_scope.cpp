@@ -65,7 +65,6 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 					is_arr = is_array(func_sig.at(i).type) && is_array(signature.at(i).type);
 					ftype = is_arr ? func_sig.at(i).array_type : func_sig.at(i).type;
 
-					// store current rest function, and try to find an exactly signature match
 					if (it->second.parameters[i].is_rest) {
 						rest = true;
 					}

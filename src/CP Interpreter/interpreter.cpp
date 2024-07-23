@@ -124,7 +124,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	new_value->ref = new_var;
 	//current_expression_value = *new_value;
 
-	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, match_array_dim_ptr)
+	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, evaluate_access_vector_ptr)
 		&& !is_undefined(new_value->type)) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
@@ -165,7 +165,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	identifier_call_name = "";
 
 	if (current_expression_value.ref && current_expression_value.ref->use_ref && astnode->op == "=") {
-		if (!TypeDefinition::is_any_or_match_type(variable, *variable, nullptr, current_expression_value, match_array_dim_ptr)) {
+		if (!TypeDefinition::is_any_or_match_type(variable, *variable, nullptr, current_expression_value, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_mismatched_type_err(variable->type, current_expression_value.type);
 		}
 		astscope->declare_variable(astnode->identifier, current_expression_value.ref);
@@ -210,7 +210,7 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 		curr_func_ret_type,
 		nullptr,
 		*value,
-		match_array_dim_ptr)) {
+		evaluate_access_vector_ptr)) {
 		ExceptionHandler::throw_return_type_err(current_this_name.top(),
 			curr_func_ret_type.type,
 			value->type);
@@ -253,7 +253,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 
 	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
 
-	auto declfun = func_scope->find_declared_function(astnode->identifier, signature);
+	auto declfun = func_scope->find_declared_function(astnode->identifier, signature, evaluate_access_vector_ptr);
 
 	current_function_defined_parameters.push(std::get<0>(declfun));
 	is_function_context = true;
@@ -384,7 +384,7 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 		}
 		auto case_type = static_cast<TypeDefinition>(current_expression_value);
 
-		if (!TypeDefinition::match_type(cond_type, case_type, match_array_dim_ptr)) {
+		if (!TypeDefinition::match_type(cond_type, case_type, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_mismatched_type_err(cond_type.type, case_type.type);
 		}
 	}
@@ -930,7 +930,7 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 
 		expr.second->accept(this);
 
-		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct, nullptr, current_expression_value, match_array_dim_ptr)) {
+		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct, nullptr, current_expression_value, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_struct_type_err(astnode->type_name, var_type_struct.type);
 		}
 
@@ -1510,10 +1510,10 @@ InterpreterScope* Interpreter::get_inner_most_struct_definition_scope(const std:
 
 InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature) {
 	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature); --i) {
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr); --i) {
 		if (i <= 0) {
 			for (const auto& prgnmspace : program_nmspaces[get_current_namespace()]) {
-				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function(identifier, signature); --i) {
+				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr); --i) {
 					if (i <= 0) {
 						i = -1;
 						break;
@@ -2032,7 +2032,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			break;
 		}
 
-		if (!TypeDefinition::match_type_array(*lval, *rval, match_array_dim_ptr)) {
+		if (!TypeDefinition::match_type_array(*lval, *rval, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_operation_err(op, l_type, r_type);
 		}
 

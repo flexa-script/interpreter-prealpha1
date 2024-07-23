@@ -30,9 +30,9 @@ bool InterpreterScope::already_declared_structure_definition(std::string identif
 	return structure_symbol_table.find(identifier) != structure_symbol_table.end();
 }
 
-bool InterpreterScope::already_declared_function(std::string identifier, std::vector<TypeDefinition> signature) {
+bool InterpreterScope::already_declared_function(std::string identifier, std::vector<TypeDefinition> signature, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector_ptr) {
 	try {
-		find_declared_function(identifier, signature);
+		find_declared_function(identifier, signature, evaluate_access_vector_ptr);
 		return true;
 	}
 	catch (...) {
@@ -74,7 +74,7 @@ Variable* InterpreterScope::find_declared_variable(std::string identifier) {
 	return var;
 }
 
-interpreter_function_t InterpreterScope::find_declared_function(std::string identifier, std::vector<TypeDefinition> signature) {
+interpreter_function_t InterpreterScope::find_declared_function(std::string identifier, std::vector<TypeDefinition> signature, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector_ptr) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
 	if (std::distance(funcs.first, funcs.second) == 0) {
@@ -85,21 +85,18 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 		auto& func_params = std::get<0>(it->second);
 		bool rest = false;
 		auto found = true;
-		bool is_arr = false;
-		Type stype = Type::T_UNDEFINED;
-		Type ftype = Type::T_UNDEFINED;
+		TypeDefinition stype;
+		TypeDefinition ftype;
 		size_t func_sig_size = func_params.size();
 		size_t call_sig_size = signature.size();
 
 		// if signatures size match, handle normal cases
 		if (func_sig_size == call_sig_size) {
 			for (size_t i = 0; i < call_sig_size; ++i) {
-				is_arr = is_array(std::get<1>(func_params.at(i)).type) && is_array(signature.at(i).type);
-				ftype = is_arr ? std::get<1>(func_params.at(i)).array_type : std::get<1>(func_params.at(i)).type;
-				stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+				ftype = std::get<1>(func_params.at(i));
+				stype = signature.at(i);
 
-				if (!match_type(ftype, stype) && !is_any(ftype)
-					&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr)) {
 					found = false;
 					break;
 				}
@@ -115,18 +112,15 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 		if (func_sig_size < call_sig_size) {
 			for (size_t i = 0; i < func_params.size(); ++i) {
 				if (!rest) {
-					is_arr = is_array(std::get<1>(func_params.at(i)).type) && is_array(signature.at(i).type);
-					ftype = is_arr ? std::get<1>(func_params.at(i)).array_type : std::get<1>(func_params.at(i)).type;
+					ftype = std::get<1>(func_params.at(i));
 
-					// store current rest function, and try to find an exactly signature match
 					if (std::get<3>(std::get<0>(it->second)[i])) {
 						rest = true;
 					}
 				}
-				stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+				stype = signature.at(i);
 
-				if (!match_type(ftype, stype) && !is_any(ftype)
-					&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr)) {
 					found = false;
 					break;
 				}
@@ -142,12 +136,10 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 		if (func_sig_size > call_sig_size) {
 			for (size_t i = 0; i < func_sig_size; ++i) {
 				if (func_sig_size <= call_sig_size) {
-					is_arr = is_array(std::get<1>(func_params.at(i)).type) && is_array(signature.at(i).type);
-					ftype = is_arr ? std::get<1>(func_params.at(i)).array_type : std::get<1>(func_params.at(i)).type;
-					stype = is_arr ? signature.at(i).array_type : signature.at(i).type;
+					ftype = std::get<1>(func_params.at(i));
+					stype = signature.at(i);
 
-					if (!match_type(ftype, stype) && !is_any(ftype)
-						&& !is_void(stype) && !is_undefined(stype) && !is_any(stype)) {
+					if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr)) {
 						found = false;
 						break;
 					}

@@ -45,18 +45,18 @@ struct Bar {
 // println(any_fun(2));
 // println(int_fun());
 
-println("struct value:");
-println(unref Foo{} in {Foo{}, Foo{}});
-println(ref Foo{} in {Foo{}, Foo{}});
-println(Foo{} in {Foo{}, Foo{}});
-var str: Foo = Foo{};
-println("var value:");
-println(unref str in {Foo{}, Foo{}});
-println(ref str in {Foo{}, Foo{}});
-println(str in {Foo{}, Foo{}});
-println(unref str in {str, Foo{}});
-println(ref str in {str, Foo{}});
-println(str in {str, Foo{}});
+// println("struct value:");
+// println(unref Foo{} in {Foo{}, Foo{}});
+// println(ref Foo{} in {Foo{}, Foo{}});
+// println(Foo{} in {Foo{}, Foo{}});
+// var str: Foo = Foo{};
+// println("var value:");
+// println(unref str in {Foo{}, Foo{}});
+// println(ref str in {Foo{}, Foo{}});
+// println(str in {Foo{}, Foo{}});
+// println(unref str in {str, Foo{}});
+// println(ref str in {str, Foo{}});
+// println(str in {str, Foo{}});
 
 // println("\nothers:");
 // println(10 in {0,1,2,10});
@@ -69,3 +69,25 @@ println(str in {str, Foo{}});
 // println("10" in "asdsad0");
 // println('a' in "asdsad0");
 // println('x' in "asdsad0");
+
+fun bar_fun(bar: Bar = null){
+	println(bar);
+}
+
+fun foo_fun(foo: Foo = null){
+	println(foo);
+}
+
+bar_fun();
+bar_fun(Bar{});
+
+foo_fun();
+foo_fun(Foo{});
+
+fun strfun(bar: Bar = null){
+	println(bar);
+}
+
+fun strfun(foo: Foo = null){
+	println(foo);
+}
