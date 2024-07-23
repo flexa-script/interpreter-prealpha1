@@ -96,6 +96,17 @@ namespace visitor {
 	class SemanticVariable;
 	class Variable;
 
+	class Ref {
+	public:
+		bool use_ref;
+
+		Ref();
+
+	protected:
+		virtual void reset_ref() = 0;
+
+	};
+
 	class CodePosition {
 	public:
 		unsigned int row;
@@ -104,7 +115,7 @@ namespace visitor {
 		CodePosition(unsigned int row = 0, unsigned int col = 0) : row(row), col(col) {};
 	};
 
-	class TypeDefinition {
+	class TypeDefinition : public Ref {
 	public:
 		parser::Type type;
 		std::string type_name;
@@ -138,6 +149,8 @@ namespace visitor {
 			std::function<bool(TypeDefinition ltype, TypeDefinition rtype)> match_array_dim);
 		static bool match_type_struct(TypeDefinition ltype, TypeDefinition rtype);
 		static bool match_type_function(TypeDefinition ltype, TypeDefinition rtype);
+
+		void reset_ref() override;
 	};
 
 	class VariableDefinition : public TypeDefinition, public CodePosition {
@@ -224,7 +237,6 @@ namespace visitor {
 	public:
 		std::string identifier;
 		SemanticValue* value;
-		bool use_ref;
 		bool is_const;
 
 		SemanticVariable(const std::string& identifier, parser::Type type, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,

@@ -133,7 +133,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		auto arr = build_array(astnode->dim, new_value->arr[0], astnode->dim.size() - 1);
 		new_value->arr = arr;
 	}
-	
+
 	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
 }
 
@@ -609,7 +609,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		auto colletion = std::get<2>(*current_expression_value.str);
 		for (const auto& val : colletion) {
 			astnode->itdecl->accept(this);
-			
+
 			if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
 				if (idnode->declarations.size() != 2) {
 					throw std::runtime_error("invalid number of values");
@@ -725,7 +725,7 @@ void Interpreter::visit(parser::ASTThrowNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->error->accept(this);
-	
+
 	if (is_struct(current_expression_value.type)
 		&& current_expression_value.type_name == "Exception") {
 		try {
@@ -899,7 +899,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	value.array_type = current_expression_value.array_type;
 
 	current_expression_value = value;
-	current_expression_value.dim = std::vector<ASTExprNode*>{ new ASTLiteralNode<cp_int>(arr.size(), astnode->row, astnode->col)};
+	current_expression_value.dim = std::vector<ASTExprNode*>{ new ASTLiteralNode<cp_int>(arr.size(), astnode->row, astnode->col) };
 }
 
 void Interpreter::visit(ASTStructConstructorNode* astnode) {
@@ -1102,10 +1102,16 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 
 	if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
 		if (astnode->unary_op == "unref") {
-			current_expression_value.ref->use_ref = false;
+			if (current_expression_value.ref) {
+				current_expression_value.ref->use_ref = false;
+			}
+			current_expression_value.use_ref = false;
 		}
 		else if (astnode->unary_op == "ref") {
-			current_expression_value.ref->use_ref = true;
+			if (current_expression_value.ref) {
+				current_expression_value.ref->use_ref = true;
+			}
+			current_expression_value.use_ref = true;
 		}
 	}
 	else {
@@ -1365,6 +1371,8 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 
 bool Interpreter::equals_value(const Value* lval, const Value* rval) {
 	switch (lval->type) {
+	case Type::T_VOID:
+		return is_void(rval->type);
 	case Type::T_BOOL:
 		return lval->b == rval->b;
 	case Type::T_INT:
@@ -1376,15 +1384,15 @@ bool Interpreter::equals_value(const Value* lval, const Value* rval) {
 	case Type::T_STRING:
 		return lval->s == rval->s;
 	case Type::T_ARRAY:
-		if (lval->ref) {
+		if (lval->use_ref) {
 			return lval->arr == rval->arr;
 		}
 		return equals_array(lval->arr, rval->arr);
 	case Type::T_STRUCT:
-		if (!lval->ref) {
-			return equals_struct(lval->str, rval->str);
+		if (lval->use_ref) {
+			return lval->str == rval->str;
 		}
-		return lval->str == rval->str;
+		return equals_struct(lval->str, rval->str);
 	}
 	return false;
 }
@@ -2436,7 +2444,7 @@ void Interpreter::register_built_in_functions() {
 		for (auto arg : builtin_arguments[0]->arr) {
 			std::cout << parse_value_to_string(arg);
 		}
-	};
+		};
 	params.clear();
 	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), new ASTNullNode(0, 0), true));
 	scopes[default_namespace].back()->declare_function("print", params, nullptr, TypeDefinition::get_basic(Type::T_VOID));

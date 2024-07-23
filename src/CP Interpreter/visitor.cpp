@@ -114,6 +114,9 @@ std::vector<std::string> built_in_libs = {
 	"cp.core.console"
 };
 
+Ref::Ref() {
+	reset_ref();
+}
 
 TypeDefinition::TypeDefinition(Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
 	const std::string& type_name, const std::string& type_name_space)
@@ -197,6 +200,10 @@ bool TypeDefinition::match_type_struct(TypeDefinition ltype, TypeDefinition rtyp
 
 bool TypeDefinition::match_type_function(TypeDefinition ltype, TypeDefinition rtype) {
 	return is_function(ltype.type) && is_function(rtype.type);
+}
+
+void TypeDefinition::reset_ref() {
+	use_ref = is_struct(type);
 }
 
 

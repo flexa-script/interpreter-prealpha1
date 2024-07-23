@@ -415,6 +415,11 @@ void SemanticAnalyser::visit(ASTExitNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->exit_code->accept(this);
+	
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
+
 	if (!is_int(current_expression.type)) {
 		throw std::runtime_error("expected int value");
 	}
@@ -447,11 +452,19 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 
 	astnode->condition->accept(this);
 
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
+
 	auto cond_type = static_cast<TypeDefinition>(current_expression);
 	auto case_type = TypeDefinition::get_basic(Type::T_UNDEFINED);
 
 	for (const auto& expr : astnode->case_blocks) {
 		expr.first->accept(this);
+
+		if (is_undefined(current_expression.type)) {
+			throw std::runtime_error("undefined expression");
+		}
 
 		if (!current_expression.is_const) {
 			throw std::runtime_error("case expression is not an constant expression");
@@ -495,6 +508,10 @@ void SemanticAnalyser::visit(ASTElseIfNode* astnode) {
 
 	astnode->condition->accept(this);
 
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
+
 	if (!is_bool(current_expression.type)
 		&& !is_any(current_expression.type)) {
 		ExceptionHandler::throw_condition_type_err();
@@ -507,6 +524,10 @@ void SemanticAnalyser::visit(ASTIfNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->condition->accept(this);
+
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
 
 	if (!is_bool(current_expression.type)
 		&& !is_any(current_expression.type)) {
@@ -537,6 +558,10 @@ void SemanticAnalyser::visit(ASTForNode* astnode) {
 	}
 	if (astnode->dci[1]) {
 		astnode->dci[1]->accept(this);
+
+		if (is_undefined(current_expression.type)) {
+			throw std::runtime_error("undefined expression");
+		}
 
 		if (!is_bool(current_expression.type)
 			&& !is_any(current_expression.type)) {
@@ -707,14 +732,12 @@ void SemanticAnalyser::visit(parser::ASTThrowNode* astnode) {
 		}
 	}
 	else if (!is_string(current_expression.type)) {
-		throw std::runtime_error("expected Exception struct or in throw");
+		throw std::runtime_error("expected Exception or string in throw");
 	}
 }
 
 void SemanticAnalyser::visit(ASTReticencesNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-
-	current_expression = SemanticValue();
 }
 
 void SemanticAnalyser::visit(ASTWhileNode* astnode) {
@@ -722,6 +745,10 @@ void SemanticAnalyser::visit(ASTWhileNode* astnode) {
 
 	is_loop = true;
 	astnode->condition->accept(this);
+
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
 
 	if (!is_bool(current_expression.type)
 		&& !is_any(current_expression.type)) {
@@ -737,6 +764,10 @@ void SemanticAnalyser::visit(ASTDoWhileNode* astnode) {
 
 	is_loop = true;
 	astnode->condition->accept(this);
+
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
 
 	if (!is_bool(current_expression.type)
 		&& !is_any(current_expression.type)) {
@@ -808,6 +839,11 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
 		astnode->values.at(i)->accept(this);
+
+		if (is_undefined(current_expression.type)) {
+			throw std::runtime_error("undefined expression");
+		}
+
 		++arr_size;
 	}
 
@@ -919,9 +955,19 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->left->accept(this);
+
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
+
 	auto lexpr = current_expression;
 
 	astnode->right->accept(this);
+
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
+
 	auto rexpr = current_expression;
 
 	current_expression = SemanticValue(do_operation(astnode->op, lexpr, lexpr, nullptr, rexpr, true), 0, false, 0, 0);
@@ -933,16 +979,22 @@ void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
 
 	astnode->expr->accept(this);
 
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
+
 	if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
 		if (astnode->unary_op == "ref") {
 			if (current_expression.ref) {
 				current_expression.ref->use_ref = true;
 			}
+			current_expression.use_ref = true;
 		}
 		if (astnode->unary_op == "unref") {
 			if (current_expression.ref) {
 				current_expression.ref->use_ref = false;
 			}
+			current_expression.use_ref = false;
 		}
 	}
 	else {
@@ -984,35 +1036,63 @@ void SemanticAnalyser::visit(ASTTernaryNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->condition->accept(this);
+
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
+
 	astnode->value_if_true->accept(this);
+
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
+
 	astnode->value_if_false->accept(this);
+
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
 }
 
 void SemanticAnalyser::visit(ASTInNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->value->accept(this);
+
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
+
 	auto valtype = current_expression.type;
+
 	astnode->collection->accept(this);
+
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
+
+	auto coltype = current_expression.type;
+	auto colarrtype = current_expression.type;
 
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_BOOL;
 
 	if (is_any(valtype)
-		&& (is_any(current_expression.type)
-			|| is_array(current_expression.type)
-			&& is_any(current_expression.array_type))) {
+		&& (is_any(coltype)
+			|| is_array(coltype)
+			&& is_any(colarrtype))) {
 		return;
 	}
 
-	if (!match_type(valtype, current_expression.array_type)
-		&& !is_any(valtype) && !is_any(current_expression.type) && !is_any(current_expression.array_type)
-		&& is_string(valtype) && !is_string(current_expression.type)
-		&& is_char(valtype) && !is_string(current_expression.type)) {
-		throw std::runtime_error("types don't match '" + type_str(valtype) + "' and '" + type_str(current_expression.type) + "'");
+	if (!match_type(valtype, colarrtype)
+		&& !is_any(valtype) && !is_any(coltype) && !is_any(colarrtype)
+		&& is_string(valtype) && !is_string(coltype)
+		&& is_char(valtype) && !is_string(coltype)) {
+		throw std::runtime_error("types don't match '" + type_str(valtype) + "' and '" + type_str(coltype) + "'");
 	}
-	if (!is_collection(current_expression.type) && !is_any(current_expression.type)) {
-		throw std::runtime_error("invalid type '" + type_str(current_expression.type) + "', value must be a array or string");
+
+	if (!is_collection(coltype) && !is_any(coltype)) {
+		throw std::runtime_error("invalid type '" + type_str(coltype) + "', value must be a array or string");
 	}
 
 }
@@ -1021,6 +1101,10 @@ void SemanticAnalyser::visit(ASTTypeParseNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->expr->accept(this);
+
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
 
 	if ((is_array(current_expression.type) || is_struct(current_expression.type))
 		&& !is_string(astnode->type)) {
@@ -1050,6 +1134,11 @@ void SemanticAnalyser::visit(ASTTypingNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->expr->accept(this);
+
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
+
 	current_expression = SemanticValue();
 	if (astnode->image == "typeid") {
 		current_expression.type = Type::T_INT;
@@ -1316,10 +1405,10 @@ bool SemanticAnalyser::match_array_dim(TypeDefinition ltype, TypeDefinition rtyp
 }
 
 void SemanticAnalyser::equals_value(const SemanticValue& lval, const SemanticValue& rval) {
-	if (lval.ref && !rval.ref) {
+	if (lval.use_ref && !rval.use_ref) {
 		throw std::runtime_error("both values must be references");
 	}
-	if (!lval.ref && rval.ref) {
+	if (!lval.use_ref && rval.use_ref) {
 		throw std::runtime_error("both values must be unreferenced");
 	}
 }
