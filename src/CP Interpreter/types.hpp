@@ -80,21 +80,21 @@ public:
 	static TypeDefinition get_struct(const std::string& type_name,
 		const std::string& type_name_space);
 
-	static bool is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype,
-		TypeDefinition* rvtype, TypeDefinition rtype,
-		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector);
+	static bool is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype,
+		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector, bool strict = false);
 	static bool match_type(TypeDefinition ltype, TypeDefinition rtype,
-		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector);
+		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector, bool strict = false);
 	static bool match_type_bool(TypeDefinition ltype, TypeDefinition rtype);
 	static bool match_type_int(TypeDefinition ltype, TypeDefinition rtype);
-	static bool match_type_float(TypeDefinition ltype, TypeDefinition rtype);
+	static bool match_type_float(TypeDefinition ltype, TypeDefinition rtype, bool strict = false);
 	static bool match_type_char(TypeDefinition ltype, TypeDefinition rtype);
-	static bool match_type_string(TypeDefinition ltype, TypeDefinition rtype);
+	static bool match_type_string(TypeDefinition ltype, TypeDefinition rtype, bool strict = false);
 	static bool match_type_array(TypeDefinition ltype, TypeDefinition rtype,
 		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector);
 	static bool match_type_struct(TypeDefinition ltype, TypeDefinition rtype);
 	static bool match_type_function(TypeDefinition ltype, TypeDefinition rtype);
-	static bool match_array_dim(TypeDefinition ltype, TypeDefinition rtype, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector);
+	static bool match_array_dim(TypeDefinition ltype, TypeDefinition rtype,
+		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector);
 
 
 	void reset_ref();

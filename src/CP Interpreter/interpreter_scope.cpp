@@ -94,7 +94,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 				ftype = std::get<1>(func_params.at(i));
 				stype = signature.at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr)) {
+				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr, true)) {
 					found = false;
 					break;
 				}
@@ -118,7 +118,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 				}
 				stype = signature.at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr)) {
+				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr, true)) {
 					found = false;
 					break;
 				}
@@ -137,7 +137,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 					ftype = std::get<1>(func_params.at(i));
 					stype = signature.at(i);
 
-					if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr)) {
+					if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr, true)) {
 						found = false;
 						break;
 					}

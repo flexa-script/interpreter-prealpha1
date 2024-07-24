@@ -139,22 +139,24 @@ TypeDefinition TypeDefinition::get_struct(const std::string& type_name, const st
 	return TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), type_name, type_name_space);
 }
 
-bool TypeDefinition::is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector) {
+bool TypeDefinition::is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype,
+	std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector, bool strict) {
 	if (lvtype && is_any(lvtype->type)
 		|| rvtype && is_any(rvtype->type)
 		|| is_any(ltype.type)
 		|| is_any(rtype.type)
 		|| is_void(ltype.type)
 		|| is_void(rtype.type)) return true;
-	return match_type(ltype, rtype, evaluate_access_vector);
+	return match_type(ltype, rtype, evaluate_access_vector, strict);
 }
 
-bool TypeDefinition::match_type(TypeDefinition ltype, TypeDefinition rtype, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector) {
+bool TypeDefinition::match_type(TypeDefinition ltype, TypeDefinition rtype,
+	std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector, bool strict) {
 	if (match_type_bool(ltype, rtype)) return true;
 	if (match_type_int(ltype, rtype)) return true;
-	if (match_type_float(ltype, rtype)) return true;
+	if (match_type_float(ltype, rtype, strict)) return true;
 	if (match_type_char(ltype, rtype)) return true;
-	if (match_type_string(ltype, rtype)) return true;
+	if (match_type_string(ltype, rtype, strict)) return true;
 	if (match_type_array(ltype, rtype, evaluate_access_vector)) return true;
 	if (match_type_struct(ltype, rtype)) return true;
 	if (match_type_function(ltype, rtype)) return true;
@@ -169,18 +171,20 @@ bool TypeDefinition::match_type_int(TypeDefinition ltype, TypeDefinition rtype) 
 	return is_int(ltype.type) && is_int(rtype.type);
 }
 
-bool TypeDefinition::match_type_float(TypeDefinition ltype, TypeDefinition rtype) {
+bool TypeDefinition::match_type_float(TypeDefinition ltype, TypeDefinition rtype, bool strict) {
 	return is_float(ltype.type)
-		&& (is_float(rtype.type) || is_int(rtype.type));
+		&& (strict && is_float(rtype.type) ||
+			!strict && is_numeric(rtype.type));
 }
 
 bool TypeDefinition::match_type_char(TypeDefinition ltype, TypeDefinition rtype) {
 	return is_char(ltype.type) && is_char(rtype.type);
 }
 
-bool TypeDefinition::match_type_string(TypeDefinition ltype, TypeDefinition rtype) {
+bool TypeDefinition::match_type_string(TypeDefinition ltype, TypeDefinition rtype, bool strict) {
 	return is_string(ltype.type)
-		&& (is_char(rtype.type) || is_string(rtype.type));
+		&& (strict && is_string(rtype.type) ||
+			!strict && is_text(rtype.type));
 }
 
 bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector) {
