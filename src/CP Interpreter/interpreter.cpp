@@ -121,7 +121,6 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		astnode_type_name, astnode->type_name_space,
 		new_value);
 	new_value->ref = new_var;
-	//current_expression_value = *new_value;
 
 	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, evaluate_access_vector_ptr)
 		&& !is_undefined(new_value->type)) {
@@ -131,6 +130,15 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	if (new_value->arr.size() == 1) {
 		auto arr = build_array(astnode->dim, new_value->arr[0], astnode->dim.size() - 1);
 		new_value->arr = arr;
+	}
+
+	if (is_string(new_var->type) && is_char(new_value->type)) {
+		new_value->type = new_var->type;
+		new_value->s = new_value->c;
+	}
+	else if (is_float(new_var->type) && is_int(new_value->type)) {
+		new_value->type = new_var->type;
+		new_value->f = new_value->i;
 	}
 
 	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);

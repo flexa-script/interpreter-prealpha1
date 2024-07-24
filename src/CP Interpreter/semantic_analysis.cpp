@@ -170,6 +170,10 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		new_value->dim = new_var->dim;
 	}
 
+	if (is_string(new_var->type) || is_float(new_var->type)) {
+		new_value->type = new_var->type;
+	}
+
 	current_scope->declare_variable(astnode->identifier, new_var);
 }
 
