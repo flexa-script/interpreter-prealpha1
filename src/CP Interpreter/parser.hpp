@@ -4,7 +4,6 @@
 #include "ast.hpp"
 #include "lexer.hpp"
 
-
 namespace parser {
 
 	class Parser {

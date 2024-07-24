@@ -11,7 +11,6 @@
 
 using namespace axe;
 
-
 Logger::Logger(LogLevel level) : level(level), path("") {}
 
 Logger::Logger(LogLevel level, std::string path) : level(level), path(path) {}

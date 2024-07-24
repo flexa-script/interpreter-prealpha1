@@ -6,11 +6,8 @@
 
 #include "token.hpp"
 
-
 namespace lexer {
-
     class Lexer {
-
     public:
         Lexer(const std::string& name, const std::string& source);
         ~Lexer();

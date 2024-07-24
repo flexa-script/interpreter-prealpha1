@@ -1,8 +1,6 @@
 #include "token.hpp"
 
-
 using namespace lexer;
-
 
 Token::Token(TokenType type, const std::string& value, unsigned int row, unsigned int col)
 	: type(type), value(value), row(row), col(col) {}

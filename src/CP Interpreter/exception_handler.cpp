@@ -1,6 +1,5 @@
 #include "exception_handler.hpp"
 
-
 void ExceptionHandler::throw_operation_type_err(const std::string op, Type ltype, Type rtype) {
 	throw std::runtime_error("invalid types '" + type_str(ltype)
 		+ "' and '" + type_str(rtype) + "'");

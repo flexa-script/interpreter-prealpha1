@@ -9,7 +9,6 @@
 #include "types.hpp"
 #include "visitor.hpp"
 
-
 namespace parser {
 
 	class Identifier {

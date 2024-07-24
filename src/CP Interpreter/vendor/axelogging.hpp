@@ -10,7 +10,6 @@
 #include <string>
 #include <map>
 
-
 namespace axe {
 	enum LogLevel {
 		NOTSET,

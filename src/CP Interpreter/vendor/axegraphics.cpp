@@ -4,7 +4,6 @@
 
 using namespace axe;
 
-
 Image::~Image() {
 	if (bitmap) {
 		DeleteObject(bitmap);

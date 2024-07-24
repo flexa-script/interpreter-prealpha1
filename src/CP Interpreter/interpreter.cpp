@@ -14,7 +14,6 @@
 #include "files.hpp"
 #include "console.hpp"
 
-
 using namespace lexer;
 
 Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)

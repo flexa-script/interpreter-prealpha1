@@ -3,9 +3,7 @@
 
 #include "lexer.hpp"
 
-
 using namespace lexer;
-
 
 Lexer::Lexer(const std::string& name, const std::string& source)
 	: source(source), name(name) {

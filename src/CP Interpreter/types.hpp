@@ -48,7 +48,6 @@ typedef std::map<std::string, Value*> cp_struct_values;
 typedef std::tuple<std::string, std::string, cp_struct_values> cp_struct;
 typedef std::pair<void*, std::string> cp_function;
 
-
 class SemanticVariable;
 class Variable;
 
@@ -267,6 +266,5 @@ public:
 	Type def_type(Type type);
 	Type def_array_type(Type array_type, const std::vector<ASTExprNode*>& dim);
 };
-
 
 #endif // !TYPES_HPP

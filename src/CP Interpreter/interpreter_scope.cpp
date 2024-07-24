@@ -5,10 +5,8 @@
 #include "interpreter.hpp"
 #include "vendor/axeutils.hpp"
 
-
 using namespace visitor;
 using namespace parser;
-
 
 InterpreterScope::InterpreterScope(std::string name) : name(name) {}
 

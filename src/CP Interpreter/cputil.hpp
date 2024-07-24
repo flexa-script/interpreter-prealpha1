@@ -6,7 +6,6 @@
 #include <regex>
 #include <iomanip>
 
-
 class CPUtil {
 public:
 	static std::string load_source(const std::string& path);

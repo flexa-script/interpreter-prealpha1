@@ -3,7 +3,6 @@
 
 #include <string>
 
-
 class CPSource {
 public:
 	std::string name;

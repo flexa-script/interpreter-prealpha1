@@ -9,7 +9,6 @@
 #include "types.hpp"
 #include "ast.hpp"
 
-
 namespace visitor {
 
 	class SemanticScope {

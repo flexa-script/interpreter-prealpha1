@@ -4,7 +4,6 @@
 #include "ast.hpp"
 #include "cpsource.hpp"
 
-
 namespace visitor {
 
 	class LibFinder : Visitor {

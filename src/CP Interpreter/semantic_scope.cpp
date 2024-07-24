@@ -4,10 +4,8 @@
 #include "semantic_scope.hpp"
 #include "vendor/axeutils.hpp"
 
-
 using namespace visitor;
 using namespace parser;
-
 
 SemanticScope::SemanticScope() = default;
 

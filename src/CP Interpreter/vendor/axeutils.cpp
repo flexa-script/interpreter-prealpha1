@@ -7,7 +7,6 @@
 
 #include "axeutils.hpp"
 
-
 namespace axe {
 
 	// StringUtils

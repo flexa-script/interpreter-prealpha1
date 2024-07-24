@@ -3,7 +3,6 @@
 #include "vendor/axeutils.hpp"
 #include "cputil.hpp"
 
-
 std::string CPUtil::load_source(const std::string& path) {
 	std::string source;
 

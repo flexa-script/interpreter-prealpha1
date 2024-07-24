@@ -4,10 +4,8 @@
 #include "vendor/axeutils.hpp"
 #include "cputil.hpp"
 
-
 using namespace visitor;
 using namespace parser;
-
 
 LibFinder::LibFinder(ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
 	: cp_root(axe::PathUtils::get_current_path() + "libs"),

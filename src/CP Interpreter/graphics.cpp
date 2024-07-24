@@ -4,7 +4,6 @@
 using namespace modules;
 using namespace visitor;
 
-
 Graphics::Graphics() {}
 
 Graphics::~Graphics() {

@@ -5,7 +5,6 @@
 #include <vector>
 #include <list>
 
-
 namespace axe {
 	class StringUtils {
 	public:

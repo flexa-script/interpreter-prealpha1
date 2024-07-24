@@ -10,10 +10,8 @@
 #include "ast.hpp"
 #include "interpreter_scope.hpp"
 
-
 using namespace visitor;
 using namespace parser;
-
 
 namespace modules {
 	class Graphics;

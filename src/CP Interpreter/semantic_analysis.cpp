@@ -7,11 +7,9 @@
 #include "vendor/axeutils.hpp"
 #include "graphics.hpp"
 
-
 using namespace visitor;
 using namespace parser;
 using namespace lexer;
-
 
 SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
 	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {

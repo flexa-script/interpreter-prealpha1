@@ -2,7 +2,6 @@
 #include "cpinterpreter.hpp"
 #include "vendor/axewatch.h"
 
-
 int main(int argc, const char* argv[]) {
 	bool debug = false;
 	int result = 0;

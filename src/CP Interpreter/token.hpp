@@ -6,7 +6,6 @@
 #include "token_constants.hpp"
 
 namespace lexer {
-
 	class Token {
 	public:
 		TokenType type;

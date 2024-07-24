@@ -4,10 +4,8 @@
 #include "ast.hpp"
 #include "vendor/axeutils.hpp"
 
-
 using namespace visitor;
 using namespace parser;
-
 
 Identifier::Identifier(const std::string& identifier, std::vector<ASTExprNode*>&& access_vector)
 	: identifier(identifier), access_vector(std::move(access_vector)) {}

@@ -7,10 +7,8 @@
 #include "visitor.hpp"
 #include "ast.hpp"
 
-
 using namespace visitor;
 using namespace parser;
-
 
 namespace visitor {
 	typedef std::map<std::string, StructureDefinition> interpreter_struct_list_t;
