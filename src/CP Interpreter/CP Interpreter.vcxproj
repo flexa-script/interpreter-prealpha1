@@ -88,6 +88,7 @@
     <ClCompile Include="semantic_analysis.cpp" />
     <ClCompile Include="semantic_scope.cpp" />
     <ClCompile Include="token.cpp" />
+    <ClCompile Include="token_constants.hpp" />
     <ClCompile Include="types.cpp" />
     <ClCompile Include="vendor\axegraphics.cpp" />
     <ClCompile Include="vendor\axelogging.cpp" />

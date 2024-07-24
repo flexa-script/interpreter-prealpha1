@@ -209,5 +209,8 @@
     <ClCompile Include="types.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
+    <ClCompile Include="token_constants.hpp">
+      <Filter>Header Files\core\lexer</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
