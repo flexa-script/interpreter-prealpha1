@@ -1855,7 +1855,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			break;
 		}
 
-		if (is_float(l_type) && is_any(l_var_type)) {
+		if (is_float(l_type) && (is_any(l_var_type) || is_expr)) {
 			lval->set(do_operation(lval->f, cp_float(rval->i), op));
 		}
 		else if (is_int(l_type) && is_any(l_var_type)
