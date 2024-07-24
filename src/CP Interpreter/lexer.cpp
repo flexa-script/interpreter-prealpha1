@@ -319,142 +319,142 @@ Token Lexer::process_identifier() {
 		advance();
 	}
 
-	if (identifier == "using") {
+	if (identifier == TOKEN_IMAGE[TOK_USING]) {
 		type = TOK_USING;
 	}
-	else if (identifier == "namespace") {
+	else if (identifier == TOKEN_IMAGE[TOK_NAMESPACE]) {
 		type = TOK_NAMESPACE;
 	}
-	else if (identifier == "const") {
+	else if (identifier == TOKEN_IMAGE[TOK_CONST]) {
 		type = TOK_CONST;
 	}
-	else if (identifier == "var") {
+	else if (identifier == TOKEN_IMAGE[TOK_VAR]) {
 		type = TOK_VAR;
 	}
-	else if (identifier == "ref") {
+	else if (identifier == TOKEN_IMAGE[TOK_REF]) {
 		type = TOK_REF;
 	}
-	else if (identifier == "unref") {
+	else if (identifier == TOKEN_IMAGE[TOK_UNREF]) {
 		type = TOK_UNREF;
 	}
-	else if (identifier == "struct") {
+	else if (identifier == TOKEN_IMAGE[TOK_STRUCT]) {
 		type = TOK_STRUCT;
 	}
-	else if (identifier == "fun") {
+	else if (identifier == TOKEN_IMAGE[TOK_FUN]) {
 		type = TOK_FUN;
 	}
-	else if (identifier == "this") {
+	else if (identifier == TOKEN_IMAGE[TOK_THIS]) {
 		type = TOK_THIS;
 	}
-	else if (identifier == "return") {
+	else if (identifier == TOKEN_IMAGE[TOK_RETURN]) {
 		type = TOK_RETURN;
 	}
-	else if (identifier == "continue") {
+	else if (identifier == TOKEN_IMAGE[TOK_CONTINUE]) {
 		type = TOK_CONTINUE;
 	}
-	else if (identifier == "break") {
+	else if (identifier == TOKEN_IMAGE[TOK_BREAK]) {
 		type = TOK_BREAK;
 	}
-	else if (identifier == "exit") {
+	else if (identifier == TOKEN_IMAGE[TOK_EXIT]) {
 		type = TOK_EXIT;
 	}
-	else if (identifier == "switch") {
+	else if (identifier == TOKEN_IMAGE[TOK_SWITCH]) {
 		type = TOK_SWITCH;
 	}
-	else if (identifier == "default") {
+	else if (identifier == TOKEN_IMAGE[TOK_DEFAULT]) {
 		type = TOK_DEFAULT;
 	}
-	else if (identifier == "case") {
+	else if (identifier == TOKEN_IMAGE[TOK_CASE]) {
 		type = TOK_CASE;
 	}
-	else if (identifier == "as") {
+	else if (identifier == TOKEN_IMAGE[TOK_AS]) {
 		type = TOK_AS;
 	}
-	else if (identifier == "in") {
+	else if (identifier == TOKEN_IMAGE[TOK_IN]) {
 		type = TOK_IN;
 	}
-	else if (identifier == "if") {
+	else if (identifier == TOKEN_IMAGE[TOK_IF]) {
 		type = TOK_IF;
 	}
-	else if (identifier == "else") {
+	else if (identifier == TOKEN_IMAGE[TOK_ELSE]) {
 		type = TOK_ELSE;
 	}
-	else if (identifier == "enum") {
+	else if (identifier == TOKEN_IMAGE[TOK_ENUM]) {
 		type = TOK_ENUM;
 	}
-	else if (identifier == "try") {
+	else if (identifier == TOKEN_IMAGE[TOK_TRY]) {
 		type = TOK_TRY;
 	}
-	else if (identifier == "catch") {
+	else if (identifier == TOKEN_IMAGE[TOK_CATCH]) {
 		type = TOK_CATCH;
 	}
-	else if (identifier == "throw") {
+	else if (identifier == TOKEN_IMAGE[TOK_THROW]) {
 		type = TOK_THROW;
 	}
-	else if (identifier == "for") {
+	else if (identifier == TOKEN_IMAGE[TOK_FOR]) {
 		type = TOK_FOR;
 	}
-	else if (identifier == "foreach") {
+	else if (identifier == TOKEN_IMAGE[TOK_FOREACH]) {
 		type = TOK_FOREACH;
 	}
-	else if (identifier == "while") {
+	else if (identifier == TOKEN_IMAGE[TOK_WHILE]) {
 		type = TOK_WHILE;
 	}
-	else if (identifier == "do") {
+	else if (identifier == TOKEN_IMAGE[TOK_DO]) {
 		type = TOK_DO;
 	}
-	else if (identifier == "void") {
+	else if (identifier == TOKEN_IMAGE[TOK_VOID_TYPE]) {
 		type = TOK_VOID_TYPE;
 	}
-	else if (identifier == "bool") {
+	else if (identifier == TOKEN_IMAGE[TOK_BOOL_TYPE]) {
 		type = TOK_BOOL_TYPE;
 	}
-	else if (identifier == "int") {
+	else if (identifier == TOKEN_IMAGE[TOK_INT_TYPE]) {
 		type = TOK_INT_TYPE;
 	}
-	else if (identifier == "float") {
+	else if (identifier == TOKEN_IMAGE[TOK_FLOAT_TYPE]) {
 		type = TOK_FLOAT_TYPE;
 	}
-	else if (identifier == "char") {
+	else if (identifier == TOKEN_IMAGE[TOK_CHAR_TYPE]) {
 		type = TOK_CHAR_TYPE;
 	}
-	else if (identifier == "string") {
+	else if (identifier == TOKEN_IMAGE[TOK_STRING_TYPE]) {
 		type = TOK_STRING_TYPE;
 	}
-	else if (identifier == "any") {
+	else if (identifier == TOKEN_IMAGE[TOK_ANY_TYPE]) {
 		type = TOK_ANY_TYPE;
 	}
-	else if (identifier == "function") {
+	else if (identifier == TOKEN_IMAGE[TOK_FUNCTION_TYPE]) {
 		type = TOK_FUNCTION_TYPE;
 	}
-	else if (identifier == "typeof") {
+	else if (identifier == TOKEN_IMAGE[TOK_TYPEOF]) {
 		type = TOK_TYPEOF;
 	}
-	else if (identifier == "typeid") {
+	else if (identifier == TOKEN_IMAGE[TOK_TYPEID]) {
 		type = TOK_TYPEID;
 	}
-	else if (identifier == "is_any") {
+	else if (identifier == TOKEN_IMAGE[TOK_IS_ANY]) {
 		type = TOK_IS_ANY;
 	}
-	else if (identifier == "is_array") {
+	else if (identifier == TOKEN_IMAGE[TOK_IS_ARRAY]) {
 		type = TOK_IS_ARRAY;
 	}
-	else if (identifier == "is_struct") {
+	else if (identifier == TOKEN_IMAGE[TOK_IS_STRUCT]) {
 		type = TOK_IS_STRUCT;
 	}
 	else if (identifier == "true" || identifier == "false") {
 		type = TOK_BOOL_LITERAL;
 	}
-	else if (identifier == "null") {
+	else if (identifier == TOKEN_IMAGE[TOK_NULL]) {
 		type = TOK_NULL;
 	}
-	else if (identifier == "and") {
+	else if (identifier == TOKEN_IMAGE[TOK_LOGICAL_AND_OP]) {
 		type = TOK_LOGICAL_AND_OP;
 	}
-	else if (identifier == "or") {
+	else if (identifier == TOKEN_IMAGE[TOK_LOGICAL_OR_OP]) {
 		type = TOK_LOGICAL_OR_OP;
 	}
-	else if (identifier == "not") {
+	else if (identifier == TOKEN_IMAGE[TOK_NOT]) {
 		type = TOK_NOT;
 	}
 	else {
