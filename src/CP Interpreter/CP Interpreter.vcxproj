@@ -61,6 +61,7 @@
     <ClInclude Include="semantic_analysis.hpp" />
     <ClInclude Include="semantic_scope.hpp" />
     <ClInclude Include="token.hpp" />
+    <ClInclude Include="types.hpp" />
     <ClInclude Include="vendor\axegraphics.hpp" />
     <ClInclude Include="vendor\axelogging.hpp" />
     <ClInclude Include="vendor\axeutils.hpp" />
@@ -87,6 +88,7 @@
     <ClCompile Include="semantic_analysis.cpp" />
     <ClCompile Include="semantic_scope.cpp" />
     <ClCompile Include="token.cpp" />
+    <ClCompile Include="types.cpp" />
     <ClCompile Include="vendor\axegraphics.cpp" />
     <ClCompile Include="vendor\axelogging.cpp" />
     <ClCompile Include="vendor\axeutils.cpp" />

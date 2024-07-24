@@ -5,6 +5,7 @@
 #include <stack>
 #include <functional>
 
+#include "types.hpp"
 #include "visitor.hpp"
 #include "ast.hpp"
 #include "interpreter_scope.hpp"
@@ -41,7 +42,7 @@ namespace visitor {
 		std::stack<std::string> current_function_nmspace;
 		std::stack<interpreter_parameter_list_t> current_function_defined_parameters;
 		std::stack<std::vector<Value*>> current_function_calling_arguments;
-		std::stack<visitor::TypeDefinition> current_function_return_type;
+		std::stack<TypeDefinition> current_function_return_type;
 		std::stack<std::string> current_this_name;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		bool is_function_context = false;
@@ -82,7 +83,7 @@ namespace visitor {
 
 		InterpreterScope* get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
 		InterpreterScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-		InterpreterScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<visitor::TypeDefinition>& signature);
+		InterpreterScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature);
 
 		Value* set_value(InterpreterScope* scope, const std::vector<parser::Identifier>& identifier_vector, Value* new_value);
 		Value* access_value(const InterpreterScope* scope, Value* value, const std::vector<parser::Identifier>& identifier_vector, size_t i = 0);

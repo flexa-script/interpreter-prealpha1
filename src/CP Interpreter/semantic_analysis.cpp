@@ -1615,8 +1615,8 @@ long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 }
 
 void SemanticAnalyser::register_built_in_functions() {
-	auto signature = std::vector<visitor::TypeDefinition>();
-	auto parameters = std::vector<visitor::VariableDefinition>();
+	auto signature = std::vector<TypeDefinition>();
+	auto parameters = std::vector<VariableDefinition>();
 
 	signature.clear();
 	parameters.clear();

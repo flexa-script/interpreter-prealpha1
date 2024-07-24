@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 
+#include "types.hpp"
 #include "visitor.hpp"
 
 
@@ -23,10 +24,10 @@ namespace parser {
 		Identifier();
 	};
 
-	class ASTNode : public visitor::CodePosition {
+	class ASTNode : public CodePosition {
 	public:
 		ASTNode(unsigned int row, unsigned int col)
-			: visitor::CodePosition(row, col) {}
+			: CodePosition(row, col) {}
 
 		virtual void accept(visitor::Visitor*) = 0;
 	};
@@ -80,7 +81,7 @@ namespace parser {
 		void accept(visitor::Visitor*) override;
 	};
 
-	class ASTDeclarationNode : public ASTStatementNode, public visitor::TypeDefinition {
+	class ASTDeclarationNode : public ASTStatementNode, public TypeDefinition {
 	public:
 		std::string identifier;
 		ASTExprNode* expr;
@@ -274,23 +275,23 @@ namespace parser {
 	class ASTStructDefinitionNode : public ASTStatementNode {
 	public:
 		std::string identifier;
-		std::map<std::string, visitor::VariableDefinition> variables;
+		std::map<std::string, VariableDefinition> variables;
 
-		ASTStructDefinitionNode(const std::string& identifier, const std::map<std::string, visitor::VariableDefinition>& variables,
+		ASTStructDefinitionNode(const std::string& identifier, const std::map<std::string, VariableDefinition>& variables,
 			unsigned int row, unsigned int col);
 
 		void accept(visitor::Visitor*) override;
 	};
 
-	class ASTFunctionDefinitionNode : public ASTStatementNode, public visitor::TypeDefinition {
+	class ASTFunctionDefinitionNode : public ASTStatementNode, public TypeDefinition {
 	public:
 		std::string identifier;
-		std::vector<visitor::VariableDefinition> parameters;
+		std::vector<VariableDefinition> parameters;
 		std::vector<std::string> variable_names;
 		std::vector<TypeDefinition> signature;
 		ASTBlockNode* block;
 
-		ASTFunctionDefinitionNode(const std::string& identifier, std::vector<visitor::VariableDefinition>&& parameters,
+		ASTFunctionDefinitionNode(const std::string& identifier, std::vector<VariableDefinition>&& parameters,
 			Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, std::vector<ASTExprNode*>&& dim,
 			ASTBlockNode* block, unsigned int row, unsigned int col);
 
@@ -308,7 +309,7 @@ namespace parser {
 		virtual long long hash(visitor::Visitor*) override;
 	};
 
-	class ASTFunctionExpression : public ASTExprNode, public visitor::TypeDefinition {
+	class ASTFunctionExpression : public ASTExprNode, public TypeDefinition {
 	public:
 		ASTFunctionDefinitionNode* fun;
 

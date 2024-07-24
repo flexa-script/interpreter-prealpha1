@@ -14,9 +14,9 @@ var bar: Bar = Bar{x="10", foo=Foo{a=10,b=50}};
 
 // bar = Bar{};
 
-// println(bar);
+println(bar);
 
-bar.foo = 10;
+bar.foo = Foo{};
 
 println(bar);
 

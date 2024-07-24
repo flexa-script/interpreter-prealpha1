@@ -132,6 +132,9 @@
     <ClInclude Include="exception_handler.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="types.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -201,6 +204,9 @@
       <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
     <ClCompile Include="exception_handler.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="types.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>
