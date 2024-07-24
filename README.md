@@ -197,8 +197,8 @@
 - [X] some expression nodes aren't cleaning return type like void funcions
     - [X] add undefined checks after expression semantical analysis
 - [X] reference is not working properly
-- [ ] searching functions in scope, it will not handle struct type
-- [ ] struct assign seems not working in semantical analisys
+- [X] searching functions in scope, it will not handle struct type
+- [X] struct assign seems not working in semantical analisys
 
 ## Errors
 - Errors has CP prefix, eg. CP9999

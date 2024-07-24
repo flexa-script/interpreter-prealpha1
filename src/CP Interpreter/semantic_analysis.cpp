@@ -1313,6 +1313,9 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 			&& !Token::is_equality_op(op)) {
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
+		else if (!is_numeric(l_type) && !is_any(l_type) && !is_any(l_var_type)) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
 
 		break;
 	}
@@ -1321,6 +1324,9 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 			&& !Token::is_float_op(op)
 			&& !Token::is_relational_op(op)
 			&& !Token::is_equality_op(op)) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
+		else if (!is_numeric(l_type) && !is_any(l_type) && !is_any(l_var_type)) {
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
 
@@ -1335,6 +1341,9 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 				ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 			}
 		}
+		else if (!is_text(l_type) && !is_any(l_type) && !is_any(l_var_type)) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
 
 		break;
 	}
@@ -1344,6 +1353,9 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 				&& !Token::is_equality_op(op)))
 			&& (is_expr && (!is_char(l_type)
 				|| !Token::is_expression_collection_op(op)))) {
+			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+		}
+		else if (!is_text(l_type) && !is_any(l_type) && !is_any(l_var_type)) {
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
 

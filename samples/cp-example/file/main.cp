@@ -8,9 +8,17 @@ struct Bar {
   var foo: Foo;
 };
 
-// var bar: Bar = Bar{x="10", foo=Foo{a=10,b=50}};
+var bar: Bar = Bar{x="10", foo=Foo{a=10,b=50}};
 
 // println(bar);
+
+// bar = Bar{};
+
+// println(bar);
+
+bar.foo = 10;
+
+println(bar);
 
 // fun any_void_fun() {
 //   print("(void -> undefined)");
@@ -70,24 +78,24 @@ struct Bar {
 // println('a' in "asdsad0");
 // println('x' in "asdsad0");
 
-fun bar_fun(bar: Bar = null){
-	println(bar);
-}
+// fun bar_fun(bar: Bar = null){
+// 	println(bar);
+// }
 
-fun foo_fun(foo: Foo = null){
-	println(foo);
-}
+// fun foo_fun(foo: Foo = null){
+// 	println(foo);
+// }
 
-bar_fun();
-bar_fun(Bar{});
+// bar_fun();
+// bar_fun(Bar{});
 
-foo_fun();
-foo_fun(Foo{});
+// foo_fun();
+// foo_fun(Foo{});
 
-fun strfun(bar: Bar = null){
-	println(bar);
-}
+// fun strfun(bar: Bar = null){
+// 	println(bar);
+// }
 
-fun strfun(foo: Foo = null){
-	println(foo);
-}
+// fun strfun(foo: Foo = null){
+// 	println(foo);
+// }
