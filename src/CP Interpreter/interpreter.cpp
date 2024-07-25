@@ -238,7 +238,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace(astnode->nmspace);
-
+	bool strict = true;
 	std::vector<TypeDefinition> signature;
 	std::vector<Value*> function_arguments;
 
@@ -258,9 +258,30 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		function_arguments.push_back(pvalue);
 	}
 
-	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature);
+	InterpreterScope* func_scope;
+	try {
+		func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature, strict);
+	}
+	catch (...) {
+		try {
+			strict = false;
+			func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature, strict);
+		}
+		catch (...) {
+			std::string func_name = astnode->identifier + "(";
+			for (const auto& param : signature) {
+				func_name += type_str(param.type) + ", ";
+			}
+			if (signature.size() > 0) {
+				func_name.pop_back();
+				func_name.pop_back();
+			}
+			func_name += ")";
 
-	auto declfun = func_scope->find_declared_function(astnode->identifier, signature, evaluate_access_vector_ptr);
+			throw std::runtime_error("function '" + func_name + "' was never declared");
+		}
+	}
+	auto declfun = func_scope->find_declared_function(astnode->identifier, signature, evaluate_access_vector_ptr, strict);
 
 	current_function_defined_parameters.push(std::get<0>(declfun));
 	is_function_context = true;
@@ -1515,12 +1536,12 @@ InterpreterScope* Interpreter::get_inner_most_struct_definition_scope(const std:
 	return scopes[nmspace][i];
 }
 
-InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature) {
+InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature, bool strict) {
 	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr); --i) {
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); --i) {
 		if (i <= 0) {
 			for (const auto& prgnmspace : program_nmspaces[get_current_namespace()]) {
-				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr); --i) {
+				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); --i) {
 					if (i <= 0) {
 						i = -1;
 						break;
@@ -2300,13 +2321,34 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 
 	// adds function arguments
 	for (i = 0; i < current_function_calling_arguments.top().size(); ++i) {
+		auto current_function_calling_argument = current_function_calling_arguments.top()[i];
+
+		if (current_function_defined_parameters.top().size() > i
+			&& is_string(std::get<1>(current_function_defined_parameters.top()[i]).type) && is_char(current_function_calling_argument->type)) {
+			if (current_function_calling_argument->ref && current_function_calling_argument->ref->use_ref ||
+				current_function_calling_argument->use_ref) {
+				throw std::runtime_error("cannot reference char to string in function call");
+			}
+			current_function_calling_argument->type = std::get<1>(current_function_defined_parameters.top()[i]).type;
+			current_function_calling_argument->s = current_function_calling_argument->c;
+		}
+		else if (current_function_defined_parameters.top().size() > i
+			&& is_float(std::get<1>(current_function_defined_parameters.top()[i]).type) && is_int(current_function_calling_argument->type)) {
+			if (current_function_calling_argument->ref && current_function_calling_argument->ref->use_ref ||
+				current_function_calling_argument->use_ref) {
+				throw std::runtime_error("cannot reference int to float in function call");
+			}
+			current_function_calling_argument->type = std::get<1>(current_function_defined_parameters.top()[i]).type;
+			current_function_calling_argument->f = current_function_calling_argument->i;
+		}
+
 		// is reference : not reference
 		Value* current_value = nullptr;
-		if (current_function_calling_arguments.top()[i]->ref) {
-			current_value = current_function_calling_arguments.top()[i];
+		if (current_function_calling_argument->ref) {
+			current_value = current_function_calling_argument;
 		}
 		else {
-			current_value = new Value(current_function_calling_arguments.top()[i]);
+			current_value = new Value(current_function_calling_argument);
 			current_value->ref = nullptr;
 		}
 
@@ -2316,8 +2358,8 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		else {
 			const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
 
-			if (is_function(current_function_calling_arguments.top()[i]->type)) {
-				auto funcs = ((InterpreterScope*)current_function_calling_arguments.top()[i]->fun.first)->find_declared_functions(current_function_calling_arguments.top()[i]->fun.second);
+			if (is_function(current_function_calling_argument->type)) {
+				auto funcs = ((InterpreterScope*)current_function_calling_argument->fun.first)->find_declared_functions(current_function_calling_argument->fun.second);
 				for (auto& it = funcs.first; it != funcs.second; ++it) {
 					auto& func_params = std::get<0>(it->second);
 					auto& func_block = std::get<1>(it->second);
@@ -2325,7 +2367,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 				}
 			}
 			else {
-				if (current_function_calling_arguments.top()[i]->ref) {
+				if (current_function_calling_argument->ref) {
 					curr_scope->declare_variable(pname, current_value->ref);
 				}
 				else {

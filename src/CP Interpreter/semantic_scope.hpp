@@ -23,7 +23,8 @@ namespace visitor {
 
 		bool already_declared_structure_definition(const std::string& identifier);
 		bool already_declared_variable(const std::string& identifier);
-		bool already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector);
+		bool already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature,
+			std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector, bool strict = true);
 
 		void declare_structure_definition(const std::string& name, const std::map<std::string, VariableDefinition>& variables, unsigned int row, unsigned int col);
 
@@ -53,7 +54,8 @@ namespace visitor {
 		void change_variable_value_type_name(const std::string& identifier, const std::string& type_name);
 
 		StructureDefinition find_declared_structure_definition(const std::string& identifier);
-		FunctionDefinition find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector);
+		FunctionDefinition find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature,
+			std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector, bool strict = true);
 		SemanticVariable* find_declared_variable(const std::string& identifier);
 
 	};

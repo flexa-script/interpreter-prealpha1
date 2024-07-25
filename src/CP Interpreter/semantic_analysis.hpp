@@ -40,7 +40,7 @@ namespace visitor {
 
 		SemanticScope* get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
 		SemanticScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-		SemanticScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature);
+		SemanticScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature, bool strict = true);
 
 		void determine_array_type(parser::ASTArrayConstructorNode* astnode);
 		void check_array_type(parser::ASTExprNode* astnode, unsigned int row, unsigned int col);

@@ -19,7 +19,8 @@ SemanticVariable* SemanticScope::find_declared_variable(const std::string& ident
 	return variable_symbol_table[identifier];
 }
 
-FunctionDefinition SemanticScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector) {
+FunctionDefinition SemanticScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature,
+	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
 	if (std::distance(funcs.first, funcs.second) == 0) {
@@ -41,7 +42,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 				ftype = func_sig.at(i);
 				stype = signature.at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, true)) {
+				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict)) {
 					found = false;
 					break;
 				}
@@ -65,7 +66,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 				}
 				stype = signature.at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, true)) {
+				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict)) {
 					found = false;
 					break;
 				}
@@ -84,7 +85,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 					ftype = func_sig.at(i);
 					stype = signature.at(i);
 
-					if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, true)) {
+					if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict)) {
 						found = false;
 						break;
 					}
@@ -115,9 +116,10 @@ bool SemanticScope::already_declared_variable(const std::string& identifier) {
 	return variable_symbol_table.find(identifier) != variable_symbol_table.end();
 }
 
-bool SemanticScope::already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector) {
+bool SemanticScope::already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature,
+	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict) {
 	try {
-		find_declared_function(identifier, signature, evaluate_access_vector);
+		find_declared_function(identifier, signature, evaluate_access_vector, strict);
 		return true;
 	}
 	catch (...) {
