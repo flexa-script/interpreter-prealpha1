@@ -224,17 +224,17 @@ void Graphics::register_functions(visitor::Interpreter* interpreter) {
 
 	interpreter->builtin_functions["is_quit"] = [this, interpreter]() {
 		Value* win = interpreter->builtin_arguments[0];
-		auto val = Value(parser::Type::T_BOOL);
+		auto val = new Value(parser::Type::T_BOOL);
 		if (!parser::is_void(win->type)) {
 			if (windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]) {
-				val.b = windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]->is_quit();
+				val->b = windows[std::get<2>(*win->str)[INSTANCE_ID_NAME]->i]->is_quit();
 			}
 			else {
-				val.b = true;
+				val->b = true;
 			}
 		}
 		else {
-			val.b = true;
+			val->b = true;
 		}
 		interpreter->current_expression_value = val;
 	};

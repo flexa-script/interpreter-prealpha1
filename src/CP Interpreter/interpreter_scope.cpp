@@ -69,7 +69,7 @@ StructureDefinition InterpreterScope::find_declared_structure_definition(std::st
 
 Variable* InterpreterScope::find_declared_variable(std::string identifier) {
 	auto var = variable_symbol_table[identifier];
-	var->use_ref = is_struct(var->type);
+	var->value->reset_ref();
 	return var;
 }
 

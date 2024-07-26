@@ -24,7 +24,7 @@ namespace visitor {
 	public:
 		std::map<std::string, std::function<void()>> builtin_functions;
 		std::vector<Value*> builtin_arguments;
-		Value current_expression_value;
+		Value* current_expression_value;
 
 		std::string parse_value_to_string(const Value* value);
 

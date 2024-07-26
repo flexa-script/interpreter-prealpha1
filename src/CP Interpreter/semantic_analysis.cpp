@@ -949,8 +949,6 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 
 	auto declared_variable = curr_scope->find_declared_variable(astnode->identifier);
 	auto variable_expr = access_value(declared_variable->value, astnode->identifier_vector);
-
-	declared_variable->reset_ref();
 	variable_expr->reset_ref();
 
 	if (is_undefined(variable_expr->type)) {
@@ -958,7 +956,7 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 	}
 
 	current_expression = *variable_expr;
-	current_expression.resetref();
+	current_expression.reset_ref();
 	current_expression.is_sub = declared_variable->value != variable_expr;
 
 }
@@ -997,15 +995,9 @@ void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
 
 	if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
 		if (astnode->unary_op == "ref") {
-			if (current_expression.ref) {
-				current_expression.ref->use_ref = true;
-			}
 			current_expression.use_ref = true;
 		}
 		if (astnode->unary_op == "unref") {
-			if (current_expression.ref) {
-				current_expression.ref->use_ref = false;
-			}
 			current_expression.use_ref = false;
 		}
 	}

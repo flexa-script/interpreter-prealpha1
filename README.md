@@ -184,7 +184,8 @@
     - [ ] Util?
 
 ## Known bugs
-- [ ] Should we have ref in variables?
+- [ ] Fix references
+    - [X] Remove reference from variable
     - [ ] Function call is not taking account value ref
 - [ ] Throw an error when trying to pass char to string or int to float reference in function parameter
 - [X] function shadowing IS GENERATING ERROR
