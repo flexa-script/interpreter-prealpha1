@@ -187,6 +187,7 @@
 - [ ] Should we have ref in variables?
     - [ ] Function call is not taking account value ref
 - [ ] Throw an error when trying to pass char to string or int to float reference in function parameter
+- [X] function shadowing IS GENERATING ERROR
 - [X] When a struct is passed by parameter, it can't be assigned as null, it occours because it's passed just the strcut reference and not the variable
 - [X] Can't assing string position
 - [X] Parser can't handle unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))

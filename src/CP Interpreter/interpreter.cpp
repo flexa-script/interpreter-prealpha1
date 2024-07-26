@@ -2567,7 +2567,7 @@ void Interpreter::register_built_in_lib(const std::string& libname) {
 		cpfiles->register_functions(this);
 	}
 
-	if (built_in_libs[3] == libname) {
+	if (built_in_libs[2] == libname) {
 		cpconsole = new modules::Console();
 		cpconsole->register_functions(this);
 	}

@@ -135,7 +135,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 		found = true;
 		if (func_sig_size > call_sig_size) {
 			for (size_t i = 0; i < func_sig_size; ++i) {
-				if (func_sig_size <= call_sig_size) {
+				if (i < call_sig_size) {
 					ftype = std::get<1>(func_params.at(i));
 					stype = signature.at(i);
 
@@ -145,7 +145,10 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 					}
 				}
 				else {
-					break;
+					if (!std::get<2>(std::get<0>(it->second)[i])) {
+						found = false;
+						break;
+					}
 				}
 			}
 

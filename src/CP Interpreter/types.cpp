@@ -111,9 +111,9 @@ std::vector<std::string> std_libs = {
 std::vector<std::string> built_in_libs = {
 	"cp.core.graphics",
 	"cp.core.files",
+	"cp.core.console",
 	"cp.core.exception",
-	"cp.core.pair",
-	"cp.core.console"
+	"cp.core.pair"
 };
 
 TypeDefinition::TypeDefinition(Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
