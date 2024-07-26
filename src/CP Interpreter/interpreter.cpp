@@ -112,7 +112,6 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		current_expression_value = new Value(Type::T_UNDEFINED);
 	}
 
-
 	Value* new_value;
 
 	if (current_expression_value->use_ref) {
@@ -179,7 +178,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	astnode->expr->accept(this);
 	identifier_call_name = "";
 
-	if (current_expression_value->use_ref && astnode->op == "=") {
+	if (current_expression_value->use_ref && astnode->op == "=" && astnode->identifier_vector.size() == 1) {
 		if (!TypeDefinition::is_any_or_match_type(variable, *variable, nullptr, *current_expression_value, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_mismatched_type_err(variable->type, current_expression_value->type);
 		}
