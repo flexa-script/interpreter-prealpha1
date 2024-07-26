@@ -227,6 +227,10 @@ bool TypeDefinition::match_array_dim(TypeDefinition ltype, TypeDefinition rtype,
 	return true;
 }
 
+void TypeDefinition::reset_ref() {
+	use_ref = is_struct(type);
+}
+
 
 SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, const std::vector<ASTExprNode*>& dim,
 	const std::string& type_name, const std::string& type_name_space, long long hash,
@@ -276,10 +280,6 @@ void SemanticValue::copy_from(SemanticValue* value) {
 	is_sub = value->is_sub;
 	row = value->row;
 	col = value->col;
-}
-
-void SemanticValue::reset_ref() {
-	use_ref = is_struct(type);
 }
 
 SemanticVariable::SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
@@ -572,10 +572,6 @@ bool Value::equals(Value* value) {
 		s == value->s &&
 		equals_array(value->arr) &&
 		str == value->str;
-}
-
-void Value::reset_ref() {
-	use_ref = is_struct(type);
 }
 
 Variable::Variable(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,

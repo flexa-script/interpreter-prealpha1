@@ -2326,7 +2326,9 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 
 		if (current_function_defined_parameters.top().size() > i
 			&& is_string(std::get<1>(current_function_defined_parameters.top()[i]).type) && is_char(current_function_calling_argument->type)) {
-			if (current_function_calling_argument->use_ref) {
+			if (current_function_calling_argument->use_ref
+				&& current_function_calling_argument->ref
+				&& !is_any(current_function_calling_argument->ref->type)) {
 				throw std::runtime_error("cannot reference char to string in function call");
 			}
 			current_function_calling_argument->type = std::get<1>(current_function_defined_parameters.top()[i]).type;
@@ -2334,7 +2336,9 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		}
 		else if (current_function_defined_parameters.top().size() > i
 			&& is_float(std::get<1>(current_function_defined_parameters.top()[i]).type) && is_int(current_function_calling_argument->type)) {
-			if (current_function_calling_argument->use_ref) {
+			if (current_function_calling_argument->use_ref
+				&& current_function_calling_argument->ref
+				&& !is_any(current_function_calling_argument->ref->type)) {
 				throw std::runtime_error("cannot reference int to float in function call");
 			}
 			current_function_calling_argument->type = std::get<1>(current_function_defined_parameters.top()[i]).type;

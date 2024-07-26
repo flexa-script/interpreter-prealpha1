@@ -66,6 +66,7 @@ public:
 	std::string type_name_space;
 	parser::Type array_type;
 	std::vector<parser::ASTExprNode*> dim;
+	bool use_ref;
 
 	TypeDefinition(parser::Type type, parser::Type array_type,
 		const std::vector<parser::ASTExprNode*>& dim,
@@ -94,6 +95,8 @@ public:
 	static bool match_type_function(TypeDefinition ltype, TypeDefinition rtype);
 	static bool match_array_dim(TypeDefinition ltype, TypeDefinition rtype,
 		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector);
+
+	void reset_ref();
 };
 
 class VariableDefinition : public TypeDefinition, public CodePosition {
@@ -155,7 +158,6 @@ public:
 	long long hash;
 	bool is_const;
 	bool is_sub;
-	bool use_ref;
 
 	// complete constructor
 	SemanticValue(parser::Type type, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,
@@ -174,8 +176,6 @@ public:
 	SemanticValue();
 
 	void copy_from(SemanticValue* value);
-
-	void reset_ref();
 };
 
 class SemanticVariable : public TypeDefinition, public CodePosition {
@@ -203,7 +203,6 @@ public:
 	cp_struct* str = nullptr;
 	cp_function fun;
 	Variable* ref = nullptr;
-	bool use_ref;
 
 	Value(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
 		const std::string& type_name, const std::string& type_name_space,
@@ -246,8 +245,6 @@ public:
 
 	bool equals_array(cp_array arr);
 	bool equals(Value* value);
-
-	void reset_ref();
 };
 
 class Variable : public TypeDefinition {

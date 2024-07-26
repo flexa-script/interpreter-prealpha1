@@ -42,7 +42,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 				ftype = func_sig.at(i);
 				stype = signature.at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict)) {
+				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict || stype.use_ref)) {
 					found = false;
 					break;
 				}
@@ -66,7 +66,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 				}
 				stype = signature.at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict)) {
+				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict || stype.use_ref)) {
 					found = false;
 					break;
 				}
@@ -85,7 +85,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 					ftype = func_sig.at(i);
 					stype = signature.at(i);
 
-					if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict)) {
+					if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict || stype.use_ref)) {
 						found = false;
 						break;
 					}

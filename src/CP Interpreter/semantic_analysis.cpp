@@ -272,8 +272,7 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 			throw std::runtime_error("undefined expression");
 		}
 
-		auto td = TypeDefinition(current_expression.type, current_expression.array_type, current_expression.dim,
-			current_expression.type_name, current_expression.type_name_space);
+		auto td = current_expression;
 
 		signature.push_back(td);
 	}
