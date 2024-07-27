@@ -178,12 +178,11 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	astnode->expr->accept(this);
 	identifier_call_name = "";
 
-	if (current_expression_value->use_ref && astnode->op == "=" && astnode->identifier_vector.size() == 1) {
+	if (current_expression_value->use_ref && astnode->op == "=" && astnode->identifier_vector.size() == 1 && !has_string_access) {
 		if (!TypeDefinition::is_any_or_match_type(variable, *variable, nullptr, *current_expression_value, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_mismatched_type_err(variable->type, current_expression_value->type);
 		}
 		variable->value = current_expression_value;
-		astscope->declare_variable(astnode->identifier, current_expression_value->ref);
 		return;
 	}
 
@@ -206,8 +205,7 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, current_function_signature.top());
 
 	astnode->expr->accept(this);
-	auto root = new Value(current_expression_value);
-	Value* value = access_value(func_scope, root, current_function_call_identifier_vector.top());
+	Value* value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
 
 	if (value->type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
 		has_string_access = false;
@@ -231,7 +229,12 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 			value->type);
 	}
 
-	current_expression_value = value;
+	if (value->use_ref) {
+		current_expression_value = value;
+	}
+	else {
+		current_expression_value = new Value(value);
+	}
 
 	for (long long i = scopes[nmspace].size() - 1; i >= 0; --i) {
 		if (!scopes[nmspace][i]->get_name().empty()) {
@@ -253,7 +256,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
 
-		signature.push_back(static_cast<TypeDefinition>(Value(current_expression_value)));
+		signature.push_back(*current_expression_value);
 
 		Value* pvalue = nullptr;
 		if (current_expression_value->use_ref) {
@@ -327,7 +330,7 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 		interpreter_parameter_t param = std::make_tuple(astnode->variable_names[i], astnode->signature[i], astnode->parameters[i].default_value, astnode->parameters[i].is_rest);
 		params.push_back(param);
 	}
-	scopes[get_namespace()].back()->declare_function(astnode->identifier, params, astnode->block, *static_cast<TypeDefinition*>(astnode));
+	scopes[get_namespace()].back()->declare_function(astnode->identifier, params, astnode->block, *astnode);
 }
 
 void Interpreter::visit(ASTFunctionExpression* astnode) {
@@ -413,12 +416,12 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 	long long pos = -1;
 	if (astnode->case_blocks.size() > 0) {
 		astnode->condition->accept(this);
-		auto cond_type = static_cast<TypeDefinition>(Value(current_expression_value));
+		TypeDefinition cond_type = *current_expression_value;
 		for (const auto& expr : astnode->case_blocks) {
 			expr.first->accept(this);
 			break;
 		}
-		auto case_type = static_cast<TypeDefinition>(Value(current_expression_value));
+		TypeDefinition case_type = *current_expression_value;
 
 		if (!TypeDefinition::match_type(cond_type, case_type, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_mismatched_type_err(cond_type.type, case_type.type);
@@ -1054,7 +1057,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 		return;
 	}
 
-	Variable* variable = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
+	Variable* variable = id_scope->find_declared_variable(astnode->identifier);
 	auto sub_val = access_value(id_scope, variable->value, astnode->identifier_vector);
 	sub_val->reset_ref();
 
@@ -1076,10 +1079,10 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->left->accept(this);
-	Value l_value = current_expression_value;
+	Value l_value = *current_expression_value;
 
 	astnode->right->accept(this);
-	Value r_value = current_expression_value;
+	Value r_value = *current_expression_value;
 
 	current_expression_value = new Value(do_operation(astnode->op, &l_value, &r_value, true, 0));
 }
@@ -1195,7 +1198,7 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 		const std::string& nmspace = get_namespace(id->nmspace);
 		InterpreterScope* id_scope;
 		try {
-			id_scope = get_inner_most_variable_scope(nmspace, id->identifier_vector[0].identifier);
+			id_scope = get_inner_most_variable_scope(nmspace, id->identifier);
 		}
 		catch (std::exception ex) {
 			throw std::runtime_error(ex.what());
@@ -1209,6 +1212,10 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->expr->accept(this);
+
+	if (!current_expression_value->use_ref) {
+		current_expression_value = new Value(current_expression_value);
+	}
 
 	switch (astnode->type) {
 	case Type::T_BOOL:

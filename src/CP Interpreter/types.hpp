@@ -204,7 +204,7 @@ public:
 	cp_function fun;
 	Variable* ref = nullptr;
 
-	Value(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+	Value(Type type, Type array_type, std::vector<ASTExprNode*> dim,
 		const std::string& type_name, const std::string& type_name_space,
 		unsigned int row, unsigned int col);
 	Value(cp_bool);
@@ -217,7 +217,7 @@ public:
 	Value(cp_function);
 	Value(Variable*);
 	Value(Type type);
-	Value(Type type, parser::Type arr_type, std::vector<ASTExprNode*> dim);
+	Value(Type type, Type arr_type, std::vector<ASTExprNode*> dim);
 	Value(Value*);
 	Value(TypeDefinition type);
 	Value();

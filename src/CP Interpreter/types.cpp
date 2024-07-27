@@ -530,7 +530,6 @@ void Value::copy_array(cp_array arr) {
 
 void Value::copy_from(Value* value) {
 	type = value->type;
-	//curr_type = value->curr_type;
 	type_name = value->type_name;
 	type_name_space = value->type_name_space;
 	array_type = value->array_type;
@@ -542,6 +541,9 @@ void Value::copy_from(Value* value) {
 	s = value->s;
 	copy_array(value->arr);
 	str = value->str;
+	fun = value->fun;
+	ref = value->ref;
+	use_ref = value->use_ref;
 }
 
 bool Value::equals_array(cp_array arr) {
