@@ -594,14 +594,12 @@ Variable::~Variable() = default;
 
 void Variable::set(Value* val) {
 	value = new Value(val);
-	//if (is_any(type) || is_void(type) || is_undefined(type)) {
-	//	type = val->type;
-	//	type_name = val->type_name;
-	//	type_name_space = val->type_name_space;
-	//	array_type = val->array_type;
-	//	dim = val->dim;
-	//}
 	value->ref = this;
+}
+
+Value* Variable::get() {
+	value->ref = this;
+	return value;
 }
 
 Type Variable::def_type(Type type) {

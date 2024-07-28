@@ -258,6 +258,7 @@ public:
 	~Variable();
 
 	void set(Value* value);
+	Value* get();
 
 	Type def_type(Type type);
 	Type def_array_type(Type array_type, const std::vector<ASTExprNode*>& dim);
