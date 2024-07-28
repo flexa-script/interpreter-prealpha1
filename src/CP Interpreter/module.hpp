@@ -13,7 +13,7 @@ namespace modules {
 		Module() = default;
 		~Module() = default;
 
-		virtual void register_functions(visitor::Interpreter* interpreter) = 0;
+		virtual void register_functions(Interpreter* interpreter) = 0;
 	};
 }
 

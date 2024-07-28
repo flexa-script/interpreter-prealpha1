@@ -29,7 +29,7 @@ namespace visitor {
 		std::string parse_value_to_string(const Value* value);
 
 	private:
-		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector_ptr = std::bind(&Interpreter::evaluate_access_vector, this, std::placeholders::_1);
+		std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector_ptr = std::bind(&Interpreter::evaluate_access_vector, this, std::placeholders::_1);
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
 		std::vector<std::string> parsed_libs;
 		std::string identifier_call_name;
@@ -61,10 +61,10 @@ namespace visitor {
 
 		void determine_array_type(ASTArrayConstructorNode* astnode);
 		void check_array_type(ASTExprNode* astnode);
-		std::vector<unsigned int> evaluate_access_vector(const std::vector<parser::ASTExprNode*>& expr_access_vector);
+		std::vector<unsigned int> evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector);
 		std::vector<unsigned int> calculate_array_dim_size(const cp_array& arr);
 
-		std::vector<Value*> build_array(const std::vector<parser::ASTExprNode*>& dim, Value* init_value, long long i);
+		std::vector<Value*> build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i);
 
 		void declare_structure(cp_struct* str, const std::string& nmspace);
 
@@ -83,8 +83,8 @@ namespace visitor {
 		InterpreterScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
 		InterpreterScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature, bool strict = true);
 
-		Value* set_value(InterpreterScope* scope, const std::vector<parser::Identifier>& identifier_vector, Value* new_value);
-		Value* access_value(const InterpreterScope* scope, Value* value, const std::vector<parser::Identifier>& identifier_vector, size_t i = 0);
+		Value* set_value(InterpreterScope* scope, const std::vector<Identifier>& identifier_vector, Value* new_value);
+		Value* access_value(const InterpreterScope* scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
 
 		void call_builtin_function(const std::string& identifier);
 		void declare_function_block_parameters(const std::string& nmspace);
@@ -97,67 +97,67 @@ namespace visitor {
 
 		const std::string& get_current_namespace();
 		const std::string& get_namespace(const std::string& nmspace = "") const override;
-		const std::string& get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace = "") const override;
+		const std::string& get_namespace(const ASTProgramNode* program, const std::string& nmspace = "") const override;
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;
 
 	public:
-		Interpreter(InterpreterScope* global_scope, parser::ASTProgramNode* main_program, const std::map<std::string, parser::ASTProgramNode*>& programs);
+		Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs);
 		Interpreter() = default;
 		~Interpreter() = default;
 
 		void start();
 
-		void visit(parser::ASTProgramNode*) override;
-		void visit(parser::ASTUsingNode*) override;
-		void visit(parser::ASTAsNamespaceNode*) override;
-		void visit(parser::ASTDeclarationNode*) override;
-		void visit(parser::ASTUnpackedDeclarationNode*) override;
-		void visit(parser::ASTAssignmentNode*) override;
-		void visit(parser::ASTReturnNode*) override;
-		void visit(parser::ASTExitNode*) override;
-		void visit(parser::ASTBlockNode*) override;
-		void visit(parser::ASTContinueNode*) override;
-		void visit(parser::ASTBreakNode*) override;
-		void visit(parser::ASTEnumNode*) override;
-		void visit(parser::ASTTryCatchNode*) override;
-		void visit(parser::ASTThrowNode*) override;
-		void visit(parser::ASTReticencesNode*) override;
-		void visit(parser::ASTSwitchNode*) override;
-		void visit(parser::ASTElseIfNode*) override;
-		void visit(parser::ASTIfNode*) override;
-		void visit(parser::ASTForNode*) override;
-		void visit(parser::ASTForEachNode*) override;
-		void visit(parser::ASTWhileNode*) override;
-		void visit(parser::ASTDoWhileNode*) override;
-		void visit(parser::ASTFunctionDefinitionNode*) override;
-		void visit(parser::ASTStructDefinitionNode*) override;
-		void visit(parser::ASTLiteralNode<cp_bool>*) override;
-		void visit(parser::ASTLiteralNode<cp_int>*) override;
-		void visit(parser::ASTLiteralNode<cp_float>*) override;
-		void visit(parser::ASTLiteralNode<cp_char>*) override;
-		void visit(parser::ASTLiteralNode<cp_string>*) override;
-		void visit(parser::ASTFunctionExpression*) override;
-		void visit(parser::ASTArrayConstructorNode*) override;
-		void visit(parser::ASTStructConstructorNode*) override;
-		void visit(parser::ASTBinaryExprNode*) override;
-		void visit(parser::ASTUnaryExprNode*) override;
-		void visit(parser::ASTIdentifierNode*) override;
-		void visit(parser::ASTTernaryNode*) override;
-		void visit(parser::ASTInNode*) override;
-		void visit(parser::ASTFunctionCallNode*) override;
-		void visit(parser::ASTTypeParseNode*) override;
-		void visit(parser::ASTNullNode*) override;
-		void visit(parser::ASTThisNode*) override;
-		void visit(parser::ASTTypingNode*) override;
+		void visit(ASTProgramNode*) override;
+		void visit(ASTUsingNode*) override;
+		void visit(ASTAsNamespaceNode*) override;
+		void visit(ASTDeclarationNode*) override;
+		void visit(ASTUnpackedDeclarationNode*) override;
+		void visit(ASTAssignmentNode*) override;
+		void visit(ASTReturnNode*) override;
+		void visit(ASTExitNode*) override;
+		void visit(ASTBlockNode*) override;
+		void visit(ASTContinueNode*) override;
+		void visit(ASTBreakNode*) override;
+		void visit(ASTEnumNode*) override;
+		void visit(ASTTryCatchNode*) override;
+		void visit(ASTThrowNode*) override;
+		void visit(ASTReticencesNode*) override;
+		void visit(ASTSwitchNode*) override;
+		void visit(ASTElseIfNode*) override;
+		void visit(ASTIfNode*) override;
+		void visit(ASTForNode*) override;
+		void visit(ASTForEachNode*) override;
+		void visit(ASTWhileNode*) override;
+		void visit(ASTDoWhileNode*) override;
+		void visit(ASTFunctionDefinitionNode*) override;
+		void visit(ASTStructDefinitionNode*) override;
+		void visit(ASTLiteralNode<cp_bool>*) override;
+		void visit(ASTLiteralNode<cp_int>*) override;
+		void visit(ASTLiteralNode<cp_float>*) override;
+		void visit(ASTLiteralNode<cp_char>*) override;
+		void visit(ASTLiteralNode<cp_string>*) override;
+		void visit(ASTFunctionExpression*) override;
+		void visit(ASTArrayConstructorNode*) override;
+		void visit(ASTStructConstructorNode*) override;
+		void visit(ASTBinaryExprNode*) override;
+		void visit(ASTUnaryExprNode*) override;
+		void visit(ASTIdentifierNode*) override;
+		void visit(ASTTernaryNode*) override;
+		void visit(ASTInNode*) override;
+		void visit(ASTFunctionCallNode*) override;
+		void visit(ASTTypeParseNode*) override;
+		void visit(ASTNullNode*) override;
+		void visit(ASTThisNode*) override;
+		void visit(ASTTypingNode*) override;
 
-		long long hash(parser::ASTExprNode*) override;
-		long long hash(parser::ASTIdentifierNode*) override;
-		long long hash(parser::ASTLiteralNode<cp_bool>*) override;
-		long long hash(parser::ASTLiteralNode<cp_int>*) override;
-		long long hash(parser::ASTLiteralNode<cp_float>*) override;
-		long long hash(parser::ASTLiteralNode<cp_char>*) override;
-		long long hash(parser::ASTLiteralNode<cp_string>*) override;
+		long long hash(ASTExprNode*) override;
+		long long hash(ASTIdentifierNode*) override;
+		long long hash(ASTLiteralNode<cp_bool>*) override;
+		long long hash(ASTLiteralNode<cp_int>*) override;
+		long long hash(ASTLiteralNode<cp_float>*) override;
+		long long hash(ASTLiteralNode<cp_char>*) override;
+		long long hash(ASTLiteralNode<cp_string>*) override;
 
 	};
 }

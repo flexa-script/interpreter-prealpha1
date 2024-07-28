@@ -118,10 +118,14 @@ std::vector<std::string> built_in_libs = {
 
 TypeDefinition::TypeDefinition(Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
 	const std::string& type_name, const std::string& type_name_space)
-	: type(type), array_type(array_type), dim(dim), type_name(type_name), type_name_space(type_name_space) {}
+	: type(type), array_type(array_type), dim(dim), type_name(type_name), type_name_space(type_name_space) {
+	reset_ref();
+}
 
 TypeDefinition::TypeDefinition()
-	: type(Type::T_UNDEFINED), array_type(Type::T_UNDEFINED), dim(std::vector<ASTExprNode*>()), type_name(""), type_name_space("") {}
+	: type(Type::T_UNDEFINED), array_type(Type::T_UNDEFINED), dim(std::vector<ASTExprNode*>()), type_name(""), type_name_space("") {
+	reset_ref();
+}
 
 TypeDefinition TypeDefinition::get_basic(Type type) {
 	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "");
@@ -231,81 +235,6 @@ void TypeDefinition::reset_ref() {
 	use_ref = is_struct(type);
 }
 
-
-SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, const std::vector<ASTExprNode*>& dim,
-	const std::string& type_name, const std::string& type_name_space, long long hash,
-	bool is_const, unsigned int row, unsigned int col)
-	: CodePosition(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
-	hash(hash), is_const(is_const), is_sub(false) {
-	reset_ref();
-}
-
-SemanticValue::SemanticValue(TypeDefinition type_definition, long long hash,
-	bool is_const, unsigned int row, unsigned int col)
-	: CodePosition(row, col),
-	TypeDefinition(type_definition.type, type_definition.array_type,
-		type_definition.dim, type_definition.type_name, type_definition.type_name_space),
-	hash(hash), is_const(is_const), is_sub(false) {
-	reset_ref();
-}
-
-SemanticValue::SemanticValue(VariableDefinition variable_definition, long long hash,
-	bool is_const, unsigned int row, unsigned int col)
-	: CodePosition(row, col),
-	TypeDefinition(variable_definition.type, variable_definition.array_type,
-		variable_definition.dim, variable_definition.type_name, variable_definition.type_name_space),
-	hash(hash), is_const(is_const), is_sub(false) {
-	reset_ref();
-}
-
-SemanticValue::SemanticValue(Type type, unsigned int row, unsigned int col)
-	: CodePosition(row, col), TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
-	hash(0), is_const(false), is_sub(false) {
-	reset_ref();
-}
-
-SemanticValue::SemanticValue()
-	: CodePosition(0, 0), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
-	hash(0), is_const(false), ref(nullptr), is_sub(false) {}
-
-void SemanticValue::copy_from(SemanticValue* value) {
-	type = value->type;
-	array_type = value->array_type;
-	dim = value->dim;
-	type_name = value->type_name;
-	type_name_space = value->type_name_space;
-	hash = value->hash;
-	is_const = value->is_const;
-	ref = value->ref;
-	is_sub = value->is_sub;
-	row = value->row;
-	col = value->col;
-}
-
-SemanticVariable::SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
-	const std::string& type_name, const std::string& type_name_space, SemanticValue* value, bool is_const, unsigned int row, unsigned int col)
-	: CodePosition(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
-	identifier(identifier), value(value), is_const(is_const) {}
-
-SemanticVariable::SemanticVariable()
-	: CodePosition(0, 0), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
-	identifier(""), value(nullptr), is_const(false) {}
-
-void SemanticVariable::copy_from(SemanticVariable* var) {
-	identifier = var->identifier;
-	type = var->type;
-	array_type = var->array_type;
-	dim = var->dim;
-	type_name = var->type_name;
-	is_const = value->is_const;
-	row = var->row;
-	col = var->col;
-
-	delete value;
-	value = new SemanticValue();
-	value->copy_from(var->value);
-}
-
 VariableDefinition::VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,
 	const std::string& type_name_space, Type array_type, std::vector<ASTExprNode*>&& dim,
 	ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col)
@@ -370,84 +299,138 @@ StructureDefinition::StructureDefinition(const std::string& identifier, const st
 StructureDefinition::StructureDefinition()
 	: CodePosition(row, col), identifier(""), variables(std::map<std::string, VariableDefinition>()) {}
 
+SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, const std::vector<ASTExprNode*>& dim,
+	const std::string& type_name, const std::string& type_name_space, long long hash,
+	bool is_const, unsigned int row, unsigned int col)
+	: CodePosition(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
+	ref(nullptr), hash(hash), is_const(is_const), is_sub(false) {}
+
+SemanticValue::SemanticValue(TypeDefinition type_definition, long long hash,
+	bool is_const, unsigned int row, unsigned int col)
+	: CodePosition(row, col),
+	TypeDefinition(type_definition.type, type_definition.array_type,
+		type_definition.dim, type_definition.type_name, type_definition.type_name_space),
+	ref(nullptr), hash(hash), is_const(is_const), is_sub(false) {}
+
+SemanticValue::SemanticValue(VariableDefinition variable_definition, long long hash,
+	bool is_const, unsigned int row, unsigned int col)
+	: CodePosition(row, col),
+	TypeDefinition(variable_definition.type, variable_definition.array_type,
+		variable_definition.dim, variable_definition.type_name, variable_definition.type_name_space),
+	ref(nullptr), hash(hash), is_const(is_const), is_sub(false) {}
+
+SemanticValue::SemanticValue(Type type, unsigned int row, unsigned int col)
+	: CodePosition(row, col), TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
+	ref(nullptr), hash(0), is_const(false), is_sub(false) {}
+
+SemanticValue::SemanticValue()
+	: CodePosition(0, 0), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
+	ref(nullptr), hash(0), is_const(false), is_sub(false) {}
+
+void SemanticValue::copy_from(SemanticValue* value) {
+	type = value->type;
+	array_type = value->array_type;
+	dim = value->dim;
+	type_name = value->type_name;
+	type_name_space = value->type_name_space;
+	hash = value->hash;
+	is_const = value->is_const;
+	ref = value->ref;
+	is_sub = value->is_sub;
+	row = value->row;
+	col = value->col;
+}
+
+SemanticVariable::SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
+	const std::string& type_name, const std::string& type_name_space, SemanticValue* value, bool is_const, unsigned int row, unsigned int col)
+	: CodePosition(row, col), TypeDefinition(def_type(type), def_array_type(array_type, dim), dim, type_name, type_name_space),
+	identifier(identifier), value(value), is_const(is_const) {}
+
+SemanticVariable::SemanticVariable()
+	: CodePosition(0, 0), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
+	identifier(""), value(nullptr), is_const(false) {}
+
+void SemanticVariable::copy_from(SemanticVariable* var) {
+	identifier = var->identifier;
+	type = var->type;
+	array_type = var->array_type;
+	dim = var->dim;
+	type_name = var->type_name;
+	is_const = value->is_const;
+	row = var->row;
+	col = var->col;
+
+	delete value;
+	value = new SemanticValue();
+	value->copy_from(var->value);
+}
+
+Type SemanticVariable::def_type(Type type) {
+	return is_void(type) || is_undefined(type) ? Type::T_ANY : type;
+}
+
+Type SemanticVariable::def_array_type(Type array_type, const std::vector<ASTExprNode*>& dim) {
+	return is_void(array_type) || is_undefined(array_type) && dim.size() > 0 ? Type::T_ANY : array_type;
+}
+
 Value::Value(Type type, Type array_type, std::vector<ASTExprNode*> dim,
 	const std::string& type_name, const std::string& type_name_space,
 	unsigned int row, unsigned int col)
-	: TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space) {
-	reset_ref();
-}
+	: TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space) {}
 
 Value::Value()
-	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {
-	reset_ref();
-}
+	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {}
 
 Value::Value(cp_bool rawv) {
 	set(rawv);
-	reset_ref();
 }
 
 Value::Value(cp_int rawv) {
 	set(rawv);
-	reset_ref();
 }
 
 Value::Value(cp_float rawv) {
 	set(rawv);
-	reset_ref();
 }
 
 Value::Value(cp_char rawv) {
 	set(rawv);
-	reset_ref();
 }
 
 Value::Value(cp_string rawv) {
 	set(rawv);
-	reset_ref();
 }
 
 Value::Value(cp_array rawv, Type array_type) {
 	set(rawv, array_type);
-	reset_ref();
 }
 
 Value::Value(cp_struct* rawv) {
 	set(rawv);
-	reset_ref();
 }
 
 Value::Value(cp_function rawv) {
 	set(rawv);
-	reset_ref();
 }
 
 Value::Value(Variable* rawv) {
 	set(rawv);
-	reset_ref();
 }
 
 Value::Value(Type type)
-	: TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {
-	reset_ref();
-}
+	: TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {}
 
 Value::Value(Type type, Type arr_type, std::vector<ASTExprNode*> dim)
-	: TypeDefinition(type, arr_type, dim, "", "") {
-	reset_ref();
-}
+	: TypeDefinition(type, arr_type, dim, "", "") {}
 
 Value::Value(Value* v)
 	: TypeDefinition(v->type, v->array_type, v->dim, v ->type_name, v->type_name_space),
 	b(v->b), i(v->i), f(v->f), c(v->c), s(v->s), str(v->str), fun(v->fun) {
 	copy_array(v->arr);
-	reset_ref();
 }
 
 Value::Value(TypeDefinition v)
-	: TypeDefinition(v.type, v.array_type, v.dim, v.type_name, v.type_name_space) {
-	reset_ref();
-}
+	: TypeDefinition(v.type, v.array_type, v.dim, v.type_name, v.type_name_space) {}
 
 Value::~Value() = default;
 
@@ -562,7 +545,6 @@ bool Value::equals_array(cp_array arr) {
 
 bool Value::equals(Value* value) {
 	return type == value->type &&
-		//curr_type == value->curr_type &&
 		type_name == value->type_name &&
 		type_name_space == value->type_name_space &&
 		array_type == value->array_type &&
@@ -583,7 +565,8 @@ Variable::Variable(parser::Type type, parser::Type array_type, std::vector<ASTEx
 	value(value) {}
 
 Variable::Variable()
-	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {};
+	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
+	value(nullptr) {};
 
 Variable::Variable(Value* v)
 	: TypeDefinition(def_type(v->type), def_array_type(v->array_type, dim),
@@ -609,4 +592,3 @@ Type Variable::def_type(Type type) {
 Type Variable::def_array_type(Type array_type, const std::vector<ASTExprNode*>& dim) {
 	return is_void(array_type) || is_undefined(array_type) && dim.size() > 0 ? Type::T_ANY : array_type;
 }
-

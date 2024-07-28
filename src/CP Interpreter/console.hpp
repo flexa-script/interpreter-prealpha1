@@ -10,7 +10,7 @@ namespace modules {
 	public:
 		Console();
 
-		void register_functions(visitor::Interpreter* interpreter) override;
+		void register_functions(Interpreter* interpreter) override;
 	};
 }
 

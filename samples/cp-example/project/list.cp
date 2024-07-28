@@ -29,7 +29,6 @@ fun add(list: List, value: any) {
     if (list.first == null) {
         list.first = Node{value=value, next=null};
         list.size = 1;
-        // print("added to 1st list pos: "+string(list)+"\n");
     } else {
         var prev_node: Node = Node{value=null, next=null};
         var curr_node = list.first;
@@ -41,8 +40,6 @@ fun add(list: List, value: any) {
 
         curr_node.next = Node{value=value, next=null};
         list.size++;
-
-        // print("added to nth list pos: "+string(list)+"\n");
     }
 }
 
@@ -72,35 +69,30 @@ fun add(list: List, value: any) {
 // }
 
 fun remove(list: List, index: int): bool {
-    // print("curr list: "+string(list)+"\n");
-    // print("list.first="+string(list.first)+"\n");
-    // print("list.first.next="+string(list.first.next)+"\n");
-    // print("list.first.next.next="+string(list.first.next.next)+"\n");
-    // print("list.size: " + string(list.size) + "\nindex: "+string(index)+"\n");
-    // print("(index >= list.size)="+string(index >= list.size)+"\n");
+    println(this);
     if (index >= list.size) {
-        // print("entrou (index >= list.size)\n");
         return false;
     }
+    // println("after if");
 
-    // print("(index == 0)="+string(index == 0)+"\n");
     if (index == 0) {
-        // print("list.first="+string(list.first)+"\n");
-        // print("list.first.next="+string(list.first.next)+"\n");
+        // println("index 0");
+        println("list.first=",list.first);
+        println("list.first.next=",list.first.next);
         list.first = list.first.next;
-        // print("list.first="+string(list.first)+"\n");
-        // print("list.first.next="+string(list.first.next)+"\n");
+        // println("after assign");
+        println("list.first=",list.first);
+        println("list.first.next=",list.first.next);
     } else {
         var prev_node;
         var curr_node = list.first;
+        println("else");
+        println("list.first=",list.first);
+        println("list.first.next=",list.first.next);
 
         for (var i = 0; i < index; i++) {
             prev_node = curr_node;
-            // print("curr_node="+string(curr_node)+"\n");
-            // print("curr_node.next="+string(curr_node.next)+"\n");
             curr_node = curr_node.next;
-            // print("curr_node="+string(curr_node)+"\n");
-            // print("curr_node.next="+string(curr_node.next)+"\n");
         }
 
         prev_node.next = curr_node.next;
@@ -133,13 +125,9 @@ fun is_empty(list: List): bool {
 }
 
 fun to_array(list: List): any[] {
-    // print("\nto_array:\n");
     var arr[list.size]: any = {null};
-    // print(arr);
     var curr_node = list.first;
     for (var i = 0; i < list.size; i++) {
-        // print(typeof(List) + "\n");
-        // print(typeof(curr_node.value) + "\n");
         if (typeof(curr_node.value) == typeof(List)) {
             arr[i] = to_array(curr_node.value);
         } else {

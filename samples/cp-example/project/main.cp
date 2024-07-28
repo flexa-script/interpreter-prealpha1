@@ -14,7 +14,7 @@ if (this == "main") {
     // print(new_person("Carlos", 29), "\n");
 
     // io::println("numbers: " + string(numbers));
-    print("List init: size: " + string(numbers.size) + io::NEW_LINE);
+    print("list init: size: " + string(numbers.size) + io::NEW_LINE);
 
     list::add(numbers, 10);
     list::add(numbers, 20);
@@ -23,11 +23,9 @@ if (this == "main") {
     list::add(numbers, 50);
     list::add(numbers, 60);
 
-    print(string(numbers.size) + "\n");
-    print(list::to_string(numbers));
-    print("\n\n\n");
-
     print("size: " + string(numbers.size) + "\n");
+    print(list::to_string(numbers));
+    print("\n");
     
     print(string(list::get(numbers, 0)) + "\n");
     print(string(list::get(numbers, 1)) + "\n");
@@ -37,7 +35,7 @@ if (this == "main") {
     print(string(list::get(numbers, 5)) + "\n");
     print("\n");
 
-    print("\n\nto_array return: \n" + string(list::to_array(numbers)));
+    print("to_array return: \n" + string(list::to_array(numbers)));
     print("\n\n");
 
     print(list::to_string(numbers));
@@ -57,9 +55,12 @@ if (this == "main") {
     list::remove(numbers, 1);
     print(list::to_string(numbers));
     print("\n");
+    println("0");
     list::remove(numbers, 0);
+    println("1");
     print(list::to_string(numbers));
+    println("2");
     print("\n");
 
-    print("\n\nto_array return: \n" + string(list::to_array(numbers)));
+    print("\nto_array return: \n" + string(list::to_array(numbers)));
 }

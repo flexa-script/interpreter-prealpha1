@@ -10,20 +10,20 @@ void ExceptionHandler::throw_operation_err(const std::string op, Type ltype, Typ
 		+ "' and '" + type_str(rtype) + ")");
 }
 
-void ExceptionHandler::throw_declaration_type_err(const std::string& identifier, parser::Type ltype, parser::Type rtype) {
+void ExceptionHandler::throw_declaration_type_err(const std::string& identifier, Type ltype, Type rtype) {
 	throw std::runtime_error("found " + type_str(ltype)
 		+ " in definition of '" + identifier
 		+ "', expected " + type_str(rtype) + " type");
 }
 
-void ExceptionHandler::throw_return_type_err(const std::string& identifier, parser::Type ltype, parser::Type rtype) {
+void ExceptionHandler::throw_return_type_err(const std::string& identifier, Type ltype, Type rtype) {
 	throw std::runtime_error("invalid " + type_str(ltype)
 		+ " return type for '" + identifier
 		+ "' function with " + type_str(rtype)
 		+ " return type");
 }
 
-void ExceptionHandler::throw_mismatched_type_err(parser::Type ltype, parser::Type rtype) {
+void ExceptionHandler::throw_mismatched_type_err(Type ltype, Type rtype) {
 	throw std::runtime_error("mismatched types " + type_str(ltype)
 		+ " and " + type_str(rtype));
 }
@@ -32,7 +32,7 @@ void ExceptionHandler::throw_condition_type_err() {
 	throw std::runtime_error("conditions must be boolean expression");
 }
 
-void ExceptionHandler::throw_struct_type_err(const std::string& type_name, parser::Type type) {
+void ExceptionHandler::throw_struct_type_err(const std::string& type_name, Type type) {
 	throw std::runtime_error("invalid type " + type_str(type) +
 		" trying to assign '" + type_name + "' struct");
 }

@@ -150,12 +150,13 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		throw std::runtime_error("initializer of '" + astnode->identifier + "' is not a constant");
 	}
 
-	auto astnode_type = is_undefined(astnode->type) ? Type::T_ANY : astnode->type;
-	auto astnode_array_type = is_undefined(astnode->array_type) && astnode->dim.size() > 0 ? Type::T_ANY : astnode->array_type;
+	//auto astnode_type = is_undefined(astnode->type) ? Type::T_ANY : astnode->type;
+	//auto astnode_array_type = is_undefined(astnode->array_type) && astnode->dim.size() > 0 ? Type::T_ANY : astnode->array_type;
 	auto astnode_type_name = astnode->type_name.empty() ? new_value->type_name : astnode->type_name;
 
-	SemanticVariable* new_var = new SemanticVariable(astnode->identifier, astnode_type,
-		astnode_array_type, astnode->dim,
+	SemanticVariable* new_var = new SemanticVariable(
+		astnode->identifier, astnode->type,
+		astnode->array_type, astnode->dim,
 		astnode_type_name, astnode->type_name_space,
 		new_value, astnode->is_const,
 		astnode->row, astnode->col);

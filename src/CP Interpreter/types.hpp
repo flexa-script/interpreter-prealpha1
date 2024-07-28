@@ -14,22 +14,22 @@ namespace parser {
 	
 	std::string type_str(Type);
 
-	bool match_type(parser::Type, parser::Type);
-	bool is_undefined(parser::Type);
-	bool is_void(parser::Type);
-	bool is_bool(parser::Type);
-	bool is_int(parser::Type);
-	bool is_float(parser::Type);
-	bool is_char(parser::Type);
-	bool is_string(parser::Type);
-	bool is_any(parser::Type);
-	bool is_array(parser::Type);
-	bool is_struct(parser::Type);
-	bool is_function(parser::Type);
-	bool is_text(parser::Type);
-	bool is_numeric(parser::Type);
-	bool is_collection(parser::Type);
-	bool is_iterable(parser::Type);
+	bool match_type(Type, Type);
+	bool is_undefined(Type);
+	bool is_void(Type);
+	bool is_bool(Type);
+	bool is_int(Type);
+	bool is_float(Type);
+	bool is_char(Type);
+	bool is_string(Type);
+	bool is_any(Type);
+	bool is_array(Type);
+	bool is_struct(Type);
+	bool is_function(Type);
+	bool is_text(Type);
+	bool is_numeric(Type);
+	bool is_collection(Type);
+	bool is_iterable(Type);
 
 	class ASTExprNode;
 }
@@ -61,40 +61,40 @@ public:
 
 class TypeDefinition {
 public:
-	parser::Type type;
+	Type type;
 	std::string type_name;
 	std::string type_name_space;
-	parser::Type array_type;
-	std::vector<parser::ASTExprNode*> dim;
+	Type array_type;
+	std::vector<ASTExprNode*> dim;
 	bool use_ref;
 
-	TypeDefinition(parser::Type type, parser::Type array_type,
-		const std::vector<parser::ASTExprNode*>& dim,
+	TypeDefinition(Type type, Type array_type,
+		const std::vector<ASTExprNode*>& dim,
 		const std::string& type_name, const std::string& type_name_space);
 
 	TypeDefinition();
 
-	static TypeDefinition get_basic(parser::Type type);
-	static TypeDefinition get_array(parser::Type array_type,
-		std::vector<parser::ASTExprNode*>&& dim = std::vector<parser::ASTExprNode*>());
+	static TypeDefinition get_basic(Type type);
+	static TypeDefinition get_array(Type array_type,
+		std::vector<ASTExprNode*>&& dim = std::vector<ASTExprNode*>());
 	static TypeDefinition get_struct(const std::string& type_name,
 		const std::string& type_name_space);
 
 	static bool is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype,
-		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector, bool strict = false);
+		std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict = false);
 	static bool match_type(TypeDefinition ltype, TypeDefinition rtype,
-		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector, bool strict = false);
+		std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict = false);
 	static bool match_type_bool(TypeDefinition ltype, TypeDefinition rtype);
 	static bool match_type_int(TypeDefinition ltype, TypeDefinition rtype);
 	static bool match_type_float(TypeDefinition ltype, TypeDefinition rtype, bool strict = false);
 	static bool match_type_char(TypeDefinition ltype, TypeDefinition rtype);
 	static bool match_type_string(TypeDefinition ltype, TypeDefinition rtype, bool strict = false);
 	static bool match_type_array(TypeDefinition ltype, TypeDefinition rtype,
-		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector);
+		std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector);
 	static bool match_type_struct(TypeDefinition ltype, TypeDefinition rtype);
 	static bool match_type_function(TypeDefinition ltype, TypeDefinition rtype);
 	static bool match_array_dim(TypeDefinition ltype, TypeDefinition rtype,
-		std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector);
+		std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector);
 
 	void reset_ref();
 };
@@ -102,24 +102,24 @@ public:
 class VariableDefinition : public TypeDefinition, public CodePosition {
 public:
 	std::string identifier;
-	parser::ASTExprNode* default_value;
+	ASTExprNode* default_value;
 	bool is_rest;
 
-	VariableDefinition(const std::string& identifier, parser::Type type, const std::string& type_name,
-		const std::string& type_name_space, parser::Type array_type, std::vector<parser::ASTExprNode*>&& dim,
-		parser::ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col);
+	VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,
+		const std::string& type_name_space, Type array_type, std::vector<ASTExprNode*>&& dim,
+		ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col);
 
 	VariableDefinition();
 
-	static VariableDefinition get_basic(const std::string& identifier, parser::Type type,
-		parser::ASTExprNode* default_value = nullptr, bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
+	static VariableDefinition get_basic(const std::string& identifier, Type type,
+		ASTExprNode* default_value = nullptr, bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 
-	static VariableDefinition get_array(const std::string& identifier, parser::Type array_type,
-		std::vector<parser::ASTExprNode*>&& dim = std::vector<parser::ASTExprNode*>(), parser::ASTExprNode* default_value = nullptr,
+	static VariableDefinition get_array(const std::string& identifier, Type array_type,
+		std::vector<ASTExprNode*>&& dim = std::vector<ASTExprNode*>(), ASTExprNode* default_value = nullptr,
 		bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 
 	static VariableDefinition get_struct(const std::string& identifier,
-		const std::string& type_name, const std::string& type_name_space, parser::ASTExprNode* default_value = nullptr,
+		const std::string& type_name, const std::string& type_name_space, ASTExprNode* default_value = nullptr,
 		bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 };
 
@@ -129,8 +129,8 @@ public:
 	std::vector<TypeDefinition> signature;
 	std::vector<VariableDefinition> parameters;
 
-	FunctionDefinition(const std::string& identifier, parser::Type type, const std::string& type_name,
-		const std::string& type_name_space, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,
+	FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
+		const std::string& type_name_space, Type array_type, const std::vector<ASTExprNode*>& dim,
 		const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters,
 		unsigned int row, unsigned int col);
 
@@ -160,7 +160,7 @@ public:
 	bool is_sub;
 
 	// complete constructor
-	SemanticValue(parser::Type type, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,
+	SemanticValue(Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
 		const std::string& type_name, const std::string& type_name_space, long long hash,
 		bool is_const, unsigned int row, unsigned int col);
 
@@ -171,7 +171,7 @@ public:
 		bool is_const, unsigned int row, unsigned int col);
 
 	// simplified constructor
-	SemanticValue(parser::Type type, unsigned int row, unsigned int col);
+	SemanticValue(Type type, unsigned int row, unsigned int col);
 
 	SemanticValue();
 
@@ -184,12 +184,15 @@ public:
 	SemanticValue* value;
 	bool is_const;
 
-	SemanticVariable(const std::string& identifier, parser::Type type, parser::Type array_type, const std::vector<parser::ASTExprNode*>& dim,
+	SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
 		const std::string& type_name, const std::string& type_name_space, SemanticValue* value, bool is_const, unsigned int row, unsigned int col);
 
 	SemanticVariable();
 
 	void copy_from(SemanticVariable* var);
+
+	Type def_type(Type type);
+	Type def_array_type(Type array_type, const std::vector<ASTExprNode*>& dim);
 };
 
 class Value : public TypeDefinition {
@@ -251,7 +254,7 @@ class Variable : public TypeDefinition {
 public:
 	Value* value;
 
-	Variable(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
+	Variable(Type type, Type array_type, std::vector<ASTExprNode*> dim,
 		const std::string& type_name, const std::string& type_name_space, Value* value);
 	Variable(Value* value);
 	Variable();

@@ -258,6 +258,10 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
 
+		if (astnode->identifier == "remove" && current_expression_value->i == 0) {
+			int x = 0;
+		}
+
 		signature.push_back(*current_expression_value);
 
 		Value* pvalue = nullptr;

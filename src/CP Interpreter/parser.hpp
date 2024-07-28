@@ -4,13 +4,15 @@
 #include "ast.hpp"
 #include "lexer.hpp"
 
+using namespace lexer;
+
 namespace parser {
 
 	class Parser {
 	private:
-		lexer::Lexer* lex;
-		lexer::Token current_token;
-		lexer::Token next_token;
+		Lexer* lex;
+		Token current_token;
+		Token next_token;
 		Type current_array_type = Type::T_UNDEFINED;
 		bool consume_semicolon = false;
 
@@ -18,14 +20,14 @@ namespace parser {
 		std::string name;
 
 	public:
-		explicit Parser(const std::string& name, lexer::Lexer* lex);
+		explicit Parser(const std::string& name, Lexer* lex);
 
 		ASTProgramNode* parse_program();
 
 	private:
 		void consume_token();
-		void consume_token(lexer::TokenType type);
-		void check_current_token(lexer::TokenType type);
+		void consume_token(TokenType type);
+		void check_current_token(TokenType type);
 		void check_consume_semicolon();
 
 		// parse types and parameters
