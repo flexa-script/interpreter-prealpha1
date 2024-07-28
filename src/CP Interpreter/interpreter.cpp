@@ -17,7 +17,9 @@
 using namespace lexer;
 
 Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
-	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
+	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace),
+	current_expression_value(new Value(Type::T_UNDEFINED)) {
+
 	if (main_program) {
 		current_this_name.push(main_program->name);
 	}
