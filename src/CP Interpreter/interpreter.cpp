@@ -129,7 +129,6 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		astnode->array_type, astnode->dim,
 		astnode_type_name, astnode->type_name_space,
 		new_value);
-	new_value->ref = new_var;
 
 	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, evaluate_access_vector_ptr)
 		&& !is_undefined(new_value->type)) {
@@ -258,9 +257,13 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
 
-		if (astnode->identifier == "remove" && current_expression_value->i == 0) {
+		if (current_expression_value->s == "3 list.first=") {
 			int x = 0;
 		}
+
+		//if (astnode->identifier == "remove" && current_expression_value->i == 0) {
+		//	int x = 0;
+		//}
 
 		signature.push_back(*current_expression_value);
 
@@ -1057,7 +1060,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 			current_expression_value->set(arr, type);
 		}
 		else {
-			current_expression_value->copy_from(expression_value);
+			current_expression_value = new Value(expression_value);
 		}
 
 		return;
@@ -1109,7 +1112,7 @@ void Interpreter::visit(ASTInNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->value->accept(this);
-	Value expr_val = current_expression_value;
+	Value expr_val = *current_expression_value;
 	astnode->collection->accept(this);
 	bool res = false;
 

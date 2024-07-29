@@ -244,6 +244,7 @@ public:
 	bool has_value();
 
 	void copy_array(cp_array arr);
+	void copy_struct(cp_struct* str);
 	void copy_from(Value* value);
 
 	bool equals_array(cp_array arr);

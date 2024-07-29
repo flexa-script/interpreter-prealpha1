@@ -344,7 +344,9 @@ void SemanticValue::copy_from(SemanticValue* value) {
 SemanticVariable::SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
 	const std::string& type_name, const std::string& type_name_space, SemanticValue* value, bool is_const, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(def_type(type), def_array_type(array_type, dim), dim, type_name, type_name_space),
-	identifier(identifier), value(value), is_const(is_const) {}
+	identifier(identifier), value(value), is_const(is_const) {
+	value->ref = this;
+}
 
 SemanticVariable::SemanticVariable()
 	: CodePosition(0, 0), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
@@ -511,6 +513,19 @@ void Value::copy_array(cp_array arr) {
 	}
 }
 
+void Value::copy_struct(cp_struct* str) {
+	this->str = new cp_struct();
+	if (!str) {
+		return;
+	}
+	std::get<0>(*this->str) = std::get<0>(*str);
+	std::get<1>(*this->str) = std::get<1>(*str);
+	for (const auto& ca : std::get<2>(*str)) {
+		auto val = std::pair<std::string, Value*>(ca.first, new Value(ca.second));
+		std::get<2>(*this->str).emplace(val);
+	}
+}
+
 void Value::copy_from(Value* value) {
 	type = value->type;
 	type_name = value->type_name;
@@ -523,7 +538,7 @@ void Value::copy_from(Value* value) {
 	c = value->c;
 	s = value->s;
 	copy_array(value->arr);
-	str = value->str;
+	copy_struct(value->str);
 	fun = value->fun;
 	ref = value->ref;
 	use_ref = value->use_ref;
@@ -562,21 +577,26 @@ Variable::Variable(parser::Type type, parser::Type array_type, std::vector<ASTEx
 	const std::string& type_name, const std::string& type_name_space, Value* value)
 	: TypeDefinition(def_type(type), def_array_type(array_type, dim),
 		std::move(dim), type_name, type_name_space),
-	value(value) {}
+	value(value) {
+	value->ref = this;
+}
 
 Variable::Variable()
 	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
-	value(nullptr) {};
+	value(nullptr) {}
 
 Variable::Variable(Value* v)
 	: TypeDefinition(def_type(v->type), def_array_type(v->array_type, dim),
-		v->dim, v ->type_name, v->type_name_space),
-	value(v) {};
+		v->dim, v->type_name, v->type_name_space),
+	value(v) {
+	value->ref = this;
+}
 
 Variable::~Variable() = default;
 
 void Variable::set(Value* val) {
-	value = new Value(val);
+	//value = new Value(val);
+	value = val;
 	value->ref = this;
 }
 

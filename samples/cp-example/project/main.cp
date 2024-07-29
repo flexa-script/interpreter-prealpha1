@@ -53,7 +53,9 @@ if (this == "main") {
     print(list::to_string(numbers));
     print("\n");
     list::remove(numbers, 1);
+    println("bef numbers.first=",numbers.first);
     print(list::to_string(numbers));
+    println("\naft numbers.first=",numbers.first);
     print("\n");
     println("0");
     list::remove(numbers, 0);
