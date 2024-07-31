@@ -173,7 +173,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	}
 
 	Variable* variable = astscope->find_declared_variable(astnode->identifier);
-	//Value* value = access_value(astscope, variable->get(), astnode->identifier_vector);
+	Value* value = access_value(astscope, variable->get(), astnode->identifier_vector);
 
 	identifier_call_name = astnode->identifier;
 	astnode->expr->accept(this);
@@ -188,7 +188,10 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	}
 
 	auto new_value = new Value(current_expression_value);
-	variable->set(new Value(variable->get()));
+	if (astnode->identifier_vector.size() == 1) {
+		variable->set(new Value(variable->get()));
+		value = variable->get();
+	}
 
 	cp_int pos = 0;
 	if (has_string_access) {
@@ -196,7 +199,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		pos = current_expression_value->i;
 	}
 
-	do_operation(astnode->op, variable->get(), new_value, false, pos);
+	do_operation(astnode->op, value, new_value, false, pos);
 }
 
 void Interpreter::visit(ASTReturnNode* astnode) {

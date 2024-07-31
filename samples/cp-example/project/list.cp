@@ -69,54 +69,22 @@ fun add(list: List, value: any) {
 // }
 
 fun remove(list: List, index: int): bool {
-    println("list.first=",list.first);
     println(this);
     if (index >= list.size) {
         return false;
     }
-    // println("after if");
 
-    println("list.size=",list.size);
     if (index == 0) {
-        // println("index 0");
-        println("list.first=",list.first);
-        println("list.first.next=",list.first.next);
         list.first = list.first.next;
-        // println("after assign");
-        println("list.first=",list.first);
-        println("list.first.next=",list.first.next);
     } else {
         var prev_node;
         var curr_node = list.first;
-        println("else");
-        println("list.first=",list.first);
-        println("list.first.next=",list.first.next,"\n");
 
         for (var i = 0; i < index; i++) {
             prev_node = curr_node;
             curr_node = curr_node.next;
         }
-        println("after for");
-        println("list.first=",list.first);
-        println("list.first.next=",list.first.next,"\n");
-
-        println("before prev_node.next = curr_node.next");
-        println("prev_node=",prev_node);
-        println("prev_node.next=",prev_node.next);
-        println("curr_node=",curr_node);
-        println("curr_node.next=",curr_node.next,"\n");
-
         prev_node.next = curr_node.next;
-
-        println("after prev_node.next = curr_node.next");
-        println("prev_node=",prev_node);
-        println("prev_node.next=",prev_node.next);
-        println("curr_node=",curr_node);
-        println("curr_node.next=",curr_node.next,"\n");
-
-        println("after prev_node.next = curr_node.next");
-        println("list.first=",list.first);
-        println("list.first.next=",list.first.next,"\n");
     }
     list.size--;
 
@@ -160,25 +128,20 @@ fun to_array(list: List): any[] {
 }
 
 fun to_string(list: List): string {
-    println("1 list.first=",list.first);
     if (list.first == null) {
         return "[]";
     }
 
     var str: string = "[";
     var node = list.first;
-    println("2 list.first=",list.first);
     while (node != null) {
         str += string(node.value);
         if (node.next != null) {
             str += ",";
         }
-    println("3 list.first=",list.first);
         node = node.next;
-    println("4 list.first=",list.first);
     }
     str += "]";
 
-    println("5 list.first=",list.first);
     return str;
 }
