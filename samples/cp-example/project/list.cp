@@ -69,7 +69,6 @@ fun add(list: List, value: any) {
 // }
 
 fun remove(list: List, index: int): bool {
-    println(this);
     if (index >= list.size) {
         return false;
     }

@@ -188,7 +188,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	}
 
 	auto new_value = new Value(current_expression_value);
-	if (astnode->identifier_vector.size() == 1) {
+	if (astnode->identifier_vector.size() == 1 && astnode->identifier_vector[0].access_vector.size() == 0) {
 		variable->set(new Value(variable->get()));
 		value = variable->get();
 	}
