@@ -233,15 +233,15 @@ if (this == "main") {
 
     while (not end) {
         var gridcopy[4][4]: int = {0};
-
+        
         for (var i: int = 0; i < 4; i++) {
             for (var j: int = 0; j < 4; j++) {
                 gridcopy[i][j] = grid[i][j];
             }
         }
-
+        
         direction = readch();
-
+        
         if (direction == "w") {
             moves_up(ref grid);
         }
@@ -273,9 +273,10 @@ if (this == "main") {
             if (z == 0) {
                 cont2 = is_end_game(cont, cont2, grid);
             }
-
+            
             if (not cont2) {
                 end = true;
+                // exit(0);
                 print("GAME OVER\n");
             }
         }

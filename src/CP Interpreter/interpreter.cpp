@@ -1084,10 +1084,10 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->left->accept(this);
-	Value l_value = *current_expression_value;
+	Value l_value = Value(current_expression_value);
 
 	astnode->right->accept(this);
-	Value r_value = *current_expression_value;
+	Value r_value = Value(current_expression_value);
 
 	current_expression_value = new Value(do_operation(astnode->op, &l_value, &r_value, true, 0));
 }
@@ -1108,7 +1108,7 @@ void Interpreter::visit(ASTInNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->value->accept(this);
-	Value expr_val = *current_expression_value;
+	Value expr_val = Value(current_expression_value);
 	astnode->collection->accept(this);
 	bool res = false;
 
@@ -1154,6 +1154,10 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 		}
 	}
 	else {
+		if (!current_expression_value->use_ref) {
+			current_expression_value = new Value(current_expression_value);
+		}
+
 		switch (current_expression_value->type) {
 		case Type::T_INT:
 			if (astnode->unary_op == "-") {
@@ -1218,26 +1222,28 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 
 	astnode->expr->accept(this);
 
-	if (!current_expression_value->use_ref) {
-		current_expression_value = new Value(current_expression_value);
-	}
+	//if (!current_expression_value->use_ref) {
+	//	current_expression_value = new Value(current_expression_value);
+	//}
+	Value* new_value = new Value();
 
 	switch (astnode->type) {
 	case Type::T_BOOL:
 		switch (current_expression_value->type) {
 		case Type::T_BOOL:
+			new_value->copy_from(current_expression_value);
 			break;
 		case Type::T_INT:
-			current_expression_value->set(cp_bool(current_expression_value->i != 0));
+			new_value->set(cp_bool(current_expression_value->i != 0));
 			break;
 		case Type::T_FLOAT:
-			current_expression_value->set(cp_bool(current_expression_value->f != .0));
+			new_value->set(cp_bool(current_expression_value->f != .0));
 			break;
 		case Type::T_CHAR:
-			current_expression_value->set(cp_bool(current_expression_value->c != '\0'));
+			new_value->set(cp_bool(current_expression_value->c != '\0'));
 			break;
 		case Type::T_STRING:
-			current_expression_value->set(cp_bool(!current_expression_value->s.empty()));
+			new_value->set(cp_bool(!current_expression_value->s.empty()));
 			break;
 		}
 		break;
@@ -1245,19 +1251,20 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 	case Type::T_INT:
 		switch (current_expression_value->type) {
 		case Type::T_BOOL:
-			current_expression_value->set(cp_int(current_expression_value->b));
+			new_value->set(cp_int(current_expression_value->b));
 			break;
 		case Type::T_INT:
+			new_value->copy_from(current_expression_value);
 			break;
 		case Type::T_FLOAT:
-			current_expression_value->set(cp_int(current_expression_value->f));
+			new_value->set(cp_int(current_expression_value->f));
 			break;
 		case Type::T_CHAR:
-			current_expression_value->set(cp_int(current_expression_value->c));
+			new_value->set(cp_int(current_expression_value->c));
 			break;
 		case Type::T_STRING:
 			try {
-				current_expression_value->set(cp_int(std::stoll(current_expression_value->s)));
+				new_value->set(cp_int(std::stoll(current_expression_value->s)));
 			}
 			catch (...) {
 				throw std::runtime_error("'" + current_expression_value->s + "' is not a valid value to parse int");
@@ -1269,19 +1276,20 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 	case Type::T_FLOAT:
 		switch (current_expression_value->type) {
 		case Type::T_BOOL:
-			current_expression_value->set(cp_float(current_expression_value->b));
+			new_value->set(cp_float(current_expression_value->b));
 			break;
 		case Type::T_INT:
-			current_expression_value->set(cp_float(current_expression_value->i));
+			new_value->set(cp_float(current_expression_value->i));
 			break;
 		case Type::T_FLOAT:
+			new_value->copy_from(current_expression_value);
 			break;
 		case Type::T_CHAR:
-			current_expression_value->set(cp_float(current_expression_value->c));
+			new_value->set(cp_float(current_expression_value->c));
 			break;
 		case Type::T_STRING:
 			try {
-				current_expression_value->set(cp_float(std::stold(current_expression_value->s)));
+				new_value->set(cp_float(std::stold(current_expression_value->s)));
 			}
 			catch (...) {
 				throw std::runtime_error("'" + current_expression_value->s + "' is not a valid value to parse float");
@@ -1293,33 +1301,36 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 	case Type::T_CHAR:
 		switch (current_expression_value->type) {
 		case Type::T_BOOL:
-			current_expression_value->set(cp_char(current_expression_value->b));
+			new_value->set(cp_char(current_expression_value->b));
 			break;
 		case Type::T_INT:
-			current_expression_value->set(cp_char(current_expression_value->i));
+			new_value->set(cp_char(current_expression_value->i));
 			break;
 		case Type::T_FLOAT:
-			current_expression_value->set(cp_char(current_expression_value->f));
+			new_value->set(cp_char(current_expression_value->f));
 			break;
 		case Type::T_CHAR:
+			new_value->copy_from(current_expression_value);
 			break;
 		case Type::T_STRING:
-			if (current_expression_value->s.size() > 1) {
+			if (new_value->s.size() > 1) {
 				throw std::runtime_error("'" + current_expression_value->s + "' is not a valid value to parse char");
 			}
 			else {
-				current_expression_value->set(cp_char(current_expression_value->s[0]));
+				new_value->set(cp_char(current_expression_value->s[0]));
 			}
 			break;
 		}
 		break;
 
 	case Type::T_STRING:
-		current_expression_value->set(cp_string(parse_value_to_string(current_expression_value)));
+		new_value->set(cp_string(parse_value_to_string(current_expression_value)));
 
 	}
 
-	current_expression_value->set_type(astnode->type);
+	new_value->set_type(astnode->type);
+
+	current_expression_value = new_value;
 }
 
 void Interpreter::visit(ASTNullNode* astnode) {
