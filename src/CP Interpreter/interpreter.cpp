@@ -1648,6 +1648,10 @@ Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, co
 	++i;
 
 	if (i < identifier_vector.size()) {
+		if (is_void(next_value->type)) {
+			throw std::runtime_error("identifier '" + identifier_vector[i - 1].identifier + "' is null");
+		}
+
 		next_value = std::get<2>(*next_value->str)[identifier_vector[i].identifier];
 
 		if (identifier_vector[i].access_vector.size() > 0 || i < identifier_vector.size()) {

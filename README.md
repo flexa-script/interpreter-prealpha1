@@ -188,7 +188,7 @@
     - [X] Remove reference from variable
     - [X] Function call is not taking account value ref
 - [ ] Test function as parameter or variable behaviour when already exists a function with its name
-- [ ] Interpreter is not checking null struct values correctly
+- [X] Interpreter is not checking null struct values correctly
 - [X] Throw an error when trying to pass char to string or int to float reference in function parameter
 - [X] function shadowing IS GENERATING ERROR
 - [X] When a struct is passed by parameter, it can't be assigned as null, it occours because it's passed just the strcut reference and not the variable
