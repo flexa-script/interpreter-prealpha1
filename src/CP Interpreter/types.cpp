@@ -425,11 +425,8 @@ Value::Value(Type type)
 Value::Value(Type type, Type arr_type, std::vector<ASTExprNode*> dim)
 	: TypeDefinition(type, arr_type, dim, "", "") {}
 
-Value::Value(Value* v)
-	: TypeDefinition(v->type, v->array_type, v->dim, v ->type_name, v->type_name_space),
-	b(v->b), i(v->i), f(v->f), c(v->c), s(v->s), fun(v->fun) {
-	copy_array(v->arr);
-	copy_struct(v->str);
+Value::Value(Value* v) {
+	copy_from(v);
 }
 
 Value::Value(TypeDefinition v)

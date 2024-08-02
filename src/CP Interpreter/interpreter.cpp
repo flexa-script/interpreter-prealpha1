@@ -214,7 +214,7 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 
 	if (value->type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
 		has_string_access = false;
-		auto str = value->s;
+		std::string str = value->s;
 		current_function_call_identifier_vector.top().back().access_vector[current_function_call_identifier_vector.top().back().access_vector.size() - 1]->accept(this);
 		auto pos = value->i;
 
@@ -594,7 +594,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 
 	switch (current_expression_value->type) {
 	case Type::T_ARRAY: {
-		auto colletion = current_expression_value->arr;
+		const auto& colletion = current_expression_value->arr;
 		for (auto val : colletion) {
 			astnode->itdecl->accept(this);
 
@@ -622,7 +622,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		break;
 	}
 	case Type::T_STRING: {
-		auto colletion = current_expression_value->s;
+		const auto& colletion = current_expression_value->s;
 		for (auto val : colletion) {
 			astnode->itdecl->accept(this);
 
@@ -650,24 +650,11 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		break;
 	}
 	case Type::T_STRUCT: {
-		auto colletion = std::get<2>(*current_expression_value->str);
+		const auto& colletion = std::get<2>(*current_expression_value->str);
 		for (const auto& val : colletion) {
 			astnode->itdecl->accept(this);
 
-			if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
-				if (idnode->declarations.size() != 2) {
-					throw std::runtime_error("invalid number of values");
-				}
-
-				InterpreterScope* back_scope = scopes[nmspace].back();
-				auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
-				decl_key->set(new Value(cp_string(val.first)));
-
-				back_scope = scopes[nmspace].back();
-				auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
-				decl_val->set(val.second);
-			}
-			else {
+			if (itdecl) {
 				if (!is_any(current_expression_value->ref->type)
 					&& current_expression_value->ref->type_name_space != "cp"
 					&& current_expression_value->ref->type_name != "Pair") {
@@ -686,6 +673,19 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 					scopes[nmspace].back(),
 					std::vector<Identifier>{Identifier(itdecl->identifier)},
 					new Value(str));
+			}
+			else if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
+				if (idnode->declarations.size() != 2) {
+					throw std::runtime_error("invalid number of values");
+				}
+
+				InterpreterScope* back_scope = scopes[nmspace].back();
+				auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
+				decl_key->set(new Value(cp_string(val.first)));
+
+				back_scope = scopes[nmspace].back();
+				auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
+				decl_val->set(val.second);
 			}
 
 			astnode->block->accept(this);
@@ -1123,7 +1123,7 @@ void Interpreter::visit(ASTInNode* astnode) {
 		}
 	}
 	else {
-		auto expr_col = current_expression_value->s;
+		const auto& expr_col = current_expression_value->s;
 
 		if (is_char(expr_val.type)) {
 			res = current_expression_value->s.find(expr_val.c) != std::string::npos;
@@ -1222,9 +1222,6 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 
 	astnode->expr->accept(this);
 
-	//if (!current_expression_value->use_ref) {
-	//	current_expression_value = new Value(current_expression_value);
-	//}
 	Value* new_value = new Value();
 
 	switch (astnode->type) {
@@ -1531,7 +1528,7 @@ InterpreterScope* Interpreter::get_inner_most_variable_scope(const std::string& 
 					return scopes[prgnmspace][i];
 				}
 			}
-			throw std::runtime_error("something went wrong searching '" + identifier + "'");
+			throw std::runtime_error("something went wrong searching '" + identifier + "' variable");
 		}
 	}
 	return scopes[nmspace][i];
@@ -1553,7 +1550,7 @@ InterpreterScope* Interpreter::get_inner_most_struct_definition_scope(const std:
 					return scopes[prgnmspace][i];
 				}
 			}
-			throw std::runtime_error("something went wrong searching '" + identifier + "'");
+			throw std::runtime_error("something went wrong searching '" + identifier + "' struct");
 		}
 	}
 	return scopes[nmspace][i];
@@ -1574,43 +1571,17 @@ InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& 
 					return scopes[prgnmspace][i];
 				}
 			}
-			throw std::runtime_error("something went wrong searching '" + identifier + "'");
+			throw std::runtime_error("something went wrong searching '" + identifier + "' fuction");
 		}
 	}
 	return scopes[nmspace][i];
 }
 
 Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser::Identifier>& identifier_vector, Value* new_value) {
-	// todo: replace by do_operation
 	auto var = scope->find_declared_variable(identifier_vector[0].identifier);
 	auto value = access_value(scope, var->get(), identifier_vector);
 
-	switch (new_value->type) {
-	case Type::T_BOOL:
-		value->set(new_value->b);
-		break;
-	case Type::T_INT:
-		value->set(new_value->i);
-		break;
-	case Type::T_FLOAT:
-		value->set(new_value->f);
-		break;
-	case Type::T_CHAR:
-		value->set(new_value->c);
-		break;
-	case Type::T_STRING:
-		value->set(new_value->s);
-		break;
-	case Type::T_ARRAY:
-		value->set(new_value->arr, new_value->array_type);
-		break;
-	case Type::T_STRUCT:
-		value->set(new_value->str);
-		break;
-	case Type::T_FUNCTION:
-		value->set(new_value->fun);
-		break;
-	}
+	value->copy_from(new_value);
 
 	return value;
 }
@@ -1670,10 +1641,6 @@ std::vector<Value*> Interpreter::build_array(const std::vector<ASTExprNode*>& di
 
 	size_t size = current_expression_value->i;
 
-	if (size == 0) {
-		//throw std::runtime_error("an array cannot be initialized with 0");
-	}
-
 	for (size_t j = 0; j < size; ++j) {
 		auto val = new Value(init_value);
 		arr.push_back(val);
@@ -1716,10 +1683,7 @@ void Interpreter::declare_structure(cp_struct* str, const std::string& nmspace) 
 	auto struct_def = curr_scope->find_declared_structure_definition(std::get<1>(*str));
 
 	for (auto& struct_var_def : struct_def.variables) {
-		if (std::get<2>(*str).find(struct_var_def.first) != std::get<2>(*str).end()) {
-			//std::get<2>(*str)[struct_var_def.first]->set_type(struct_var_def.second.type);
-		}
-		else {
+		if (std::get<2>(*str).find(struct_var_def.first) == std::get<2>(*str).end()) {
 			Value* str_value = new Value(struct_var_def.second.type);
 			str_value->set_null();
 			std::get<2>(*str)[struct_var_def.first] = str_value;
