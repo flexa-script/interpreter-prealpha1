@@ -42,7 +42,7 @@ namespace visitor {
 		SemanticScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
 		SemanticScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature, bool strict = true);
 
-		void determine_array_type(ASTArrayConstructorNode* astnode);
+		//void determine_array_type(ASTArrayConstructorNode* astnode);
 		void check_array_type(ASTExprNode* astnode, unsigned int row, unsigned int col);
 
 		TypeDefinition do_operation(const std::string& op, TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, bool is_expr = true);

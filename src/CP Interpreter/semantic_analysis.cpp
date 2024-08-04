@@ -839,9 +839,25 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_string>* astnode) {
 	current_expression.is_const = true;
 }
 
+std::vector<ASTExprNode*> current_expression_array_dim;
+int current_expression_array_dim_max;
+Type current_expression_array_type;
+bool is_max;
+
 void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	cp_int arr_size = 0;
+
+	if (current_expression_array_dim.size() == 0) {
+		current_expression_array_type = Type::T_UNDEFINED;
+		current_expression_array_dim_max = 0;
+		is_max = false;
+	}
+
+	++current_expression_array_dim_max;
+	if (!is_max) {
+		current_expression_array_dim.push_back(new ASTLiteralNode<cp_int>(arr_size, astnode->row, astnode->col));
+	}
 
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
 		astnode->values.at(i)->accept(this);
@@ -850,15 +866,35 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 			throw std::runtime_error("undefined expression");
 		}
 
+		if (is_undefined(current_expression_array_type) || is_array(current_expression_array_type)) {
+			current_expression_array_type = current_expression.type;
+		}
+		else {
+			if (!match_type(current_expression_array_type, current_expression.type)
+				&& !is_any(current_expression.type) && !is_void(current_expression.type)
+				&& !is_array(current_expression.type)) {
+				throw std::runtime_error("invalid type in array subvalue assignment");
+			}
+		}
+
 		++arr_size;
 	}
+	
+	is_max = true;
 
-	determine_array_type(astnode);
-	auto current_expression_array_type = current_expression.array_type;
+	auto curr_type = current_expression.type;
 	current_expression = SemanticValue();
-	current_expression.array_type = current_expression_array_type;
-	current_expression.dim = std::vector<ASTExprNode*>{ new ASTLiteralNode<cp_int>(arr_size, astnode->row, astnode->col) };
 	current_expression.type = Type::T_ARRAY;
+	current_expression.array_type = current_expression_array_type;
+	--current_expression_array_dim_max;
+	size_t stay = current_expression_array_dim.size() - current_expression_array_dim_max;
+	std::vector<ASTExprNode*> current_expression_array_dim_aux;
+	size_t o2 = current_expression_array_dim.size() - 1;
+	for (size_t i = 0; i < stay; ++i) {
+		current_expression_array_dim_aux.push_back(current_expression_array_dim.at(o2));
+		--o2;
+	}
+	current_expression.dim = current_expression_array_dim_aux;
 }
 
 void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
@@ -1403,22 +1439,22 @@ void SemanticAnalyser::equals_value(const SemanticValue& lval, const SemanticVal
 	}
 }
 
-void SemanticAnalyser::determine_array_type(ASTArrayConstructorNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
-	auto aux_curr_type = current_expression.type;
-	for (size_t i = 0; i < astnode->values.size(); ++i) {
-		astnode->values.at(i)->accept(this);
-
-		if (auto expr = dynamic_cast<ASTArrayConstructorNode*>(astnode->values.at(i))) {
-			determine_array_type(expr);
-		}
-		else {
-			check_array_type(astnode->values.at(i), astnode->row, astnode->col);
-		}
-	}
-	current_expression.type = aux_curr_type;
-}
+//void SemanticAnalyser::determine_array_type(ASTArrayConstructorNode* astnode) {
+//	set_curr_pos(astnode->row, astnode->col);
+//
+//	auto aux_curr_type = current_expression.type;
+//	for (size_t i = 0; i < astnode->values.size(); ++i) {
+//		astnode->values.at(i)->accept(this);
+//
+//		if (auto expr = dynamic_cast<ASTArrayConstructorNode*>(astnode->values.at(i))) {
+//			determine_array_type(expr);
+//		}
+//		else {
+//			check_array_type(astnode->values.at(i), astnode->row, astnode->col);
+//		}
+//	}
+//	current_expression.type = aux_curr_type;
+//}
 
 void SemanticAnalyser::check_array_type(ASTExprNode* astnode, unsigned int row, unsigned int col) {
 	set_curr_pos(astnode->row, astnode->col);
