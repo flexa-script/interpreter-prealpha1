@@ -370,8 +370,6 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 void SemanticAnalyser::visit(ASTFunctionExpression* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	const auto& nmspace = get_namespace();
-
 	astnode->fun->identifier = identifier_call_name;
 	astnode->fun->accept(this);
 
@@ -973,6 +971,9 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 				curr_scope = get_inner_most_function_scope(nmspace,
 					astnode->identifier, std::vector<TypeDefinition>());
 				current_expression.type = Type::T_FUNCTION;
+
+				scopes[nmspace].back()->declare_variable_function(identifier_call_name, astnode->row, astnode->row);
+
 				return;
 			}
 			catch (...) {
@@ -1507,19 +1508,6 @@ std::vector<unsigned int> SemanticAnalyser::evaluate_access_vector(const std::ve
 	return access_vector;
 }
 
-//std::vector<unsigned int> SemanticAnalyser::calculate_array_dim_size(ASTArrayConstructorNode* arr) {
-//	auto dim = std::vector<unsigned int>();
-//
-//	dim.push_back(arr->values.size());
-//
-//	if (auto sub_arr = dynamic_cast<ASTArrayConstructorNode*>(arr->values.at(0))) {
-//		auto dim2 = calculate_array_dim_size(sub_arr);
-//		dim.insert(dim.end(), dim2.begin(), dim2.end());
-//	}
-//
-//	return dim;
-//}
-
 bool SemanticAnalyser::returns(ASTNode* astnode) {
 	if (dynamic_cast<ASTReturnNode*>(astnode)) {
 		return true;
@@ -1602,20 +1590,8 @@ long long SemanticAnalyser::hash(ASTLiteralNode<cp_string>* astnode) {
 }
 
 long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
-	SemanticScope* curr_scope;
-	try {
-		const auto& nmspace = get_namespace(astnode->nmspace);
-		curr_scope = get_inner_most_variable_scope(nmspace, astnode->identifier_vector[0].identifier);
-	}
-	catch (...) {
-		throw std::runtime_error("identifier '" + astnode->identifier_vector[0].identifier +
-			"' was not declared");
-	}
-
-	auto declared_variable = curr_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
-	auto variable_expression = declared_variable->value;
-
-	return variable_expression->hash;
+	astnode->accept(this);
+	return current_expression.hash;
 }
 
 void SemanticAnalyser::register_built_in_functions() {

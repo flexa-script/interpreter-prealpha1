@@ -173,7 +173,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	}
 
 	Variable* variable = astscope->find_declared_variable(astnode->identifier);
-	Value* value = access_value(astscope, variable->get(), astnode->identifier_vector);
+	Value* value = access_value(astscope, variable->get_value(), astnode->identifier_vector);
 
 	identifier_call_name = astnode->identifier;
 	astnode->expr->accept(this);
@@ -183,14 +183,14 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		if (!TypeDefinition::is_any_or_match_type(variable, *variable, nullptr, *current_expression_value, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_mismatched_type_err(variable->type, current_expression_value->type);
 		}
-		variable->set(current_expression_value);
+		variable->set_value(current_expression_value);
 		return;
 	}
 
 	auto new_value = new Value(current_expression_value);
 	if (astnode->identifier_vector.size() == 1 && astnode->identifier_vector[0].access_vector.size() == 0) {
-		variable->set(new Value(variable->get()));
-		value = variable->get();
+		variable->set_value(new Value(variable->get_value()));
+		value = variable->get_value();
 	}
 
 	cp_int pos = 0;
@@ -681,11 +681,11 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 
 				InterpreterScope* back_scope = scopes[nmspace].back();
 				auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
-				decl_key->set(new Value(cp_string(val.first)));
+				decl_key->set_value(new Value(cp_string(val.first)));
 
 				back_scope = scopes[nmspace].back();
 				auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
-				decl_val->set(val.second);
+				decl_val->set_value(val.second);
 			}
 
 			astnode->block->accept(this);
@@ -737,7 +737,7 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 
 			InterpreterScope* back_scope = scopes[nmspace].back();
 			auto decl_val = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
-			decl_val->set(new Value(cp_string(ex.what())));
+			decl_val->set_value(new Value(cp_string(ex.what())));
 		}
 		else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
 			if (!is_any(current_expression_value->ref->type)
@@ -754,7 +754,7 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 			std::get<1>(*value->str) = "Exception";
 			std::get<2>(*value->str)["error"] = new Value(cp_string(ex.what()));
 
-			current_expression_value->ref->set(value);
+			current_expression_value->ref->set_value(value);
 		}
 		else if (!dynamic_cast<ASTReticencesNode*>(astnode->decl)) {
 			throw std::runtime_error("expected declaration");
@@ -1107,7 +1107,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	}
 
 	Variable* variable = id_scope->find_declared_variable(astnode->identifier);
-	auto sub_val = access_value(id_scope, variable->get(), astnode->identifier_vector);
+	auto sub_val = access_value(id_scope, variable->get_value(), astnode->identifier_vector);
 	sub_val->reset_ref();
 
 	current_expression_value = sub_val;
@@ -1590,7 +1590,7 @@ InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& 
 
 Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser::Identifier>& identifier_vector, Value* new_value) {
 	auto var = scope->find_declared_variable(identifier_vector[0].identifier);
-	auto value = access_value(scope, var->get(), identifier_vector);
+	auto value = access_value(scope, var->get_value(), identifier_vector);
 
 	value->copy_from(new_value);
 
@@ -2309,7 +2309,7 @@ long long Interpreter::hash(ASTIdentifierNode* astnode) {
 	}
 
 	Variable* variable = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
-	auto value = access_value(id_scope, variable->get(), astnode->identifier_vector);
+	auto value = access_value(id_scope, variable->get_value(), astnode->identifier_vector);
 
 	switch (value->type) {
 	case Type::T_BOOL:

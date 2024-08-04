@@ -161,7 +161,6 @@ namespace visitor {
 		long long hash(ASTLiteralNode<cp_float>*) override;
 		long long hash(ASTLiteralNode<cp_char>*) override;
 		long long hash(ASTLiteralNode<cp_string>*) override;
-
 	};
 }
 

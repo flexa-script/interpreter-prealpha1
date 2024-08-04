@@ -348,21 +348,6 @@ SemanticVariable::SemanticVariable()
 	: CodePosition(0, 0), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
 	identifier(""), value(nullptr), is_const(false) {}
 
-void SemanticVariable::copy_from(SemanticVariable* var) {
-	identifier = var->identifier;
-	type = var->type;
-	array_type = var->array_type;
-	dim = var->dim;
-	type_name = var->type_name;
-	is_const = value->is_const;
-	row = var->row;
-	col = var->col;
-
-	delete value;
-	value = new SemanticValue();
-	value->copy_from(var->value);
-}
-
 Type SemanticVariable::def_type(Type type) {
 	return is_void(type) || is_undefined(type) ? Type::T_ANY : type;
 }
@@ -587,12 +572,12 @@ Variable::Variable(Value* v)
 
 Variable::~Variable() = default;
 
-void Variable::set(Value* val) {
+void Variable::set_value(Value* val) {
 	value = val;
 	value->ref = this;
 }
 
-Value* Variable::get() {
+Value* Variable::get_value() {
 	value->ref = this;
 	return value;
 }

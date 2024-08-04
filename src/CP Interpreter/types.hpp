@@ -192,8 +192,6 @@ public:
 
 	SemanticVariable();
 
-	void copy_from(SemanticVariable* var);
-
 	Type def_type(Type type);
 	Type def_array_type(Type array_type, const std::vector<ASTExprNode*>& dim);
 };
@@ -264,8 +262,8 @@ public:
 	Variable();
 	~Variable();
 
-	void set(Value* value);
-	Value* get();
+	void set_value(Value* value);
+	Value* get_value();
 
 	Type def_type(Type type);
 	Type def_array_type(Type array_type, const std::vector<ASTExprNode*>& dim);
