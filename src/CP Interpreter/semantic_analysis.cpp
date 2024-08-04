@@ -1441,38 +1441,6 @@ void SemanticAnalyser::equals_value(const SemanticValue& lval, const SemanticVal
 	}
 }
 
-//void SemanticAnalyser::determine_array_type(ASTArrayConstructorNode* astnode) {
-//	set_curr_pos(astnode->row, astnode->col);
-//
-//	auto aux_curr_type = current_expression.type;
-//	for (size_t i = 0; i < astnode->values.size(); ++i) {
-//		astnode->values.at(i)->accept(this);
-//
-//		if (auto expr = dynamic_cast<ASTArrayConstructorNode*>(astnode->values.at(i))) {
-//			determine_array_type(expr);
-//		}
-//		else {
-//			check_array_type(astnode->values.at(i), astnode->row, astnode->col);
-//		}
-//	}
-//	current_expression.type = aux_curr_type;
-//}
-
-//void SemanticAnalyser::check_array_type(ASTExprNode* astnode, unsigned int row, unsigned int col) {
-//	set_curr_pos(astnode->row, astnode->col);
-//
-//	auto aux_curr_type = current_expression.type;
-//	astnode->accept(this);
-//
-//	if (is_any(current_expression.array_type) || is_undefined(current_expression.array_type) || is_void(current_expression.array_type)) {
-//		current_expression.array_type = current_expression.type;
-//	}
-//	if (!match_type(current_expression.array_type, current_expression.type)) {
-//		throw std::runtime_error("mismatched type in array definition");
-//	}
-//	current_expression.type = aux_curr_type;
-//}
-
 SemanticValue* SemanticAnalyser::access_value(SemanticValue* value, const std::vector<Identifier>& identifier_vector, size_t i) {
 	SemanticValue* next_value = value;
 
