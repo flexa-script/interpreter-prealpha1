@@ -41,14 +41,14 @@ namespace visitor {
 		void equals_value(const SemanticValue& lval, const SemanticValue& rval);
 
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector);
-		std::vector<unsigned int> calculate_array_dim_size(ASTArrayConstructorNode*);
+		//std::vector<unsigned int> calculate_array_dim_size(ASTArrayConstructorNode*);
 
 		SemanticScope* get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
 		SemanticScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
 		SemanticScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature, bool strict = true);
 
 		//void determine_array_type(ASTArrayConstructorNode* astnode);
-		void check_array_type(ASTExprNode* astnode, unsigned int row, unsigned int col);
+		//void check_array_type(ASTExprNode* astnode, unsigned int row, unsigned int col);
 
 		TypeDefinition do_operation(const std::string& op, TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, bool is_expr = true);
 

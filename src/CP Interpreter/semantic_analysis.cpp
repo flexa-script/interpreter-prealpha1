@@ -889,7 +889,7 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	std::vector<ASTExprNode*> current_expression_array_dim_aux;
 	size_t curr_dim_i = current_expression_array_dim.size() - 1;
 	for (size_t i = 0; i < stay; ++i) {
-		current_expression_array_dim_aux.push_back(current_expression_array_dim.at(curr_dim_i));
+		current_expression_array_dim_aux.emplace(current_expression_array_dim_aux.begin(), current_expression_array_dim.at(curr_dim_i));
 		--curr_dim_i;
 	}
 	current_expression.dim = current_expression_array_dim_aux;
@@ -1458,20 +1458,20 @@ void SemanticAnalyser::equals_value(const SemanticValue& lval, const SemanticVal
 //	current_expression.type = aux_curr_type;
 //}
 
-void SemanticAnalyser::check_array_type(ASTExprNode* astnode, unsigned int row, unsigned int col) {
-	set_curr_pos(astnode->row, astnode->col);
-
-	auto aux_curr_type = current_expression.type;
-	astnode->accept(this);
-
-	if (is_any(current_expression.array_type) || is_undefined(current_expression.array_type) || is_void(current_expression.array_type)) {
-		current_expression.array_type = current_expression.type;
-	}
-	if (!match_type(current_expression.array_type, current_expression.type)) {
-		throw std::runtime_error("mismatched type in array definition");
-	}
-	current_expression.type = aux_curr_type;
-}
+//void SemanticAnalyser::check_array_type(ASTExprNode* astnode, unsigned int row, unsigned int col) {
+//	set_curr_pos(astnode->row, astnode->col);
+//
+//	auto aux_curr_type = current_expression.type;
+//	astnode->accept(this);
+//
+//	if (is_any(current_expression.array_type) || is_undefined(current_expression.array_type) || is_void(current_expression.array_type)) {
+//		current_expression.array_type = current_expression.type;
+//	}
+//	if (!match_type(current_expression.array_type, current_expression.type)) {
+//		throw std::runtime_error("mismatched type in array definition");
+//	}
+//	current_expression.type = aux_curr_type;
+//}
 
 SemanticValue* SemanticAnalyser::access_value(SemanticValue* value, const std::vector<Identifier>& identifier_vector, size_t i) {
 	SemanticValue* next_value = value;
@@ -1539,18 +1539,18 @@ std::vector<unsigned int> SemanticAnalyser::evaluate_access_vector(const std::ve
 	return access_vector;
 }
 
-std::vector<unsigned int> SemanticAnalyser::calculate_array_dim_size(ASTArrayConstructorNode* arr) {
-	auto dim = std::vector<unsigned int>();
-
-	dim.push_back(arr->values.size());
-
-	if (auto sub_arr = dynamic_cast<ASTArrayConstructorNode*>(arr->values.at(0))) {
-		auto dim2 = calculate_array_dim_size(sub_arr);
-		dim.insert(dim.end(), dim2.begin(), dim2.end());
-	}
-
-	return dim;
-}
+//std::vector<unsigned int> SemanticAnalyser::calculate_array_dim_size(ASTArrayConstructorNode* arr) {
+//	auto dim = std::vector<unsigned int>();
+//
+//	dim.push_back(arr->values.size());
+//
+//	if (auto sub_arr = dynamic_cast<ASTArrayConstructorNode*>(arr->values.at(0))) {
+//		auto dim2 = calculate_array_dim_size(sub_arr);
+//		dim.insert(dim.end(), dim2.begin(), dim2.end());
+//	}
+//
+//	return dim;
+//}
 
 bool SemanticAnalyser::returns(ASTNode* astnode) {
 	if (dynamic_cast<ASTReturnNode*>(astnode)) {

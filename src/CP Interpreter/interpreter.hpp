@@ -64,8 +64,8 @@ namespace visitor {
 		modules::Console* cpconsole;
 
 
-		void determine_array_type(ASTArrayConstructorNode* astnode);
-		void check_array_type(ASTExprNode* astnode);
+		//void determine_array_type(ASTArrayConstructorNode* astnode);
+		//void check_array_type(ASTExprNode* astnode);
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector);
 		std::vector<unsigned int> calculate_array_dim_size(const cp_array& arr);
 

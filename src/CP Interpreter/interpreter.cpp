@@ -980,7 +980,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	std::vector<ASTExprNode*> current_expression_array_dim_aux;
 	size_t curr_dim_i = current_expression_array_dim.size() - 1;
 	for (size_t i = 0; i < stay; ++i) {
-		current_expression_array_dim_aux.push_back(current_expression_array_dim.at(curr_dim_i));
+		current_expression_array_dim_aux.emplace(current_expression_array_dim_aux.begin(), current_expression_array_dim.at(curr_dim_i));
 		--curr_dim_i;
 	}
 	current_expression_value->dim = current_expression_array_dim_aux;
@@ -1525,37 +1525,37 @@ bool Interpreter::equals_array(const cp_array& larr, const cp_array& rarr) {
 	return true;
 }
 
-void Interpreter::determine_array_type(ASTArrayConstructorNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
-	auto aux_curr_type = current_expression_value->type;
-	for (size_t i = 0; i < astnode->values.size(); ++i) {
-		astnode->values.at(i)->accept(this);
-
-		if (auto expr = dynamic_cast<ASTArrayConstructorNode*>(astnode->values.at(i))) {
-			determine_array_type(expr);
-		}
-		else {
-			check_array_type(astnode->values.at(i));
-		}
-	}
-	current_expression_value->type = aux_curr_type;
-}
-
-void Interpreter::check_array_type(ASTExprNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
-	auto aux_curr_type = current_expression_value->type;
-	astnode->accept(this);
-
-	if (is_any(current_expression_value->array_type) || is_undefined(current_expression_value->array_type) || is_void(current_expression_value->array_type)) {
-		current_expression_value->array_type = current_expression_value->type;
-	}
-	if (!match_type(current_expression_value->array_type, current_expression_value->type)) {
-		throw std::runtime_error("mismatched type in array definition");
-	}
-	current_expression_value->type = aux_curr_type;
-}
+//void Interpreter::determine_array_type(ASTArrayConstructorNode* astnode) {
+//	set_curr_pos(astnode->row, astnode->col);
+//
+//	auto aux_curr_type = current_expression_value->type;
+//	for (size_t i = 0; i < astnode->values.size(); ++i) {
+//		astnode->values.at(i)->accept(this);
+//
+//		if (auto expr = dynamic_cast<ASTArrayConstructorNode*>(astnode->values.at(i))) {
+//			determine_array_type(expr);
+//		}
+//		else {
+//			check_array_type(astnode->values.at(i));
+//		}
+//	}
+//	current_expression_value->type = aux_curr_type;
+//}
+//
+//void Interpreter::check_array_type(ASTExprNode* astnode) {
+//	set_curr_pos(astnode->row, astnode->col);
+//
+//	auto aux_curr_type = current_expression_value->type;
+//	astnode->accept(this);
+//
+//	if (is_any(current_expression_value->array_type) || is_undefined(current_expression_value->array_type) || is_void(current_expression_value->array_type)) {
+//		current_expression_value->array_type = current_expression_value->type;
+//	}
+//	if (!match_type(current_expression_value->array_type, current_expression_value->type)) {
+//		throw std::runtime_error("mismatched type in array definition");
+//	}
+//	current_expression_value->type = aux_curr_type;
+//}
 
 InterpreterScope* Interpreter::get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier) {
 	long long i;
@@ -1680,6 +1680,10 @@ Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, co
 std::vector<Value*> Interpreter::build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i) {
 	auto arr = std::vector<Value*>();
 
+	if (dim.size() - 1 == i) {
+		current_expression_array_type = Type::T_UNDEFINED;
+	}
+
 	auto crr_acc = dim[i];
 	crr_acc->accept(this);
 
@@ -1687,15 +1691,27 @@ std::vector<Value*> Interpreter::build_array(const std::vector<ASTExprNode*>& di
 
 	for (size_t j = 0; j < size; ++j) {
 		auto val = new Value(init_value);
+
+		if (is_undefined(current_expression_array_type) || is_array(current_expression_array_type)) {
+			current_expression_array_type = val->type;
+		}
+
 		arr.push_back(val);
 	}
 
 	--i;
 
 	if (i >= 0) {
-		// todo: get current dimension to init correctly
-		auto val = new Value(Type::T_ARRAY, init_value->type, std::vector<ASTExprNode*>());
-		val->set(arr, init_value->type);
+		size_t stay = dim.size() - i - 1;
+		std::vector<ASTExprNode*> curr_arr_dim;
+		size_t curr_dim_i = dim.size() - 1;
+		for (size_t i = 0; i < stay; ++i) {
+			curr_arr_dim.emplace(curr_arr_dim.begin(), dim.at(curr_dim_i));
+			--curr_dim_i;
+		}
+
+		auto val = new Value(Type::T_ARRAY, current_expression_array_type, curr_arr_dim);
+		val->set(arr, current_expression_array_type);
 		return build_array(dim, val, i);
 	}
 
