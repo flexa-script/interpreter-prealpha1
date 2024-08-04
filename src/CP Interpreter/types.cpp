@@ -140,7 +140,7 @@ TypeDefinition TypeDefinition::get_struct(const std::string& type_name, const st
 }
 
 bool TypeDefinition::is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype,
-	std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector, bool strict) {
+	dim_eval_func_t evaluate_access_vector, bool strict) {
 	if (lvtype && is_any(lvtype->type)
 		|| rvtype && is_any(rvtype->type)
 		|| is_any(ltype.type)
@@ -150,8 +150,7 @@ bool TypeDefinition::is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition
 	return match_type(ltype, rtype, evaluate_access_vector, strict);
 }
 
-bool TypeDefinition::match_type(TypeDefinition ltype, TypeDefinition rtype,
-	std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector, bool strict) {
+bool TypeDefinition::match_type(TypeDefinition ltype, TypeDefinition rtype, dim_eval_func_t evaluate_access_vector, bool strict) {
 	if (match_type_bool(ltype, rtype)) return true;
 	if (match_type_int(ltype, rtype)) return true;
 	if (match_type_float(ltype, rtype, strict)) return true;
@@ -187,7 +186,7 @@ bool TypeDefinition::match_type_string(TypeDefinition ltype, TypeDefinition rtyp
 			!strict && is_text(rtype.type));
 }
 
-bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector) {
+bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype, dim_eval_func_t evaluate_access_vector) {
 	TypeDefinition latype = TypeDefinition(ltype.array_type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), ltype.type_name, ltype.type_name_space);
 	TypeDefinition ratype = TypeDefinition(rtype.array_type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), rtype.type_name, rtype.type_name_space);
 
@@ -205,7 +204,7 @@ bool TypeDefinition::match_type_function(TypeDefinition ltype, TypeDefinition rt
 	return is_function(ltype.type) && is_function(rtype.type);
 }
 
-bool TypeDefinition::match_array_dim(TypeDefinition ltype, TypeDefinition rtype, std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector) {
+bool TypeDefinition::match_array_dim(TypeDefinition ltype, TypeDefinition rtype, dim_eval_func_t evaluate_access_vector) {
 	std::vector<unsigned int> var_dim = evaluate_access_vector(ltype.dim);
 	std::vector<unsigned int> expr_dim = evaluate_access_vector(rtype.dim);
 

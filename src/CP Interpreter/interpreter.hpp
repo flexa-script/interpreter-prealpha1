@@ -29,7 +29,7 @@ namespace visitor {
 		std::string parse_value_to_string(const Value* value);
 
 	private:
-		std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector_ptr = std::bind(&Interpreter::evaluate_access_vector, this, std::placeholders::_1);
+		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&Interpreter::evaluate_access_vector, this, std::placeholders::_1);
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
 		std::vector<std::string> parsed_libs;
 		std::string identifier_call_name;
