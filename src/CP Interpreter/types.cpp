@@ -198,10 +198,7 @@ bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype
 
 bool TypeDefinition::match_type_struct(TypeDefinition ltype, TypeDefinition rtype) {
 	return is_struct(ltype.type) && is_struct(rtype.type)
-		&& ltype.type_name == rtype.type_name
-		// todo: check why it is not possible use typename namespace
-		//&& ltype.type_name_space == rtype.type_name_space
-		;
+		&& ltype.type_name == rtype.type_name;
 }
 
 bool TypeDefinition::match_type_function(TypeDefinition ltype, TypeDefinition rtype) {
@@ -561,7 +558,6 @@ bool Value::equals(Value* value) {
 		type_name == value->type_name &&
 		type_name_space == value->type_name_space &&
 		array_type == value->array_type &&
-		dim == value->dim && // TODO: check if it will handle equality
 		b == value->b &&
 		i == value->i &&
 		f == value->f &&
@@ -593,7 +589,6 @@ Variable::Variable(Value* v)
 Variable::~Variable() = default;
 
 void Variable::set(Value* val) {
-	//value = new Value(val);
 	value = val;
 	value->ref = this;
 }

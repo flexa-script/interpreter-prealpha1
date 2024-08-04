@@ -922,6 +922,11 @@ void Interpreter::visit(ASTLiteralNode<cp_string>* astnode) {
 	current_expression_value = value;
 }
 
+std::vector<ASTExprNode*> current_expression_array_dim;
+int current_expression_array_dim_max;
+Type current_expression_array_type;
+bool is_max;
+
 void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
@@ -929,21 +934,60 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	Type arr_t = Type::T_ANY;
 	cp_array arr = cp_array();
 
+	if (current_expression_array_dim.size() == 0) {
+		current_expression_array_type = Type::T_UNDEFINED;
+		current_expression_array_dim_max = 0;
+		is_max = false;
+	}
+
+	++current_expression_array_dim_max;
+	if (!is_max) {
+		current_expression_array_dim.push_back(new ASTLiteralNode<cp_int>(0, astnode->row, astnode->col));
+	}
+
 	for (auto& expr : astnode->values) {
 		expr->accept(this);
+
+		if (is_undefined(current_expression_array_type) || is_array(current_expression_array_type)) {
+			current_expression_array_type = current_expression_value->type;
+		}
+		else {
+			if (!match_type(current_expression_array_type, current_expression_value->type)
+				&& !is_any(current_expression_value->type) && !is_void(current_expression_value->type)
+				&& !is_array(current_expression_value->type)) {
+				throw std::runtime_error("invalid type in array subvalue assignment");
+			}
+		}
+
 		arr_t = current_expression_value->type;
 		auto arr_value = new Value(current_expression_value->type);
 		arr_value->copy_from(current_expression_value);
 		arr.push_back(arr_value);
 	}
 
+	if (!is_max) {
+		((ASTLiteralNode<cp_int>*)current_expression_array_dim.back())->val = arr.size();
+	}
+
+	is_max = true;
+
 	value->set(arr, arr_t);
 
-	determine_array_type(astnode);
-	value->array_type = current_expression_value->array_type;
-
 	current_expression_value = value;
-	current_expression_value->dim = std::vector<ASTExprNode*>{ new ASTLiteralNode<cp_int>(arr.size(), astnode->row, astnode->col) };
+	current_expression_value->array_type = current_expression_array_type;
+	--current_expression_array_dim_max;
+	size_t stay = current_expression_array_dim.size() - current_expression_array_dim_max;
+	std::vector<ASTExprNode*> current_expression_array_dim_aux;
+	size_t curr_dim_i = current_expression_array_dim.size() - 1;
+	for (size_t i = 0; i < stay; ++i) {
+		current_expression_array_dim_aux.push_back(current_expression_array_dim.at(curr_dim_i));
+		--curr_dim_i;
+	}
+	current_expression_value->dim = current_expression_array_dim_aux;
+
+	if (current_expression_array_dim_max == 0) {
+		current_expression_array_dim.clear();
+	}
 }
 
 void Interpreter::visit(ASTStructConstructorNode* astnode) {
