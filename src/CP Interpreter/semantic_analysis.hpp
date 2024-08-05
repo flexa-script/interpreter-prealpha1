@@ -19,7 +19,6 @@ namespace visitor {
 	private:
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&SemanticAnalyser::evaluate_access_vector, this, std::placeholders::_1);
 		std::map<std::string, std::vector<SemanticScope*>> scopes;
-		std::string identifier_call_name;
 		std::vector<std::string> nmspaces;
 		std::vector<std::string> parsed_libs;
 		std::string current_namespace;

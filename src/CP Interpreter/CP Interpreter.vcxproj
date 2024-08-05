@@ -65,7 +65,8 @@
     <ClInclude Include="vendor\axegraphics.hpp" />
     <ClInclude Include="vendor\axelogging.hpp" />
     <ClInclude Include="vendor\axeutils.hpp" />
-    <ClInclude Include="vendor\axewatch.h" />
+    <ClInclude Include="vendor\axeuuid.hpp" />
+    <ClInclude Include="vendor\axewatch.hpp" />
     <ClInclude Include="visitor.hpp" />
   </ItemGroup>
   <ItemGroup>

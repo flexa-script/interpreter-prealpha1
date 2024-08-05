@@ -5,8 +5,8 @@
  * v1.3.15
  */
 
-#ifndef AXEWATCH_H
-#define AXEWATCH_H
+#ifndef AXEWATCH_HPP
+#define AXEWATCH_HPP
 
 #include <time.h>
 #include <chrono>
@@ -211,4 +211,4 @@ namespace axe {
 
 }
 
-#endif // !AXEWATCH_H
+#endif // !AXEWATCH_HPP

@@ -1,6 +1,6 @@
 #include "cprepl.hpp"
 #include "cpinterpreter.hpp"
-#include "vendor/axewatch.h"
+#include "vendor/axewatch.hpp"
 
 int main(int argc, const char* argv[]) {
 	bool debug = false;

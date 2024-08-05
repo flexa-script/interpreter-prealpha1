@@ -32,7 +32,6 @@ namespace visitor {
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&Interpreter::evaluate_access_vector, this, std::placeholders::_1);
 		std::map<std::string, std::vector<InterpreterScope*>> scopes;
 		std::vector<std::string> parsed_libs;
-		std::string identifier_call_name;
 		std::string function_call_name;
 		std::string return_from_function_name;
 		std::stack<std::vector<TypeDefinition>> current_function_signature;
@@ -85,6 +84,7 @@ namespace visitor {
 		InterpreterScope* get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
 		InterpreterScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
 		InterpreterScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature, bool strict = true);
+		InterpreterScope* get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
 
 		Value* set_value(InterpreterScope* scope, const std::vector<Identifier>& identifier_vector, Value* new_value);
 		Value* access_value(const InterpreterScope* scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);

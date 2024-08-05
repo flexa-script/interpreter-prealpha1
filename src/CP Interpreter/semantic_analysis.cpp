@@ -131,15 +131,17 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	}
 
 	if (astnode->expr) {
-		identifier_call_name = astnode->identifier;
 		astnode->expr->accept(this);
 		if (is_undefined(current_expression.type)) {
 			throw std::runtime_error("undefined expression");
 		}
-		identifier_call_name = "";
 	}
 	else {
 		current_expression = SemanticValue(Type::T_UNDEFINED, astnode->row, astnode->col);
+	}
+
+	if (is_function(current_expression.type)) {
+		scopes[nmspace].back()->declare_variable_function(astnode->identifier, astnode->row, astnode->row);
 	}
 
 	auto new_value = new SemanticValue();
@@ -216,12 +218,16 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		}
 	}
 
-	identifier_call_name = astnode->identifier;
 	astnode->expr->accept(this);
+
 	if (is_undefined(current_expression.type)) {
 		throw std::runtime_error("undefined expression");
 	}
-	identifier_call_name = "";
+
+	if (is_function(current_expression.type)) {
+		scopes[nmspace].back()->declare_variable_function(astnode->identifier, astnode->row, astnode->row);
+	}
+
 	auto assignment_expr = current_expression;
 
 	auto declared_variable = curr_scope->find_declared_variable(identifier);
@@ -341,12 +347,14 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 		auto type = is_void(astnode->type) && has_return ? Type::T_ANY : astnode->type;
 		auto array_type = (is_void(astnode->array_type) || is_undefined(astnode->array_type)) && has_return ? Type::T_ANY : astnode->type;
 
-		scopes[nmspace].back()->declare_function(astnode->identifier, type, astnode->type_name, astnode->type_name_space,
-			array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->row, astnode->row);
+		if (astnode->identifier != "") {
+			scopes[nmspace].back()->declare_function(astnode->identifier, type, astnode->type_name, astnode->type_name_space,
+				array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->row, astnode->row);
 
-		auto curr_function = scopes[nmspace].back()->find_declared_function(astnode->identifier, astnode->signature, evaluate_access_vector_ptr);
+			auto curr_function = scopes[nmspace].back()->find_declared_function(astnode->identifier, astnode->signature, evaluate_access_vector_ptr);
 
-		current_function.push(curr_function);
+			current_function.push(curr_function);
+		}
 
 		astnode->block->accept(this);
 
@@ -359,18 +367,17 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 		current_function.pop();
 	}
 	else {
-		if (!astnode->block) {
-			// todo: check if is builtin
+		// todo: check if is builtin
+		if (astnode->identifier != "") {
+			scopes[nmspace].back()->declare_function(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
+				astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->row, astnode->row);
 		}
-		scopes[nmspace].back()->declare_function(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
-			astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->row, astnode->row);
 	}
 }
 
 void SemanticAnalyser::visit(ASTFunctionExpression* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	astnode->fun->identifier = identifier_call_name;
 	astnode->fun->accept(this);
 
 	current_expression = SemanticValue();
@@ -971,8 +978,6 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 				curr_scope = get_inner_most_function_scope(nmspace,
 					astnode->identifier, std::vector<TypeDefinition>());
 				current_expression.type = Type::T_FUNCTION;
-
-				scopes[nmspace].back()->declare_variable_function(identifier_call_name, astnode->row, astnode->row);
 
 				return;
 			}

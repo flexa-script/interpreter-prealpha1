@@ -188,7 +188,7 @@
     - [X] Remove reference from variable
     - [X] Function call is not taking account value ref
 - [ ] Test function as parameter or variable behaviour when already exists a function with its name
-    - [ ] Fix function assign, i cant declare function in expression evaluation of a declaration node...
+    - [X] Fix function assign, i cant declare function in expression evaluation of a declaration node...
 - [X] Interpreter is not checking null struct values correctly
 - [X] Throw an error when trying to pass char to string or int to float reference in function parameter
 - [X] function shadowing IS GENERATING ERROR

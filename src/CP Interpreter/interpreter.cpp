@@ -9,7 +9,8 @@
 #include "exception_handler.hpp"
 #include "token.hpp"
 #include "vendor/axeutils.hpp"
-#include "vendor/axewatch.h"
+#include "vendor/axewatch.hpp"
+#include "vendor/axeuuid.hpp"
 #include "graphics.hpp"
 #include "files.hpp"
 #include "console.hpp"
@@ -106,9 +107,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	const auto& nmspace = get_namespace();
 
 	if (astnode->expr) {
-		identifier_call_name = astnode->identifier;
 		astnode->expr->accept(this);
-		identifier_call_name = "";
 	}
 	else {
 		current_expression_value = new Value(Type::T_UNDEFINED);
@@ -175,9 +174,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	Variable* variable = astscope->find_declared_variable(astnode->identifier);
 	Value* value = access_value(astscope, variable->get_value(), astnode->identifier_vector);
 
-	identifier_call_name = astnode->identifier;
 	astnode->expr->accept(this);
-	identifier_call_name = "";
 
 	if (current_expression_value->use_ref && astnode->op == "=" && astnode->identifier_vector.size() == 1 && !has_string_access) {
 		if (!TypeDefinition::is_any_or_match_type(variable, *variable, nullptr, *current_expression_value, evaluate_access_vector_ptr)) {
@@ -253,7 +250,9 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	const auto& nmspace = get_namespace(astnode->nmspace);
+	std::string nmspace = get_namespace(astnode->nmspace);
+	std::string identifier = astnode->identifier;
+	std::vector<Identifier> identifier_vector = astnode->identifier_vector;
 	bool strict = true;
 	std::vector<TypeDefinition> signature;
 	std::vector<Value*> function_arguments;
@@ -276,36 +275,46 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 
 	InterpreterScope* func_scope;
 	try {
-		func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature, strict);
+		func_scope = get_inner_most_function_scope(nmspace, identifier, signature, strict);
 	}
 	catch (...) {
 		try {
 			strict = false;
-			func_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature, strict);
+			func_scope = get_inner_most_function_scope(nmspace, identifier, signature, strict);
 		}
 		catch (...) {
-			std::string func_name = astnode->identifier + "(";
-			for (const auto& param : signature) {
-				func_name += type_str(param.type) + ", ";
+			try {
+				auto var_scope = get_inner_most_variable_scope(nmspace, identifier);
+				auto var = var_scope->find_declared_variable(identifier);
+				nmspace = var->value->fun.first;
+				identifier = var->value->fun.second;
+				identifier_vector = std::vector<Identifier>{ Identifier(identifier) };
+				func_scope = get_inner_most_function_scope(nmspace, identifier, signature, strict);
 			}
-			if (signature.size() > 0) {
-				func_name.pop_back();
-				func_name.pop_back();
-			}
-			func_name += ")";
+			catch (...) {
+				std::string func_name = identifier + "(";
+				for (const auto& param : signature) {
+					func_name += type_str(param.type) + ", ";
+				}
+				if (signature.size() > 0) {
+					func_name.pop_back();
+					func_name.pop_back();
+				}
+				func_name += ")";
 
-			throw std::runtime_error("function '" + func_name + "' was never declared");
+				throw std::runtime_error("function '" + func_name + "' was never declared");
+			}
 		}
 	}
-	auto declfun = func_scope->find_declared_function(astnode->identifier, signature, evaluate_access_vector_ptr, strict);
+	auto declfun = func_scope->find_declared_function(identifier, signature, evaluate_access_vector_ptr, strict);
 
 	current_function_defined_parameters.push(std::get<0>(declfun));
 	is_function_context = true;
-	function_call_name = astnode->identifier;
+	function_call_name = identifier;
 
-	current_this_name.push(astnode->identifier);
+	current_this_name.push(identifier);
 	current_function_signature.push(signature);
-	current_function_call_identifier_vector.push(astnode->identifier_vector);
+	current_function_call_identifier_vector.push(identifier_vector);
 	current_function_nmspace.push(nmspace);
 	current_function_return_type.push(std::get<2>(declfun));
 	current_function_calling_arguments.push(function_arguments);
@@ -315,7 +324,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		block->accept(this);
 	}
 	else {
-		call_builtin_function(astnode->identifier);
+		call_builtin_function(identifier);
 	}
 
 	current_function_return_type.pop();
@@ -330,12 +339,17 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
+	const auto& nmspace = get_namespace();
+
 	interpreter_parameter_list_t params;
 	for (size_t i = 0; i < astnode->parameters.size(); ++i) {
 		interpreter_parameter_t param = std::make_tuple(astnode->variable_names[i], astnode->signature[i], astnode->parameters[i].default_value, astnode->parameters[i].is_rest);
 		params.push_back(param);
 	}
-	scopes[get_namespace()].back()->declare_function(astnode->identifier, params, astnode->block, *astnode);
+
+	if (astnode->identifier != "") {
+		scopes[nmspace].back()->declare_function(astnode->identifier, params, astnode->block, *astnode);
+	}
 }
 
 void Interpreter::visit(ASTFunctionExpression* astnode) {
@@ -343,11 +357,20 @@ void Interpreter::visit(ASTFunctionExpression* astnode) {
 
 	const auto& nmspace = get_namespace();
 
-	astnode->fun->identifier = identifier_call_name;
-	astnode->fun->accept(this);
+	auto& fun = astnode->fun;
+
+	interpreter_parameter_list_t params;
+	for (size_t i = 0; i < fun->parameters.size(); ++i) {
+		interpreter_parameter_t param = std::make_tuple(fun->variable_names[i], fun->signature[i], fun->parameters[i].default_value, fun->parameters[i].is_rest);
+		params.push_back(param);
+	}
+
+	std::string identifier = "unnamed_function_" + axe::AxeUUID::generate();
+
+	scopes[nmspace].back()->declare_function(identifier, params, fun->block, *fun);
 
 	auto value = new Value(Type::T_FUNCTION);
-	value->set(cp_function(scopes[nmspace].back(), astnode->fun->identifier));
+	value->set(cp_function(nmspace, identifier));
 	current_expression_value = value;
 }
 
@@ -1072,7 +1095,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 				try {
 					curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, std::vector<TypeDefinition>());
 					auto fun = cp_function();
-					fun.first = curr_scope;
+					fun.first = nmspace;
 					fun.second = astnode->identifier;
 					current_expression_value = new Value(Type::T_FUNCTION);
 					current_expression_value->set(fun);
@@ -1588,6 +1611,27 @@ InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& 
 	return scopes[nmspace][i];
 }
 
+InterpreterScope* Interpreter::get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier) {
+	long long i;
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function_name(identifier); --i) {
+		if (i <= 0) {
+			for (const auto& prgnmspace : program_nmspaces[get_current_namespace()]) {
+				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function_name(identifier); --i) {
+					if (i <= 0) {
+						i = -1;
+						break;
+					}
+				}
+				if (i >= 0) {
+					return scopes[prgnmspace][i];
+				}
+			}
+			throw std::runtime_error("something went wrong searching '" + identifier + "' fuction");
+		}
+	}
+	return scopes[nmspace][i];
+}
+
 Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser::Identifier>& identifier_vector, Value* new_value) {
 	auto var = scope->find_declared_variable(identifier_vector[0].identifier);
 	auto value = access_value(scope, var->get_value(), identifier_vector);
@@ -1753,7 +1797,7 @@ std::string Interpreter::parse_value_to_string(const Value* value) {
 	case Type::T_ARRAY:
 		return parse_array_to_string(value->arr);
 	case Type::T_FUNCTION: {
-		auto funcs = ((InterpreterScope*)value->fun.first)->find_declared_functions(value->fun.second);
+		auto funcs = get_inner_most_functions_scope(value->fun.first, value->fun.second)->find_declared_functions(value->fun.second);
 		for (auto& it = funcs.first; it != funcs.second; ++it) {
 			auto& func_name = it->first;
 			auto& func_sig = std::get<0>(it->second);
@@ -2379,7 +2423,8 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
 
 			if (is_function(current_function_calling_argument->type)) {
-				auto funcs = ((InterpreterScope*)current_function_calling_argument->fun.first)->find_declared_functions(current_function_calling_argument->fun.second);
+				auto funcs = get_inner_most_functions_scope(current_function_calling_argument->fun.first,
+					current_function_calling_argument->fun.second)->find_declared_functions(current_function_calling_argument->fun.second);
 				for (auto& it = funcs.first; it != funcs.second; ++it) {
 					auto& func_params = std::get<0>(it->second);
 					auto& func_block = std::get<1>(it->second);
@@ -2415,7 +2460,8 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		std::get<2>(current_function_defined_parameters.top()[i])->accept(this);
 
 		if (is_function(current_expression_value->type)) {
-			auto funcs = ((InterpreterScope*)current_expression_value->fun.first)->find_declared_functions(current_expression_value->fun.second);
+			auto funcs = get_inner_most_functions_scope(current_expression_value->fun.first,
+				current_expression_value->fun.second)->find_declared_functions(current_expression_value->fun.second);
 			for (auto& it = funcs.first; it != funcs.second; ++it) {
 				auto& func_params = std::get<0>(it->second);
 				auto& func_block = std::get<1>(it->second);
