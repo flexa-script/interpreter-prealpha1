@@ -16,6 +16,9 @@ using namespace parser;
 namespace visitor {
 
 	class SemanticAnalyser : Visitor {
+	public:
+		std::map<std::string, void*> builtin_functions;
+
 	private:
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&SemanticAnalyser::evaluate_access_vector, this, std::placeholders::_1);
 		std::map<std::string, std::vector<SemanticScope*>> scopes;
@@ -34,6 +37,10 @@ namespace visitor {
 		Type current_expression_array_type;
 		bool is_max;
 
+		modules::Graphics* cpgraphics;
+		modules::Files* cpfiles;
+		modules::Console* cpconsole;
+
 	private:
 		bool returns(ASTNode* astnode);
 
@@ -50,6 +57,7 @@ namespace visitor {
 		VariableDefinition access_struct_variable(std::vector<Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i = 0);
 
 		void register_built_in_functions();
+		void register_built_in_lib(const std::string& libname);
 
 		bool namespace_exists(const std::string& nmspace);
 		const std::string& get_namespace(const std::string& nmspace = "") const override;

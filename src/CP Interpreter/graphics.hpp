@@ -16,7 +16,8 @@ namespace modules {
 		Graphics();
 		~Graphics();
 
-		void register_functions(Interpreter* interpreter) override;
+		void register_functions(SemanticAnalyser* visitor) override;
+		void register_functions(Interpreter* visitor) override;
 	};
 }
 

@@ -8,6 +8,10 @@
 #include "vendor/axeutils.hpp"
 #include "vendor/axeuuid.hpp"
 
+#include "graphics.hpp"
+#include "files.hpp"
+#include "console.hpp"
+
 using namespace visitor;
 using namespace parser;
 using namespace lexer;
@@ -44,6 +48,10 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	std::string libname = axe::StringUtils::join(astnode->library, ".");
+
+	if (axe::StringUtils::contains(built_in_libs, libname)) {
+		register_built_in_lib(libname);
+	}
 
 	if (programs.find(libname) == programs.end()) {
 		throw std::runtime_error("lib '" + libname + "' not found");
@@ -368,7 +376,10 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 		current_function.pop();
 	}
 	else {
-		// todo: check if is builtin
+		if (builtin_functions.find(astnode->identifier) == builtin_functions.end()) {
+			throw std::runtime_error("defined function '" + astnode->identifier + "' is not from a built in library");
+		}
+
 		if (astnode->identifier != "") {
 			scopes[nmspace].back()->declare_function(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
 				astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->row, astnode->row);
@@ -1664,6 +1675,23 @@ void SemanticAnalyser::register_built_in_functions() {
 	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
 	parameters.push_back(VariableDefinition::get_basic("cmd", Type::T_STRING));
 	scopes[default_namespace].back()->declare_basic_function("system", Type::T_VOID, signature, parameters);
+}
+
+void SemanticAnalyser::register_built_in_lib(const std::string& libname) {
+	if (built_in_libs[0] == libname) {
+		cpgraphics = new modules::Graphics();
+		cpgraphics->register_functions(this);
+	}
+
+	if (built_in_libs[1] == libname) {
+		cpfiles = new modules::Files();
+		cpfiles->register_functions(this);
+	}
+
+	if (built_in_libs[2] == libname) {
+		cpconsole = new modules::Console();
+		cpconsole->register_functions(this);
+	}
 }
 
 const std::string& SemanticAnalyser::get_namespace(const std::string& nmspace) const {

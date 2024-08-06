@@ -7,23 +7,29 @@ using namespace modules;
 
 Console::Console() {}
 
-void Console::register_functions(visitor::Interpreter* interpreter) {
+void Console::register_functions(visitor::SemanticAnalyser* visitor) {
+	visitor->builtin_functions["set_console_color"] = nullptr;
+	visitor->builtin_functions["set_console_cursor_position"] = nullptr;
+	visitor->builtin_functions["set_console_font"] = nullptr;
+}
 
-	interpreter->builtin_functions["set_console_color"] = [this, interpreter]() {
+void Console::register_functions(visitor::Interpreter* visitor) {
+
+	visitor->builtin_functions["set_console_color"] = [this, visitor]() {
 		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-		SetConsoleTextAttribute(hConsole, interpreter->builtin_arguments[0]->i * 16 | interpreter->builtin_arguments[1]->i);
+		SetConsoleTextAttribute(hConsole, visitor->builtin_arguments[0]->i * 16 | visitor->builtin_arguments[1]->i);
 	};
 
-	interpreter->builtin_functions["set_console_cursor_position"] = [this, interpreter]() {
-		COORD pos = { interpreter->builtin_arguments[0]->i, interpreter->builtin_arguments[1]->i };
+	visitor->builtin_functions["set_console_cursor_position"] = [this, visitor]() {
+		COORD pos = { visitor->builtin_arguments[0]->i, visitor->builtin_arguments[1]->i };
 		HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
 		SetConsoleCursorPosition(output, pos);
 	};
 
-	interpreter->builtin_functions["set_console_font"] = [this, interpreter]() {
-		auto pfontname = std::wstring(interpreter->builtin_arguments[0]->s.begin(), interpreter->builtin_arguments[0]->s.end());
-		int pwidth = interpreter->builtin_arguments[1]->i;
-		int pheight = interpreter->builtin_arguments[2]->i;
+	visitor->builtin_functions["set_console_font"] = [this, visitor]() {
+		auto pfontname = std::wstring(visitor->builtin_arguments[0]->s.begin(), visitor->builtin_arguments[0]->s.end());
+		int pwidth = visitor->builtin_arguments[1]->i;
+		int pheight = visitor->builtin_arguments[2]->i;
 
 		CONSOLE_FONT_INFOEX cfi;
 		cfi.cbSize = sizeof(cfi);

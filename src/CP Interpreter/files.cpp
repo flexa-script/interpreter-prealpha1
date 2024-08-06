@@ -12,15 +12,26 @@ Files::~Files() {
 	files.clear();
 }
 
-void Files::register_functions(visitor::Interpreter* interpreter) {
+void Files::register_functions(visitor::SemanticAnalyser* visitor) {
+	visitor->builtin_functions["open"] = nullptr;
+	visitor->builtin_functions["read"] = nullptr;
+	visitor->builtin_functions["read_line"] = nullptr;
+	visitor->builtin_functions["read_all_bytes"] = nullptr;
+	visitor->builtin_functions["write"] = nullptr;
+	visitor->builtin_functions["write_bytes"] = nullptr;
+	visitor->builtin_functions["is_open"] = nullptr;
+	visitor->builtin_functions["close"] = nullptr;
+}
 
-	interpreter->builtin_functions["open"] = [this, interpreter]() {
+void Files::register_functions(visitor::Interpreter* visitor) {
+
+	visitor->builtin_functions["open"] = [this, visitor]() {
 		// initialize file struct values
-		Value* cpfile = interpreter->builtin_arguments[0];
-		std::get<2>(*cpfile->str)["path"] = new Value(interpreter->builtin_arguments[1]);
-		std::get<2>(*cpfile->str)["mode"] = new Value(interpreter->builtin_arguments[2]);
+		Value* cpfile = visitor->builtin_arguments[0];
+		std::get<2>(*cpfile->str)["path"] = new Value(visitor->builtin_arguments[1]);
+		std::get<2>(*cpfile->str)["mode"] = new Value(visitor->builtin_arguments[2]);
 
-		int parmode = interpreter->builtin_arguments[2]->i;
+		int parmode = visitor->builtin_arguments[2]->i;
 		int mode = 0;
 		if (parmode > 10) {
 			if (parmode >= 10 && parmode < 20) {
@@ -49,7 +60,7 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 		auto rval = new Value(parser::Type::T_BOOL);
 		std::fstream* fs;
 		try {
-			fs = new std::fstream(interpreter->builtin_arguments[1]->s, mode);
+			fs = new std::fstream(visitor->builtin_arguments[1]->s, mode);
 			rval->b = fs->is_open();
 		}
 		catch (...) {
@@ -61,11 +72,11 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 			std::get<2>(*cpfile->str)[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
 			std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i = files.size() - 1;
 		}
-		interpreter->current_expression_value = rval;
+		visitor->current_expression_value = rval;
 	};
 
-	interpreter->builtin_functions["read"] = [this, interpreter]() {
-		Value* cpfile = interpreter->builtin_arguments[0];
+	visitor->builtin_functions["read"] = [this, visitor]() {
+		Value* cpfile = visitor->builtin_arguments[0];
 		if (!parser::is_void(cpfile->type)) {
 			auto rval = new Value(parser::Type::T_STRING);
 			
@@ -80,12 +91,12 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 			}
 			rval->s = ss.str();
 
-			interpreter->current_expression_value = rval;
+			visitor->current_expression_value = rval;
 		}
 	};
 
-	interpreter->builtin_functions["read_line"] = [this, interpreter]() {
-		Value* cpfile = interpreter->builtin_arguments[0];
+	visitor->builtin_functions["read_line"] = [this, visitor]() {
+		Value* cpfile = visitor->builtin_arguments[0];
 		if (!parser::is_void(cpfile->type)) {
 			auto rval = new Value(parser::Type::T_STRING);
 
@@ -95,12 +106,12 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 			std::getline(*fs, line);
 			rval->s = line;
 
-			interpreter->current_expression_value = rval;
+			visitor->current_expression_value = rval;
 		}
 	};
 
-	interpreter->builtin_functions["read_all_bytes"] = [this, interpreter]() {
-		Value* cpfile = interpreter->builtin_arguments[0];
+	visitor->builtin_functions["read_all_bytes"] = [this, visitor]() {
+		Value* cpfile = visitor->builtin_arguments[0];
 		if (!parser::is_void(cpfile->type)) {
 			auto rval = new Value(parser::Type::T_ARRAY);
 			rval->set_arr_type(parser::Type::T_CHAR);
@@ -131,24 +142,24 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 
 			delete[] buffer;
 
-			interpreter->current_expression_value = rval;
+			visitor->current_expression_value = rval;
 		}
 	};
 
-	interpreter->builtin_functions["write"] = [this, interpreter]() {
-		Value* cpfile = interpreter->builtin_arguments[0];
+	visitor->builtin_functions["write"] = [this, visitor]() {
+		Value* cpfile = visitor->builtin_arguments[0];
 		if (!parser::is_void(cpfile->type)) {
 			std::fstream* fs = files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i];
-			*fs << interpreter->builtin_arguments[1]->s;
+			*fs << visitor->builtin_arguments[1]->s;
 		}
 	};
 
-	interpreter->builtin_functions["write_bytes"] = [this, interpreter]() {
-		Value* cpfile = interpreter->builtin_arguments[0];
+	visitor->builtin_functions["write_bytes"] = [this, visitor]() {
+		Value* cpfile = visitor->builtin_arguments[0];
 		if (!parser::is_void(cpfile->type)) {
 			std::fstream* fs = files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i];
 
-			auto arr = interpreter->builtin_arguments[1]->arr;
+			auto arr = visitor->builtin_arguments[1]->arr;
 
 			std::streamsize buffer_size = arr.size();
 
@@ -162,17 +173,17 @@ void Files::register_functions(visitor::Interpreter* interpreter) {
 		}
 	};
 
-	interpreter->builtin_functions["is_open"] = [this, interpreter]() {
-		Value* cpfile = interpreter->builtin_arguments[0];
+	visitor->builtin_functions["is_open"] = [this, visitor]() {
+		Value* cpfile = visitor->builtin_arguments[0];
 		if (!parser::is_void(cpfile->type)) {
 			auto rval = new Value(parser::Type::T_BOOL);
 			rval->b = files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i]->is_open();
-			interpreter->current_expression_value = rval;
+			visitor->current_expression_value = rval;
 		}
 	};
 
-	interpreter->builtin_functions["close"] = [this, interpreter]() {
-		Value* cpfile = interpreter->builtin_arguments[0];
+	visitor->builtin_functions["close"] = [this, visitor]() {
+		Value* cpfile = visitor->builtin_arguments[0];
 		if (!parser::is_void(cpfile->type)) {
 			if (files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i]) {
 				files[std::get<2>(*cpfile->str)[INSTANCE_ID_NAME]->i]->close();

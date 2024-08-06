@@ -3,6 +3,7 @@
 
 #include <string>
 #include "interpreter.hpp"
+#include "semantic_analysis.hpp"
 
 namespace modules {
 	class Module {
@@ -13,7 +14,8 @@ namespace modules {
 		Module() = default;
 		~Module() = default;
 
-		virtual void register_functions(Interpreter* interpreter) = 0;
+		virtual void register_functions(SemanticAnalyser* visitor) = 0;
+		virtual void register_functions(Interpreter* visitor) = 0;
 	};
 }
 

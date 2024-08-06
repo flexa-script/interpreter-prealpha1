@@ -202,7 +202,7 @@
 - [X] Assigning struct values on constructors is not checking types correctly
 - [X] Function call strcut, string and array acessors is not working
 - [X] print({0,2} + {0,2}); is passing semantic analisys
-- [ ] functions with no block are not checked (should check if is builtin)
+- [X] functions with no block are not checked (should check if is builtin)
 - [X] some expression nodes aren't cleaning return type like void funcions
     - [X] add undefined checks after expression semantical analysis
 - [X] reference is not working properly
