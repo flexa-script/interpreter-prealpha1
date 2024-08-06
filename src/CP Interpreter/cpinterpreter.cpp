@@ -17,6 +17,8 @@ CPInterpreter::CPInterpreter(const std::string& root, std::vector<std::string>&&
 	: root(root), files(std::move(files)) {}
 
 int CPInterpreter::execute() {
+	//axe::PathUtils::get_current_path() + "libs"
+	//root
 	if (files.size() > 0) {
 		auto programs = load_programs(root, files);
 		return interpreter(programs);

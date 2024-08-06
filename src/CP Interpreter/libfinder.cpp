@@ -28,10 +28,6 @@ void LibFinder::visit(ASTUsingNode* astnode) {
 	std::string libname = axe::StringUtils::join(astnode->library, ".");
 
 	if (programs.find(libname) == programs.end()) {
-		if (!axe::StringUtils::contains(built_in_libs, libname) && !axe::StringUtils::contains(std_libs, libname)) {
-			throw std::exception(std::string{ "unable to find library '" + libname + "'" }.c_str());
-		}
-		// find in cp std libs
 		std::string path = axe::StringUtils::replace(libname, ".", std::string{ std::filesystem::path::preferred_separator }) + ".cp";
 		if (std::find(lib_names.begin(), lib_names.end(), path) == lib_names.end()) {
 			lib_names.push_back(path);

@@ -183,6 +183,9 @@
         - [ ] json_parse
     - [ ] Util?
 
+## Improvements from existent resources
+- [ ] Automatically find and load included libs without to send by command line arguments
+
 ## Known bugs
 - [X] Fix references
     - [X] Remove reference from variable
