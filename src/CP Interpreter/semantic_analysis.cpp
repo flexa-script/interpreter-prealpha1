@@ -1,11 +1,12 @@
-#include <utility>
 #include <iostream>
+#include <utility>
 
+#include "exception_handler.hpp"
+#include "graphics.hpp"
 #include "semantic_analysis.hpp"
 #include "token.hpp"
-#include "exception_handler.hpp"
 #include "vendor/axeutils.hpp"
-#include "graphics.hpp"
+#include "vendor/axeuuid.hpp"
 
 using namespace visitor;
 using namespace parser;
@@ -378,13 +379,20 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 void SemanticAnalyser::visit(ASTFunctionExpression* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	astnode->fun->accept(this);
+	auto fun = dynamic_cast<ASTFunctionDefinitionNode*>(astnode->fun);
+
+	std::string identifier = "__unnamed_function_" + axe::AxeUUID::generate();
+	FunctionDefinition tempfundef(identifier, fun->type, fun->type_name, fun->type_name_space, fun->array_type, fun->dim, fun->signature, fun->parameters, fun->row, fun->col);
+
+	current_function.push(tempfundef);
+
+	fun->accept(this);
 
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_FUNCTION;
-	current_expression.dim = astnode->fun->dim;
-	current_expression.row = astnode->fun->row;
-	current_expression.col = astnode->fun->col;
+	current_expression.dim = fun->dim;
+	current_expression.row = fun->row;
+	current_expression.col = fun->col;
 }
 
 void SemanticAnalyser::visit(ASTBlockNode* astnode) {

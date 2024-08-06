@@ -1,8 +1,8 @@
 #include <filesystem>
 
+#include "cputil.hpp"
 #include "libfinder.hpp"
 #include "vendor/axeutils.hpp"
-#include "cputil.hpp"
 
 using namespace visitor;
 using namespace parser;

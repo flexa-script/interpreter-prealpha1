@@ -1,6 +1,8 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
+#include <stack>
+
 #include "ast.hpp"
 #include "lexer.hpp"
 
@@ -14,7 +16,7 @@ namespace parser {
 		Token current_token;
 		Token next_token;
 		Type current_array_type = Type::T_UNDEFINED;
-		bool consume_semicolon = false;
+		std::stack<bool> consume_semicolon;
 
 	public:
 		std::string name;
@@ -25,15 +27,8 @@ namespace parser {
 		ASTProgramNode* parse_program();
 
 	private:
-		void consume_token();
-		void consume_token(TokenType type);
-		void check_current_token(TokenType type);
-		void check_consume_semicolon();
-
 		// parse types and parameters
 		Type parse_type();
-
-		std::string msg_header();
 
 		// statement nodes
 		ASTNode* parse_program_statement();
@@ -109,6 +104,13 @@ namespace parser {
 		std::vector<ASTExprNode*> parse_dimension_vector();
 		Identifier parse_identifier();
 		std::vector<Identifier> parse_identifier_vector();
+
+		void consume_token();
+		void consume_token(TokenType type);
+		void check_current_token(TokenType type) const;
+		void check_consume_semicolon();
+
+		std::string msg_header() const;
 
 	};
 }

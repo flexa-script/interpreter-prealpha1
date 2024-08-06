@@ -8,9 +8,11 @@
 #include "interpreter.hpp"
 #include "exception_handler.hpp"
 #include "token.hpp"
+
 #include "vendor/axeutils.hpp"
 #include "vendor/axewatch.hpp"
 #include "vendor/axeuuid.hpp"
+
 #include "graphics.hpp"
 #include "files.hpp"
 #include "console.hpp"
@@ -365,7 +367,7 @@ void Interpreter::visit(ASTFunctionExpression* astnode) {
 		params.push_back(param);
 	}
 
-	std::string identifier = "unnamed_function_" + axe::AxeUUID::generate();
+	std::string identifier = "__unnamed_function_" + axe::AxeUUID::generate();
 
 	scopes[nmspace].back()->declare_function(identifier, params, fun->block, *fun);
 

@@ -1,9 +1,9 @@
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
-#include "visitor.hpp"
 #include "parser.hpp"
 #include "vendor/axeutils.hpp"
+#include "visitor.hpp"
 
 using namespace lexer;
 using namespace parser;
@@ -12,22 +12,6 @@ using namespace visitor;
 Parser::Parser(const std::string& name, Lexer* lex) : name(name), lex(lex) {
 	current_token = lex->next_token();
 	next_token = lex->next_token();
-}
-
-void Parser::consume_token() {
-	current_token = next_token;
-	next_token = lex->next_token();
-}
-
-void Parser::consume_token(TokenType type) {
-	consume_token();
-	check_current_token(type);
-}
-
-void Parser::check_current_token(TokenType type) {
-	if (current_token.type != type) {
-		throw std::runtime_error(msg_header() + "expected '" + Token::token_image(type) + "'");
-	}
 }
 
 ASTProgramNode* Parser::parse_program() {
@@ -76,8 +60,10 @@ ASTNode* Parser::parse_program_statement() {
 	case TOK_FUN:
 		return parse_function_statement();
 	default:
-		consume_semicolon = true;
-		parse_block_statement();
+		consume_semicolon.push(true);
+		ASTNode* node = parse_block_statement();
+		consume_semicolon.pop();
+		return node;
 	}
 }
 
@@ -118,7 +104,7 @@ ASTNode* Parser::parse_block_statement() {
 		return parse_identifier_statement();
 	default:
 		try {
-			parse_statement_expression();
+			return parse_statement_expression();
 		}
 		catch (const std::exception& ex) {
 			throw std::runtime_error(msg_header() + "expected statement or expression");
@@ -154,10 +140,7 @@ ASTReturnNode* Parser::parse_return_statement() {
 	consume_token();
 	ASTExprNode* expr = parse_expression();
 
-	if (consume_semicolon) {
-		consume_semicolon = false;
-		consume_token(TOK_SEMICOLON);
-	}
+	check_consume_semicolon();
 
 	return new ASTReturnNode(expr, row, col);
 }
@@ -210,8 +193,9 @@ ASTBlockNode* Parser::parse_block() {
 	while (current_token.type != TOK_RIGHT_CURLY
 		&& current_token.type != TOK_ERROR
 		&& current_token.type != TOK_EOF) {
-		consume_semicolon = true;
+		consume_semicolon.push(true);
 		statements->push_back(parse_block_statement());
+		consume_semicolon.pop();
 		consume_token();
 	}
 
@@ -344,7 +328,6 @@ ASTBreakNode* Parser::parse_break_statement() {
 }
 
 ASTSwitchNode* Parser::parse_switch_statement() {
-	// node attributes
 	ASTExprNode* condition;
 	std::map<ASTExprNode*, unsigned int>* case_blocks = new std::map<ASTExprNode*, unsigned int>();
 	long default_block = -1;
@@ -375,8 +358,9 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 			while (current_token.type != TOK_CASE && current_token.type != TOK_DEFAULT
 				&& current_token.type != TOK_RIGHT_CURLY && current_token.type != TOK_ERROR
 				&& current_token.type != TOK_EOF) {
-				consume_semicolon = true;
+				consume_semicolon.push(true);
 				statements->push_back(parse_block_statement());
+				consume_semicolon.pop();
 				consume_token();
 			}
 		}
@@ -394,8 +378,9 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 		}
 		else {
 			while (current_token.type != TOK_RIGHT_CURLY && current_token.type != TOK_ERROR && current_token.type != TOK_EOF) {
-				consume_semicolon = true;
+				consume_semicolon.push(true);
 				statements->push_back(parse_block_statement());
+				consume_semicolon.pop();
 				consume_token();
 			}
 		}
@@ -476,8 +461,9 @@ ASTTryCatchNode* Parser::parse_try_catch_statement() {
 	}
 	else {
 		check_current_token(TOK_VAR);
-		consume_semicolon = false;
+		consume_semicolon.push(false);
 		decl = parse_undef_declaration_statement();
+		consume_semicolon.pop();
 	}
 	consume_token(TOK_RIGHT_BRACKET);
 
@@ -511,8 +497,9 @@ ASTForNode* Parser::parse_for_statement() {
 	for (int i = 0; i < 3; ++i) {
 		if (next_token.type != TOK_SEMICOLON && next_token.type != TOK_RIGHT_BRACKET) {
 			consume_token();
-			consume_semicolon = i < 2;
+			consume_semicolon.push(i < 2);
 			dci[i] = parse_block_statement();
+			consume_semicolon.pop();
 
 		}
 		else {
@@ -531,16 +518,22 @@ ASTForNode* Parser::parse_for_statement() {
 }
 
 ASTNode* Parser::parse_foreach_collection() {
-	consume_semicolon = false;
+	ASTNode* node = nullptr;
 
+	consume_semicolon.push(false);
 	switch (current_token.type) {
 	case TOK_LEFT_CURLY:
-		return parse_array_constructor_node();
+		node = parse_array_constructor_node();
+		break;
 	case TOK_IDENTIFIER:
-		return parse_identifier_statement();
+		node = parse_identifier_statement();
+		break;
 	default:
 		throw std::runtime_error(msg_header() + "expected array");
 	}
+	consume_semicolon.pop();
+
+	return node;
 }
 
 ASTForEachNode* Parser::parse_foreach_statement() {
@@ -549,17 +542,16 @@ ASTForEachNode* Parser::parse_foreach_statement() {
 	ASTBlockNode* block;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
-	auto consaux = consume_semicolon;
 
 	consume_token(TOK_LEFT_BRACKET);
 	consume_token();
-	consume_semicolon = false;
+	consume_semicolon.push(false);
 	check_current_token(TOK_VAR);
 	itdecl = parse_undef_declaration_statement();
 	consume_token(TOK_IN);
 	consume_token();
 	collection = parse_foreach_collection();
-	consume_semicolon = consaux;
+	consume_semicolon.pop();
 	consume_token(TOK_RIGHT_BRACKET);
 	consume_token(TOK_LEFT_CURLY);
 	block = parse_block();
@@ -596,8 +588,9 @@ ASTDoWhileNode* Parser::parse_do_while_statement() {
 	consume_token();
 	condition = parse_expression();
 	check_current_token(TOK_RIGHT_BRACKET);
-	consume_semicolon = true;
+	consume_semicolon.push(true);
 	check_consume_semicolon();
+	consume_semicolon.pop();
 
 	return new ASTDoWhileNode(condition, block, row, col);
 }
@@ -996,7 +989,7 @@ ASTExprNode* Parser::parse_factor() {
 		return sub_expr;
 	}
 
-						 // unary expression cases
+		// unary expression cases
 	case TOK_REF:
 	case TOK_UNREF: {
 		std::string current_token_value = current_token.value;
@@ -1278,8 +1271,9 @@ ASTStatementNode* Parser::parse_undef_declaration_statement() {
 		consume_token();
 
 		while (next_token.type == TOK_IDENTIFIER) {
-			consume_semicolon = false;
+			consume_semicolon.push(false);
 			declarations.push_back(parse_declaration_statement());
+			consume_semicolon.pop();
 			if (next_token.type == TOK_COMMA) {
 				consume_token();
 			}
@@ -1470,7 +1464,7 @@ ASTStructConstructorNode* Parser::parse_struct_constructor_node(ASTIdentifierNod
 	return new ASTStructConstructorNode(type_name, nmspace, values, row, col);
 }
 
-cp_bool Parser::parse_bool_literal() {
+cp_bool Parser::parse_bool_literal(){
 	return current_token.value == "true";
 }
 
@@ -1589,25 +1583,21 @@ cp_string Parser::parse_string_literal() {
 }
 
 ASTTypeParseNode* Parser::parse_type_parse_node() {
-	// determine line number
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 	Type type = parse_type();
 
 	consume_token(TOK_LEFT_BRACKET);
 
-	// get expression
 	consume_token();
 	ASTExprNode* expr = parse_expression();
 
-	// ensure right close bracket after fetching parameters
 	consume_token(TOK_RIGHT_BRACKET);
 
 	return new ASTTypeParseNode(type, expr, row, col);
 }
 
 ASTThisNode* Parser::parse_this_node() {
-	// determine line number
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1615,13 +1605,12 @@ ASTThisNode* Parser::parse_this_node() {
 }
 
 void Parser::check_consume_semicolon() {
-	if (consume_semicolon) {
-		consume_semicolon = false;
+	if (!consume_semicolon.empty() && consume_semicolon.top()) {
 		consume_token(TOK_SEMICOLON);
 	}
 }
 
-std::string Parser::msg_header() {
+std::string Parser::msg_header() const {
 	return "(PERR) " + name + '[' + std::to_string(current_token.row) + ':' + std::to_string(current_token.col) + "]: ";
 }
 
@@ -1665,5 +1654,21 @@ Type Parser::parse_type() {
 
 	default:
 		throw std::runtime_error(msg_header() + "invalid type");
+	}
+}
+
+void Parser::consume_token() {
+	current_token = next_token;
+	next_token = lex->next_token();
+}
+
+void Parser::consume_token(TokenType type) {
+	consume_token();
+	check_current_token(type);
+}
+
+void Parser::check_current_token(TokenType type) const {
+	if (current_token.type != type) {
+		throw std::runtime_error(msg_header() + "expected '" + Token::token_image(type) + "'");
 	}
 }
