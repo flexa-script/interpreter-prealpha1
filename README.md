@@ -187,6 +187,7 @@
 - [X] Automatically find and load included libs without to send by command line arguments
 
 ## Known bugs
+- [X] This is not working on libs, maybe set lib name in current name
 - [X] Fix references
     - [X] Remove reference from variable
     - [X] Function call is not taking account value ref

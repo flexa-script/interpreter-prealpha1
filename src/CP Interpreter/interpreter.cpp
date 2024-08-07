@@ -81,7 +81,9 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 		if (!program->alias.empty()) {
 			scopes[program->alias].push_back(new InterpreterScope());
 		}
+		current_this_name.push(current_program->name);
 		start();
+		current_this_name.pop();
 		current_program = prev_program;
 	}
 }

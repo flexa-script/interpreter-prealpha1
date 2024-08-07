@@ -6,6 +6,8 @@
 
 namespace list;
 
+println(this);
+
 struct Node {
     var value: any;
     var next: Node;
