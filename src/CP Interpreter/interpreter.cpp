@@ -314,7 +314,6 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 
 	current_function_defined_parameters.push(std::get<0>(declfun));
 	is_function_context = true;
-	function_call_name = identifier;
 
 	current_this_name.push(identifier);
 	current_function_signature.push(signature);
@@ -325,6 +324,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 
 	auto block = std::get<1>(declfun);
 	if (block) {
+		function_call_name = identifier;
 		block->accept(this);
 	}
 	else {
@@ -394,7 +394,7 @@ void Interpreter::visit(ASTBlockNode* astnode) {
 			return;
 		}
 
-		if (continue_block && (is_loop || is_switch)) {
+		if (continue_block && (is_loop)) {
 			break;
 		}
 
@@ -542,6 +542,8 @@ void Interpreter::visit(ASTIfNode* astnode) {
 			astnode->else_block->accept(this);
 		}
 	}
+
+	executed_elif = false;
 }
 
 void Interpreter::visit(ASTForNode* astnode) {
@@ -585,10 +587,6 @@ void Interpreter::visit(ASTForNode* astnode) {
 		}
 
 		if (return_from_function) {
-			if (!return_from_function_name.empty() && return_from_function_name == scopes[nmspace].back()->get_name()) {
-				return_from_function_name = "";
-				return_from_function = false;
-			}
 			break;
 		}
 
@@ -655,10 +653,6 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 			}
 
 			if (return_from_function) {
-				if (!return_from_function_name.empty() && return_from_function_name == scopes[nmspace].back()->get_name()) {
-					return_from_function_name = "";
-					return_from_function = false;
-				}
 				break;
 			}
 		}
@@ -691,10 +685,6 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 			}
 
 			if (return_from_function) {
-				if (!return_from_function_name.empty() && return_from_function_name == scopes[nmspace].back()->get_name()) {
-					return_from_function_name = "";
-					return_from_function = false;
-				}
 				break;
 			}
 		}
@@ -756,10 +746,6 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 			}
 
 			if (return_from_function) {
-				if (!return_from_function_name.empty() && return_from_function_name == scopes[nmspace].back()->get_name()) {
-					return_from_function_name = "";
-					return_from_function = false;
-				}
 				break;
 			}
 		}
@@ -890,10 +876,6 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 		}
 
 		if (return_from_function) {
-			if (!return_from_function_name.empty() && return_from_function_name == scopes[nmspace].back()->get_name()) {
-				return_from_function_name = "";
-				return_from_function = false;
-			}
 			break;
 		}
 
@@ -936,10 +918,6 @@ void Interpreter::visit(ASTDoWhileNode* astnode) {
 		}
 
 		if (return_from_function) {
-			if (!return_from_function_name.empty() && return_from_function_name == scopes[nmspace].back()->get_name()) {
-				return_from_function_name = "";
-				return_from_function = false;
-			}
 			break;
 		}
 

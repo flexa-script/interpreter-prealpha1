@@ -187,7 +187,7 @@
 - [X] Automatically find and load included libs without to send by command line arguments
 
 ## Known bugs
-- [ ] Return is not returning in some cases eg `while(){if(){return;}}`
+- [X] Return is not returning in some cases eg `while(){if(){return;}}`
 - [X] This is not working on libs, maybe set lib name in current name
 - [X] Fix references
     - [X] Remove reference from variable
