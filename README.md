@@ -146,10 +146,10 @@
     - [ ] Web/API
 - [ ] Add CP library:
     - [ ] String
-        - [ ] size: size of string
+        - [X] size: size of string
         - [ ] contains: string is contained in other string
         - [ ] ends_with, starts_with: string is contained in extremities
-        - [ ] substring: returns substring
+        - [X] substring: returns substring
         - [ ] replace: replace substrinf for another
         - [ ] to_lower, to_upper: capitalize, uncapitalize
         - [ ] to_string: value to string
