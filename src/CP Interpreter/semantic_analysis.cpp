@@ -660,6 +660,7 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 
 		if (!match_type(declared_variable->type, col_type.type)
 			&& !match_type(declared_variable->type, col_type.array_type)
+			&& is_char(declared_variable->type) && !is_string(col_type.type)
 			&& !is_any(declared_variable->type)
 			&& !is_any(col_type.type)
 			&& !is_any(col_type.array_type)) {
