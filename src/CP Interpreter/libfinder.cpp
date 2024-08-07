@@ -8,9 +8,8 @@ using namespace visitor;
 using namespace parser;
 
 LibFinder::LibFinder(ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
-	: cp_root(axe::PathUtils::get_current_path() + "libs"),
-	libs(std::vector<std::string>()), lib_names(std::vector<std::string>()),
-	Visitor(programs, main_program, main_program->name) {};
+	: Visitor(programs, main_program, main_program->name),
+	libs(std::vector<std::string>()), lib_names(std::vector<std::string>()) {};
 
 void LibFinder::start() {
 	visit(current_program);

@@ -8,6 +8,8 @@ fun new_person(name, age): axe::Person {
     return axe::Person{name=name, age=age};
 }
 
+using tests;
+
 if (this == "main") {
     var numbers: list::List = list::create();
     

@@ -11,20 +11,20 @@ int main(int argc, const char* argv[]) {
 	}
 
 	std::vector<std::string> files;
-	std::string root = "";
+	std::string project_root = "";
 	for (size_t i = 1; i < argc; ++i) {
 		if (argv[i] == "-d" || argv[i] == "--debug") {
 			debug = true;
 			continue;
 		}
-		if (root == "") {
-			root = argv[i];
+		if (project_root == "") {
+			project_root = argv[i];
 			continue;
 		}
 		files.push_back(argv[i]);
 	}
 
-	auto interpreter = CPInterpreter(root, std::move(files));
+	auto interpreter = CPInterpreter(project_root, std::move(files));
 
 	auto sw = axe::ChronoStopwatch();
 	sw.start();

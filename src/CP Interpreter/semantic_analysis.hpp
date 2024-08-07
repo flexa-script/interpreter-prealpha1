@@ -13,6 +13,12 @@
 using namespace visitor;
 using namespace parser;
 
+namespace modules {
+	class Graphics;
+	class Files;
+	class Console;
+}
+
 namespace visitor {
 
 	class SemanticAnalyser : Visitor {

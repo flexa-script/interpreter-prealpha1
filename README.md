@@ -184,7 +184,7 @@
     - [ ] Util?
 
 ## Improvements from existent resources
-- [ ] Automatically find and load included libs without to send by command line arguments
+- [X] Automatically find and load included libs without to send by command line arguments
 
 ## Known bugs
 - [X] Fix references

@@ -8,7 +8,6 @@ namespace visitor {
 
 	class LibFinder : Visitor {
 	public:
-		std::string cp_root;
 		std::vector<std::string> lib_names;
 
 	private:

@@ -13,27 +13,37 @@
 #include "cpinterpreter.hpp"
 #include "libfinder.hpp"
 
-CPInterpreter::CPInterpreter(const std::string& root, std::vector<std::string>&& files)
-	: root(root), files(std::move(files)) {}
+CPInterpreter::CPInterpreter(const std::string& project_root, std::vector<std::string>&& files)
+	: project_root(axe::PathUtils::normalize_path_sep(project_root)),
+	cp_root(axe::PathUtils::normalize_path_sep(axe::PathUtils::get_current_path() + "libs")),
+	files(std::move(files)) {}
 
 int CPInterpreter::execute() {
-	//axe::PathUtils::get_current_path() + "libs"
-	//root
 	if (files.size() > 0) {
-		auto programs = load_programs(root, files);
-		return interpreter(programs);
+		return interpreter();
 	}
 
 	return 0;
 }
 
-std::vector<CPSource> CPInterpreter::load_programs(const std::string& root, const std::vector<std::string>& files) {
+std::vector<CPSource> CPInterpreter::load_programs(const std::vector<std::string>& files) {
 	std::vector<CPSource> source_programs;
-	auto norm_root = axe::PathUtils::normalize_path_sep(root);
 
 	for (size_t i = 0; i < files.size(); ++i) {
-		auto program_path = norm_root + std::string{ std::filesystem::path::preferred_separator } + axe::PathUtils::normalize_path_sep(files[i]);
-		auto program = CPSource(CPUtil::get_lib_name(files[i]), CPUtil::load_source(program_path));
+		auto current_file_path = std::string{ std::filesystem::path::preferred_separator } + axe::PathUtils::normalize_path_sep(files[i]);
+		std::string current_full_path = "";
+
+		if (std::filesystem::exists(project_root + current_file_path)) {
+			current_full_path = project_root + current_file_path;
+		}
+		else if (std::filesystem::exists(cp_root + current_file_path)) {
+			current_full_path = cp_root + current_file_path;
+		}
+		else {
+
+		}
+
+		auto program = CPSource(CPUtil::get_lib_name(files[i]), CPUtil::load_source(current_full_path));
 		source_programs.push_back(program);
 	}
 
@@ -62,7 +72,9 @@ void CPInterpreter::parse_programs(const std::vector<CPSource>& source_programs,
 	}
 }
 
-int CPInterpreter::interpreter(const std::vector<CPSource>& source_programs) {
+int CPInterpreter::interpreter() {
+	const std::vector<CPSource>& source_programs = load_programs(files);
+
 	visitor::SemanticScope semantic_global_scope;
 	visitor::InterpreterScope interpreter_global_scope;
 
@@ -78,7 +90,7 @@ int CPInterpreter::interpreter(const std::vector<CPSource>& source_programs) {
 			cplibs_size = libfinder.lib_names.size();
 
 			if (cplibs_size > 0) {
-				auto cplib_programs = load_programs(libfinder.cp_root, libfinder.lib_names);
+				auto cplib_programs = load_programs(libfinder.lib_names);
 				parse_programs(cplib_programs, &main_program, &programs);
 			}
 		} while (cplibs_size > 0);
