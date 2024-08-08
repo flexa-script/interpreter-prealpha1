@@ -186,12 +186,13 @@ bool TypeDefinition::match_type_string(TypeDefinition ltype, TypeDefinition rtyp
 			!strict && is_text(rtype.type));
 }
 
-bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype, dim_eval_func_t evaluate_access_vector) {
+bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype, dim_eval_func_t evaluate_access_vector, bool strict, bool strict_array) {
 	TypeDefinition latype = TypeDefinition(ltype.array_type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), ltype.type_name, ltype.type_name_space);
 	TypeDefinition ratype = TypeDefinition(rtype.array_type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), rtype.type_name, rtype.type_name_space);
 
 	return is_array(ltype.type) && is_array(rtype.type)
-		&& is_any_or_match_type(&latype, latype, nullptr, ratype, evaluate_access_vector)
+		&& (strict_array && is_any_or_match_type(&latype, latype, nullptr, ratype, evaluate_access_vector, strict, strict_array) ||
+							match_type(latype, ratype, evaluate_access_vector, strict, strict_array))
 		&& match_array_dim(ltype, rtype, evaluate_access_vector);
 }
 

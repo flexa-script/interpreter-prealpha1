@@ -134,7 +134,9 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		new_value);
 
 	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, evaluate_access_vector_ptr)
-		&& !is_undefined(new_value->type)) {
+		&& !is_undefined(new_value->type) ||
+			is_array(new_var->type) && !is_any(new_var->array_type)
+		&& !TypeDefinition::match_type(*new_var, *new_value, evaluate_access_vector_ptr)) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
 
@@ -1012,7 +1014,8 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 			if (!match_type(current_expression_array_type, current_expression_value->type)
 				&& !is_any(current_expression_value->type) && !is_void(current_expression_value->type)
 				&& !is_array(current_expression_value->type)) {
-				throw std::runtime_error("invalid type in array subvalue assignment");
+				//throw std::runtime_error("invalid type in array subvalue assignment");
+				current_expression_array_type = Type::T_ANY;
 			}
 		}
 
