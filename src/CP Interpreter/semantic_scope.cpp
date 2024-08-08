@@ -62,6 +62,9 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 
 					if (it->second.parameters[i].is_rest) {
 						rest = true;
+						if (is_array(ftype.type)) {
+							ftype = TypeDefinition(ftype.array_type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), ftype.type_name, ftype.type_name_space);
+						}
 					}
 				}
 				stype = signature.at(i);

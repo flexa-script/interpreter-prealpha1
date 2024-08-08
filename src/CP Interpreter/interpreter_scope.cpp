@@ -116,6 +116,9 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 
 					if (std::get<3>(std::get<0>(it->second)[i])) {
 						rest = true;
+						if (is_array(ftype.type)) {
+							ftype = TypeDefinition(ftype.array_type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), ftype.type_name, ftype.type_name_space);
+						}
 					}
 				}
 				stype = signature.at(i);
