@@ -171,7 +171,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		astnode->row, astnode->col);
 
 	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, evaluate_access_vector_ptr)
-		&& !is_undefined(new_value->type)) {
+		&& astnode->expr && !is_undefined(new_value->type)) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
 	}
 

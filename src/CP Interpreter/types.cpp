@@ -140,23 +140,23 @@ TypeDefinition TypeDefinition::get_struct(const std::string& type_name, const st
 }
 
 bool TypeDefinition::is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype,
-	dim_eval_func_t evaluate_access_vector, bool strict) {
+	dim_eval_func_t evaluate_access_vector, bool strict, bool strict_array) {
 	if (lvtype && is_any(lvtype->type)
 		|| rvtype && is_any(rvtype->type)
 		|| is_any(ltype.type)
 		|| is_any(rtype.type)
 		|| is_void(ltype.type)
 		|| is_void(rtype.type)) return true;
-	return match_type(ltype, rtype, evaluate_access_vector, strict);
+	return match_type(ltype, rtype, evaluate_access_vector, strict, strict_array);
 }
 
-bool TypeDefinition::match_type(TypeDefinition ltype, TypeDefinition rtype, dim_eval_func_t evaluate_access_vector, bool strict) {
+bool TypeDefinition::match_type(TypeDefinition ltype, TypeDefinition rtype, dim_eval_func_t evaluate_access_vector, bool strict, bool strict_array) {
 	if (match_type_bool(ltype, rtype)) return true;
 	if (match_type_int(ltype, rtype)) return true;
 	if (match_type_float(ltype, rtype, strict)) return true;
 	if (match_type_char(ltype, rtype)) return true;
 	if (match_type_string(ltype, rtype, strict)) return true;
-	if (match_type_array(ltype, rtype, evaluate_access_vector)) return true;
+	if (match_type_array(ltype, rtype, evaluate_access_vector, strict, strict_array)) return true;
 	if (match_type_struct(ltype, rtype)) return true;
 	if (match_type_function(ltype, rtype)) return true;
 	return false;
@@ -191,7 +191,7 @@ bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype
 	TypeDefinition ratype = TypeDefinition(rtype.array_type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), rtype.type_name, rtype.type_name_space);
 
 	return is_array(ltype.type) && is_array(rtype.type)
-		&& (strict_array && is_any_or_match_type(&latype, latype, nullptr, ratype, evaluate_access_vector, strict, strict_array) ||
+		&& (!strict_array && is_any_or_match_type(&latype, latype, nullptr, ratype, evaluate_access_vector, strict, strict_array) ||
 							match_type(latype, ratype, evaluate_access_vector, strict, strict_array))
 		&& match_array_dim(ltype, rtype, evaluate_access_vector);
 }
