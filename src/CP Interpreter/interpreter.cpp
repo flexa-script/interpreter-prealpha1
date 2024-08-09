@@ -182,29 +182,39 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 
 	astnode->expr->accept(this);
 
-	if (current_expression_value->use_ref && astnode->op == "=" && astnode->identifier_vector.size() == 1 && !has_string_access) {
-		if (!TypeDefinition::is_any_or_match_type(variable, *variable, nullptr, *current_expression_value, evaluate_access_vector_ptr) ||
+	auto ptr_value = current_expression_value;
+	Value* new_value = nullptr;
+
+	if (astnode->op == "="
+		&& astnode->identifier_vector.size() == 1
+		&& astnode->identifier_vector[0].access_vector.size() == 0
+		&& !has_string_access) {
+		if (!TypeDefinition::is_any_or_match_type(variable, *variable, nullptr, *ptr_value, evaluate_access_vector_ptr) ||
 			is_array(variable->type) && !is_any(variable->array_type)
-			&& !TypeDefinition::match_type(*variable, *current_expression_value, evaluate_access_vector_ptr, false, true)) {
-			ExceptionHandler::throw_mismatched_type_err(variable->type, current_expression_value->type);
+			&& !TypeDefinition::match_type(*variable, *ptr_value, evaluate_access_vector_ptr, false, true)) {
+			ExceptionHandler::throw_mismatched_type_err(variable->type, ptr_value->type);
 		}
-		variable->set_value(current_expression_value);
-		return;
+		if (!ptr_value->use_ref) {
+			new_value = new Value(ptr_value);
+		}
+		variable->set_value(ptr_value);
 	}
+	else {
+		new_value = new Value(ptr_value);
 
-	auto new_value = new Value(current_expression_value);
-	if (astnode->identifier_vector.size() == 1 && astnode->identifier_vector[0].access_vector.size() == 0) {
-		variable->set_value(new Value(variable->get_value()));
-		value = variable->get_value();
+		if (astnode->identifier_vector.size() == 1 && astnode->identifier_vector[0].access_vector.size() == 0) {
+			variable->set_value(new Value(variable->get_value()));
+			value = variable->get_value();
+		}
+
+		cp_int pos = 0;
+		if (has_string_access) {
+			astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
+			pos = new_value->i;
+		}
+
+		do_operation(astnode->op, value, new_value, false, pos);
 	}
-
-	cp_int pos = 0;
-	if (has_string_access) {
-		astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
-		pos = current_expression_value->i;
-	}
-
-	do_operation(astnode->op, value, new_value, false, pos);
 }
 
 void Interpreter::visit(ASTReturnNode* astnode) {
@@ -1897,8 +1907,10 @@ std::string Interpreter::parse_struct_to_string(const cp_struct& str_value) {
 
 Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr, cp_int str_pos) {
 	Type l_var_type = lval->ref ? lval->ref->type : lval->type;
+	Type l_var_array_type = lval->ref ? lval->ref->array_type : lval->array_type;
 	Type l_type = is_undefined(lval->type) ? l_var_type : lval->type;
 	Type r_var_type = rval->ref ? rval->ref->type : rval->type;
+	Type r_var_array_type = rval->ref ? rval->ref->array_type : rval->array_type;
 	Type r_type = rval->type;
 
 	if (is_void(r_type) && op == "=") {
@@ -2143,7 +2155,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		bool match_arr_t = lval->array_type == rval->array_type;
-		if (!match_arr_t && !is_any(r_var_type)) {
+		if (!match_arr_t && !is_any(l_var_array_type)) {
 			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
 		}
 
@@ -2336,8 +2348,11 @@ cp_array Interpreter::do_operation(cp_array lval, cp_array rval, const std::stri
 		return rval;
 	}
 	else if (op == "+=" || op == "+") {
-		std::merge(lval.begin(), lval.end(), rval.begin(), rval.end(), lval.begin());
-		return lval;
+		std::sort(lval.begin(), lval.end());
+		std::sort(rval.begin(), rval.end());
+		cp_array result(lval.size() + rval.size());
+		std::merge(lval.begin(), lval.end(), rval.begin(), rval.end(), result.begin());
+		return result;
 	}
 	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");
 }
