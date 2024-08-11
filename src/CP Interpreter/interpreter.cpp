@@ -780,9 +780,7 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 	const auto& nmspace = get_namespace();
 
 	try {
-		scopes[nmspace].push_back(new InterpreterScope(""));
 		astnode->try_block->accept(this);
-		scopes[nmspace].pop_back();
 	}
 	catch (std::exception ex) {
 		scopes[nmspace].push_back(new InterpreterScope(""));

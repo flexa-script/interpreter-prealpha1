@@ -708,9 +708,7 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 
 	const auto& nmspace = get_namespace();
 
-	scopes[nmspace].push_back(new SemanticScope());
 	astnode->try_block->accept(this);
-	scopes[nmspace].pop_back();
 
 	scopes[nmspace].push_back(new SemanticScope());
 
@@ -1477,6 +1475,12 @@ SemanticValue* SemanticAnalyser::access_value(SemanticValue* value, const std::v
 		if (access_vector.size() == value->dim.size()) {
 			next_value = new SemanticValue(next_value->array_type, Type::T_UNDEFINED,
 				std::vector<ASTExprNode*>(), next_value->type_name, next_value->type_name_space,
+				0, false, next_value->row, next_value->col);
+		}
+		else if (access_vector.size() - 1 == value->dim.size()
+			&& is_string(next_value->type)) {
+			next_value = new SemanticValue(Type::T_CHAR, Type::T_UNDEFINED,
+				std::vector<ASTExprNode*>(), "", "",
 				0, false, next_value->row, next_value->col);
 		}
 	}

@@ -27,3 +27,11 @@ var bls = `This ${x}`;
 println('<', bls, '>');
 bls = `${x}`;
 println('<', bls, '>');
+
+var v = `
+  Array size: ${len({0,`
+ 1 ${{7,3,2}}
+ `,2})}
+`;
+
+println(v);
