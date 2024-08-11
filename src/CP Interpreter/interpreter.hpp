@@ -42,13 +42,12 @@ namespace visitor {
 		std::stack<TypeDefinition> current_function_return_type;
 		std::stack<std::string> current_this_name;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
-		bool is_function_context = false;
-		bool return_from_function = false;
-		bool is_switch = false;
-		bool is_loop = false;
-		bool exit_from_program = false;
+		size_t is_switch = 0;
+		size_t is_loop = 0;
 		bool continue_block = false;
 		bool break_block = false;
+		bool return_from_function = false;
+		bool exit_from_program = false;
 		bool executed_elif = false;
 		bool has_string_access = false;
 		bool exception = false;

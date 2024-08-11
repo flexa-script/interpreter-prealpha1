@@ -327,7 +327,6 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	auto declfun = func_scope->find_declared_function(identifier, signature, evaluate_access_vector_ptr, strict);
 
 	current_function_defined_parameters.push(std::get<0>(declfun));
-	is_function_context = true;
 
 	current_this_name.push(identifier);
 	current_function_signature.push(signature);
@@ -350,8 +349,6 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	current_function_signature.pop();
 	current_function_nmspace.pop();
 	current_this_name.pop();
-
-	is_function_context = false;
 }
 
 void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
@@ -441,7 +438,6 @@ void Interpreter::visit(ASTExitNode* astnode) {
 void Interpreter::visit(ASTContinueNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	astnode->accept(this);
 	continue_block = true;
 }
 
@@ -455,7 +451,7 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
-	is_switch = true;
+	++is_switch;
 
 	scopes[nmspace].push_back(new InterpreterScope(""));
 
@@ -509,7 +505,7 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 	}
 
 	scopes[nmspace].pop_back();
-	is_switch = false;
+	--is_switch;
 }
 
 void Interpreter::visit(ASTElseIfNode* astnode) {
@@ -564,7 +560,7 @@ void Interpreter::visit(ASTForNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
-	is_loop = true;
+	++is_loop;
 	scopes[nmspace].push_back(new InterpreterScope(""));
 
 	if (astnode->dci[0]) {
@@ -624,14 +620,14 @@ void Interpreter::visit(ASTForNode* astnode) {
 	}
 
 	scopes[nmspace].pop_back();
-	is_loop = false;
+	--is_loop;
 }
 
 void Interpreter::visit(ASTForEachNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
-	is_loop = true;
+	++is_loop;
 
 	astnode->collection->accept(this);
 
@@ -771,7 +767,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 
 	scopes[nmspace].pop_back();
 
-	is_loop = false;
+	--is_loop;
 }
 
 void Interpreter::visit(ASTTryCatchNode* astnode) {
@@ -860,7 +856,7 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 
 	const auto& nmspace = get_namespace();
 
-	is_loop = true;
+	++is_loop;
 
 	astnode->condition->accept(this);
 
@@ -879,7 +875,7 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 
 		if (continue_block) {
 			continue_block = false;
-			continue;
+			//continue;
 		}
 
 		if (break_block) {
@@ -900,7 +896,7 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 		result = current_expression_value->b;
 	}
 
-	is_loop = false;
+	--is_loop;
 }
 
 void Interpreter::visit(ASTDoWhileNode* astnode) {
@@ -908,7 +904,7 @@ void Interpreter::visit(ASTDoWhileNode* astnode) {
 
 	const auto& nmspace = get_namespace();
 
-	is_loop = true;
+	++is_loop;
 
 	bool result = false;
 
@@ -921,7 +917,7 @@ void Interpreter::visit(ASTDoWhileNode* astnode) {
 
 		if (continue_block) {
 			continue_block = false;
-			continue;
+			//continue;
 		}
 
 		if (break_block) {
@@ -942,7 +938,7 @@ void Interpreter::visit(ASTDoWhileNode* astnode) {
 		result = current_expression_value->b;
 	} while (result);
 
-	is_loop = false;
+	--is_loop;
 }
 
 void Interpreter::visit(ASTStructDefinitionNode* astnode) {
@@ -1055,6 +1051,9 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	current_expression_value->dim = current_expression_array_dim_aux;
 
 	if (current_expression_array_dim_max == 0) {
+		if (is_undefined(current_expression_value->array_type)) {
+			current_expression_value->array_type = Type::T_ANY;
+		}
 		current_expression_array_dim.clear();
 	}
 }

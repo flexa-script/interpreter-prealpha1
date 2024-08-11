@@ -654,6 +654,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition(const std::string& 
 		consume_token();
 		dim_vector = parse_dimension_vector();
 		if (dim_vector.size() > 0) {
+			array_type = type;
 			type = Type::T_ARRAY;
 			consume_token();
 		}

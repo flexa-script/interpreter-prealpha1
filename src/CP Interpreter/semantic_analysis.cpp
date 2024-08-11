@@ -354,7 +354,7 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 	if (astnode->block) {
 		auto has_return = returns(astnode->block);
 		auto type = is_void(astnode->type) && has_return ? Type::T_ANY : astnode->type;
-		auto array_type = (is_void(astnode->array_type) || is_undefined(astnode->array_type)) && has_return ? Type::T_ANY : astnode->type;
+		auto array_type = (is_void(astnode->array_type) || is_undefined(astnode->array_type)) && has_return ? Type::T_ANY : astnode->array_type;
 
 		if (astnode->identifier != "") {
 			scopes[nmspace].back()->declare_function(astnode->identifier, type, astnode->type_name, astnode->type_name_space,
@@ -918,6 +918,9 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	current_expression.dim = current_expression_array_dim_aux;
 
 	if (current_expression_array_dim_max == 0) {
+		if (is_undefined(current_expression.array_type)) {
+			current_expression.array_type = Type::T_ANY;
+		}
 		current_expression_array_dim.clear();
 	}
 }
