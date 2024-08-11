@@ -1418,18 +1418,23 @@ ASTArrayConstructorNode* Parser::parse_array_constructor_node() {
 	unsigned int col = current_token.col;
 	std::vector<ASTExprNode*> values = std::vector<ASTExprNode*>();
 
-	do {
-		consume_token();
-		values.push_back(parse_expression());
+	if (next_token.type != TOK_RIGHT_CURLY) {
+		do {
+			consume_token();
+			values.push_back(parse_expression());
 
-		consume_token();
+			consume_token();
 
-	} while (next_token.type == TOK_LEFT_CURLY || next_token.type == TOK_NULL
-		|| next_token.type == TOK_BOOL_LITERAL || next_token.type == TOK_INT_LITERAL
-		|| next_token.type == TOK_IDENTIFIER || next_token.type == TOK_FLOAT_LITERAL
-		|| next_token.type == TOK_CHAR_LITERAL || next_token.type == TOK_STRING_LITERAL);
+		} while (next_token.type == TOK_LEFT_CURLY || next_token.type == TOK_NULL
+			|| next_token.type == TOK_BOOL_LITERAL || next_token.type == TOK_INT_LITERAL
+			|| next_token.type == TOK_IDENTIFIER || next_token.type == TOK_FLOAT_LITERAL
+			|| next_token.type == TOK_CHAR_LITERAL || next_token.type == TOK_STRING_LITERAL);
 
-	check_current_token(TOK_RIGHT_CURLY);
+		check_current_token(TOK_RIGHT_CURLY);
+	}
+	else {
+		consume_token(TOK_RIGHT_CURLY);
+	}
 
 	return new ASTArrayConstructorNode(values, row, col);
 }

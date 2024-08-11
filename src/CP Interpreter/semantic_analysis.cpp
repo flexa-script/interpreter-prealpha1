@@ -891,7 +891,6 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 			if (!match_type(current_expression_array_type, current_expression.type)
 				&& !is_any(current_expression.type) && !is_void(current_expression.type)
 				&& !is_array(current_expression.type)) {
-				//throw std::runtime_error("invalid type in array subvalue assignment");
 				current_expression_array_type = Type::T_ANY;
 			}
 		}
