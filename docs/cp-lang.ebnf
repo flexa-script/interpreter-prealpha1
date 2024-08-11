@@ -33,7 +33,7 @@ as_namespace          = "as" "namespace" identifier
 
 block                 = "{" { statement } "}"
 
-function_decl         = "def" identifier "(" [ formal_params ] ")" [ ":" def_type ] block
+function_decl         = "fun" identifier "(" [ formal_params ] ")" [ ":" def_type ] block
 
 struct_decl           = "struct" identifier "{" { formal_params } "}"
 
