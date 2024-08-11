@@ -40,7 +40,7 @@ std::vector<CPSource> CPInterpreter::load_programs(const std::vector<std::string
 			current_full_path = cp_root + current_file_path;
 		}
 		else {
-
+			throw std::runtime_error("file not found: '" + current_file_path + "'");
 		}
 
 		auto program = CPSource(CPUtil::get_lib_name(files[i]), CPUtil::load_source(current_full_path));
