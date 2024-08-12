@@ -137,6 +137,9 @@
 - [X] Automatically find and load included libs without to send by command line arguments
 
 ## Known bugs
+- [ ] Some function definition are not being found:
+    - [ ] `var arr = {1, 2, 3, 4, 5, 6}` X `fun arr_size(arr[])`
+    - [ ] `var arr = {1, 2, 3, 4, 5, 6}` X `fun arr_size(arr[])`
 - [X] Undefined variables cant be assigned
 - [X] Array items cant verified correctly
 - [ ] Check behaviour of rest arrays and why join and print haven't the same signature

@@ -77,6 +77,10 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector_ptr, bool strict) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
+	if (identifier == "contains") {
+		std::cout << "tentou buscar\n";
+	}
+
 	if (std::distance(funcs.first, funcs.second) == 0) {
 		throw std::runtime_error("something went wrong searching '" + identifier + "'");
 	}
@@ -109,8 +113,8 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 
 		// if function signature is lesser than signature call, handle rest case
 		found = true;
-		if (func_sig_size < call_sig_size) {
-			for (size_t i = 0; i < func_params.size(); ++i) {
+		if (func_sig_size >= 1 && func_sig_size < call_sig_size) {
+			for (size_t i = 0; i < call_sig_size; ++i) {
 				if (!rest) {
 					ftype = std::get<1>(func_params.at(i));
 

@@ -55,7 +55,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 
 		// if function signature is lesser than signature call, handle rest case
 		found = true;
-		if (func_sig_size < call_sig_size) {
+		if (func_sig_size >= 1 && func_sig_size < call_sig_size) {
 			for (size_t i = 0; i < call_sig_size; ++i) {
 				if (!rest) {
 					ftype = func_sig.at(i);
