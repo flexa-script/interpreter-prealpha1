@@ -77,10 +77,6 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector_ptr, bool strict) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
-	if (identifier == "contains") {
-		std::cout << "tentou buscar\n";
-	}
-
 	if (std::distance(funcs.first, funcs.second) == 0) {
 		throw std::runtime_error("something went wrong searching '" + identifier + "'");
 	}

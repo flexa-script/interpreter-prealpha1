@@ -268,10 +268,6 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	if (astnode->identifier == "contains") {
-		std::cout << "inicio\n";
-	}
-
 	std::string nmspace = get_namespace(astnode->nmspace);
 	std::string identifier = astnode->identifier;
 	std::vector<Identifier> identifier_vector = astnode->identifier_vector;
@@ -297,24 +293,15 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 
 	InterpreterScope* func_scope;
 	try {
-		if (astnode->identifier == "contains") {
-			std::cout << "vai buscar strict\n";
-		}
 		func_scope = get_inner_most_function_scope(nmspace, identifier, signature, strict);
 	}
 	catch (...) {
 		try {
-			if (astnode->identifier == "contains") {
-				std::cout << "vai buscar não strict\n";
-			}
 			strict = false;
 			func_scope = get_inner_most_function_scope(nmspace, identifier, signature, strict);
 		}
 		catch (...) {
 			try {
-				if (astnode->identifier == "contains") {
-					std::cout << "vai buscar variavel\n";
-				}
 				auto var_scope = get_inner_most_variable_scope(nmspace, identifier);
 				auto var = var_scope->find_declared_variable(identifier);
 				nmspace = var->value->fun.first;
@@ -323,9 +310,6 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 				func_scope = get_inner_most_function_scope(nmspace, identifier, signature, strict);
 			}
 			catch (...) {
-				if (astnode->identifier == "contains") {
-					std::cout << "nao achou\n";
-				}
 				std::string func_name = identifier + "(";
 				for (const auto& param : signature) {
 					func_name += type_str(param.type) + ", ";
@@ -339,9 +323,6 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 				throw std::runtime_error("function '" + func_name + "' was never declared");
 			}
 		}
-	}
-	if (astnode->identifier == "contains") {
-		std::cout << "vai buscar declaracao\n";
 	}
 	auto declfun = func_scope->find_declared_function(identifier, signature, evaluate_access_vector_ptr, strict);
 
