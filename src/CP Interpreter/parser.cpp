@@ -716,10 +716,10 @@ ASTExprNode* Parser::parse_ternary_expression() {
 		ASTExprNode* value_if_false;
 		consume_token();
 		consume_token();
-		value_if_true = parse_expression();
+		value_if_true = parse_ternary_expression();
 		consume_token(TOK_COLON);
 		consume_token();
-		value_if_false = parse_expression();
+		value_if_false = parse_ternary_expression();
 		return new ASTTernaryNode(expr, value_if_true, value_if_false, row, col);
 	}
 
@@ -735,7 +735,7 @@ ASTExprNode* Parser::parse_in_expression() {
 		ASTExprNode* collection;
 		consume_token();
 		consume_token();
-		collection = parse_expression();
+		collection = parse_logical_or_expression();
 		return new ASTInNode(expr, collection, row, col);
 	}
 
