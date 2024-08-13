@@ -66,6 +66,11 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 							ftype = TypeDefinition(ftype.array_type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), ftype.type_name, ftype.type_name_space);
 						}
 					}
+
+					if (!it->second.parameters[i].is_rest && i == func_sig.size() -1) {
+						found = false;
+						break;
+					}
 				}
 				stype = signature.at(i);
 

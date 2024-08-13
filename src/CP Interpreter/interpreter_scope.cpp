@@ -120,6 +120,11 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 							ftype = TypeDefinition(ftype.array_type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), ftype.type_name, ftype.type_name_space);
 						}
 					}
+
+					if (!std::get<3>(std::get<0>(it->second)[i]) && i == func_params.size() - 1) {
+						found = false;
+						break;
+					}
 				}
 				stype = signature.at(i);
 
