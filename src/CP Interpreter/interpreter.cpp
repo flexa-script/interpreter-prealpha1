@@ -145,14 +145,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		new_value->arr = arr;
 	}
 
-	if (is_string(new_var->type) && is_char(new_value->type)) {
-		new_value->type = new_var->type;
-		new_value->s = new_value->c;
-	}
-	else if (is_float(new_var->type) && is_int(new_value->type)) {
-		new_value->type = new_var->type;
-		new_value->f = new_value->i;
-	}
+	normalize_type(new_var, new_value);
 
 	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
 }
@@ -197,7 +190,13 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		if (!ptr_value->use_ref) {
 			new_value = new Value(ptr_value);
 		}
-		variable->set_value(ptr_value);
+		else {
+			new_value = ptr_value;
+		}
+
+		normalize_type(variable, new_value);
+
+		variable->set_value(new_value);
 	}
 	else {
 		new_value = new Value(ptr_value);
@@ -212,6 +211,8 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 			astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
 			pos = new_value->i;
 		}
+
+		normalize_type(variable, new_value);
 
 		do_operation(astnode->op, value, new_value, false, pos);
 	}
@@ -2351,6 +2352,17 @@ cp_array Interpreter::do_operation(cp_array lval, cp_array rval, const std::stri
 		return result;
 	}
 	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");
+}
+
+void Interpreter::normalize_type(Variable* var, Value* val) {
+	if (is_string(var->type) && is_char(val->type)) {
+		val->type = var->type;
+		val->s = val->c;
+	}
+	else if (is_float(var->type) && is_int(val->type)) {
+		val->type = var->type;
+		val->f = val->i;
+	}
 }
 
 long long Interpreter::hash(ASTExprNode* astnode) {
