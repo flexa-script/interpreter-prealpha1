@@ -1,11 +1,15 @@
-#include "cprepl.hpp"
+﻿#include "cprepl.hpp"
 #include "cpinterpreter.hpp"
 #include "vendor/axewatch.hpp"
+
+#include <Windows.h>
 
 int main(int argc, const char* argv[]) {
 	bool debug = false;
 	int result = 0;
 
+	SetConsoleOutputCP(CP_UTF8);
+	
 	if (argc == 1) {
 		return CPRepl::execute();
 	}
