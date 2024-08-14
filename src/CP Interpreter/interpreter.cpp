@@ -2494,7 +2494,12 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 				}
 			}
 			else {
-				curr_scope->declare_variable(pname, new Variable(current_value));
+				if (current_value->use_ref && current_value->ref) {
+					curr_scope->declare_variable(pname, current_value->ref);
+				}
+				else {
+					curr_scope->declare_variable(pname, new Variable(current_value));
+				}
 			}
 
 			// is rest
