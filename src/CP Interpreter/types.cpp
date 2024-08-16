@@ -391,7 +391,7 @@ Value::Value(cp_array rawv, Type array_type) {
 	set(rawv, array_type);
 }
 
-Value::Value(cp_struct* rawv) {
+Value::Value(cp_struct rawv) {
 	set(rawv);
 }
 
@@ -454,7 +454,7 @@ void Value::set(cp_array arr, Type array_type) {
 	this->array_type = array_type;
 }
 
-void Value::set(cp_struct* str) {
+void Value::set(cp_struct str) {
 	this->str = str;
 	type = Type::T_STRUCT;
 	array_type = Type::T_UNDEFINED;
@@ -495,16 +495,13 @@ void Value::copy_array(cp_array arr) {
 	}
 }
 
-void Value::copy_struct(cp_struct* str) {
-	this->str = new cp_struct();
-	if (!str) {
-		return;
-	}
-	std::get<0>(*this->str) = std::get<0>(*str);
-	std::get<1>(*this->str) = std::get<1>(*str);
-	for (const auto& ca : std::get<2>(*str)) {
+void Value::copy_struct(cp_struct str) {
+	this->str = cp_struct();
+	std::get<0>(this->str) = std::get<0>(str);
+	std::get<1>(this->str) = std::get<1>(str);
+	for (const auto& ca : std::get<2>(str)) {
 		auto val = std::pair<std::string, Value*>(ca.first, new Value(ca.second));
-		std::get<2>(*this->str).emplace(val);
+		std::get<2>(this->str).emplace(val);
 	}
 }
 

@@ -1045,6 +1045,7 @@ ASTNode* Parser::parse_identifier_statement() {
 		return parse_increment_expression(identifier);
 
 	case TOK_ADDITIVE_OP:
+	case TOK_MULTIPLICATIVE_OP:
 	case TOK_EQUALS:
 		return parse_assignment_statement(identifier);
 

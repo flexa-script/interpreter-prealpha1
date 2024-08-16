@@ -204,7 +204,7 @@ public:
 	cp_char c = '\0';
 	cp_string s;
 	cp_array arr;
-	cp_struct* str = nullptr;
+	cp_struct str;
 	cp_function fun;
 	Variable* ref = nullptr;
 
@@ -217,7 +217,7 @@ public:
 	Value(cp_char);
 	Value(cp_string);
 	Value(cp_array, Type);
-	Value(cp_struct*);
+	Value(cp_struct);
 	Value(cp_function);
 	Value(Variable*);
 	Value(Type type);
@@ -233,7 +233,7 @@ public:
 	void set(cp_char);
 	void set(cp_string);
 	void set(cp_array, Type);
-	void set(cp_struct*);
+	void set(cp_struct);
 	void set(cp_function);
 
 	void set_null();
@@ -245,7 +245,7 @@ public:
 	bool has_value();
 
 	void copy_array(cp_array arr);
-	void copy_struct(cp_struct* str);
+	void copy_struct(cp_struct str);
 	void copy_from(Value* value);
 
 	bool equals_array(cp_array arr);

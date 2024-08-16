@@ -177,6 +177,12 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 
 	auto ptr_value = current_expression_value;
 	Value* new_value = nullptr;
+	if (ptr_value->use_ref) {
+		new_value = ptr_value;
+	}
+	else {
+		new_value = new Value(ptr_value);
+	}
 
 	if (astnode->op == "="
 		&& astnode->identifier_vector.size() == 1
@@ -187,20 +193,12 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 			&& !TypeDefinition::match_type(*variable, *ptr_value, evaluate_access_vector_ptr, false, true)) {
 			ExceptionHandler::throw_mismatched_type_err(variable->type, ptr_value->type);
 		}
-		if (!ptr_value->use_ref) {
-			new_value = new Value(ptr_value);
-		}
-		else {
-			new_value = ptr_value;
-		}
 
 		normalize_type(variable, new_value);
 
 		variable->set_value(new_value);
 	}
 	else {
-		new_value = new Value(ptr_value);
-
 		if (astnode->identifier_vector.size() == 1 && astnode->identifier_vector[0].access_vector.size() == 0) {
 			variable->set_value(new Value(variable->get_value()));
 			value = variable->get_value();
@@ -224,6 +222,10 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 	const auto& nmspace = get_namespace();
 	auto& curr_func_ret_type = current_function_return_type.top();
 	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, current_function_signature.top());
+
+	if (current_function_call_identifier_vector.top()[0].identifier == "create_collection") {
+		int x = 0;
+	}
 
 	astnode->expr->accept(this);
 	Value* value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
@@ -364,6 +366,9 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 	}
 
 	if (astnode->identifier != "") {
+		if (astnode->identifier == "create_collection") {
+			int x = 0;
+		}
 		scopes[nmspace].back()->declare_function(astnode->identifier, params, astnode->block, *astnode);
 	}
 }
@@ -702,7 +707,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		break;
 	}
 	case Type::T_STRUCT: {
-		const auto& colletion = std::get<2>(*current_expression_value->str);
+		const auto& colletion = std::get<2>(current_expression_value->str);
 		for (const auto& val : colletion) {
 			astnode->itdecl->accept(this);
 
@@ -715,11 +720,11 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 						+ "' declaration in foreach loop");
 				}
 
-				auto str = new cp_struct();
-				std::get<0>(*str) = "cp";
-				std::get<1>(*str) = "Pair";
-				std::get<2>(*str)["key"] = new Value(cp_string(val.first));
-				std::get<2>(*str)["value"] = val.second;
+				auto str = cp_struct();
+				std::get<0>(str) = "cp";
+				std::get<1>(str) = "Pair";
+				std::get<2>(str)["key"] = new Value(cp_string(val.first));
+				std::get<2>(str)["value"] = val.second;
 
 				set_value(
 					scopes[nmspace].back(),
@@ -803,10 +808,10 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 			}
 
 			Value* value = new Value(Type::T_STRUCT);
-			value->str = new cp_struct();
-			std::get<0>(*value->str) = "cp";
-			std::get<1>(*value->str) = "Exception";
-			std::get<2>(*value->str)["error"] = new Value(cp_string(ex.what()));
+			value->str = cp_struct();
+			std::get<0>(value->str) = "cp";
+			std::get<1>(value->str) = "Exception";
+			std::get<2>(value->str)["error"] = new Value(cp_string(ex.what()));
 
 			current_expression_value->ref->set_value(value);
 		}
@@ -833,7 +838,7 @@ void Interpreter::visit(parser::ASTThrowNode* astnode) {
 			throw std::runtime_error("struct 'cp::Exception' not found");
 		}
 
-		throw std::exception(std::get<2>(*current_expression_value->str)["error"]->s.c_str());
+		throw std::exception(std::get<2>(current_expression_value->str)["error"]->s.c_str());
 	}
 	else if (is_string(current_expression_value->type)) {
 		throw std::runtime_error(current_expression_value->s);
@@ -1074,10 +1079,10 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 
 	auto value = new Value(Type::T_STRUCT);
 
-	auto str = new cp_struct();
-	std::get<0>(*str) = astnode->nmspace;
-	std::get<1>(*str) = astnode->type_name;
-	std::get<2>(*str) = cp_struct_values();
+	auto str = cp_struct();
+	std::get<0>(str) = astnode->nmspace;
+	std::get<1>(str) = astnode->type_name;
+	std::get<2>(str) = cp_struct_values();
 
 	for (auto& expr : astnode->values) {
 		if (type_struct.variables.find(expr.first) == type_struct.variables.end()) {
@@ -1091,9 +1096,14 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 			ExceptionHandler::throw_struct_type_err(astnode->type_name, var_type_struct.type);
 		}
 
-		auto str_value = new Value(current_expression_value->type);
-		str_value->copy_from(current_expression_value);
-		std::get<2>(*str)[expr.first] = str_value;
+		Value* str_value = nullptr;
+		if (current_expression_value->use_ref) {
+			str_value = current_expression_value;
+		}
+		else {
+			str_value = new Value(current_expression_value);
+		}
+		std::get<2>(str)[expr.first] = str_value;
 	}
 
 	declare_structure(str, astnode->nmspace);
@@ -1152,9 +1162,9 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 				}
 			}
 			type = Type::T_STRUCT;
-			auto str = new cp_struct();
-			std::get<0>(*str) = nmspace;
-			std::get<1>(*str) = astnode->identifier;
+			auto str = cp_struct();
+			std::get<0>(str) = nmspace;
+			std::get<1>(str) = astnode->identifier;
 			expression_value->set(str);
 		}
 
@@ -1503,10 +1513,10 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 			for (size_t i = 0; i < dim.size() - 1; ++i) {
 				arr = arr->arr[0];
 			}
-			str_type = std::get<1>(*arr->str);
+			str_type = std::get<1>(arr->str);
 		}
 		else {
-			str_type = std::get<1>(*curr_value->str);
+			str_type = std::get<1>(curr_value->str);
 		}
 	}
 
@@ -1516,8 +1526,8 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 		}
 	}
 
-	if (is_struct(type) && !std::get<0>(*curr_value->str).empty()) {
-		str_type = std::get<0>(*curr_value->str) + "::" + str_type;
+	if (is_struct(type) && !std::get<0>(curr_value->str).empty()) {
+		str_type = std::get<0>(curr_value->str) + "::" + str_type;
 	}
 
 	if (astnode->image == "typeid") {
@@ -1533,6 +1543,10 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 }
 
 bool Interpreter::equals_value(const Value* lval, const Value* rval) {
+	if (lval->use_ref) {
+		return lval == rval;
+	}
+
 	switch (lval->type) {
 	case Type::T_VOID:
 		return is_void(rval->type);
@@ -1547,31 +1561,25 @@ bool Interpreter::equals_value(const Value* lval, const Value* rval) {
 	case Type::T_STRING:
 		return lval->s == rval->s;
 	case Type::T_ARRAY:
-		if (lval->use_ref) {
-			return lval->arr == rval->arr;
-		}
 		return equals_array(lval->arr, rval->arr);
 	case Type::T_STRUCT:
-		if (lval->use_ref) {
-			return lval->str == rval->str;
-		}
 		return equals_struct(lval->str, rval->str);
 	}
 	return false;
 }
 
-bool Interpreter::equals_struct(const cp_struct* lstr, const cp_struct* rstr) {
-	if (std::get<0>(*lstr) != std::get<0>(*rstr)
-		|| std::get<1>(*lstr) != std::get<1>(*rstr)
-		|| std::get<2>(*lstr).size() != std::get<2>(*rstr).size()) {
+bool Interpreter::equals_struct(const cp_struct& lstr, const cp_struct& rstr) {
+	if (std::get<0>(lstr) != std::get<0>(rstr)
+		|| std::get<1>(lstr) != std::get<1>(rstr)
+		|| std::get<2>(lstr).size() != std::get<2>(rstr).size()) {
 		return false;
 	}
 
-	for (auto& lval : std::get<2>(*lstr)) {
-		if (std::get<2>(*rstr).find(lval.first) == std::get<2>(*rstr).end()) {
+	for (auto& lval : std::get<2>(lstr)) {
+		if (std::get<2>(rstr).find(lval.first) == std::get<2>(rstr).end()) {
 			return false;
 		}
-		if (!equals_value(lval.second, std::get<2>(*rstr).at(lval.first))) {
+		if (!equals_value(lval.second, std::get<2>(rstr).at(lval.first))) {
 			return false;
 		}
 	}
@@ -1724,7 +1732,7 @@ Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, co
 			throw std::runtime_error("identifier '" + identifier_vector[i - 1].identifier + "' is null");
 		}
 
-		next_value = std::get<2>(*next_value->str)[identifier_vector[i].identifier];
+		next_value = std::get<2>(next_value->str)[identifier_vector[i].identifier];
 
 		if (identifier_vector[i].access_vector.size() > 0 || i < identifier_vector.size()) {
 			return access_value(scope, next_value, identifier_vector, i);
@@ -1788,22 +1796,22 @@ std::vector<unsigned int> Interpreter::calculate_array_dim_size(const cp_array& 
 	return dim;
 }
 
-void Interpreter::declare_structure(cp_struct* str, const std::string& nmspace) {
+void Interpreter::declare_structure(cp_struct& str, const std::string& nmspace) {
 	std::string actnmspace = get_namespace(nmspace);
 	InterpreterScope* curr_scope;
 	try {
-		curr_scope = get_inner_most_struct_definition_scope(get_namespace(actnmspace), std::get<1>(*str));
+		curr_scope = get_inner_most_struct_definition_scope(get_namespace(actnmspace), std::get<1>(str));
 	}
 	catch (std::exception ex) {
 		throw std::runtime_error(ex.what());
 	}
-	auto struct_def = curr_scope->find_declared_structure_definition(std::get<1>(*str));
+	auto struct_def = curr_scope->find_declared_structure_definition(std::get<1>(str));
 
 	for (auto& struct_var_def : struct_def.variables) {
-		if (std::get<2>(*str).find(struct_var_def.first) == std::get<2>(*str).end()) {
+		if (std::get<2>(str).find(struct_var_def.first) == std::get<2>(str).end()) {
 			Value* str_value = new Value(struct_var_def.second.type);
 			str_value->set_null();
-			std::get<2>(*str)[struct_var_def.first] = str_value;
+			std::get<2>(str)[struct_var_def.first] = str_value;
 		}
 	}
 }
@@ -1839,7 +1847,7 @@ std::string Interpreter::parse_value_to_string(const Value* value) {
 	case Type::T_STRING:
 		return value->s;
 	case Type::T_STRUCT:
-		return parse_struct_to_string(*value->str);
+		return parse_struct_to_string(value->str);
 	case Type::T_ARRAY:
 		return parse_array_to_string(value->arr);
 	case Type::T_FUNCTION: {
