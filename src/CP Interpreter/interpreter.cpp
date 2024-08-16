@@ -207,12 +207,24 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		cp_int pos = 0;
 		if (has_string_access) {
 			astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
-			pos = new_value->i;
+			pos = current_expression_value->i;
 		}
 
-		normalize_type(variable, new_value);
-
-		do_operation(astnode->op, value, new_value, false, pos);
+		if (astnode->op == "=") {
+			if (is_string(variable->type) && is_char(new_value->type)
+				&& new_value->use_ref && new_value->ref && !is_any(new_value->ref->type)) {
+					throw std::runtime_error("cannot reference char to string in function call");
+			}
+			else if (is_float(variable->type) && is_int(new_value->type)
+				&& new_value->use_ref&& new_value->ref && !is_any(new_value->ref->type)) {
+					throw std::runtime_error("cannot reference int to float in function call");
+			}
+			set_value(astscope, astnode->identifier_vector, new_value);
+		}
+		else {
+			normalize_type(variable, new_value);
+			do_operation(astnode->op, value, new_value, false, pos);
+		}
 	}
 }
 
@@ -1688,11 +1700,69 @@ InterpreterScope* Interpreter::get_inner_most_functions_scope(const std::string&
 
 Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser::Identifier>& identifier_vector, Value* new_value) {
 	auto var = scope->find_declared_variable(identifier_vector[0].identifier);
-	auto value = access_value(scope, var->get_value(), identifier_vector);
 
-	value->copy_from(new_value);
+	if (identifier_vector.size() == 1 && identifier_vector[0].access_vector.size() == 0) {
+		var->set_value(new_value);
+		return var->get_value();
+	}
 
-	return value;
+	Value* before_value = nullptr;
+	Value* value = var->get_value();
+	size_t i = 0;
+
+	while (i < identifier_vector.size()) {
+		before_value = value;
+
+		auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
+
+		if (access_vector.size() > 0) {
+			cp_array* current_val = &value->arr;
+			size_t s = 0;
+			size_t access_pos = 0;
+
+			for (s = 0; s < access_vector.size() - 1; ++s) {
+				access_pos = access_vector.at(s);
+
+				// break if it is a string, and the string access will be handled in identifier node evaluation
+				if (is_string(current_val->at(access_pos)->type)) {
+					current_val->at(access_pos)->s[access_vector.at(s + 1)] = new_value->c;
+					return current_val->at(access_pos);
+				}
+				if (access_pos >= current_val->size()) {
+					throw std::runtime_error("invalid array position access");
+				}
+				current_val = &current_val->at(access_pos)->arr;
+			}
+			if (is_string(value->type)) {
+				value->s[access_vector.at(s)] = new_value->c;
+				return value;
+			}
+			access_pos = access_vector.at(s);
+			if (i == identifier_vector.size() - 1) {
+				current_val->at(access_pos) = new_value;
+			}
+			else {
+				value = current_val->at(access_pos);
+			}
+		}
+
+		++i;
+
+		if (i < identifier_vector.size()) {
+			if (is_void(value->type)) {
+				throw std::runtime_error("identifier '" + identifier_vector[i - 1].identifier + "' is null");
+			}
+
+			if (i == identifier_vector.size() - 1) {
+				std::get<2>(value->str)[identifier_vector[i].identifier] = new_value;
+			}
+			else {
+				value = std::get<2>(value->str)[identifier_vector[i].identifier];
+			}
+		}
+	}
+
+	return new_value;
 }
 
 Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i) {
