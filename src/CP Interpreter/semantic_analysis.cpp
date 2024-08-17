@@ -257,9 +257,14 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	astnode->expr->accept(this);
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
+	if (astnode->expr) {
+		astnode->expr->accept(this);
+		if (is_undefined(current_expression.type)) {
+			throw std::runtime_error("undefined expression");
+		}
+	}
+	else {
+		current_expression = SemanticValue();
 	}
 
 	if (!current_function.empty()) {

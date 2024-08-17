@@ -232,39 +232,45 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
-	auto& curr_func_ret_type = current_function_return_type.top();
-	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, current_function_signature.top());
 
-	astnode->expr->accept(this);
-	Value* value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
+	if (astnode->expr) {
+		auto& curr_func_ret_type = current_function_return_type.top();
+		InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, current_function_signature.top());
 
-	if (value->type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
-		has_string_access = false;
-		std::string str = value->s;
-		current_function_call_identifier_vector.top().back().access_vector[current_function_call_identifier_vector.top().back().access_vector.size() - 1]->accept(this);
-		auto pos = value->i;
+		astnode->expr->accept(this);
+		Value* value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
 
-		auto char_value = new Value(Type::T_CHAR);
-		char_value->set(cp_char(str[pos]));
-		value = char_value;
-	}
+		if (value->type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
+			has_string_access = false;
+			std::string str = value->s;
+			current_function_call_identifier_vector.top().back().access_vector[current_function_call_identifier_vector.top().back().access_vector.size() - 1]->accept(this);
+			auto pos = value->i;
 
-	if (!TypeDefinition::is_any_or_match_type(
-		&curr_func_ret_type,
-		curr_func_ret_type,
-		nullptr,
-		*value,
-		evaluate_access_vector_ptr)) {
-		ExceptionHandler::throw_return_type_err(current_this_name.top(),
-			curr_func_ret_type.type,
-			value->type);
-	}
+			auto char_value = new Value(Type::T_CHAR);
+			char_value->set(cp_char(str[pos]));
+			value = char_value;
+		}
 
-	if (value->use_ref) {
-		current_expression_value = value;
+		if (!TypeDefinition::is_any_or_match_type(
+			&curr_func_ret_type,
+			curr_func_ret_type,
+			nullptr,
+			*value,
+			evaluate_access_vector_ptr)) {
+			ExceptionHandler::throw_return_type_err(current_this_name.top(),
+				curr_func_ret_type.type,
+				value->type);
+		}
+
+		if (value->use_ref) {
+			current_expression_value = value;
+		}
+		else {
+			current_expression_value = new Value(value);
+		}
 	}
 	else {
-		current_expression_value = new Value(value);
+		current_expression_value = new Value(Type::T_UNDEFINED);
 	}
 
 	for (long long i = scopes[nmspace].size() - 1; i >= 0; --i) {

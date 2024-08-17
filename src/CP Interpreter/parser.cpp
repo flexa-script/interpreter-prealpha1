@@ -136,9 +136,12 @@ ASTExprNode* Parser::parse_statement_expression() {
 ASTReturnNode* Parser::parse_return_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
+	ASTExprNode* expr = nullptr;
 
-	consume_token();
-	ASTExprNode* expr = parse_expression();
+	if (next_token.type != TOK_SEMICOLON) {
+		consume_token();
+		expr = parse_expression();
+	}
 
 	check_consume_semicolon();
 
