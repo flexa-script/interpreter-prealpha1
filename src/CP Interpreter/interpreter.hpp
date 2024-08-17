@@ -57,6 +57,9 @@ namespace visitor {
 		Type current_expression_array_type;
 		bool is_max;
 
+		size_t print_level = 0;
+		std::vector<uintptr_t> printed;
+
 		modules::Graphics* cpgraphics;
 		modules::Files* cpfiles;
 		modules::Console* cpconsole;
@@ -79,7 +82,7 @@ namespace visitor {
 		cp_array do_operation(cp_array lval, cp_array rval, const std::string& op);
 
 		std::string parse_array_to_string(const cp_array& arr_value);
-		std::string parse_struct_to_string(const cp_struct& str_value);
+		std::string parse_struct_to_string(const  Value* value);
 
 		InterpreterScope* get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
 		InterpreterScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);

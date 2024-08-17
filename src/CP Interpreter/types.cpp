@@ -516,8 +516,8 @@ void Value::copy_from(Value* value) {
 	f = value->f;
 	c = value->c;
 	s = value->s;
-	copy_array(value->arr);
-	copy_struct(value->str);
+	arr = value->arr;
+	str = value->str;
 	fun = value->fun;
 	ref = value->ref;
 	use_ref = value->use_ref;
