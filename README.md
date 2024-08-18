@@ -93,6 +93,7 @@
             - [X] `is_any`: returns if a variable is any
             - [X] `is_array`: returns if a variable is array
             - [X] `is_struct`: returns if a variable is struct
+        - [ ] `refid`: returns reference id
     - [X] add: bitwise operators:
         - [x] &   bitwise AND
         - [x] |   bitwise inclusive OR

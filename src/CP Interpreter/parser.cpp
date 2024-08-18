@@ -1431,6 +1431,7 @@ ASTArrayConstructorNode* Parser::parse_array_constructor_node() {
 			consume_token();
 
 		} while (next_token.type == TOK_LEFT_CURLY || next_token.type == TOK_NULL
+			|| next_token.type == TOK_REF || next_token.type == TOK_UNREF
 			|| next_token.type == TOK_BOOL_LITERAL || next_token.type == TOK_INT_LITERAL
 			|| next_token.type == TOK_IDENTIFIER || next_token.type == TOK_FLOAT_LITERAL
 			|| next_token.type == TOK_CHAR_LITERAL || next_token.type == TOK_STRING_LITERAL);

@@ -1040,9 +1040,13 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 			}
 		}
 
-		arr_t = current_expression_value->type;
-		auto arr_value = new Value(current_expression_value->type);
-		arr_value->copy_from(current_expression_value);
+		Value* arr_value = nullptr;
+		if (current_expression_value->use_ref) {
+			arr_value = current_expression_value;
+		}
+		else {
+			arr_value = new Value(current_expression_value);
+		}
 		arr.push_back(arr_value);
 	}
 
@@ -1234,7 +1238,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 		r_value = new Value(current_expression_value);
 	}
 
-	current_expression_value = new Value(do_operation(astnode->op, l_value, r_value, true, 0));
+	current_expression_value = do_operation(astnode->op, l_value, r_value, true, 0);
 }
 
 void Interpreter::visit(ASTTernaryNode* astnode) {
@@ -1772,7 +1776,7 @@ Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser:
 		}
 	}
 
-	return new_value;
+	return value;
 }
 
 Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i) {
