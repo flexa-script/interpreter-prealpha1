@@ -246,6 +246,14 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 		throw std::runtime_error("'" + identifier + "' constant being reassigned");
 	}
 
+	if (decl_var_expression->dim.size() < declared_variable->dim.size() && decl_var_expression->dim.size() == 1) {
+		decl_var_expression->dim = declared_variable->dim;
+	}
+
+	if (is_string(declared_variable->type) || is_float(declared_variable->type)) {
+		decl_var_expression->type = declared_variable->type;
+	}
+
 	assignment_expr = SemanticValue(do_operation(astnode->op, *declared_variable, *decl_var_expression,
 		nullptr, assignment_expr, false), 0, false, astnode->row, astnode->col);
 
