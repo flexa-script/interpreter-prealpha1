@@ -86,7 +86,7 @@ namespace visitor {
 
 		InterpreterScope* get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
 		InterpreterScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-		InterpreterScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature, bool strict = true);
+		InterpreterScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
 		InterpreterScope* get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
 
 		Value* set_value(InterpreterScope* scope, const std::vector<Identifier>& identifier_vector, Value* new_value);

@@ -235,7 +235,7 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 
 	if (astnode->expr) {
 		auto& curr_func_ret_type = current_function_return_type.top();
-		InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, current_function_signature.top());
+		InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
 
 		astnode->expr->accept(this);
 		Value* value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
@@ -310,12 +310,12 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 
 	InterpreterScope* func_scope;
 	try {
-		func_scope = get_inner_most_function_scope(nmspace, identifier, signature, strict);
+		func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, strict);
 	}
 	catch (...) {
 		try {
 			strict = false;
-			func_scope = get_inner_most_function_scope(nmspace, identifier, signature, strict);
+			func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, strict);
 		}
 		catch (...) {
 			try {
@@ -324,7 +324,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 				nmspace = var->value->fun.first;
 				identifier = var->value->fun.second;
 				identifier_vector = std::vector<Identifier>{ Identifier(identifier) };
-				func_scope = get_inner_most_function_scope(nmspace, identifier, signature, strict);
+				func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, strict);
 			}
 			catch (...) {
 				std::string func_name = identifier + "(";
@@ -341,7 +341,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 			}
 		}
 	}
-	auto declfun = func_scope->find_declared_function(identifier, signature, evaluate_access_vector_ptr, strict);
+	auto declfun = func_scope->find_declared_function(identifier, &signature, evaluate_access_vector_ptr, strict);
 
 	current_function_defined_parameters.push(std::get<0>(declfun));
 
@@ -1163,7 +1163,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 			}
 			catch (...) {
 				try {
-					curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, std::vector<TypeDefinition>());
+					curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, nullptr);
 					auto fun = cp_function();
 					fun.first = nmspace;
 					fun.second = astnode->identifier;
@@ -1670,7 +1670,7 @@ InterpreterScope* Interpreter::get_inner_most_struct_definition_scope(const std:
 	return scopes[nmspace][i];
 }
 
-InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature, bool strict) {
+InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); --i) {
 		if (i <= 0) {
@@ -1764,7 +1764,14 @@ Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser:
 
 		if (i < identifier_vector.size()) {
 			if (is_void(value->type)) {
-				throw std::runtime_error("identifier '" + identifier_vector[i - 1].identifier + "' is null");
+				std::stringstream ss;
+				for (size_t si = 0; si <= i; ++si) {
+					ss << identifier_vector[si].identifier;
+					if (si < i) {
+						ss << '.';
+					}
+				}
+				throw std::runtime_error("cannot reach '" + ss.str() + "', previous '" + identifier_vector[i - 1].identifier + "' value is null");
 			}
 
 			if (i == identifier_vector.size() - 1) {
@@ -1813,7 +1820,14 @@ Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, co
 
 	if (i < identifier_vector.size()) {
 		if (is_void(next_value->type)) {
-			throw std::runtime_error("identifier '" + identifier_vector[i - 1].identifier + "' is null");
+			std::stringstream ss;
+			for (size_t si = 0; si <= i; ++si) {
+				ss << identifier_vector[si].identifier;
+				if (si < i) {
+					ss << '.';
+				}
+			}
+			throw std::runtime_error("cannot reach '" + ss.str() + "', previous '" + identifier_vector[i - 1].identifier + "' value is null");
 		}
 
 		next_value = std::get<2>(next_value->str)[identifier_vector[i].identifier];

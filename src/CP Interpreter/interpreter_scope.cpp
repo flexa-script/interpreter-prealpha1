@@ -28,7 +28,7 @@ bool InterpreterScope::already_declared_structure_definition(std::string identif
 	return structure_symbol_table.find(identifier) != structure_symbol_table.end();
 }
 
-bool InterpreterScope::already_declared_function(std::string identifier, std::vector<TypeDefinition> signature,
+bool InterpreterScope::already_declared_function(std::string identifier, const std::vector<TypeDefinition>* signature,
 	std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector_ptr, bool strict) {
 	try {
 		find_declared_function(identifier, signature, evaluate_access_vector_ptr, strict);
@@ -73,7 +73,7 @@ Variable* InterpreterScope::find_declared_variable(std::string identifier) {
 	return var;
 }
 
-interpreter_function_t InterpreterScope::find_declared_function(std::string identifier, std::vector<TypeDefinition> signature,
+interpreter_function_t InterpreterScope::find_declared_function(std::string identifier, const std::vector<TypeDefinition>* signature,
 	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector_ptr, bool strict) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
@@ -82,19 +82,23 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 	}
 
 	for (auto& it = funcs.first; it != funcs.second; ++it) {
+		if (!signature) {
+			return it->second;
+		}
+
 		auto& func_params = std::get<0>(it->second);
 		bool rest = false;
 		auto found = true;
 		TypeDefinition stype;
 		TypeDefinition ftype;
 		size_t func_sig_size = func_params.size();
-		size_t call_sig_size = signature.size();
+		size_t call_sig_size = signature->size();
 
 		// if signatures size match, handle normal cases
 		if (func_sig_size == call_sig_size) {
 			for (size_t i = 0; i < call_sig_size; ++i) {
 				ftype = std::get<1>(func_params.at(i));
-				stype = signature.at(i);
+				stype = signature->at(i);
 
 				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr, strict)) {
 					found = false;
@@ -126,7 +130,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 						break;
 					}
 				}
-				stype = signature.at(i);
+				stype = signature->at(i);
 
 				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr, strict)) {
 					found = false;
@@ -145,7 +149,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 			for (size_t i = 0; i < func_sig_size; ++i) {
 				if (i < call_sig_size) {
 					ftype = std::get<1>(func_params.at(i));
-					stype = signature.at(i);
+					stype = signature->at(i);
 
 					if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr, strict)) {
 						found = false;

@@ -37,7 +37,7 @@ namespace visitor {
 
 		bool already_declared_structure_definition(std::string);
 		bool already_declared_variable(std::string);
-		bool already_declared_function(std::string identifier, std::vector<TypeDefinition> signature,
+		bool already_declared_function(std::string identifier, const std::vector<TypeDefinition>* signature,
 			std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict = true);
 		bool already_declared_function_name(std::string identifier);
 
@@ -48,7 +48,7 @@ namespace visitor {
 
 		StructureDefinition find_declared_structure_definition(std::string);
 		Variable* find_declared_variable(std::string);
-		interpreter_function_t find_declared_function(std::string identifier, std::vector<TypeDefinition> signature,
+		interpreter_function_t find_declared_function(std::string identifier, const std::vector<TypeDefinition>* signature,
 			std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict = true);
 		std::pair<interpreter_function_list_t::iterator, interpreter_function_list_t::iterator> find_declared_functions(std::string identifier);
 
