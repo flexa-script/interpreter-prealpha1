@@ -194,7 +194,7 @@ bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype
 
 	return is_array(ltype.type) && is_array(rtype.type)
 		&& (!strict_array && is_any_or_match_type(&latype, latype, nullptr, ratype, evaluate_access_vector, strict, strict_array) ||
-							match_type(latype, ratype, evaluate_access_vector, strict, strict_array))
+			match_type(latype, ratype, evaluate_access_vector, strict, strict_array))
 		&& match_array_dim(ltype, rtype, evaluate_access_vector);
 }
 
@@ -269,8 +269,8 @@ FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type,
 	identifier(identifier), parameters(parameters), signature(signature) {}
 
 FunctionDefinition::FunctionDefinition(const std::string& identifier, unsigned int row, unsigned int col)
-	: CodePosition(row, col), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
-	identifier(identifier), signature(std::vector<TypeDefinition>()), parameters(std::vector<VariableDefinition>()) {}
+	: CodePosition(row, col), TypeDefinition(Type::T_ANY, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
+	identifier(identifier), signature(std::vector<TypeDefinition>()), parameters(std::vector<VariableDefinition>()), is_var(true) {}
 
 FunctionDefinition::FunctionDefinition()
 	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""), CodePosition(0, 0),

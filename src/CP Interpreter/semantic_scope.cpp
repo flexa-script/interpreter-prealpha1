@@ -28,6 +28,10 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 	}
 
 	for (auto& it = funcs.first; it != funcs.second; ++it) {
+		if (it->second.is_var) {
+			return it->second;
+		}
+
 		auto& func_sig = it->second.signature;
 		bool rest = false;
 		auto found = true;
@@ -159,8 +163,7 @@ void SemanticScope::declare_function(const std::string& identifier, Type type, c
 }
 
 void SemanticScope::declare_variable_function(const std::string& identifier, unsigned int row, unsigned int col) {
-	FunctionDefinition fun(identifier, Type::T_UNDEFINED, "", "", Type::T_UNDEFINED, std::vector<ASTExprNode*>(),
-		std::vector<TypeDefinition>(), std::vector<VariableDefinition>(), row, col);
+	FunctionDefinition fun(identifier, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
 }
 

@@ -131,6 +131,7 @@ public:
 	std::string identifier;
 	std::vector<TypeDefinition> signature;
 	std::vector<VariableDefinition> parameters;
+	bool is_var = false;
 
 	FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
 		const std::string& type_name_space, Type array_type, const std::vector<ASTExprNode*>& dim,
