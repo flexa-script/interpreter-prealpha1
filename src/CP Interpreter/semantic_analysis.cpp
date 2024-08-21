@@ -213,7 +213,7 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	catch (...) {
 		bool isfunc = false;
 		try {
-			curr_scope = get_inner_most_function_scope(nmspace, identifier, std::vector<TypeDefinition>());
+			curr_scope = get_inner_most_function_scope(nmspace, identifier, nullptr);
 			isfunc = true;
 			throw std::runtime_error("function '" + identifier + "' can't be assigned");
 		}
@@ -305,12 +305,12 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 
 	SemanticScope* curr_scope;
 	try {
-		curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature, strict);
+		curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, &signature, strict);
 	}
 	catch (...) {
 		try {
 			strict = false;
-			curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, signature, strict);
+			curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, &signature, strict);
 		}
 		catch (...) {
 			std::string func_name = astnode->identifier + "(";
@@ -327,7 +327,7 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 		}
 	}
 
-	const auto& curr_function = curr_scope->find_declared_function(astnode->identifier, signature, evaluate_access_vector_ptr, strict);
+	const auto& curr_function = curr_scope->find_declared_function(astnode->identifier, &signature, evaluate_access_vector_ptr, strict);
 
 	if (is_void(curr_function.type)) {
 		current_expression = SemanticValue(Type::T_UNDEFINED, 0, 0);
@@ -349,7 +349,7 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 	const auto& nmspace = get_namespace();
 
 	for (const auto& scope : scopes[nmspace]) {
-		if (scope->already_declared_function(astnode->identifier, astnode->signature, evaluate_access_vector_ptr)) {
+		if (scope->already_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr)) {
 			std::string signature = "(";
 			for (const auto& param : astnode->signature) {
 				signature += type_str(param.type) + ", ";
@@ -373,7 +373,7 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 			scopes[nmspace].back()->declare_function(astnode->identifier, type, astnode->type_name, astnode->type_name_space,
 				array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->row, astnode->row);
 
-			auto curr_function = scopes[nmspace].back()->find_declared_function(astnode->identifier, astnode->signature, evaluate_access_vector_ptr);
+			auto curr_function = scopes[nmspace].back()->find_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr);
 
 			current_function.push(curr_function);
 		}
@@ -1010,7 +1010,7 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 		catch (...) {
 			try {
 				curr_scope = get_inner_most_function_scope(nmspace,
-					astnode->identifier, std::vector<TypeDefinition>());
+					astnode->identifier, nullptr);
 				current_expression.type = Type::T_FUNCTION;
 
 				return;
@@ -1308,7 +1308,7 @@ SemanticScope* SemanticAnalyser::get_inner_most_struct_definition_scope(const st
 	return scopes[nmspace][i];
 }
 
-SemanticScope* SemanticAnalyser::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>& signature, bool strict) {
+SemanticScope* SemanticAnalyser::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict) {
 	if (!namespace_exists(nmspace)) {
 		throw std::runtime_error("namespace '" + nmspace + "' was not declared");
 	}

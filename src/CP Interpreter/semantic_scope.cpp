@@ -19,7 +19,7 @@ SemanticVariable* SemanticScope::find_declared_variable(const std::string& ident
 	return variable_symbol_table[identifier];
 }
 
-FunctionDefinition SemanticScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature,
+FunctionDefinition SemanticScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
 	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
@@ -28,7 +28,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 	}
 
 	for (auto& it = funcs.first; it != funcs.second; ++it) {
-		if (it->second.is_var) {
+		if (it->second.is_var || !signature) {
 			return it->second;
 		}
 
@@ -38,13 +38,13 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 		TypeDefinition stype;
 		TypeDefinition ftype;
 		size_t func_sig_size = func_sig.size();
-		size_t call_sig_size = signature.size();
+		size_t call_sig_size = signature->size();
 
 		// if signatures size match, handle normal cases
 		if (func_sig_size == call_sig_size) {
 			for (size_t i = 0; i < call_sig_size; ++i) {
 				ftype = func_sig.at(i);
-				stype = signature.at(i);
+				stype = signature->at(i);
 
 				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict || stype.use_ref)) {
 					found = false;
@@ -76,7 +76,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 						break;
 					}
 				}
-				stype = signature.at(i);
+				stype = signature->at(i);
 
 				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict || stype.use_ref)) {
 					found = false;
@@ -95,7 +95,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 			for (size_t i = 0; i < func_sig_size; ++i) {
 				if (i < call_sig_size) {
 					ftype = func_sig.at(i);
-					stype = signature.at(i);
+					stype = signature->at(i);
 
 					if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict || stype.use_ref)) {
 						found = false;
@@ -128,7 +128,7 @@ bool SemanticScope::already_declared_variable(const std::string& identifier) {
 	return variable_symbol_table.find(identifier) != variable_symbol_table.end();
 }
 
-bool SemanticScope::already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>& signature,
+bool SemanticScope::already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
 	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict) {
 	try {
 		find_declared_function(identifier, signature, evaluate_access_vector, strict);
