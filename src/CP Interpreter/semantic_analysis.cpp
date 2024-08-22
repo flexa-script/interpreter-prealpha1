@@ -693,16 +693,36 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 			declared_variable->value->array_type = Type::T_UNDEFINED;
 		}
 		else if (col_type.dim.size() > 1) {
-			declared_variable->value->type = col_type.type;
-			declared_variable->value->type_name = current_expression.type_name;
-			declared_variable->value->type_name_space = current_expression.type_name_space;
-			declared_variable->value->array_type = current_expression.array_type;
+			if (!is_any(declared_variable->type)) {
+				declared_variable->value->type = declared_variable->type;
+				declared_variable->value->array_type = declared_variable->array_type;
+				declared_variable->value->type_name = declared_variable->type_name;
+				declared_variable->value->type_name_space = declared_variable->type_name_space;
+			}
+			else {
+				declared_variable->value->type = col_type.type;
+				declared_variable->value->array_type = current_expression.array_type;
+				if (!current_expression.type_name.empty()) {
+					declared_variable->value->type_name = current_expression.type_name;
+					declared_variable->value->type_name_space = current_expression.type_name_space;
+				}
+			}
 		}
 		else {
-			declared_variable->value->type = col_type.array_type;
-			declared_variable->value->type_name = current_expression.type_name;
-			declared_variable->value->type_name_space = current_expression.type_name_space;
-			declared_variable->value->array_type = current_expression.array_type;
+			if (!is_any(declared_variable->type)) {
+				declared_variable->value->type = declared_variable->type;
+				declared_variable->value->array_type = declared_variable->array_type;
+				declared_variable->value->type_name = declared_variable->type_name;
+				declared_variable->value->type_name_space = declared_variable->type_name_space;
+			}
+			else {
+				declared_variable->value->type = col_type.array_type;
+				declared_variable->value->array_type = Type::T_UNDEFINED;
+				if (!current_expression.type_name.empty()) {
+					declared_variable->value->type_name = current_expression.type_name;
+					declared_variable->value->type_name_space = current_expression.type_name_space;
+				}
+			}
 		}
 		
 	}
@@ -1236,31 +1256,31 @@ bool SemanticAnalyser::namespace_exists(const std::string& nmspace) {
 	return scopes.find(nmspace) != scopes.end();
 }
 
-VariableDefinition SemanticAnalyser::access_struct_variable(std::vector<Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i) {
-	SemanticScope* curr_scope;
-	try {
-		curr_scope = get_inner_most_struct_definition_scope(get_namespace(nmspace), type_name);
-	}
-	catch (...) {
-		throw std::runtime_error("can't find struct");
-	}
-	auto type_struct = curr_scope->find_declared_structure_definition(type_name);
-
-	if (type_struct.variables.find(identifier_vector[i].identifier) == type_struct.variables.end()) {
-		ExceptionHandler::throw_struct_member_err(type_name, identifier_vector[i].identifier);
-	}
-	VariableDefinition var_type_struct = type_struct.variables[identifier_vector[i].identifier];
-
-	if ((is_struct(var_type_struct.type) || is_any(var_type_struct.type)) && identifier_vector.size() - 1 > i) {
-		return access_struct_variable(identifier_vector, var_type_struct.type_name, var_type_struct.type_name_space, ++i);
-	}
-	else {
-		if (identifier_vector.size() - 1 > i) {
-			throw std::runtime_error("member '" + var_type_struct.identifier + "' of '" + type_name + "' is not a struct");
-		}
-		return var_type_struct;
-	}
-}
+//VariableDefinition SemanticAnalyser::access_struct_variable(std::vector<Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i) {
+//	SemanticScope* curr_scope;
+//	try {
+//		curr_scope = get_inner_most_struct_definition_scope(get_namespace(nmspace), type_name);
+//	}
+//	catch (...) {
+//		throw std::runtime_error("can't find struct");
+//	}
+//	auto type_struct = curr_scope->find_declared_structure_definition(type_name);
+//
+//	if (type_struct.variables.find(identifier_vector[i].identifier) == type_struct.variables.end()) {
+//		ExceptionHandler::throw_struct_member_err(type_name, identifier_vector[i].identifier);
+//	}
+//	VariableDefinition var_type_struct = type_struct.variables[identifier_vector[i].identifier];
+//
+//	if ((is_struct(var_type_struct.type) || is_any(var_type_struct.type)) && identifier_vector.size() - 1 > i) {
+//		return access_struct_variable(identifier_vector, var_type_struct.type_name, var_type_struct.type_name_space, ++i);
+//	}
+//	else {
+//		if (identifier_vector.size() - 1 > i) {
+//			throw std::runtime_error("member '" + var_type_struct.identifier + "' of '" + type_name + "' is not a struct");
+//		}
+//		return var_type_struct;
+//	}
+//}
 
 SemanticScope* SemanticAnalyser::get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier) {
 	if (!namespace_exists(nmspace)) {
@@ -1505,20 +1525,25 @@ SemanticValue* SemanticAnalyser::access_value(SemanticValue* value, const std::v
 	++i;
 
 	if (i < identifier_vector.size()) {
-		SemanticScope* curr_scope;
-		try {
-			curr_scope = get_inner_most_struct_definition_scope(get_namespace(next_value->type_name_space), next_value->type_name);
+		if (next_value->type_name.empty()) {
+			next_value = new SemanticValue(Type::T_ANY, next_value->row, next_value->col);
 		}
-		catch (...) {
-			throw std::runtime_error("can't find struct");
-		}
-		auto type_struct = curr_scope->find_declared_structure_definition(next_value->type_name);
+		else {
+			SemanticScope* curr_scope;
+			try {
+				curr_scope = get_inner_most_struct_definition_scope(get_namespace(next_value->type_name_space), next_value->type_name);
+			}
+			catch (...) {
+				throw std::runtime_error("can't find struct");
+			}
+			auto type_struct = curr_scope->find_declared_structure_definition(next_value->type_name);
 
-		if (type_struct.variables.find(identifier_vector[i].identifier) == type_struct.variables.end()) {
-			ExceptionHandler::throw_struct_member_err(next_value->type_name, identifier_vector[i].identifier);
-		}
+			if (type_struct.variables.find(identifier_vector[i].identifier) == type_struct.variables.end()) {
+				ExceptionHandler::throw_struct_member_err(next_value->type_name, identifier_vector[i].identifier);
+			}
 
-		next_value = new SemanticValue(type_struct.variables[identifier_vector[i].identifier], 0, false, next_value->row, next_value->col);
+			next_value = new SemanticValue(type_struct.variables[identifier_vector[i].identifier], 0, false, next_value->row, next_value->col);
+		}
 
 		if (identifier_vector[i].access_vector.size() > 0 || i < identifier_vector.size()) {
 			return access_value(next_value, identifier_vector, i);
@@ -1598,10 +1623,6 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 	}
 
 	if (const auto forstmt = dynamic_cast<ASTForNode*>(astnode)) {
-		return returns(forstmt->block);
-	}
-
-	if (const auto forstmt = dynamic_cast<ASTForEachNode*>(astnode)) {
 		return returns(forstmt->block);
 	}
 
