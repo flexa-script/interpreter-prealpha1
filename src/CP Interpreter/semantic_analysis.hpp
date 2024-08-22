@@ -40,7 +40,7 @@ namespace visitor {
 
 		std::vector<ASTExprNode*> current_expression_array_dim;
 		int current_expression_array_dim_max;
-		Type current_expression_array_type;
+		TypeDefinition current_expression_array_type;
 		bool is_max;
 
 		modules::Graphics* cpgraphics;

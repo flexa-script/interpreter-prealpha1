@@ -1016,7 +1016,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	cp_array arr = cp_array();
 
 	if (current_expression_array_dim.size() == 0) {
-		current_expression_array_type = Type::T_UNDEFINED;
+		current_expression_array_type = TypeDefinition();
 		current_expression_array_dim_max = 0;
 		is_max = false;
 	}
@@ -1029,14 +1029,14 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	for (auto& expr : astnode->values) {
 		expr->accept(this);
 
-		if (is_undefined(current_expression_array_type) || is_array(current_expression_array_type)) {
-			current_expression_array_type = current_expression_value->type;
+		if (is_undefined(current_expression_array_type.type) || is_array(current_expression_array_type.type)) {
+			current_expression_array_type.type = current_expression_value->type;
 		}
 		else {
-			if (!match_type(current_expression_array_type, current_expression_value->type)
+			if (!match_type(current_expression_array_type.type, current_expression_value->type)
 				&& !is_any(current_expression_value->type) && !is_void(current_expression_value->type)
 				&& !is_array(current_expression_value->type)) {
-				current_expression_array_type = Type::T_ANY;
+				current_expression_array_type = TypeDefinition::get_basic(Type::T_ANY);
 			}
 		}
 
@@ -1059,7 +1059,9 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	value->set(arr, arr_t);
 
 	current_expression_value = value;
-	current_expression_value->array_type = current_expression_array_type;
+	current_expression_value->array_type = current_expression_array_type.array_type;
+	current_expression_value->type_name = current_expression_array_type.type_name;
+	current_expression_value->type_name_space = current_expression_array_type.type_name_space;
 	--current_expression_array_dim_max;
 	size_t stay = current_expression_array_dim.size() - current_expression_array_dim_max;
 	std::vector<ASTExprNode*> current_expression_array_dim_aux;
@@ -1227,6 +1229,10 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 	}
 	else {
 		l_value = new Value(current_expression_value);
+	}
+
+	if (is_bool(current_expression_value->type) && astnode->op == "and" && !current_expression_value->b) {
+		return;
 	}
 
 	astnode->right->accept(this);
@@ -1844,7 +1850,7 @@ std::vector<Value*> Interpreter::build_array(const std::vector<ASTExprNode*>& di
 	auto arr = std::vector<Value*>();
 
 	if (dim.size() - 1 == i) {
-		current_expression_array_type = Type::T_UNDEFINED;
+		current_expression_array_type = TypeDefinition();
 	}
 
 	auto crr_acc = dim[i];
@@ -1855,8 +1861,8 @@ std::vector<Value*> Interpreter::build_array(const std::vector<ASTExprNode*>& di
 	for (size_t j = 0; j < size; ++j) {
 		auto val = new Value(init_value);
 
-		if (is_undefined(current_expression_array_type) || is_array(current_expression_array_type)) {
-			current_expression_array_type = val->type;
+		if (is_undefined(current_expression_array_type.type) || is_array(current_expression_array_type.type)) {
+			current_expression_array_type = *val;
 		}
 
 		arr.push_back(val);
@@ -1873,8 +1879,10 @@ std::vector<Value*> Interpreter::build_array(const std::vector<ASTExprNode*>& di
 			--curr_dim_i;
 		}
 
-		auto val = new Value(Type::T_ARRAY, current_expression_array_type, curr_arr_dim);
-		val->set(arr, current_expression_array_type);
+		auto val = new Value(Type::T_ARRAY, current_expression_array_type.array_type, curr_arr_dim);
+		val->set(arr, current_expression_array_type.array_type);
+		val->type_name = current_expression_array_type.type_name;
+		val->type_name_space = current_expression_array_type.type_name_space;
 		return build_array(dim, val, i);
 	}
 

@@ -880,7 +880,7 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	cp_int arr_size = 0;
 
 	if (current_expression_array_dim.size() == 0) {
-		current_expression_array_type = Type::T_UNDEFINED;
+		current_expression_array_type = TypeDefinition();
 		current_expression_array_dim_max = 0;
 		is_max = false;
 	}
@@ -897,14 +897,14 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 			throw std::runtime_error("undefined expression");
 		}
 
-		if (is_undefined(current_expression_array_type) || is_array(current_expression_array_type)) {
-			current_expression_array_type = current_expression.type;
+		if (is_undefined(current_expression_array_type.type) || is_array(current_expression_array_type.type)) {
+			current_expression_array_type = current_expression;
 		}
 		else {
-			if (!match_type(current_expression_array_type, current_expression.type)
+			if (!match_type(current_expression_array_type.type, current_expression.type)
 				&& !is_any(current_expression.type) && !is_void(current_expression.type)
 				&& !is_array(current_expression.type)) {
-				current_expression_array_type = Type::T_ANY;
+				current_expression_array_type = TypeDefinition::get_basic(Type::T_ANY);
 			}
 		}
 
@@ -919,7 +919,9 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_ARRAY;
-	current_expression.array_type = current_expression_array_type;
+	current_expression.array_type = current_expression_array_type.array_type;
+	current_expression.type_name = current_expression_array_type.type_name;
+	current_expression.type_name_space = current_expression_array_type.type_name_space;
 	--current_expression_array_dim_max;
 	size_t stay = current_expression_array_dim.size() - current_expression_array_dim_max;
 	std::vector<ASTExprNode*> current_expression_array_dim_aux;
@@ -1554,7 +1556,8 @@ std::vector<unsigned int> SemanticAnalyser::evaluate_access_vector(const std::ve
 }
 
 bool SemanticAnalyser::returns(ASTNode* astnode) {
-	if (dynamic_cast<ASTReturnNode*>(astnode)) {
+	if (dynamic_cast<ASTReturnNode*>(astnode)
+		|| dynamic_cast<ASTThrowNode*>(astnode)) {
 		return true;
 	}
 
@@ -1580,6 +1583,10 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 			elsereturn = returns(ifstmt->else_block);
 		}
 		return ifreturn && elifreturn && elsereturn;
+	}
+
+	if (auto trycatchstmt = dynamic_cast<ASTTryCatchNode*>(astnode)) {
+		return returns(trycatchstmt->try_block) && returns(trycatchstmt->catch_block);
 	}
 
 	if (const auto switchstmt = dynamic_cast<ASTSwitchNode*>(astnode)) {
