@@ -1,5 +1,6 @@
-#include "types.hpp"
+#include "vendor/axeutils.hpp"
 
+#include "types.hpp"
 #include "visitor.hpp"
 #include "token.hpp"
 
@@ -449,7 +450,7 @@ void Value::set(cp_string s) {
 }
 
 void Value::set(cp_array arr, Type array_type) {
-	copy_array(arr);
+	this->arr = arr;
 	type = Type::T_ARRAY;
 	this->array_type = array_type;
 }
@@ -487,23 +488,60 @@ bool Value::has_value() {
 		&& type != Type::T_VOID;
 }
 
-void Value::copy_array(cp_array arr) {
-	this->arr = cp_array();
-	for (auto ca : arr) {
-		auto val = new Value(ca);
-		this->arr.emplace_back(val);
+long double Value::value_hash() const {
+	switch (type) {
+	case Type::T_UNDEFINED:
+		throw std::runtime_error("value is undefined");
+	case Type::T_VOID:
+		throw std::runtime_error("value is null");
+	case Type::T_BOOL:
+		return (long double)b;
+	case Type::T_INT:
+		return (long double)i;
+	case Type::T_FLOAT:
+		return (long double)f;
+	case Type::T_CHAR:
+		return (long double)c;
+	case Type::T_STRING:
+		return (long double)axe::StringUtils::hashcode(s);
+	case Type::T_ANY:
+		throw std::runtime_error("value is any");
+	case Type::T_ARRAY: {
+		long double h = 0;
+		for (size_t i = 0; i < arr.second; ++i) {
+			h += arr.first[i]->value_hash();
+		}
+		return h;
+	}
+	case Type::T_STRUCT: {
+		long double h = 0;
+		for (const auto& v : std::get<2>(str)) {
+			h += v.second->value_hash();
+		}
+		return h;
+	}
+	default:
+		throw std::runtime_error("invalid type encountered");
 	}
 }
 
-void Value::copy_struct(cp_struct str) {
-	this->str = cp_struct();
-	std::get<0>(this->str) = std::get<0>(str);
-	std::get<1>(this->str) = std::get<1>(str);
-	for (const auto& ca : std::get<2>(str)) {
-		auto val = std::pair<std::string, Value*>(ca.first, new Value(ca.second));
-		std::get<2>(this->str).emplace(val);
-	}
-}
+//void Value::copy_array(cp_array arr) {
+//	this->arr = cp_array();
+//	for (auto ca : arr) {
+//		auto val = new Value(ca);
+//		this->arr.emplace_back(val);
+//	}
+//}
+
+//void Value::copy_struct(cp_struct str) {
+//	this->str = cp_struct();
+//	std::get<0>(this->str) = std::get<0>(str);
+//	std::get<1>(this->str) = std::get<1>(str);
+//	for (const auto& ca : std::get<2>(str)) {
+//		auto val = std::pair<std::string, Value*>(ca.first, new Value(ca.second));
+//		std::get<2>(this->str).emplace(val);
+//	}
+//}
 
 void Value::copy_from(Value* value) {
 	type = value->type;
@@ -524,12 +562,12 @@ void Value::copy_from(Value* value) {
 }
 
 bool Value::equals_array(cp_array arr) {
-	if (this->arr.size() != arr.size()) {
+	if (this->arr.second != arr.second) {
 		return false;
 	}
 
-	for (size_t i = 0; i < arr.size(); ++i) {
-		if (!this->arr[i]->equals(arr[i])) {
+	for (size_t i = 0; i < arr.second; ++i) {
+		if (!this->arr.first[i]->equals(arr.first[i])) {
 			return false;
 		}
 	}

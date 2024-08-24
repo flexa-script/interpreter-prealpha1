@@ -1568,7 +1568,7 @@ std::vector<unsigned int> SemanticAnalyser::evaluate_access_vector(const std::ve
 		if (expr) {
 			expr->accept(this);
 			val = expr->hash(this);
-			if (!is_int(current_expression.type)) {
+			if (!is_int(current_expression.type) && !is_any(current_expression.type)) {
 				throw std::runtime_error("array index access must be a integer value");
 			}
 		}

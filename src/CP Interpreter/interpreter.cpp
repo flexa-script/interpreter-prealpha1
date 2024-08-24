@@ -140,8 +140,8 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, *new_var, *new_value, evaluate_access_vector_ptr);
 	}
 
-	if (new_value->arr.size() == 1) {
-		auto arr = build_array(astnode->dim, new_value->arr[0], astnode->dim.size() - 1);
+	if (new_value->arr.second == 1) {
+		auto arr = build_array(astnode->dim, new_value->arr.first[0], astnode->dim.size() - 1);
 		new_value->arr = arr;
 		new_value->type = Type::T_ARRAY;
 		new_value->array_type = current_expression_array_type.type;
@@ -187,6 +187,20 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	else {
 		new_value = new Value(ptr_value);
 	}
+
+	std::vector<unsigned int> dim;
+	if (variable->dim.size() > 0) {
+		dim = evaluate_access_vector(variable->dim);
+	}
+	if (new_value->arr.second == 1 && dim.size() > 0) {
+		auto arr = build_array(variable->dim, new_value->arr.first[0], variable->dim.size() - 1);
+		new_value->arr = arr;
+		new_value->type = Type::T_ARRAY;
+		new_value->array_type = current_expression_array_type.type;
+		new_value->type_name = current_expression_array_type.type_name;
+		new_value->type_name_space = current_expression_array_type.type_name_space;
+	}
+	new_value->dim = variable->dim;
 
 	if (astnode->op == "="
 		&& astnode->identifier_vector.size() == 1
@@ -655,7 +669,9 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 	switch (current_expression_value->type) {
 	case Type::T_ARRAY: {
 		const auto& colletion = current_expression_value->arr;
-		for (auto val : colletion) {
+		for (size_t i = 0; i < colletion.second; ++i) {
+			auto val = colletion.first[i];
+
 			astnode->itdecl->accept(this);
 
 			set_value(
@@ -1026,7 +1042,9 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 		current_expression_array_dim.push_back(new ASTLiteralNode<cp_int>(0, astnode->row, astnode->col));
 	}
 
-	for (auto& expr : astnode->values) {
+	for (size_t i = 0; i < astnode->values.size(); ++i) {
+		const auto expr = astnode->values[i];
+
 		expr->accept(this);
 
 		if (is_undefined(current_expression_array_type.type) || is_array(current_expression_array_type.type)) {
@@ -1047,11 +1065,11 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 		else {
 			arr_value = new Value(current_expression_value);
 		}
-		arr.push_back(arr_value);
+		arr.first[i] = arr_value;
 	}
 
 	if (!is_max) {
-		((ASTLiteralNode<cp_int>*)current_expression_array_dim.back())->val = arr.size();
+		((ASTLiteralNode<cp_int>*)current_expression_array_dim.back())->val = arr.second;
 	}
 
 	is_max = true;
@@ -1108,17 +1126,36 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 
 		expr.second->accept(this);
 
+		Value* str_value = current_expression_value;
+
 		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct, nullptr, *current_expression_value, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_struct_type_err(astnode->nmspace, astnode->type_name, var_type_struct, evaluate_access_vector_ptr);
 		}
 
-		Value* str_value = nullptr;
-		if (current_expression_value->use_ref) {
-			str_value = current_expression_value;
+		if (!current_expression_value->use_ref) {
+			str_value = new Value(str_value);
 		}
-		else {
-			str_value = new Value(current_expression_value);
+
+		std::vector<unsigned int> dim;
+		if (var_type_struct.dim.size() > 0) {
+			dim = evaluate_access_vector(var_type_struct.dim);
 		}
+		if (str_value->arr.second == 1 && dim.size() > 0) {
+			auto arr = build_array(var_type_struct.dim, str_value->arr.first[0], var_type_struct.dim.size() - 1);
+			str_value->arr = arr;
+			str_value->type = Type::T_ARRAY;
+			str_value->array_type = current_expression_array_type.type;
+			str_value->type_name = current_expression_array_type.type_name;
+			str_value->type_name_space = current_expression_array_type.type_name_space;
+		}
+		else if (!is_any(var_type_struct.type)) {
+			str_value->type = var_type_struct.type;
+			str_value->array_type = var_type_struct.array_type;
+			str_value->type_name = var_type_struct.type_name;
+			str_value->type_name_space = var_type_struct.type_name_space;
+		}
+		str_value->dim = var_type_struct.dim;
+
 		std::get<2>(str)[expr.first] = str_value;
 	}
 
@@ -1270,8 +1307,8 @@ void Interpreter::visit(ASTInNode* astnode) {
 	if (is_array(current_expression_value->type)) {
 		cp_array expr_col = current_expression_value->arr;
 
-		for (auto it : expr_col) {
-			res = equals_value(&expr_val, it);
+		for (size_t i = 0; i < expr_col.second; ++i) {
+			res = equals_value(&expr_val, expr_col.first[i]);
 			if (res) {
 				break;
 			}
@@ -1541,9 +1578,9 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 
 	if (is_struct(type)) {
 		if (dim.size() > 0) {
-			auto arr = curr_value->arr[0];
+			auto arr = curr_value->arr.first[0];
 			for (size_t i = 0; i < dim.size() - 1; ++i) {
-				arr = arr->arr[0];
+				arr = arr->arr.first[0];
 			}
 			str_type = std::get<1>(arr->str);
 		}
@@ -1620,12 +1657,12 @@ bool Interpreter::equals_struct(const cp_struct& lstr, const cp_struct& rstr) {
 }
 
 bool Interpreter::equals_array(const cp_array& larr, const cp_array& rarr) {
-	if (larr.size() != rarr.size()) {
+	if (larr.second != rarr.second) {
 		return false;
 	}
 
-	for (size_t i = 0; i < larr.size(); ++i) {
-		if (!equals_value(larr[i], rarr[i])) {
+	for (size_t i = 0; i < larr.second; ++i) {
+		if (!equals_value(larr.first[i], rarr.first[i])) {
 			return false;
 		}
 	}
@@ -1744,14 +1781,14 @@ Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser:
 				access_pos = access_vector.at(s);
 
 				// break if it is a string, and the string access will be handled in identifier node evaluation
-				if (is_string(current_val->at(access_pos)->type)) {
-					current_val->at(access_pos)->s[access_vector.at(s + 1)] = new_value->c;
-					return current_val->at(access_pos);
+				if (is_string(current_val->first[access_pos]->type)) {
+					current_val->first[access_pos]->s[access_vector.at(s + 1)] = new_value->c;
+					return current_val->first[access_pos];
 				}
-				if (access_pos >= current_val->size()) {
+				if (access_pos >= current_val->second) {
 					throw std::runtime_error("invalid array position access");
 				}
-				current_val = &current_val->at(access_pos)->arr;
+				current_val = &current_val->first[access_pos]->arr;
 			}
 			if (is_string(value->type)) {
 				value->s[access_vector.at(s)] = new_value->c;
@@ -1759,10 +1796,10 @@ Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser:
 			}
 			access_pos = access_vector.at(s);
 			if (i == identifier_vector.size() - 1) {
-				current_val->at(access_pos) = new_value;
+				current_val->first[access_pos] = new_value;
 			}
 			else {
-				value = current_val->at(access_pos);
+				value = current_val->first[access_pos];
 			}
 		}
 
@@ -1805,21 +1842,21 @@ Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, co
 		for (s = 0; s < access_vector.size() - 1; ++s) {
 			access_pos = access_vector.at(s);
 			// break if it is a string, and the string access will be handled in identifier node evaluation
-			if (current_Val->at(access_pos)->type == Type::T_STRING) {
+			if (current_Val->first[access_pos]->type == Type::T_STRING) {
 				has_string_access = true;
 				break;
 			}
-			if (access_pos >= current_Val->size()) {
+			if (access_pos >= current_Val->second) {
 				throw std::runtime_error("invalid array position access");
 			}
-			current_Val = &current_Val->at(access_pos)->arr;
+			current_Val = &current_Val->first[access_pos]->arr;
 		}
 		if (is_string(next_value->type)) {
 			has_string_access = true;
 			return next_value;
 		}
 		access_pos = access_vector.at(s);
-		next_value = current_Val->at(access_pos);
+		next_value = current_Val->first[access_pos];
 	}
 
 	++i;
@@ -1846,8 +1883,8 @@ Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, co
 	return next_value;
 }
 
-std::vector<Value*> Interpreter::build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i) {
-	auto arr = std::vector<Value*>();
+cp_array Interpreter::build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i) {
+	Value** raw_arr;
 
 	if (dim.size() - 1 == i) {
 		current_expression_array_type = TypeDefinition();
@@ -1863,6 +1900,8 @@ std::vector<Value*> Interpreter::build_array(const std::vector<ASTExprNode*>& di
 		size = current_expression_value->i;
 	}
 
+	raw_arr = new Value*[size];
+
 	for (size_t j = 0; j < size; ++j) {
 		auto val = new Value(init_value);
 
@@ -1870,8 +1909,10 @@ std::vector<Value*> Interpreter::build_array(const std::vector<ASTExprNode*>& di
 			current_expression_array_type = *val;
 		}
 
-		arr.push_back(val);
+		raw_arr[j] = val;
 	}
+
+	auto arr = std::pair<Value**, size_t>(raw_arr, size);
 
 	--i;
 
@@ -1897,10 +1938,10 @@ std::vector<Value*> Interpreter::build_array(const std::vector<ASTExprNode*>& di
 std::vector<unsigned int> Interpreter::calculate_array_dim_size(const cp_array& arr) {
 	auto dim = std::vector<unsigned int>();
 
-	dim.push_back(arr.size());
+	dim.push_back(arr.second);
 
-	if (is_array(arr.at(0)->type)) {
-		auto dim2 = calculate_array_dim_size(arr.at(0)->arr);
+	if (is_array(arr.first[0]->type)) {
+		auto dim2 = calculate_array_dim_size(arr.first[0]->arr);
 		dim.insert(dim.end(), dim2.begin(), dim2.end());
 	}
 
@@ -2019,9 +2060,9 @@ std::string Interpreter::parse_value_to_string(const Value* value) {
 std::string Interpreter::parse_array_to_string(const cp_array& arr_value) {
 	std::stringstream s = std::stringstream();
 	s << "[";
-	for (auto i = 0; i < arr_value.size(); ++i) {
-		s << parse_value_to_string(arr_value.at(i));
-		if (i < arr_value.size() - 1) {
+	for (auto i = 0; i < arr_value.second; ++i) {
+		s << parse_value_to_string(arr_value.first[i]);
+		if (i < arr_value.second - 1) {
 			s << ",";
 		}
 	}
@@ -2501,17 +2542,33 @@ cp_string Interpreter::do_operation(cp_string lval, cp_string rval, const std::s
 	throw std::runtime_error("invalid '" + op + "' operator for types 'string' and 'string'");
 }
 
-cp_array Interpreter::do_operation(cp_array lval, cp_array rval, const std::string& op) {
+cp_array do_operation(cp_array lval, cp_array rval, const std::string& op) {
 	if (op == "=") {
-		return rval;
+		Value** result = new Value*[rval.second];
+		for (size_t i = 0; i < rval.second; ++i) {
+			result[i] = rval.first[i];
+		}
+		return cp_array(result, rval.second);
 	}
 	else if (op == "+=" || op == "+") {
-		std::sort(lval.begin(), lval.end());
-		std::sort(rval.begin(), rval.end());
-		cp_array result(lval.size() + rval.size());
-		std::merge(lval.begin(), lval.end(), rval.begin(), rval.end(), result.begin());
-		return result;
+		auto size = lval.second + rval.second;
+		Value** result = new Value*[size];
+
+		std::sort(lval.first, lval.first + lval.second, [](const Value* a, const Value* b) {
+			return a->value_hash() < b->value_hash();
+			});
+
+		std::sort(rval.first, rval.first + rval.second, [](const Value* a, const Value* b) {
+			return a->value_hash() < b->value_hash();
+			});
+
+		std::merge(lval.first, lval.first + lval.second, rval.first, rval.first + rval.second, result, [](const Value* a, const Value* b) {
+			return a->value_hash() < b->value_hash();
+			});
+
+		return cp_array(result, size);
 	}
+
 	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");
 }
 

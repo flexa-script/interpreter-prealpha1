@@ -68,7 +68,7 @@ namespace visitor {
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector);
 		std::vector<unsigned int> calculate_array_dim_size(const cp_array& arr);
 
-		std::vector<Value*> build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i);
+		cp_array build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i);
 
 		void declare_structure(cp_struct& str, const std::string& nmspace);
 
