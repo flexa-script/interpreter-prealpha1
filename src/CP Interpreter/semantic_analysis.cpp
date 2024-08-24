@@ -172,7 +172,7 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 
 	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, evaluate_access_vector_ptr)
 		&& astnode->expr && !is_undefined(new_value->type)) {
-		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
+		ExceptionHandler::throw_declaration_type_err(astnode->identifier, *new_var, *new_value, evaluate_access_vector_ptr);
 	}
 
 	if (new_value->dim.size() < new_var->dim.size() && new_value->dim.size() == 1) {
@@ -278,9 +278,7 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 	if (!current_function.empty()) {
 		auto& currfun = current_function.top();
 		if (!TypeDefinition::is_any_or_match_type(&currfun, currfun, nullptr, current_expression, evaluate_access_vector_ptr)) {
-			ExceptionHandler::throw_return_type_err(currfun.identifier,
-				currfun.type,
-				current_expression.type);
+			ExceptionHandler::throw_return_type_err(currfun.identifier, currfun, current_expression, evaluate_access_vector_ptr);
 		}
 	}
 }
@@ -523,7 +521,7 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 		}
 
 		if (!TypeDefinition::match_type(case_type, current_expression, evaluate_access_vector_ptr)) {
-			ExceptionHandler::throw_mismatched_type_err(case_type.type, current_expression.type);
+			ExceptionHandler::throw_mismatched_type_err(case_type, current_expression, evaluate_access_vector_ptr);
 		}
 
 		auto hash = expr.first->hash(this);
@@ -535,7 +533,7 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 	}
 
 	if (!TypeDefinition::is_any_or_match_type(&cond_type, cond_type, nullptr, case_type, evaluate_access_vector_ptr)) {
-		ExceptionHandler::throw_mismatched_type_err(cond_type.type, case_type.type);
+		ExceptionHandler::throw_mismatched_type_err(cond_type, case_type, evaluate_access_vector_ptr);
 	}
 
 	for (auto& stmt : astnode->statements) {
@@ -976,14 +974,14 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 
 	for (const auto& expr : astnode->values) {
 		if (type_struct.variables.find(expr.first) == type_struct.variables.end()) {
-			ExceptionHandler::throw_struct_member_err(astnode->type_name, expr.first);
+			ExceptionHandler::throw_struct_member_err(astnode->nmspace, astnode->type_name, expr.first);
 		}
 		VariableDefinition var_type_struct = type_struct.variables[expr.first];
 		expr.second->accept(this);
 
 		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct,
 			nullptr, current_expression, evaluate_access_vector_ptr)) {
-			ExceptionHandler::throw_struct_type_err(astnode->type_name, var_type_struct.type);
+			ExceptionHandler::throw_struct_type_err(astnode->nmspace, astnode->type_name, var_type_struct, evaluate_access_vector_ptr);
 		}
 	}
 
@@ -1390,7 +1388,7 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 			&& op != "and"
 			&& op != "or"
 			&& !Token::is_equality_op(op)) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 		}
 
 		break;
@@ -1402,17 +1400,17 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 			if (!Token::is_float_op(op)
 				&& !Token::is_relational_op(op)
 				&& !Token::is_equality_op(op)) {
-				ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+				ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 			}
 		}
 		else if (is_int(l_type)
 			&& !Token::is_int_op(op)
 			&& !Token::is_relational_op(op)
 			&& !Token::is_equality_op(op)) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 		}
 		else if (!is_numeric(l_type) && !is_any(l_type) && !is_any(l_var_type)) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 		}
 
 		break;
@@ -1422,25 +1420,25 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 			&& !Token::is_float_op(op)
 			&& !Token::is_relational_op(op)
 			&& !Token::is_equality_op(op)) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 		}
 		else if (!is_numeric(l_type) && !is_any(l_type) && !is_any(l_var_type)) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 		}
 
 		break;
 	}
 	case Type::T_CHAR: {
 		if (is_string(l_type) && !Token::is_collection_op(op)) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 		}
 		else if (is_char(l_type)) {
 			if (op != "=" && !Token::is_equality_op(op)) {
-				ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+				ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 			}
 		}
 		else if (!is_text(l_type) && !is_any(l_type) && !is_any(l_var_type)) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 		}
 
 		break;
@@ -1451,10 +1449,10 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 				&& !Token::is_equality_op(op)))
 			&& (is_expr && (!is_char(l_type)
 				|| !Token::is_expression_collection_op(op)))) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 		}
 		else if (!is_text(l_type) && !is_any(l_type) && !is_any(l_var_type)) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 		}
 
 		break;
@@ -1463,21 +1461,21 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 		if (!TypeDefinition::match_type_array(lvalue, rvalue, evaluate_access_vector_ptr)
 			|| (!Token::is_collection_op(op)
 				&& !Token::is_equality_op(op))) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 		}
 
 		break;
 	}
 	case Type::T_STRUCT: {
 		if (!is_struct(l_type) || (!Token::is_equality_op(op) && op != "=")) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 		}
 
 		break;
 	}
 	case Type::T_FUNCTION: {
 		if (!is_function(l_type) || (!Token::is_equality_op(op) && op != "=")) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 		}
 
 		break;
@@ -1539,7 +1537,7 @@ SemanticValue* SemanticAnalyser::access_value(SemanticValue* value, const std::v
 			auto type_struct = curr_scope->find_declared_structure_definition(next_value->type_name);
 
 			if (type_struct.variables.find(identifier_vector[i].identifier) == type_struct.variables.end()) {
-				ExceptionHandler::throw_struct_member_err(next_value->type_name, identifier_vector[i].identifier);
+				ExceptionHandler::throw_struct_member_err(next_value->type_name_space, next_value->type_name, identifier_vector[i].identifier);
 			}
 
 			next_value = new SemanticValue(type_struct.variables[identifier_vector[i].identifier], 0, false, next_value->row, next_value->col);

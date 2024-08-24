@@ -137,7 +137,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		is_array(new_var->type) && !is_any(new_var->array_type)
 		&& !TypeDefinition::match_type(*new_var, *new_value, evaluate_access_vector_ptr, false, true))
 		&& astnode->expr && !is_undefined(new_value->type)) {
-		ExceptionHandler::throw_declaration_type_err(astnode->identifier, new_var->type, new_value->type);
+		ExceptionHandler::throw_declaration_type_err(astnode->identifier, *new_var, *new_value, evaluate_access_vector_ptr);
 	}
 
 	if (new_value->arr.size() == 1) {
@@ -195,7 +195,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		if (!TypeDefinition::is_any_or_match_type(variable, *variable, nullptr, *ptr_value, evaluate_access_vector_ptr) ||
 			is_array(variable->type) && !is_any(variable->array_type)
 			&& !TypeDefinition::match_type(*variable, *ptr_value, evaluate_access_vector_ptr, false, true)) {
-			ExceptionHandler::throw_mismatched_type_err(variable->type, ptr_value->type);
+			ExceptionHandler::throw_mismatched_type_err(*variable, *ptr_value, evaluate_access_vector_ptr);
 		}
 
 		normalize_type(variable, new_value);
@@ -256,14 +256,10 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 		}
 
 		if (!TypeDefinition::is_any_or_match_type(
-			&curr_func_ret_type,
-			curr_func_ret_type,
-			nullptr,
-			*value,
-			evaluate_access_vector_ptr)) {
+			&curr_func_ret_type, curr_func_ret_type,
+			nullptr, *value, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_return_type_err(current_this_name.top(),
-				curr_func_ret_type.type,
-				value->type);
+				curr_func_ret_type, *value, evaluate_access_vector_ptr);
 		}
 
 		if (value->use_ref) {
@@ -487,7 +483,7 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 		TypeDefinition case_type = *current_expression_value;
 
 		if (!TypeDefinition::match_type(cond_type, case_type, evaluate_access_vector_ptr)) {
-			ExceptionHandler::throw_mismatched_type_err(cond_type.type, case_type.type);
+			ExceptionHandler::throw_mismatched_type_err(cond_type, case_type, evaluate_access_vector_ptr);
 		}
 	}
 
@@ -1106,14 +1102,14 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 
 	for (auto& expr : astnode->values) {
 		if (type_struct.variables.find(expr.first) == type_struct.variables.end()) {
-			ExceptionHandler::throw_struct_member_err(astnode->type_name, expr.first);
+			ExceptionHandler::throw_struct_member_err(astnode->nmspace, astnode->type_name, expr.first);
 		}
 		VariableDefinition var_type_struct = type_struct.variables[expr.first];
 
 		expr.second->accept(this);
 
 		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct, nullptr, *current_expression_value, evaluate_access_vector_ptr)) {
-			ExceptionHandler::throw_struct_type_err(astnode->type_name, var_type_struct.type);
+			ExceptionHandler::throw_struct_type_err(astnode->nmspace, astnode->type_name, var_type_struct, evaluate_access_vector_ptr);
 		}
 
 		Value* str_value = nullptr;
@@ -2095,7 +2091,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (!is_bool(l_type)) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
 		if (op == "=") {
@@ -2114,7 +2110,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			res_value = new Value((cp_bool)(lval->b != rval->b));
 		}
 		else {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
 		break;
@@ -2164,7 +2160,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			lval->set(do_operation(lval->i, rval->i, op));
 		}
 		else {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
 		break;
@@ -2210,7 +2206,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			lval->set(do_operation(cp_float(lval->i), rval->f, op));
 		}
 		else {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
 		break;
@@ -2234,7 +2230,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		if (is_string(l_type)) {
 			if (has_string_access) {
 				if (op != "=") {
-					ExceptionHandler::throw_operation_err(op, l_type, r_type);
+					ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 				}
 				has_string_access = false;
 				lval->s[str_pos] = rval->c;
@@ -2246,20 +2242,20 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 		else if (is_char(l_type)) {
 			if (op != "=") {
-				ExceptionHandler::throw_operation_err(op, l_type, r_type);
+				ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 			}
 
 			lval->set(rval->c);
 		}
 		else if (is_any(l_var_type)) {
 			if (op != "=") {
-				ExceptionHandler::throw_operation_err(op, l_type, r_type);
+				ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 			}
 
 			lval->set(rval->c);
 		}
 		else {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
 		break;
@@ -2287,7 +2283,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			lval->set(do_operation(cp_string{ lval->c }, rval->s, op));
 		}
 		else {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
 		break;
@@ -2309,12 +2305,12 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (!TypeDefinition::match_type_array(*lval, *rval, evaluate_access_vector_ptr)) {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
 		bool match_arr_t = lval->array_type == rval->array_type;
 		if (!match_arr_t && !is_any(l_var_array_type)) {
-			ExceptionHandler::throw_operation_type_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
 		lval->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
@@ -2338,7 +2334,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (!is_struct(l_type) || op != "=") {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
 		lval->set(rval->str);
@@ -2352,7 +2348,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (!is_function(l_type) || op != "=") {
-			ExceptionHandler::throw_operation_err(op, l_type, r_type);
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
 		lval->set(rval->fun);
@@ -2387,7 +2383,7 @@ cp_bool Interpreter::do_relational_operation(const std::string& op, Value* lval,
 	else if (op == ">=") {
 		return l >= r;
 	}
-	ExceptionHandler::throw_operation_type_err(op, lval->type, rval->type);
+	ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 }
 
 cp_int Interpreter::do_spaceship_operation(const std::string& op, Value* lval, Value* rval) {
