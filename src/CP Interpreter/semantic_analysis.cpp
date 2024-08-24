@@ -1128,7 +1128,6 @@ void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
 				"' in front of " + type_str(current_expression.type) + " expression");
 		}
 	}
-	current_expression.is_const = false;
 }
 
 void SemanticAnalyser::visit(ASTTernaryNode* astnode) {
