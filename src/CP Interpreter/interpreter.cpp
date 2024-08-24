@@ -1059,7 +1059,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	value->set(arr, arr_t);
 
 	current_expression_value = value;
-	current_expression_value->array_type = current_expression_array_type.array_type;
+	current_expression_value->array_type = current_expression_array_type.type;
 	current_expression_value->type_name = current_expression_array_type.type_name;
 	current_expression_value->type_name_space = current_expression_array_type.type_name_space;
 	--current_expression_array_dim_max;
@@ -1970,7 +1970,7 @@ std::string Interpreter::parse_value_to_string(const Value* value) {
 				s << std::get<0>(value->str) << "::";
 			}
 			s << std::get<1>(value->str);
-			s << "<" << value << ">...";
+			s << "<" << value << ">{...}";
 			str = s.str();
 		}
 		else {

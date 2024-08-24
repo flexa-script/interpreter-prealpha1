@@ -939,7 +939,7 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_ARRAY;
-	current_expression.array_type = current_expression_array_type.array_type;
+	current_expression.array_type = current_expression_array_type.type;
 	current_expression.type_name = current_expression_array_type.type_name;
 	current_expression.type_name_space = current_expression_array_type.type_name_space;
 	--current_expression_array_dim_max;
