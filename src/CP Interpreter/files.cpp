@@ -128,17 +128,17 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 			// buffer to store read data
 			char* buffer = new char[buffer_size];
 
-			cp_array arr;
+			Value** arr = new Value*[buffer_size];
 
 			// read all bytes
 			if (fs->read(buffer, buffer_size)) {
 				for (size_t i = 0; i < buffer_size; ++i) {
 					Value* val = new Value(parser::Type::T_CHAR);
 					val->set(buffer[i]);
-					arr.push_back(val);
+					arr[i] = val;
 				}
 			}
-			rval->arr = arr;
+			rval->arr = cp_array(arr, buffer_size);
 
 			delete[] buffer;
 
@@ -161,12 +161,12 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 
 			auto arr = visitor->builtin_arguments[1]->arr;
 
-			std::streamsize buffer_size = arr.size();
+			std::streamsize buffer_size = arr.second;
 
 			char* buffer = new char[buffer_size];
 
 			for (size_t i = 0; i < buffer_size; ++i) {
-				buffer[i] = arr[i]->c;
+				buffer[i] = arr.first[i]->c;
 			}
 
 			fs->write(buffer, sizeof(buffer));

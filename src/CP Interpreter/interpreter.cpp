@@ -1029,7 +1029,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 
 	auto value = new Value(Type::T_ARRAY);
 	Type arr_t = Type::T_ANY;
-	cp_array arr = cp_array();
+	cp_array arr = cp_array(new Value * [astnode->values.size()], astnode->values.size());
 
 	if (current_expression_array_dim.size() == 0) {
 		current_expression_array_type = TypeDefinition();
@@ -1148,7 +1148,7 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 			str_value->type_name = current_expression_array_type.type_name;
 			str_value->type_name_space = current_expression_array_type.type_name_space;
 		}
-		else if (!is_any(var_type_struct.type)) {
+		else if (!is_any(var_type_struct.type) && !is_void(str_value->type)) {
 			str_value->type = var_type_struct.type;
 			str_value->array_type = var_type_struct.array_type;
 			str_value->type_name = var_type_struct.type_name;
@@ -1900,7 +1900,7 @@ cp_array Interpreter::build_array(const std::vector<ASTExprNode*>& dim, Value* i
 		size = current_expression_value->i;
 	}
 
-	raw_arr = new Value*[size];
+	raw_arr = new Value * [size];
 
 	for (size_t j = 0; j < size; ++j) {
 		auto val = new Value(init_value);
@@ -2110,18 +2110,18 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		return lval;
 	}
 
-	if (lval->use_ref
-		&& Token::is_equality_op(op)) {
-		return new Value((cp_bool)((op == "==") ?
-			lval == rval
-			: lval != rval));
-	}
-
 	if ((is_void(l_type) || is_void(r_type))
 		&& Token::is_equality_op(op)) {
 		return new Value((cp_bool)((op == "==") ?
 			match_type(l_type, r_type)
 			: !match_type(l_type, r_type)));
+	}
+
+	if (lval->use_ref
+		&& Token::is_equality_op(op)) {
+		return new Value((cp_bool)((op == "==") ?
+			lval == rval
+			: lval != rval));
 	}
 
 	switch (r_type) {
@@ -2542,9 +2542,9 @@ cp_string Interpreter::do_operation(cp_string lval, cp_string rval, const std::s
 	throw std::runtime_error("invalid '" + op + "' operator for types 'string' and 'string'");
 }
 
-cp_array do_operation(cp_array lval, cp_array rval, const std::string& op) {
+cp_array Interpreter::do_operation(cp_array lval, cp_array rval, const std::string& op) {
 	if (op == "=") {
-		Value** result = new Value*[rval.second];
+		Value** result = new Value * [rval.second];
 		for (size_t i = 0; i < rval.second; ++i) {
 			result[i] = rval.first[i];
 		}
@@ -2552,7 +2552,7 @@ cp_array do_operation(cp_array lval, cp_array rval, const std::string& op) {
 	}
 	else if (op == "+=" || op == "+") {
 		auto size = lval.second + rval.second;
-		Value** result = new Value*[size];
+		Value** result = new Value * [size];
 
 		std::sort(lval.first, lval.first + lval.second, [](const Value* a, const Value* b) {
 			return a->value_hash() < b->value_hash();
@@ -2654,7 +2654,7 @@ long long Interpreter::hash(ASTIdentifierNode* astnode) {
 void Interpreter::declare_function_block_parameters(const std::string& nmspace) {
 	auto curr_scope = scopes[nmspace].back();
 	auto rest_name = std::string();
-	auto arr = cp_array();
+	auto vec = std::vector<Value*>();
 	size_t i;
 
 	if (current_function_calling_arguments.size() == 0 || current_function_defined_parameters.size() == 0) {
@@ -2697,7 +2697,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		}
 
 		if (i >= current_function_defined_parameters.top().size()) {
-			arr.push_back(current_value);
+			vec.push_back(current_value);
 		}
 		else {
 			const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
@@ -2726,10 +2726,12 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 				// if is last parameter and is array
 				if (current_function_defined_parameters.top().size() - 1 == i
 					&& is_array(current_value->type)) {
-					arr = current_value->arr;
+					for (size_t i = 0; i < vec.size(); ++i) {
+						vec.push_back(current_value->arr.first[i]);
+					}
 				}
 				else {
-					arr.push_back(current_value);
+					vec.push_back(current_value);
 				}
 			}
 		}
@@ -2758,8 +2760,14 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		}
 	}
 
-	if (arr.size() > 0) {
+	if (vec.size() > 0) {
 		auto rest = new Value(Type::T_ARRAY, Type::T_ANY, std::vector<ASTExprNode*>());
+		auto rarr = new Value * [vec.size()];
+		for (size_t i = 0; i < vec.size(); ++i) {
+			rarr[i] = vec[i];
+		}
+		auto arr = cp_array(rarr, vec.size());
+		rest->set(arr, Type::T_ANY);
 		rest->set(arr, Type::T_ANY);
 		curr_scope->declare_variable(rest_name, new Variable(new Value(rest)));
 	}
@@ -2769,7 +2777,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 }
 
 void Interpreter::call_builtin_function(const std::string& identifier) {
-	auto arr = cp_array();
+	auto vec = std::vector<Value*>();
 
 	for (size_t i = 0; i < current_function_calling_arguments.top().size(); ++i) {
 		// is reference : not reference
@@ -2783,11 +2791,11 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 		}
 
 		if (i >= current_function_defined_parameters.top().size()) {
-			arr.push_back(current_value);
+			vec.push_back(current_value);
 		}
 		else {
 			if (std::get<3>(current_function_defined_parameters.top()[i])) {
-				arr.push_back(current_value);
+				vec.push_back(current_value);
 			}
 			else {
 				builtin_arguments.push_back(current_value);
@@ -2795,8 +2803,13 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 		}
 	}
 
-	if (arr.size() > 0) {
+	if (vec.size() > 0) {
 		auto rest = new Value(Type::T_ARRAY, Type::T_ANY, std::vector<ASTExprNode*>());
+		auto rarr = new Value * [vec.size()];
+		for (size_t i = 0; i < vec.size(); ++i) {
+			rarr[i] = vec[i];
+		}
+		auto arr = cp_array(rarr, vec.size());
 		rest->set(arr, Type::T_ANY);
 		builtin_arguments.push_back(rest);
 	}
@@ -2816,8 +2829,8 @@ void Interpreter::register_built_in_functions() {
 		if (builtin_arguments.size() == 0) {
 			return;
 		}
-		for (auto arg : builtin_arguments[0]->arr) {
-			std::cout << parse_value_to_string(arg);
+		for (size_t i = 0; i < builtin_arguments[0]->arr.second; ++i) {
+			std::cout << parse_value_to_string(builtin_arguments[0]->arr.first[i]);
 		}
 		};
 	params.clear();
@@ -2862,7 +2875,7 @@ void Interpreter::register_built_in_functions() {
 		auto val = new Value(Type::T_INT);
 
 		if (is_array(curr_val->type)) {
-			val->set(cp_int(curr_val->arr.size()));
+			val->set(cp_int(curr_val->arr.second));
 		}
 		else {
 			val->set(cp_int(curr_val->s.size()));
