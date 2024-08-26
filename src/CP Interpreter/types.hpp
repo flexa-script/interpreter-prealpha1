@@ -1,6 +1,7 @@
 #ifndef TYPES_HPP
 #define TYPES_HPP
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <map>
@@ -11,7 +12,7 @@ namespace parser {
 	enum class Type {
 		T_UNDEFINED, T_VOID, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ARRAY, T_STRUCT, T_ANY, T_FUNCTION
 	};
-	
+
 	std::string type_str(Type);
 
 	bool match_type(Type, Type);
@@ -198,14 +199,14 @@ public:
 
 class Value : public TypeDefinition {
 public:
-	cp_bool b = false;
-	cp_int i = 0;
-	cp_float f = 0;
-	cp_char c = '\0';
-	cp_string s;
-	cp_array arr;
-	cp_struct str;
-	cp_function fun;
+	std::shared_ptr<cp_bool> b = nullptr;
+	std::shared_ptr<cp_int> i = nullptr;
+	std::shared_ptr<cp_float> f = nullptr;
+	std::shared_ptr<cp_char> c = nullptr;
+	std::shared_ptr<cp_string> s = nullptr;
+	std::shared_ptr<cp_array> arr = nullptr;
+	std::shared_ptr<cp_struct> str = nullptr;
+	std::shared_ptr<cp_function> fun = nullptr;
 	Variable* ref = nullptr;
 
 	Value(Type type, Type array_type, std::vector<ASTExprNode*> dim,
@@ -235,6 +236,17 @@ public:
 	void set(cp_array, Type);
 	void set(cp_struct);
 	void set(cp_function);
+
+	cp_bool get_b() const;
+	cp_int get_i() const;
+	cp_float get_f() const;
+	cp_char get_c() const;
+	cp_string get_s() const;
+	cp_array get_arr() const;
+	cp_struct get_str() const;
+	cp_function get_fun() const;
+
+	void unset();
 
 	void set_null();
 	void set_undefined();

@@ -140,9 +140,11 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, *new_var, *new_value, evaluate_access_vector_ptr);
 	}
 
-	if (new_value->arr.second == 1) {
-		auto arr = build_array(astnode->dim, new_value->arr.first[0], astnode->dim.size() - 1);
-		new_value->arr = arr;
+	auto arr = new_value->get_arr();
+
+	if (arr.second == 1) {
+		auto rarr = build_array(astnode->dim, arr.first[0], astnode->dim.size() - 1);
+		new_value->set(rarr, current_expression_array_type.type);
 		new_value->type = Type::T_ARRAY;
 		new_value->array_type = current_expression_array_type.type;
 		new_value->type_name = current_expression_array_type.type_name;
@@ -188,13 +190,15 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		new_value = new Value(ptr_value);
 	}
 
+	auto arr = new_value->get_arr();
+
 	std::vector<unsigned int> dim;
 	if (variable->dim.size() > 0) {
 		dim = evaluate_access_vector(variable->dim);
 	}
-	if (new_value->arr.second == 1 && dim.size() > 0) {
-		auto arr = build_array(variable->dim, new_value->arr.first[0], variable->dim.size() - 1);
-		new_value->arr = arr;
+	if (arr.second == 1 && dim.size() > 0) {
+		auto rarr = build_array(variable->dim, arr.first[0], variable->dim.size() - 1);
+		new_value->set(rarr, current_expression_array_type.type);
 		new_value->type = Type::T_ARRAY;
 		new_value->array_type = current_expression_array_type.type;
 		new_value->type_name = current_expression_array_type.type_name;
@@ -225,7 +229,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		cp_int pos = 0;
 		if (has_string_access) {
 			astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
-			pos = current_expression_value->i;
+			pos = current_expression_value->get_i();
 		}
 
 		if (astnode->op == "=") {
@@ -260,9 +264,9 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 
 		if (value->type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
 			has_string_access = false;
-			std::string str = value->s;
+			std::string str = value->get_s();
 			current_function_call_identifier_vector.top().back().access_vector[current_function_call_identifier_vector.top().back().access_vector.size() - 1]->accept(this);
-			auto pos = value->i;
+			auto pos = value->get_i();
 
 			auto char_value = new Value(Type::T_CHAR);
 			char_value->set(cp_char(str[pos]));
@@ -335,8 +339,8 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 			try {
 				auto var_scope = get_inner_most_variable_scope(nmspace, identifier);
 				auto var = var_scope->find_declared_variable(identifier);
-				nmspace = var->value->fun.first;
-				identifier = var->value->fun.second;
+				nmspace = var->value->get_fun().first;
+				identifier = var->value->get_fun().second;
 				identifier_vector = std::vector<Identifier>{ Identifier(identifier) };
 				func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, strict);
 			}
@@ -550,7 +554,7 @@ void Interpreter::visit(ASTElseIfNode* astnode) {
 		ExceptionHandler::throw_condition_type_err();
 	}
 
-	bool result = current_expression_value->b;
+	bool result = current_expression_value->get_b();
 
 	if (result) {
 		astnode->block->accept(this);
@@ -567,7 +571,7 @@ void Interpreter::visit(ASTIfNode* astnode) {
 		ExceptionHandler::throw_condition_type_err();
 	}
 
-	bool result = current_expression_value->b;
+	bool result = current_expression_value->get_b();
 
 	if (result) {
 		astnode->if_block->accept(this);
@@ -609,7 +613,7 @@ void Interpreter::visit(ASTForNode* astnode) {
 		current_expression_value->set(true);
 	}
 
-	bool result = current_expression_value->b;
+	bool result = current_expression_value->get_b();
 
 	while (result) {
 		astnode->block->accept(this);
@@ -647,7 +651,7 @@ void Interpreter::visit(ASTForNode* astnode) {
 			current_expression_value->set(true);
 		}
 
-		result = current_expression_value->b;
+		result = current_expression_value->get_b();
 	}
 
 	scopes[nmspace].pop_back();
@@ -668,7 +672,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 
 	switch (current_expression_value->type) {
 	case Type::T_ARRAY: {
-		const auto& colletion = current_expression_value->arr;
+		const auto& colletion = current_expression_value->get_arr();
 		for (size_t i = 0; i < colletion.second; ++i) {
 			auto val = colletion.first[i];
 
@@ -702,7 +706,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		break;
 	}
 	case Type::T_STRING: {
-		const auto& colletion = current_expression_value->s;
+		const auto& colletion = current_expression_value->get_s();
 		for (auto val : colletion) {
 			astnode->itdecl->accept(this);
 
@@ -734,7 +738,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		break;
 	}
 	case Type::T_STRUCT: {
-		const auto& colletion = current_expression_value->str;
+		const auto& colletion = current_expression_value->get_str();
 		for (const auto& val : colletion) {
 			astnode->itdecl->accept(this);
 
@@ -836,8 +840,8 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 			}
 
 			Value* value = new Value(Type::T_STRUCT);
-			value->str = cp_struct();
-			value->str["error"] = new Value(cp_string(ex.what()));
+			value->get_str() = cp_struct();
+			value->get_str()["error"] = new Value(cp_string(ex.what()));
 			value->type_name_space = "cp";
 			value->type_name = "Exception";
 
@@ -866,10 +870,10 @@ void Interpreter::visit(parser::ASTThrowNode* astnode) {
 			throw std::runtime_error("struct 'cp::Exception' not found");
 		}
 
-		throw std::exception(current_expression_value->str["error"]->s.c_str());
+		throw std::exception(current_expression_value->get_str()["error"]->get_s().c_str());
 	}
 	else if (is_string(current_expression_value->type)) {
-		throw std::runtime_error(current_expression_value->s);
+		throw std::runtime_error(current_expression_value->get_s());
 	}
 	else {
 		throw std::runtime_error("expected Exception cp::Exception struct or string in throw");
@@ -898,7 +902,7 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 		ExceptionHandler::throw_condition_type_err();
 	}
 
-	bool result = current_expression_value->b;
+	bool result = current_expression_value->get_b();
 
 	while (result) {
 		astnode->block->accept(this);
@@ -927,7 +931,7 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 			ExceptionHandler::throw_condition_type_err();
 		}
 
-		result = current_expression_value->b;
+		result = current_expression_value->get_b();
 	}
 
 	--is_loop;
@@ -968,7 +972,7 @@ void Interpreter::visit(ASTDoWhileNode* astnode) {
 			ExceptionHandler::throw_condition_type_err();
 		}
 
-		result = current_expression_value->b;
+		result = current_expression_value->get_b();
 	} while (result);
 
 	--is_loop;
@@ -1138,9 +1142,9 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 		if (var_type_struct.dim.size() > 0) {
 			dim = evaluate_access_vector(var_type_struct.dim);
 		}
-		if (str_value->arr.second == 1 && dim.size() > 0) {
-			auto arr = build_array(var_type_struct.dim, str_value->arr.first[0], var_type_struct.dim.size() - 1);
-			str_value->arr = arr;
+		if (str_value->get_arr().second == 1 && dim.size() > 0) {
+			auto arr = build_array(var_type_struct.dim, str_value->get_arr().first[0], var_type_struct.dim.size() - 1);
+			str_value->set(arr, current_expression_array_type.type);
 			str_value->type = Type::T_ARRAY;
 			str_value->array_type = current_expression_array_type.type;
 			str_value->type_name = current_expression_array_type.type_name;
@@ -1252,9 +1256,9 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 
 	if (current_expression_value->type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
 		has_string_access = false;
-		auto str = current_expression_value->s;
+		auto str = current_expression_value->get_s();
 		astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
-		auto pos = current_expression_value->i;
+		auto pos = current_expression_value->get_i();
 
 		auto char_value = new Value(Type::T_CHAR);
 		char_value->set(cp_char(str[pos]));
@@ -1274,7 +1278,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 		l_value = new Value(current_expression_value);
 	}
 
-	if (is_bool(current_expression_value->type) && astnode->op == "and" && !current_expression_value->b) {
+	if (is_bool(current_expression_value->type) && astnode->op == "and" && !current_expression_value->get_b()) {
 		return;
 	}
 
@@ -1294,7 +1298,7 @@ void Interpreter::visit(ASTTernaryNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->condition->accept(this);
-	if (current_expression_value->b) {
+	if (current_expression_value->get_b()) {
 		astnode->value_if_true->accept(this);
 	}
 	else {
@@ -1311,7 +1315,7 @@ void Interpreter::visit(ASTInNode* astnode) {
 	bool res = false;
 
 	if (is_array(current_expression_value->type)) {
-		cp_array expr_col = current_expression_value->arr;
+		cp_array expr_col = current_expression_value->get_arr();
 
 		for (size_t i = 0; i < expr_col.second; ++i) {
 			res = equals_value(&expr_val, expr_col.first[i]);
@@ -1321,13 +1325,13 @@ void Interpreter::visit(ASTInNode* astnode) {
 		}
 	}
 	else {
-		const auto& expr_col = current_expression_value->s;
+		const auto& expr_col = current_expression_value->get_s();
 
 		if (is_char(expr_val.type)) {
-			res = current_expression_value->s.find(expr_val.c) != std::string::npos;
+			res = current_expression_value->get_s().find(expr_val.get_c()) != std::string::npos;
 		}
 		else {
-			res = current_expression_value->s.find(expr_val.s) != std::string::npos;
+			res = current_expression_value->get_s().find(expr_val.get_s()) != std::string::npos;
 		}
 	}
 
@@ -1359,35 +1363,35 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 		switch (current_expression_value->type) {
 		case Type::T_INT:
 			if (astnode->unary_op == "-") {
-				current_expression_value->set(cp_int(-current_expression_value->i));
+				current_expression_value->set(cp_int(-current_expression_value->get_i()));
 			}
 			else if (astnode->unary_op == "--") {
-				current_expression_value->set(cp_int(--current_expression_value->i));
+				current_expression_value->set(cp_int(current_expression_value->get_i() - 1));
 				has_assign = true;
 			}
 			else if (astnode->unary_op == "++") {
-				current_expression_value->set(cp_int(++current_expression_value->i));
+				current_expression_value->set(cp_int(current_expression_value->get_i() + 1));
 				has_assign = true;
 			}
 			else if (astnode->unary_op == "~") {
-				current_expression_value->set(cp_int(~current_expression_value->i));
+				current_expression_value->set(cp_int(~current_expression_value->get_i()));
 			}
 			break;
 		case Type::T_FLOAT:
 			if (astnode->unary_op == "-") {
-				current_expression_value->set(cp_float(-current_expression_value->f));
+				current_expression_value->set(cp_float(-current_expression_value->get_f()));
 			}
 			else if (astnode->unary_op == "--") {
-				current_expression_value->set(cp_float(--current_expression_value->f));
+				current_expression_value->set(cp_float(current_expression_value->get_f() - 1));
 				has_assign = true;
 			}
 			else if (astnode->unary_op == "++") {
-				current_expression_value->set(cp_float(++current_expression_value->f));
+				current_expression_value->set(cp_float(current_expression_value->get_f() + 1));
 				has_assign = true;
 			}
 			break;
 		case Type::T_BOOL:
-			current_expression_value->set(cp_bool(!current_expression_value->b));
+			current_expression_value->set(cp_bool(!current_expression_value->get_b()));
 			break;
 		default:
 			throw std::runtime_error("incompatible unary operator '" + astnode->unary_op +
@@ -1429,16 +1433,16 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 			new_value->copy_from(current_expression_value);
 			break;
 		case Type::T_INT:
-			new_value->set(cp_bool(current_expression_value->i != 0));
+			new_value->set(cp_bool(current_expression_value->get_i() != 0));
 			break;
 		case Type::T_FLOAT:
-			new_value->set(cp_bool(current_expression_value->f != .0));
+			new_value->set(cp_bool(current_expression_value->get_f() != .0));
 			break;
 		case Type::T_CHAR:
-			new_value->set(cp_bool(current_expression_value->c != '\0'));
+			new_value->set(cp_bool(current_expression_value->get_c() != '\0'));
 			break;
 		case Type::T_STRING:
-			new_value->set(cp_bool(!current_expression_value->s.empty()));
+			new_value->set(cp_bool(!current_expression_value->get_s().empty()));
 			break;
 		}
 		break;
@@ -1446,23 +1450,23 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 	case Type::T_INT:
 		switch (current_expression_value->type) {
 		case Type::T_BOOL:
-			new_value->set(cp_int(current_expression_value->b));
+			new_value->set(cp_int(current_expression_value->get_b()));
 			break;
 		case Type::T_INT:
 			new_value->copy_from(current_expression_value);
 			break;
 		case Type::T_FLOAT:
-			new_value->set(cp_int(current_expression_value->f));
+			new_value->set(cp_int(current_expression_value->get_f()));
 			break;
 		case Type::T_CHAR:
-			new_value->set(cp_int(current_expression_value->c));
+			new_value->set(cp_int(current_expression_value->get_c()));
 			break;
 		case Type::T_STRING:
 			try {
-				new_value->set(cp_int(std::stoll(current_expression_value->s)));
+				new_value->set(cp_int(std::stoll(current_expression_value->get_s())));
 			}
 			catch (...) {
-				throw std::runtime_error("'" + current_expression_value->s + "' is not a valid value to parse int");
+				throw std::runtime_error("'" + current_expression_value->get_s() + "' is not a valid value to parse int");
 			}
 			break;
 		}
@@ -1471,23 +1475,23 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 	case Type::T_FLOAT:
 		switch (current_expression_value->type) {
 		case Type::T_BOOL:
-			new_value->set(cp_float(current_expression_value->b));
+			new_value->set(cp_float(current_expression_value->get_b()));
 			break;
 		case Type::T_INT:
-			new_value->set(cp_float(current_expression_value->i));
+			new_value->set(cp_float(current_expression_value->get_i()));
 			break;
 		case Type::T_FLOAT:
 			new_value->copy_from(current_expression_value);
 			break;
 		case Type::T_CHAR:
-			new_value->set(cp_float(current_expression_value->c));
+			new_value->set(cp_float(current_expression_value->get_c()));
 			break;
 		case Type::T_STRING:
 			try {
-				new_value->set(cp_float(std::stold(current_expression_value->s)));
+				new_value->set(cp_float(std::stold(current_expression_value->get_s())));
 			}
 			catch (...) {
-				throw std::runtime_error("'" + current_expression_value->s + "' is not a valid value to parse float");
+				throw std::runtime_error("'" + current_expression_value->get_s() + "' is not a valid value to parse float");
 			}
 			break;
 		}
@@ -1496,23 +1500,23 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 	case Type::T_CHAR:
 		switch (current_expression_value->type) {
 		case Type::T_BOOL:
-			new_value->set(cp_char(current_expression_value->b));
+			new_value->set(cp_char(current_expression_value->get_b()));
 			break;
 		case Type::T_INT:
-			new_value->set(cp_char(current_expression_value->i));
+			new_value->set(cp_char(current_expression_value->get_i()));
 			break;
 		case Type::T_FLOAT:
-			new_value->set(cp_char(current_expression_value->f));
+			new_value->set(cp_char(current_expression_value->get_f()));
 			break;
 		case Type::T_CHAR:
 			new_value->copy_from(current_expression_value);
 			break;
 		case Type::T_STRING:
-			if (new_value->s.size() > 1) {
-				throw std::runtime_error("'" + current_expression_value->s + "' is not a valid value to parse char");
+			if (new_value->get_s().size() > 1) {
+				throw std::runtime_error("'" + current_expression_value->get_s() + "' is not a valid value to parse char");
 			}
 			else {
-				new_value->set(cp_char(current_expression_value->s[0]));
+				new_value->set(cp_char(current_expression_value->get_s()[0]));
 			}
 			break;
 		}
@@ -1576,7 +1580,7 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 	std::string str_type = "";
 
 	if (is_array(type)) {
-		dim = calculate_array_dim_size(curr_value->arr);
+		dim = calculate_array_dim_size(curr_value->get_arr());
 		type = curr_value->array_type;
 	}
 
@@ -1584,9 +1588,9 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 
 	if (is_struct(type)) {
 		if (dim.size() > 0) {
-			auto arr = curr_value->arr.first[0];
+			auto arr = curr_value->get_arr().first[0];
 			for (size_t i = 0; i < dim.size() - 1; ++i) {
-				arr = arr->arr.first[0];
+				arr = arr->get_arr().first[0];
 			}
 			str_type = arr->type_name;
 		}
@@ -1617,7 +1621,7 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 	}
 }
 
-bool Interpreter::equals_value(const Value* lval, const Value* rval) {
+cp_bool Interpreter::equals_value(const Value* lval, const Value* rval) {
 	if (lval->use_ref) {
 		return lval == rval;
 	}
@@ -1626,24 +1630,24 @@ bool Interpreter::equals_value(const Value* lval, const Value* rval) {
 	case Type::T_VOID:
 		return is_void(rval->type);
 	case Type::T_BOOL:
-		return lval->b == rval->b;
+		return lval->get_b() == rval->get_b();
 	case Type::T_INT:
-		return lval->i == rval->i;
+		return lval->get_i() == rval->get_i();
 	case Type::T_FLOAT:
-		return lval->f == rval->f;
+		return lval->get_f() == rval->get_f();
 	case Type::T_CHAR:
-		return lval->c == rval->c;
+		return lval->get_c() == rval->get_c();
 	case Type::T_STRING:
-		return lval->s == rval->s;
+		return lval->get_s() == rval->get_s();
 	case Type::T_ARRAY:
-		return equals_array(lval->arr, rval->arr);
+		return equals_array(lval->get_arr(), rval->get_arr());
 	case Type::T_STRUCT:
-		return equals_struct(lval->str, rval->str);
+		return equals_struct(lval->get_str(), rval->get_str());
 	}
 	return false;
 }
 
-bool Interpreter::equals_struct(const cp_struct& lstr, const cp_struct& rstr) {
+cp_bool Interpreter::equals_struct(const cp_struct& lstr, const cp_struct& rstr) {
 	if (lstr.size() != rstr.size()) {
 		return false;
 	}
@@ -1660,7 +1664,7 @@ bool Interpreter::equals_struct(const cp_struct& lstr, const cp_struct& rstr) {
 	return true;
 }
 
-bool Interpreter::equals_array(const cp_array& larr, const cp_array& rarr) {
+cp_bool Interpreter::equals_array(const cp_array& larr, const cp_array& rarr) {
 	if (larr.second != rarr.second) {
 		return false;
 	}
@@ -1777,7 +1781,7 @@ Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser:
 		auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
 		if (access_vector.size() > 0) {
-			cp_array* current_val = &value->arr;
+			auto current_val = value->arr;
 			size_t s = 0;
 			size_t access_pos = 0;
 
@@ -1786,16 +1790,16 @@ Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser:
 
 				// break if it is a string, and the string access will be handled in identifier node evaluation
 				if (is_string(current_val->first[access_pos]->type)) {
-					current_val->first[access_pos]->s[access_vector.at(s + 1)] = new_value->c;
+					current_val->first[access_pos]->get_s()[access_vector.at(s + 1)] = new_value->get_c();
 					return current_val->first[access_pos];
 				}
 				if (access_pos >= current_val->second) {
 					throw std::runtime_error("invalid array position access");
 				}
-				current_val = &current_val->first[access_pos]->arr;
+				current_val = current_val->first[access_pos]->arr;
 			}
 			if (is_string(value->type)) {
-				value->s[access_vector.at(s)] = new_value->c;
+				value->get_s()[access_vector.at(s)] = new_value->get_c();
 				return value;
 			}
 			access_pos = access_vector.at(s);
@@ -1822,10 +1826,10 @@ Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser:
 			}
 
 			if (i == identifier_vector.size() - 1) {
-				value->str[identifier_vector[i].identifier] = new_value;
+				value->str->at(identifier_vector[i].identifier) = new_value;
 			}
 			else {
-				value = value->str[identifier_vector[i].identifier];
+				value = value->get_str()[identifier_vector[i].identifier];
 			}
 		}
 	}
@@ -1839,7 +1843,7 @@ Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, co
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
 	if (access_vector.size() > 0) {
-		cp_array* current_Val = &next_value->arr;
+		auto current_Val = next_value->arr;
 		size_t s = 0;
 		size_t access_pos = 0;
 
@@ -1853,7 +1857,7 @@ Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, co
 			if (access_pos >= current_Val->second) {
 				throw std::runtime_error("invalid array position access");
 			}
-			current_Val = &current_Val->first[access_pos]->arr;
+			current_Val = current_Val->first[access_pos]->arr;
 		}
 		if (is_string(next_value->type)) {
 			has_string_access = true;
@@ -1877,7 +1881,7 @@ Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, co
 			throw std::runtime_error("cannot reach '" + ss.str() + "', previous '" + identifier_vector[i - 1].identifier + "' value is null");
 		}
 
-		next_value = next_value->str[identifier_vector[i].identifier];
+		next_value = next_value->get_str()[identifier_vector[i].identifier];
 
 		if (identifier_vector[i].access_vector.size() > 0 || i < identifier_vector.size()) {
 			return access_value(scope, next_value, identifier_vector, i);
@@ -1901,7 +1905,7 @@ cp_array Interpreter::build_array(const std::vector<ASTExprNode*>& dim, Value* i
 	else {
 		auto crr_acc = dim[i];
 		crr_acc->accept(this);
-		size = current_expression_value->i;
+		size = current_expression_value->get_i();
 	}
 
 	raw_arr = new Value * [size];
@@ -1945,7 +1949,7 @@ std::vector<unsigned int> Interpreter::calculate_array_dim_size(const cp_array& 
 	dim.push_back(arr.second);
 
 	if (is_array(arr.first[0]->type)) {
-		auto dim2 = calculate_array_dim_size(arr.first[0]->arr);
+		auto dim2 = calculate_array_dim_size(arr.first[0]->get_arr());
 		dim.insert(dim.end(), dim2.begin(), dim2.end());
 	}
 
@@ -1961,7 +1965,7 @@ std::vector<unsigned int> Interpreter::evaluate_access_vector(const std::vector<
 			if (!is_int(current_expression_value->type)) {
 				throw std::runtime_error("array index access must be a integer value");
 			}
-			val = current_expression_value->i;
+			val = current_expression_value->get_i();
 		}
 		access_vector.push_back(val);
 	}
@@ -1979,19 +1983,19 @@ std::string Interpreter::parse_value_to_string(const Value* value) {
 		str = "null";
 		break;
 	case Type::T_BOOL:
-		str = ((value->b) ? "true" : "false");
+		str = ((value->get_b()) ? "true" : "false");
 		break;
 	case Type::T_INT:
-		str = std::to_string(value->i);
+		str = std::to_string(value->get_i());
 		break;
 	case Type::T_FLOAT:
-		str = std::to_string(value->f);
+		str = std::to_string(value->get_f());
 		break;
 	case Type::T_CHAR:
-		str = cp_string(std::string{ value->c });
+		str = cp_string(std::string{ value->get_c() });
 		break;
 	case Type::T_STRING:
-		str = value->s;
+		str = value->get_s();
 		break;
 	case Type::T_STRUCT: {
 		if (std::find(printed.begin(), printed.end(), reinterpret_cast<uintptr_t>(value)) != printed.end()) {
@@ -2010,10 +2014,10 @@ std::string Interpreter::parse_value_to_string(const Value* value) {
 		break;
 	}
 	case Type::T_ARRAY:
-		str = parse_array_to_string(value->arr);
+		str = parse_array_to_string(value->get_arr());
 		break;
 	case Type::T_FUNCTION: {
-		auto funcs = get_inner_most_functions_scope(value->fun.first, value->fun.second)->find_declared_functions(value->fun.second);
+		auto funcs = get_inner_most_functions_scope(value->get_fun().first, value->get_fun().second)->find_declared_functions(value->get_fun().second);
 		for (auto& it = funcs.first; it != funcs.second; ++it) {
 			auto& func_name = it->first;
 			auto& func_sig = std::get<0>(it->second);
@@ -2055,7 +2059,7 @@ std::string Interpreter::parse_array_to_string(const cp_array& arr_value) {
 }
 
 std::string Interpreter::parse_struct_to_string(const Value* value) {
-	auto str_value = value->str;
+	auto str_value = value->get_str();
 	std::stringstream s = std::stringstream();
 	if (!value->type_name_space.empty()) {
 		s << value->type_name_space << "::";
@@ -2111,7 +2115,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	switch (r_type) {
 	case Type::T_BOOL: {
 		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->b);
+			lval->set(rval->get_b());
 			break;
 		}
 
@@ -2120,19 +2124,19 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (op == "=") {
-			lval->set(rval->b);
+			lval->set(rval->get_b());
 		}
 		else if (op == "and") {
-			res_value = new Value((cp_bool)(lval->b && rval->b));
+			res_value = new Value((cp_bool)(lval->get_b() && rval->get_b()));
 		}
 		else if (op == "or") {
-			res_value = new Value((cp_bool)(lval->b || rval->b));
+			res_value = new Value((cp_bool)(lval->get_b() || rval->get_b()));
 		}
 		else if (op == "==") {
-			res_value = new Value((cp_bool)(lval->b == rval->b));
+			res_value = new Value((cp_bool)(lval->get_b() == rval->get_b()));
 		}
 		else if (op == "!=") {
-			res_value = new Value((cp_bool)(lval->b != rval->b));
+			res_value = new Value((cp_bool)(lval->get_b() != rval->get_b()));
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
@@ -2142,7 +2146,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	}
 	case Type::T_INT: {
 		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->i);
+			lval->set(rval->get_i());
 			break;
 		}
 
@@ -2165,8 +2169,8 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		if (is_expr
 			&& is_numeric(l_type)
 			&& Token::is_equality_op(op)) {
-			cp_float l = is_float(lval->type) ? lval->f : lval->i;
-			cp_float r = is_float(rval->type) ? rval->f : rval->i;
+			cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
+			cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
 			res_value = new Value((cp_bool)(op == "==" ?
 				l == r : l != r));
@@ -2175,14 +2179,14 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (is_float(l_type) && (is_any(l_var_type) || is_expr)) {
-			lval->set(do_operation(lval->f, cp_float(rval->i), op));
+			lval->set(do_operation(lval->get_f(), cp_float(rval->get_i()), op));
 		}
 		else if (is_int(l_type) && is_any(l_var_type)
 			&& (op == "/=" || op == "/%=" || op == "/" || op == "/%")) {
-			lval->set(do_operation(cp_float(lval->i), cp_float(rval->i), op));
+			lval->set(do_operation(cp_float(lval->get_i()), cp_float(rval->get_i()), op));
 		}
 		else if (is_int(l_type)) {
-			lval->set(do_operation(lval->i, rval->i, op));
+			lval->set(do_operation(lval->get_i(), rval->get_i(), op));
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
@@ -2192,7 +2196,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	}
 	case Type::T_FLOAT: {
 		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->f);
+			lval->set(rval->get_f());
 			break;
 		}
 
@@ -2215,8 +2219,8 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		if (is_expr
 			&& is_numeric(l_type)
 			&& Token::is_equality_op(op)) {
-			cp_float l = is_float(lval->type) ? lval->f : lval->i;
-			cp_float r = is_float(rval->type) ? rval->f : rval->i;
+			cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
+			cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
 			res_value = new Value((cp_bool)(op == "==" ?
 				l == r : l != r));
@@ -2225,10 +2229,10 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		}
 
 		if (is_float(l_type)) {
-			lval->set(do_operation(lval->f, rval->f, op));
+			lval->set(do_operation(lval->get_f(), rval->get_f(), op));
 		}
 		else if (is_int(l_type)) {
-			lval->set(do_operation(cp_float(lval->i), rval->f, op));
+			lval->set(do_operation(cp_float(lval->get_i()), rval->get_f(), op));
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
@@ -2238,7 +2242,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	}
 	case Type::T_CHAR: {
 		if (is_any(l_var_type) && op == "=" && !has_string_access) {
-			lval->set(rval->c);
+			lval->set(rval->get_c());
 			break;
 		}
 
@@ -2246,8 +2250,8 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			&& is_char(l_type)
 			&& Token::is_equality_op(op)) {
 			res_value = new Value((cp_bool)(op == "==" ?
-				lval->c == rval->c
-				: lval->c != lval->c));
+				lval->get_c() == rval->get_c()
+				: lval->get_c() != lval->get_c()));
 
 			break;
 		}
@@ -2258,11 +2262,11 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 					ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 				}
 				has_string_access = false;
-				lval->s[str_pos] = rval->c;
-				lval->set(lval->s);
+				lval->get_s()[str_pos] = rval->get_c();
+				lval->set(lval->get_s());
 			}
 			else {
-				lval->set(do_operation(lval->s, std::string{ rval->c }, op));
+				lval->set(do_operation(lval->get_s(), std::string{ rval->get_c() }, op));
 			}
 		}
 		else if (is_char(l_type)) {
@@ -2270,14 +2274,14 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 				ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 			}
 
-			lval->set(rval->c);
+			lval->set(rval->get_c());
 		}
 		else if (is_any(l_var_type)) {
 			if (op != "=") {
 				ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 			}
 
-			lval->set(rval->c);
+			lval->set(rval->get_c());
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
@@ -2287,7 +2291,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	}
 	case Type::T_STRING: {
 		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->s);
+			lval->set(rval->get_s());
 			break;
 		}
 
@@ -2295,17 +2299,17 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			&& is_string(l_type)
 			&& Token::is_equality_op(op)) {
 			res_value = new Value((cp_bool)(op == "==" ?
-				lval->s == rval->s
-				: lval->s != rval->s));
+				lval->get_s() == rval->get_s()
+				: lval->get_s() != rval->get_s()));
 
 			break;
 		}
 
 		if (is_string(l_type)) {
-			lval->set(do_operation(lval->s, rval->s, op));
+			lval->set(do_operation(lval->get_s(), rval->get_s(), op));
 		}
 		else if (is_expr && is_char(l_type)) {
-			lval->set(do_operation(cp_string{ lval->c }, rval->s, op));
+			lval->set(do_operation(cp_string{ lval->get_c() }, rval->get_s(), op));
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
@@ -2315,7 +2319,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	}
 	case Type::T_ARRAY: {
 		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->arr, lval->array_type);
+			lval->set(rval->get_arr(), lval->array_type);
 			break;
 		}
 
@@ -2338,13 +2342,13 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
-		lval->set(do_operation(lval->arr, rval->arr, op), match_arr_t ? lval->array_type : Type::T_ANY);
+		lval->set(do_operation(lval->get_arr(), rval->get_arr(), op), match_arr_t ? lval->array_type : Type::T_ANY);
 
 		break;
 	}
 	case Type::T_STRUCT: {
 		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->str);
+			lval->set(rval->get_str());
 			break;
 		}
 
@@ -2362,13 +2366,13 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
-		lval->set(rval->str);
+		lval->set(rval->get_str());
 
 		break;
 	}
 	case Type::T_FUNCTION: {
 		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->str);
+			lval->set(rval->get_str());
 			break;
 		}
 
@@ -2376,7 +2380,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
-		lval->set(rval->fun);
+		lval->set(rval->get_fun());
 
 		break;
 	}
@@ -2393,8 +2397,8 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 }
 
 cp_bool Interpreter::do_relational_operation(const std::string& op, Value* lval, Value* rval) {
-	cp_float l = is_float(lval->type) ? lval->f : lval->i;
-	cp_float r = is_float(rval->type) ? rval->f : rval->i;
+	cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
+	cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
 	if (op == "<") {
 		return l < r;
@@ -2412,8 +2416,8 @@ cp_bool Interpreter::do_relational_operation(const std::string& op, Value* lval,
 }
 
 cp_int Interpreter::do_spaceship_operation(const std::string& op, Value* lval, Value* rval) {
-	cp_float l = is_float(lval->type) ? lval->f : lval->i;
-	cp_float r = is_float(rval->type) ? rval->f : rval->i;
+	cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
+	cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
 	auto res = l <=> r;
 	if (res == std::strong_ordering::less) {
@@ -2559,11 +2563,11 @@ cp_array Interpreter::do_operation(cp_array lval, cp_array rval, const std::stri
 void Interpreter::normalize_type(Variable* var, Value* val) {
 	if (is_string(var->type) && is_char(val->type)) {
 		val->type = var->type;
-		val->s = val->c;
+		val->set(cp_string{ val->get_c() });
 	}
 	else if (is_float(var->type) && is_int(val->type)) {
 		val->type = var->type;
-		val->f = val->i;
+		val->set(cp_float(val->get_i()));
 	}
 }
 
@@ -2571,15 +2575,15 @@ long long Interpreter::hash(ASTExprNode* astnode) {
 	astnode->accept(this);
 	switch (current_expression_value->type) {
 	case Type::T_BOOL:
-		return static_cast<long long>(current_expression_value->b);
+		return static_cast<long long>(current_expression_value->get_b());
 	case Type::T_INT:
-		return static_cast<long long>(current_expression_value->i);
+		return static_cast<long long>(current_expression_value->get_i());
 	case Type::T_FLOAT:
-		return static_cast<long long>(current_expression_value->f);
+		return static_cast<long long>(current_expression_value->get_f());
 	case Type::T_CHAR:
-		return static_cast<long long>(current_expression_value->c);
+		return static_cast<long long>(current_expression_value->get_c());
 	case Type::T_STRING:
-		return axe::StringUtils::hashcode(current_expression_value->s);
+		return axe::StringUtils::hashcode(current_expression_value->get_s());
 	default:
 		throw std::runtime_error("cannot determine type");
 	}
@@ -2621,15 +2625,15 @@ long long Interpreter::hash(ASTIdentifierNode* astnode) {
 
 	switch (value->type) {
 	case Type::T_BOOL:
-		return static_cast<long long>(value->b);
+		return static_cast<long long>(value->get_b());
 	case Type::T_INT:
-		return static_cast<long long>(value->i);
+		return static_cast<long long>(value->get_i());
 	case Type::T_FLOAT:
-		return static_cast<long long>(value->f);
+		return static_cast<long long>(value->get_f());
 	case Type::T_CHAR:
-		return static_cast<long long>(value->c);
+		return static_cast<long long>(value->get_c());
 	case Type::T_STRING:
-		return axe::StringUtils::hashcode(value->s);
+		return axe::StringUtils::hashcode(value->get_s());
 	default:
 		throw std::runtime_error("cannot determine type");
 	}
@@ -2657,7 +2661,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 				throw std::runtime_error("cannot reference char to string in function call");
 			}
 			current_function_calling_argument->type = std::get<1>(current_function_defined_parameters.top()[i]).type;
-			current_function_calling_argument->s = current_function_calling_argument->c;
+			current_function_calling_argument->set(cp_string{ current_function_calling_argument->get_c() });
 		}
 		else if (current_function_defined_parameters.top().size() > i
 			&& is_float(std::get<1>(current_function_defined_parameters.top()[i]).type) && is_int(current_function_calling_argument->type)) {
@@ -2667,7 +2671,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 				throw std::runtime_error("cannot reference int to float in function call");
 			}
 			current_function_calling_argument->type = std::get<1>(current_function_defined_parameters.top()[i]).type;
-			current_function_calling_argument->f = current_function_calling_argument->i;
+			current_function_calling_argument->set(cp_float(current_function_calling_argument->get_i()));
 		}
 
 		// is reference : not reference
@@ -2687,8 +2691,8 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
 
 			if (is_function(current_function_calling_argument->type)) {
-				auto funcs = get_inner_most_functions_scope(current_function_calling_argument->fun.first,
-					current_function_calling_argument->fun.second)->find_declared_functions(current_function_calling_argument->fun.second);
+				auto funcs = get_inner_most_functions_scope(current_function_calling_argument->get_fun().first,
+					current_function_calling_argument->get_fun().second)->find_declared_functions(current_function_calling_argument->get_fun().second);
 				for (auto& it = funcs.first; it != funcs.second; ++it) {
 					auto& func_params = std::get<0>(it->second);
 					auto& func_block = std::get<1>(it->second);
@@ -2711,7 +2715,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 				if (current_function_defined_parameters.top().size() - 1 == i
 					&& is_array(current_value->type)) {
 					for (size_t i = 0; i < vec.size(); ++i) {
-						vec.push_back(current_value->arr.first[i]);
+						vec.push_back(current_value->get_arr().first[i]);
 					}
 				}
 				else {
@@ -2731,8 +2735,8 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		std::get<2>(current_function_defined_parameters.top()[i])->accept(this);
 
 		if (is_function(current_expression_value->type)) {
-			auto funcs = get_inner_most_functions_scope(current_expression_value->fun.first,
-				current_expression_value->fun.second)->find_declared_functions(current_expression_value->fun.second);
+			auto funcs = get_inner_most_functions_scope(current_expression_value->get_fun().first,
+				current_expression_value->get_fun().second)->find_declared_functions(current_expression_value->get_fun().second);
 			for (auto& it = funcs.first; it != funcs.second; ++it) {
 				auto& func_params = std::get<0>(it->second);
 				auto& func_block = std::get<1>(it->second);
@@ -2813,8 +2817,8 @@ void Interpreter::register_built_in_functions() {
 		if (builtin_arguments.size() == 0) {
 			return;
 		}
-		for (size_t i = 0; i < builtin_arguments[0]->arr.second; ++i) {
-			std::cout << parse_value_to_string(builtin_arguments[0]->arr.first[i]);
+		for (size_t i = 0; i < builtin_arguments[0]->get_arr().second; ++i) {
+			std::cout << parse_value_to_string(builtin_arguments[0]->get_arr().first[i]);
 		}
 		};
 	params.clear();
@@ -2859,10 +2863,10 @@ void Interpreter::register_built_in_functions() {
 		auto val = new Value(Type::T_INT);
 
 		if (is_array(curr_val->type)) {
-			val->set(cp_int(curr_val->arr.second));
+			val->set(cp_int(curr_val->get_arr().second));
 		}
 		else {
-			val->set(cp_int(curr_val->s.size()));
+			val->set(cp_int(curr_val->get_s().size()));
 		}
 
 		current_expression_value = val;
@@ -2880,7 +2884,7 @@ void Interpreter::register_built_in_functions() {
 		auto& lval = builtin_arguments[1];
 		auto res = new Value(Type::T_BOOL);
 
-		res->b = equals_struct(rval->str, lval->str);
+		res->set(equals_struct(rval->get_str(), lval->get_str()));
 
 		current_expression_value = res;
 		};
@@ -2892,7 +2896,7 @@ void Interpreter::register_built_in_functions() {
 
 	builtin_functions["system"] = [this]() {
 		current_expression_value = new Value(Type::T_UNDEFINED);
-		system(builtin_arguments[0]->s.c_str());
+		system(builtin_arguments[0]->get_s().c_str());
 		};
 	params.clear();
 	params.push_back(std::make_tuple("cmd", TypeDefinition::get_basic(Type::T_STRING), nullptr, false));

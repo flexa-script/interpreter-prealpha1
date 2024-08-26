@@ -95,9 +95,9 @@ namespace visitor {
 		void register_built_in_functions();
 		void register_built_in_lib(const std::string& libname);
 
-		bool equals_value(const Value* lval, const Value* rval);
-		bool equals_array(const cp_array& larr, const cp_array& rarr);
-		bool equals_struct(const cp_struct& lstr, const cp_struct& rstr);
+		cp_bool equals_value(const Value* lval, const Value* rval);
+		cp_bool equals_array(const cp_array& larr, const cp_array& rarr);
+		cp_bool equals_struct(const cp_struct& lstr, const cp_struct& rstr);
 
 		const std::string& get_current_namespace();
 		const std::string& get_namespace(const std::string& nmspace = "") const override;

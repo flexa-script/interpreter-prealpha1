@@ -101,7 +101,7 @@ int CPInterpreter::interpreter() {
 		visitor::Interpreter interpreter(&interpreter_global_scope, main_program, programs);
 		interpreter.start();
 
-		return interpreter.current_expression_value->i;
+		return interpreter.current_expression_value->get_i();
 	}
 	catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;

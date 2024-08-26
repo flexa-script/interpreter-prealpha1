@@ -420,51 +420,116 @@ Value::Value(TypeDefinition v)
 Value::~Value() = default;
 
 void Value::set(cp_bool b) {
-	this->b = b;
+	unset();
+	this->b = std::unique_ptr<cp_bool>(new cp_bool(b));
+
 	type = Type::T_BOOL;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_int i) {
-	this->i = i;
+	unset();
+	this->i = std::unique_ptr<cp_int>(new cp_int(i));
 	type = Type::T_INT;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_float f) {
-	this->f = f;
+	unset();
+	this->f = std::unique_ptr<cp_float>(new cp_float(f));
 	type = Type::T_FLOAT;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_char c) {
-	this->c = c;
+	unset();
+	this->c = std::unique_ptr<cp_char>(new cp_char(c));
 	type = Type::T_CHAR;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_string s) {
-	this->s = s;
+	unset();
+	this->s = std::unique_ptr<cp_string>(new cp_string(s));
 	type = Type::T_STRING;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_array arr, Type array_type) {
-	this->arr = arr;
+	unset();
+	this->arr = std::unique_ptr<cp_array>(new cp_array(arr));
 	type = Type::T_ARRAY;
 	this->array_type = array_type;
 }
 
 void Value::set(cp_struct str) {
-	this->str = str;
+	unset();
+	this->str = std::unique_ptr<cp_struct>(new cp_struct(str));
 	type = Type::T_STRUCT;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_function fun) {
-	this->fun = fun;
+	unset();
+	this->fun = std::unique_ptr<cp_function>(new cp_function(fun));
 	type = Type::T_FUNCTION;
 	array_type = Type::T_UNDEFINED;
+}
+
+cp_bool Value::get_b() const {
+	if (b) {
+		return *b;
+	}
+	return false;
+}
+
+cp_int Value::get_i() const {
+	if (i) {
+		return *i;
+	}
+	return 0;
+}
+
+cp_float Value::get_f() const {
+	if (f) {
+		return *f;
+	}
+	return 0;
+}
+
+cp_char Value::get_c() const {
+	if (c) {
+		return *c;
+	}
+	return '\0';
+}
+
+cp_string Value::get_s() const {
+	if (s) {
+		return *s;
+	}
+	return "";
+}
+
+cp_array Value::get_arr() const {
+	if (arr) {
+		return *arr;
+	}
+	return cp_array();
+}
+
+cp_struct Value::get_str() const {
+	if (str) {
+		return *str;
+	}
+	return cp_struct();
+}
+
+cp_function Value::get_fun() const {
+	if (fun) {
+		return *fun;
+	}
+	return cp_function();
 }
 
 void Value::set_type(Type type) {
@@ -473,6 +538,17 @@ void Value::set_type(Type type) {
 
 void Value::set_arr_type(Type arr_type) {
 	this->array_type = arr_type;
+}
+
+void Value::unset() {
+	this->b = nullptr;
+	this->i = nullptr;
+	this->f = nullptr;
+	this->c = nullptr;
+	this->s = nullptr;
+	this->arr = nullptr;
+	this->str = nullptr;
+	this->fun = nullptr;
 }
 
 void Value::set_null() {
@@ -495,27 +571,27 @@ long double Value::value_hash() const {
 	case Type::T_VOID:
 		throw std::runtime_error("value is null");
 	case Type::T_BOOL:
-		return (long double)b;
+		return (long double)*b;
 	case Type::T_INT:
-		return (long double)i;
+		return (long double)*i;
 	case Type::T_FLOAT:
-		return (long double)f;
+		return (long double)*f;
 	case Type::T_CHAR:
-		return (long double)c;
+		return (long double)*c;
 	case Type::T_STRING:
-		return (long double)axe::StringUtils::hashcode(s);
+		return (long double)axe::StringUtils::hashcode(*s);
 	case Type::T_ANY:
 		throw std::runtime_error("value is any");
 	case Type::T_ARRAY: {
 		long double h = 0;
-		for (size_t i = 0; i < arr.second; ++i) {
-			h += arr.first[i]->value_hash();
+		for (size_t i = 0; i < arr->second; ++i) {
+			h += arr->first[i]->value_hash();
 		}
 		return h;
 	}
 	case Type::T_STRUCT: {
 		long double h = 0;
-		for (const auto& v : str) {
+		for (const auto& v : *str) {
 			h += v.second->value_hash();
 		}
 		return h;
@@ -544,12 +620,12 @@ void Value::copy_from(Value* value) {
 }
 
 bool Value::equals_array(cp_array arr) {
-	if (this->arr.second != arr.second) {
+	if (this->arr->second != arr.second) {
 		return false;
 	}
 
 	for (size_t i = 0; i < arr.second; ++i) {
-		if (!this->arr.first[i]->equals(arr.first[i])) {
+		if (!this->arr->first[i]->equals(arr.first[i])) {
 			return false;
 		}
 	}
@@ -567,7 +643,7 @@ bool Value::equals(Value* value) {
 		f == value->f &&
 		c == value->c &&
 		s == value->s &&
-		equals_array(value->arr) &&
+		equals_array(*value->arr) &&
 		str == value->str;
 }
 
