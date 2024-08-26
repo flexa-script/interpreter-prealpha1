@@ -70,8 +70,6 @@ namespace visitor {
 
 		cp_array build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i);
 
-		void declare_structure(cp_struct& str, const std::string& nmspace);
-
 		void normalize_type(Variable* var, Value* val);
 		Value* do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr = false, cp_int str_pos = 0);
 		cp_int do_spaceship_operation(const std::string& op, Value* lval, Value* rval);

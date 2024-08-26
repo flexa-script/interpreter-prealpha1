@@ -734,7 +734,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		break;
 	}
 	case Type::T_STRUCT: {
-		const auto& colletion = std::get<2>(current_expression_value->str);
+		const auto& colletion = current_expression_value->str;
 		for (const auto& val : colletion) {
 			astnode->itdecl->accept(this);
 
@@ -748,15 +748,16 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 				}
 
 				auto str = cp_struct();
-				std::get<0>(str) = "cp";
-				std::get<1>(str) = "Pair";
-				std::get<2>(str)["key"] = new Value(cp_string(val.first));
-				std::get<2>(str)["value"] = val.second;
+				str["key"] = new Value(cp_string(val.first));
+				str["value"] = val.second;
+				auto str_value = new Value(str);
+				str_value->type_name_space = "cp";
+				str_value->type_name = "Pair";
 
 				set_value(
 					scopes[nmspace].back(),
 					std::vector<Identifier>{Identifier(itdecl->identifier)},
-					new Value(str));
+					str_value);
 			}
 			else if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
 				if (idnode->declarations.size() != 2) {
@@ -836,9 +837,9 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 
 			Value* value = new Value(Type::T_STRUCT);
 			value->str = cp_struct();
-			std::get<0>(value->str) = "cp";
-			std::get<1>(value->str) = "Exception";
-			std::get<2>(value->str)["error"] = new Value(cp_string(ex.what()));
+			value->str["error"] = new Value(cp_string(ex.what()));
+			value->type_name_space = "cp";
+			value->type_name = "Exception";
 
 			current_expression_value->ref->set_value(value);
 		}
@@ -865,7 +866,7 @@ void Interpreter::visit(parser::ASTThrowNode* astnode) {
 			throw std::runtime_error("struct 'cp::Exception' not found");
 		}
 
-		throw std::exception(std::get<2>(current_expression_value->str)["error"]->s.c_str());
+		throw std::exception(current_expression_value->str["error"]->s.c_str());
 	}
 	else if (is_string(current_expression_value->type)) {
 		throw std::runtime_error(current_expression_value->s);
@@ -1114,9 +1115,6 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 	auto value = new Value(Type::T_STRUCT);
 
 	auto str = cp_struct();
-	std::get<0>(str) = astnode->nmspace;
-	std::get<1>(str) = astnode->type_name;
-	std::get<2>(str) = cp_struct_values();
 
 	for (auto& expr : astnode->values) {
 		if (type_struct.variables.find(expr.first) == type_struct.variables.end()) {
@@ -1156,12 +1154,20 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 		}
 		str_value->dim = var_type_struct.dim;
 
-		std::get<2>(str)[expr.first] = str_value;
+		str[expr.first] = str_value;
 	}
 
-	declare_structure(str, astnode->nmspace);
+	// declare rest values as null
+	for (auto& struct_var_def : type_struct.variables) {
+		if (str.find(struct_var_def.first) == str.end()) {
+			Value* str_value = new Value(struct_var_def.second.type);
+			str_value->set_null();
+			str[struct_var_def.first] = str_value;
+		}
+	}
 
 	value->set(str);
+	value->type_name_space = astnode->nmspace;
 	value->type_name = astnode->type_name;
 	current_expression_value = value;
 }
@@ -1216,9 +1222,9 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 			}
 			type = Type::T_STRUCT;
 			auto str = cp_struct();
-			std::get<0>(str) = nmspace;
-			std::get<1>(str) = astnode->identifier;
 			expression_value->set(str);
+			expression_value->type_name_space = nmspace;
+			expression_value->type_name = astnode->identifier;
 		}
 
 		expression_value->set_type(type);
@@ -1582,10 +1588,10 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 			for (size_t i = 0; i < dim.size() - 1; ++i) {
 				arr = arr->arr.first[0];
 			}
-			str_type = std::get<1>(arr->str);
+			str_type = arr->type_name;
 		}
 		else {
-			str_type = std::get<1>(curr_value->str);
+			str_type = curr_value->type_name;
 		}
 	}
 
@@ -1595,8 +1601,8 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 		}
 	}
 
-	if (is_struct(type) && !std::get<0>(curr_value->str).empty()) {
-		str_type = std::get<0>(curr_value->str) + "::" + str_type;
+	if (is_struct(type) && !curr_value->type_name_space.empty()) {
+		str_type = curr_value->type_name_space + "::" + str_type;
 	}
 
 	if (astnode->image == "typeid") {
@@ -1638,17 +1644,15 @@ bool Interpreter::equals_value(const Value* lval, const Value* rval) {
 }
 
 bool Interpreter::equals_struct(const cp_struct& lstr, const cp_struct& rstr) {
-	if (std::get<0>(lstr) != std::get<0>(rstr)
-		|| std::get<1>(lstr) != std::get<1>(rstr)
-		|| std::get<2>(lstr).size() != std::get<2>(rstr).size()) {
+	if (lstr.size() != rstr.size()) {
 		return false;
 	}
 
-	for (auto& lval : std::get<2>(lstr)) {
-		if (std::get<2>(rstr).find(lval.first) == std::get<2>(rstr).end()) {
+	for (auto& lval : lstr) {
+		if (rstr.find(lval.first) == rstr.end()) {
 			return false;
 		}
-		if (!equals_value(lval.second, std::get<2>(rstr).at(lval.first))) {
+		if (!equals_value(lval.second, rstr.at(lval.first))) {
 			return false;
 		}
 	}
@@ -1818,10 +1822,10 @@ Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser:
 			}
 
 			if (i == identifier_vector.size() - 1) {
-				std::get<2>(value->str)[identifier_vector[i].identifier] = new_value;
+				value->str[identifier_vector[i].identifier] = new_value;
 			}
 			else {
-				value = std::get<2>(value->str)[identifier_vector[i].identifier];
+				value = value->str[identifier_vector[i].identifier];
 			}
 		}
 	}
@@ -1873,7 +1877,7 @@ Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, co
 			throw std::runtime_error("cannot reach '" + ss.str() + "', previous '" + identifier_vector[i - 1].identifier + "' value is null");
 		}
 
-		next_value = std::get<2>(next_value->str)[identifier_vector[i].identifier];
+		next_value = next_value->str[identifier_vector[i].identifier];
 
 		if (identifier_vector[i].access_vector.size() > 0 || i < identifier_vector.size()) {
 			return access_value(scope, next_value, identifier_vector, i);
@@ -1948,26 +1952,6 @@ std::vector<unsigned int> Interpreter::calculate_array_dim_size(const cp_array& 
 	return dim;
 }
 
-void Interpreter::declare_structure(cp_struct& str, const std::string& nmspace) {
-	std::string actnmspace = get_namespace(nmspace);
-	InterpreterScope* curr_scope;
-	try {
-		curr_scope = get_inner_most_struct_definition_scope(get_namespace(actnmspace), std::get<1>(str));
-	}
-	catch (std::exception ex) {
-		throw std::runtime_error(ex.what());
-	}
-	auto struct_def = curr_scope->find_declared_structure_definition(std::get<1>(str));
-
-	for (auto& struct_var_def : struct_def.variables) {
-		if (std::get<2>(str).find(struct_var_def.first) == std::get<2>(str).end()) {
-			Value* str_value = new Value(struct_var_def.second.type);
-			str_value->set_null();
-			std::get<2>(str)[struct_var_def.first] = str_value;
-		}
-	}
-}
-
 std::vector<unsigned int> Interpreter::evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector) {
 	auto access_vector = std::vector<unsigned int>();
 	for (const auto& expr : expr_access_vector) {
@@ -2012,10 +1996,10 @@ std::string Interpreter::parse_value_to_string(const Value* value) {
 	case Type::T_STRUCT: {
 		if (std::find(printed.begin(), printed.end(), reinterpret_cast<uintptr_t>(value)) != printed.end()) {
 			std::stringstream s = std::stringstream();
-			if (!std::get<0>(value->str).empty()) {
-				s << std::get<0>(value->str) << "::";
+			if (!value->type_name_space.empty()) {
+				s << value->type_name_space << "::";
 			}
-			s << std::get<1>(value->str);
+			s << value->type_name;
 			s << "<" << value << ">{...}";
 			str = s.str();
 		}
@@ -2073,11 +2057,11 @@ std::string Interpreter::parse_array_to_string(const cp_array& arr_value) {
 std::string Interpreter::parse_struct_to_string(const Value* value) {
 	auto str_value = value->str;
 	std::stringstream s = std::stringstream();
-	if (!std::get<0>(str_value).empty()) {
-		s << std::get<0>(str_value) << "::";
+	if (!value->type_name_space.empty()) {
+		s << value->type_name_space << "::";
 	}
-	s << std::get<1>(str_value) << "<" << value << ">{";
-	for (auto const& [key, val] : std::get<2>(str_value)) {
+	s << value->type_name << "<" << value << ">{";
+	for (auto const& [key, val] : str_value) {
 		if (key != modules::Module::INSTANCE_ID_NAME) {
 			s << key + ":";
 			s << parse_value_to_string(val);

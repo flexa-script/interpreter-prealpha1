@@ -50,8 +50,7 @@ typedef long double cp_float;
 typedef char cp_char;
 typedef std::string cp_string;
 typedef std::pair<Value**, size_t> cp_array;
-typedef std::map<std::string, Value*> cp_struct_values;
-typedef std::tuple<std::string, std::string, cp_struct_values> cp_struct;
+typedef std::map<std::string, Value*> cp_struct;
 typedef std::pair<std::string, std::string> cp_function;
 
 class SemanticVariable;
@@ -247,8 +246,6 @@ public:
 
 	long double value_hash() const;
 
-	//void copy_array(cp_array arr);
-	//void copy_struct(cp_struct str);
 	void copy_from(Value* value);
 
 	bool equals_array(cp_array arr);

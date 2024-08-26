@@ -515,7 +515,7 @@ long double Value::value_hash() const {
 	}
 	case Type::T_STRUCT: {
 		long double h = 0;
-		for (const auto& v : std::get<2>(str)) {
+		for (const auto& v : str) {
 			h += v.second->value_hash();
 		}
 		return h;
@@ -524,24 +524,6 @@ long double Value::value_hash() const {
 		throw std::runtime_error("invalid type encountered");
 	}
 }
-
-//void Value::copy_array(cp_array arr) {
-//	this->arr = cp_array();
-//	for (auto ca : arr) {
-//		auto val = new Value(ca);
-//		this->arr.emplace_back(val);
-//	}
-//}
-
-//void Value::copy_struct(cp_struct str) {
-//	this->str = cp_struct();
-//	std::get<0>(this->str) = std::get<0>(str);
-//	std::get<1>(this->str) = std::get<1>(str);
-//	for (const auto& ca : std::get<2>(str)) {
-//		auto val = std::pair<std::string, Value*>(ca.first, new Value(ca.second));
-//		std::get<2>(this->str).emplace(val);
-//	}
-//}
 
 void Value::copy_from(Value* value) {
 	type = value->type;
