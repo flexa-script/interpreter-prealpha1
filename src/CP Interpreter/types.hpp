@@ -258,6 +258,7 @@ public:
 
 	long double value_hash() const;
 
+	void copy_array(std::shared_ptr<cp_array> arr);
 	void copy_from(Value* value);
 
 	bool equals_array(cp_array arr);

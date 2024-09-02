@@ -421,7 +421,7 @@ Value::~Value() = default;
 
 void Value::set(cp_bool b) {
 	unset();
-	this->b = std::unique_ptr<cp_bool>(new cp_bool(b));
+	this->b = std::shared_ptr<cp_bool>(new cp_bool(b));
 
 	type = Type::T_BOOL;
 	array_type = Type::T_UNDEFINED;
@@ -429,49 +429,49 @@ void Value::set(cp_bool b) {
 
 void Value::set(cp_int i) {
 	unset();
-	this->i = std::unique_ptr<cp_int>(new cp_int(i));
+	this->i = std::shared_ptr<cp_int>(new cp_int(i));
 	type = Type::T_INT;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_float f) {
 	unset();
-	this->f = std::unique_ptr<cp_float>(new cp_float(f));
+	this->f = std::shared_ptr<cp_float>(new cp_float(f));
 	type = Type::T_FLOAT;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_char c) {
 	unset();
-	this->c = std::unique_ptr<cp_char>(new cp_char(c));
+	this->c = std::shared_ptr<cp_char>(new cp_char(c));
 	type = Type::T_CHAR;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_string s) {
 	unset();
-	this->s = std::unique_ptr<cp_string>(new cp_string(s));
+	this->s = std::shared_ptr<cp_string>(new cp_string(s));
 	type = Type::T_STRING;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_array arr, Type array_type) {
 	unset();
-	this->arr = std::unique_ptr<cp_array>(new cp_array(arr));
+	this->arr = std::shared_ptr<cp_array>(new cp_array(arr));
 	type = Type::T_ARRAY;
 	this->array_type = array_type;
 }
 
 void Value::set(cp_struct str) {
 	unset();
-	this->str = std::unique_ptr<cp_struct>(new cp_struct(str));
+	this->str = std::shared_ptr<cp_struct>(new cp_struct(str));
 	type = Type::T_STRUCT;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_function fun) {
 	unset();
-	this->fun = std::unique_ptr<cp_function>(new cp_function(fun));
+	this->fun = std::shared_ptr<cp_function>(new cp_function(fun));
 	type = Type::T_FUNCTION;
 	array_type = Type::T_UNDEFINED;
 }
@@ -601,6 +601,22 @@ long double Value::value_hash() const {
 	}
 }
 
+void Value::copy_array(std::shared_ptr<cp_array> arr) {
+	if (!arr) {
+		this->arr = nullptr;
+		return;
+	}
+
+	auto rarr = new Value * [arr->second];
+
+	for (size_t i = 0; i < arr->second; ++i) {
+		Value* val = new Value(arr->first[i]);
+		rarr[i] = val;
+	}
+
+	this->arr = std::shared_ptr<cp_array>(new cp_array(rarr, arr->second));
+}
+
 void Value::copy_from(Value* value) {
 	type = value->type;
 	type_name = value->type_name;
@@ -612,7 +628,7 @@ void Value::copy_from(Value* value) {
 	f = value->f;
 	c = value->c;
 	s = value->s;
-	arr = value->arr;
+	copy_array(value->arr);
 	str = value->str;
 	fun = value->fun;
 	ref = value->ref;
