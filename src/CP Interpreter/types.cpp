@@ -617,7 +617,8 @@ void Value::copy_array(std::shared_ptr<cp_array> arr) {
 	auto rarr = new Value * [arr->second];
 
 	for (size_t i = 0; i < arr->second; ++i) {
-		Value* val = new Value(arr->first[i]);
+		Value* currval = arr->first[i];
+		Value* val = currval ? new Value(currval) : nullptr;
 		rarr[i] = val;
 	}
 

@@ -1950,7 +1950,7 @@ cp_array Interpreter::build_array(const std::vector<ASTExprNode*>& dim, Value* i
 		raw_arr[j] = val;
 	}
 
-	auto arr = std::pair<Value**, size_t>(raw_arr, size);
+	auto arr = cp_array(raw_arr, size);
 
 	--i;
 
@@ -1989,7 +1989,7 @@ cp_array Interpreter::build_undefined_array(const std::vector<ASTExprNode*>& dim
 		size = current_expression_value->get_i();
 	}
 
-	raw_arr = new Value * [size];
+	raw_arr = new Value * [size] { nullptr };
 
 	auto arr = cp_array(raw_arr, size);
 
@@ -2965,17 +2965,17 @@ void Interpreter::register_built_in_functions() {
 
 void Interpreter::register_built_in_lib(const std::string& libname) {
 	if (built_in_libs[0] == libname) {
-		cpgraphics = new modules::Graphics();
+		cpgraphics = std::unique_ptr<modules::Graphics>(new modules::Graphics());
 		cpgraphics->register_functions(this);
 	}
 
 	if (built_in_libs[1] == libname) {
-		cpfiles = new modules::Files();
+		cpfiles = std::unique_ptr<modules::Files>(new modules::Files());
 		cpfiles->register_functions(this);
 	}
 
 	if (built_in_libs[2] == libname) {
-		cpconsole = new modules::Console();
+		cpconsole = std::unique_ptr<modules::Console>(new modules::Console());
 		cpconsole->register_functions(this);
 	}
 }

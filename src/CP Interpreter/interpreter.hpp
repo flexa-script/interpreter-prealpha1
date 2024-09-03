@@ -1,6 +1,7 @@
 #ifndef INTERPRETER_HPP
 #define INTERPRETER_HPP
 
+#include <memory>
 #include <map>
 #include <stack>
 #include <functional>
@@ -60,9 +61,9 @@ namespace visitor {
 		size_t print_level = 0;
 		std::vector<uintptr_t> printed;
 
-		modules::Graphics* cpgraphics;
-		modules::Files* cpfiles;
-		modules::Console* cpconsole;
+		std::unique_ptr<modules::Graphics> cpgraphics;
+		std::unique_ptr<modules::Files> cpfiles;
+		std::unique_ptr<modules::Console> cpconsole;
 
 	private:
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector);

@@ -1,6 +1,7 @@
 #ifndef SEMANTIC_ANALYSIS_HPP
 #define SEMANTIC_ANALYSIS_HPP
 
+#include <memory>
 #include <map>
 #include <vector>
 #include <stack>
@@ -43,9 +44,9 @@ namespace visitor {
 		TypeDefinition current_expression_array_type;
 		bool is_max;
 
-		modules::Graphics* cpgraphics;
-		modules::Files* cpfiles;
-		modules::Console* cpconsole;
+		std::unique_ptr<modules::Graphics> cpgraphics;
+		std::unique_ptr<modules::Files> cpfiles;
+		std::unique_ptr<modules::Console> cpconsole;
 
 	private:
 		bool returns(ASTNode* astnode);
