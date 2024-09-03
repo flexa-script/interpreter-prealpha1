@@ -74,7 +74,7 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 			str[INSTANCE_ID_NAME]->set(cp_int(files.size() - 1));
 		}
 
-		cpfile->set(str);
+		cpfile->set(str, "File", "cp");
 
 		visitor->current_expression_value = rval;
 	};
@@ -142,7 +142,7 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 					arr[i] = val;
 				}
 			}
-			rval->set(cp_array(arr, buffer_size), Type::T_CHAR);
+			rval->set(cp_array(arr, buffer_size), Type::T_CHAR, std::vector<ASTExprNode*>());
 
 			delete[] buffer;
 

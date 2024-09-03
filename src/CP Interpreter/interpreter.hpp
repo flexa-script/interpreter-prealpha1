@@ -69,6 +69,7 @@ namespace visitor {
 		std::vector<unsigned int> calculate_array_dim_size(const cp_array& arr);
 
 		cp_array build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i);
+		cp_array build_undefined_array(const std::vector<ASTExprNode*>& dim, long long i);
 
 		void normalize_type(Variable* var, Value* val);
 		Value* do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr = false, cp_int str_pos = 0);

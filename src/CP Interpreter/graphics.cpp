@@ -61,7 +61,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 			win->set_null();
 		}
 
-		win->set(str);
+		win->set(str, "Window", "cp");
 
 		visitor->current_expression_value = win;
 	};

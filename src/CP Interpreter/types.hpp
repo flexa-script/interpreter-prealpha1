@@ -217,12 +217,13 @@ public:
 	Value(cp_float);
 	Value(cp_char);
 	Value(cp_string);
-	Value(cp_array, Type);
-	Value(cp_struct);
+	Value(cp_array, Type array_type, std::vector<ASTExprNode*> dim);
+	Value(cp_struct, std::string type_name, std::string type_name_space);
 	Value(cp_function);
 	Value(Variable*);
 	Value(Type type);
-	Value(Type type, Type arr_type, std::vector<ASTExprNode*> dim);
+	Value(Type array_type, std::vector<ASTExprNode*> dim, std::string type_name = "", std::string type_name_space = "");
+	Value(std::string type_name, std::string type_name_space);
 	Value(Value*);
 	Value(TypeDefinition type);
 	Value();
@@ -233,8 +234,8 @@ public:
 	void set(cp_float);
 	void set(cp_char);
 	void set(cp_string);
-	void set(cp_array, Type);
-	void set(cp_struct);
+	void set(cp_array, Type array_type, std::vector<ASTExprNode*> dim, std::string type_name = "", std::string type_name_space = "");
+	void set(cp_struct, std::string type_name, std::string type_name_space);
 	void set(cp_function);
 
 	cp_bool get_b() const;

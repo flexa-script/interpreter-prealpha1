@@ -140,15 +140,25 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, *new_var, *new_value, evaluate_access_vector_ptr);
 	}
 
-	auto arr = new_value->get_arr();
+	if (is_array(new_value->type)) {
+		auto arr = new_value->get_arr();
 
-	if (arr.second == 1) {
-		auto rarr = build_array(astnode->dim, arr.first[0], astnode->dim.size() - 1);
-		new_value->set(rarr, current_expression_array_type.type);
-		new_value->type = Type::T_ARRAY;
-		new_value->array_type = current_expression_array_type.type;
-		new_value->type_name = current_expression_array_type.type_name;
-		new_value->type_name_space = current_expression_array_type.type_name_space;
+		if (arr.second == 1) {
+			auto rarr = build_array(astnode->dim, arr.first[0], astnode->dim.size() - 1);
+			new_value->set(rarr, current_expression_array_type.type, current_expression_array_type.dim);
+			new_value->type = Type::T_ARRAY;
+			new_value->array_type = current_expression_array_type.type;
+			new_value->type_name = current_expression_array_type.type_name;
+			new_value->type_name_space = current_expression_array_type.type_name_space;
+		}
+		else if (arr.second == 0) {
+			auto rarr = build_undefined_array(astnode->dim, astnode->dim.size() - 1);
+			new_value->set(rarr, current_expression_array_type.type, current_expression_array_type.dim);
+			new_value->type = Type::T_ARRAY;
+			new_value->array_type = current_expression_array_type.type;
+			new_value->type_name = current_expression_array_type.type_name;
+			new_value->type_name_space = current_expression_array_type.type_name_space;
+		}
 	}
 
 	normalize_type(new_var, new_value);
@@ -196,14 +206,28 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	if (variable->dim.size() > 0) {
 		dim = evaluate_access_vector(variable->dim);
 	}
-	if (arr.second == 1 && dim.size() > 0) {
-		auto rarr = build_array(variable->dim, arr.first[0], variable->dim.size() - 1);
-		new_value->set(rarr, current_expression_array_type.type);
-		new_value->type = Type::T_ARRAY;
-		new_value->array_type = current_expression_array_type.type;
-		new_value->type_name = current_expression_array_type.type_name;
-		new_value->type_name_space = current_expression_array_type.type_name_space;
+
+	if (is_array(new_value->type)) {
+		auto arr = new_value->get_arr();
+
+		if (arr.second == 1 && dim.size() > 0) {
+			auto rarr = build_array(variable->dim, arr.first[0], variable->dim.size() - 1);
+			new_value->set(rarr, current_expression_array_type.type, current_expression_array_type.dim);
+			new_value->type = Type::T_ARRAY;
+			new_value->array_type = current_expression_array_type.type;
+			new_value->type_name = current_expression_array_type.type_name;
+			new_value->type_name_space = current_expression_array_type.type_name_space;
+		}
+		else if (arr.second == 0 && dim.size() > 0) {
+			auto rarr = build_undefined_array(variable->dim, variable->dim.size() - 1);
+			new_value->set(rarr, current_expression_array_type.type, current_expression_array_type.dim);
+			new_value->type = Type::T_ARRAY;
+			new_value->array_type = current_expression_array_type.type;
+			new_value->type_name = current_expression_array_type.type_name;
+			new_value->type_name_space = current_expression_array_type.type_name_space;
+		}
 	}
+
 	new_value->dim = variable->dim;
 
 	if (astnode->op == "="
@@ -754,9 +778,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 				auto str = cp_struct();
 				str["key"] = new Value(cp_string(val.first));
 				str["value"] = val.second;
-				auto str_value = new Value(str);
-				str_value->type_name_space = "cp";
-				str_value->type_name = "Pair";
+				auto str_value = new Value(str, "cp", "Pair");
 
 				set_value(
 					scopes[nmspace].back(),
@@ -1079,7 +1101,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 
 	is_max = true;
 
-	value->set(arr, arr_t);
+	value->set(arr, arr_t, current_expression_array_dim, current_expression_array_type.type_name, current_expression_array_type.type_name_space);
 
 	current_expression_value = value;
 	current_expression_value->array_type = current_expression_array_type.type;
@@ -1142,13 +1164,28 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 		if (var_type_struct.dim.size() > 0) {
 			dim = evaluate_access_vector(var_type_struct.dim);
 		}
-		if (str_value->get_arr().second == 1 && dim.size() > 0) {
-			auto arr = build_array(var_type_struct.dim, str_value->get_arr().first[0], var_type_struct.dim.size() - 1);
-			str_value->set(arr, current_expression_array_type.type);
-			str_value->type = Type::T_ARRAY;
-			str_value->array_type = current_expression_array_type.type;
-			str_value->type_name = current_expression_array_type.type_name;
-			str_value->type_name_space = current_expression_array_type.type_name_space;
+
+
+
+		if (is_array(var_type_struct.type)) {
+			auto arr = str_value->get_arr();
+
+			if (str_value->get_arr().second == 1 && dim.size() > 0) {
+				auto arr = build_array(var_type_struct.dim, str_value->get_arr().first[0], var_type_struct.dim.size() - 1);
+				str_value->set(arr, current_expression_array_type.type, current_expression_array_type.dim);
+				str_value->type = Type::T_ARRAY;
+				str_value->array_type = current_expression_array_type.type;
+				str_value->type_name = current_expression_array_type.type_name;
+				str_value->type_name_space = current_expression_array_type.type_name_space;
+			}
+			else if (arr.second == 0 && dim.size() > 0) {
+				auto rarr = build_undefined_array(var_type_struct.dim, var_type_struct.dim.size() - 1);
+				str_value->set(rarr, current_expression_array_type.type, current_expression_array_type.dim);
+				str_value->type = Type::T_ARRAY;
+				str_value->array_type = current_expression_array_type.type;
+				str_value->type_name = current_expression_array_type.type_name;
+				str_value->type_name_space = current_expression_array_type.type_name_space;
+			}
 		}
 		else if (!is_any(var_type_struct.type) && !is_void(str_value->type)) {
 			str_value->type = var_type_struct.type;
@@ -1170,9 +1207,7 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 		}
 	}
 
-	value->set(str);
-	value->type_name_space = astnode->nmspace;
-	value->type_name = astnode->type_name;
+	value->set(str, astnode->type_name, astnode->nmspace);
 	current_expression_value = value;
 }
 
@@ -1226,20 +1261,15 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 			}
 			type = Type::T_STRUCT;
 			auto str = cp_struct();
-			expression_value->set(str);
-			expression_value->type_name_space = nmspace;
-			expression_value->type_name = astnode->identifier;
+			expression_value->set(str, astnode->identifier, nmspace);
 		}
 
 		expression_value->set_type(type);
 
 		if (dim.size() > 0) {
-			cp_array arr;
+			cp_array arr = build_array(dim, expression_value, dim.size() - 1);
 
-			arr = build_array(dim, expression_value, dim.size() - 1);
-
-			current_expression_value = new Value(Type::T_ARRAY, type, dim);
-			current_expression_value->set(arr, type);
+			current_expression_value = new Value(arr, type, dim);
 		}
 		else {
 			current_expression_value = new Value(expression_value);
@@ -1933,11 +1963,40 @@ cp_array Interpreter::build_array(const std::vector<ASTExprNode*>& dim, Value* i
 			--curr_dim_i;
 		}
 
-		auto val = new Value(Type::T_ARRAY, current_expression_array_type.array_type, curr_arr_dim);
-		val->set(arr, current_expression_array_type.array_type);
+		auto val = new Value(arr, current_expression_array_type.array_type, curr_arr_dim);
 		val->type_name = current_expression_array_type.type_name;
 		val->type_name_space = current_expression_array_type.type_name_space;
 		return build_array(dim, val, i);
+	}
+
+	return arr;
+}
+
+cp_array Interpreter::build_undefined_array(const std::vector<ASTExprNode*>& dim, long long i) {
+	Value** raw_arr;
+
+	if (dim.size() - 1 == i) {
+		current_expression_array_type = TypeDefinition();
+	}
+
+	size_t size = 0;
+	if (dim.size() == 0) {
+		size = 1;
+	}
+	else {
+		auto crr_acc = dim[i];
+		crr_acc->accept(this);
+		size = current_expression_value->get_i();
+	}
+
+	raw_arr = new Value * [size];
+
+	auto arr = cp_array(raw_arr, size);
+
+	--i;
+
+	if (i >= 0) {
+		return build_undefined_array(dim, i);
 	}
 
 	return arr;
@@ -2319,7 +2378,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 	}
 	case Type::T_ARRAY: {
 		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->get_arr(), lval->array_type);
+			lval->set(rval->get_arr(), lval->array_type, lval->dim, lval->type_name, lval->type_name_space);
 			break;
 		}
 
@@ -2342,13 +2401,15 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
-		lval->set(do_operation(lval->get_arr(), rval->get_arr(), op), match_arr_t ? lval->array_type : Type::T_ANY);
+		lval->set(do_operation(lval->get_arr(), rval->get_arr(), op),
+			match_arr_t ? lval->array_type : Type::T_ANY, lval->dim,
+			lval->type_name, lval->type_name_space);
 
 		break;
 	}
 	case Type::T_STRUCT: {
 		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->get_str());
+			lval->set(rval->get_str(), rval->type_name, lval->type_name_space);
 			break;
 		}
 
@@ -2366,13 +2427,13 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 		}
 
-		lval->set(rval->get_str());
+		lval->set(rval->get_str(), rval->type_name, rval->type_name_space);
 
 		break;
 	}
 	case Type::T_FUNCTION: {
 		if (is_any(l_var_type) && op == "=") {
-			lval->set(rval->get_str());
+			lval->set(rval->get_str(), rval->type_name, rval->type_name_space);
 			break;
 		}
 
@@ -2749,14 +2810,13 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 	}
 
 	if (vec.size() > 0) {
-		auto rest = new Value(Type::T_ARRAY, Type::T_ANY, std::vector<ASTExprNode*>());
+		auto rest = new Value(Type::T_ANY, std::vector<ASTExprNode*>());
 		auto rarr = new Value * [vec.size()];
 		for (size_t i = 0; i < vec.size(); ++i) {
 			rarr[i] = vec[i];
 		}
 		auto arr = cp_array(rarr, vec.size());
-		rest->set(arr, Type::T_ANY);
-		rest->set(arr, Type::T_ANY);
+		rest->set(arr, Type::T_ANY, std::vector<ASTExprNode*>());
 		curr_scope->declare_variable(rest_name, new Variable(new Value(rest)));
 	}
 
@@ -2792,13 +2852,13 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 	}
 
 	if (vec.size() > 0) {
-		auto rest = new Value(Type::T_ARRAY, Type::T_ANY, std::vector<ASTExprNode*>());
+		auto rest = new Value(Type::T_ANY, std::vector<ASTExprNode*>());
 		auto rarr = new Value * [vec.size()];
 		for (size_t i = 0; i < vec.size(); ++i) {
 			rarr[i] = vec[i];
 		}
 		auto arr = cp_array(rarr, vec.size());
-		rest->set(arr, Type::T_ANY);
+		rest->set(arr, Type::T_ANY, std::vector<ASTExprNode*>());
 		builtin_arguments.push_back(rest);
 	}
 

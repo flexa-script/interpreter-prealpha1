@@ -388,12 +388,12 @@ Value::Value(cp_string rawv) {
 	set(rawv);
 }
 
-Value::Value(cp_array rawv, Type array_type) {
-	set(rawv, array_type);
+Value::Value(cp_array rawv, Type array_type, std::vector<ASTExprNode*> dim) {
+	set(rawv, array_type, dim);
 }
 
-Value::Value(cp_struct rawv) {
-	set(rawv);
+Value::Value(cp_struct rawv, std::string type_name, std::string type_name_space) {
+	set(rawv, type_name, type_name_space);
 }
 
 Value::Value(cp_function rawv) {
@@ -407,8 +407,11 @@ Value::Value(Variable* rawv) {
 Value::Value(Type type)
 	: TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {}
 
-Value::Value(Type type, Type arr_type, std::vector<ASTExprNode*> dim)
-	: TypeDefinition(type, arr_type, dim, "", "") {}
+Value::Value(Type array_type, std::vector<ASTExprNode*> dim, std::string type_name, std::string type_name_space)
+	: TypeDefinition(Type::T_ARRAY, array_type, dim, type_name, type_name_space) {}
+
+Value::Value(std::string type_name, std::string type_name_space)
+	: TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), type_name, type_name_space) {}
 
 Value::Value(Value* v) {
 	copy_from(v);
@@ -455,18 +458,22 @@ void Value::set(cp_string s) {
 	array_type = Type::T_UNDEFINED;
 }
 
-void Value::set(cp_array arr, Type array_type) {
+void Value::set(cp_array arr, Type array_type, std::vector<ASTExprNode*> dim, std::string type_name, std::string type_name_space) {
 	unset();
 	this->arr = std::shared_ptr<cp_array>(new cp_array(arr));
 	type = Type::T_ARRAY;
 	this->array_type = array_type;
+	this->type_name = type_name;
+	this->type_name_space = type_name_space;
 }
 
-void Value::set(cp_struct str) {
+void Value::set(cp_struct str, std::string type_name, std::string type_name_space) {
 	unset();
 	this->str = std::shared_ptr<cp_struct>(new cp_struct(str));
 	type = Type::T_STRUCT;
 	array_type = Type::T_UNDEFINED;
+	this->type_name = type_name;
+	this->type_name_space = type_name_space;
 }
 
 void Value::set(cp_function fun) {
