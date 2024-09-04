@@ -1855,7 +1855,7 @@ Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser:
 				throw std::runtime_error("cannot reach '" + ss.str() + "', previous '" + identifier_vector[i - 1].identifier + "' value is null");
 			}
 
-			if (i == identifier_vector.size() - 1) {
+			if (i == identifier_vector.size() - 1 && identifier_vector[i].access_vector.size() == 0) {
 				value->str->at(identifier_vector[i].identifier) = new_value;
 			}
 			else {
