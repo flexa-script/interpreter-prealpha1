@@ -388,8 +388,8 @@ Value::Value(cp_string rawv) {
 	set(rawv);
 }
 
-Value::Value(cp_array rawv, Type array_type, std::vector<ASTExprNode*> dim) {
-	set(rawv, array_type, dim);
+Value::Value(cp_array rawv, Type array_type, std::vector<ASTExprNode*> dim, std::string type_name, std::string type_name_space) {
+	set(rawv, array_type, dim, type_name, type_name_space);
 }
 
 Value::Value(cp_struct rawv, std::string type_name, std::string type_name_space) {

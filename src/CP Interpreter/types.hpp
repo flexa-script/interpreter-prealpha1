@@ -217,7 +217,7 @@ public:
 	Value(cp_float);
 	Value(cp_char);
 	Value(cp_string);
-	Value(cp_array, Type array_type, std::vector<ASTExprNode*> dim);
+	Value(cp_array, Type array_type, std::vector<ASTExprNode*> dim, std::string type_name = "", std::string type_name_space = "");
 	Value(cp_struct, std::string type_name, std::string type_name_space);
 	Value(cp_function);
 	Value(Variable*);
