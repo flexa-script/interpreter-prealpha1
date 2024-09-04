@@ -2016,7 +2016,7 @@ std::string Interpreter::parse_value_to_string(const Value* value) {
 		str = std::to_string(value->get_f());
 		break;
 	case Type::T_CHAR:
-		str = cp_string(std::string{ value->get_c() });
+		str = cp_string(std::string{value->get_c()});
 		break;
 	case Type::T_STRING:
 		str = value->get_s();
@@ -2047,7 +2047,7 @@ std::string Interpreter::parse_value_to_string(const Value* value) {
 			auto& func_sig = std::get<0>(it->second);
 
 			std::string func_decl = func_name + "(";
-			for (auto param : func_sig) {
+			for (const auto& param : func_sig) {
 				func_decl += type_str(std::get<1>(param).type) + ", ";
 			}
 			if (func_sig.size() > 0) {
@@ -2073,7 +2073,17 @@ std::string Interpreter::parse_array_to_string(const cp_array& arr_value) {
 	std::stringstream s = std::stringstream();
 	s << "[";
 	for (auto i = 0; i < arr_value.second; ++i) {
+		bool isc = is_char(arr_value.first[i]->type);
+		bool iss = is_string(arr_value.first[i]->type);
+		
+		if (isc) s << "'";
+		else if (iss) s << "\"";
+
 		s << parse_value_to_string(arr_value.first[i]);
+		
+		if (isc) s << "'";
+		else if (iss) s << "\"";
+
 		if (i < arr_value.second - 1) {
 			s << ",";
 		}
