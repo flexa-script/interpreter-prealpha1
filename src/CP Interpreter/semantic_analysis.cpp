@@ -1249,32 +1249,6 @@ bool SemanticAnalyser::namespace_exists(const std::string& nmspace) {
 	return scopes.find(nmspace) != scopes.end();
 }
 
-//VariableDefinition SemanticAnalyser::access_struct_variable(std::vector<Identifier> identifier_vector, std::string type_name, std::string nmspace, unsigned int i) {
-//	SemanticScope* curr_scope;
-//	try {
-//		curr_scope = get_inner_most_struct_definition_scope(get_namespace(nmspace), type_name);
-//	}
-//	catch (...) {
-//		throw std::runtime_error("can't find struct");
-//	}
-//	auto type_struct = curr_scope->find_declared_structure_definition(type_name);
-//
-//	if (type_struct.variables.find(identifier_vector[i].identifier) == type_struct.variables.end()) {
-//		ExceptionHandler::throw_struct_member_err(type_name, identifier_vector[i].identifier);
-//	}
-//	VariableDefinition var_type_struct = type_struct.variables[identifier_vector[i].identifier];
-//
-//	if ((is_struct(var_type_struct.type) || is_any(var_type_struct.type)) && identifier_vector.size() - 1 > i) {
-//		return access_struct_variable(identifier_vector, var_type_struct.type_name, var_type_struct.type_name_space, ++i);
-//	}
-//	else {
-//		if (identifier_vector.size() - 1 > i) {
-//			throw std::runtime_error("member '" + var_type_struct.identifier + "' of '" + type_name + "' is not a struct");
-//		}
-//		return var_type_struct;
-//	}
-//}
-
 SemanticScope* SemanticAnalyser::get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier) {
 	if (!namespace_exists(nmspace)) {
 		throw std::runtime_error("namespace '" + nmspace + "' was not declared");
@@ -1579,7 +1553,7 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 		return true;
 	}
 
-	if (auto block = dynamic_cast<ASTBlockNode*>(astnode)) {
+	if (const auto& block = dynamic_cast<ASTBlockNode*>(astnode)) {
 		for (const auto& blk_stmt : block->statements) {
 			if (returns(blk_stmt)) {
 				return true;
@@ -1587,10 +1561,10 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 		}
 	}
 
-	if (auto ifstmt = dynamic_cast<ASTIfNode*>(astnode)) {
-		auto ifreturn = returns(ifstmt->if_block);
-		auto elifreturn = true;
-		auto elsereturn = true;
+	if (const auto& ifstmt = dynamic_cast<ASTIfNode*>(astnode)) {
+		bool ifreturn = returns(ifstmt->if_block);
+		bool elifreturn = true;
+		bool elsereturn = true;
 		for (const auto& elif : ifstmt->else_ifs) {
 			if (!returns(elif->block)) {
 				elifreturn = false;
@@ -1603,11 +1577,11 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 		return ifreturn && elifreturn && elsereturn;
 	}
 
-	if (auto trycatchstmt = dynamic_cast<ASTTryCatchNode*>(astnode)) {
+	if (const auto& trycatchstmt = dynamic_cast<ASTTryCatchNode*>(astnode)) {
 		return returns(trycatchstmt->try_block) && returns(trycatchstmt->catch_block);
 	}
 
-	if (const auto switchstmt = dynamic_cast<ASTSwitchNode*>(astnode)) {
+	if (const auto& switchstmt = dynamic_cast<ASTSwitchNode*>(astnode)) {
 		for (const auto& blk_stmt : switchstmt->statements) {
 			if (returns(blk_stmt)) {
 				return true;
@@ -1615,15 +1589,15 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 		}
 	}
 
-	if (const auto forstmt = dynamic_cast<ASTForNode*>(astnode)) {
+	if (const auto& forstmt = dynamic_cast<ASTForNode*>(astnode)) {
 		return returns(forstmt->block);
 	}
 
-	if (const auto forstmt = dynamic_cast<ASTForEachNode*>(astnode)) {
+	if (const auto& forstmt = dynamic_cast<ASTForEachNode*>(astnode)) {
 		return returns(forstmt->block);
 	}
 
-	if (const auto whilestmt = dynamic_cast<ASTWhileNode*>(astnode)) {
+	if (const auto& whilestmt = dynamic_cast<ASTWhileNode*>(astnode)) {
 		return returns(whilestmt->block);
 	}
 
