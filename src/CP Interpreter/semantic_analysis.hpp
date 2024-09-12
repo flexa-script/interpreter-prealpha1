@@ -11,14 +11,12 @@
 #include "ast.hpp"
 #include "semantic_scope.hpp"
 
+#include "graphics.hpp"
+#include "files.hpp"
+#include "console.hpp"
+
 using namespace visitor;
 using namespace parser;
-
-namespace modules {
-	class Graphics;
-	class Files;
-	class Console;
-}
 
 namespace visitor {
 

@@ -2,8 +2,11 @@
 #define MODULE_HPP
 
 #include <string>
-#include "interpreter.hpp"
-#include "semantic_analysis.hpp"
+
+namespace visitor {
+	class SemanticAnalyser;
+	class Interpreter;
+}
 
 namespace modules {
 	class Module {
@@ -11,15 +14,11 @@ namespace modules {
 		static const std::string INSTANCE_ID_NAME;
 
 	public:
-		Module() = default;
-		~Module() = default;
+		virtual ~Module() = default;
 
-		virtual void register_functions(SemanticAnalyser* visitor) = 0;
-		virtual void register_functions(Interpreter* visitor) = 0;
+		virtual void register_functions(visitor::SemanticAnalyser* visitor) = 0;
+		virtual void register_functions(visitor::Interpreter* visitor) = 0;
 	};
 }
 
 #endif // !MODULE_HPP
-
-
-

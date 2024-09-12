@@ -3,9 +3,14 @@
 
 #include "console.hpp"
 
+#include "interpreter.hpp"
+#include "semantic_analysis.hpp"
+
 using namespace modules;
 
 Console::Console() {}
+
+Console::~Console() = default;
 
 void Console::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["set_console_color"] = nullptr;

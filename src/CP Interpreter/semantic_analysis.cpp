@@ -8,10 +8,6 @@
 #include "vendor/axeutils.hpp"
 #include "vendor/axeuuid.hpp"
 
-#include "graphics.hpp"
-#include "files.hpp"
-#include "console.hpp"
-
 using namespace visitor;
 using namespace parser;
 using namespace lexer;
