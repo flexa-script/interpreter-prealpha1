@@ -648,7 +648,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 
 	scopes[nmspace].push_back(new InterpreterScope(""));
 
-	auto itdecl = static_cast<ASTDeclarationNode*>(astnode->itdecl);
+	auto itdecl = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl);
 
 	switch (current_expression_value->type) {
 	case Type::T_ARRAY: {
