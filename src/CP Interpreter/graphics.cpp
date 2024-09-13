@@ -1,5 +1,9 @@
-#include "graphics.hpp"
 #include <iostream>
+
+#include "graphics.hpp"
+
+#include "interpreter.hpp"
+#include "semantic_analysis.hpp"
 
 using namespace modules;
 using namespace visitor;

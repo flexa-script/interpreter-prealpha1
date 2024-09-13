@@ -16,8 +16,8 @@ namespace modules {
 		Graphics();
 		~Graphics();
 
-		void register_functions(SemanticAnalyser* visitor) override;
-		void register_functions(Interpreter* visitor) override;
+		void register_functions(visitor::SemanticAnalyser* visitor) override;
+		void register_functions(visitor::Interpreter* visitor) override;
 	};
 }
 
