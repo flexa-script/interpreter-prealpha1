@@ -36,19 +36,20 @@ namespace visitor {
 
 		void declare_function(const std::string& identifier, Type type, const std::string& type_name, const std::string& type_name_space,
 			Type array_type, const std::vector<ASTExprNode*>& dim, const std::vector<TypeDefinition>& signature,
-			const std::vector<VariableDefinition>& parameters, unsigned int row, unsigned int col);
+			const std::vector<VariableDefinition>& parameters, ASTBlockNode* block, unsigned int row, unsigned int col);
 
 		void declare_variable_function(const std::string& identifier, unsigned int row, unsigned int col);
 
 		void declare_basic_function(const std::string& identifier, Type type, std::vector<TypeDefinition> signature,
-			std::vector<VariableDefinition> parameters, unsigned int row = 0, unsigned int col = 0);
+			std::vector<VariableDefinition> parameters, ASTBlockNode* block = nullptr, unsigned int row = 0, unsigned int col = 0);
 
 		void declare_array_function(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
-			const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters,
+			const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters, ASTBlockNode* block = nullptr,
 			unsigned int row = 0, unsigned int col = 0);
 
 		void declare_struct_function(const std::string& identifier, Type type, const std::string& type_name, const std::string& type_name_space,
-			const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters, unsigned int row = 0, unsigned int col = 0);
+			const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters, ASTBlockNode* block = nullptr,
+			unsigned int row = 0, unsigned int col = 0);
 
 		void change_variable_type(const std::string& identifier, Type type);
 		void change_variable_type_name(const std::string& identifier, const std::string& type_name);
@@ -56,7 +57,7 @@ namespace visitor {
 		void change_variable_value_type_name(const std::string& identifier, const std::string& type_name);
 
 		StructureDefinition find_declared_structure_definition(const std::string& identifier);
-		FunctionDefinition find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
+		FunctionDefinition* find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
 			std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict = true);
 		SemanticVariable* find_declared_variable(const std::string& identifier);
 

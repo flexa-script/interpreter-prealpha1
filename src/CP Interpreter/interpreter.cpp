@@ -341,21 +341,25 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	}
 	auto declfun = func_scope->find_declared_function(identifier, &signature, evaluate_access_vector_ptr, strict);
 
-	current_function_defined_parameters.push(std::get<0>(declfun));
+	current_function_defined_parameters.push(std::get<0>(*declfun));
 
 	current_this_name.push(identifier);
 	current_function_signature.push(signature);
 	current_function_call_identifier_vector.push(identifier_vector);
 	current_function_nmspace.push(nmspace);
-	current_function_return_type.push(std::get<2>(declfun));
+	current_function_return_type.push(std::get<2>(*declfun));
 	current_function_calling_arguments.push(function_arguments);
 
-	auto block = std::get<1>(declfun);
+	auto block = std::get<1>(*declfun);
 	if (block) {
 		function_call_name = identifier;
 		block->accept(this);
 	}
 	else {
+		if (builtin_functions.find(astnode->identifier) == builtin_functions.end() && !block) {
+			throw std::runtime_error("function '" + astnode->identifier + "' definition not found");
+		}
+
 		call_builtin_function(identifier);
 	}
 
@@ -378,7 +382,14 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 	}
 
 	if (astnode->identifier != "") {
-		scopes[nmspace].back()->declare_function(astnode->identifier, params, astnode->block, *astnode);
+		try {
+			InterpreterScope* func_scope = scopes[nmspace].back();
+			interpreter_function_t* declfun = func_scope->find_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr, true);
+			std::get<1>(*declfun) = astnode->block;
+		}
+		catch (...) {
+			scopes[nmspace].back()->declare_function(astnode->identifier, params, astnode->block, *astnode);
+		}
 	}
 }
 
@@ -2012,7 +2023,7 @@ std::string Interpreter::parse_value_to_string(const Value* value) {
 		str = std::to_string(value->get_f());
 		break;
 	case Type::T_CHAR:
-		str = cp_string(std::string{value->get_c()});
+		str = cp_string(std::string{ value->get_c() });
 		break;
 	case Type::T_STRING:
 		str = value->get_s();
@@ -2071,12 +2082,12 @@ std::string Interpreter::parse_array_to_string(const cp_array& arr_value) {
 	for (auto i = 0; i < arr_value.second; ++i) {
 		bool isc = is_char(arr_value.first[i]->type);
 		bool iss = is_string(arr_value.first[i]->type);
-		
+
 		if (isc) s << "'";
 		else if (iss) s << "\"";
 
 		s << parse_value_to_string(arr_value.first[i]);
-		
+
 		if (isc) s << "'";
 		else if (iss) s << "\"";
 

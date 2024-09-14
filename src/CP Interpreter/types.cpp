@@ -265,9 +265,9 @@ VariableDefinition VariableDefinition::get_struct(const std::string& identifier,
 FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
 	const std::string& type_name_space, Type array_type, const std::vector<ASTExprNode*>& dim,
 	const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters,
-	unsigned int row, unsigned int col)
+	ASTBlockNode* block, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
-	identifier(identifier), parameters(parameters), signature(signature) {}
+	identifier(identifier), parameters(parameters), signature(signature), block(block) {}
 
 FunctionDefinition::FunctionDefinition(const std::string& identifier, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(Type::T_ANY, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),

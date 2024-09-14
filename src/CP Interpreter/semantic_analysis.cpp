@@ -273,8 +273,8 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 
 	if (!current_function.empty()) {
 		auto& currfun = current_function.top();
-		if (!TypeDefinition::is_any_or_match_type(&currfun, currfun, nullptr, current_expression, evaluate_access_vector_ptr)) {
-			ExceptionHandler::throw_return_type_err(currfun.identifier, currfun, current_expression, evaluate_access_vector_ptr);
+		if (!TypeDefinition::is_any_or_match_type(currfun, *currfun, nullptr, current_expression, evaluate_access_vector_ptr)) {
+			ExceptionHandler::throw_return_type_err(currfun->identifier, *currfun, current_expression, evaluate_access_vector_ptr);
 		}
 	}
 }
@@ -292,9 +292,7 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 			throw std::runtime_error("undefined expression");
 		}
 
-		auto td = current_expression;
-
-		signature.push_back(td);
+		signature.push_back(current_expression);
 	}
 
 	SemanticScope* curr_scope;
@@ -323,16 +321,21 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 
 	const auto& curr_function = curr_scope->find_declared_function(astnode->identifier, &signature, evaluate_access_vector_ptr, strict);
 
-	if (is_void(curr_function.type)) {
+	//if (builtin_functions.find(astnode->identifier) == builtin_functions.end() && !curr_function->block && !curr_function->is_var
+	//	) {
+	//	throw std::runtime_error("function '" + astnode->identifier + "' definition not found");
+	//}
+
+	if (is_void(curr_function->type)) {
 		current_expression = SemanticValue(Type::T_UNDEFINED, 0, 0);
 	}
 	else {
-		current_expression = SemanticValue(curr_function.type,
-			curr_function.array_type, curr_function.dim,
-			curr_function.type_name,
-			curr_function.type_name_space.empty() ?
-			astnode->nmspace : curr_function.type_name_space,
-			0, false, curr_function.row, curr_function.col
+		current_expression = SemanticValue(curr_function->type,
+			curr_function->array_type, curr_function->dim,
+			curr_function->type_name,
+			curr_function->type_name_space.empty() ?
+			astnode->nmspace : curr_function->type_name_space,
+			0, false, curr_function->row, curr_function->col
 		);
 	}
 }
@@ -344,6 +347,12 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 
 	for (const auto& scope : scopes[nmspace]) {
 		if (scope->already_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr)) {
+			auto decl_function = scopes[nmspace].back()->find_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr);
+
+			if (!decl_function->block && astnode->block) {
+				break;
+			}
+
 			std::string signature = "(";
 			for (const auto& param : astnode->signature) {
 				signature += type_str(param.type) + ", ";
@@ -364,8 +373,15 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 		auto array_type = (is_void(astnode->array_type) || is_undefined(astnode->array_type)) && has_return ? Type::T_ANY : astnode->array_type;
 
 		if (astnode->identifier != "") {
-			scopes[nmspace].back()->declare_function(astnode->identifier, type, astnode->type_name, astnode->type_name_space,
-				array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->row, astnode->row);
+			try {
+				SemanticScope* func_scope = scopes[nmspace].back();
+				FunctionDefinition* declfun = func_scope->find_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr, true);
+				declfun->block = astnode->block;
+			}
+			catch (...) {
+				scopes[nmspace].back()->declare_function(astnode->identifier, type, astnode->type_name, astnode->type_name_space,
+					array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
+			}
 
 			auto curr_function = scopes[nmspace].back()->find_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr);
 
@@ -383,13 +399,13 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 		current_function.pop();
 	}
 	else {
-		if (builtin_functions.find(astnode->identifier) == builtin_functions.end()) {
-			throw std::runtime_error("defined function '" + astnode->identifier + "' is not from a built in library");
-		}
+		//if (builtin_functions.find(astnode->identifier) == builtin_functions.end()) {
+		//	throw std::runtime_error("defined function '" + astnode->identifier + "' is not from a built in library");
+		//}
 
 		if (astnode->identifier != "") {
 			scopes[nmspace].back()->declare_function(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
-				astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->row, astnode->row);
+				astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
 		}
 	}
 }
@@ -400,7 +416,8 @@ void SemanticAnalyser::visit(ASTFunctionExpression* astnode) {
 	auto fun = dynamic_cast<ASTFunctionDefinitionNode*>(astnode->fun);
 
 	std::string identifier = "__unnamed_function_" + axe::AxeUUID::generate();
-	FunctionDefinition tempfundef(identifier, fun->type, fun->type_name, fun->type_name_space, fun->array_type, fun->dim, fun->signature, fun->parameters, fun->row, fun->col);
+	FunctionDefinition* tempfundef = new FunctionDefinition(identifier, fun->type, fun->type_name, fun->type_name_space,
+		fun->array_type, fun->dim, fun->signature, fun->parameters, fun->block, fun->row, fun->col);
 
 	current_function.push(tempfundef);
 
@@ -421,7 +438,7 @@ void SemanticAnalyser::visit(ASTBlockNode* astnode) {
 	scopes[nmspace].push_back(new SemanticScope());
 
 	if (!current_function.empty()) {
-		for (const auto& param : current_function.top().parameters) {
+		for (const auto& param : current_function.top()->parameters) {
 			if (is_function(param.type) || is_any(param.type)) {
 				scopes[nmspace].back()->declare_variable_function(param.identifier, param.row, param.row);
 			}
@@ -630,7 +647,7 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 	col_type = current_expression;
 
 	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
-		if (!is_struct(col_type.type)) {
+		if (!is_struct(col_type.type) && !is_any(col_type.type)) {
 			throw std::runtime_error("[key, value] can only be used with struct");
 		}
 
@@ -686,6 +703,12 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 			declared_variable->value->type_name_space = "";
 			declared_variable->value->array_type = Type::T_UNDEFINED;
 		}
+		else if (is_any(col_type.type)) {
+			declared_variable->value->type = Type::T_ANY;
+			declared_variable->value->type_name = "";
+			declared_variable->value->type_name_space = "";
+			declared_variable->value->array_type = Type::T_UNDEFINED;
+		}
 		else if (col_type.dim.size() > 1) {
 			if (!is_any(declared_variable->type)) {
 				declared_variable->value->type = declared_variable->type;
@@ -703,19 +726,11 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 			}
 		}
 		else {
-			if (!is_any(declared_variable->type)) {
-				declared_variable->value->type = declared_variable->type;
-				declared_variable->value->array_type = declared_variable->array_type;
-				declared_variable->value->type_name = declared_variable->type_name;
-				declared_variable->value->type_name_space = declared_variable->type_name_space;
-			}
-			else {
-				declared_variable->value->type = col_type.array_type;
-				declared_variable->value->array_type = Type::T_UNDEFINED;
-				if (!current_expression.type_name.empty()) {
-					declared_variable->value->type_name = current_expression.type_name;
-					declared_variable->value->type_name_space = current_expression.type_name_space;
-				}
+			declared_variable->value->type = col_type.array_type;
+			declared_variable->value->array_type = Type::T_UNDEFINED;
+			if (!current_expression.type_name.empty()) {
+				declared_variable->value->type_name = current_expression.type_name;
+				declared_variable->value->type_name_space = current_expression.type_name_space;
 			}
 		}
 		
@@ -1669,12 +1684,14 @@ void SemanticAnalyser::register_built_in_functions() {
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
 	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true));
 	scopes[default_namespace].back()->declare_basic_function("print", Type::T_VOID, signature, parameters);
+	builtin_functions["print"] = nullptr;
 
 	signature.clear();
 	parameters.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
 	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true));
 	scopes[default_namespace].back()->declare_basic_function("println", Type::T_VOID, signature, parameters);
+	builtin_functions["println"] = nullptr;
 
 
 	signature.clear();
@@ -1683,11 +1700,13 @@ void SemanticAnalyser::register_built_in_functions() {
 	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
 	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true));
 	scopes[default_namespace].back()->declare_basic_function("read", Type::T_STRING, signature, parameters);
+	builtin_functions["read"] = nullptr;
 
 
 	signature.clear();
 	parameters.clear();
 	scopes[default_namespace].back()->declare_basic_function("readch", Type::T_CHAR, signature, parameters);
+	builtin_functions["readch"] = nullptr;
 
 
 	signature.clear();
@@ -1695,12 +1714,14 @@ void SemanticAnalyser::register_built_in_functions() {
 	signature.push_back(TypeDefinition::get_array(Type::T_ANY));
 	parameters.push_back(VariableDefinition::get_array("arr", Type::T_ANY));
 	scopes[default_namespace].back()->declare_basic_function("len", Type::T_INT, signature, parameters);
+	builtin_functions["system"] = nullptr;
 
 	signature.clear();
 	parameters.clear();
 	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
 	parameters.push_back(VariableDefinition::get_basic("str", Type::T_STRING));
 	scopes[default_namespace].back()->declare_basic_function("len", Type::T_INT, signature, parameters);
+	builtin_functions["len"] = nullptr;
 
 
 	signature.clear();
@@ -1710,6 +1731,7 @@ void SemanticAnalyser::register_built_in_functions() {
 	parameters.push_back(VariableDefinition::get_basic("lval", Type::T_ANY));
 	parameters.push_back(VariableDefinition::get_basic("rval", Type::T_ANY));
 	scopes[default_namespace].back()->declare_basic_function("equals", Type::T_BOOL, signature, parameters);
+	builtin_functions["equals"] = nullptr;
 
 
 	signature.clear();
@@ -1717,6 +1739,7 @@ void SemanticAnalyser::register_built_in_functions() {
 	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
 	parameters.push_back(VariableDefinition::get_basic("cmd", Type::T_STRING));
 	scopes[default_namespace].back()->declare_basic_function("system", Type::T_VOID, signature, parameters);
+	builtin_functions["system"] = nullptr;
 }
 
 void SemanticAnalyser::register_built_in_lib(const std::string& libname) {

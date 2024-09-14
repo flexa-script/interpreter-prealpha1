@@ -1404,7 +1404,8 @@ ASTTypingNode* Parser::parse_typing_node() {
 	case TOK_INT_TYPE:
 	case TOK_FLOAT_TYPE:
 	case TOK_CHAR_TYPE:
-	case TOK_STRING_TYPE: {
+	case TOK_STRING_TYPE:
+	case TOK_FUNCTION_TYPE: {
 		auto id = parse_identifier();
 		expr = new ASTIdentifierNode(std::vector{ id }, std::string(), row, col);
 		break;
@@ -1430,11 +1431,7 @@ ASTArrayConstructorNode* Parser::parse_array_constructor_node() {
 
 			consume_token();
 
-		} while (next_token.type == TOK_LEFT_CURLY || next_token.type == TOK_NULL
-			|| next_token.type == TOK_REF || next_token.type == TOK_UNREF
-			|| next_token.type == TOK_BOOL_LITERAL || next_token.type == TOK_INT_LITERAL
-			|| next_token.type == TOK_IDENTIFIER || next_token.type == TOK_FLOAT_LITERAL
-			|| next_token.type == TOK_CHAR_LITERAL || next_token.type == TOK_STRING_LITERAL);
+		} while (current_token.type == TOK_COMMA);
 
 		check_current_token(TOK_RIGHT_CURLY);
 	}

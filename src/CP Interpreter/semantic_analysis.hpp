@@ -31,7 +31,7 @@ namespace visitor {
 		std::vector<std::string> parsed_libs;
 		std::string current_namespace;
 		SemanticValue current_expression;
-		std::stack<FunctionDefinition> current_function;
+		std::stack<FunctionDefinition*> current_function;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		bool exception = false;
 		bool is_switch = false;

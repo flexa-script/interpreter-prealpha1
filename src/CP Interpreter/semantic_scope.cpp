@@ -19,7 +19,7 @@ SemanticVariable* SemanticScope::find_declared_variable(const std::string& ident
 	return variable_symbol_table[identifier];
 }
 
-FunctionDefinition SemanticScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
+FunctionDefinition* SemanticScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
 	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
@@ -29,7 +29,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 
 	for (auto& it = funcs.first; it != funcs.second; ++it) {
 		if (it->second.is_var || !signature) {
-			return it->second;
+			return &it->second;
 		}
 
 		auto& func_sig = it->second.signature;
@@ -53,7 +53,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 			}
 
 			if (found) {
-				return it->second;
+				return &it->second;
 			}
 		}
 
@@ -85,7 +85,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 			}
 
 			if (found) {
-				return it->second;
+				return &it->second;
 			}
 		}
 
@@ -112,7 +112,7 @@ FunctionDefinition SemanticScope::find_declared_function(const std::string& iden
 
 			// if found and exactly signature size (not rest)
 			if (found) {
-				return it->second;
+				return &it->second;
 			}
 		}
 	}
@@ -157,8 +157,8 @@ void SemanticScope::declare_variable(const std::string& identifier, SemanticVari
 
 void SemanticScope::declare_function(const std::string& identifier, Type type, const std::string& type_name, const std::string& type_name_space,
 	Type array_type, const std::vector<ASTExprNode*>& dim, const std::vector<TypeDefinition>& signature,
-	const std::vector<VariableDefinition>& parameters, unsigned int row, unsigned int col) {
-	FunctionDefinition fun(identifier, type, type_name, type_name_space, array_type, dim, signature, parameters, row, col);
+	const std::vector<VariableDefinition>& parameters, ASTBlockNode* block, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, type, type_name, type_name_space, array_type, dim, signature, parameters, block, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
 }
 
@@ -168,20 +168,20 @@ void SemanticScope::declare_variable_function(const std::string& identifier, uns
 }
 
 void SemanticScope::declare_basic_function(const std::string& identifier, Type type, std::vector<TypeDefinition> signature,
-	std::vector<VariableDefinition> parameters, unsigned int row, unsigned int col) {
-	FunctionDefinition fun(identifier, type, "", "", Type::T_UNDEFINED, std::vector<ASTExprNode*>(), signature, parameters, row, col);
+	std::vector<VariableDefinition> parameters, ASTBlockNode* block, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, type, "", "", Type::T_UNDEFINED, std::vector<ASTExprNode*>(), signature, parameters, block, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
 }
 
 void SemanticScope::declare_array_function(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
-	const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters, unsigned int row, unsigned int col) {
-	FunctionDefinition fun(identifier, type, "", "", array_type, dim, signature, parameters, row, col);
+	const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters, ASTBlockNode* block, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, type, "", "", array_type, dim, signature, parameters, block, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
 }
 
 void SemanticScope::declare_struct_function(const std::string& identifier, Type type, const std::string& type_name, const std::string& type_name_space,
-	const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters, unsigned int row, unsigned int col) {
-	FunctionDefinition fun(identifier, type, type_name, type_name_space, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), signature, parameters, row, col);
+	const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters, ASTBlockNode* block, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, type, type_name, type_name_space, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), signature, parameters, block, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
 }
 

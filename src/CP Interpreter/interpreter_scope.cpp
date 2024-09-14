@@ -73,7 +73,7 @@ Variable* InterpreterScope::find_declared_variable(std::string identifier) {
 	return var;
 }
 
-interpreter_function_t InterpreterScope::find_declared_function(std::string identifier, const std::vector<TypeDefinition>* signature,
+interpreter_function_t* InterpreterScope::find_declared_function(std::string identifier, const std::vector<TypeDefinition>* signature,
 	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector_ptr, bool strict) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
@@ -83,7 +83,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 
 	for (auto& it = funcs.first; it != funcs.second; ++it) {
 		if (!signature) {
-			return it->second;
+			return &it->second;
 		}
 
 		auto& func_params = std::get<0>(it->second);
@@ -107,7 +107,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 			}
 
 			if (found) {
-				return it->second;
+				return &it->second;
 			}
 		}
 
@@ -139,7 +139,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 			}
 
 			if (found) {
-				return it->second;
+				return &it->second;
 			}
 		}
 
@@ -166,7 +166,7 @@ interpreter_function_t InterpreterScope::find_declared_function(std::string iden
 
 			// if found and exactly signature size (not rest)
 			if (found) {
-				return it->second;
+				return &it->second;
 			}
 		}
 	}

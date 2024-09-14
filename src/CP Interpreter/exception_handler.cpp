@@ -6,9 +6,9 @@ void ExceptionHandler::throw_operation_err(const std::string op, const TypeDefin
 }
 
 void ExceptionHandler::throw_declaration_type_err(const std::string& identifier, const TypeDefinition& ltype, const TypeDefinition& rtype, dim_eval_func_t evaluate_access_vector) {
-	throw std::runtime_error("found " + buid_type_str(ltype, evaluate_access_vector)
+	throw std::runtime_error("found " + buid_type_str(rtype, evaluate_access_vector)
 		+ " in definition of '" + identifier
-		+ "', expected " + buid_type_str(rtype, evaluate_access_vector) + " type");
+		+ "', expected " + buid_type_str(ltype, evaluate_access_vector) + " type");
 }
 
 void ExceptionHandler::throw_return_type_err(const std::string& identifier, const TypeDefinition& ltype, const TypeDefinition& rtype, dim_eval_func_t evaluate_access_vector) {
