@@ -237,7 +237,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		axe::Font* font = fonts[font_value->get_str()[INSTANCE_ID_NAME]->get_i()];
 		if (!font) {
 			throw std::runtime_error("there was an error handling font");
-		};
+		}
 
 		windows[win->get_str()[INSTANCE_ID_NAME]->get_i()]->draw_text(x, y, text, RGB(r, g, b), font);
 		};
