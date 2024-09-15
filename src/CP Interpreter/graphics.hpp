@@ -8,11 +8,6 @@
 
 namespace modules {
 	class Graphics : public Module {
-	private:
-		std::vector<axe::Image*> images;
-		std::vector<axe::Font*> fonts;
-		std::vector<axe::Window*> windows;
-
 	public:
 		Graphics();
 		~Graphics();
