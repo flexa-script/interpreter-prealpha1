@@ -22,6 +22,20 @@ namespace axe {
 		static Image* load_image(const std::string& filename);
 	};
 
+	struct Font {
+		HFONT font;
+		int size;
+		std::string name;
+		int orientation;
+		int weight;
+		bool italic;
+		bool underline;
+		bool strike;
+		~Font();
+		static Font* create_font(int size = 20, const std::string& name = "Arial", int weight = 0,
+			bool italic = false, bool underline = false, bool strike = false, int orientation = 0);
+	};
+
 	class Window {
 	private:
 		HWND hwnd;
@@ -40,6 +54,7 @@ namespace axe {
 
 		bool initialize(const std::string& title, int width, int height);
 		void clear_screen(COLORREF color);
+		void draw_text(int x, int y, const std::string& text, COLORREF color, Font* font);
 		void draw_image(Image* image, int x, int y);
 		void draw_pixel(int x, int y, COLORREF color);
 		void draw_line(int x1, int y1, int x2, int y2, COLORREF color);

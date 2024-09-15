@@ -24,6 +24,23 @@ Image* Image::load_image(const std::string& filename) {
 	return new Image{ hbm_image, bm.bmWidth, bm.bmHeight };
 }
 
+Font::~Font() {
+	if (font) {
+		DeleteObject(font);
+	}
+}
+
+Font* Font::create_font(int size, const std::string& name, int weight, bool italic, bool underline, bool strike, int orientation) {
+	std::wstring wfont_name(name.begin(), name.end());
+
+	HFONT font = CreateFont(
+		size, 0, 0, orientation, weight, italic, underline, strike, DEFAULT_CHARSET,
+		OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, wfont_name.c_str()
+	);
+
+	return new Font{ font, size, name, orientation, weight, italic, underline, strike };
+}
+
 std::map<HWND, Window*> Window::hwnd_map;
 
 Window::Window()
@@ -104,6 +121,18 @@ void Window::clear_screen(COLORREF color) {
 	else {
 		quit = true;
 	}
+}
+
+void Window::draw_text(int x, int y, const std::string& text, COLORREF color, Font* font) {
+	HFONT oldFont = (HFONT)SelectObject(hdc_back_buffer, font->font);
+	SetTextColor(hdc_back_buffer, color);
+	SetBkMode(hdc_back_buffer, TRANSPARENT);
+
+	std::wstring wtext(text.begin(), text.end());
+
+	TextOut(hdc_back_buffer, x, y, wtext.c_str(), wtext.length());
+
+	SelectObject(hdc_back_buffer, oldFont);
 }
 
 void Window::draw_image(Image* image, int x, int y) {

@@ -2686,7 +2686,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 	auto curr_scope = scopes[nmspace].back();
 	auto rest_name = std::string();
 	auto vec = std::vector<Value*>();
-	size_t i;
+	size_t i = 0;
 
 	if (current_function_calling_arguments.size() == 0 || current_function_defined_parameters.size() == 0) {
 		return;
@@ -2808,8 +2808,9 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 
 void Interpreter::call_builtin_function(const std::string& identifier) {
 	auto vec = std::vector<Value*>();
+	size_t i = 0;
 
-	for (size_t i = 0; i < current_function_calling_arguments.top().size(); ++i) {
+	for (i = 0; i < current_function_calling_arguments.top().size(); ++i) {
 		// is reference : not reference
 		Value* current_value = nullptr;
 		if (current_function_calling_arguments.top()[i]->use_ref) {
@@ -2831,6 +2832,18 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 				builtin_arguments.push_back(current_value);
 			}
 		}
+	}
+
+	// adds default values
+	for (; i < current_function_defined_parameters.top().size(); ++i) {
+		if (std::get<3>(current_function_defined_parameters.top()[i])) {
+			break;
+		}
+
+		const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
+		std::get<2>(current_function_defined_parameters.top()[i])->accept(this);
+
+		builtin_arguments.push_back(new Value(current_expression_value));
 	}
 
 	if (vec.size() > 0) {

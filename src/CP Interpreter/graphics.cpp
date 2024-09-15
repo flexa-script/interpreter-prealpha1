@@ -24,12 +24,14 @@ Graphics::~Graphics() {
 void Graphics::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["create_window"] = nullptr;
 	visitor->builtin_functions["clear_screen"] = nullptr;
+	visitor->builtin_functions["draw_text"] = nullptr;
 	visitor->builtin_functions["draw_pixel"] = nullptr;
 	visitor->builtin_functions["draw_line"] = nullptr;
 	visitor->builtin_functions["draw_rect"] = nullptr;
 	visitor->builtin_functions["fill_rect"] = nullptr;
 	visitor->builtin_functions["draw_circle"] = nullptr;
 	visitor->builtin_functions["fill_circle"] = nullptr;
+	visitor->builtin_functions["create_font"] = nullptr;
 	visitor->builtin_functions["load_image"] = nullptr;
 	visitor->builtin_functions["draw_image"] = nullptr;
 	visitor->builtin_functions["update"] = nullptr;
@@ -42,8 +44,6 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions["create_window"] = [this, visitor]() {
 		// initialize window struct values
 		Value* win = new Value(parser::Type::T_STRUCT);
-		win->type_name_space = "cp";
-		win->type_name = "Window";
 
 		cp_struct str = cp_struct();
 		str["title"] = new Value(visitor->builtin_arguments[0]);
@@ -55,6 +55,8 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		str[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
 		str[INSTANCE_ID_NAME]->set(cp_int(windows.size() - 1));
 
+		win->set(str, "Window", "cp");
+
 		// initialize window graphic engine and return value
 		auto res = windows[win->get_str()[INSTANCE_ID_NAME]->get_i()]->initialize(
 			str["title"]->get_s(),
@@ -64,8 +66,6 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (!res) {
 			win->set_null();
 		}
-
-		win->set(str, "Window", "cp");
 
 		visitor->current_expression_value = win;
 	};
@@ -181,26 +181,89 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		}
 	};
 
+	visitor->builtin_functions["create_font"] = [this, visitor]() {
+		// initialize image struct values
+		Value* font_value = new Value(parser::Type::T_STRUCT);
+
+		auto str = cp_struct();
+		str["size"] = new Value(visitor->builtin_arguments[0]);
+		str["name"] = new Value(visitor->builtin_arguments[1]);
+		str["weight"] = new Value(visitor->builtin_arguments[2]);
+		str["italic"] = new Value(visitor->builtin_arguments[3]);
+		str["underline"] = new Value(visitor->builtin_arguments[4]);
+		str["strike"] = new Value(visitor->builtin_arguments[5]);
+		str["orientation"] = new Value(visitor->builtin_arguments[6]);
+
+		auto font = axe::Font::create_font(
+			str["size"]->get_i(),
+			str["name"]->get_s(),
+			str["weight"]->get_i(),
+			str["italic"]->get_b(),
+			str["underline"]->get_b(),
+			str["strike"]->get_b(),
+			str["orientation"]->get_i()
+		);
+		if (!font) {
+			throw std::runtime_error("there was an error creating font");
+		}
+		fonts.push_back(font);
+		str[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
+		str[INSTANCE_ID_NAME]->set(cp_int(fonts.size() - 1));
+
+		font_value->set(str, "Font", "cp");
+
+		visitor->current_expression_value = font_value;
+		};
+
+	visitor->builtin_functions["draw_text"] = [this, visitor]() {
+		Value* win = visitor->builtin_arguments[0];
+		if (parser::is_void(win->type)) {
+			throw std::runtime_error("Window is null");
+		}
+		if (!windows[win->get_str()[INSTANCE_ID_NAME]->get_i()]) {
+			throw std::runtime_error("Window is corrupted");
+		}
+		int x = (int)visitor->builtin_arguments[1]->get_i(); 
+		int y = (int)visitor->builtin_arguments[2]->get_i();
+		std::string text = visitor->builtin_arguments[3]->get_s();
+		int r = (int)visitor->builtin_arguments[4]->get_str()["r"]->get_i();
+		int g = (int)visitor->builtin_arguments[4]->get_str()["g"]->get_i();
+		int b = (int)visitor->builtin_arguments[4]->get_str()["b"]->get_i();
+
+		Value* font_value = visitor->builtin_arguments[5];
+		if (parser::is_void(font_value->type)) {
+			throw std::exception("font is null");
+		}
+		axe::Font* font = fonts[font_value->get_str()[INSTANCE_ID_NAME]->get_i()];
+		if (!font) {
+			throw std::runtime_error("there was an error handling font");
+		};
+
+		windows[win->get_str()[INSTANCE_ID_NAME]->get_i()]->draw_text(x, y, text, RGB(r, g, b), font);
+		};
+
 	visitor->builtin_functions["load_image"] = [this, visitor]() {
 		// initialize image struct values
 		Value* img = new Value(parser::Type::T_STRUCT);
-		img->get_str()["path"] = new Value(visitor->builtin_arguments[0]);
-		img->type_name_space = "cp";
-		img->type_name= "Image";
+
+		auto str = cp_struct();
+		str["path"] = new Value(visitor->builtin_arguments[0]);
 
 		// loads image
-		auto image = axe::Image::load_image(img->get_str()["path"]->get_s());
+		auto image = axe::Image::load_image(str["path"]->get_s());
 		if (!image) {
 			throw std::runtime_error("there was an error loading image");
 		}
 		images.push_back(image);
-		img->get_str()[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
-		img->get_str()[INSTANCE_ID_NAME]->set(cp_int(images.size() - 1));
+		str[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
+		str[INSTANCE_ID_NAME]->set(cp_int(images.size() - 1));
 
-		img->get_str()["width"] = new Value(parser::Type::T_INT);
-		img->get_str()["width"]->set(cp_int(image->width));
-		img->get_str()["height"] = new Value(parser::Type::T_INT);
-		img->get_str()["height"]->set(cp_int(image->height));
+		str["width"] = new Value(parser::Type::T_INT);
+		str["width"]->set(cp_int(image->width));
+		str["height"] = new Value(parser::Type::T_INT);
+		str["height"]->set(cp_int(image->height));
+
+		img->set(str, "Image", "cp");
 
 		visitor->current_expression_value = img;
 	};
@@ -218,7 +281,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (parser::is_void(img->type)) {
 			throw std::exception("window is null");
 		}
-		auto image = images[win->get_str()[INSTANCE_ID_NAME]->get_i()];
+		auto image = images[img->get_str()[INSTANCE_ID_NAME]->get_i()];
 		if (!image) {
 			throw std::runtime_error("there was an error handling image");
 		}

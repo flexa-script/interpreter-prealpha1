@@ -1,20 +1,57 @@
+using cp.core.console;
 using cp.std.random;
 
-const PRINT_TOP_LINE = "+---------------------------------------+";
-const PRINT_BLK_LINE = "                                       ";
+as namespace cp;
+
+const PRINT_HORIZONTAL_LINE = "+---------------------------------------+";
+const PRINT_BLANK_LINE = "                                       ";
+
+fun set_color(val: int) {
+    if (val == 2) {
+        set_console_color(BLACK, BLUE);
+    } else if (val == 4) {
+        set_console_color(BLACK, GREEN);
+    } else if (val == 8) {
+        set_console_color(BLACK, AQUA);
+    } else if (val == 16) {
+        set_console_color(BLACK, RED);
+    } else if (val == 32) {
+        set_console_color(BLACK, PURPLE);
+    } else if (val == 64) {
+        set_console_color(BLACK, YELLOW);
+    } else if (val == 128) {
+        set_console_color(BLACK, LIGHT_BLUE);
+    } else if (val == 256) {
+        set_console_color(BLACK, LIGHT_GREEN);
+    } else if (val == 512) {
+        set_console_color(BLACK, LIGHT_AQUA);
+    } else if (val == 1024) {
+        set_console_color(BLACK, LIGHT_RED);
+    } else if (val == 2048) {
+        set_console_color(BLACK, LIGHT_PURPLE);
+    } else if (val == 4096) {
+        set_console_color(BLACK, LIGHT_YELLOW);
+    } else if (val == 8192) {
+        set_console_color(BLACK, GRAY);
+    } else {
+        set_console_color(BLACK, WHITE);
+    }
+}
 
 fun print_board(board[4][4]: int) {
     system("cls");
-    print(PRINT_TOP_LINE);
+    print(PRINT_HORIZONTAL_LINE);
     for (var i: int = 0; i < 4; i++) {
-        print("\n|" + PRINT_BLK_LINE + "|\n|" + PRINT_BLK_LINE + "|\n|");
+        print("\n|" + PRINT_BLANK_LINE + "|\n|" + PRINT_BLANK_LINE + "|\n|");
         for (var j: int = 0; j < 4; j++) {
+			set_color(board[i][j]);
             print("\t" + string(board[i][j]));
         }
-        print("\t|\n|" + PRINT_BLK_LINE + "|");
+        set_console_color(BLACK, WHITE);
+        print("\t|\n|" + PRINT_BLANK_LINE + "|");
     }
-    print("\n|" + PRINT_BLK_LINE + "|\n");
-    print(PRINT_TOP_LINE);
+    print("\n|" + PRINT_BLANK_LINE + "|\n");
+    print(PRINT_HORIZONTAL_LINE);
 }
 
 fun moves_up(board[4][4]: int) {
@@ -219,10 +256,10 @@ fun is_end_game(c1: bool, c2: bool, board[4][4]: int): bool {
     return c2;
 }
 
-if (this == "main") {
+if (this == "2048") {
     //srand(time(NULL));
     
-    var grid[4][4]: int = { 0 };
+    var grid[4][4]: int = {0};
 
     grid[3][3] = 2;
 
@@ -276,8 +313,8 @@ if (this == "main") {
             
             if (not cont2) {
                 end = true;
-                // exit(0);
                 print("GAME OVER\n");
+                // exit(0);
             }
         }
     }

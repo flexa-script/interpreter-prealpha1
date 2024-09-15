@@ -36,35 +36,11 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 		str["mode"] = new Value(visitor->builtin_arguments[2]);
 
 		int parmode = visitor->builtin_arguments[2]->get_i();
-		int mode = 0;
-		if (parmode > 10) {
-			if (parmode >= 10 && parmode < 20) {
-			}
-			else if (parmode >= 20 && parmode < 30) {
-				mode = std::fstream::binary;
-			}
-			parmode %= 10;
-		}
-
-		switch (parmode)
-		{
-		case 1:
-			mode |= std::fstream::in;
-			break;
-		case 2:
-			mode |= std::fstream::out;
-			break;
-		case 3:
-			mode |= std::fstream::app;
-			break;
-		default:
-			break;
-		}
 
 		auto rval = new Value(parser::Type::T_BOOL);
 		std::fstream* fs;
 		try {
-			fs = new std::fstream(visitor->builtin_arguments[1]->get_s(), mode);
+			fs = new std::fstream(visitor->builtin_arguments[1]->get_s(), parmode);
 			rval->set(cp_bool(fs->is_open()));
 		}
 		catch (...) {
@@ -157,7 +133,7 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 		Value* cpfile = visitor->builtin_arguments[0];
 		if (!parser::is_void(cpfile->type)) {
 			std::fstream* fs = files[cpfile->get_str()[INSTANCE_ID_NAME]->get_i()];
-			*fs << visitor->builtin_arguments[1]->s;
+			*fs << visitor->builtin_arguments[1]->get_s();
 		}
 	};
 

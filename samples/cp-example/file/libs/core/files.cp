@@ -20,6 +20,6 @@ if (not res) {
 	print("unable to open file");
 }
 else {
-	cp::write(file2, "this war write using cp files lib");
+	cp::write(file2, "this was write using cp files lib");
 	cp::close(file2);
 }
