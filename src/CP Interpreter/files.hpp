@@ -10,9 +10,6 @@
 
 namespace modules {
 	class Files : public Module {
-	private:
-		std::vector<std::fstream*> files;
-
 	public:
 		Files();
 		~Files();
