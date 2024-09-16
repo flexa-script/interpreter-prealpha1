@@ -16,6 +16,8 @@ void Graphics::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["create_window"] = nullptr;
 	visitor->builtin_functions["get_current_width"] = nullptr;
 	visitor->builtin_functions["get_current_height"] = nullptr;
+	visitor->builtin_functions["get_current_content_width"] = nullptr;
+	visitor->builtin_functions["get_current_content_height"] = nullptr;
 	visitor->builtin_functions["clear_screen"] = nullptr;
 	visitor->builtin_functions["get_text_size"] = nullptr;
 	visitor->builtin_functions["draw_text"] = nullptr;
@@ -101,6 +103,16 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		visitor->current_expression_value = new Value(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_current_height()));
+		};
+
+	visitor->builtin_functions["get_current_content_width"] = [this, visitor]() {
+		visitor->builtin_functions["get_current_width"]();
+		visitor->current_expression_value->set(cp_int(visitor->current_expression_value->get_i() - 16));
+		};
+
+	visitor->builtin_functions["get_current_content_height"] = [this, visitor]() {
+		visitor->builtin_functions["get_current_height"]();
+		visitor->current_expression_value->set(cp_int(visitor->current_expression_value->get_i() - 39));
 		};
 
 	visitor->builtin_functions["draw_pixel"] = [this, visitor]() {

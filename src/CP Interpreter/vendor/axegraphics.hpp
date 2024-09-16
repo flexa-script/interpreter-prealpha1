@@ -42,7 +42,8 @@ namespace axe {
 		HDC hdc;
 		HBITMAP hbm_back_buffer;
 		HDC hdc_back_buffer;
-		int screen_width, screen_height;
+		long initial_width, initial_height;
+		long width, height;
 		MSG msg = { 0 };
 		bool quit = false;
 
@@ -67,6 +68,7 @@ namespace axe {
 		void fill_circle(int xc, int yc, int radius, COLORREF color);
 		void update();
 		bool is_quit();
+		void resize_back_buffer();
 
 		static LRESULT CALLBACK window_proc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 
