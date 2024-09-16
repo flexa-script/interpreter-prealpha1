@@ -45,8 +45,7 @@ std::map<HWND, Window*> Window::hwnd_map;
 
 Window::Window()
 	: hwnd(nullptr), hdc(nullptr), hbm_back_buffer(nullptr),
-	hdc_back_buffer(nullptr), initial_width(0), initial_height(0),
-	width(0), height(0) {}
+	hdc_back_buffer(nullptr), width(0), height(0) {}
 
 Window::~Window() {
 	if (hdc) {
@@ -69,8 +68,8 @@ Window::~Window() {
 
 bool Window::initialize(const std::string& title, int width, int height) {
 	std::wstring wtitle(title.begin(), title.end());
-	initial_width = width;
-	initial_height = height;
+	this->width = width;
+	this->height = height;
 
 	WNDCLASS wc = { 0 };
 	wc.lpfnWndProc = window_proc;
@@ -82,7 +81,7 @@ bool Window::initialize(const std::string& title, int width, int height) {
 	}
 
 	hwnd = CreateWindowEx(0, wc.lpszClassName, wtitle.c_str(), WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, CW_USEDEFAULT, width, height,
+		CW_USEDEFAULT, CW_USEDEFAULT, width + 16, height + 39,
 		NULL, NULL, GetModuleHandle(NULL), this);
 
 	if (!hwnd) {
@@ -102,11 +101,11 @@ bool Window::initialize(const std::string& title, int width, int height) {
 	return true;
 }
 
-int Window::get_current_width() {
+int Window::get_width() {
 	return width;
 }
 
-int Window::get_current_height() {
+int Window::get_height() {
 	return height;
 }
 
@@ -122,7 +121,7 @@ void Window::clear_screen(COLORREF color) {
 		}
 		else {
 			HBRUSH hBrush = CreateSolidBrush(color);
-			RECT rect = { 0, 0, initial_width, initial_height };
+			RECT rect = { 0, 0, width, height };
 			FillRect(hdc_back_buffer, &rect, hBrush);
 			DeleteObject(hBrush);
 		}
@@ -224,7 +223,7 @@ void Window::fill_circle(int xc, int yc, int radius, COLORREF color) {
 }
 
 void Window::update() {
-	BitBlt(hdc, 0, 0, initial_width, initial_height, hdc_back_buffer, 0, 0, SRCCOPY);
+	BitBlt(hdc, 0, 0, width, height, hdc_back_buffer, 0, 0, SRCCOPY);
 }
 
 bool Window::is_quit() {
@@ -242,11 +241,6 @@ void Window::resize_back_buffer() {
 	hdc_back_buffer = CreateCompatibleDC(hdc);
 	hbm_back_buffer = CreateCompatibleBitmap(hdc, width, height);
 	SelectObject(hdc_back_buffer, hbm_back_buffer);
-
-	HBRUSH hBrush = CreateSolidBrush(RGB(255, 255, 255));
-	RECT rect = { 0, 0, width, height };
-	FillRect(hdc_back_buffer, &rect, hBrush);
-	DeleteObject(hBrush);
 }
 
 LRESULT Window::handle_message(UINT umsg, WPARAM wparam, LPARAM lparam) {
@@ -256,8 +250,6 @@ LRESULT Window::handle_message(UINT umsg, WPARAM wparam, LPARAM lparam) {
 		GetClientRect(hwnd, &rect);
 		width = rect.right - rect.left;
 		height = rect.bottom - rect.top;
-		//std::cout << "width: " << width << std::endl;
-		//std::cout << "height: " << height << std::endl;
 		resize_back_buffer();
 		break;
 	}
@@ -272,7 +264,7 @@ LRESULT Window::handle_message(UINT umsg, WPARAM wparam, LPARAM lparam) {
 	case WM_PAINT: {
 		PAINTSTRUCT ps;
 		BeginPaint(hwnd, &ps);
-		BitBlt(ps.hdc, 0, 0, initial_width, initial_height, hdc_back_buffer, 0, 0, SRCCOPY);
+		BitBlt(ps.hdc, 0, 0, width, height, hdc_back_buffer, 0, 0, SRCCOPY);
 		EndPaint(hwnd, &ps);
 		return 0;
 	}

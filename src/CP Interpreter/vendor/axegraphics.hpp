@@ -42,7 +42,6 @@ namespace axe {
 		HDC hdc;
 		HBITMAP hbm_back_buffer;
 		HDC hdc_back_buffer;
-		long initial_width, initial_height;
 		long width, height;
 		MSG msg = { 0 };
 		bool quit = false;
@@ -54,8 +53,8 @@ namespace axe {
 		~Window();
 
 		bool initialize(const std::string& title, int width, int height);
-		int get_current_width();
-		int get_current_height();
+		int get_width();
+		int get_height();
 		void clear_screen(COLORREF color);
 		SIZE get_text_size(const std::string& text, Font* font);
 		void draw_text(int x, int y, const std::string& text, COLORREF color, Font* font);

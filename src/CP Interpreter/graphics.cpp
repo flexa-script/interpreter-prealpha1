@@ -16,8 +16,6 @@ void Graphics::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["create_window"] = nullptr;
 	visitor->builtin_functions["get_current_width"] = nullptr;
 	visitor->builtin_functions["get_current_height"] = nullptr;
-	visitor->builtin_functions["get_current_content_width"] = nullptr;
-	visitor->builtin_functions["get_current_content_height"] = nullptr;
 	visitor->builtin_functions["clear_screen"] = nullptr;
 	visitor->builtin_functions["get_text_size"] = nullptr;
 	visitor->builtin_functions["draw_text"] = nullptr;
@@ -45,8 +43,6 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		str["title"] = new Value(visitor->builtin_arguments[0]);
 		str["width"] = new Value(visitor->builtin_arguments[1]);
 		str["height"] = new Value(visitor->builtin_arguments[2]);
-		str["content_width"] = new Value(cp_int(visitor->builtin_arguments[1]->get_i()) - 16);
-		str["content_height"] = new Value(cp_int(visitor->builtin_arguments[2]->get_i() - 39));
 
 		// create a new window graphic engine
 		str[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
@@ -91,7 +87,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (!win->get_str()[INSTANCE_ID_NAME]->get_i()) {
 			throw std::runtime_error("Window is corrupted");
 		}
-		visitor->current_expression_value=new Value(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_current_width()));
+		visitor->current_expression_value=new Value(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_width()));
 		};
 
 	visitor->builtin_functions["get_current_height"] = [this, visitor]() {
@@ -102,17 +98,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (!win->get_str()[INSTANCE_ID_NAME]->get_i()) {
 			throw std::runtime_error("Window is corrupted");
 		}
-		visitor->current_expression_value = new Value(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_current_height()));
-		};
-
-	visitor->builtin_functions["get_current_content_width"] = [this, visitor]() {
-		visitor->builtin_functions["get_current_width"]();
-		visitor->current_expression_value->set(cp_int(visitor->current_expression_value->get_i() - 16));
-		};
-
-	visitor->builtin_functions["get_current_content_height"] = [this, visitor]() {
-		visitor->builtin_functions["get_current_height"]();
-		visitor->current_expression_value->set(cp_int(visitor->current_expression_value->get_i() - 39));
+		visitor->current_expression_value = new Value(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_height()));
 		};
 
 	visitor->builtin_functions["draw_pixel"] = [this, visitor]() {
