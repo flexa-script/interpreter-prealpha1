@@ -53,7 +53,10 @@ namespace axe {
 		~Window();
 
 		bool initialize(const std::string& title, int width, int height);
+		int get_current_width();
+		int get_current_height();
 		void clear_screen(COLORREF color);
+		SIZE get_text_size(const std::string& text, Font* font);
 		void draw_text(int x, int y, const std::string& text, COLORREF color, Font* font);
 		void draw_image(Image* image, int x, int y);
 		void draw_pixel(int x, int y, COLORREF color);

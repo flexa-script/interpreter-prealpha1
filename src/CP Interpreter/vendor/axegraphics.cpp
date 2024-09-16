@@ -101,6 +101,14 @@ bool Window::initialize(const std::string& title, int width, int height) {
 	return true;
 }
 
+int Window::get_current_width() {
+	return GetSystemMetrics(SM_CXSCREEN);
+}
+
+int Window::get_current_height() {
+	return GetSystemMetrics(SM_CYSCREEN);
+}
+
 void Window::clear_screen(COLORREF color) {
 	if (msg.message != WM_QUIT) {
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -123,8 +131,22 @@ void Window::clear_screen(COLORREF color) {
 	}
 }
 
+SIZE Window::get_text_size(const std::string& text, Font* font) {
+	RECT rect = { 0, 0, 0, 0 };
+	std::wstring wtext(text.begin(), text.end());
+
+	HFONT old_font = (HFONT)SelectObject(hdc_back_buffer, font);
+
+	DrawText(hdc_back_buffer, wtext.c_str(), -1, &rect, DT_CALCRECT);
+
+	SelectObject(hdc_back_buffer, old_font);
+	DeleteObject(font);
+
+	return SIZE{ rect.right - rect.left, rect.bottom - rect.top };
+}
+
 void Window::draw_text(int x, int y, const std::string& text, COLORREF color, Font* font) {
-	HFONT oldFont = (HFONT)SelectObject(hdc_back_buffer, font->font);
+	HFONT old_font = (HFONT)SelectObject(hdc_back_buffer, font->font);
 	SetTextColor(hdc_back_buffer, color);
 	SetBkMode(hdc_back_buffer, TRANSPARENT);
 
@@ -132,7 +154,7 @@ void Window::draw_text(int x, int y, const std::string& text, COLORREF color, Fo
 
 	TextOut(hdc_back_buffer, x, y, wtext.c_str(), wtext.length());
 
-	SelectObject(hdc_back_buffer, oldFont);
+	SelectObject(hdc_back_buffer, old_font);
 }
 
 void Window::draw_image(Image* image, int x, int y) {
@@ -156,20 +178,20 @@ void Window::draw_pixel(int x, int y, COLORREF color) {
 
 void Window::draw_line(int x1, int y1, int x2, int y2, COLORREF color) {
 	HPEN pen = CreatePen(PS_SOLID, 1, color);
-	HPEN oldPen = (HPEN)SelectObject(hdc_back_buffer, pen);
+	HPEN old_pen = (HPEN)SelectObject(hdc_back_buffer, pen);
 	MoveToEx(hdc_back_buffer, x1, y1, nullptr);
 	LineTo(hdc_back_buffer, x2, y2);
-	SelectObject(hdc_back_buffer, oldPen);
+	SelectObject(hdc_back_buffer, old_pen);
 	DeleteObject(pen);
 }
 
 void Window::draw_rect(int x, int y, int width, int height, COLORREF color) {
 	HPEN pen = CreatePen(PS_SOLID, 1, color);
-	HPEN oldPen = (HPEN)SelectObject(hdc_back_buffer, pen);
-	HBRUSH oldBrush = (HBRUSH)SelectObject(hdc_back_buffer, GetStockObject(NULL_BRUSH));
+	HPEN old_pen = (HPEN)SelectObject(hdc_back_buffer, pen);
+	HBRUSH old_brush = (HBRUSH)SelectObject(hdc_back_buffer, GetStockObject(NULL_BRUSH));
 	Rectangle(hdc_back_buffer, x, y, x + width, y + height);
-	SelectObject(hdc_back_buffer, oldPen);
-	SelectObject(hdc_back_buffer, oldBrush);
+	SelectObject(hdc_back_buffer, old_pen);
+	SelectObject(hdc_back_buffer, old_brush);
 	DeleteObject(pen);
 }
 
@@ -182,21 +204,21 @@ void Window::fill_rect(int x, int y, int width, int height, COLORREF color) {
 
 void Window::draw_circle(int xc, int yc, int radius, COLORREF color) {
 	HPEN pen = CreatePen(PS_SOLID, 1, color);
-	HPEN oldPen = (HPEN)SelectObject(hdc_back_buffer, pen);
-	HBRUSH oldBrush = (HBRUSH)SelectObject(hdc_back_buffer, GetStockObject(NULL_BRUSH));
+	HPEN old_pen = (HPEN)SelectObject(hdc_back_buffer, pen);
+	HBRUSH old_brush = (HBRUSH)SelectObject(hdc_back_buffer, GetStockObject(NULL_BRUSH));
 	Ellipse(hdc_back_buffer, xc - radius, yc - radius, xc + radius, yc + radius);
-	SelectObject(hdc_back_buffer, oldPen);
-	SelectObject(hdc_back_buffer, oldBrush);
+	SelectObject(hdc_back_buffer, old_pen);
+	SelectObject(hdc_back_buffer, old_brush);
 	DeleteObject(pen);
 }
 
 void Window::fill_circle(int xc, int yc, int radius, COLORREF color) {
 	HBRUSH brush = CreateSolidBrush(color);
-	HBRUSH oldBrush = (HBRUSH)SelectObject(hdc_back_buffer, brush);
-	HPEN oldPen = (HPEN)SelectObject(hdc_back_buffer, GetStockObject(NULL_PEN));
+	HBRUSH old_brush = (HBRUSH)SelectObject(hdc_back_buffer, brush);
+	HPEN old_pen = (HPEN)SelectObject(hdc_back_buffer, GetStockObject(NULL_PEN));
 	Ellipse(hdc_back_buffer, xc - radius, yc - radius, xc + radius, yc + radius);
-	SelectObject(hdc_back_buffer, oldPen);
-	SelectObject(hdc_back_buffer, oldBrush);
+	SelectObject(hdc_back_buffer, old_pen);
+	SelectObject(hdc_back_buffer, old_brush);
 	DeleteObject(brush);
 }
 
