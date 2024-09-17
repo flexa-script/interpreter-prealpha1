@@ -147,6 +147,9 @@
     <ClInclude Include="builtin.hpp">
       <Filter>Header Files\modules\builtin</Filter>
     </ClInclude>
+    <ClInclude Include="datetime.hpp">
+      <Filter>Header Files\modules\cp.core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -226,6 +229,9 @@
     </ClCompile>
     <ClCompile Include="builtin.cpp">
       <Filter>Source Files\modules\builtin</Filter>
+    </ClCompile>
+    <ClCompile Include="datetime.cpp">
+      <Filter>Source Files\modules\cp.core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,5 +1,11 @@
 #include "vendor/axeutils.hpp"
 
+#include "module.hpp";
+#include "datetime.hpp"
+#include "graphics.hpp"
+#include "files.hpp"
+#include "console.hpp"
+
 #include "types.hpp"
 #include "visitor.hpp"
 #include "token.hpp"
@@ -99,23 +105,6 @@ namespace parser {
 		return is_collection(type) || is_struct(type);
 	}
 }
-
-std::string default_namespace = "__main";
-
-std::vector<std::string> std_libs = {
-	"cp.std.math",
-	"cp.std.print",
-	"cp.std.random",
-	"cp.std.testing"
-};
-
-std::vector<std::string> built_in_libs = {
-	"cp.core.graphics",
-	"cp.core.files",
-	"cp.core.console",
-	"cp.core.exception",
-	"cp.core.pair"
-};
 
 TypeDefinition::TypeDefinition(Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
 	const std::string& type_name, const std::string& type_name_space)

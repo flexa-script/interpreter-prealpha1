@@ -11,10 +11,6 @@
 #include "ast.hpp"
 #include "interpreter_scope.hpp"
 
-#include "graphics.hpp"
-#include "files.hpp"
-#include "console.hpp"
-
 using namespace visitor;
 using namespace parser;
 
@@ -59,10 +55,6 @@ namespace visitor {
 		size_t print_level = 0;
 		std::vector<uintptr_t> printed;
 
-		std::unique_ptr<modules::Graphics> cpgraphics;
-		std::unique_ptr<modules::Files> cpfiles;
-		std::unique_ptr<modules::Console> cpconsole;
-
 	private:
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector);
 		std::vector<unsigned int> calculate_array_dim_size(const cp_array& arr);
@@ -93,7 +85,6 @@ namespace visitor {
 
 		void call_builtin_function(const std::string& identifier);
 		void declare_function_block_parameters(const std::string& nmspace);
-		void register_built_in_lib(const std::string& libname);
 
 		cp_bool equals_value(const Value* lval, const Value* rval);
 		cp_bool equals_array(const cp_array& larr, const cp_array& rarr);

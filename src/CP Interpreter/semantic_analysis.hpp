@@ -11,10 +11,6 @@
 #include "ast.hpp"
 #include "semantic_scope.hpp"
 
-#include "graphics.hpp"
-#include "files.hpp"
-#include "console.hpp"
-
 using namespace visitor;
 using namespace parser;
 
@@ -42,10 +38,6 @@ namespace visitor {
 		TypeDefinition current_expression_array_type;
 		bool is_max;
 
-		std::unique_ptr<modules::Graphics> cpgraphics;
-		std::unique_ptr<modules::Files> cpfiles;
-		std::unique_ptr<modules::Console> cpconsole;
-
 	private:
 		bool returns(ASTNode* astnode);
 
@@ -59,8 +51,6 @@ namespace visitor {
 
 		TypeDefinition do_operation(const std::string& op, TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, bool is_expr = true);
 		SemanticValue* access_value(SemanticValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
-
-		void register_built_in_lib(const std::string& libname);
 
 		bool namespace_exists(const std::string& nmspace);
 		const std::string& get_namespace(const std::string& nmspace = "") const override;

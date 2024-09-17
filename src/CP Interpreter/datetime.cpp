@@ -24,19 +24,18 @@ void DateTime::register_functions(visitor::SemanticAnalyser* visitor) {
 void DateTime::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["create_date_time"] = [this, visitor]() {
-		tm* tm = nullptr;
+		tm* tm = new struct tm();
 		time_t t;
 
 		if (visitor->builtin_arguments.size() == 0) {
 			t = time(nullptr);
-			tm = gmtime(&t);
+			gmtime_s(tm, &t);
 		}
 		else if (visitor->builtin_arguments.size() == 1) {
 			t = visitor->builtin_arguments[0]->get_i();
-			tm = gmtime(&t);
+			gmtime_s(tm, &t);
 		}
 		else {
-			tm = new struct tm();
 			tm->tm_year = visitor->builtin_arguments[0]->get_i() - 1900;
 			tm->tm_mon = visitor->builtin_arguments[1]->get_i() - 1;
 			tm->tm_mday = visitor->builtin_arguments[2]->get_i();

@@ -8,33 +8,33 @@ const PRINT_BLANK_LINE = "                                       ";
 
 fun set_color(val: int) {
     if (val == 2) {
-        set_console_color(BLACK, BLUE);
+        set_console_color(CL_BLACK, CL_BLUE);
     } else if (val == 4) {
-        set_console_color(BLACK, GREEN);
+        set_console_color(CL_BLACK, CL_GREEN);
     } else if (val == 8) {
-        set_console_color(BLACK, AQUA);
+        set_console_color(CL_BLACK, CL_AQUA);
     } else if (val == 16) {
-        set_console_color(BLACK, RED);
+        set_console_color(CL_BLACK, CL_RED);
     } else if (val == 32) {
-        set_console_color(BLACK, PURPLE);
+        set_console_color(CL_BLACK, CL_PURPLE);
     } else if (val == 64) {
-        set_console_color(BLACK, YELLOW);
+        set_console_color(CL_BLACK, CL_YELLOW);
     } else if (val == 128) {
-        set_console_color(BLACK, LIGHT_BLUE);
+        set_console_color(CL_BLACK, CL_LIGHT_BLUE);
     } else if (val == 256) {
-        set_console_color(BLACK, LIGHT_GREEN);
+        set_console_color(CL_BLACK, CL_LIGHT_GREEN);
     } else if (val == 512) {
-        set_console_color(BLACK, LIGHT_AQUA);
+        set_console_color(CL_BLACK, CL_LIGHT_AQUA);
     } else if (val == 1024) {
-        set_console_color(BLACK, LIGHT_RED);
+        set_console_color(CL_BLACK, CL_LIGHT_RED);
     } else if (val == 2048) {
-        set_console_color(BLACK, LIGHT_PURPLE);
+        set_console_color(CL_BLACK, CL_LIGHT_PURPLE);
     } else if (val == 4096) {
-        set_console_color(BLACK, LIGHT_YELLOW);
+        set_console_color(CL_BLACK, CL_LIGHT_YELLOW);
     } else if (val == 8192) {
-        set_console_color(BLACK, GRAY);
+        set_console_color(CL_BLACK, CL_GRAY);
     } else {
-        set_console_color(BLACK, WHITE);
+        set_console_color(CL_BLACK, CL_WHITE);
     }
 }
 
@@ -47,7 +47,7 @@ fun print_board(board[4][4]: int) {
 			set_color(board[i][j]);
             print("\t" + string(board[i][j]));
         }
-        set_console_color(BLACK, WHITE);
+        set_console_color(CL_BLACK, CL_WHITE);
         print("\t|\n|" + PRINT_BLANK_LINE + "|");
     }
     print("\n|" + PRINT_BLANK_LINE + "|\n");

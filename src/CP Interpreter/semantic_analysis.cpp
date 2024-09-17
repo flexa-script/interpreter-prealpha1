@@ -49,8 +49,8 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 
 	std::string libname = axe::StringUtils::join(astnode->library, ".");
 
-	if (axe::StringUtils::contains(built_in_libs, libname)) {
-		register_built_in_lib(libname);
+	if (built_in_libs.find(libname) != built_in_libs.end()) {
+		built_in_libs.find(libname)->second->register_functions(this);
 	}
 
 	if (programs.find(libname) == programs.end()) {
@@ -403,10 +403,6 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 		current_function.pop();
 	}
 	else {
-		//if (builtin_functions.find(astnode->identifier) == builtin_functions.end()) {
-		//	throw std::runtime_error("defined function '" + astnode->identifier + "' is not from a built in library");
-		//}
-
 		if (astnode->identifier != "") {
 			scopes[nmspace].back()->declare_function(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
 				astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
@@ -419,7 +415,7 @@ void SemanticAnalyser::visit(ASTFunctionExpression* astnode) {
 
 	auto fun = dynamic_cast<ASTFunctionDefinitionNode*>(astnode->fun);
 
-	std::string identifier = "__unnamed_function_" + axe::AxeUUID::generate();
+	std::string identifier = "__unnamed_function_" + axe::UUID::generate();
 	FunctionDefinition* tempfundef = new FunctionDefinition(identifier, fun->type, fun->type_name, fun->type_name_space,
 		fun->array_type, fun->dim, fun->signature, fun->parameters, fun->block, fun->row, fun->col);
 
@@ -1651,23 +1647,6 @@ long long SemanticAnalyser::hash(ASTLiteralNode<cp_string>* astnode) {
 long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 	astnode->accept(this);
 	return current_expression.hash;
-}
-
-void SemanticAnalyser::register_built_in_lib(const std::string& libname) {
-	if (built_in_libs[0] == libname) {
-		cpgraphics = std::unique_ptr<modules::Graphics>(new modules::Graphics());
-		cpgraphics->register_functions(this);
-	}
-
-	if (built_in_libs[1] == libname) {
-		cpfiles = std::unique_ptr<modules::Files>(new modules::Files());
-		cpfiles->register_functions(this);
-	}
-
-	if (built_in_libs[2] == libname) {
-		cpconsole = std::unique_ptr<modules::Console>(new modules::Console());
-		cpconsole->register_functions(this);
-	}
 }
 
 const std::string& SemanticAnalyser::get_namespace(const std::string& nmspace) const {

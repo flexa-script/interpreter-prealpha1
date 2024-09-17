@@ -8,6 +8,7 @@
 #include <functional>
 
 #include "types.hpp"
+#include "module.hpp"
 
 namespace parser {
 	class ASTProgramNode;
@@ -57,7 +58,7 @@ using namespace parser;
 
 extern std::string default_namespace;
 extern std::vector<std::string> std_libs;
-extern std::vector<std::string> built_in_libs;
+extern std::map<std::string, std::shared_ptr<modules::Module>> built_in_libs;
 
 namespace visitor {
 

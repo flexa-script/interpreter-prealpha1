@@ -61,8 +61,8 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 
 	std::string libname = axe::StringUtils::join(astnode->library, ".");
 
-	if (axe::StringUtils::contains(built_in_libs, libname)) {
-		register_built_in_lib(libname);
+	if (built_in_libs.find(libname) != built_in_libs.end()) {
+		built_in_libs.find(libname)->second->register_functions(this);
 	}
 
 	auto program = programs[libname];
@@ -2864,23 +2864,6 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 
 	builtin_functions[identifier]();
 	builtin_arguments.clear();
-}
-
-void Interpreter::register_built_in_lib(const std::string& libname) {
-	if (built_in_libs[0] == libname) {
-		cpgraphics = std::unique_ptr<modules::Graphics>(new modules::Graphics());
-		cpgraphics->register_functions(this);
-	}
-
-	if (built_in_libs[1] == libname) {
-		cpfiles = std::unique_ptr<modules::Files>(new modules::Files());
-		cpfiles->register_functions(this);
-	}
-
-	if (built_in_libs[2] == libname) {
-		cpconsole = std::unique_ptr<modules::Console>(new modules::Console());
-		cpconsole->register_functions(this);
-	}
 }
 
 const std::string& Interpreter::get_namespace(const std::string& nmspace) const {

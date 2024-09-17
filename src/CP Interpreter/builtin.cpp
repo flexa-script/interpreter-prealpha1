@@ -1,3 +1,4 @@
+#include <iostream>
 #include <functional>
 #include <chrono>
 #include <thread>
@@ -5,9 +6,10 @@
 
 #include "builtin.hpp"
 
-#include "visitor.hpp"
 #include "interpreter.hpp"
 #include "semantic_analysis.hpp"
+
+#include "visitor.hpp"
 
 using namespace modules;
 
