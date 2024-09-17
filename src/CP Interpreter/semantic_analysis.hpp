@@ -23,15 +23,15 @@ namespace visitor {
 	class SemanticAnalyser : Visitor {
 	public:
 		std::map<std::string, void*> builtin_functions;
+		std::map<std::string, std::vector<SemanticScope*>> scopes;
 
 	private:
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&SemanticAnalyser::evaluate_access_vector, this, std::placeholders::_1);
-		std::map<std::string, std::vector<SemanticScope*>> scopes;
 		std::vector<std::string> nmspaces;
 		std::vector<std::string> parsed_libs;
 		std::string current_namespace;
 		SemanticValue current_expression;
-		std::stack<FunctionDefinition> current_function;
+		std::stack<FunctionDefinition*> current_function;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		bool exception = false;
 		bool is_switch = false;
@@ -60,7 +60,6 @@ namespace visitor {
 		TypeDefinition do_operation(const std::string& op, TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, bool is_expr = true);
 		SemanticValue* access_value(SemanticValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
 
-		void register_built_in_functions();
 		void register_built_in_lib(const std::string& libname);
 
 		bool namespace_exists(const std::string& nmspace);

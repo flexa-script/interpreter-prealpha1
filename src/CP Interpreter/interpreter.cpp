@@ -1,13 +1,13 @@
 #include <iostream>
 #include <algorithm> 
 #include <cmath>
-#include <conio.h>
 #include <compare>
 #include <functional>
 
 #include "interpreter.hpp"
 #include "exception_handler.hpp"
 #include "token.hpp"
+#include "builtin.hpp"
 
 #include "vendor/axeutils.hpp"
 #include "vendor/axewatch.hpp"
@@ -23,7 +23,9 @@ Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_pr
 		current_this_name.push(main_program->name);
 	}
 	scopes[default_namespace].push_back(global_scope);
-	register_built_in_functions();
+
+	auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
+	builtin->register_functions(this);
 }
 
 void Interpreter::start() {
@@ -341,21 +343,25 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	}
 	auto declfun = func_scope->find_declared_function(identifier, &signature, evaluate_access_vector_ptr, strict);
 
-	current_function_defined_parameters.push(std::get<0>(declfun));
+	current_function_defined_parameters.push(std::get<0>(*declfun));
 
 	current_this_name.push(identifier);
 	current_function_signature.push(signature);
 	current_function_call_identifier_vector.push(identifier_vector);
 	current_function_nmspace.push(nmspace);
-	current_function_return_type.push(std::get<2>(declfun));
+	current_function_return_type.push(std::get<2>(*declfun));
 	current_function_calling_arguments.push(function_arguments);
 
-	auto block = std::get<1>(declfun);
+	auto block = std::get<1>(*declfun);
 	if (block) {
 		function_call_name = identifier;
 		block->accept(this);
 	}
 	else {
+		if (builtin_functions.find(astnode->identifier) == builtin_functions.end() && !block) {
+			throw std::runtime_error("function '" + astnode->identifier + "' definition not found");
+		}
+
 		call_builtin_function(identifier);
 	}
 
@@ -378,7 +384,14 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 	}
 
 	if (astnode->identifier != "") {
-		scopes[nmspace].back()->declare_function(astnode->identifier, params, astnode->block, *astnode);
+		try {
+			InterpreterScope* func_scope = scopes[nmspace].back();
+			interpreter_function_t* declfun = func_scope->find_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr, true);
+			std::get<1>(*declfun) = astnode->block;
+		}
+		catch (...) {
+			scopes[nmspace].back()->declare_function(astnode->identifier, params, astnode->block, *astnode);
+		}
 	}
 }
 
@@ -648,7 +661,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 
 	scopes[nmspace].push_back(new InterpreterScope(""));
 
-	auto itdecl = static_cast<ASTDeclarationNode*>(astnode->itdecl);
+	auto itdecl = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl);
 
 	switch (current_expression_value->type) {
 	case Type::T_ARRAY: {
@@ -2043,7 +2056,7 @@ std::string Interpreter::parse_value_to_string(const Value* value) {
 			auto& func_sig = std::get<0>(it->second);
 
 			std::string func_decl = func_name + "(";
-			for (auto param : func_sig) {
+			for (const auto& param : func_sig) {
 				func_decl += type_str(std::get<1>(param).type) + ", ";
 			}
 			if (func_sig.size() > 0) {
@@ -2069,7 +2082,17 @@ std::string Interpreter::parse_array_to_string(const cp_array& arr_value) {
 	std::stringstream s = std::stringstream();
 	s << "[";
 	for (auto i = 0; i < arr_value.second; ++i) {
+		bool isc = is_char(arr_value.first[i]->type);
+		bool iss = is_string(arr_value.first[i]->type);
+
+		if (isc) s << "'";
+		else if (iss) s << "\"";
+
 		s << parse_value_to_string(arr_value.first[i]);
+
+		if (isc) s << "'";
+		else if (iss) s << "\"";
+
 		if (i < arr_value.second - 1) {
 			s << ",";
 		}
@@ -2665,7 +2688,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 	auto curr_scope = scopes[nmspace].back();
 	auto rest_name = std::string();
 	auto vec = std::vector<Value*>();
-	size_t i;
+	size_t i = 0;
 
 	if (current_function_calling_arguments.size() == 0 || current_function_defined_parameters.size() == 0) {
 		return;
@@ -2787,8 +2810,9 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 
 void Interpreter::call_builtin_function(const std::string& identifier) {
 	auto vec = std::vector<Value*>();
+	size_t i = 0;
 
-	for (size_t i = 0; i < current_function_calling_arguments.top().size(); ++i) {
+	for (i = 0; i < current_function_calling_arguments.top().size(); ++i) {
 		// is reference : not reference
 		Value* current_value = nullptr;
 		if (current_function_calling_arguments.top()[i]->use_ref) {
@@ -2812,6 +2836,18 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 		}
 	}
 
+	// adds default values
+	for (; i < current_function_defined_parameters.top().size(); ++i) {
+		if (std::get<3>(current_function_defined_parameters.top()[i])) {
+			break;
+		}
+
+		const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
+		std::get<2>(current_function_defined_parameters.top()[i])->accept(this);
+
+		builtin_arguments.push_back(new Value(current_expression_value));
+	}
+
 	if (vec.size() > 0) {
 		auto rest = new Value(Type::T_ANY, std::vector<ASTExprNode*>());
 		auto rarr = new Value * [vec.size()];
@@ -2828,100 +2864,6 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 
 	builtin_functions[identifier]();
 	builtin_arguments.clear();
-}
-
-void Interpreter::register_built_in_functions() {
-	interpreter_parameter_list_t params;
-
-	builtin_functions["print"] = [this]() {
-		current_expression_value = new Value(Type::T_UNDEFINED);
-		if (builtin_arguments.size() == 0) {
-			return;
-		}
-		for (size_t i = 0; i < builtin_arguments[0]->get_arr().second; ++i) {
-			std::cout << parse_value_to_string(builtin_arguments[0]->get_arr().first[i]);
-		}
-		};
-	params.clear();
-	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), new ASTNullNode(0, 0), true));
-	scopes[default_namespace].back()->declare_function("print", params, nullptr, TypeDefinition::get_basic(Type::T_VOID));
-
-	builtin_functions["println"] = [this]() {
-		builtin_functions["print"]();
-		std::cout << std::endl;
-		};
-	params.clear();
-	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), new ASTNullNode(0, 0), true));
-	scopes[default_namespace].back()->declare_function("println", params, nullptr, TypeDefinition::get_basic(Type::T_VOID));
-
-
-	builtin_functions["read"] = [this]() {
-		if (builtin_arguments.size() > 0) {
-			builtin_functions["print"]();
-		}
-		std::string line;
-		std::getline(std::cin, line);
-		current_expression_value = new Value(Type::T_STRING);
-		current_expression_value->set(cp_string(std::move(line)));
-		};
-	params.clear();
-	params.push_back(std::make_tuple("args", TypeDefinition::get_basic(Type::T_ANY), new ASTNullNode(0, 0), true));
-	scopes[default_namespace].back()->declare_function("read", params, nullptr, TypeDefinition::get_basic(Type::T_STRING));
-
-
-	builtin_functions["readch"] = [this]() {
-		while (!_kbhit());
-		char ch = _getch();
-		current_expression_value = new Value(Type::T_CHAR);
-		current_expression_value->set(cp_char(ch));
-		};
-	params.clear();
-	scopes[default_namespace].back()->declare_function("readch", params, nullptr, TypeDefinition::get_basic(Type::T_CHAR));
-
-
-	builtin_functions["len"] = [this]() {
-		auto& curr_val = builtin_arguments[0];
-		auto val = new Value(Type::T_INT);
-
-		if (is_array(curr_val->type)) {
-			val->set(cp_int(curr_val->get_arr().second));
-		}
-		else {
-			val->set(cp_int(curr_val->get_s().size()));
-		}
-
-		current_expression_value = val;
-		};
-	params.clear();
-	params.push_back(std::make_tuple("arr", TypeDefinition::get_array(Type::T_ANY), nullptr, false));
-	scopes[default_namespace].back()->declare_function("len", params, nullptr, TypeDefinition::get_basic(Type::T_INT));
-	params.clear();
-	params.push_back(std::make_tuple("str", TypeDefinition::get_basic(Type::T_STRING), nullptr, false));
-	scopes[default_namespace].back()->declare_function("len", params, nullptr, TypeDefinition::get_basic(Type::T_INT));
-
-
-	builtin_functions["equals"] = [this]() {
-		auto& rval = builtin_arguments[0];
-		auto& lval = builtin_arguments[1];
-		auto res = new Value(Type::T_BOOL);
-
-		res->set(equals_struct(rval->get_str(), lval->get_str()));
-
-		current_expression_value = res;
-		};
-	params.clear();
-	params.push_back(std::make_tuple("lval", TypeDefinition::get_basic(Type::T_ANY), nullptr, false));
-	params.push_back(std::make_tuple("rval", TypeDefinition::get_basic(Type::T_ANY), nullptr, false));
-	scopes[default_namespace].back()->declare_function("equals", params, nullptr, TypeDefinition::get_basic(Type::T_BOOL));
-
-
-	builtin_functions["system"] = [this]() {
-		current_expression_value = new Value(Type::T_UNDEFINED);
-		system(builtin_arguments[0]->get_s().c_str());
-		};
-	params.clear();
-	params.push_back(std::make_tuple("cmd", TypeDefinition::get_basic(Type::T_STRING), nullptr, false));
-	scopes[default_namespace].back()->declare_function("system", params, nullptr, TypeDefinition::get_basic(Type::T_VOID));
 }
 
 void Interpreter::register_built_in_lib(const std::string& libname) {

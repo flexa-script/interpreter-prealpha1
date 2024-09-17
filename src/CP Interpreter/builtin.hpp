@@ -1,22 +1,17 @@
-#ifndef FILES_HPP
-#define FILES_HPP
-
-#include <functional>
-#include <iostream>
-#include <fstream>
-#include <sstream>
+#ifndef BUILTIN_HPP
+#define BUILTIN_HPP
 
 #include "module.hpp"
 
 namespace modules {
-	class Files : public Module {
+	class Builtin : public Module {
 	public:
-		Files();
-		~Files();
+		Builtin();
+		~Builtin();
 
 		void register_functions(visitor::SemanticAnalyser* visitor) override;
 		void register_functions(visitor::Interpreter* visitor) override;
 	};
 }
 
-#endif // !FILES_HPP
+#endif // !BUILTIN_HPP

@@ -1,22 +1,17 @@
-#ifndef FILES_HPP
-#define FILES_HPP
-
-#include <functional>
-#include <iostream>
-#include <fstream>
-#include <sstream>
+#ifndef DATETIME_HPP
+#define DATETIME_HPP
 
 #include "module.hpp"
 
 namespace modules {
-	class Files : public Module {
+	class DateTime : public Module {
 	public:
-		Files();
-		~Files();
+		DateTime();
+		~DateTime();
 
 		void register_functions(visitor::SemanticAnalyser* visitor) override;
 		void register_functions(visitor::Interpreter* visitor) override;
 	};
 }
 
-#endif // !FILES_HPP
+#endif // !DATETIME_HPP
