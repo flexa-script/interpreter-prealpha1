@@ -24,12 +24,12 @@ namespace visitor {
 		std::map<std::string, std::function<void()>> builtin_functions;
 		std::vector<Value*> builtin_arguments;
 		Value* current_expression_value;
+		std::map<std::string, std::vector<InterpreterScope*>> scopes;
 
 		std::string parse_value_to_string(const Value* value);
 
 	private:
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&Interpreter::evaluate_access_vector, this, std::placeholders::_1);
-		std::map<std::string, std::vector<InterpreterScope*>> scopes;
 		std::vector<std::string> parsed_libs;
 		std::string function_call_name;
 		std::string return_from_function_name;
@@ -93,7 +93,6 @@ namespace visitor {
 
 		void call_builtin_function(const std::string& identifier);
 		void declare_function_block_parameters(const std::string& nmspace);
-		void register_built_in_functions();
 		void register_built_in_lib(const std::string& libname);
 
 		cp_bool equals_value(const Value* lval, const Value* rval);

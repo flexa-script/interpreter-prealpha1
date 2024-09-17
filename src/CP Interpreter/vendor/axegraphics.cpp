@@ -274,7 +274,7 @@ LRESULT Window::handle_message(UINT umsg, WPARAM wparam, LPARAM lparam) {
 
 LRESULT CALLBACK Window::window_proc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam) {
 	Window* windows;
-
+	
 	if (umsg == WM_CREATE) {
 		windows = reinterpret_cast<Window*>(reinterpret_cast<LPCREATESTRUCT>(lparam)->lpCreateParams);
 		SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windows));

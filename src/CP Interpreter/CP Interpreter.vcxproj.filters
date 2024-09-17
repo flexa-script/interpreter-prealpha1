@@ -61,6 +61,12 @@
     <Filter Include="Source Files\modules\cp.core">
       <UniqueIdentifier>{b1edb529-77be-4e86-a690-c74c53dc4993}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\modules\builtin">
+      <UniqueIdentifier>{dea4d0d0-1529-47b6-9069-398ada94321f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modules\builtin">
+      <UniqueIdentifier>{e6d03087-f488-47a9-ae62-e91af6a68a76}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lexer.hpp">
@@ -138,6 +144,9 @@
     <ClInclude Include="vendor\axeuuid.hpp">
       <Filter>Header Files\vendor</Filter>
     </ClInclude>
+    <ClInclude Include="builtin.hpp">
+      <Filter>Header Files\modules\builtin</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -214,6 +223,9 @@
     </ClCompile>
     <ClCompile Include="token_constants.hpp">
       <Filter>Header Files\core\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="builtin.cpp">
+      <Filter>Source Files\modules\builtin</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

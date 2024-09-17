@@ -1,10 +1,12 @@
 #include <iostream>
 #include <utility>
 
+#include "semantic_analysis.hpp"
 #include "exception_handler.hpp"
 #include "graphics.hpp"
-#include "semantic_analysis.hpp"
 #include "token.hpp"
+#include "builtin.hpp"
+
 #include "vendor/axeutils.hpp"
 #include "vendor/axeuuid.hpp"
 
@@ -15,7 +17,9 @@ using namespace lexer;
 SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
 	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
 	scopes[default_namespace].push_back(global_scope);
-	register_built_in_functions();
+
+	auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
+	builtin->register_functions(this);
 };
 
 void SemanticAnalyser::start() {
@@ -1673,73 +1677,6 @@ long long SemanticAnalyser::hash(ASTLiteralNode<cp_string>* astnode) {
 long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
 	astnode->accept(this);
 	return current_expression.hash;
-}
-
-void SemanticAnalyser::register_built_in_functions() {
-	auto signature = std::vector<TypeDefinition>();
-	auto parameters = std::vector<VariableDefinition>();
-
-	signature.clear();
-	parameters.clear();
-	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
-	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true));
-	scopes[default_namespace].back()->declare_basic_function("print", Type::T_VOID, signature, parameters);
-	builtin_functions["print"] = nullptr;
-
-	signature.clear();
-	parameters.clear();
-	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
-	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true));
-	scopes[default_namespace].back()->declare_basic_function("println", Type::T_VOID, signature, parameters);
-	builtin_functions["println"] = nullptr;
-
-
-	signature.clear();
-	parameters.clear();
-	scopes[default_namespace].back()->declare_basic_function("read", Type::T_STRING, signature, parameters);
-	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
-	parameters.push_back(VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true));
-	scopes[default_namespace].back()->declare_basic_function("read", Type::T_STRING, signature, parameters);
-	builtin_functions["read"] = nullptr;
-
-
-	signature.clear();
-	parameters.clear();
-	scopes[default_namespace].back()->declare_basic_function("readch", Type::T_CHAR, signature, parameters);
-	builtin_functions["readch"] = nullptr;
-
-
-	signature.clear();
-	parameters.clear();
-	signature.push_back(TypeDefinition::get_array(Type::T_ANY));
-	parameters.push_back(VariableDefinition::get_array("arr", Type::T_ANY));
-	scopes[default_namespace].back()->declare_basic_function("len", Type::T_INT, signature, parameters);
-	builtin_functions["system"] = nullptr;
-
-	signature.clear();
-	parameters.clear();
-	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
-	parameters.push_back(VariableDefinition::get_basic("str", Type::T_STRING));
-	scopes[default_namespace].back()->declare_basic_function("len", Type::T_INT, signature, parameters);
-	builtin_functions["len"] = nullptr;
-
-
-	signature.clear();
-	parameters.clear();
-	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
-	signature.push_back(TypeDefinition::get_basic(Type::T_ANY));
-	parameters.push_back(VariableDefinition::get_basic("lval", Type::T_ANY));
-	parameters.push_back(VariableDefinition::get_basic("rval", Type::T_ANY));
-	scopes[default_namespace].back()->declare_basic_function("equals", Type::T_BOOL, signature, parameters);
-	builtin_functions["equals"] = nullptr;
-
-
-	signature.clear();
-	parameters.clear();
-	signature.push_back(TypeDefinition::get_basic(Type::T_STRING));
-	parameters.push_back(VariableDefinition::get_basic("cmd", Type::T_STRING));
-	scopes[default_namespace].back()->declare_basic_function("system", Type::T_VOID, signature, parameters);
-	builtin_functions["system"] = nullptr;
 }
 
 void SemanticAnalyser::register_built_in_lib(const std::string& libname) {

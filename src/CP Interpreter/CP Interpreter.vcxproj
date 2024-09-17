@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ast.hpp" />
+    <ClInclude Include="builtin.hpp" />
     <ClInclude Include="console.hpp" />
     <ClInclude Include="exception_handler.hpp" />
     <ClInclude Include="files.hpp" />
@@ -79,6 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ast.cpp" />
+    <ClCompile Include="builtin.cpp" />
     <ClCompile Include="console.cpp" />
     <ClCompile Include="exception_handler.cpp" />
     <ClCompile Include="files.cpp" />
