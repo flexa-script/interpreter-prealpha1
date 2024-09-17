@@ -6,7 +6,7 @@
 
 namespace axe {
 
-    class AxeUUID {
+    class UUID {
     public:
         static std::string generate() {
             static std::random_device dev;
