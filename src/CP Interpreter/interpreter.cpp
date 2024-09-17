@@ -408,7 +408,7 @@ void Interpreter::visit(ASTFunctionExpression* astnode) {
 		params.push_back(param);
 	}
 
-	std::string identifier = "__unnamed_function_" + axe::AxeUUID::generate();
+	std::string identifier = "__unnamed_function_" + axe::UUID::generate();
 
 	scopes[nmspace].back()->declare_function(identifier, params, fun->block, *fun);
 
