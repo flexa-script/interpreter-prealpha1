@@ -51,7 +51,7 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 		dt_str["minute"] = new Value(cp_int(tm->tm_min));
 		dt_str["hour"] = new Value(cp_int(tm->tm_hour));
 		dt_str["day"] = new Value(cp_int(tm->tm_mday));
-		dt_str["month"] = new Value(cp_int(tm->tm_mon));
+		dt_str["month"] = new Value(cp_int(tm->tm_mon + 1));
 		dt_str["year"] = new Value(cp_int(tm->tm_year));
 		dt_str["week_day"] = new Value(cp_int(tm->tm_wday));
 		dt_str["year_day"] = new Value(cp_int(tm->tm_yday));
