@@ -258,9 +258,7 @@ fun is_end_game(c1: bool, c2: bool, board[4][4]: int): bool {
 }
 
 if (this == "game_2048") {
-    // randomize(create_date_time().timestamp);
-    var ts = create_date_time().timestamp;
-    randomize(ts);
+    randomize(create_date_time().timestamp);
     
     var grid[4][4]: int = {0};
 

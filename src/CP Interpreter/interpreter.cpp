@@ -2810,6 +2810,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 }
 
 void Interpreter::call_builtin_function(const std::string& identifier) {
+	std::string nmspace = get_namespace();
 	auto vec = std::vector<Value*>();
 	size_t i = 0;
 
@@ -2863,8 +2864,12 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 	current_function_defined_parameters.pop();
 	current_function_calling_arguments.pop();
 
+	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
+
 	builtin_functions[identifier]();
 	builtin_arguments.clear();
+
+	current_expression_value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
 }
 
 const std::string& Interpreter::get_namespace(const std::string& nmspace) const {
