@@ -1,5 +1,6 @@
 using cp.core.console;
 using cp.std.random;
+using cp.core.datetime;
 
 as namespace cp;
 
@@ -257,7 +258,9 @@ fun is_end_game(c1: bool, c2: bool, board[4][4]: int): bool {
 }
 
 if (this == "2048") {
-    //srand(time(NULL));
+    // randomize(create_date_time().timestamp);
+    var ts = create_date_time().timestamp;
+    randomize(ts);
     
     var grid[4][4]: int = {0};
 

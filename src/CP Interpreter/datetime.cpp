@@ -1,5 +1,3 @@
-#include <ctime>
-
 #include "datetime.hpp"
 
 #include "interpreter.hpp"
@@ -11,13 +9,29 @@ DateTime::DateTime() {}
 
 DateTime::~DateTime() = default;
 
+cp_struct DateTime::tm_to_date_time(time_t t, tm* tm) {
+	cp_struct dt_str = cp_struct();
+	dt_str["timestamp"] = new Value(cp_int(t));
+	dt_str["second"] = new Value(cp_int(tm->tm_sec));
+	dt_str["minute"] = new Value(cp_int(tm->tm_min));
+	dt_str["hour"] = new Value(cp_int(tm->tm_hour));
+	dt_str["day"] = new Value(cp_int(tm->tm_mday));
+	dt_str["month"] = new Value(cp_int(tm->tm_mon + 1));
+	dt_str["year"] = new Value(cp_int(tm->tm_year));
+	dt_str["week_day"] = new Value(cp_int(tm->tm_wday));
+	dt_str["year_day"] = new Value(cp_int(tm->tm_yday));
+	dt_str["is_dst"] = new Value(cp_int(tm->tm_isdst));
+
+	return dt_str;
+}
+
 void DateTime::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["create_date_time"] = nullptr;
-	visitor->builtin_functions["local_date_time"] = nullptr;
-	visitor->builtin_functions["utc_date_time"] = nullptr;
 	visitor->builtin_functions["diff_date_time"] = nullptr;
 	visitor->builtin_functions["format_date_time"] = nullptr;
+	visitor->builtin_functions["format_local_date_time"] = nullptr;
 	visitor->builtin_functions["ascii_date_time"] = nullptr;
+	visitor->builtin_functions["ascii_local_date_time"] = nullptr;
 	visitor->builtin_functions["clock"] = nullptr;
 }
 
@@ -45,49 +59,75 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 			t = mktime(tm);
 		}
 
-		cp_struct dt_str = cp_struct();
-		dt_str["timestamp"] = new Value(cp_int(t));
-		dt_str["second"] = new Value(cp_int(tm->tm_sec));
-		dt_str["minute"] = new Value(cp_int(tm->tm_min));
-		dt_str["hour"] = new Value(cp_int(tm->tm_hour));
-		dt_str["day"] = new Value(cp_int(tm->tm_mday));
-		dt_str["month"] = new Value(cp_int(tm->tm_mon + 1));
-		dt_str["year"] = new Value(cp_int(tm->tm_year));
-		dt_str["week_day"] = new Value(cp_int(tm->tm_wday));
-		dt_str["year_day"] = new Value(cp_int(tm->tm_yday));
-		dt_str["is_dst"] = new Value(cp_int(tm->tm_isdst));
-
-		visitor->current_expression_value = new Value(dt_str, "DateTime", "cp");
-
-		};
-
-	visitor->builtin_functions["local_date_time"] = [this, visitor]() {
-		
-
-		};
-
-	visitor->builtin_functions["utc_date_time"] = [this, visitor]() {
-
+		visitor->current_expression_value = new Value(tm_to_date_time(t, tm), "DateTime", "cp");
 
 		};
 
 	visitor->builtin_functions["diff_date_time"] = [this, visitor]() {
+		time_t lt = visitor->builtin_arguments[0]->get_str()["timestamp"]->get_i();
+		time_t rt = visitor->builtin_arguments[1]->get_str()["timestamp"]->get_i();
+		time_t t = difftime(lt, rt);
+		tm* tm = new struct tm();
+		gmtime_s(tm, &t);
 
+		visitor->current_expression_value = new Value(tm_to_date_time(t, tm), "DateTime", "cp");
 
 		};
 
 	visitor->builtin_functions["format_date_time"] = [this, visitor]() {
+		time_t t = visitor->builtin_arguments[0]->get_str()["timestamp"]->get_i();
+		std::string fmt = visitor->builtin_arguments[1]->get_s();
+		tm* tm = new struct tm();
+		gmtime_s(tm, &t);
+		char buffer[80];
+		strftime(buffer, 80, fmt.c_str(), tm);
 
+		visitor->current_expression_value = new Value(std::string{ buffer });
+
+		};
+
+	visitor->builtin_functions["format_local_date_time"] = [this, visitor]() {
+		time_t t = visitor->builtin_arguments[0]->get_str()["timestamp"]->get_i();
+		std::string fmt = visitor->builtin_arguments[1]->get_s();
+		tm* tm = new struct tm();
+		localtime_s(tm, &t);
+		char buffer[80];
+		strftime(buffer, 80, fmt.c_str(), tm);
+
+		visitor->current_expression_value = new Value(std::string{ buffer });
 
 		};
 
 	visitor->builtin_functions["ascii_date_time"] = [this, visitor]() {
+		time_t t = visitor->builtin_arguments[0]->get_str()["timestamp"]->get_i();
+		tm* tm = new struct tm();
+		gmtime_s(tm, &t);
+		char buffer[26];
+		
+		if (asctime_s(buffer, sizeof(buffer), tm) != 0) {
+			throw std::runtime_error("Error trying to convert date/time to ASCII string");
+		}
 
+		visitor->current_expression_value = new Value(std::string{ buffer });
+
+		};
+
+	visitor->builtin_functions["ascii_local_date_time"] = [this, visitor]() {
+		time_t t = visitor->builtin_arguments[0]->get_str()["timestamp"]->get_i();
+		tm* tm = new struct tm();
+		localtime_s(tm, &t);
+		char buffer[26];
+
+		if (asctime_s(buffer, sizeof(buffer), tm) != 0) {
+			throw std::runtime_error("Error trying to convert date/time to ASCII string");
+		}
+
+		visitor->current_expression_value = new Value(std::string{ buffer });
 
 		};
 
 	visitor->builtin_functions["clock"] = [this, visitor]() {
-
+		visitor->current_expression_value = new Value(cp_int(clock()));
 
 		};
 
