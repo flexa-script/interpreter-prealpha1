@@ -242,6 +242,7 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 		InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
 
 		astnode->expr->accept(this);
+		Value* returned_value = current_expression_value;
 		Value* value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
 
 		if (value->type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
@@ -257,9 +258,9 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 
 		if (!TypeDefinition::is_any_or_match_type(
 			&curr_func_ret_type, curr_func_ret_type,
-			nullptr, *value, evaluate_access_vector_ptr)) {
+			nullptr, *returned_value, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_return_type_err(current_this_name.top(),
-				curr_func_ret_type, *value, evaluate_access_vector_ptr);
+				curr_func_ret_type, *returned_value, evaluate_access_vector_ptr);
 		}
 
 		if (value->use_ref) {

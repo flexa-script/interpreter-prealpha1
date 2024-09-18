@@ -325,22 +325,13 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 
 	const auto& curr_function = curr_scope->find_declared_function(astnode->identifier, &signature, evaluate_access_vector_ptr, strict);
 
-	//if (builtin_functions.find(astnode->identifier) == builtin_functions.end() && !curr_function->block && !curr_function->is_var
-	//	) {
-	//	throw std::runtime_error("function '" + astnode->identifier + "' definition not found");
-	//}
-
 	if (is_void(curr_function->type)) {
 		current_expression = SemanticValue(Type::T_UNDEFINED, 0, 0);
 	}
 	else {
-		current_expression = SemanticValue(curr_function->type,
-			curr_function->array_type, curr_function->dim,
-			curr_function->type_name,
-			curr_function->type_name_space.empty() ?
-			astnode->nmspace : curr_function->type_name_space,
-			0, false, curr_function->row, curr_function->col
-		);
+		auto typedeg = SemanticValue(static_cast<TypeDefinition>(*curr_function), 0, false, 0, 0);
+		current_expression = *access_value(&typedeg, astnode->identifier_vector);
+
 	}
 }
 
