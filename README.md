@@ -125,12 +125,12 @@
         - [ ] ...?
     - [X] Implement detructors
 - [ ] Projects to implement in CP:
+    - [ ] https://github.com/bpslib/bps
     - [ ] https://github.com/drmenguin/minilang-interpreter
     - [ ] https://github.com/univesity-projects/sort-algorithms
     - [ ] https://github.com/univesity-projects/caesar-cipher
     - [ ] https://github.com/univesity-projects/pong-pro-player
     - [ ] https://github.com/carlosebmachado-games/tetris-Clone
-    - [ ] https://github.com/bpslib/bps
     - [X] 2048
 
 

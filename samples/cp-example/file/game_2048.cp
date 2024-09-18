@@ -260,7 +260,7 @@ fun is_end_game(c1: bool, c2: bool, board[4][4]: int): bool {
 if (this == "game_2048") {
     randomize(create_date_time().timestamp);
     
-    var grid[4][4]: int = {0};
+    var grid[4][4]: int = { 0 };
 
     grid[3][3] = 2;
 
@@ -270,7 +270,7 @@ if (this == "game_2048") {
     var end: bool = false;
 
     while (not end) {
-        var gridcopy[4][4]: int = {0};
+        var gridcopy[4][4]: int = { 0 };
         
         for (var i: int = 0; i < 4; i++) {
             for (var j: int = 0; j < 4; j++) {
