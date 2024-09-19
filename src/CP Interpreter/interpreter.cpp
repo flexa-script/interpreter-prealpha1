@@ -117,7 +117,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 
 	Value* new_value;
 
-	if (current_expression_value->ref->use_ref) {
+	if (current_expression_value->use_ref) {
 		new_value = current_expression_value;
 	}
 	else {
@@ -172,7 +172,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 
 	auto ptr_value = current_expression_value;
 	Value* new_value = nullptr;
-	if (ptr_value->ref->use_ref) {
+	if (ptr_value->use_ref) {
 		new_value = ptr_value;
 	}
 	else {
@@ -216,11 +216,11 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 
 		if (astnode->op == "=") {
 			if (is_string(variable->type) && is_char(new_value->type)
-				&& new_value->ref && new_value->ref->use_ref && !is_any(new_value->ref->type)) {
+				&& new_value->use_ref && new_value->ref && !is_any(new_value->ref->type)) {
 				throw std::runtime_error("cannot reference char to string in function call");
 			}
 			else if (is_float(variable->type) && is_int(new_value->type)
-				&& new_value->ref && new_value->ref->use_ref && !is_any(new_value->ref->type)) {
+				&& new_value->use_ref && new_value->ref && !is_any(new_value->ref->type)) {
 				throw std::runtime_error("cannot reference int to float in function call");
 			}
 			set_value(astscope, astnode->identifier_vector, new_value);
@@ -263,7 +263,7 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 				curr_func_ret_type, *returned_value, evaluate_access_vector_ptr);
 		}
 
-		if (value->ref->use_ref) {
+		if (value->use_ref) {
 			current_expression_value = value;
 		}
 		else {
@@ -299,7 +299,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		signature.push_back(*current_expression_value);
 
 		Value* pvalue = nullptr;
-		if (current_expression_value->ref->use_ref) {
+		if (current_expression_value->use_ref) {
 			pvalue = current_expression_value;
 		}
 		else {
@@ -1056,7 +1056,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 		}
 
 		Value* arr_value = nullptr;
-		if (current_expression_value->ref->use_ref) {
+		if (current_expression_value->use_ref) {
 			arr_value = current_expression_value;
 		}
 		else {
@@ -1126,7 +1126,7 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 			ExceptionHandler::throw_struct_type_err(astnode->nmspace, astnode->type_name, var_type_struct, evaluate_access_vector_ptr);
 		}
 
-		if (!current_expression_value->ref->use_ref) {
+		if (!current_expression_value->use_ref) {
 			str_value = new Value(str_value);
 		}
 
@@ -1250,7 +1250,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 
 	astnode->left->accept(this);
 	Value* l_value = nullptr;
-	if (current_expression_value->ref->use_ref) {
+	if (current_expression_value->use_ref) {
 		l_value = current_expression_value;
 	}
 	else {
@@ -1263,7 +1263,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 
 	astnode->right->accept(this);
 	Value* r_value = nullptr;
-	if (current_expression_value->ref->use_ref) {
+	if (current_expression_value->use_ref) {
 		r_value = current_expression_value;
 	}
 	else {
@@ -1328,14 +1328,14 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 
 	if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
 		if (astnode->unary_op == "unref") {
-			current_expression_value->ref->use_ref = false;
+			current_expression_value->use_ref = false;
 		}
 		else if (astnode->unary_op == "ref") {
-			current_expression_value->ref->use_ref = true;
+			current_expression_value->use_ref = true;
 		}
 	}
 	else {
-		if (!current_expression_value->ref->use_ref) {
+		if (!current_expression_value->use_ref) {
 			current_expression_value = new Value(current_expression_value);
 		}
 
@@ -1601,7 +1601,7 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 }
 
 cp_bool Interpreter::equals_value(const Value* lval, const Value* rval) {
-	if (lval->ref->use_ref) {
+	if (lval->use_ref) {
 		return lval == rval;
 	}
 
@@ -2149,7 +2149,7 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 			: !match_type(l_type, r_type)));
 	}
 
-	if (lval->ref->use_ref
+	if (lval->use_ref
 		&& Token::is_equality_op(op)) {
 		return new Value((cp_bool)((op == "==") ?
 			lval == rval
@@ -2706,7 +2706,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 
 		if (current_function_defined_parameters.top().size() > i
 			&& is_string(std::get<1>(current_function_defined_parameters.top()[i]).type) && is_char(current_function_calling_argument->type)) {
-			if (current_function_calling_argument->ref->use_ref
+			if (current_function_calling_argument->use_ref
 				&& current_function_calling_argument->ref
 				&& !is_any(current_function_calling_argument->ref->type)) {
 				throw std::runtime_error("cannot reference char to string in function call");
@@ -2716,7 +2716,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		}
 		else if (current_function_defined_parameters.top().size() > i
 			&& is_float(std::get<1>(current_function_defined_parameters.top()[i]).type) && is_int(current_function_calling_argument->type)) {
-			if (current_function_calling_argument->ref->use_ref
+			if (current_function_calling_argument->use_ref
 				&& current_function_calling_argument->ref
 				&& !is_any(current_function_calling_argument->ref->type)) {
 				throw std::runtime_error("cannot reference int to float in function call");
@@ -2727,7 +2727,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 
 		// is reference : not reference
 		Value* current_value = nullptr;
-		if (current_function_calling_argument->ref->use_ref) {
+		if (current_function_calling_argument->use_ref) {
 			current_value = current_function_calling_argument;
 		}
 		else {
@@ -2751,7 +2751,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 				}
 			}
 			else {
-				if (current_value->ref && current_value->ref->use_ref) {
+				if (current_value->use_ref && current_value->ref) {
 					curr_scope->declare_variable(pname, current_value->ref);
 				}
 				else {
@@ -2819,14 +2819,10 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 	auto vec = std::vector<Value*>();
 	size_t i = 0;
 
-	if (identifier == "open") {
-		int x = 0;
-	}
-
 	for (i = 0; i < current_function_calling_arguments.top().size(); ++i) {
 		// is reference : not reference
 		Value* current_value = nullptr;
-		if (current_function_calling_arguments.top()[i]->ref->use_ref) {
+		if (current_function_calling_arguments.top()[i]->use_ref) {
 			current_value = current_function_calling_arguments.top()[i];
 		}
 		else {

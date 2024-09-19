@@ -290,29 +290,27 @@ StructureDefinition::StructureDefinition()
 
 SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, const std::vector<ASTExprNode*>& dim,
 	const std::string& type_name, const std::string& type_name_space, long long hash,
-	bool is_const, SemanticVariable* ref, unsigned int row, unsigned int col)
+	bool is_const, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
-	ref(ref), hash(hash), is_const(is_const), is_sub(false) {
-	ref->set_value(this);
-}
+	ref(nullptr), hash(hash), is_const(is_const), is_sub(false) {}
 
 SemanticValue::SemanticValue(TypeDefinition type_definition, long long hash,
-	bool is_const, SemanticVariable* ref, unsigned int row, unsigned int col)
+	bool is_const, unsigned int row, unsigned int col)
 	: CodePosition(row, col),
 	TypeDefinition(type_definition.type, type_definition.array_type,
 		type_definition.dim, type_definition.type_name, type_definition.type_name_space),
-	ref(ref), hash(hash), is_const(is_const), is_sub(false) {}
+	ref(nullptr), hash(hash), is_const(is_const), is_sub(false) {}
 
 SemanticValue::SemanticValue(VariableDefinition variable_definition, long long hash,
-	bool is_const, SemanticVariable* ref, unsigned int row, unsigned int col)
+	bool is_const, unsigned int row, unsigned int col)
 	: CodePosition(row, col),
 	TypeDefinition(variable_definition.type, variable_definition.array_type,
 		variable_definition.dim, variable_definition.type_name, variable_definition.type_name_space),
-	ref(ref), hash(hash), is_const(is_const), is_sub(false) {}
+	ref(nullptr), hash(hash), is_const(is_const), is_sub(false) {}
 
-SemanticValue::SemanticValue(Type type, SemanticVariable* ref, unsigned int row, unsigned int col)
+SemanticValue::SemanticValue(Type type, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
-	ref(ref), hash(0), is_const(false), is_sub(false) {}
+	ref(nullptr), hash(0), is_const(false), is_sub(false) {}
 
 SemanticValue::SemanticValue()
 	: CodePosition(0, 0), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
@@ -339,23 +337,9 @@ SemanticVariable::SemanticVariable(const std::string& identifier, Type type, Typ
 	value->ref = this;
 }
 
-SemanticVariable::SemanticVariable(const std::string identifier, TypeDefinition type_definition, SemanticValue* value, bool is_const)
-	: CodePosition(0, 0), TypeDefinition(type_definition.type, type_definition.array_type, type_definition.dim, type_definition.type_name, type_definition.type_name_space),
-	identifier(identifier), value(value), is_const(is_const) {}
-
 SemanticVariable::SemanticVariable()
 	: CodePosition(0, 0), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
 	identifier(""), value(nullptr), is_const(false) {}
-
-void SemanticVariable::set_value(SemanticValue* val) {
-	value = val;
-	value->ref = this;
-}
-
-SemanticValue* SemanticVariable::get_value() {
-	value->ref = this;
-	return value;
-}
 
 Type SemanticVariable::def_type(Type type) {
 	return is_void(type) || is_undefined(type) ? Type::T_ANY : type;
@@ -604,7 +588,7 @@ long double Value::value_hash() const {
 	case Type::T_STRUCT: {
 		long double h = 0;
 		for (const auto& v : *str) {
-			h += v.second->value->value_hash();
+			h += v.second->value_hash();
 		}
 		return h;
 	}

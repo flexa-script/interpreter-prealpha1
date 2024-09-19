@@ -45,7 +45,6 @@ namespace visitor {
 using namespace visitor;
 
 class Value;
-class Variable;
 
 typedef bool cp_bool;
 typedef int64_t cp_int;
@@ -53,10 +52,11 @@ typedef long double cp_float;
 typedef char cp_char;
 typedef std::string cp_string;
 typedef std::pair<Value**, size_t> cp_array;
-typedef std::map<std::string, Variable*> cp_struct;
+typedef std::map<std::string, Value*> cp_struct;
 typedef std::pair<std::string, std::string> cp_function;
 
 class SemanticVariable;
+class Variable;
 
 class CodePosition {
 public:
@@ -168,16 +168,16 @@ public:
 	// complete constructor
 	SemanticValue(Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
 		const std::string& type_name, const std::string& type_name_space, long long hash,
-		bool is_const, SemanticVariable* ref, unsigned int row, unsigned int col);
+		bool is_const, unsigned int row, unsigned int col);
 
 	SemanticValue(TypeDefinition type_definition, long long hash,
-		bool is_const, SemanticVariable* ref, unsigned int row, unsigned int col);
+		bool is_const, unsigned int row, unsigned int col);
 
 	SemanticValue(VariableDefinition variable_definition, long long hash,
-		bool is_const, SemanticVariable* ref, unsigned int row, unsigned int col);
+		bool is_const, unsigned int row, unsigned int col);
 
 	// simplified constructor
-	SemanticValue(Type type, SemanticVariable* ref, unsigned int row, unsigned int col);
+	SemanticValue(Type type, unsigned int row, unsigned int col);
 
 	SemanticValue();
 
@@ -193,12 +193,7 @@ public:
 	SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
 		const std::string& type_name, const std::string& type_name_space, SemanticValue* value, bool is_const, unsigned int row, unsigned int col);
 
-	SemanticVariable(const std::string identifier, TypeDefinition type_definition, SemanticValue* value, bool is_const);
-
 	SemanticVariable();
-
-	void set_value(SemanticValue* value);
-	SemanticValue* get_value();
 
 	Type def_type(Type type);
 	Type def_array_type(Type array_type, const std::vector<ASTExprNode*>& dim);
