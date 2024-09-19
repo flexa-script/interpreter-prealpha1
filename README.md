@@ -53,6 +53,7 @@
         - [x] &=, ^=, |=
     - [X] namespace
     - [X] as namespace
+    - [ ] revoke namespace
     - [X] exit
     - [X] enum
     - [X] try catch throw

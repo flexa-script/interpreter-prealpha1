@@ -2342,6 +2342,11 @@ Value* Interpreter::do_operation(const std::string& op, Value* lval, Value* rval
 		if (is_expr
 			&& is_string(l_type)
 			&& Token::is_equality_op(op)) {
+
+			if (lval->get_s().size() > 30) {
+				int x = 0;
+			}
+
 			res_value = new Value((cp_bool)(op == "==" ?
 				lval->get_s() == rval->get_s()
 				: lval->get_s() != rval->get_s()));

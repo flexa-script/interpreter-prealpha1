@@ -1408,7 +1408,7 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 		}
 		else if (is_char(l_type)) {
-			if (op != "=" && !Token::is_equality_op(op)) {
+			if (op != "=" && !Token::is_equality_op(op) && !is_expr) {
 				ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
 			}
 		}
