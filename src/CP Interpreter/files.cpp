@@ -46,9 +46,9 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 			// create a new file
 			str[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
 			str[INSTANCE_ID_NAME]->set(cp_int(fs));
-		}
 
-		cpfile->set(str, "File", "cp");
+			cpfile->set(str, "File", "cp");
+		}
 
 		visitor->current_expression_value = rval;
 	};

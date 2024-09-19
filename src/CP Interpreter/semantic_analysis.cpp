@@ -1092,10 +1092,10 @@ void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
 
 	if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
 		if (astnode->unary_op == "ref") {
-			current_expression.use_ref = true;
+			current_expression.ref->use_ref = true;
 		}
 		if (astnode->unary_op == "unref") {
-			current_expression.use_ref = false;
+			current_expression.ref->use_ref = false;
 		}
 	}
 	else {
@@ -1468,10 +1468,10 @@ TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinit
 }
 
 void SemanticAnalyser::equals_value(const SemanticValue& lval, const SemanticValue& rval) {
-	if (lval.use_ref && !rval.use_ref) {
+	if (lval.ref->use_ref && !rval.ref->use_ref) {
 		throw std::runtime_error("both values must be references");
 	}
-	if (!lval.use_ref && rval.use_ref) {
+	if (!lval.ref->use_ref && rval.ref->use_ref) {
 		throw std::runtime_error("both values must be unreferenced");
 	}
 }
@@ -1481,11 +1481,13 @@ SemanticValue* SemanticAnalyser::access_value(SemanticValue* value, const std::v
 
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
+	auto var = new SemanticVariable(identifier_vector[i].identifier, next_value, nullptr, false);
+
 	if (access_vector.size() > 0) {
 		if (access_vector.size() == value->dim.size()) {
 			next_value = new SemanticValue(next_value->array_type, Type::T_UNDEFINED,
 				std::vector<ASTExprNode*>(), next_value->type_name, next_value->type_name_space,
-				0, false, next_value->row, next_value->col);
+				0, false, var, next_value->row, next_value->col);
 		}
 		else if (access_vector.size() - 1 == value->dim.size()
 			&& is_string(next_value->type)) {
@@ -1499,7 +1501,7 @@ SemanticValue* SemanticAnalyser::access_value(SemanticValue* value, const std::v
 
 	if (i < identifier_vector.size()) {
 		if (next_value->type_name.empty()) {
-			next_value = new SemanticValue(Type::T_ANY, next_value->row, next_value->col);
+			next_value = new SemanticValue(Type::T_ANY, next_value->ref, next_value->row, next_value->col);
 		}
 		else {
 			SemanticScope* curr_scope;
