@@ -221,7 +221,7 @@ bool TypeDefinition::match_array_dim(TypeDefinition ltype, TypeDefinition rtype,
 }
 
 void TypeDefinition::reset_ref() {
-	use_ref = is_struct(type);
+	use_ref = false;
 }
 
 VariableDefinition::VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,

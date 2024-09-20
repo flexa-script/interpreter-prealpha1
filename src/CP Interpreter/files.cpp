@@ -25,32 +25,24 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["open"] = [this, visitor]() {
 		// initialize file struct values
-		Value* cpfile = visitor->builtin_arguments[0];
+		Value* cpfile = new Value(parser::Type::T_STRUCT);
+
 		cp_struct str = cp_struct();
-		str["path"] = new Value(visitor->builtin_arguments[1]);
-		str["mode"] = new Value(visitor->builtin_arguments[2]);
+		str["path"] = new Value(visitor->builtin_arguments[0]);
+		str["mode"] = new Value(visitor->builtin_arguments[1]);
 
-		int parmode = visitor->builtin_arguments[2]->get_i();
+		int parmode = visitor->builtin_arguments[1]->get_i();
 
-		auto rval = new Value(parser::Type::T_BOOL);
 		std::fstream* fs = nullptr;
 		try {
-			fs = new std::fstream(visitor->builtin_arguments[1]->get_s(), parmode);
-			rval->set(cp_bool(fs->is_open()));
+			fs = new std::fstream(visitor->builtin_arguments[0]->get_s(), parmode);
+			str[INSTANCE_ID_NAME] = new Value(cp_int(fs));
+			cpfile->set(str, "File", "cp");
+			visitor->current_expression_value = cpfile;
 		}
-		catch (...) {
-			rval->set(cp_bool(false));
+		catch (std::exception ex) {
+			throw std::runtime_error(ex.what());
 		}
-
-		if (rval->get_b()) {
-			// create a new file
-			str[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
-			str[INSTANCE_ID_NAME]->set(cp_int(fs));
-		}
-
-		cpfile->set(str, "File", "cp");
-
-		visitor->current_expression_value = rval;
 	};
 
 	visitor->builtin_functions["read"] = [this, visitor]() {
