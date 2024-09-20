@@ -62,6 +62,7 @@
     <ClInclude Include="cprepl.hpp" />
     <ClInclude Include="cpsource.hpp" />
     <ClInclude Include="cputil.hpp" />
+    <ClInclude Include="input.hpp" />
     <ClInclude Include="interpreter.hpp" />
     <ClInclude Include="interpreter_scope.hpp" />
     <ClInclude Include="lexer.hpp" />
@@ -91,6 +92,7 @@
     <ClCompile Include="cprepl.cpp" />
     <ClCompile Include="cpsource.cpp" />
     <ClCompile Include="cputil.cpp" />
+    <ClCompile Include="input.cpp" />
     <ClCompile Include="interpreter.cpp" />
     <ClCompile Include="interpreter_scope.cpp" />
     <ClCompile Include="lexer.cpp" />

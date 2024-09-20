@@ -4,6 +4,7 @@
 #include "graphics.hpp"
 #include "files.hpp"
 #include "console.hpp"
+#include "input.hpp"
 
 using namespace visitor;
 
@@ -33,5 +34,6 @@ std::map<std::string, std::shared_ptr<modules::Module>> built_in_libs = {
 	{"cp.core.graphics", std::shared_ptr<modules::Graphics>(new modules::Graphics())},
 	{"cp.core.files", std::shared_ptr<modules::Files>(new modules::Files())},
 	{"cp.core.console", std::shared_ptr<modules::Console>(new modules::Console())},
-	{"cp.core.datetime", std::shared_ptr<modules::DateTime>(new modules::DateTime())}
+	{"cp.core.datetime", std::shared_ptr<modules::DateTime>(new modules::DateTime())},
+	{"cp.core.input", std::shared_ptr<modules::Input>(new modules::Input())}
 };
