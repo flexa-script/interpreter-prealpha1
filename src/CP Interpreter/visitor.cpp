@@ -5,6 +5,7 @@
 #include "files.hpp"
 #include "console.hpp"
 #include "input.hpp"
+#include "sound.hpp"
 
 using namespace visitor;
 
@@ -27,7 +28,11 @@ std::vector<std::string> std_libs = {
 	"cp.std.strings",
 	"cp.std.structs",
 	"cp.std.testing",
-	"cp.std.utils"
+	"cp.std.utils",
+	"cp.std.DSL.BPS",
+	"cp.std.DSL.JSON",
+	"cp.std.DSL.YAML",
+	"cp.std.DSL.XML"
 };
 
 std::map<std::string, std::shared_ptr<modules::Module>> built_in_libs = {
@@ -35,5 +40,6 @@ std::map<std::string, std::shared_ptr<modules::Module>> built_in_libs = {
 	{"cp.core.files", std::shared_ptr<modules::Files>(new modules::Files())},
 	{"cp.core.console", std::shared_ptr<modules::Console>(new modules::Console())},
 	{"cp.core.datetime", std::shared_ptr<modules::DateTime>(new modules::DateTime())},
-	{"cp.core.input", std::shared_ptr<modules::Input>(new modules::Input())}
+	{"cp.core.input", std::shared_ptr<modules::Input>(new modules::Input())},
+	{"cp.core.sound", std::shared_ptr<modules::Sound>(new modules::Sound())}
 };

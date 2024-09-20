@@ -60,6 +60,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		}
 
 		visitor->current_expression_value = win;
+
 		};
 
 	visitor->builtin_functions["clear_screen"] = [this, visitor]() {
@@ -75,6 +76,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		g = (int)visitor->builtin_arguments[1]->get_str()["g"]->get_i();
 		b = (int)visitor->builtin_arguments[1]->get_str()["b"]->get_i();
 		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->clear_screen(RGB(r, g, b));
+
 		};
 
 	visitor->builtin_functions["get_current_width"] = [this, visitor]() {
@@ -86,6 +88,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		visitor->current_expression_value=new Value(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_width()));
+
 		};
 
 	visitor->builtin_functions["get_current_height"] = [this, visitor]() {
@@ -97,6 +100,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		visitor->current_expression_value = new Value(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_height()));
+
 		};
 
 	visitor->builtin_functions["draw_pixel"] = [this, visitor]() {
@@ -114,6 +118,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		g = (int)visitor->builtin_arguments[3]->get_str()["g"]->get_i();
 		b = (int)visitor->builtin_arguments[3]->get_str()["b"]->get_i();
 		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_pixel(x, y, RGB(r, g, b));
+
 		};
 
 	visitor->builtin_functions["draw_line"] = [this, visitor]() {
@@ -133,6 +138,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		g = (int)visitor->builtin_arguments[5]->get_str()["g"]->get_i();
 		b = (int)visitor->builtin_arguments[5]->get_str()["b"]->get_i();
 		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_line(x1, y1, x2, y2, RGB(r, g, b));
+
 		};
 
 	visitor->builtin_functions["draw_rect"] = [this, visitor]() {
@@ -244,6 +250,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		font_value->set(str, "Font", "cp");
 
 		visitor->current_expression_value = font_value;
+
 		};
 
 	visitor->builtin_functions["draw_text"] = [this, visitor]() {
@@ -271,6 +278,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		}
 
 		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_text(x, y, text, RGB(r, g, b), font);
+
 		};
 
 	visitor->builtin_functions["get_text_size"] = [this, visitor]() {
@@ -300,6 +308,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		Value* res = new Value(str, "Size", "cp");
 
 		visitor->current_expression_value = res;
+
 		};
 
 	visitor->builtin_functions["load_image"] = [this, visitor]() {
@@ -325,6 +334,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		img->set(str, "Image", "cp");
 
 		visitor->current_expression_value = img;
+
 		};
 
 	visitor->builtin_functions["draw_image"] = [this, visitor]() {
@@ -347,6 +357,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		int x = (int)visitor->builtin_arguments[2]->get_i();
 		int y = (int)visitor->builtin_arguments[3]->get_i();
 		window->draw_image(image, x, y);
+
 		};
 
 	visitor->builtin_functions["update"] = [this, visitor]() {
@@ -356,6 +367,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 				((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->update();
 			}
 		}
+
 		};
 
 	visitor->builtin_functions["destroy_window"] = [this, visitor]() {
@@ -366,6 +378,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 				win->set_null();
 			}
 		}
+
 		};
 
 	visitor->builtin_functions["is_quit"] = [this, visitor]() {
@@ -383,5 +396,6 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 			val->set(cp_bool(true));
 		}
 		visitor->current_expression_value = val;
+
 		};
 }

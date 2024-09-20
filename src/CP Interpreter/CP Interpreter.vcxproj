@@ -71,6 +71,7 @@
     <ClInclude Include="parser.hpp" />
     <ClInclude Include="semantic_analysis.hpp" />
     <ClInclude Include="semantic_scope.hpp" />
+    <ClInclude Include="sound.hpp" />
     <ClInclude Include="token.hpp" />
     <ClInclude Include="types.hpp" />
     <ClInclude Include="vendor\axegraphics.hpp" />
@@ -102,6 +103,7 @@
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="semantic_analysis.cpp" />
     <ClCompile Include="semantic_scope.cpp" />
+    <ClCompile Include="sound.cpp" />
     <ClCompile Include="token.cpp" />
     <ClCompile Include="token_constants.hpp" />
     <ClCompile Include="types.cpp" />
