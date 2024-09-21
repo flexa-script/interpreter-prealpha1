@@ -16,6 +16,7 @@ Sound::~Sound() = default;
 
 void Sound::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["play_sound"] = nullptr;
+	visitor->builtin_functions["stop_sound_once"] = nullptr;
 	visitor->builtin_functions["stop_sound"] = nullptr;
 	visitor->builtin_functions["set_volume"] = nullptr;
 }
@@ -23,6 +24,13 @@ void Sound::register_functions(visitor::SemanticAnalyser* visitor) {
 void Sound::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["play_sound"] = [this, visitor]() {
+		auto file_path = visitor->builtin_arguments[0]->get_s();
+		std::wstring wfile_path = std::wstring(file_path.begin(), file_path.end());
+		PlaySound(wfile_path.c_str(), NULL, SND_ASYNC | SND_FILENAME | SND_LOOP);
+
+		};
+
+	visitor->builtin_functions["play_sound_once"] = [this, visitor]() {
 		auto file_path = visitor->builtin_arguments[0]->get_s();
 		std::wstring wfile_path = std::wstring(file_path.begin(), file_path.end());
 		PlaySound(wfile_path.c_str(), NULL, SND_ASYNC | SND_FILENAME);
@@ -35,7 +43,7 @@ void Sound::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["set_volume"] = [this, visitor]() {
-		auto volume = visitor->builtin_arguments[0]->get_i();
+		unsigned long volume = visitor->builtin_arguments[0]->get_f() * 65535;
 		waveOutSetVolume(0, MAKELONG(volume, volume));
 
 		};
