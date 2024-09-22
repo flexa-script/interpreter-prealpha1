@@ -83,7 +83,7 @@ public:
 
 	static TypeDefinition get_basic(Type type);
 	static TypeDefinition get_array(Type array_type,
-		std::vector<ASTExprNode*>&& dim = std::vector<ASTExprNode*>());
+		const std::vector<ASTExprNode*>& dim = std::vector<ASTExprNode*>());
 	static TypeDefinition get_struct(const std::string& type_name,
 		const std::string& type_name_space);
 
@@ -110,7 +110,7 @@ public:
 	bool is_rest;
 
 	VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,
-		const std::string& type_name_space, Type array_type, std::vector<ASTExprNode*>&& dim,
+		const std::string& type_name_space, Type array_type, const std::vector<ASTExprNode*>& dim,
 		ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col);
 
 	VariableDefinition();
@@ -119,7 +119,7 @@ public:
 		ASTExprNode* default_value = nullptr, bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 
 	static VariableDefinition get_array(const std::string& identifier, Type array_type,
-		std::vector<ASTExprNode*>&& dim = std::vector<ASTExprNode*>(), ASTExprNode* default_value = nullptr,
+		const std::vector<ASTExprNode*>& dim = std::vector<ASTExprNode*>(), ASTExprNode* default_value = nullptr,
 		bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 
 	static VariableDefinition get_struct(const std::string& identifier,

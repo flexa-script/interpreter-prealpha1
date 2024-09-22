@@ -121,7 +121,7 @@ TypeDefinition TypeDefinition::get_basic(Type type) {
 	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "");
 }
 
-TypeDefinition TypeDefinition::get_array(Type array_type, std::vector<ASTExprNode*>&& dim) {
+TypeDefinition TypeDefinition::get_array(Type array_type, const std::vector<ASTExprNode*>& dim) {
 	return TypeDefinition(Type::T_ARRAY, array_type, std::move(dim), "", "");
 }
 
@@ -225,9 +225,9 @@ void TypeDefinition::reset_ref() {
 }
 
 VariableDefinition::VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,
-	const std::string& type_name_space, Type array_type, std::vector<ASTExprNode*>&& dim,
+	const std::string& type_name_space, Type array_type, const std::vector<ASTExprNode*>& dim,
 	ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col)
-	: CodePosition(row, col), TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space),
+	: CodePosition(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
 	identifier(identifier), default_value(default_value), is_rest(is_rest) {}
 
 VariableDefinition::VariableDefinition()
@@ -240,8 +240,8 @@ VariableDefinition VariableDefinition::get_basic(const std::string& identifier, 
 }
 
 VariableDefinition VariableDefinition::get_array(const std::string& identifier, parser::Type array_type,
-	std::vector<ASTExprNode*>&& dim, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col) {
-	return VariableDefinition(identifier, Type::T_ARRAY, "", "", array_type, std::move(dim), default_value, is_rest, row, col);
+	const std::vector<ASTExprNode*>& dim, ASTExprNode* default_value, bool is_rest, unsigned int row, unsigned int col) {
+	return VariableDefinition(identifier, Type::T_ARRAY, "", "", array_type, dim, default_value, is_rest, row, col);
 }
 
 VariableDefinition VariableDefinition::get_struct(const std::string& identifier,
@@ -260,11 +260,11 @@ FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type,
 
 FunctionDefinition::FunctionDefinition(const std::string& identifier, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(Type::T_ANY, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
-	identifier(identifier), signature(std::vector<TypeDefinition>()), parameters(std::vector<VariableDefinition>()), is_var(true) {}
+	identifier(identifier), signature(std::vector<TypeDefinition>()), parameters(std::vector<VariableDefinition>()), block(nullptr), is_var(true) {}
 
 FunctionDefinition::FunctionDefinition()
 	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""), CodePosition(0, 0),
-	identifier(""), signature(std::vector<TypeDefinition>()), parameters(std::vector<VariableDefinition>()) {}
+	identifier(""), signature(std::vector<TypeDefinition>()), parameters(std::vector<VariableDefinition>()), block(nullptr) {}
 
 void FunctionDefinition::check_signature() const {
 	bool has_default = false;
@@ -352,7 +352,7 @@ Type SemanticVariable::def_array_type(Type array_type, const std::vector<ASTExpr
 Value::Value(Type type, Type array_type, std::vector<ASTExprNode*> dim,
 	const std::string& type_name, const std::string& type_name_space,
 	unsigned int row, unsigned int col)
-	: TypeDefinition(type, array_type, std::move(dim), type_name, type_name_space) {}
+	: TypeDefinition(type, array_type, dim, type_name, type_name_space) {}
 
 Value::Value()
 	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "") {}
@@ -414,7 +414,6 @@ Value::~Value() = default;
 void Value::set(cp_bool b) {
 	unset();
 	this->b = std::shared_ptr<cp_bool>(new cp_bool(b));
-
 	type = Type::T_BOOL;
 	array_type = Type::T_UNDEFINED;
 }
@@ -581,7 +580,7 @@ long double Value::value_hash() const {
 	case Type::T_ARRAY: {
 		long double h = 0;
 		for (size_t i = 0; i < arr->second; ++i) {
-			h += arr->first[i]->value_hash();
+			h = h * 31 + arr->first[i]->value_hash();
 		}
 		return h;
 	}

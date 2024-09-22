@@ -869,7 +869,7 @@ void Interpreter::visit(parser::ASTThrowNode* astnode) {
 		throw std::runtime_error(current_expression_value->get_s());
 	}
 	else {
-		throw std::runtime_error("expected Exception cp::Exception struct or string in throw");
+		throw std::runtime_error("expected cp::Exception struct or string in throw");
 	}
 
 }
@@ -906,7 +906,6 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 
 		if (continue_block) {
 			continue_block = false;
-			//continue;
 		}
 
 		if (break_block) {
@@ -1016,11 +1015,6 @@ void Interpreter::visit(ASTLiteralNode<cp_string>* astnode) {
 	value->set(astnode->val);
 	current_expression_value = value;
 }
-
-std::vector<ASTExprNode*> current_expression_array_dim;
-int current_expression_array_dim_max;
-Type current_expression_array_type;
-bool is_max;
 
 void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
@@ -1315,8 +1309,7 @@ void Interpreter::visit(ASTInNode* astnode) {
 		}
 	}
 
-	auto value = new Value(Type::T_BOOL);
-	value->set(res);
+	auto value = new Value(cp_bool(res));
 	current_expression_value = value;
 }
 
@@ -1515,16 +1508,13 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 void Interpreter::visit(ASTNullNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new Value(Type::T_VOID);
-	current_expression_value = value;
+	current_expression_value = new Value(Type::T_VOID);
 }
 
 void Interpreter::visit(ASTThisNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new Value(Type::T_STRING);
-	value->set(cp_string(current_this_name.top()));
-	current_expression_value = value;
+	current_expression_value = new Value(cp_string(current_this_name.top()));
 }
 
 void Interpreter::visit(ASTTypingNode* astnode) {

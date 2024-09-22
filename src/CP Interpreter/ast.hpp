@@ -18,7 +18,7 @@ namespace parser {
 		std::string identifier;
 		std::vector<ASTExprNode*> access_vector;
 
-		Identifier(const std::string& identifier, std::vector<ASTExprNode*>&& access_vector);
+		Identifier(const std::string& identifier, const std::vector<ASTExprNode*>& access_vector);
 
 		Identifier(const std::string& identifier);
 
@@ -58,7 +58,7 @@ namespace parser {
 		std::vector<std::string> libs;
 
 		explicit ASTProgramNode(const std::string& name, const std::string& alias,
-			std::vector<ASTNode*>&& statements);
+			const std::vector<ASTNode*>& statements);
 
 		void accept(Visitor*) override;
 	};
@@ -90,7 +90,7 @@ namespace parser {
 		bool is_const;
 
 		ASTDeclarationNode(const std::string& identifier, Type type, Type array_type,
-			std::vector<ASTExprNode*>&& dim, const std::string& type_name,
+			const std::vector<ASTExprNode*>& dim, const std::string& type_name,
 			const std::string& type_name_space, ASTExprNode* expr, bool is_const,
 			unsigned int row, unsigned int col);
 
@@ -115,7 +115,7 @@ namespace parser {
 		std::string op;
 		ASTExprNode* expr;
 
-		ASTAssignmentNode(std::vector<Identifier>&& identifier_vector, const std::string& nmspace,
+		ASTAssignmentNode(const std::vector<Identifier>& identifier_vector, const std::string& nmspace,
 			const std::string& op, ASTExprNode* expr, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
@@ -134,7 +134,7 @@ namespace parser {
 	public:
 		std::vector<ASTNode*> statements;
 
-		ASTBlockNode(std::vector<ASTNode*>&& statements, unsigned int row, unsigned int col);
+		ASTBlockNode(const std::vector<ASTNode*>& statements, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
@@ -170,8 +170,8 @@ namespace parser {
 		unsigned int default_block;
 		std::vector<ASTNode*> statements;
 
-		ASTSwitchNode(ASTExprNode* condition, std::vector<ASTNode*>&& statements,
-			std::map<ASTExprNode*, unsigned int>&& case_blocks,
+		ASTSwitchNode(ASTExprNode* condition, const std::vector<ASTNode*>& statements,
+			const std::map<ASTExprNode*, unsigned int>& case_blocks,
 			unsigned int default_block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
@@ -184,7 +184,7 @@ namespace parser {
 		std::vector<ASTElseIfNode*> else_ifs;
 		ASTBlockNode* else_block;
 
-		ASTIfNode(ASTExprNode* condition, ASTBlockNode* if_block, std::vector<ASTElseIfNode*>&& else_ifs,
+		ASTIfNode(ASTExprNode* condition, ASTBlockNode* if_block, const std::vector<ASTElseIfNode*>& else_ifs,
 			ASTBlockNode* else_block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
@@ -204,7 +204,7 @@ namespace parser {
 	public:
 		std::vector<std::string> identifiers;
 
-		ASTEnumNode(std::vector<std::string>&& identifiers, unsigned int row, unsigned int col);
+		ASTEnumNode(const std::vector<std::string>& identifiers, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
@@ -241,7 +241,7 @@ namespace parser {
 		std::array<ASTNode*, 3> dci;
 		ASTBlockNode* block;
 
-		ASTForNode(std::array<ASTNode*, 3>&& dci, ASTBlockNode* block, unsigned int row, unsigned int col);
+		ASTForNode(const std::array<ASTNode*, 3>& dci, ASTBlockNode* block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
@@ -293,8 +293,8 @@ namespace parser {
 		std::vector<TypeDefinition> signature;
 		ASTBlockNode* block;
 
-		ASTFunctionDefinitionNode(const std::string& identifier, std::vector<VariableDefinition>&& parameters,
-			Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, std::vector<ASTExprNode*>&& dim,
+		ASTFunctionDefinitionNode(const std::string& identifier, const std::vector<VariableDefinition>& parameters,
+			Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, const std::vector<ASTExprNode*>& dim,
 			ASTBlockNode* block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
@@ -389,7 +389,7 @@ namespace parser {
 		std::string nmspace;
 		std::vector<Identifier> identifier_vector;
 
-		explicit ASTIdentifierNode(std::vector<Identifier>&& identifier_vector, std::string nmspace, unsigned int row, unsigned int col);
+		explicit ASTIdentifierNode(const std::vector<Identifier>& identifier_vector, std::string nmspace, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;
