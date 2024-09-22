@@ -15,7 +15,7 @@ using namespace parser;
 using namespace lexer;
 
 SemanticAnalyser::SemanticAnalyser(SemanticScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
-	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
+	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace), is_max(false) {
 	scopes[default_namespace].push_back(global_scope);
 
 	auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
@@ -100,7 +100,7 @@ void SemanticAnalyser::visit(ASTNamespaceManagerNode* astnode) {
 		throw std::runtime_error("namespace '" + astnode->nmspace + "' is not valid ");
 	}
 
-	if (astnode->image=="as") {
+	if (astnode->image == "as") {
 		program_nmspaces[nmspace].push_back(astnode->nmspace);
 	}
 	else {
@@ -320,29 +320,24 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 			curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, &signature, strict);
 		}
 		catch (...) {
-			std::string func_name = astnode->identifier + "(";
-			for (const auto& param : signature) {
-				func_name += type_str(param.type) + ", ";
-			}
-			if (signature.size() > 0) {
-				func_name.pop_back();
-				func_name.pop_back();
-			}
-			func_name += ")";
-
+			std::string func_name = ExceptionHandler::buid_signature(astnode->identifier, signature, evaluate_access_vector_ptr);
 			throw std::runtime_error("function '" + func_name + "' was never declared");
 		}
 	}
 
 	const auto& curr_function = curr_scope->find_declared_function(astnode->identifier, &signature, evaluate_access_vector_ptr, strict);
+	current_function.push(curr_function);
 
 	if (is_void(curr_function->type)) {
 		current_expression = SemanticValue(Type::T_UNDEFINED, 0, 0);
 	}
 	else {
 		auto typedeg = SemanticValue(static_cast<TypeDefinition>(*curr_function), 0, false, 0, 0);
+		typedeg.type_name_space = astnode->nmspace;
 		current_expression = *access_value(&typedeg, astnode->identifier_vector);
 	}
+
+	current_function.pop();
 }
 
 void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
@@ -461,7 +456,7 @@ void SemanticAnalyser::visit(ASTExitNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->exit_code->accept(this);
-	
+
 	if (is_undefined(current_expression.type)) {
 		throw std::runtime_error("undefined expression");
 	}
@@ -725,7 +720,7 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 				declared_variable->value->type_name_space = current_expression.type_name_space;
 			}
 		}
-		
+
 	}
 	else {
 		throw std::runtime_error("expected declaration");
@@ -935,7 +930,7 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	if (!is_max) {
 		((ASTLiteralNode<cp_int>*)current_expression_array_dim.back())->val = arr_size;
 	}
-	
+
 	is_max = true;
 
 	current_expression = SemanticValue();
@@ -1505,10 +1500,11 @@ SemanticValue* SemanticAnalyser::access_value(SemanticValue* value, const std::v
 		else {
 			SemanticScope* curr_scope;
 			try {
-				curr_scope = get_inner_most_struct_definition_scope(get_namespace(next_value->type_name_space), next_value->type_name);
+				auto nmspace = get_namespace(next_value->type_name_space);
+				curr_scope = get_inner_most_struct_definition_scope(nmspace, next_value->type_name);
 			}
 			catch (...) {
-				throw std::runtime_error("can't find struct");
+				throw std::runtime_error("cannot find struct");
 			}
 			auto type_struct = curr_scope->find_declared_structure_definition(next_value->type_name);
 
@@ -1646,7 +1642,11 @@ const std::string& SemanticAnalyser::get_namespace(const std::string& nmspace) c
 }
 
 const std::string& SemanticAnalyser::get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace) const {
-	return nmspace.empty() ? (program->alias.empty() ? default_namespace : program->alias) : nmspace;
+	return nmspace.empty() ? (
+		program->alias.empty() ? (
+			!current_function.empty() && !current_function.top()->type_name_space.empty() ? current_function.top()->type_name_space : default_namespace
+		) : program->alias
+	) : nmspace;
 }
 
 void SemanticAnalyser::set_curr_pos(unsigned int row, unsigned int col) {

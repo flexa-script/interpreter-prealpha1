@@ -12,7 +12,9 @@ Input::Input() {}
 Input::~Input() = default;
 
 void Input::register_functions(visitor::SemanticAnalyser* visitor) {
+	visitor->builtin_functions["update_key_states"] = nullptr;
 	visitor->builtin_functions["is_key_pressed"] = nullptr;
+	visitor->builtin_functions["is_key_released"] = nullptr;
 	visitor->builtin_functions["get_mouse_position"] = nullptr;
 	visitor->builtin_functions["set_mouse_position"] = nullptr;
 	visitor->builtin_functions["is_mouse_button_pressed"] = nullptr;
@@ -20,9 +22,24 @@ void Input::register_functions(visitor::SemanticAnalyser* visitor) {
 
 void Input::register_functions(visitor::Interpreter* visitor) {
 
+	visitor->builtin_functions["update_key_states"] = [this, visitor]() {
+		previous_key_state = current_key_state;
+
+		for (int i = 0; i < KEY_COUNT; ++i) {
+			current_key_state[i] = GetAsyncKeyState(i) & 0x8000;
+		}
+
+		};
+
 	visitor->builtin_functions["is_key_pressed"] = [this, visitor]() {
 		int key = visitor->builtin_arguments[0]->get_i();
-		visitor->current_expression_value = new Value(cp_bool(GetAsyncKeyState(key) & 0x8000));
+		visitor->current_expression_value = new Value(cp_bool(current_key_state[key]));
+
+		};
+
+	visitor->builtin_functions["is_key_released"] = [this, visitor]() {
+		int key = visitor->builtin_arguments[0]->get_i();
+		visitor->current_expression_value = new Value(cp_bool(previous_key_state[key] && !current_key_state[key]));
 
 		};
 

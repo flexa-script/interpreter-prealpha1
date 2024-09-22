@@ -116,7 +116,7 @@ void Interpreter::visit(ASTEnumNode* astnode) {
 void Interpreter::visit(ASTDeclarationNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	const auto& nmspace = get_namespace(astnode->type_name_space);
+	const auto& nmspace = get_namespace();
 
 	if (astnode->expr) {
 		astnode->expr->accept(this);
