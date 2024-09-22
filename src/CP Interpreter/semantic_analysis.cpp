@@ -90,7 +90,8 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 
 void SemanticAnalyser::visit(ASTNamespaceManagerNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	auto nmspace = get_namespace(current_program->alias);
+
+	const auto& nmspace = get_namespace(current_program->alias);
 
 	if (!axe::StringUtils::contains(nmspaces, astnode->nmspace)) {
 		throw std::runtime_error("namespace '" + astnode->nmspace + "' not found");
@@ -103,13 +104,10 @@ void SemanticAnalyser::visit(ASTNamespaceManagerNode* astnode) {
 		program_nmspaces[nmspace].push_back(astnode->nmspace);
 	}
 	else {
-		size_t i;
-		for (i = 0; i < program_nmspaces[nmspace].size(); ++i) {
-			if (astnode->nmspace == program_nmspaces[nmspace][i]) {
-				break;
-			}
-		}
-		program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + i);
+		size_t pos = std::distance(program_nmspaces[nmspace].begin(),
+			std::find(program_nmspaces[nmspace].begin(),
+				program_nmspaces[nmspace].end(), astnode->nmspace));
+		program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + pos);
 	}
 }
 
@@ -344,7 +342,6 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	else {
 		auto typedeg = SemanticValue(static_cast<TypeDefinition>(*curr_function), 0, false, 0, 0);
 		current_expression = *access_value(&typedeg, astnode->identifier_vector);
-
 	}
 }
 
@@ -361,17 +358,8 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 				break;
 			}
 
-			std::string signature = "(";
-			for (const auto& param : astnode->signature) {
-				signature += type_str(param.type) + ", ";
-			}
-			if (astnode->signature.size() > 0) {
-				signature.pop_back();
-				signature.pop_back();
-			}
-			signature += ")";
-
-			throw std::runtime_error("function " + astnode->identifier + signature + " already defined");
+			std::string signature = ExceptionHandler::buid_signature(astnode->identifier, astnode->signature, evaluate_access_vector_ptr);
+			throw std::runtime_error("function " + signature + " already defined");
 		}
 	}
 

@@ -88,19 +88,17 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 
 void Interpreter::visit(ASTNamespaceManagerNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	auto nmspace = get_namespace(current_program->alias);
+
+	const auto& nmspace = get_namespace(current_program->alias);
 
 	if (astnode->image == "as") {
 		program_nmspaces[nmspace].push_back(astnode->nmspace);
 	}
 	else {
-		size_t i;
-		for (i = 0; i < program_nmspaces[nmspace].size(); ++i) {
-			if (astnode->nmspace == program_nmspaces[nmspace][i]) {
-				break;
-			}
-		}
-		program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + i);
+		size_t pos = std::distance(program_nmspaces[nmspace].begin(),
+			std::find(program_nmspaces[nmspace].begin(),
+			program_nmspaces[nmspace].end(), astnode->nmspace));
+		program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + pos);
 	}
 }
 
@@ -340,16 +338,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 				func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, strict);
 			}
 			catch (...) {
-				std::string func_name = identifier + "(";
-				for (const auto& param : signature) {
-					func_name += type_str(param.type) + ", ";
-				}
-				if (signature.size() > 0) {
-					func_name.pop_back();
-					func_name.pop_back();
-				}
-				func_name += ")";
-
+				std::string func_name = ExceptionHandler::buid_signature(astnode->identifier, signature, evaluate_access_vector_ptr);
 				throw std::runtime_error("function '" + func_name + "' was never declared");
 			}
 		}
