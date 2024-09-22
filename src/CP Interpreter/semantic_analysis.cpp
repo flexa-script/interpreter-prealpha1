@@ -893,6 +893,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_string>* astnode) {
 
 void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
+	auto is_const = true;
 	cp_int arr_size = 0;
 
 	if (current_expression_array_dim.size() == 0) {
@@ -908,6 +909,9 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
 		astnode->values.at(i)->accept(this);
+		if (!current_expression.is_const) {
+			is_const = false;
+		}
 
 		if (is_undefined(current_expression.type)) {
 			throw std::runtime_error("undefined expression");
@@ -938,6 +942,7 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	current_expression.array_type = current_expression_array_type.type;
 	current_expression.type_name = current_expression_array_type.type_name;
 	current_expression.type_name_space = current_expression_array_type.type_name_space;
+	current_expression.is_const = is_const;
 	--current_expression_array_dim_max;
 	size_t stay = current_expression_array_dim.size() - current_expression_array_dim_max;
 	std::vector<ASTExprNode*> current_expression_array_dim_aux;
@@ -958,6 +963,7 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 
 void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
+	auto is_const = true;
 
 	SemanticScope* curr_scope;
 	try {
@@ -976,6 +982,9 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 		}
 		VariableDefinition var_type_struct = type_struct.variables[expr.first];
 		expr.second->accept(this);
+		if (!current_expression.is_const) {
+			is_const = false;
+		}
 
 		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct,
 			nullptr, current_expression, evaluate_access_vector_ptr)) {
@@ -987,6 +996,7 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 	current_expression.type = Type::T_STRUCT;
 	current_expression.type_name = astnode->type_name;
 	current_expression.type_name_space = astnode->nmspace;
+	current_expression.is_const = is_const;
 }
 
 void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
