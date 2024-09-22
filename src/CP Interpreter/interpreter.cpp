@@ -86,10 +86,22 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 	}
 }
 
-void Interpreter::visit(ASTAsNamespaceNode* astnode) {
+void Interpreter::visit(ASTNamespaceManagerNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
+	auto nmspace = get_namespace(current_program->alias);
 
-	program_nmspaces[get_namespace(current_program->alias)].push_back(astnode->nmspace);
+	if (astnode->image == "as") {
+		program_nmspaces[nmspace].push_back(astnode->nmspace);
+	}
+	else {
+		size_t i;
+		for (i = 0; i < program_nmspaces[nmspace].size(); ++i) {
+			if (astnode->nmspace == program_nmspaces[nmspace][i]) {
+				break;
+			}
+		}
+		program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + i);
+	}
 }
 
 void Interpreter::visit(ASTEnumNode* astnode) {

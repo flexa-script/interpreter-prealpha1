@@ -32,7 +32,7 @@ namespace parser {
 
 		// statement nodes
 		ASTNode* parse_program_statement();
-		ASTAsNamespaceNode* parse_as_namespace_statement();
+		ASTNamespaceManagerNode* parse_namespace_manager_statement();
 		ASTUsingNode* parse_using_statement();
 		ASTNode* parse_block_statement();
 		ASTDeclarationNode* parse_declaration_statement();

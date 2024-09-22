@@ -22,8 +22,8 @@ ASTProgramNode::ASTProgramNode(const std::string& name, const std::string& alias
 ASTUsingNode::ASTUsingNode(const std::vector<std::string>& library, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), library(library) {}
 
-ASTAsNamespaceNode::ASTAsNamespaceNode(const std::string& nmspace, unsigned int row, unsigned int col)
-	: ASTStatementNode(row, col), nmspace(nmspace) {}
+ASTNamespaceManagerNode::ASTNamespaceManagerNode(const std::string& image, const std::string& nmspace, unsigned int row, unsigned int col)
+	: ASTStatementNode(row, col), image(image), nmspace(nmspace) {}
 
 ASTDeclarationNode::ASTDeclarationNode(const std::string& identifier, Type type, Type array_type, std::vector<ASTExprNode*>&& dim,
 	const std::string& type_name, const std::string& type_name_space, ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
@@ -283,7 +283,7 @@ void ASTUnpackedDeclarationNode::accept(Visitor* v) {
 	v->visit(this);
 }
 
-void ASTAsNamespaceNode::accept(Visitor* v) {
+void ASTNamespaceManagerNode::accept(Visitor* v) {
 	v->visit(this);
 }
 

@@ -88,8 +88,9 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTAsNamespaceNode* astnode) {
+void SemanticAnalyser::visit(ASTNamespaceManagerNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
+	auto nmspace = get_namespace(current_program->alias);
 
 	if (!axe::StringUtils::contains(nmspaces, astnode->nmspace)) {
 		throw std::runtime_error("namespace '" + astnode->nmspace + "' not found");
@@ -97,7 +98,19 @@ void SemanticAnalyser::visit(ASTAsNamespaceNode* astnode) {
 	if (astnode->nmspace == default_namespace) {
 		throw std::runtime_error("namespace '" + astnode->nmspace + "' is not valid ");
 	}
-	program_nmspaces[get_namespace(current_program->alias)].push_back(astnode->nmspace);
+
+	if (astnode->image=="as") {
+		program_nmspaces[nmspace].push_back(astnode->nmspace);
+	}
+	else {
+		size_t i;
+		for (i = 0; i < program_nmspaces[nmspace].size(); ++i) {
+			if (astnode->nmspace == program_nmspaces[nmspace][i]) {
+				break;
+			}
+		}
+		program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + i);
+	}
 }
 
 void SemanticAnalyser::visit(ASTEnumNode* astnode) {

@@ -14,7 +14,7 @@ namespace parser {
 	class ASTProgramNode;
 
 	class ASTUsingNode;
-	class ASTAsNamespaceNode;
+	class ASTNamespaceManagerNode;
 	class ASTDeclarationNode;
 	class ASTUnpackedDeclarationNode;
 	class ASTAssignmentNode;
@@ -80,7 +80,7 @@ namespace visitor {
 
 		virtual void visit(ASTProgramNode*) = 0;
 		virtual void visit(ASTUsingNode*) = 0;
-		virtual void visit(ASTAsNamespaceNode*) = 0;
+		virtual void visit(ASTNamespaceManagerNode*) = 0;
 		virtual void visit(ASTDeclarationNode*) = 0;
 		virtual void visit(ASTUnpackedDeclarationNode*) = 0;
 		virtual void visit(ASTAssignmentNode*) = 0;

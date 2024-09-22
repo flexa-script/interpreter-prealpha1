@@ -73,11 +73,12 @@ namespace parser {
 		void accept(Visitor*) override;
 	};
 
-	class ASTAsNamespaceNode : public ASTStatementNode {
+	class ASTNamespaceManagerNode : public ASTStatementNode {
 	public:
+		std::string image;
 		std::string nmspace;
 
-		ASTAsNamespaceNode(const std::string& nmspace, unsigned int col, unsigned int row);
+		ASTNamespaceManagerNode(const std::string& image, const std::string& nmspace, unsigned int col, unsigned int row);
 
 		void accept(Visitor*) override;
 	};

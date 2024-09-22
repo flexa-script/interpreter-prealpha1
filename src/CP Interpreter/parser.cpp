@@ -56,7 +56,8 @@ ASTNode* Parser::parse_program_statement() {
 	case TOK_USING:
 		return parse_using_statement();
 	case TOK_AS:
-		return parse_as_namespace_statement();
+	case TOK_REVOKE:
+		return parse_namespace_manager_statement();
 	case TOK_FUN:
 		return parse_function_statement();
 	default:
@@ -112,17 +113,18 @@ ASTNode* Parser::parse_block_statement() {
 	}
 }
 
-ASTAsNamespaceNode* Parser::parse_as_namespace_statement() {
+ASTNamespaceManagerNode* Parser::parse_namespace_manager_statement() {
+	std::string image = current_token.value;
 	std::string nmspace = "";
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	consume_token(TOK_NAMESPACE);
+	consume_token();
 	consume_token(TOK_IDENTIFIER);
 	nmspace = current_token.value;
 	consume_token(TOK_SEMICOLON);
 
-	return new ASTAsNamespaceNode(nmspace, row, col);
+	return new ASTNamespaceManagerNode(image, nmspace, row, col);
 }
 
 ASTExprNode* Parser::parse_statement_expression() {

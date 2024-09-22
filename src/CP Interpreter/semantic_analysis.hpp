@@ -69,7 +69,7 @@ namespace visitor {
 
 		void visit(ASTProgramNode*) override;
 		void visit(ASTUsingNode*) override;
-		void visit(ASTAsNamespaceNode*) override;
+		void visit(ASTNamespaceManagerNode*) override;
 		void visit(ASTDeclarationNode*) override;
 		void visit(ASTUnpackedDeclarationNode*) override;
 		void visit(ASTAssignmentNode*) override;
