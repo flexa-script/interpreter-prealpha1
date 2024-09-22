@@ -6,6 +6,7 @@
 #include "console.hpp"
 #include "input.hpp"
 #include "sound.hpp"
+#include "HTTP.hpp"
 
 using namespace visitor;
 
@@ -41,5 +42,6 @@ std::map<std::string, std::shared_ptr<modules::Module>> built_in_libs = {
 	{"cp.core.console", std::shared_ptr<modules::Console>(new modules::Console())},
 	{"cp.core.datetime", std::shared_ptr<modules::DateTime>(new modules::DateTime())},
 	{"cp.core.input", std::shared_ptr<modules::Input>(new modules::Input())},
-	{"cp.core.sound", std::shared_ptr<modules::Sound>(new modules::Sound())}
+	{"cp.core.sound", std::shared_ptr<modules::Sound>(new modules::Sound())},
+	{"cp.core.HTTP", std::shared_ptr<modules::HTTP>(new modules::HTTP())}
 };

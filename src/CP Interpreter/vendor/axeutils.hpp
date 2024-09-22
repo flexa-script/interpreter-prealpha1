@@ -18,15 +18,12 @@ namespace axe {
 		static bool contains(const std::string& string, const std::string& cont);
 
 		static std::string join(const std::vector<std::string>& strings, const char* const delim);
-		static std::vector<std::string> split_vector(const std::string& str, char sep);
-		static std::list<std::string> split_list(const std::string& str, char sep);
+		static std::vector<std::string> split(const std::string& str, char delimiter);
+		static std::vector<std::string> split(std::string s, const std::string& delimiter);
 		static bool contains(const std::vector<std::string>& c, const std::string& v);
 
 		static long long hashcode(const std::string& str);
 
-	private:
-		template<typename OutputIterator>
-		static void split(const std::string& str, char sep, OutputIterator result);
 	};
 
 	class CollectionUtils {

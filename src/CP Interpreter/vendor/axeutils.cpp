@@ -70,25 +70,28 @@ namespace axe {
 		return string;
 	}
 
-	template<typename OutputIterator>
-	void StringUtils::split(const std::string& str, char sep, OutputIterator result) {
+	std::vector<std::string> StringUtils::split(const std::string& str, char delimiter) {
+		std::vector<std::string> result;
 		std::istringstream iss(str);
 		std::string item;
-		while (std::getline(iss, item, sep)) {
-			*result++ = item;
+		while (std::getline(iss, item, delimiter)) {
+			result.push_back(item);
 		}
-	}
-
-	std::vector<std::string> StringUtils::split_vector(const std::string& str, char sep) {
-		std::vector<std::string> result;
-		split(str, sep, std::back_inserter(result));
 		return result;
 	}
 
-	std::list<std::string> StringUtils::split_list(const std::string& str, char sep) {
-		std::list<std::string> result;
-		split(str, sep, std::back_inserter(result));
-		return result;
+	std::vector<std::string> StringUtils::split(std::string s, const std::string& delimiter) {
+		std::vector<std::string> tokens;
+		size_t pos = 0;
+		std::string token;
+		while ((pos = s.find(delimiter)) != std::string::npos) {
+			token = s.substr(0, pos);
+			tokens.push_back(token);
+			s.erase(0, pos + delimiter.length());
+		}
+		tokens.push_back(s);
+
+		return tokens;
 	}
 
 	bool StringUtils::contains(const std::vector<std::string>& c, const std::string& v) {
