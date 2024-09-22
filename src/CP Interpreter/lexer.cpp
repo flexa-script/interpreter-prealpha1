@@ -312,153 +312,27 @@ Token Lexer::process_number() {
 
 Token Lexer::process_identifier() {
 	std::string identifier;
-	TokenType type;
+	TokenType type = TokenType::TOK_ERROR;
 
 	while (has_next() && (std::isalnum(current_char) || current_char == '_')) {
 		identifier += current_char;
 		advance();
 	}
 
-	if (identifier == TOKEN_IMAGE[TOK_USING]) {
-		type = TOK_USING;
+	for (size_t i = 0; i < TOKEN_IMAGE_SIZE; ++i) {
+		if (identifier == TOKEN_IMAGE[i]) {
+			type = (TokenType)i;
+			break;
+		}
 	}
-	else if (identifier == TOKEN_IMAGE[TOK_NAMESPACE]) {
-		type = TOK_NAMESPACE;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_CONST]) {
-		type = TOK_CONST;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_VAR]) {
-		type = TOK_VAR;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_REF]) {
-		type = TOK_REF;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_UNREF]) {
-		type = TOK_UNREF;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_STRUCT]) {
-		type = TOK_STRUCT;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_FUN]) {
-		type = TOK_FUN;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_THIS]) {
-		type = TOK_THIS;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_RETURN]) {
-		type = TOK_RETURN;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_CONTINUE]) {
-		type = TOK_CONTINUE;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_BREAK]) {
-		type = TOK_BREAK;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_EXIT]) {
-		type = TOK_EXIT;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_SWITCH]) {
-		type = TOK_SWITCH;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_DEFAULT]) {
-		type = TOK_DEFAULT;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_CASE]) {
-		type = TOK_CASE;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_AS]) {
-		type = TOK_AS;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_IN]) {
-		type = TOK_IN;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_IF]) {
-		type = TOK_IF;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_ELSE]) {
-		type = TOK_ELSE;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_ENUM]) {
-		type = TOK_ENUM;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_TRY]) {
-		type = TOK_TRY;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_CATCH]) {
-		type = TOK_CATCH;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_THROW]) {
-		type = TOK_THROW;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_FOR]) {
-		type = TOK_FOR;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_FOREACH]) {
-		type = TOK_FOREACH;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_WHILE]) {
-		type = TOK_WHILE;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_DO]) {
-		type = TOK_DO;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_VOID_TYPE]) {
-		type = TOK_VOID_TYPE;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_BOOL_TYPE]) {
-		type = TOK_BOOL_TYPE;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_INT_TYPE]) {
-		type = TOK_INT_TYPE;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_FLOAT_TYPE]) {
-		type = TOK_FLOAT_TYPE;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_CHAR_TYPE]) {
-		type = TOK_CHAR_TYPE;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_STRING_TYPE]) {
-		type = TOK_STRING_TYPE;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_ANY_TYPE]) {
-		type = TOK_ANY_TYPE;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_FUNCTION_TYPE]) {
-		type = TOK_FUNCTION_TYPE;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_TYPEOF]) {
-		type = TOK_TYPEOF;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_TYPEID]) {
-		type = TOK_TYPEID;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_IS_ANY]) {
-		type = TOK_IS_ANY;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_IS_ARRAY]) {
-		type = TOK_IS_ARRAY;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_IS_STRUCT]) {
-		type = TOK_IS_STRUCT;
-	}
-	else if (identifier == "true" || identifier == "false") {
-		type = TOK_BOOL_LITERAL;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_NULL]) {
-		type = TOK_NULL;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_LOGICAL_AND_OP]) {
-		type = TOK_LOGICAL_AND_OP;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_LOGICAL_OR_OP]) {
-		type = TOK_LOGICAL_OR_OP;
-	}
-	else if (identifier == TOKEN_IMAGE[TOK_NOT]) {
-		type = TOK_NOT;
-	}
-	else {
-		type = TOK_IDENTIFIER;
+
+	if (type == TokenType::TOK_ERROR) {
+		if (identifier == "true" || identifier == "false") {
+			type = TOK_BOOL_LITERAL;
+		}
+		else {
+			type = TOK_IDENTIFIER;
+		}
 	}
 
 	return Token(type, identifier, current_row, start_col);

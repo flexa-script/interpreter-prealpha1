@@ -1240,7 +1240,7 @@ void SemanticAnalyser::visit(ASTTypingNode* astnode) {
 	}
 
 	current_expression = SemanticValue();
-	if (astnode->image == "typeid") {
+	if (astnode->image == "typeid" || astnode->image == "refid") {
 		current_expression.type = Type::T_INT;
 	}
 	else if (astnode->image == "typeof") {

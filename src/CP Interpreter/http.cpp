@@ -167,7 +167,8 @@ void HTTP::register_functions(visitor::Interpreter* visitor) {
 
 		visitor->scopes["cp"].push_back(new InterpreterScope());
 		auto curr_scope = visitor->scopes["cp"].back();
-		(new ASTDeclarationNode("headers_value", Type::T_STRUCT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "Dictionary", "cp", new ASTNullNode(0, 0), false, 0, 0))->accept(visitor);
+		(new ASTDeclarationNode("headers_value", Type::T_STRUCT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(),
+			"Dictionary", "cp", new ASTNullNode(0, 0), false, 0, 0))->accept(visitor);
 		auto var = curr_scope->find_declared_variable("headers_value");
 		var->set_value(headers_value);
 

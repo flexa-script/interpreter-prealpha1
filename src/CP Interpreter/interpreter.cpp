@@ -1531,6 +1531,11 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 
 	astnode->expr->accept(this);
 
+	if (astnode->image == "refid") {
+		current_expression_value = new Value(cp_int(current_expression_value));
+		return;
+	}
+
 	if (astnode->image == "is_any") {
 		auto value = new Value(Type::T_BOOL);
 		value->set(cp_bool(

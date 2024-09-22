@@ -31,6 +31,7 @@ namespace lexer {
 		TOK_FUNCTION_TYPE,
 		TOK_TYPEOF,
 		TOK_TYPEID,
+		TOK_REFID,
 		TOK_IS_ANY,
 		TOK_IS_ARRAY,
 		TOK_IS_STRUCT,
@@ -115,6 +116,7 @@ namespace lexer {
 		"function",
 		"typeof",
 		"typeid",
+		"refid",
 		"is_any",
 		"is_array",
 		"is_struct",
@@ -172,6 +174,8 @@ namespace lexer {
 		"error token",
 		"EOF token"
 	};
+
+	const size_t TOKEN_IMAGE_SIZE = sizeof(TOKEN_IMAGE) / sizeof(std::string);
 
 }
 
