@@ -150,6 +150,15 @@
     <ClInclude Include="datetime.hpp">
       <Filter>Header Files\modules\cp.core</Filter>
     </ClInclude>
+    <ClInclude Include="http.hpp">
+      <Filter>Header Files\modules\cp.core</Filter>
+    </ClInclude>
+    <ClInclude Include="input.hpp">
+      <Filter>Header Files\modules\cp.core</Filter>
+    </ClInclude>
+    <ClInclude Include="sound.hpp">
+      <Filter>Header Files\modules\cp.core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -231,6 +240,15 @@
       <Filter>Source Files\modules\builtin</Filter>
     </ClCompile>
     <ClCompile Include="datetime.cpp">
+      <Filter>Source Files\modules\cp.core</Filter>
+    </ClCompile>
+    <ClCompile Include="input.cpp">
+      <Filter>Source Files\modules\cp.core</Filter>
+    </ClCompile>
+    <ClCompile Include="http.cpp">
+      <Filter>Source Files\modules\cp.core</Filter>
+    </ClCompile>
+    <ClCompile Include="sound.cpp">
       <Filter>Source Files\modules\cp.core</Filter>
     </ClCompile>
   </ItemGroup>
