@@ -36,6 +36,8 @@ namespace parser {
 			return "array";
 		case Type::T_STRUCT:
 			return "struct";
+		case Type::T_FUNCTION:
+			return "function";
 		default:
 			throw std::runtime_error("invalid type encountered");
 		}
@@ -122,7 +124,7 @@ TypeDefinition TypeDefinition::get_basic(Type type) {
 }
 
 TypeDefinition TypeDefinition::get_array(Type array_type, const std::vector<ASTExprNode*>& dim) {
-	return TypeDefinition(Type::T_ARRAY, array_type, std::move(dim), "", "");
+	return TypeDefinition(Type::T_ARRAY, array_type, dim, "", "");
 }
 
 TypeDefinition TypeDefinition::get_struct(const std::string& type_name, const std::string& type_name_space) {
