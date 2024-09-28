@@ -76,7 +76,7 @@ int CPInterpreter::interpreter() {
 	const std::vector<CPSource>& source_programs = load_programs(files);
 
 	visitor::SemanticScope semantic_global_scope;
-	visitor::InterpreterScope interpreter_global_scope;
+	std::shared_ptr<visitor::InterpreterScope> interpreter_global_scope = std::make_shared<visitor::InterpreterScope>();
 
 	try {
 		parser::ASTProgramNode* main_program = nullptr;
@@ -98,7 +98,7 @@ int CPInterpreter::interpreter() {
 		visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, main_program, programs);
 		semantic_analyser.start();
 
-		visitor::Interpreter interpreter(&interpreter_global_scope, main_program, programs);
+		visitor::Interpreter interpreter(interpreter_global_scope, main_program, programs);
 		interpreter.start();
 
 		return interpreter.current_expression_value->get_i();

@@ -165,7 +165,7 @@ void HTTP::register_functions(visitor::Interpreter* visitor) {
 		auto identifier_vector = std::vector<Identifier>{ Identifier("emplace") };
 		auto fcall = new ASTFunctionCallNode("cp", identifier_vector, std::vector<ASTExprNode*>(), 0, 0);
 
-		visitor->scopes["cp"].push_back(new InterpreterScope());
+		visitor->scopes["cp"].push_back(std::make_shared<InterpreterScope>());
 		auto curr_scope = visitor->scopes["cp"].back();
 		(new ASTDeclarationNode("headers_value", Type::T_STRUCT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(),
 			"Dictionary", "cp", new ASTNullNode(0, 0), false, 0, 0))->accept(visitor);

@@ -15,7 +15,7 @@
 
 using namespace lexer;
 
-Interpreter::Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
+Interpreter::Interpreter(std::shared_ptr<InterpreterScope> global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
 	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace),
 	current_expression_value(new Value(Type::T_UNDEFINED)) {
 
@@ -77,7 +77,7 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 		current_program = program;
 		program_nmspaces[get_current_namespace()].push_back(default_namespace);
 		if (!program->alias.empty()) {
-			scopes[program->alias].push_back(new InterpreterScope());
+			scopes[program->alias].push_back(std::make_shared<InterpreterScope>());
 		}
 		current_this_name.push(current_program->name);
 		start();
@@ -166,7 +166,7 @@ void Interpreter::visit(ASTUnpackedDeclarationNode* astnode) {
 void Interpreter::visit(ASTAssignmentNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	InterpreterScope* astscope;
+	std::shared_ptr<InterpreterScope> astscope;
 	try {
 		const auto& nmspace = get_namespace(astnode->nmspace);
 		astscope = get_inner_most_variable_scope(nmspace, astnode->identifier);
@@ -249,7 +249,7 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 
 	if (astnode->expr) {
 		auto& curr_func_ret_type = current_function_return_type.top();
-		InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
+		std::shared_ptr<InterpreterScope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
 
 		astnode->expr->accept(this);
 		Value* returned_value = current_expression_value;
@@ -319,7 +319,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		function_arguments.push_back(pvalue);
 	}
 
-	InterpreterScope* func_scope;
+	std::shared_ptr<InterpreterScope> func_scope;
 	try {
 		func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, strict);
 	}
@@ -387,7 +387,7 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 
 	if (astnode->identifier != "") {
 		try {
-			InterpreterScope* func_scope = scopes[nmspace].back();
+			std::shared_ptr<InterpreterScope> func_scope = scopes[nmspace].back();
 			interpreter_function_t* declfun = func_scope->find_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr, true);
 			std::get<1>(*declfun) = astnode->block;
 		}
@@ -423,7 +423,7 @@ void Interpreter::visit(ASTBlockNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
-	scopes[nmspace].push_back(new InterpreterScope(function_call_name));
+	scopes[nmspace].push_back(std::make_shared<InterpreterScope>(function_call_name));
 	function_call_name = "";
 
 	declare_function_block_parameters(nmspace);
@@ -483,7 +483,7 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 	const auto& nmspace = get_namespace();
 	++is_switch;
 
-	scopes[nmspace].push_back(new InterpreterScope(""));
+	scopes[nmspace].push_back(std::make_shared<InterpreterScope>());
 
 	long long pos = -1;
 	if (astnode->case_blocks.size() > 0) {
@@ -591,7 +591,7 @@ void Interpreter::visit(ASTForNode* astnode) {
 
 	const auto& nmspace = get_namespace();
 	++is_loop;
-	scopes[nmspace].push_back(new InterpreterScope(""));
+	scopes[nmspace].push_back(std::make_shared<InterpreterScope>());
 
 	if (astnode->dci[0]) {
 		astnode->dci[0]->accept(this);
@@ -661,7 +661,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 
 	astnode->collection->accept(this);
 
-	scopes[nmspace].push_back(new InterpreterScope(""));
+	scopes[nmspace].push_back(std::make_shared<InterpreterScope>());
 
 	auto itdecl = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl);
 
@@ -761,7 +761,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 					throw std::runtime_error("invalid number of values");
 				}
 
-				InterpreterScope* back_scope = scopes[nmspace].back();
+				std::shared_ptr<InterpreterScope> back_scope = scopes[nmspace].back();
 				auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
 				decl_key->set_value(new Value(cp_string(val.first)));
 
@@ -810,7 +810,7 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 		astnode->try_block->accept(this);
 	}
 	catch (std::exception ex) {
-		scopes[nmspace].push_back(new InterpreterScope(""));
+		scopes[nmspace].push_back(std::make_shared<InterpreterScope>());
 
 		astnode->decl->accept(this);
 
@@ -819,7 +819,7 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 				throw std::runtime_error("invalid number of values");
 			}
 
-			InterpreterScope* back_scope = scopes[nmspace].back();
+			std::shared_ptr<InterpreterScope> back_scope = scopes[nmspace].back();
 			auto decl_val = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
 			decl_val->set_value(new Value(cp_string(ex.what())));
 		}
@@ -1093,7 +1093,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 void Interpreter::visit(ASTStructConstructorNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	InterpreterScope* curr_scope;
+	std::shared_ptr<InterpreterScope> curr_scope;
 	try {
 		const auto& nmspace = get_namespace(astnode->nmspace);
 		curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->type_name);
@@ -1159,7 +1159,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace(astnode->nmspace);
-	InterpreterScope* id_scope;
+	std::shared_ptr<InterpreterScope> id_scope;
 	try {
 		id_scope = get_inner_most_variable_scope(nmspace, astnode->identifier);
 	}
@@ -1185,7 +1185,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 		}
 
 		if (is_undefined(type)) {
-			InterpreterScope* curr_scope;
+			std::shared_ptr<InterpreterScope> curr_scope;
 			try {
 				curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->identifier);
 			}
@@ -1380,7 +1380,7 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 		}
 
 		const std::string& nmspace = get_namespace(id->nmspace);
-		InterpreterScope* id_scope;
+		std::shared_ptr<InterpreterScope> id_scope;
 		try {
 			id_scope = get_inner_most_variable_scope(nmspace, id->identifier);
 		}
@@ -1653,7 +1653,7 @@ cp_bool Interpreter::equals_array(const cp_array& larr, const cp_array& rarr) {
 	return true;
 }
 
-InterpreterScope* Interpreter::get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier) {
+std::shared_ptr<InterpreterScope> Interpreter::get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
 		if (i <= 0) {
@@ -1674,7 +1674,7 @@ InterpreterScope* Interpreter::get_inner_most_variable_scope(const std::string& 
 	return scopes[nmspace][i];
 }
 
-InterpreterScope* Interpreter::get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier) {
+std::shared_ptr<InterpreterScope> Interpreter::get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); i--) {
 		if (i <= 0) {
@@ -1696,7 +1696,7 @@ InterpreterScope* Interpreter::get_inner_most_struct_definition_scope(const std:
 	return scopes[nmspace][i];
 }
 
-InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict) {
+std::shared_ptr<InterpreterScope> Interpreter::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); --i) {
 		if (i <= 0) {
@@ -1717,7 +1717,7 @@ InterpreterScope* Interpreter::get_inner_most_function_scope(const std::string& 
 	return scopes[nmspace][i];
 }
 
-InterpreterScope* Interpreter::get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier) {
+std::shared_ptr<InterpreterScope> Interpreter::get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function_name(identifier); --i) {
 		if (i <= 0) {
@@ -1738,7 +1738,7 @@ InterpreterScope* Interpreter::get_inner_most_functions_scope(const std::string&
 	return scopes[nmspace][i];
 }
 
-Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser::Identifier>& identifier_vector, Value* new_value) {
+Value* Interpreter::set_value(std::shared_ptr<InterpreterScope> scope, const std::vector<parser::Identifier>& identifier_vector, Value* new_value) {
 	auto var = scope->find_declared_variable(identifier_vector[0].identifier);
 
 	if (identifier_vector.size() == 1 && identifier_vector[0].access_vector.size() == 0) {
@@ -1812,7 +1812,7 @@ Value* Interpreter::set_value(InterpreterScope* scope, const std::vector<parser:
 	return value;
 }
 
-Value* Interpreter::access_value(const InterpreterScope* scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i) {
+Value* Interpreter::access_value(const std::shared_ptr<InterpreterScope> scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i) {
 	Value* next_value = value;
 
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
@@ -2659,7 +2659,7 @@ long long Interpreter::hash(ASTLiteralNode<cp_string>* astnode) {
 long long Interpreter::hash(ASTIdentifierNode* astnode) {
 	std::string nmspace = get_namespace(astnode->nmspace);
 
-	InterpreterScope* id_scope;
+	std::shared_ptr<InterpreterScope> id_scope;
 	try {
 		id_scope = get_inner_most_variable_scope(nmspace, astnode->identifier_vector[0].identifier);
 	}
@@ -2865,7 +2865,7 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 	current_function_defined_parameters.pop();
 	current_function_calling_arguments.pop();
 
-	InterpreterScope* func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
+	std::shared_ptr<InterpreterScope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
 
 	builtin_functions[identifier]();
 	builtin_arguments.clear();

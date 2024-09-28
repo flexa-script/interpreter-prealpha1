@@ -20,7 +20,7 @@ namespace visitor {
 		std::map<std::string, std::function<void()>> builtin_functions;
 		std::vector<Value*> builtin_arguments;
 		Value* current_expression_value;
-		std::map<std::string, std::vector<InterpreterScope*>> scopes;
+		std::map<std::string, std::vector<std::shared_ptr<InterpreterScope>>> scopes;
 
 		std::string parse_value_to_string(const Value* value);
 
@@ -48,9 +48,9 @@ namespace visitor {
 		bool exception = false;
 
 		std::vector<ASTExprNode*> current_expression_array_dim;
-		int current_expression_array_dim_max;
+		int current_expression_array_dim_max = 0;
 		TypeDefinition current_expression_array_type;
-		bool is_max;
+		bool is_max = false;
 
 		size_t print_level = 0;
 		std::vector<uintptr_t> printed;
@@ -75,13 +75,13 @@ namespace visitor {
 		std::string parse_array_to_string(const cp_array& arr_value);
 		std::string parse_struct_to_string(const  Value* value);
 
-		InterpreterScope* get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
-		InterpreterScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-		InterpreterScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
-		InterpreterScope* get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<InterpreterScope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<InterpreterScope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<InterpreterScope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
+		std::shared_ptr<InterpreterScope> get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
 
-		Value* set_value(InterpreterScope* scope, const std::vector<Identifier>& identifier_vector, Value* new_value);
-		Value* access_value(const InterpreterScope* scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
+		Value* set_value(std::shared_ptr<InterpreterScope> scope, const std::vector<Identifier>& identifier_vector, Value* new_value);
+		Value* access_value(const std::shared_ptr<InterpreterScope> scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
 
 		void call_builtin_function(const std::string& identifier);
 		void declare_function_block_parameters(const std::string& nmspace);
@@ -97,7 +97,7 @@ namespace visitor {
 		std::string msg_header() override;
 
 	public:
-		Interpreter(InterpreterScope* global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs);
+		Interpreter(std::shared_ptr<InterpreterScope> global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs);
 		Interpreter() = default;
 		~Interpreter() = default;
 

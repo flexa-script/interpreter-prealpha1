@@ -30,7 +30,7 @@ int CPRepl::execute() {
 	std::cout << "Type \"#help\" for more information.\n";
 
 	visitor::SemanticScope semantic_global_scope;
-	visitor::InterpreterScope interpreter_global_scope;
+	std::shared_ptr<visitor::InterpreterScope> interpreter_global_scope = std::make_shared<visitor::InterpreterScope>();
 
 	while (true) {
 		std::string input_line;
@@ -114,7 +114,7 @@ int CPRepl::execute() {
 
 			visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, program, programs);
 			semantic_analyser.start();
-			visitor::Interpreter interpreter(&interpreter_global_scope, program, programs);
+			visitor::Interpreter interpreter(interpreter_global_scope, program, programs);
 			interpreter.visit(program);
 
 			if (file_load) {
