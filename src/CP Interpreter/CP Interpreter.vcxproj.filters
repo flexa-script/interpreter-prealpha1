@@ -67,6 +67,12 @@
     <Filter Include="Source Files\modules\builtin">
       <UniqueIdentifier>{e6d03087-f488-47a9-ae62-e91af6a68a76}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\core\vm">
+      <UniqueIdentifier>{7aca452e-b161-4886-8c02-cd5e50e7efc9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\vm">
+      <UniqueIdentifier>{36e3625e-54ff-4a32-9625-883ffbcf4489}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lexer.hpp">
@@ -159,6 +165,21 @@
     <ClInclude Include="sound.hpp">
       <Filter>Header Files\modules\cp.core</Filter>
     </ClInclude>
+    <ClInclude Include="vmconstants.hpp">
+      <Filter>Header Files\core\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="compiler.hpp">
+      <Filter>Header Files\core\visitor</Filter>
+    </ClInclude>
+    <ClInclude Include="bytecode.hpp">
+      <Filter>Header Files\core\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="variant.hpp">
+      <Filter>Header Files\core\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="compiler_scope.hpp">
+      <Filter>Header Files\core\visitor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -250,6 +271,21 @@
     </ClCompile>
     <ClCompile Include="sound.cpp">
       <Filter>Source Files\modules\cp.core</Filter>
+    </ClCompile>
+    <ClCompile Include="vmconstants.cpp">
+      <Filter>Source Files\core\vm</Filter>
+    </ClCompile>
+    <ClCompile Include="compiler.cpp">
+      <Filter>Source Files\core\visitor</Filter>
+    </ClCompile>
+    <ClCompile Include="bytecode.cpp">
+      <Filter>Source Files\core\vm</Filter>
+    </ClCompile>
+    <ClCompile Include="variant.cpp">
+      <Filter>Source Files\core\vm</Filter>
+    </ClCompile>
+    <ClCompile Include="compiler_scope.cpp">
+      <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

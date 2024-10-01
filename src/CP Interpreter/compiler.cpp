@@ -1,27 +1,32 @@
 #include <iostream>
-#include <utility>
+#include <algorithm> 
+#include <cmath>
+#include <compare>
+#include <functional>
 
 #include "compiler.hpp"
 #include "exception_handler.hpp"
-#include "graphics.hpp"
 #include "token.hpp"
 #include "builtin.hpp"
 
 #include "vendor/axeutils.hpp"
+#include "vendor/axewatch.hpp"
 #include "vendor/axeuuid.hpp"
 
-using namespace visitor;
-using namespace parser;
 using namespace lexer;
 
-Compiler::Compiler(SemanticScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
-	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace), is_max(false) {
+Compiler::Compiler(std::shared_ptr<CompilerScope> global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
+	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace),
+	current_expression_value(new Value(Type::T_UNDEFINED)) {
+
+	if (main_program) {
+		current_this_name.push(main_program->name);
+	}
 	scopes[default_namespace].push_back(global_scope);
 
-	// register builtin functions
 	auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
-	builtin->register_functions(this);
-};
+	//builtin->register_functions(this);
+}
 
 void Compiler::start() {
 	visit(current_program);
@@ -43,6 +48,12 @@ void Compiler::visit(ASTProgramNode* astnode) {
 			throw std::runtime_error(msg_header() + ex.what());
 		}
 	}
+
+	if (astnode->statements.size() > 1
+		|| astnode->statements.size() > 0
+		&& !dynamic_cast<ASTExprNode*>(astnode->statements[0])) {
+		current_expression_value = new Value(Type::T_UNDEFINED);
+	}
 }
 
 void Compiler::visit(ASTUsingNode* astnode) {
@@ -51,7 +62,7 @@ void Compiler::visit(ASTUsingNode* astnode) {
 	std::string libname = axe::StringUtils::join(astnode->library, ".");
 
 	if (built_in_libs.find(libname) != built_in_libs.end()) {
-		built_in_libs.find(libname)->second->register_functions(this);
+		//built_in_libs.find(libname)->second->register_functions(this);
 	}
 
 	auto program = programs[libname];
@@ -61,116 +72,93 @@ void Compiler::visit(ASTUsingNode* astnode) {
 
 	// if can't parsed yet
 	if (!axe::StringUtils::contains(parsed_libs, libname)) {
-		if (!program->alias.empty()) {
-			nmspaces.push_back(program->alias);
-		}
 		parsed_libs.push_back(libname);
 		auto prev_program = current_program;
 		current_program = program;
-
-		program_nmspaces[get_namespace(current_program->alias)].push_back(default_namespace);
-
+		program_nmspaces[get_current_namespace()].push_back(default_namespace);
 		if (!program->alias.empty()) {
-			scopes[program->alias].push_back(new SemanticScope());
+			scopes[program->alias].push_back(std::make_shared<CompilerScope>());
 		}
+		current_this_name.push(current_program->name);
 		start();
+		current_this_name.pop();
 		current_program = prev_program;
 	}
 }
 
-void Compiler::visit(ASTNamespaceManagerNode* astnode) {}
+void Compiler::visit(ASTNamespaceManagerNode* astnode) {
+	//set_curr_pos(astnode->row, astnode->col);
+
+	//const auto& nmspace = get_namespace(current_program->alias);
+
+	//if (astnode->image == "as") {
+	//	program_nmspaces[nmspace].push_back(astnode->nmspace);
+	//}
+	//else {
+	//	size_t pos = std::distance(program_nmspaces[nmspace].begin(),
+	//		std::find(program_nmspaces[nmspace].begin(),
+	//			program_nmspaces[nmspace].end(), astnode->nmspace));
+	//	program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + pos);
+	//}
+}
 
 void Compiler::visit(ASTEnumNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
 	const auto& nmspace = get_namespace();
+
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
-		auto decl_current_expr = new SemanticValue();
-		decl_current_expr->type = Type::T_INT;
-		decl_current_expr->row = astnode->row;
-		decl_current_expr->col = astnode->col;
-		decl_current_expr->is_const = true;
-		decl_current_expr->hash = i;
-		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], Type::T_INT, Type::T_UNDEFINED,
-			std::vector<ASTExprNode*>(), "", "", decl_current_expr, true, astnode->row, astnode->col);
+		bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_PUSH_INT, byteoperand(i)});
+		bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_STORE_VAR, byteoperand(uint8_t(0)) });
+
+		scopes[nmspace].back()->declare_variable(astnode->identifiers[i],
+			new Variable(Type::T_INT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(),
+				"", "", new Value(cp_int(i))));
 	}
 }
 
 void Compiler::visit(ASTDeclarationNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
 	const auto& nmspace = get_namespace();
-	SemanticScope* current_scope = scopes[nmspace].back();
-
-	if (current_scope->already_declared_variable(astnode->identifier)) {
-		throw std::runtime_error("variable '" + astnode->identifier + "' already declared");
-	}
-
-	if (is_void(astnode->type)) {
-		throw std::runtime_error("variables cannot be declared as void type: '" + astnode->identifier + "'");
-	}
-
-	if (is_struct(astnode->type)) {
-		try {
-			SemanticScope* curr_scope = get_inner_most_struct_definition_scope(get_namespace(astnode->type_name_space), astnode->type_name);
-		}
-		catch (...) {
-			throw std::runtime_error("struct '" + astnode->type_name + "' not found");
-		}
-	}
 
 	if (astnode->expr) {
 		astnode->expr->accept(this);
-		if (is_undefined(current_expression.type)) {
-			throw std::runtime_error("undefined expression");
-		}
 	}
 	else {
-		current_expression = SemanticValue(Type::T_UNDEFINED, astnode->row, astnode->col);
+		bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_PUSH_UNDEFINED, byteoperand(uint8_t(0)) });
 	}
 
-	if (is_function(current_expression.type)) {
-		scopes[nmspace].back()->declare_variable_function(astnode->identifier, astnode->row, astnode->row);
+	bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_STORE_VAR, byteoperand(uint8_t(0)) });
+
+	Value* new_value;
+
+	if (current_expression_value->use_ref) {
+		new_value = current_expression_value;
+	}
+	else {
+		new_value = new Value(current_expression_value);
 	}
 
-	auto new_value = new SemanticValue();
-	new_value->copy_from(&current_expression);
-	new_value->hash = astnode->expr ? astnode->expr->hash(this) : 0;
+	auto& astnode_type_name = astnode->type_name.empty() ? new_value->type_name : astnode->type_name;
 
-	if (astnode->is_const && !new_value->is_const) {
-		throw std::runtime_error("initializer of '" + astnode->identifier + "' is not a constant");
-	}
-
-	auto astnode_type_name = astnode->type_name.empty() ? new_value->type_name : astnode->type_name;
-
-	SemanticVariable* new_var = new SemanticVariable(
-		astnode->identifier, astnode->type,
+	auto new_var = new Variable(astnode->type,
 		astnode->array_type, astnode->dim,
 		astnode_type_name, astnode->type_name_space,
-		new_value, astnode->is_const,
-		astnode->row, astnode->col);
+		new_value);
 
-	if (!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, evaluate_access_vector_ptr)
+	if ((!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, evaluate_access_vector_ptr) ||
+		is_array(new_var->type) && !is_any(new_var->array_type)
+		&& !TypeDefinition::match_type(*new_var, *new_value, evaluate_access_vector_ptr, false, true))
 		&& astnode->expr && !is_undefined(new_value->type)) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, *new_var, *new_value, evaluate_access_vector_ptr);
 	}
 
-	if (new_value->dim.size() < new_var->dim.size() && new_value->dim.size() == 1) {
-		new_value->dim = new_var->dim;
-	}
+	check_build_array(new_value, astnode->dim);
 
-	if (is_string(new_var->type) || is_float(new_var->type)) {
-		new_value->type = new_var->type;
-	}
+	normalize_type(new_var, new_value);
 
-	current_scope->declare_variable(astnode->identifier, new_var);
+	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
 }
 
 void Compiler::visit(ASTUnpackedDeclarationNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-
-	const auto& nmspace = get_namespace();
-	SemanticScope* current_scope = scopes[nmspace].back();
 
 	for (const auto& declaration : astnode->declarations) {
 		declaration->accept(this);
@@ -180,85 +168,129 @@ void Compiler::visit(ASTUnpackedDeclarationNode* astnode) {
 void Compiler::visit(ASTAssignmentNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	if (!Token::is_assignment_op(astnode->op)) {
-		throw std::runtime_error("expected assignment operator, but found '" + astnode->op + "'");
+	std::shared_ptr<CompilerScope> astscope;
+	try {
+		const auto& nmspace = get_namespace(astnode->nmspace);
+		astscope = get_inner_most_variable_scope(nmspace, astnode->identifier);
+	}
+	catch (std::exception ex) {
+		throw std::runtime_error(ex.what());
 	}
 
-	const auto& identifier = astnode->identifier;
-	const auto& nmspace = get_namespace(astnode->nmspace);
-	SemanticScope* curr_scope;
-	try {
-		curr_scope = get_inner_most_variable_scope(nmspace, identifier);
-	}
-	catch (...) {
-		bool isfunc = false;
-		try {
-			curr_scope = get_inner_most_function_scope(nmspace, identifier, nullptr);
-			isfunc = true;
-			throw std::runtime_error("function '" + identifier + "' can't be assigned");
-		}
-		catch (std::exception ex) {
-			if (isfunc) {
-				throw std::runtime_error(ex.what());
-			}
-			else {
-				throw std::runtime_error("identifier '" + identifier + "' being reassigned was never declared");
-			}
-		}
-	}
+	Variable* variable = astscope->find_declared_variable(astnode->identifier);
+	Value* value = access_value(astscope, variable->get_value(), astnode->identifier_vector);
 
 	astnode->expr->accept(this);
 
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
+	auto ptr_value = current_expression_value;
+	Value* new_value = nullptr;
+	if (ptr_value->use_ref) {
+		new_value = ptr_value;
+	}
+	else {
+		new_value = new Value(ptr_value);
 	}
 
-	if (is_function(current_expression.type)) {
-		scopes[nmspace].back()->declare_variable_function(astnode->identifier, astnode->row, astnode->row);
+	auto arr = new_value->get_arr();
+
+	std::vector<unsigned int> dim;
+	if (variable->dim.size() > 0) {
+		dim = evaluate_access_vector(variable->dim);
 	}
 
-	auto assignment_expr = current_expression;
+	check_build_array(new_value, variable->dim);
 
-	auto declared_variable = curr_scope->find_declared_variable(identifier);
-	auto decl_var_expression = access_value(declared_variable->value, astnode->identifier_vector);
+	if (astnode->op == "="
+		&& astnode->identifier_vector.size() == 1
+		&& astnode->identifier_vector[0].access_vector.size() == 0
+		&& !has_string_access) {
+		if (!TypeDefinition::is_any_or_match_type(variable, *variable, nullptr, *ptr_value, evaluate_access_vector_ptr) ||
+			is_array(variable->type) && !is_any(variable->array_type)
+			&& !TypeDefinition::match_type(*variable, *ptr_value, evaluate_access_vector_ptr, false, true)) {
+			ExceptionHandler::throw_mismatched_type_err(*variable, *ptr_value, evaluate_access_vector_ptr);
+		}
 
-	if (declared_variable->is_const) {
-		throw std::runtime_error("'" + identifier + "' constant being reassigned");
+		normalize_type(variable, new_value);
+
+		variable->set_value(new_value);
 	}
+	else {
+		if (astnode->identifier_vector.size() == 1 && astnode->identifier_vector[0].access_vector.size() == 0) {
+			variable->set_value(new Value(variable->get_value()));
+			value = variable->get_value();
+		}
 
-	if (decl_var_expression->dim.size() < declared_variable->dim.size() && decl_var_expression->dim.size() == 1) {
-		decl_var_expression->dim = declared_variable->dim;
-	}
+		cp_int pos = 0;
+		if (has_string_access) {
+			astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
+			pos = current_expression_value->get_i();
+		}
 
-	if (is_string(declared_variable->type) || is_float(declared_variable->type)) {
-		decl_var_expression->type = declared_variable->type;
-	}
-
-	assignment_expr = SemanticValue(do_operation(astnode->op, *declared_variable, *decl_var_expression,
-		nullptr, assignment_expr, false), 0, false, astnode->row, astnode->col);
-
-	if (declared_variable->value == decl_var_expression) {
-		declared_variable->value->copy_from(&assignment_expr);
+		if (astnode->op == "=") {
+			if (is_string(variable->type) && is_char(new_value->type)
+				&& new_value->use_ref && new_value->ref && !is_any(new_value->ref->type)) {
+				throw std::runtime_error("cannot reference char to string in function call");
+			}
+			else if (is_float(variable->type) && is_int(new_value->type)
+				&& new_value->use_ref && new_value->ref && !is_any(new_value->ref->type)) {
+				throw std::runtime_error("cannot reference int to float in function call");
+			}
+			set_value(astscope, astnode->identifier_vector, new_value);
+		}
+		else {
+			normalize_type(variable, new_value);
+			do_operation(astnode->op, value, new_value, false, pos);
+		}
 	}
 }
 
 void Compiler::visit(ASTReturnNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
+	const auto& nmspace = get_namespace();
+
 	if (astnode->expr) {
+		auto& curr_func_ret_type = current_function_return_type.top();
+		std::shared_ptr<CompilerScope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
+
 		astnode->expr->accept(this);
-		if (is_undefined(current_expression.type)) {
-			throw std::runtime_error("undefined expression");
+		Value* returned_value = current_expression_value;
+		Value* value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
+
+		if (value->type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
+			has_string_access = false;
+			std::string str = value->get_s();
+			current_function_call_identifier_vector.top().back().access_vector[current_function_call_identifier_vector.top().back().access_vector.size() - 1]->accept(this);
+			auto pos = value->get_i();
+
+			auto char_value = new Value(Type::T_CHAR);
+			char_value->set(cp_char(str[pos]));
+			value = char_value;
+		}
+
+		if (!TypeDefinition::is_any_or_match_type(
+			&curr_func_ret_type, curr_func_ret_type,
+			nullptr, *returned_value, evaluate_access_vector_ptr)) {
+			ExceptionHandler::throw_return_type_err(current_this_name.top(),
+				curr_func_ret_type, *returned_value, evaluate_access_vector_ptr);
+		}
+
+		if (value->use_ref) {
+			current_expression_value = value;
+		}
+		else {
+			current_expression_value = new Value(value);
 		}
 	}
 	else {
-		current_expression = SemanticValue();
+		current_expression_value = new Value(Type::T_UNDEFINED);
 	}
 
-	if (!current_function.empty()) {
-		auto& currfun = current_function.top();
-		if (!TypeDefinition::is_any_or_match_type(currfun, *currfun, nullptr, current_expression, evaluate_access_vector_ptr)) {
-			ExceptionHandler::throw_return_type_err(currfun->identifier, *currfun, current_expression, evaluate_access_vector_ptr);
+	for (long long i = scopes[nmspace].size() - 1; i >= 0; --i) {
+		if (!scopes[nmspace][i]->get_name().empty()) {
+			return_from_function_name = scopes[nmspace][i]->get_name();
+			return_from_function = true;
+			break;
 		}
 	}
 }
@@ -266,47 +298,82 @@ void Compiler::visit(ASTReturnNode* astnode) {
 void Compiler::visit(ASTFunctionCallNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	const auto& nmspace = get_namespace(astnode->nmspace);
+	std::string nmspace = get_namespace(astnode->nmspace);
+	std::string identifier = astnode->identifier;
+	std::vector<Identifier> identifier_vector = astnode->identifier_vector;
 	bool strict = true;
-	std::vector<TypeDefinition> signature = std::vector<TypeDefinition>();
+	std::vector<TypeDefinition> signature;
+	std::vector<Value*> function_arguments;
 
-	for (const auto& param : astnode->parameters) {
+	for (auto& param : astnode->parameters) {
 		param->accept(this);
-		if (is_undefined(current_expression.type)) {
-			throw std::runtime_error("undefined expression");
+
+		signature.push_back(*current_expression_value);
+
+		Value* pvalue = nullptr;
+		if (current_expression_value->use_ref) {
+			pvalue = current_expression_value;
+		}
+		else {
+			pvalue = new Value(current_expression_value);
 		}
 
-		signature.push_back(current_expression);
+		function_arguments.push_back(pvalue);
 	}
 
-	SemanticScope* curr_scope;
+	std::shared_ptr<CompilerScope> func_scope;
 	try {
-		curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, &signature, strict);
+		func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, strict);
 	}
 	catch (...) {
 		try {
 			strict = false;
-			curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, &signature, strict);
+			func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, strict);
 		}
 		catch (...) {
-			std::string func_name = ExceptionHandler::buid_signature(astnode->identifier, signature, evaluate_access_vector_ptr);
-			throw std::runtime_error("function '" + func_name + "' was never declared");
+			try {
+				auto var_scope = get_inner_most_variable_scope(nmspace, identifier);
+				auto var = var_scope->find_declared_variable(identifier);
+				nmspace = var->value->get_fun().first;
+				identifier = var->value->get_fun().second;
+				identifier_vector = std::vector<Identifier>{ Identifier(identifier) };
+				func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, strict);
+			}
+			catch (...) {
+				std::string func_name = ExceptionHandler::buid_signature(astnode->identifier, signature, evaluate_access_vector_ptr);
+				throw std::runtime_error("function '" + func_name + "' was never declared");
+			}
 		}
 	}
+	auto declfun = func_scope->find_declared_function(identifier, &signature, evaluate_access_vector_ptr, strict);
 
-	const auto& curr_function = curr_scope->find_declared_function(astnode->identifier, &signature, evaluate_access_vector_ptr, strict);
-	current_function.push(curr_function);
+	current_function_defined_parameters.push(std::get<0>(*declfun));
 
-	if (is_void(curr_function->type)) {
-		current_expression = SemanticValue(Type::T_UNDEFINED, 0, 0);
+	current_this_name.push(identifier);
+	current_function_signature.push(signature);
+	current_function_call_identifier_vector.push(identifier_vector);
+	current_function_nmspace.push(nmspace);
+	current_function_return_type.push(std::get<2>(*declfun));
+	current_function_calling_arguments.push(function_arguments);
+
+	auto block = std::get<1>(*declfun);
+	if (block) {
+		function_call_name = identifier;
+		block->accept(this);
 	}
 	else {
-		auto typedeg = SemanticValue(static_cast<TypeDefinition>(*curr_function), 0, false, 0, 0);
-		typedeg.type_name_space = astnode->nmspace;
-		current_expression = *access_value(&typedeg, astnode->identifier_vector);
+		if (builtin_functions.find(astnode->identifier) == builtin_functions.end() && !block) {
+			throw std::runtime_error("function '" + astnode->identifier + "' definition not found");
+		}
+
+		call_builtin_function(identifier);
 	}
 
-	current_function.pop();
+	current_function_return_type.pop();
+	current_function_call_identifier_vector.pop();
+	current_function_signature.pop();
+	current_function_nmspace.pop();
+	current_this_name.pop();
 }
 
 void Compiler::visit(ASTFunctionDefinitionNode* astnode) {
@@ -314,54 +381,20 @@ void Compiler::visit(ASTFunctionDefinitionNode* astnode) {
 
 	const auto& nmspace = get_namespace();
 
-	for (const auto& scope : scopes[nmspace]) {
-		if (scope->already_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr)) {
-			auto decl_function = scopes[nmspace].back()->find_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr);
-
-			if (!decl_function->block && astnode->block) {
-				break;
-			}
-
-			std::string signature = ExceptionHandler::buid_signature(astnode->identifier, astnode->signature, evaluate_access_vector_ptr);
-			throw std::runtime_error("function " + signature + " already defined");
-		}
+	interpreter_parameter_list_t params;
+	for (size_t i = 0; i < astnode->parameters.size(); ++i) {
+		interpreter_parameter_t param = std::make_tuple(astnode->variable_names[i], astnode->signature[i], astnode->parameters[i].default_value, astnode->parameters[i].is_rest);
+		params.push_back(param);
 	}
 
-	if (astnode->block) {
-		auto has_return = returns(astnode->block);
-		auto type = is_void(astnode->type) && has_return ? Type::T_ANY : astnode->type;
-		auto array_type = (is_void(astnode->array_type) || is_undefined(astnode->array_type)) && has_return ? Type::T_ANY : astnode->array_type;
-
-		if (astnode->identifier != "") {
-			try {
-				SemanticScope* func_scope = scopes[nmspace].back();
-				FunctionDefinition* declfun = func_scope->find_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr, true);
-				declfun->block = astnode->block;
-			}
-			catch (...) {
-				scopes[nmspace].back()->declare_function(astnode->identifier, type, astnode->type_name, astnode->type_name_space,
-					array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
-			}
-
-			auto curr_function = scopes[nmspace].back()->find_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr);
-
-			current_function.push(curr_function);
+	if (astnode->identifier != "") {
+		try {
+			std::shared_ptr<CompilerScope> func_scope = scopes[nmspace].back();
+			interpreter_function_t* declfun = func_scope->find_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr, true);
+			std::get<1>(*declfun) = astnode->block;
 		}
-
-		astnode->block->accept(this);
-
-		if (!is_void(type)) {
-			if (!has_return) {
-				throw std::runtime_error("defined function '" + astnode->identifier + "' is not guaranteed to return a value");
-			}
-		}
-
-		current_function.pop();
-	}
-	else {
-		if (astnode->identifier != "") {
-			scopes[nmspace].back()->declare_function(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
-				astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
+		catch (...) {
+			scopes[nmspace].back()->declare_function(astnode->identifier, params, astnode->block, *astnode);
 		}
 	}
 }
@@ -369,53 +402,56 @@ void Compiler::visit(ASTFunctionDefinitionNode* astnode) {
 void Compiler::visit(ASTFunctionExpression* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto fun = dynamic_cast<ASTFunctionDefinitionNode*>(astnode->fun);
+	const auto& nmspace = get_namespace();
+
+	auto& fun = astnode->fun;
+
+	interpreter_parameter_list_t params;
+	for (size_t i = 0; i < fun->parameters.size(); ++i) {
+		interpreter_parameter_t param = std::make_tuple(fun->variable_names[i], fun->signature[i], fun->parameters[i].default_value, fun->parameters[i].is_rest);
+		params.push_back(param);
+	}
 
 	std::string identifier = "__unnamed_function_" + axe::UUID::generate();
-	FunctionDefinition* tempfundef = new FunctionDefinition(identifier, fun->type, fun->type_name, fun->type_name_space,
-		fun->array_type, fun->dim, fun->signature, fun->parameters, fun->block, fun->row, fun->col);
 
-	current_function.push(tempfundef);
+	scopes[nmspace].back()->declare_function(identifier, params, fun->block, *fun);
 
-	fun->accept(this);
-
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_FUNCTION;
-	current_expression.dim = fun->dim;
-	current_expression.row = fun->row;
-	current_expression.col = fun->col;
+	auto value = new Value(Type::T_FUNCTION);
+	value->set(cp_function(nmspace, identifier));
+	current_expression_value = value;
 }
 
 void Compiler::visit(ASTBlockNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
+	scopes[nmspace].push_back(std::make_shared<CompilerScope>(function_call_name));
+	function_call_name = "";
 
-	scopes[nmspace].push_back(new SemanticScope());
+	declare_function_block_parameters(nmspace);
 
-	if (!current_function.empty()) {
-		for (const auto& param : current_function.top()->parameters) {
-			if (is_function(param.type) || is_any(param.type)) {
-				scopes[nmspace].back()->declare_variable_function(param.identifier, param.row, param.row);
-			}
-
-			if (!is_function(param.type)) {
-				auto var_expr = new SemanticValue();
-				var_expr->type = param.type;
-				var_expr->array_type = param.array_type;
-				var_expr->type_name = param.type_name;
-				var_expr->dim = param.dim;
-				var_expr->row = param.row;
-				var_expr->col = param.col;
-
-				scopes[nmspace].back()->declare_variable(param.identifier, param.type, param.array_type,
-					param.dim, param.type_name, param.type_name_space, var_expr, false, param.row, param.col);
-			}
-		}
-	}
-
-	for (const auto& stmt : astnode->statements) {
+	for (auto& stmt : astnode->statements) {
 		stmt->accept(this);
+
+		if (exit_from_program) {
+			return;
+		}
+
+		if (continue_block && (is_loop)) {
+			break;
+		}
+
+		if (break_block && (is_loop || is_switch)) {
+			break;
+		}
+
+		if (return_from_function) {
+			if (!return_from_function_name.empty() && return_from_function_name == scopes[nmspace].back()->get_name()) {
+				return_from_function_name = "";
+				return_from_function = false;
+			}
+			break;
+		}
 	}
 
 	scopes[nmspace].pop_back();
@@ -425,109 +461,102 @@ void Compiler::visit(ASTExitNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->exit_code->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	if (!is_int(current_expression.type)) {
+	if (!is_int(current_expression_value->type)) {
 		throw std::runtime_error("expected int value");
 	}
+	exit_from_program = true;
 }
 
 void Compiler::visit(ASTContinueNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	if (!is_loop) {
-		throw std::runtime_error("continue must be inside a loop");
-	}
+	continue_block = true;
 }
 
 void Compiler::visit(ASTBreakNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	if (!is_loop && !is_switch) {
-		throw std::runtime_error("break must be inside a loop or switch");
-	}
+	break_block = true;
 }
 
 void Compiler::visit(ASTSwitchNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	is_switch = true;
 	const auto& nmspace = get_namespace();
-	scopes[nmspace].push_back(new SemanticScope());
+	++is_switch;
 
-	astnode->parsed_case_blocks = std::map<unsigned int, unsigned int>();
+	scopes[nmspace].push_back(std::make_shared<CompilerScope>());
 
-	astnode->condition->accept(this);
+	long long pos = -1;
+	if (astnode->case_blocks.size() > 0) {
+		astnode->condition->accept(this);
+		TypeDefinition cond_type = *current_expression_value;
+		for (const auto& expr : astnode->case_blocks) {
+			expr.first->accept(this);
+			break;
+		}
+		TypeDefinition case_type = *current_expression_value;
 
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
+		if (!TypeDefinition::match_type(cond_type, case_type, evaluate_access_vector_ptr)) {
+			ExceptionHandler::throw_mismatched_type_err(cond_type, case_type, evaluate_access_vector_ptr);
+		}
 	}
 
-	auto cond_type = static_cast<TypeDefinition>(current_expression);
-	auto case_type = TypeDefinition::get_basic(Type::T_UNDEFINED);
+	try {
+		auto hash = astnode->condition->hash(this);
+		pos = astnode->parsed_case_blocks.at(hash);
+	}
+	catch (...) {
+		pos = astnode->default_block;
+	}
 
-	for (const auto& expr : astnode->case_blocks) {
-		expr.first->accept(this);
+	for (long long i = pos; i < astnode->statements.size(); ++i) {
+		astnode->statements.at(i)->accept(this);
 
-		if (is_undefined(current_expression.type)) {
-			throw std::runtime_error("undefined expression");
+		if (exit_from_program) {
+			return;
 		}
 
-		if (!current_expression.is_const) {
-			throw std::runtime_error("case expression is not an constant expression");
+		if (continue_block) {
+			continue_block = false;
+			continue;
 		}
 
-		if (is_undefined(case_type.type)) {
-			if (is_undefined(current_expression.type)
-				|| is_void(current_expression.type)
-				|| is_any(current_expression.type)) {
-				throw std::runtime_error("case values cannot be undefined");
+		if (break_block) {
+			break_block = false;
+			break;
+		}
+
+		if (return_from_function) {
+			if (!return_from_function_name.empty() && return_from_function_name == scopes[nmspace].back()->get_name()) {
+				return_from_function_name = "";
+				return_from_function = false;
 			}
-			case_type = current_expression;
+			break;
 		}
-
-		if (!TypeDefinition::match_type(case_type, current_expression, evaluate_access_vector_ptr)) {
-			ExceptionHandler::throw_mismatched_type_err(case_type, current_expression, evaluate_access_vector_ptr);
-		}
-
-		auto hash = expr.first->hash(this);
-		if (astnode->parsed_case_blocks.contains(hash)) {
-			throw std::runtime_error("duplicated case value: '" + std::to_string(hash) + "'");
-		}
-
-		astnode->parsed_case_blocks.emplace(hash, expr.second);
-	}
-
-	if (!TypeDefinition::is_any_or_match_type(&cond_type, cond_type, nullptr, case_type, evaluate_access_vector_ptr)) {
-		ExceptionHandler::throw_mismatched_type_err(cond_type, case_type, evaluate_access_vector_ptr);
-	}
-
-	for (auto& stmt : astnode->statements) {
-		stmt->accept(this);
 	}
 
 	scopes[nmspace].pop_back();
-	is_switch = false;
+	--is_switch;
 }
 
 void Compiler::visit(ASTElseIfNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
+	executed_elif = false;
+
 	astnode->condition->accept(this);
 
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	if (!is_bool(current_expression.type)
-		&& !is_any(current_expression.type)) {
+	if (!is_bool(current_expression_value->type)) {
 		ExceptionHandler::throw_condition_type_err();
 	}
 
-	astnode->block->accept(this);
+	bool result = current_expression_value->get_b();
+
+	if (result) {
+		astnode->block->accept(this);
+		executed_elif = true;
+	}
 }
 
 void Compiler::visit(ASTIfNode* astnode) {
@@ -535,33 +564,36 @@ void Compiler::visit(ASTIfNode* astnode) {
 
 	astnode->condition->accept(this);
 
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	if (!is_bool(current_expression.type)
-		&& !is_any(current_expression.type)) {
+	if (!is_bool(current_expression_value->type)) {
 		ExceptionHandler::throw_condition_type_err();
 	}
 
-	astnode->if_block->accept(this);
+	bool result = current_expression_value->get_b();
 
-	for (const auto& elif : astnode->else_ifs) {
-		elif->accept(this);
+	if (result) {
+		astnode->if_block->accept(this);
+	}
+	else {
+		for (auto& elif : astnode->else_ifs) {
+			elif->accept(this);
+			if (executed_elif) {
+				break;
+			}
+		}
+		if (astnode->else_block && !executed_elif) {
+			astnode->else_block->accept(this);
+		}
 	}
 
-	if (astnode->else_block) {
-		astnode->else_block->accept(this);
-	}
+	executed_elif = false;
 }
 
 void Compiler::visit(ASTForNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	is_loop = true;
 	const auto& nmspace = get_namespace();
-
-	scopes[nmspace].push_back(new SemanticScope());
+	++is_loop;
+	scopes[nmspace].push_back(std::make_shared<CompilerScope>());
 
 	if (astnode->dci[0]) {
 		astnode->dci[0]->accept(this);
@@ -569,136 +601,206 @@ void Compiler::visit(ASTForNode* astnode) {
 	if (astnode->dci[1]) {
 		astnode->dci[1]->accept(this);
 
-		if (is_undefined(current_expression.type)) {
-			throw std::runtime_error("undefined expression");
-		}
-
-		if (!is_bool(current_expression.type)
-			&& !is_any(current_expression.type)) {
+		if (!is_bool(current_expression_value->type)) {
 			ExceptionHandler::throw_condition_type_err();
 		}
 	}
-	if (astnode->dci[2]) {
-		astnode->dci[2]->accept(this);
+	else {
+		current_expression_value = new Value(Type::T_BOOL);
+		current_expression_value->set(true);
 	}
-	astnode->block->accept(this);
+
+	bool result = current_expression_value->get_b();
+
+	while (result) {
+		astnode->block->accept(this);
+
+		if (exit_from_program) {
+			return;
+		}
+
+		if (continue_block) {
+			continue_block = false;
+		}
+
+		if (break_block) {
+			break_block = false;
+			break;
+		}
+
+		if (return_from_function) {
+			break;
+		}
+
+		if (astnode->dci[2]) {
+			astnode->dci[2]->accept(this);
+		}
+
+		if (astnode->dci[1]) {
+			astnode->dci[1]->accept(this);
+
+			if (!is_bool(current_expression_value->type)) {
+				ExceptionHandler::throw_condition_type_err();
+			}
+		}
+		else {
+			current_expression_value = new Value(Type::T_BOOL);
+			current_expression_value->set(true);
+		}
+
+		result = current_expression_value->get_b();
+	}
 
 	scopes[nmspace].pop_back();
-	is_loop = false;
+	--is_loop;
 }
 
 void Compiler::visit(ASTForEachNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	is_loop = true;
-	TypeDefinition col_type;
 	const auto& nmspace = get_namespace();
-
-	scopes[nmspace].push_back(new SemanticScope());
-	SemanticScope* back_scope = scopes[nmspace].back();
-
-	astnode->itdecl->accept(this);
+	++is_loop;
 
 	astnode->collection->accept(this);
-	col_type = current_expression;
 
-	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
-		if (!is_struct(col_type.type) && !is_any(col_type.type)) {
-			throw std::runtime_error("[key, value] can only be used with struct");
+	scopes[nmspace].push_back(std::make_shared<CompilerScope>());
+
+	auto itdecl = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl);
+
+	switch (current_expression_value->type) {
+	case Type::T_ARRAY: {
+		const auto& colletion = current_expression_value->get_arr();
+		for (size_t i = 0; i < colletion.second; ++i) {
+			auto val = colletion.first[i];
+
+			astnode->itdecl->accept(this);
+
+			set_value(
+				scopes[nmspace].back(),
+				std::vector<Identifier>{Identifier(itdecl->identifier)},
+				val);
+
+			astnode->block->accept(this);
+
+			if (exit_from_program) {
+				return;
+			}
+
+			if (continue_block) {
+				continue_block = false;
+				continue;
+			}
+
+			if (break_block) {
+				break_block = false;
+				break;
+			}
+
+			if (return_from_function) {
+				break;
+			}
 		}
-
-		if (idnode->declarations.size() != 2) {
-			throw std::runtime_error("invalid number of values");
-		}
-
-		auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
-		decl_key->value = new SemanticValue(Type::T_STRING, astnode->row, astnode->col);
-
-		back_scope = scopes[nmspace].back();
-		auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
-		decl_val->value = new SemanticValue(Type::T_ANY, astnode->row, astnode->col);
+		break;
 	}
-	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl)) {
-		if (!is_array(col_type.type)
-			&& !is_string(col_type.type)
-			&& !is_struct(col_type.type)
-			&& !is_any(col_type.type)) {
-			throw std::runtime_error("expected iterable in foreach");
-		}
+	case Type::T_STRING: {
+		const auto& colletion = current_expression_value->get_s();
+		for (auto val : colletion) {
+			astnode->itdecl->accept(this);
 
-		if (is_struct(col_type.type)) {
-			try {
-				auto s = get_inner_most_struct_definition_scope("cp", "Pair");
+			set_value(
+				scopes[nmspace].back(),
+				std::vector<Identifier>{Identifier(itdecl->identifier)},
+				new Value(cp_char(val)));
+
+			astnode->block->accept(this);
+
+			if (exit_from_program) {
+				return;
 			}
-			catch (...) {
-				throw std::runtime_error("struct 'cp::Pair' not found");
+
+			if (continue_block) {
+				continue_block = false;
+				continue;
 			}
-			col_type = TypeDefinition::get_struct("Pair", "cp");
-		}
 
-		SemanticVariable* declared_variable = back_scope->find_declared_variable(idnode->identifier);
-
-		if (!match_type(declared_variable->type, col_type.type)
-			&& !match_type(declared_variable->type, col_type.array_type)
-			&& is_char(declared_variable->type) && !is_string(col_type.type)
-			&& !is_any(declared_variable->type)
-			&& !is_any(col_type.type)
-			&& !is_any(col_type.array_type)) {
-			throw std::runtime_error("mismatched types");
-		}
-
-		if (is_struct(col_type.type)) {
-			declared_variable->value->type = Type::T_STRUCT;
-			declared_variable->value->type_name = "Pair";
-			declared_variable->value->type_name_space = "cp";
-			declared_variable->value->array_type = Type::T_UNDEFINED;
-		}
-		else if (is_string(col_type.type)) {
-			declared_variable->value->type = Type::T_CHAR;
-			declared_variable->value->type_name = "";
-			declared_variable->value->type_name_space = "";
-			declared_variable->value->array_type = Type::T_UNDEFINED;
-		}
-		else if (is_any(col_type.type)) {
-			declared_variable->value->type = Type::T_ANY;
-			declared_variable->value->type_name = "";
-			declared_variable->value->type_name_space = "";
-			declared_variable->value->array_type = Type::T_UNDEFINED;
-		}
-		else if (col_type.dim.size() > 1) {
-			if (!is_any(declared_variable->type)) {
-				declared_variable->value->type = declared_variable->type;
-				declared_variable->value->array_type = declared_variable->array_type;
-				declared_variable->value->type_name = declared_variable->type_name;
-				declared_variable->value->type_name_space = declared_variable->type_name_space;
+			if (break_block) {
+				break_block = false;
+				break;
 			}
-			else {
-				declared_variable->value->type = col_type.type;
-				declared_variable->value->array_type = current_expression.array_type;
-				if (!current_expression.type_name.empty()) {
-					declared_variable->value->type_name = current_expression.type_name;
-					declared_variable->value->type_name_space = current_expression.type_name_space;
+
+			if (return_from_function) {
+				break;
+			}
+		}
+		break;
+	}
+	case Type::T_STRUCT: {
+		const auto& colletion = current_expression_value->get_str();
+		for (const auto& val : colletion) {
+			astnode->itdecl->accept(this);
+
+			if (itdecl) {
+				if (!is_any(current_expression_value->ref->type)
+					&& current_expression_value->ref->type_name_space != "cp"
+					&& current_expression_value->ref->type_name != "Pair") {
+					throw std::runtime_error("invalid struct '"
+						+ current_expression_value->ref->type_name
+						+ "' declaration in foreach loop");
 				}
+
+				auto str = cp_struct();
+				str["key"] = new Value(cp_string(val.first));
+				str["value"] = val.second;
+				auto str_value = new Value(str, "cp", "Pair");
+
+				set_value(
+					scopes[nmspace].back(),
+					std::vector<Identifier>{Identifier(itdecl->identifier)},
+					str_value);
+			}
+			else if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
+				if (idnode->declarations.size() != 2) {
+					throw std::runtime_error("invalid number of values");
+				}
+
+				std::shared_ptr<CompilerScope> back_scope = scopes[nmspace].back();
+				auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
+				decl_key->set_value(new Value(cp_string(val.first)));
+
+				back_scope = scopes[nmspace].back();
+				auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
+				decl_val->set_value(val.second);
+			}
+
+			astnode->block->accept(this);
+
+			if (exit_from_program) {
+				return;
+			}
+
+			if (continue_block) {
+				continue_block = false;
+				continue;
+			}
+
+			if (break_block) {
+				break_block = false;
+				break;
+			}
+
+			if (return_from_function) {
+				break;
 			}
 		}
-		else {
-			declared_variable->value->type = col_type.array_type;
-			declared_variable->value->array_type = Type::T_UNDEFINED;
-			if (!current_expression.type_name.empty()) {
-				declared_variable->value->type_name = current_expression.type_name;
-				declared_variable->value->type_name_space = current_expression.type_name_space;
-			}
-		}
-
+		break;
 	}
-	else {
-		throw std::runtime_error("expected declaration");
+	default:
+		throw std::exception("invalid foreach iterable type");
 	}
-
-	astnode->block->accept(this);
 
 	scopes[nmspace].pop_back();
-	is_loop = false;
+
+	--is_loop;
 }
 
 void Compiler::visit(ASTTryCatchNode* astnode) {
@@ -706,42 +808,47 @@ void Compiler::visit(ASTTryCatchNode* astnode) {
 
 	const auto& nmspace = get_namespace();
 
-	astnode->try_block->accept(this);
+	try {
+		astnode->try_block->accept(this);
+	}
+	catch (std::exception ex) {
+		scopes[nmspace].push_back(std::make_shared<CompilerScope>());
 
-	scopes[nmspace].push_back(new SemanticScope());
+		astnode->decl->accept(this);
 
-	astnode->decl->accept(this);
+		if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
+			if (idnode->declarations.size() != 1) {
+				throw std::runtime_error("invalid number of values");
+			}
 
-	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
-		if (idnode->declarations.size() != 1) {
-			throw std::runtime_error("invalid number of values");
+			std::shared_ptr<CompilerScope> back_scope = scopes[nmspace].back();
+			auto decl_val = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
+			decl_val->set_value(new Value(cp_string(ex.what())));
+		}
+		else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
+			if (!is_any(current_expression_value->ref->type)
+				&& current_expression_value->ref->type_name_space != "cp"
+				&& current_expression_value->ref->type_name != "Pair") {
+				throw std::runtime_error("invalid struct '"
+					+ current_expression_value->ref->type_name
+					+ "' declaration in foreach loop");
+			}
+
+			Value* value = new Value(Type::T_STRUCT);
+			value->get_str() = cp_struct();
+			value->get_str()["error"] = new Value(cp_string(ex.what()));
+			value->type_name_space = "cp";
+			value->type_name = "Exception";
+
+			current_expression_value->ref->set_value(value);
+		}
+		else if (!dynamic_cast<ASTReticencesNode*>(astnode->decl)) {
+			throw std::runtime_error("expected declaration");
 		}
 
-		SemanticScope* back_scope = scopes[nmspace].back();
-		auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
-		decl_key->value = new SemanticValue(Type::T_STRING, astnode->row, astnode->col);
-
+		astnode->catch_block->accept(this);
+		scopes[nmspace].pop_back();
 	}
-	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
-		try {
-			get_inner_most_struct_definition_scope("cp", "Exception");
-		}
-		catch (...) {
-			throw std::runtime_error("struct 'cp::Exception' not found");
-		}
-
-		auto declared_variable = current_expression.ref;
-		declared_variable->value->type = Type::T_STRUCT;
-		declared_variable->value->type_name = "Exception";
-		declared_variable->value->type_name_space = "cp";
-	}
-	else if (!dynamic_cast<ASTReticencesNode*>(astnode->decl)) {
-		throw std::runtime_error("expected declaration");
-	}
-
-	astnode->catch_block->accept(this);
-
-	scopes[nmspace].pop_back();
 }
 
 void Compiler::visit(parser::ASTThrowNode* astnode) {
@@ -749,121 +856,174 @@ void Compiler::visit(parser::ASTThrowNode* astnode) {
 
 	astnode->error->accept(this);
 
-	if (is_struct(current_expression.type)
-		&& current_expression.type_name == "Exception") {
+	if (is_struct(current_expression_value->type)
+		&& current_expression_value->type_name == "Exception") {
 		try {
 			get_inner_most_struct_definition_scope("cp", "Exception");
 		}
 		catch (...) {
 			throw std::runtime_error("struct 'cp::Exception' not found");
 		}
+
+		throw std::exception(current_expression_value->get_str()["error"]->get_s().c_str());
 	}
-	else if (!is_string(current_expression.type)) {
-		throw std::runtime_error("expected Exception or string in throw");
+	else if (is_string(current_expression_value->type)) {
+		throw std::runtime_error(current_expression_value->get_s());
 	}
+	else {
+		throw std::runtime_error("expected cp::Exception struct or string in throw");
+	}
+
 }
 
-void Compiler::visit(ASTReticencesNode* astnode) {
+void Compiler::visit(parser::ASTReticencesNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
+
+	auto value = new Value(Type::T_UNDEFINED);
+	value->set_undefined();
+	current_expression_value = value;
 }
 
 void Compiler::visit(ASTWhileNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	is_loop = true;
+	const auto& nmspace = get_namespace();
+
+	++is_loop;
+
 	astnode->condition->accept(this);
 
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	if (!is_bool(current_expression.type)
-		&& !is_any(current_expression.type)) {
+	if (!is_bool(current_expression_value->type)) {
 		ExceptionHandler::throw_condition_type_err();
 	}
 
-	astnode->block->accept(this);
-	is_loop = false;
+	bool result = current_expression_value->get_b();
+
+	while (result) {
+		astnode->block->accept(this);
+
+		if (exit_from_program) {
+			return;
+		}
+
+		if (continue_block) {
+			continue_block = false;
+		}
+
+		if (break_block) {
+			break_block = false;
+			break;
+		}
+
+		if (return_from_function) {
+			break;
+		}
+
+		astnode->condition->accept(this);
+
+		if (!is_bool(current_expression_value->type)) {
+			ExceptionHandler::throw_condition_type_err();
+		}
+
+		result = current_expression_value->get_b();
+	}
+
+	--is_loop;
 }
 
 void Compiler::visit(ASTDoWhileNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	is_loop = true;
-	astnode->condition->accept(this);
+	const auto& nmspace = get_namespace();
 
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
+	++is_loop;
 
-	if (!is_bool(current_expression.type)
-		&& !is_any(current_expression.type)) {
-		ExceptionHandler::throw_condition_type_err();
-	}
+	bool result = false;
 
-	astnode->block->accept(this);
-	is_loop = false;
+	do {
+		astnode->block->accept(this);
+
+		if (exit_from_program) {
+			return;
+		}
+
+		if (continue_block) {
+			continue_block = false;
+		}
+
+		if (break_block) {
+			break_block = false;
+			break;
+		}
+
+		if (return_from_function) {
+			break;
+		}
+
+		astnode->condition->accept(this);
+
+		if (!is_bool(current_expression_value->type)) {
+			ExceptionHandler::throw_condition_type_err();
+		}
+
+		result = current_expression_value->get_b();
+	} while (result);
+
+	--is_loop;
 }
 
 void Compiler::visit(ASTStructDefinitionNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	const auto& nmspace = get_namespace();
-
-	try {
-		SemanticScope* curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->identifier);
-		throw std::runtime_error("struct '" + astnode->identifier +
-			"' already defined");
-	}
-	catch (...) {}
-
-	scopes[nmspace].back()->declare_structure_definition(astnode->identifier, astnode->variables, astnode->row, astnode->col);
+	scopes[get_namespace()].back()->declare_structure_definition(astnode->identifier, astnode->variables, astnode->row, astnode->col);
 }
 
 void Compiler::visit(ASTLiteralNode<cp_bool>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_BOOL;
-	current_expression.is_const = true;
+	auto value = new Value(Type::T_BOOL);
+	value->set(astnode->val);
+	current_expression_value = value;
 }
 
 void Compiler::visit(ASTLiteralNode<cp_int>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_INT;
-	current_expression.is_const = true;
+	auto value = new Value(Type::T_INT);
+	value->set(astnode->val);
+	current_expression_value = value;
 }
 
 void Compiler::visit(ASTLiteralNode<cp_float>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_FLOAT;
-	current_expression.is_const = true;
+	auto value = new Value(Type::T_FLOAT);
+	value->set(astnode->val);
+	current_expression_value = value;
 }
 
 void Compiler::visit(ASTLiteralNode<cp_char>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_CHAR;
-	current_expression.is_const = true;
+	auto value = new Value(Type::T_CHAR);
+	value->set(astnode->val);
+	current_expression_value = value;
 }
 
 void Compiler::visit(ASTLiteralNode<cp_string>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_STRING;
-	current_expression.is_const = true;
+	auto value = new Value(Type::T_STRING);
+	value->set(astnode->val);
+	current_expression_value = value;
 }
 
 void Compiler::visit(ASTArrayConstructorNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	auto is_const = true;
-	cp_int arr_size = 0;
+
+	auto value = new Value(Type::T_ARRAY);
+	Type arr_t = Type::T_ANY;
+	cp_array arr = cp_array(new Value * [astnode->values.size()], astnode->values.size());
 
 	if (current_expression_array_dim.size() == 0) {
 		current_expression_array_type = TypeDefinition();
@@ -877,41 +1037,43 @@ void Compiler::visit(ASTArrayConstructorNode* astnode) {
 	}
 
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
-		astnode->values.at(i)->accept(this);
-		if (!current_expression.is_const) {
-			is_const = false;
-		}
+		const auto expr = astnode->values[i];
 
-		if (is_undefined(current_expression.type)) {
-			throw std::runtime_error("undefined expression");
-		}
+		expr->accept(this);
 
 		if (is_undefined(current_expression_array_type.type) || is_array(current_expression_array_type.type)) {
-			current_expression_array_type = current_expression;
+			current_expression_array_type = *current_expression_value;
 		}
 		else {
-			if (!match_type(current_expression_array_type.type, current_expression.type)
-				&& !is_any(current_expression.type) && !is_void(current_expression.type)
-				&& !is_array(current_expression.type)) {
+			if (!match_type(current_expression_array_type.type, current_expression_value->type)
+				&& !is_any(current_expression_value->type) && !is_void(current_expression_value->type)
+				&& !is_array(current_expression_value->type)) {
 				current_expression_array_type = TypeDefinition::get_basic(Type::T_ANY);
 			}
 		}
 
-		++arr_size;
+		Value* arr_value = nullptr;
+		if (current_expression_value->use_ref) {
+			arr_value = current_expression_value;
+		}
+		else {
+			arr_value = new Value(current_expression_value);
+		}
+		arr.first[i] = arr_value;
 	}
 
 	if (!is_max) {
-		((ASTLiteralNode<cp_int>*)current_expression_array_dim.back())->val = arr_size;
+		((ASTLiteralNode<cp_int>*)current_expression_array_dim.back())->val = arr.second;
 	}
 
 	is_max = true;
 
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_ARRAY;
-	current_expression.array_type = current_expression_array_type.type;
-	current_expression.type_name = current_expression_array_type.type_name;
-	current_expression.type_name_space = current_expression_array_type.type_name_space;
-	current_expression.is_const = is_const;
+	value->set(arr, arr_t, current_expression_array_dim, current_expression_array_type.type_name, current_expression_array_type.type_name_space);
+
+	current_expression_value = value;
+	current_expression_value->array_type = current_expression_array_type.type;
+	current_expression_value->type_name = current_expression_array_type.type_name;
+	current_expression_value->type_name_space = current_expression_array_type.type_name_space;
 	--current_expression_array_dim_max;
 	size_t stay = current_expression_array_dim.size() - current_expression_array_dim_max;
 	std::vector<ASTExprNode*> current_expression_array_dim_aux;
@@ -920,11 +1082,11 @@ void Compiler::visit(ASTArrayConstructorNode* astnode) {
 		current_expression_array_dim_aux.emplace(current_expression_array_dim_aux.begin(), current_expression_array_dim.at(curr_dim_i));
 		--curr_dim_i;
 	}
-	current_expression.dim = current_expression_array_dim_aux;
+	current_expression_value->dim = current_expression_array_dim_aux;
 
 	if (current_expression_array_dim_max == 0) {
-		if (is_undefined(current_expression.array_type)) {
-			current_expression.array_type = Type::T_ANY;
+		if (is_undefined(current_expression_value->array_type)) {
+			current_expression_value->array_type = Type::T_ANY;
 		}
 		current_expression_array_dim.clear();
 	}
@@ -932,200 +1094,191 @@ void Compiler::visit(ASTArrayConstructorNode* astnode) {
 
 void Compiler::visit(ASTStructConstructorNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	auto is_const = true;
 
-	SemanticScope* curr_scope;
+	std::shared_ptr<CompilerScope> curr_scope;
 	try {
 		const auto& nmspace = get_namespace(astnode->nmspace);
 		curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->type_name);
 	}
 	catch (...) {
-		throw std::runtime_error("struct '" + astnode->type_name +
-			"' was not declared");
+		throw std::runtime_error("error trying to find struct definition");
 	}
 	auto type_struct = curr_scope->find_declared_structure_definition(astnode->type_name);
 
-	for (const auto& expr : astnode->values) {
+	auto value = new Value(Type::T_STRUCT);
+
+	auto str = cp_struct();
+
+	for (auto& expr : astnode->values) {
 		if (type_struct.variables.find(expr.first) == type_struct.variables.end()) {
 			ExceptionHandler::throw_struct_member_err(astnode->nmspace, astnode->type_name, expr.first);
 		}
 		VariableDefinition var_type_struct = type_struct.variables[expr.first];
+
 		expr.second->accept(this);
-		if (!current_expression.is_const) {
-			is_const = false;
+
+		Value* str_value = current_expression_value;
+
+		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct, nullptr, *current_expression_value, evaluate_access_vector_ptr)) {
+			ExceptionHandler::throw_struct_type_err(astnode->nmspace, astnode->type_name, var_type_struct, evaluate_access_vector_ptr);
 		}
 
-		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct,
-			nullptr, current_expression, evaluate_access_vector_ptr)) {
-			ExceptionHandler::throw_struct_type_err(astnode->nmspace, astnode->type_name, var_type_struct, evaluate_access_vector_ptr);
+		if (!current_expression_value->use_ref) {
+			str_value = new Value(str_value);
+		}
+
+		std::vector<unsigned int> dim;
+		if (var_type_struct.dim.size() > 0) {
+			dim = evaluate_access_vector(var_type_struct.dim);
+		}
+
+		check_build_array(str_value, var_type_struct.dim);
+
+		if (!is_any(var_type_struct.type) && !is_void(str_value->type)) {
+			str_value->type = var_type_struct.type;
+			str_value->array_type = var_type_struct.array_type;
+			str_value->type_name = var_type_struct.type_name;
+			str_value->type_name_space = var_type_struct.type_name_space;
+		}
+
+		str[expr.first] = str_value;
+	}
+
+	// declare rest values as null
+	for (auto& struct_var_def : type_struct.variables) {
+		if (str.find(struct_var_def.first) == str.end()) {
+			Value* str_value = new Value(struct_var_def.second.type);
+			str_value->set_null();
+			str[struct_var_def.first] = str_value;
 		}
 	}
 
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_STRUCT;
-	current_expression.type_name = astnode->type_name;
-	current_expression.type_name_space = astnode->nmspace;
-	current_expression.is_const = is_const;
+	value->set(str, astnode->type_name, astnode->nmspace);
+	current_expression_value = value;
 }
 
 void Compiler::visit(ASTIdentifierNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	SemanticScope* curr_scope;
 	const auto& nmspace = get_namespace(astnode->nmspace);
+	std::shared_ptr<CompilerScope> id_scope;
 	try {
-		curr_scope = get_inner_most_variable_scope(nmspace, astnode->identifier);
+		id_scope = get_inner_most_variable_scope(nmspace, astnode->identifier);
 	}
 	catch (...) {
-		current_expression = SemanticValue();
+		const auto& dim = astnode->identifier_vector[0].access_vector;
+		auto type = Type::T_UNDEFINED;
+		auto expression_value = new Value(Type::T_UNDEFINED);
+
 		if (astnode->identifier == "bool") {
-			current_expression.type = Type::T_BOOL;
-			return;
+			type = Type::T_BOOL;
 		}
 		else if (astnode->identifier == "int") {
-			current_expression.type = Type::T_INT;
-			return;
+			type = Type::T_INT;
 		}
 		else if (astnode->identifier == "float") {
-			current_expression.type = Type::T_FLOAT;
-			return;
+			type = Type::T_FLOAT;
 		}
 		else if (astnode->identifier == "char") {
-			current_expression.type = Type::T_CHAR;
-			return;
+			type = Type::T_CHAR;
 		}
 		else if (astnode->identifier == "string") {
-			current_expression.type = Type::T_STRING;
-			return;
+			type = Type::T_STRING;
 		}
-		try {
-			curr_scope = get_inner_most_struct_definition_scope(
-				nmspace, astnode->identifier);
-			current_expression.type = Type::T_STRUCT;
-			return;
-		}
-		catch (...) {
-			try {
-				curr_scope = get_inner_most_function_scope(nmspace,
-					astnode->identifier, nullptr);
-				current_expression.type = Type::T_FUNCTION;
 
-				return;
+		if (is_undefined(type)) {
+			std::shared_ptr<CompilerScope> curr_scope;
+			try {
+				curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->identifier);
 			}
 			catch (...) {
-				throw std::runtime_error("identifier '" + astnode->identifier +
-					"' was not declared");
+				try {
+					curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, nullptr);
+					auto fun = cp_function();
+					fun.first = nmspace;
+					fun.second = astnode->identifier;
+					current_expression_value = new Value(Type::T_FUNCTION);
+					current_expression_value->set(fun);
+					return;
+				}
+				catch (...) {
+					throw std::runtime_error("identifier '" + astnode->identifier + "' was not declared");
+				}
 			}
+			type = Type::T_STRUCT;
+			auto str = cp_struct();
+			expression_value->set(str, astnode->identifier, nmspace);
 		}
+
+		expression_value->set_type(type);
+
+		if (dim.size() > 0) {
+			cp_array arr = build_array(dim, expression_value, dim.size() - 1);
+
+			current_expression_value = new Value(arr, type, dim);
+		}
+		else {
+			current_expression_value = new Value(expression_value);
+		}
+
+		return;
 	}
 
-	auto declared_variable = curr_scope->find_declared_variable(astnode->identifier);
-	auto variable_expr = access_value(declared_variable->value, astnode->identifier_vector);
-	variable_expr->reset_ref();
+	Variable* variable = id_scope->find_declared_variable(astnode->identifier);
+	auto sub_val = access_value(id_scope, variable->get_value(), astnode->identifier_vector);
+	sub_val->reset_ref();
 
-	if (is_undefined(variable_expr->type)) {
-		throw std::runtime_error("variable '" + astnode->identifier + "' is undefined");
+	current_expression_value = sub_val;
+
+	if (current_expression_value->type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
+		has_string_access = false;
+		auto str = current_expression_value->get_s();
+		astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
+		auto pos = current_expression_value->get_i();
+
+		auto char_value = new Value(Type::T_CHAR);
+		char_value->set(cp_char(str[pos]));
+		current_expression_value = char_value;
 	}
-
-	current_expression = *variable_expr;
-	current_expression.reset_ref();
-	current_expression.is_sub = declared_variable->value != variable_expr;
-
 }
 
 void Compiler::visit(ASTBinaryExprNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->left->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	auto lexpr = current_expression;
-
-	astnode->right->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	auto rexpr = current_expression;
-
-	current_expression = SemanticValue(do_operation(astnode->op, lexpr, lexpr, nullptr, rexpr, true), 0, false, 0, 0);
-	current_expression.is_const = lexpr.is_const && rexpr.is_const;
-}
-
-void Compiler::visit(ASTUnaryExprNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
-	astnode->expr->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
-		if (astnode->unary_op == "ref") {
-			current_expression.use_ref = true;
-		}
-		if (astnode->unary_op == "unref") {
-			current_expression.use_ref = false;
-		}
+	Value* l_value = nullptr;
+	if (current_expression_value->use_ref) {
+		l_value = current_expression_value;
 	}
 	else {
-		switch (current_expression.type) {
-		case Type::T_INT:
-			if (astnode->unary_op != "+" && astnode->unary_op != "-"
-				&& astnode->unary_op != "--" && astnode->unary_op != "++"
-				&& astnode->unary_op != "~") {
-				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of int expression");
-			}
-			break;
-		case Type::T_FLOAT:
-			if (astnode->unary_op != "+" && astnode->unary_op != "-"
-				&& astnode->unary_op != "--" && astnode->unary_op != "++") {
-				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of float expression");
-			}
-			break;
-		case Type::T_BOOL:
-			if (astnode->unary_op != "not") {
-				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of boolean expression");
-			}
-			break;
-		case Type::T_ANY:
-			if (astnode->unary_op != "not" && astnode->unary_op != "~"
-				&& astnode->unary_op != "+" && astnode->unary_op != "-"
-				&& astnode->unary_op != "--" && astnode->unary_op != "++") {
-				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of boolean expression");
-			}
-			break;
-		default:
-			throw std::runtime_error("incompatible unary operator '" + astnode->unary_op +
-				"' in front of " + type_str(current_expression.type) + " expression");
-		}
+		l_value = new Value(current_expression_value);
 	}
+
+	if (is_bool(current_expression_value->type) && astnode->op == "and" && !current_expression_value->get_b()) {
+		return;
+	}
+
+	astnode->right->accept(this);
+	Value* r_value = nullptr;
+	if (current_expression_value->use_ref) {
+		r_value = current_expression_value;
+	}
+	else {
+		r_value = new Value(current_expression_value);
+	}
+
+	current_expression_value = do_operation(astnode->op, l_value, r_value, true, 0);
 }
 
 void Compiler::visit(ASTTernaryNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->condition->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
+	if (current_expression_value->get_b()) {
+		astnode->value_if_true->accept(this);
 	}
-
-	astnode->value_if_true->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	astnode->value_if_false->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
+	else {
+		astnode->value_if_false->accept(this);
 	}
 }
 
@@ -1133,43 +1286,112 @@ void Compiler::visit(ASTInNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->value->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	auto valtype = current_expression.type;
-
+	Value expr_val = Value(current_expression_value);
 	astnode->collection->accept(this);
+	bool res = false;
 
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
+	if (is_array(current_expression_value->type)) {
+		cp_array expr_col = current_expression_value->get_arr();
+
+		for (size_t i = 0; i < expr_col.second; ++i) {
+			res = equals_value(&expr_val, expr_col.first[i]);
+			if (res) {
+				break;
+			}
+		}
+	}
+	else {
+		const auto& expr_col = current_expression_value->get_s();
+
+		if (is_char(expr_val.type)) {
+			res = current_expression_value->get_s().find(expr_val.get_c()) != std::string::npos;
+		}
+		else {
+			res = current_expression_value->get_s().find(expr_val.get_s()) != std::string::npos;
+		}
 	}
 
-	auto coltype = current_expression.type;
-	auto colarrtype = current_expression.type;
+	auto value = new Value(cp_bool(res));
+	current_expression_value = value;
+}
 
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_BOOL;
+void Compiler::visit(ASTUnaryExprNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
 
-	if (is_any(valtype)
-		&& (is_any(coltype)
-			|| is_array(coltype)
-			&& is_any(colarrtype))) {
-		return;
+	bool has_assign = false;
+
+	astnode->expr->accept(this);
+
+	if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
+		if (astnode->unary_op == "unref") {
+			current_expression_value->use_ref = false;
+		}
+		else if (astnode->unary_op == "ref") {
+			current_expression_value->use_ref = true;
+		}
+	}
+	else {
+		if (!current_expression_value->use_ref) {
+			current_expression_value = new Value(current_expression_value);
+		}
+
+		switch (current_expression_value->type) {
+		case Type::T_INT:
+			if (astnode->unary_op == "-") {
+				current_expression_value->set(cp_int(-current_expression_value->get_i()));
+			}
+			else if (astnode->unary_op == "--") {
+				current_expression_value->set(cp_int(current_expression_value->get_i() - 1));
+				has_assign = true;
+			}
+			else if (astnode->unary_op == "++") {
+				current_expression_value->set(cp_int(current_expression_value->get_i() + 1));
+				has_assign = true;
+			}
+			else if (astnode->unary_op == "~") {
+				current_expression_value->set(cp_int(~current_expression_value->get_i()));
+			}
+			break;
+		case Type::T_FLOAT:
+			if (astnode->unary_op == "-") {
+				current_expression_value->set(cp_float(-current_expression_value->get_f()));
+			}
+			else if (astnode->unary_op == "--") {
+				current_expression_value->set(cp_float(current_expression_value->get_f() - 1));
+				has_assign = true;
+			}
+			else if (astnode->unary_op == "++") {
+				current_expression_value->set(cp_float(current_expression_value->get_f() + 1));
+				has_assign = true;
+			}
+			break;
+		case Type::T_BOOL:
+			current_expression_value->set(cp_bool(!current_expression_value->get_b()));
+			break;
+		default:
+			throw std::runtime_error("incompatible unary operator '" + astnode->unary_op +
+				"' in front of " + type_str(current_expression_value->type) + " expression");
+		}
 	}
 
-	if (!match_type(valtype, colarrtype)
-		&& !is_any(valtype) && !is_any(coltype) && !is_any(colarrtype)
-		&& is_string(valtype) && !is_string(coltype)
-		&& is_char(valtype) && !is_string(coltype)) {
-		throw std::runtime_error("types don't match '" + type_str(valtype) + "' and '" + type_str(coltype) + "'");
-	}
+	if (has_assign) {
+		const auto id = dynamic_cast<ASTIdentifierNode*>(astnode->expr);
 
-	if (!is_collection(coltype) && !is_any(coltype)) {
-		throw std::runtime_error("invalid type '" + type_str(coltype) + "', value must be a array or string");
-	}
+		if (!id) {
+			throw std::runtime_error("error unary assign");
+		}
 
+		const std::string& nmspace = get_namespace(id->nmspace);
+		std::shared_ptr<CompilerScope> id_scope;
+		try {
+			id_scope = get_inner_most_variable_scope(nmspace, id->identifier);
+		}
+		catch (std::exception ex) {
+			throw std::runtime_error(ex.what());
+		}
+
+		set_value(id_scope, id->identifier_vector, current_expression_value);
+	}
 }
 
 void Compiler::visit(ASTTypeParseNode* astnode) {
@@ -1177,32 +1399,124 @@ void Compiler::visit(ASTTypeParseNode* astnode) {
 
 	astnode->expr->accept(this);
 
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
+	Value* new_value = new Value();
+
+	switch (astnode->type) {
+	case Type::T_BOOL:
+		switch (current_expression_value->type) {
+		case Type::T_BOOL:
+			new_value->copy_from(current_expression_value);
+			break;
+		case Type::T_INT:
+			new_value->set(cp_bool(current_expression_value->get_i() != 0));
+			break;
+		case Type::T_FLOAT:
+			new_value->set(cp_bool(current_expression_value->get_f() != .0));
+			break;
+		case Type::T_CHAR:
+			new_value->set(cp_bool(current_expression_value->get_c() != '\0'));
+			break;
+		case Type::T_STRING:
+			new_value->set(cp_bool(!current_expression_value->get_s().empty()));
+			break;
+		}
+		break;
+
+	case Type::T_INT:
+		switch (current_expression_value->type) {
+		case Type::T_BOOL:
+			new_value->set(cp_int(current_expression_value->get_b()));
+			break;
+		case Type::T_INT:
+			new_value->copy_from(current_expression_value);
+			break;
+		case Type::T_FLOAT:
+			new_value->set(cp_int(current_expression_value->get_f()));
+			break;
+		case Type::T_CHAR:
+			new_value->set(cp_int(current_expression_value->get_c()));
+			break;
+		case Type::T_STRING:
+			try {
+				new_value->set(cp_int(std::stoll(current_expression_value->get_s())));
+			}
+			catch (...) {
+				throw std::runtime_error("'" + current_expression_value->get_s() + "' is not a valid value to parse int");
+			}
+			break;
+		}
+		break;
+
+	case Type::T_FLOAT:
+		switch (current_expression_value->type) {
+		case Type::T_BOOL:
+			new_value->set(cp_float(current_expression_value->get_b()));
+			break;
+		case Type::T_INT:
+			new_value->set(cp_float(current_expression_value->get_i()));
+			break;
+		case Type::T_FLOAT:
+			new_value->copy_from(current_expression_value);
+			break;
+		case Type::T_CHAR:
+			new_value->set(cp_float(current_expression_value->get_c()));
+			break;
+		case Type::T_STRING:
+			try {
+				new_value->set(cp_float(std::stold(current_expression_value->get_s())));
+			}
+			catch (...) {
+				throw std::runtime_error("'" + current_expression_value->get_s() + "' is not a valid value to parse float");
+			}
+			break;
+		}
+		break;
+
+	case Type::T_CHAR:
+		switch (current_expression_value->type) {
+		case Type::T_BOOL:
+			new_value->set(cp_char(current_expression_value->get_b()));
+			break;
+		case Type::T_INT:
+			new_value->set(cp_char(current_expression_value->get_i()));
+			break;
+		case Type::T_FLOAT:
+			new_value->set(cp_char(current_expression_value->get_f()));
+			break;
+		case Type::T_CHAR:
+			new_value->copy_from(current_expression_value);
+			break;
+		case Type::T_STRING:
+			if (new_value->get_s().size() > 1) {
+				throw std::runtime_error("'" + current_expression_value->get_s() + "' is not a valid value to parse char");
+			}
+			else {
+				new_value->set(cp_char(current_expression_value->get_s()[0]));
+			}
+			break;
+		}
+		break;
+
+	case Type::T_STRING:
+		new_value->set(cp_string(parse_value_to_string(current_expression_value)));
+
 	}
 
-	if ((is_array(current_expression.type) || is_struct(current_expression.type))
-		&& !is_string(astnode->type)) {
-		throw std::runtime_error("invalid type conversion from "
-			+ type_str(current_expression.type) + " to " + type_str(astnode->type));
-	}
+	new_value->set_type(astnode->type);
 
-	current_expression = SemanticValue();
-	current_expression.type = astnode->type;
+	current_expression_value = new_value;
 }
 
 void Compiler::visit(ASTNullNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_VOID;
+	current_expression_value = new Value(Type::T_VOID);
 }
 
 void Compiler::visit(ASTThisNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_STRING;
+	current_expression_value = new Value(cp_string(current_this_name.top()));
 }
 
 void Compiler::visit(ASTTypingNode* astnode) {
@@ -1210,34 +1524,142 @@ void Compiler::visit(ASTTypingNode* astnode) {
 
 	astnode->expr->accept(this);
 
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
+	if (astnode->image == "refid") {
+		current_expression_value = new Value(cp_int(current_expression_value));
+		return;
 	}
 
-	current_expression = SemanticValue();
-	if (astnode->image == "typeid" || astnode->image == "refid") {
-		current_expression.type = Type::T_INT;
+	if (astnode->image == "is_any") {
+		auto value = new Value(Type::T_BOOL);
+		value->set(cp_bool(
+			(current_expression_value->ref
+				&& (is_any(current_expression_value->ref->type))
+				|| is_any(current_expression_value->ref->array_type))));
+		current_expression_value = value;
+		return;
 	}
-	else if (astnode->image == "typeof") {
-		current_expression.type = Type::T_STRING;
+	else if (astnode->image == "is_array") {
+		auto value = new Value(Type::T_BOOL);
+		value->set(cp_bool(is_array(current_expression_value->type) || current_expression_value->dim.size() > 0));
+		current_expression_value = value;
+		return;
+	}
+	else if (astnode->image == "is_struct") {
+		auto value = new Value(Type::T_BOOL);
+		value->set(cp_bool(is_struct(current_expression_value->type) || is_struct(current_expression_value->array_type)));
+		current_expression_value = value;
+		return;
+	}
+
+	auto curr_value = current_expression_value;
+	auto dim = std::vector<unsigned int>();
+	auto type = is_void(curr_value->type) ? curr_value->type : curr_value->type;
+	std::string str_type = "";
+
+	if (is_array(type)) {
+		dim = calculate_array_dim_size(curr_value->get_arr());
+		type = curr_value->array_type;
+	}
+
+	str_type = type_str(type);
+
+	if (is_struct(type)) {
+		if (dim.size() > 0) {
+			auto arr = curr_value->get_arr().first[0];
+			for (size_t i = 0; i < dim.size() - 1; ++i) {
+				arr = arr->get_arr().first[0];
+			}
+			str_type = arr->type_name;
+		}
+		else {
+			str_type = curr_value->type_name;
+		}
+	}
+
+	if (dim.size() > 0) {
+		for (size_t i = 0; i < dim.size(); ++i) {
+			str_type += "[" + std::to_string(dim[i]) + "]";
+		}
+	}
+
+	if (is_struct(type) && !curr_value->type_name_space.empty()) {
+		str_type = curr_value->type_name_space + "::" + str_type;
+	}
+
+	if (astnode->image == "typeid") {
+		auto value = new Value(Type::T_INT);
+		value->set(cp_int(axe::StringUtils::hashcode(str_type)));
+		current_expression_value = value;
 	}
 	else {
-		current_expression.type = Type::T_BOOL;
+		auto value = new Value(Type::T_STRING);
+		value->set(cp_string(str_type));
+		current_expression_value = value;
 	}
 }
 
-bool Compiler::namespace_exists(const std::string& nmspace) {
-	return scopes.find(nmspace) != scopes.end();
+cp_bool Compiler::equals_value(const Value* lval, const Value* rval) {
+	if (lval->use_ref) {
+		return lval == rval;
+	}
+
+	switch (lval->type) {
+	case Type::T_VOID:
+		return is_void(rval->type);
+	case Type::T_BOOL:
+		return lval->get_b() == rval->get_b();
+	case Type::T_INT:
+		return lval->get_i() == rval->get_i();
+	case Type::T_FLOAT:
+		return lval->get_f() == rval->get_f();
+	case Type::T_CHAR:
+		return lval->get_c() == rval->get_c();
+	case Type::T_STRING:
+		return lval->get_s() == rval->get_s();
+	case Type::T_ARRAY:
+		return equals_array(lval->get_arr(), rval->get_arr());
+	case Type::T_STRUCT:
+		return equals_struct(lval->get_str(), rval->get_str());
+	}
+	return false;
 }
 
-SemanticScope* Compiler::get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier) {
-	if (!namespace_exists(nmspace)) {
-		throw std::runtime_error("namespace '" + nmspace + "' was not declared");
+cp_bool Compiler::equals_struct(const cp_struct& lstr, const cp_struct& rstr) {
+	if (lstr.size() != rstr.size()) {
+		return false;
 	}
+
+	for (auto& lval : lstr) {
+		if (rstr.find(lval.first) == rstr.end()) {
+			return false;
+		}
+		if (!equals_value(lval.second, rstr.at(lval.first))) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+cp_bool Compiler::equals_array(const cp_array& larr, const cp_array& rarr) {
+	if (larr.second != rarr.second) {
+		return false;
+	}
+
+	for (size_t i = 0; i < larr.second; ++i) {
+		if (!equals_value(larr.first[i], rarr.first[i])) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+std::shared_ptr<CompilerScope> Compiler::get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
 		if (i <= 0) {
-			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
+			for (const auto& prgnmspace : program_nmspaces[get_current_namespace()]) {
 				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_variable(identifier); --i) {
 					if (i <= 0) {
 						i = -1;
@@ -1248,20 +1670,18 @@ SemanticScope* Compiler::get_inner_most_variable_scope(const std::string& nmspac
 					return scopes[prgnmspace][i];
 				}
 			}
-			throw std::runtime_error("identifier '" + identifier + "' was not declared");
+			throw std::runtime_error("something went wrong searching '" + identifier + "' variable");
 		}
 	}
 	return scopes[nmspace][i];
 }
 
-SemanticScope* Compiler::get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier) {
-	if (!namespace_exists(nmspace)) {
-		throw std::runtime_error("namespace '" + nmspace + "' was not declared");
-	}
+std::shared_ptr<CompilerScope> Compiler::get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); i--) {
 		if (i <= 0) {
-			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
+			bool found = false;
+			for (const auto& prgnmspace : program_nmspaces[get_current_namespace()]) {
 				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_structure_definition(identifier); --i) {
 					if (i <= 0) {
 						i = -1;
@@ -1272,20 +1692,17 @@ SemanticScope* Compiler::get_inner_most_struct_definition_scope(const std::strin
 					return scopes[prgnmspace][i];
 				}
 			}
-			throw std::runtime_error("struct '" + identifier + "' was not declared");
+			throw std::runtime_error("something went wrong searching '" + identifier + "' struct");
 		}
 	}
 	return scopes[nmspace][i];
 }
 
-SemanticScope* Compiler::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict) {
-	if (!namespace_exists(nmspace)) {
-		throw std::runtime_error("namespace '" + nmspace + "' was not declared");
-	}
+std::shared_ptr<CompilerScope> Compiler::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); --i) {
 		if (i <= 0) {
-			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
+			for (const auto& prgnmspace : program_nmspaces[get_current_namespace()]) {
 				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); --i) {
 					if (i <= 0) {
 						i = -1;
@@ -1296,221 +1713,279 @@ SemanticScope* Compiler::get_inner_most_function_scope(const std::string& nmspac
 					return scopes[prgnmspace][i];
 				}
 			}
-			throw std::runtime_error("function '" + identifier + "' was not declared");
+			throw std::runtime_error("something went wrong searching '" + identifier + "' fuction");
 		}
 	}
 	return scopes[nmspace][i];
 }
 
-TypeDefinition Compiler::do_operation(const std::string& op, TypeDefinition lvar, TypeDefinition lvalue, TypeDefinition* rvar, TypeDefinition rvalue, bool is_expr) {
-	Type l_var_type = lvar.type;
-	lvalue = is_undefined(lvalue.type) ? lvar : lvalue;
-	Type l_type = lvalue.type;
-	Type r_var_type = rvar ? rvar->type : rvalue.type;
-	Type r_type = rvalue.type;
-
-	if ((is_any(l_var_type) || is_any(r_var_type)
-		|| is_any(l_type) || is_any(r_type)
-		|| is_void(l_type) || is_void(r_type)) && op == "=") {
-		return rvalue;
-	}
-
-	if ((is_void(l_type) || is_void(r_type))
-		&& Token::is_equality_op(op)) {
-		return TypeDefinition::get_basic(Type::T_BOOL);
-	}
-
-	if (is_any(l_type) || is_any(r_type)) {
-		if (Token::is_relational_op(op)) {
-			return TypeDefinition::get_basic(Type::T_BOOL);
-		}
-		return is_any(r_type) ?
-			!rvar || is_any(r_var_type) ?
-			is_any(l_type) ? lvar : lvalue
-			: *rvar
-			: rvalue;
-	}
-
-	switch (r_type) {
-	case Type::T_BOOL: {
-		if (!is_bool(l_type)
-			|| op != "="
-			&& op != "and"
-			&& op != "or"
-			&& !Token::is_equality_op(op)) {
-			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
-		}
-
-		break;
-	}
-	case Type::T_INT: {
-		if (is_float(l_type) && is_any(l_var_type)
-			|| is_int(l_type) && is_any(l_var_type)
-			&& !Token::is_int_ex_op(op)) {
-			if (!Token::is_float_op(op)
-				&& !Token::is_relational_op(op)
-				&& !Token::is_equality_op(op)) {
-				ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
+std::shared_ptr<CompilerScope> Compiler::get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier) {
+	long long i;
+	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function_name(identifier); --i) {
+		if (i <= 0) {
+			for (const auto& prgnmspace : program_nmspaces[get_current_namespace()]) {
+				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function_name(identifier); --i) {
+					if (i <= 0) {
+						i = -1;
+						break;
+					}
+				}
+				if (i >= 0) {
+					return scopes[prgnmspace][i];
+				}
 			}
+			throw std::runtime_error("something went wrong searching '" + identifier + "' fuction");
 		}
-		else if (is_int(l_type)
-			&& !Token::is_int_op(op)
-			&& !Token::is_relational_op(op)
-			&& !Token::is_equality_op(op)) {
-			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
-		}
-		else if (!is_numeric(l_type) && !is_any(l_type) && !is_any(l_var_type)) {
-			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
-		}
-
-		break;
 	}
-	case Type::T_FLOAT: {
-		if ((is_float(l_type) || is_int(l_type))
-			&& !Token::is_float_op(op)
-			&& !Token::is_relational_op(op)
-			&& !Token::is_equality_op(op)) {
-			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
-		}
-		else if (!is_numeric(l_type) && !is_any(l_type) && !is_any(l_var_type)) {
-			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
-		}
-
-		break;
-	}
-	case Type::T_CHAR: {
-		if (is_string(l_type) && !Token::is_collection_op(op)) {
-			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
-		}
-		else if (is_char(l_type)) {
-			if (op != "=" && !Token::is_equality_op(op) && !is_expr) {
-				ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
-			}
-		}
-		else if (!is_text(l_type) && !is_any(l_type) && !is_any(l_var_type)) {
-			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
-		}
-
-		break;
-	}
-	case Type::T_STRING: {
-		if ((!is_string(l_type)
-			|| (!Token::is_collection_op(op)
-				&& !Token::is_equality_op(op)))
-			&& (is_expr && (!is_char(l_type)
-				|| !Token::is_expression_collection_op(op)))) {
-			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
-		}
-		else if (!is_text(l_type) && !is_any(l_type) && !is_any(l_var_type)) {
-			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
-		}
-
-		break;
-	}
-	case Type::T_ARRAY: {
-		if (!TypeDefinition::match_type_array(lvalue, rvalue, evaluate_access_vector_ptr)
-			|| (!Token::is_collection_op(op)
-				&& !Token::is_equality_op(op))) {
-			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
-		}
-
-		break;
-	}
-	case Type::T_STRUCT: {
-		if (!is_struct(l_type) || (!Token::is_equality_op(op) && op != "=")) {
-			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
-		}
-
-		break;
-	}
-	case Type::T_FUNCTION: {
-		if (!is_function(l_type) || (!Token::is_equality_op(op) && op != "=")) {
-			ExceptionHandler::throw_operation_err(op, lvalue, rvalue, evaluate_access_vector_ptr);
-		}
-
-		break;
-	}
-	default:
-		throw std::runtime_error("cannot determine type of operation");
-
-	}
-
-	if (Token::is_equality_op(op) || Token::is_relational_op(op)) {
-		return TypeDefinition::get_basic(Type::T_BOOL);
-	}
-
-	return is_float(lvalue.type) || is_string(lvalue.type) ? lvalue : rvalue;
+	return scopes[nmspace][i];
 }
 
-void Compiler::equals_value(const SemanticValue& lval, const SemanticValue& rval) {
-	if (lval.use_ref && !rval.use_ref) {
-		throw std::runtime_error("both values must be references");
+Value* Compiler::set_value(std::shared_ptr<CompilerScope> scope, const std::vector<parser::Identifier>& identifier_vector, Value* new_value) {
+	auto var = scope->find_declared_variable(identifier_vector[0].identifier);
+
+	if (identifier_vector.size() == 1 && identifier_vector[0].access_vector.size() == 0) {
+		var->set_value(new_value);
+		return var->get_value();
 	}
-	if (!lval.use_ref && rval.use_ref) {
-		throw std::runtime_error("both values must be unreferenced");
+
+	Value* before_value = nullptr;
+	Value* value = var->get_value();
+	size_t i = 0;
+
+	while (i < identifier_vector.size()) {
+		before_value = value;
+
+		auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
+
+		if (access_vector.size() > 0) {
+			auto current_val = value->arr;
+			size_t s = 0;
+			size_t access_pos = 0;
+
+			for (s = 0; s < access_vector.size() - 1; ++s) {
+				access_pos = access_vector.at(s);
+
+				// break if it is a string, and the string access will be handled in identifier node evaluation
+				if (is_string(current_val->first[access_pos]->type)) {
+					current_val->first[access_pos]->get_s()[access_vector.at(s + 1)] = new_value->get_c();
+					return current_val->first[access_pos];
+				}
+				if (access_pos >= current_val->second) {
+					throw std::runtime_error("invalid array position access");
+				}
+				current_val = current_val->first[access_pos]->arr;
+			}
+			if (is_string(value->type)) {
+				value->get_s()[access_vector.at(s)] = new_value->get_c();
+				return value;
+			}
+			access_pos = access_vector.at(s);
+			if (i == identifier_vector.size() - 1) {
+				current_val->first[access_pos] = new_value;
+			}
+			else {
+				value = current_val->first[access_pos];
+			}
+		}
+
+		++i;
+
+		if (i < identifier_vector.size()) {
+			if (is_void(value->type)) {
+				std::stringstream ss;
+				for (size_t si = 0; si <= i; ++si) {
+					ss << identifier_vector[si].identifier;
+					if (si < i) {
+						ss << '.';
+					}
+				}
+				throw std::runtime_error("cannot reach '" + ss.str() + "', previous '" + identifier_vector[i - 1].identifier + "' value is null");
+			}
+
+			if (i == identifier_vector.size() - 1 && identifier_vector[i].access_vector.size() == 0) {
+				value->str->at(identifier_vector[i].identifier) = new_value;
+			}
+			else {
+				value = value->get_str()[identifier_vector[i].identifier];
+			}
+		}
 	}
+
+	return value;
 }
 
-SemanticValue* Compiler::access_value(SemanticValue* value, const std::vector<Identifier>& identifier_vector, size_t i) {
-	SemanticValue* next_value = value;
+Value* Compiler::access_value(const std::shared_ptr<CompilerScope> scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i) {
+	Value* next_value = value;
 
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
 	if (access_vector.size() > 0) {
-		if (access_vector.size() == value->dim.size()) {
-			next_value = new SemanticValue(next_value->array_type, Type::T_UNDEFINED,
-				std::vector<ASTExprNode*>(), next_value->type_name, next_value->type_name_space,
-				0, false, next_value->row, next_value->col);
+		auto current_Val = next_value->arr;
+		size_t s = 0;
+		size_t access_pos = 0;
+
+		for (s = 0; s < access_vector.size() - 1; ++s) {
+			access_pos = access_vector.at(s);
+			// break if it is a string, and the string access will be handled in identifier node evaluation
+			if (current_Val->first[access_pos]->type == Type::T_STRING) {
+				has_string_access = true;
+				break;
+			}
+			if (access_pos >= current_Val->second) {
+				throw std::runtime_error("invalid array position access");
+			}
+			current_Val = current_Val->first[access_pos]->arr;
 		}
-		else if (access_vector.size() - 1 == value->dim.size()
-			&& is_string(next_value->type)) {
-			next_value = new SemanticValue(Type::T_CHAR, Type::T_UNDEFINED,
-				std::vector<ASTExprNode*>(), "", "",
-				0, false, next_value->row, next_value->col);
+		if (is_string(next_value->type)) {
+			has_string_access = true;
+			return next_value;
 		}
+		access_pos = access_vector.at(s);
+		next_value = current_Val->first[access_pos];
 	}
 
 	++i;
 
 	if (i < identifier_vector.size()) {
-		if (next_value->type_name.empty()) {
-			next_value = new SemanticValue(Type::T_ANY, next_value->row, next_value->col);
+		if (is_void(next_value->type)) {
+			std::stringstream ss;
+			for (size_t si = 0; si <= i; ++si) {
+				ss << identifier_vector[si].identifier;
+				if (si < i) {
+					ss << '.';
+				}
+			}
+			throw std::runtime_error("cannot reach '" + ss.str() + "', previous '" + identifier_vector[i - 1].identifier + "' value is null");
 		}
-		else {
-			SemanticScope* curr_scope;
-			try {
-				auto nmspace = get_namespace(next_value->type_name_space);
-				curr_scope = get_inner_most_struct_definition_scope(nmspace, next_value->type_name);
-			}
-			catch (...) {
-				throw std::runtime_error("cannot find struct");
-			}
-			auto type_struct = curr_scope->find_declared_structure_definition(next_value->type_name);
 
-			if (type_struct.variables.find(identifier_vector[i].identifier) == type_struct.variables.end()) {
-				ExceptionHandler::throw_struct_member_err(next_value->type_name_space, next_value->type_name, identifier_vector[i].identifier);
-			}
-
-			next_value = new SemanticValue(type_struct.variables[identifier_vector[i].identifier], 0, false, next_value->row, next_value->col);
-		}
+		next_value = next_value->get_str()[identifier_vector[i].identifier];
 
 		if (identifier_vector[i].access_vector.size() > 0 || i < identifier_vector.size()) {
-			return access_value(next_value, identifier_vector, i);
+			return access_value(scope, next_value, identifier_vector, i);
 		}
 	}
 
 	return next_value;
 }
 
-void Compiler::check_is_struct_exists(parser::Type type, const std::string& nmspace, const std::string& type_name) {
-	if (is_struct(type)) {
-		try {
-			get_inner_most_struct_definition_scope(get_namespace(nmspace), type_name);
+void Compiler::check_build_array(Value* new_value, std::vector<ASTExprNode*> dim) {
+	if (is_array(new_value->type) && dim.size() > 0) {
+		auto arr = new_value->get_arr();
+
+		cp_array* rarr = new cp_array();
+
+		if (arr.second == 1) {
+			*rarr = build_array(dim, arr.first[0], dim.size() - 1);
 		}
-		catch (...) {
-			throw std::runtime_error("struct '" + type_name + "' was not defined");
+		else if (arr.second == 0) {
+			*rarr = build_undefined_array(dim, dim.size() - 1);
+		}
+		else {
+			delete rarr;
+			rarr = nullptr;
+		}
+
+		if (rarr) {
+			new_value->set(*rarr, current_expression_array_type.type,
+				current_expression_array_type.dim,
+				current_expression_array_type.type_name,
+				current_expression_array_type.type_name_space);
 		}
 	}
+}
+
+cp_array Compiler::build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i) {
+	Value** raw_arr;
+
+	if (dim.size() - 1 == i) {
+		current_expression_array_type = TypeDefinition();
+	}
+
+	size_t size = 0;
+	if (dim.size() == 0) {
+		size = 1;
+	}
+	else {
+		auto crr_acc = dim[i];
+		crr_acc->accept(this);
+		size = current_expression_value->get_i();
+	}
+
+	raw_arr = new Value * [size];
+
+	for (size_t j = 0; j < size; ++j) {
+		auto val = new Value(init_value);
+
+		if (is_undefined(current_expression_array_type.type) || is_array(current_expression_array_type.type)) {
+			current_expression_array_type = *val;
+		}
+
+		raw_arr[j] = val;
+	}
+
+	auto arr = cp_array(raw_arr, size);
+
+	--i;
+
+	if (i >= 0) {
+		size_t stay = dim.size() - i - 1;
+		std::vector<ASTExprNode*> curr_arr_dim;
+		size_t curr_dim_i = dim.size() - 1;
+		for (size_t i = 0; i < stay; ++i) {
+			curr_arr_dim.emplace(curr_arr_dim.begin(), dim.at(curr_dim_i));
+			--curr_dim_i;
+		}
+
+		auto val = new Value(arr, current_expression_array_type.array_type, curr_arr_dim,
+			current_expression_array_type.type_name, current_expression_array_type.type_name_space);
+
+		return build_array(dim, val, i);
+	}
+
+	return arr;
+}
+
+cp_array Compiler::build_undefined_array(const std::vector<ASTExprNode*>& dim, long long i) {
+	Value** raw_arr;
+
+	if (dim.size() - 1 == i) {
+		current_expression_array_type = TypeDefinition();
+	}
+
+	size_t size = 0;
+	if (dim.size() == 0) {
+		size = 1;
+	}
+	else {
+		auto crr_acc = dim[i];
+		crr_acc->accept(this);
+		size = current_expression_value->get_i();
+	}
+
+	raw_arr = new Value * [size] { nullptr };
+
+	auto arr = cp_array(raw_arr, size);
+
+	--i;
+
+	if (i >= 0) {
+		return build_undefined_array(dim, i);
+	}
+
+	return arr;
+}
+
+std::vector<unsigned int> Compiler::calculate_array_dim_size(const cp_array& arr) {
+	auto dim = std::vector<unsigned int>();
+
+	dim.push_back(arr.second);
+
+	if (is_array(arr.first[0]->type)) {
+		auto dim2 = calculate_array_dim_size(arr.first[0]->get_arr());
+		dim.insert(dim.end(), dim2.begin(), dim2.end());
+	}
+
+	return dim;
 }
 
 std::vector<unsigned int> Compiler::evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector) {
@@ -1519,76 +1994,648 @@ std::vector<unsigned int> Compiler::evaluate_access_vector(const std::vector<AST
 		unsigned int val = 0;
 		if (expr) {
 			expr->accept(this);
-			val = expr->hash(this);
-			if (!is_int(current_expression.type) && !is_any(current_expression.type)) {
+			if (!is_int(current_expression_value->type)) {
 				throw std::runtime_error("array index access must be a integer value");
 			}
+			val = current_expression_value->get_i();
 		}
 		access_vector.push_back(val);
 	}
 	return access_vector;
 }
 
-bool Compiler::returns(ASTNode* astnode) {
-	if (dynamic_cast<ASTReturnNode*>(astnode)
-		|| dynamic_cast<ASTThrowNode*>(astnode)) {
-		return true;
+std::string Compiler::parse_value_to_string(const Value* value) {
+	std::string str = "";
+	if (print_level == 0) {
+		printed.clear();
+	}
+	++print_level;
+	switch (value->type) {
+	case Type::T_VOID:
+		str = "null";
+		break;
+	case Type::T_BOOL:
+		str = ((value->get_b()) ? "true" : "false");
+		break;
+	case Type::T_INT:
+		str = std::to_string(value->get_i());
+		break;
+	case Type::T_FLOAT:
+		str = std::to_string(value->get_f());
+		break;
+	case Type::T_CHAR:
+		str = cp_string(std::string{ value->get_c() });
+		break;
+	case Type::T_STRING:
+		str = value->get_s();
+		break;
+	case Type::T_STRUCT: {
+		if (std::find(printed.begin(), printed.end(), reinterpret_cast<uintptr_t>(value)) != printed.end()) {
+			std::stringstream s = std::stringstream();
+			if (!value->type_name_space.empty()) {
+				s << value->type_name_space << "::";
+			}
+			s << value->type_name;
+			s << "<" << value << ">{...}";
+			str = s.str();
+		}
+		else {
+			printed.push_back(reinterpret_cast<uintptr_t>(value));
+			str = parse_struct_to_string(value);
+		}
+		break;
+	}
+	case Type::T_ARRAY:
+		str = parse_array_to_string(value->get_arr());
+		break;
+	case Type::T_FUNCTION: {
+		auto funcs = get_inner_most_functions_scope(value->get_fun().first, value->get_fun().second)->find_declared_functions(value->get_fun().second);
+		for (auto& it = funcs.first; it != funcs.second; ++it) {
+			auto& func_name = it->first;
+			auto& func_sig = std::get<0>(it->second);
+
+			std::string func_decl = func_name + "(";
+			for (const auto& param : func_sig) {
+				func_decl += type_str(std::get<1>(param).type) + ", ";
+			}
+			if (func_sig.size() > 0) {
+				func_decl.pop_back();
+				func_decl.pop_back();
+			}
+			func_decl += ")";
+
+			str = func_decl;
+		}
+		break;
+	}
+	case Type::T_UNDEFINED:
+		throw std::runtime_error("undefined expression");
+	default:
+		throw std::runtime_error("can't determine value type on parsing");
+	}
+	--print_level;
+	return str;
+}
+
+std::string Compiler::parse_array_to_string(const cp_array& arr_value) {
+	std::stringstream s = std::stringstream();
+	s << "[";
+	for (auto i = 0; i < arr_value.second; ++i) {
+		bool isc = is_char(arr_value.first[i]->type);
+		bool iss = is_string(arr_value.first[i]->type);
+
+		if (isc) s << "'";
+		else if (iss) s << "\"";
+
+		s << parse_value_to_string(arr_value.first[i]);
+
+		if (isc) s << "'";
+		else if (iss) s << "\"";
+
+		if (i < arr_value.second - 1) {
+			s << ",";
+		}
+	}
+	s << "]";
+	return s.str();
+}
+
+std::string Compiler::parse_struct_to_string(const Value* value) {
+	auto str_value = value->get_str();
+	std::stringstream s = std::stringstream();
+	if (!value->type_name_space.empty()) {
+		s << value->type_name_space << "::";
+	}
+	s << value->type_name << "<" << value << ">{";
+	for (auto const& [key, val] : str_value) {
+		if (key != modules::Module::INSTANCE_ID_NAME) {
+			s << key + ":";
+			s << parse_value_to_string(val);
+			s << ",";
+		}
+	}
+	if (s.str() != "{") {
+		s.seekp(-1, std::ios_base::end);
+	}
+	s << "}";
+	return s.str();
+}
+
+Value* Compiler::do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr, cp_int str_pos) {
+	Type l_var_type = lval->ref ? lval->ref->type : lval->type;
+	Type l_var_array_type = lval->ref ? lval->ref->array_type : lval->array_type;
+	Type l_type = is_undefined(lval->type) ? l_var_type : lval->type;
+	Type r_var_type = rval->ref ? rval->ref->type : rval->type;
+	Type r_var_array_type = rval->ref ? rval->ref->array_type : rval->array_type;
+	Type r_type = rval->type;
+	Value* res_value = nullptr;
+
+	if (is_void(r_type) && op == "=") {
+		lval->set_null();
+		return lval;
 	}
 
-	if (const auto& block = dynamic_cast<ASTBlockNode*>(astnode)) {
-		for (const auto& blk_stmt : block->statements) {
-			if (returns(blk_stmt)) {
-				return true;
+	if (is_void(l_type) && op == "=") {
+		lval->copy_from(rval);
+		return lval;
+	}
+
+	if ((is_void(l_type) || is_void(r_type))
+		&& Token::is_equality_op(op)) {
+		return new Value((cp_bool)((op == "==") ?
+			match_type(l_type, r_type)
+			: !match_type(l_type, r_type)));
+	}
+
+	if (lval->use_ref
+		&& Token::is_equality_op(op)) {
+		return new Value((cp_bool)((op == "==") ?
+			lval == rval
+			: lval != rval));
+	}
+
+	switch (r_type) {
+	case Type::T_BOOL: {
+		if (is_any(l_var_type) && op == "=") {
+			lval->set(rval->get_b());
+			break;
+		}
+
+		if (!is_bool(l_type)) {
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
+		}
+
+		if (op == "=") {
+			lval->set(rval->get_b());
+		}
+		else if (op == "and") {
+			res_value = new Value((cp_bool)(lval->get_b() && rval->get_b()));
+		}
+		else if (op == "or") {
+			res_value = new Value((cp_bool)(lval->get_b() || rval->get_b()));
+		}
+		else if (op == "==") {
+			res_value = new Value((cp_bool)(lval->get_b() == rval->get_b()));
+		}
+		else if (op == "!=") {
+			res_value = new Value((cp_bool)(lval->get_b() != rval->get_b()));
+		}
+		else {
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
+		}
+
+		break;
+	}
+	case Type::T_INT: {
+		if (is_any(l_var_type) && op == "=") {
+			lval->set(rval->get_i());
+			break;
+		}
+
+		if (is_expr
+			&& is_numeric(l_type)
+			&& op == "<=>") {
+			res_value = new Value((cp_int)(do_spaceship_operation(op, lval, rval)));
+
+			break;
+		}
+
+		if (is_expr
+			&& is_numeric(l_type)
+			&& Token::is_relational_op(op)) {
+			res_value = new Value(do_relational_operation(op, lval, rval));
+
+			break;
+		}
+
+		if (is_expr
+			&& is_numeric(l_type)
+			&& Token::is_equality_op(op)) {
+			cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
+			cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
+
+			res_value = new Value((cp_bool)(op == "==" ?
+				l == r : l != r));
+
+			break;
+		}
+
+		if (is_float(l_type) && (is_any(l_var_type) || is_expr)) {
+			lval->set(do_operation(lval->get_f(), cp_float(rval->get_i()), op));
+		}
+		else if (is_int(l_type) && is_any(l_var_type)
+			&& (op == "/=" || op == "/%=" || op == "/" || op == "/%")) {
+			lval->set(do_operation(cp_float(lval->get_i()), cp_float(rval->get_i()), op));
+		}
+		else if (is_int(l_type)) {
+			lval->set(do_operation(lval->get_i(), rval->get_i(), op));
+		}
+		else {
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
+		}
+
+		break;
+	}
+	case Type::T_FLOAT: {
+		if (is_any(l_var_type) && op == "=") {
+			lval->set(rval->get_f());
+			break;
+		}
+
+		if (is_expr
+			&& is_numeric(l_type)
+			&& op == "<=>") {
+			res_value = new Value(do_spaceship_operation(op, lval, rval));
+
+			break;
+		}
+
+		if (is_expr
+			&& is_numeric(l_type)
+			&& Token::is_relational_op(op)) {
+			lval->set(do_relational_operation(op, lval, rval));
+
+			break;
+		}
+
+		if (is_expr
+			&& is_numeric(l_type)
+			&& Token::is_equality_op(op)) {
+			cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
+			cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
+
+			res_value = new Value((cp_bool)(op == "==" ?
+				l == r : l != r));
+
+			break;
+		}
+
+		if (is_float(l_type)) {
+			lval->set(do_operation(lval->get_f(), rval->get_f(), op));
+		}
+		else if (is_int(l_type)) {
+			lval->set(do_operation(cp_float(lval->get_i()), rval->get_f(), op));
+		}
+		else {
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
+		}
+
+		break;
+	}
+	case Type::T_CHAR: {
+		if (is_any(l_var_type) && op == "=" && !has_string_access) {
+			lval->set(rval->get_c());
+			break;
+		}
+
+		if (is_expr
+			&& is_char(l_type)
+			&& Token::is_equality_op(op)) {
+			res_value = new Value((cp_bool)(op == "==" ?
+				lval->get_c() == rval->get_c()
+				: lval->get_c() != lval->get_c()));
+
+			break;
+		}
+
+		if (is_string(l_type)) {
+			if (has_string_access) {
+				if (op != "=") {
+					ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
+				}
+				has_string_access = false;
+				lval->get_s()[str_pos] = rval->get_c();
+				lval->set(lval->get_s());
+			}
+			else {
+				lval->set(do_operation(lval->get_s(), std::string{ rval->get_c() }, op));
 			}
 		}
-	}
-
-	if (const auto& ifstmt = dynamic_cast<ASTIfNode*>(astnode)) {
-		bool ifreturn = returns(ifstmt->if_block);
-		bool elifreturn = true;
-		bool elsereturn = true;
-		for (const auto& elif : ifstmt->else_ifs) {
-			if (!returns(elif->block)) {
-				elifreturn = false;
-				break;
+		else if (is_char(l_type)) {
+			if (op != "=") {
+				ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 			}
-		}
-		if (ifstmt->else_block) {
-			elsereturn = returns(ifstmt->else_block);
-		}
-		return ifreturn && elifreturn && elsereturn;
-	}
 
-	if (const auto& trycatchstmt = dynamic_cast<ASTTryCatchNode*>(astnode)) {
-		return returns(trycatchstmt->try_block) && returns(trycatchstmt->catch_block);
-	}
-
-	if (const auto& switchstmt = dynamic_cast<ASTSwitchNode*>(astnode)) {
-		for (const auto& blk_stmt : switchstmt->statements) {
-			if (returns(blk_stmt)) {
-				return true;
+			lval->set(rval->get_c());
+		}
+		else if (is_any(l_var_type)) {
+			if (op != "=") {
+				ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 			}
+
+			lval->set(rval->get_c());
 		}
+		else {
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
+		}
+
+		break;
+	}
+	case Type::T_STRING: {
+		if (is_any(l_var_type) && op == "=") {
+			lval->set(rval->get_s());
+			break;
+		}
+
+		if (is_expr
+			&& is_string(l_type)
+			&& Token::is_equality_op(op)) {
+
+			if (lval->get_s().size() > 30) {
+				int x = 0;
+			}
+
+			res_value = new Value((cp_bool)(op == "==" ?
+				lval->get_s() == rval->get_s()
+				: lval->get_s() != rval->get_s()));
+
+			break;
+		}
+
+		if (is_string(l_type)) {
+			lval->set(do_operation(lval->get_s(), rval->get_s(), op));
+		}
+		else if (is_expr && is_char(l_type)) {
+			lval->set(do_operation(cp_string{ lval->get_c() }, rval->get_s(), op));
+		}
+		else {
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
+		}
+
+		break;
+	}
+	case Type::T_ARRAY: {
+		if (is_any(l_var_type) && op == "=") {
+			lval->set(rval->get_arr(), lval->array_type, lval->dim, lval->type_name, lval->type_name_space);
+			break;
+		}
+
+		if (is_expr
+			&& is_array(l_type)
+			&& Token::is_equality_op(op)) {
+			res_value = new Value((cp_bool)(op == "==" ?
+				equals_value(lval, rval)
+				: !equals_value(lval, rval)));
+
+			break;
+		}
+
+		if (!TypeDefinition::match_type_array(*lval, *rval, evaluate_access_vector_ptr)) {
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
+		}
+
+		bool match_arr_t = lval->array_type == rval->array_type;
+		if (!match_arr_t && !is_any(l_var_array_type)) {
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
+		}
+
+		lval->set(do_operation(lval->get_arr(), rval->get_arr(), op),
+			match_arr_t ? lval->array_type : Type::T_ANY, lval->dim,
+			lval->type_name, lval->type_name_space);
+
+		break;
+	}
+	case Type::T_STRUCT: {
+		if (is_any(l_var_type) && op == "=") {
+			lval->set(rval->get_str(), rval->type_name, lval->type_name_space);
+			break;
+		}
+
+		if (is_expr
+			&& is_struct(l_type)
+			&& Token::is_equality_op(op)) {
+			res_value = new Value((cp_bool)(op == "==" ?
+				equals_value(lval, rval)
+				: !equals_value(lval, rval)));
+
+			break;
+		}
+
+		if (!is_struct(l_type) || op != "=") {
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
+		}
+
+		lval->set(rval->get_str(), rval->type_name, rval->type_name_space);
+
+		break;
+	}
+	case Type::T_FUNCTION: {
+		if (is_any(l_var_type) && op == "=") {
+			lval->set(rval->get_str(), rval->type_name, rval->type_name_space);
+			break;
+		}
+
+		if (!is_function(l_type) || op != "=") {
+			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
+		}
+
+		lval->set(rval->get_fun());
+
+		break;
+	}
+	default:
+		throw std::runtime_error("cannot determine type of operation");
+
 	}
 
-	if (const auto& forstmt = dynamic_cast<ASTForNode*>(astnode)) {
-		return returns(forstmt->block);
+	if (!res_value) {
+		res_value = lval;
 	}
 
-	if (const auto& forstmt = dynamic_cast<ASTForEachNode*>(astnode)) {
-		return returns(forstmt->block);
+	return res_value;
+}
+
+cp_bool Compiler::do_relational_operation(const std::string& op, Value* lval, Value* rval) {
+	cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
+	cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
+
+	if (op == "<") {
+		return l < r;
+	}
+	else if (op == ">") {
+		return l > r;
+	}
+	else if (op == "<=") {
+		return l <= r;
+	}
+	else if (op == ">=") {
+		return l >= r;
+	}
+	ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
+}
+
+cp_int Compiler::do_spaceship_operation(const std::string& op, Value* lval, Value* rval) {
+	cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
+	cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
+
+	auto res = l <=> r;
+	if (res == std::strong_ordering::less) {
+		return cp_int(-1);
+	}
+	else if (res == std::strong_ordering::equal) {
+		return cp_int(0);
+	}
+	else if (res == std::strong_ordering::greater) {
+		return cp_int(1);
+	}
+}
+
+cp_int Compiler::do_operation(cp_int lval, cp_int rval, const std::string& op) {
+	if (op == "=") {
+		return rval;
+	}
+	else if (op == "+=" || op == "+") {
+		return lval + rval;
+	}
+	else if (op == "-=" || op == "-") {
+		return lval - rval;
+	}
+	else if (op == "*=" || op == "*") {
+		return lval * rval;
+	}
+	else if (op == "/=" || op == "/") {
+		if (rval == 0) {
+			throw std::runtime_error("division by zero encountered");
+		}
+		return lval / rval;
+	}
+	else if (op == "%=" || op == "%") {
+		if (rval == 0) {
+			throw std::runtime_error("remainder by zero is undefined");
+		}
+		return lval % rval;
+	}
+	else if (op == "/%=" || op == "/%") {
+		if (rval == 0) {
+			throw std::runtime_error("floor division by zero encountered");
+		}
+		return cp_int(std::floor(lval / rval));
+	}
+	else if (op == "**=" || op == "**") {
+		return cp_int(std::pow(lval, rval));
+	}
+	else if (op == ">>=" || op == ">>") {
+		return lval >> rval;
+	}
+	else if (op == "<<=" || op == "<<") {
+		return lval << rval;
+	}
+	else if (op == "|=" || op == "|") {
+		return lval | rval;
+	}
+	else if (op == "&=" || op == "&") {
+		return lval & rval;
+	}
+	else if (op == "^=" || op == "^") {
+		return lval ^ rval;
+	}
+	throw std::runtime_error("invalid '" + op + "' operator for types 'int' and 'int'");
+}
+
+cp_float Compiler::do_operation(cp_float lval, cp_float rval, const std::string& op) {
+	if (op == "=") {
+		return rval;
+	}
+	else if (op == "+=" || op == "+") {
+		return lval + rval;
+	}
+	else if (op == "-=" || op == "-") {
+		return lval - rval;
+	}
+	else if (op == "*=" || op == "*") {
+		return lval * rval;
+	}
+	else if (op == "/=" || op == "/") {
+		if (int(rval) == 0) {
+			throw std::runtime_error("division by zero encountered");
+		}
+		return lval / rval;
+	}
+	else if (op == "%=" || op == "%") {
+		if (int(rval) == 0) {
+			throw std::runtime_error("remainder by zero is undefined");
+		}
+		return std::fmod(lval, rval);
+	}
+	else if (op == "/%=" || op == "/%") {
+		if (int(rval) == 0) {
+			throw std::runtime_error("floor division by zero encountered");
+		}
+		return std::floor(lval / rval);
+	}
+	else if (op == "**=" || op == "**") {
+		return cp_int(std::pow(lval, rval));
+	}
+	throw std::runtime_error("invalid '" + op + "' operator");
+}
+
+cp_string Compiler::do_operation(cp_string lval, cp_string rval, const std::string& op) {
+	if (op == "=") {
+		return rval;
+	}
+	else if (op == "+=" || op == "+") {
+		return lval + rval;
+	}
+	throw std::runtime_error("invalid '" + op + "' operator for types 'string' and 'string'");
+}
+
+cp_array Compiler::do_operation(cp_array lval, cp_array rval, const std::string& op) {
+	if (op == "=") {
+		Value** result = new Value * [rval.second];
+		for (size_t i = 0; i < rval.second; ++i) {
+			result[i] = rval.first[i];
+		}
+		return cp_array(result, rval.second);
+	}
+	else if (op == "+=" || op == "+") {
+		auto size = lval.second + rval.second;
+		Value** result = new Value * [size];
+
+		std::sort(lval.first, lval.first + lval.second, [](const Value* a, const Value* b) {
+			return a->value_hash() < b->value_hash();
+			});
+
+		std::sort(rval.first, rval.first + rval.second, [](const Value* a, const Value* b) {
+			return a->value_hash() < b->value_hash();
+			});
+
+		std::merge(lval.first, lval.first + lval.second, rval.first, rval.first + rval.second, result, [](const Value* a, const Value* b) {
+			return a->value_hash() < b->value_hash();
+			});
+
+		return cp_array(result, size);
 	}
 
-	if (const auto& whilestmt = dynamic_cast<ASTWhileNode*>(astnode)) {
-		return returns(whilestmt->block);
-	}
+	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");
+}
 
-	return false;
+void Compiler::normalize_type(Variable* var, Value* val) {
+	if (is_string(var->type) && is_char(val->type)) {
+		val->type = var->type;
+		val->set(cp_string{ val->get_c() });
+	}
+	else if (is_float(var->type) && is_int(val->type)) {
+		val->type = var->type;
+		val->set(cp_float(val->get_i()));
+	}
 }
 
 long long Compiler::hash(ASTExprNode* astnode) {
 	astnode->accept(this);
-	return 0;
+	switch (current_expression_value->type) {
+	case Type::T_BOOL:
+		return static_cast<long long>(current_expression_value->get_b());
+	case Type::T_INT:
+		return static_cast<long long>(current_expression_value->get_i());
+	case Type::T_FLOAT:
+		return static_cast<long long>(current_expression_value->get_f());
+	case Type::T_CHAR:
+		return static_cast<long long>(current_expression_value->get_c());
+	case Type::T_STRING:
+		return axe::StringUtils::hashcode(current_expression_value->get_s());
+	default:
+		throw std::runtime_error("cannot determine type");
+	}
 }
 
 long long Compiler::hash(ASTLiteralNode<cp_bool>* astnode) {
@@ -1612,20 +2659,238 @@ long long Compiler::hash(ASTLiteralNode<cp_string>* astnode) {
 }
 
 long long Compiler::hash(ASTIdentifierNode* astnode) {
-	astnode->accept(this);
-	return current_expression.hash;
+	std::string nmspace = get_namespace(astnode->nmspace);
+
+	std::shared_ptr<CompilerScope> id_scope;
+	try {
+		id_scope = get_inner_most_variable_scope(nmspace, astnode->identifier_vector[0].identifier);
+	}
+	catch (std::exception ex) {
+		throw std::runtime_error(ex.what());
+	}
+
+	Variable* variable = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
+	auto value = access_value(id_scope, variable->get_value(), astnode->identifier_vector);
+
+	switch (value->type) {
+	case Type::T_BOOL:
+		return static_cast<long long>(value->get_b());
+	case Type::T_INT:
+		return static_cast<long long>(value->get_i());
+	case Type::T_FLOAT:
+		return static_cast<long long>(value->get_f());
+	case Type::T_CHAR:
+		return static_cast<long long>(value->get_c());
+	case Type::T_STRING:
+		return axe::StringUtils::hashcode(value->get_s());
+	default:
+		throw std::runtime_error("cannot determine type");
+	}
+}
+
+void Compiler::declare_function_block_parameters(const std::string& nmspace) {
+	auto curr_scope = scopes[nmspace].back();
+	auto rest_name = std::string();
+	auto vec = std::vector<Value*>();
+	size_t i = 0;
+
+	if (current_function_calling_arguments.size() == 0 || current_function_defined_parameters.size() == 0) {
+		return;
+	}
+
+	// adds function arguments
+	for (i = 0; i < current_function_calling_arguments.top().size(); ++i) {
+		auto current_function_calling_argument = current_function_calling_arguments.top()[i];
+
+		if (current_function_defined_parameters.top().size() > i
+			&& is_string(std::get<1>(current_function_defined_parameters.top()[i]).type) && is_char(current_function_calling_argument->type)) {
+			if (current_function_calling_argument->use_ref
+				&& current_function_calling_argument->ref
+				&& !is_any(current_function_calling_argument->ref->type)) {
+				throw std::runtime_error("cannot reference char to string in function call");
+			}
+			current_function_calling_argument->type = std::get<1>(current_function_defined_parameters.top()[i]).type;
+			current_function_calling_argument->set(cp_string{ current_function_calling_argument->get_c() });
+		}
+		else if (current_function_defined_parameters.top().size() > i
+			&& is_float(std::get<1>(current_function_defined_parameters.top()[i]).type) && is_int(current_function_calling_argument->type)) {
+			if (current_function_calling_argument->use_ref
+				&& current_function_calling_argument->ref
+				&& !is_any(current_function_calling_argument->ref->type)) {
+				throw std::runtime_error("cannot reference int to float in function call");
+			}
+			current_function_calling_argument->type = std::get<1>(current_function_defined_parameters.top()[i]).type;
+			current_function_calling_argument->set(cp_float(current_function_calling_argument->get_i()));
+		}
+
+		// is reference : not reference
+		Value* current_value = nullptr;
+		if (current_function_calling_argument->use_ref) {
+			current_value = current_function_calling_argument;
+		}
+		else {
+			current_value = new Value(current_function_calling_argument);
+			current_value->ref = nullptr;
+		}
+
+		if (i >= current_function_defined_parameters.top().size()) {
+			vec.push_back(current_value);
+		}
+		else {
+			const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
+
+			if (is_function(current_function_calling_argument->type)) {
+				auto funcs = get_inner_most_functions_scope(current_function_calling_argument->get_fun().first,
+					current_function_calling_argument->get_fun().second)->find_declared_functions(current_function_calling_argument->get_fun().second);
+				for (auto& it = funcs.first; it != funcs.second; ++it) {
+					auto& func_params = std::get<0>(it->second);
+					auto& func_block = std::get<1>(it->second);
+					curr_scope->declare_function(pname, func_params, func_block, std::get<2>(it->second));
+				}
+			}
+			else {
+				if (current_value->use_ref && current_value->ref) {
+					curr_scope->declare_variable(pname, current_value->ref);
+				}
+				else {
+					curr_scope->declare_variable(pname, new Variable(current_value));
+				}
+			}
+
+			// is rest
+			if (std::get<3>(current_function_defined_parameters.top()[i])) {
+				rest_name = pname;
+				// if is last parameter and is array
+				if (current_function_defined_parameters.top().size() - 1 == i
+					&& is_array(current_value->type)) {
+					for (size_t i = 0; i < vec.size(); ++i) {
+						vec.push_back(current_value->get_arr().first[i]);
+					}
+				}
+				else {
+					vec.push_back(current_value);
+				}
+			}
+		}
+	}
+
+	// adds default values
+	for (; i < current_function_defined_parameters.top().size(); ++i) {
+		if (std::get<3>(current_function_defined_parameters.top()[i])) {
+			break;
+		}
+
+		const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
+		std::get<2>(current_function_defined_parameters.top()[i])->accept(this);
+
+		if (is_function(current_expression_value->type)) {
+			auto funcs = get_inner_most_functions_scope(current_expression_value->get_fun().first,
+				current_expression_value->get_fun().second)->find_declared_functions(current_expression_value->get_fun().second);
+			for (auto& it = funcs.first; it != funcs.second; ++it) {
+				auto& func_params = std::get<0>(it->second);
+				auto& func_block = std::get<1>(it->second);
+				curr_scope->declare_function(pname, func_params, func_block, std::get<2>(it->second));
+			}
+		}
+		else {
+			curr_scope->declare_variable(pname, new Variable(new Value(current_expression_value)));
+		}
+	}
+
+	if (vec.size() > 0) {
+		auto rest = new Value(Type::T_ANY, std::vector<ASTExprNode*>());
+		auto rarr = new Value * [vec.size()];
+		for (size_t i = 0; i < vec.size(); ++i) {
+			rarr[i] = vec[i];
+		}
+		auto arr = cp_array(rarr, vec.size());
+		rest->set(arr, Type::T_ANY, std::vector<ASTExprNode*>());
+		curr_scope->declare_variable(rest_name, new Variable(new Value(rest)));
+	}
+
+	current_function_defined_parameters.pop();
+	current_function_calling_arguments.pop();
+}
+
+void Compiler::call_builtin_function(const std::string& identifier) {
+	std::string nmspace = get_namespace();
+	auto vec = std::vector<Value*>();
+	size_t i = 0;
+
+	for (i = 0; i < current_function_calling_arguments.top().size(); ++i) {
+		// is reference : not reference
+		Value* current_value = nullptr;
+		if (current_function_calling_arguments.top()[i]->use_ref) {
+			current_value = current_function_calling_arguments.top()[i];
+		}
+		else {
+			current_value = new Value(current_function_calling_arguments.top()[i]);
+			current_value->ref = nullptr;
+		}
+
+		if (i >= current_function_defined_parameters.top().size()) {
+			vec.push_back(current_value);
+		}
+		else {
+			if (std::get<3>(current_function_defined_parameters.top()[i])) {
+				vec.push_back(current_value);
+			}
+			else {
+				builtin_arguments.push_back(current_value);
+			}
+		}
+	}
+
+	// adds default values
+	for (; i < current_function_defined_parameters.top().size(); ++i) {
+		if (std::get<3>(current_function_defined_parameters.top()[i])) {
+			break;
+		}
+
+		const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
+		std::get<2>(current_function_defined_parameters.top()[i])->accept(this);
+
+		builtin_arguments.push_back(new Value(current_expression_value));
+	}
+
+	if (vec.size() > 0) {
+		auto rest = new Value(Type::T_ANY, std::vector<ASTExprNode*>());
+		auto rarr = new Value * [vec.size()];
+		for (size_t i = 0; i < vec.size(); ++i) {
+			rarr[i] = vec[i];
+		}
+		auto arr = cp_array(rarr, vec.size());
+		rest->set(arr, Type::T_ANY, std::vector<ASTExprNode*>());
+		builtin_arguments.push_back(rest);
+	}
+
+	current_function_defined_parameters.pop();
+	current_function_calling_arguments.pop();
+
+	std::shared_ptr<CompilerScope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
+
+	builtin_functions[identifier]();
+	builtin_arguments.clear();
+
+	current_expression_value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
 }
 
 const std::string& Compiler::get_namespace(const std::string& nmspace) const {
 	return get_namespace(current_program, nmspace);
 }
 
-const std::string& Compiler::get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace) const {
+const std::string& Compiler::get_namespace(const ASTProgramNode* program, const std::string& nmspace) const {
 	return nmspace.empty() ? (
-		program->alias.empty() ? (
-			!current_function.empty() && !current_function.top()->type_name_space.empty() ? current_function.top()->type_name_space : default_namespace
-		) : program->alias
-	) : nmspace;
+		current_function_nmspace.size() == 0 ? (
+			program->alias.empty() ? default_namespace : program->alias
+			) : current_function_nmspace.top()
+		) : nmspace;
+}
+
+const std::string& Compiler::get_current_namespace() {
+	return current_function_nmspace.size() == 0 ? (
+		current_program->alias.empty() ? default_namespace : current_program->alias
+		) : current_function_nmspace.top();
 }
 
 void Compiler::set_curr_pos(unsigned int row, unsigned int col) {
@@ -1634,5 +2899,5 @@ void Compiler::set_curr_pos(unsigned int row, unsigned int col) {
 }
 
 std::string Compiler::msg_header() {
-	return "(SERR) " + current_program->name + '[' + std::to_string(curr_row) + ':' + std::to_string(curr_col) + "]: ";
+	return "(IERR) " + current_program->name + '[' + std::to_string(curr_row) + ':' + std::to_string(curr_col) + "]: ";
 }

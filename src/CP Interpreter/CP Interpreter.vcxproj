@@ -53,6 +53,9 @@
   <ItemGroup>
     <ClInclude Include="ast.hpp" />
     <ClInclude Include="builtin.hpp" />
+    <ClInclude Include="bytecode.hpp" />
+    <ClInclude Include="compiler.hpp" />
+    <ClInclude Include="compiler_scope.hpp" />
     <ClInclude Include="console.hpp" />
     <ClInclude Include="datetime.hpp" />
     <ClInclude Include="exception_handler.hpp" />
@@ -75,16 +78,21 @@
     <ClInclude Include="sound.hpp" />
     <ClInclude Include="token.hpp" />
     <ClInclude Include="types.hpp" />
+    <ClInclude Include="variant.hpp" />
     <ClInclude Include="vendor\axegraphics.hpp" />
     <ClInclude Include="vendor\axelogging.hpp" />
     <ClInclude Include="vendor\axeutils.hpp" />
     <ClInclude Include="vendor\axeuuid.hpp" />
     <ClInclude Include="vendor\axewatch.hpp" />
     <ClInclude Include="visitor.hpp" />
+    <ClInclude Include="vmconstants.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ast.cpp" />
     <ClCompile Include="builtin.cpp" />
+    <ClCompile Include="bytecode.cpp" />
+    <ClCompile Include="compiler.cpp" />
+    <ClCompile Include="compiler_scope.cpp" />
     <ClCompile Include="console.cpp" />
     <ClCompile Include="datetime.cpp" />
     <ClCompile Include="exception_handler.cpp" />
@@ -109,10 +117,12 @@
     <ClCompile Include="token.cpp" />
     <ClCompile Include="token_constants.hpp" />
     <ClCompile Include="types.cpp" />
+    <ClCompile Include="variant.cpp" />
     <ClCompile Include="vendor\axegraphics.cpp" />
     <ClCompile Include="vendor\axelogging.cpp" />
     <ClCompile Include="vendor\axeutils.cpp" />
     <ClCompile Include="visitor.cpp" />
+    <ClCompile Include="vmconstants.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

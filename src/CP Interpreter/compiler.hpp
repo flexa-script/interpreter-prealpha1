@@ -1,74 +1,108 @@
-#ifndef SEMANTIC_ANALYSIS_HPP
-#define SEMANTIC_ANALYSIS_HPP
+#ifndef COMPILER_HPP
+#define COMPILER_HPP
 
 #include <memory>
 #include <map>
-#include <vector>
 #include <stack>
-#include <xutility>
 #include <functional>
 
 #include "vmconstants.hpp"
+#include "bytecode.hpp"
+#include "types.hpp"
+#include "visitor.hpp"
 #include "ast.hpp"
+#include "compiler_scope.hpp"
 
 using namespace visitor;
 using namespace parser;
 
 namespace visitor {
-
-	struct BytecodeInstruction {
-		OpCode opcode;
-		int64_t operand;
-	};
-
-	class Compiler : Visitor {
+	class Compiler : public Visitor {
 	public:
-		std::map<std::string, void*> builtin_functions;
+		std::map<std::string, std::function<void()>> builtin_functions;
+		std::vector<Value*> builtin_arguments;
+		Value* current_expression_value;
+		std::map<std::string, std::vector<std::shared_ptr<CompilerScope>>> scopes;
+
+		std::string parse_value_to_string(const Value* value);
 
 	private:
 		std::vector<BytecodeInstruction> bytecode_program;
 
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&Compiler::evaluate_access_vector, this, std::placeholders::_1);
-		std::vector<std::string> nmspaces;
 		std::vector<std::string> parsed_libs;
-		std::string current_namespace;
-		SemanticValue current_expression;
-		std::stack<FunctionDefinition*> current_function;
+		std::string function_call_name;
+		std::string return_from_function_name;
+		std::stack<std::vector<TypeDefinition>> current_function_signature;
+		std::stack<std::vector<Identifier>> current_function_call_identifier_vector;
+		std::stack<std::string> current_function_nmspace;
+		std::stack<interpreter_parameter_list_t> current_function_defined_parameters;
+		std::stack<std::vector<Value*>> current_function_calling_arguments;
+		std::stack<TypeDefinition> current_function_return_type;
+		std::stack<std::string> current_this_name;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
+		size_t is_switch = 0;
+		size_t is_loop = 0;
+		bool continue_block = false;
+		bool break_block = false;
+		bool return_from_function = false;
+		bool exit_from_program = false;
+		bool executed_elif = false;
+		bool has_string_access = false;
 		bool exception = false;
-		bool is_switch = false;
-		bool is_loop = false;
 
 		std::vector<ASTExprNode*> current_expression_array_dim;
-		int current_expression_array_dim_max;
+		int current_expression_array_dim_max = 0;
 		TypeDefinition current_expression_array_type;
-		bool is_max;
+		bool is_max = false;
+
+		size_t print_level = 0;
+		std::vector<uintptr_t> printed;
 
 	private:
-		bool returns(ASTNode* astnode);
-
-		void equals_value(const SemanticValue& lval, const SemanticValue& rval);
-
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector);
+		std::vector<unsigned int> calculate_array_dim_size(const cp_array& arr);
 
-		SemanticScope* get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
-		SemanticScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-		SemanticScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
+		void check_build_array(Value* new_value, std::vector<ASTExprNode*> dim);
+		cp_array build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i);
+		cp_array build_undefined_array(const std::vector<ASTExprNode*>& dim, long long i);
 
-		TypeDefinition do_operation(const std::string& op, TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, bool is_expr = true);
-		SemanticValue* access_value(SemanticValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
+		void normalize_type(Variable* var, Value* val);
+		Value* do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr = false, cp_int str_pos = 0);
+		cp_int do_spaceship_operation(const std::string& op, Value* lval, Value* rval);
+		cp_bool do_relational_operation(const std::string& op, Value* lval, Value* rval);
+		cp_int do_operation(cp_int lval, cp_int rval, const std::string& op);
+		cp_float do_operation(cp_float lval, cp_float rval, const std::string& op);
+		cp_string do_operation(cp_string lval, cp_string rval, const std::string& op);
+		cp_array do_operation(cp_array lval, cp_array rval, const std::string& op);
 
-		bool namespace_exists(const std::string& nmspace);
+		std::string parse_array_to_string(const cp_array& arr_value);
+		std::string parse_struct_to_string(const  Value* value);
+
+		std::shared_ptr<CompilerScope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<CompilerScope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<CompilerScope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
+		std::shared_ptr<CompilerScope> get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
+
+		Value* set_value(std::shared_ptr<CompilerScope> scope, const std::vector<Identifier>& identifier_vector, Value* new_value);
+		Value* access_value(const std::shared_ptr<CompilerScope> scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
+
+		void call_builtin_function(const std::string& identifier);
+		void declare_function_block_parameters(const std::string& nmspace);
+
+		cp_bool equals_value(const Value* lval, const Value* rval);
+		cp_bool equals_array(const cp_array& larr, const cp_array& rarr);
+		cp_bool equals_struct(const cp_struct& lstr, const cp_struct& rstr);
+
+		const std::string& get_current_namespace();
 		const std::string& get_namespace(const std::string& nmspace = "") const override;
 		const std::string& get_namespace(const ASTProgramNode* program, const std::string& nmspace = "") const override;
-
-		void check_is_struct_exists(Type type, const std::string& nmspace, const std::string& identifier);
-
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;
 
 	public:
-		Compiler(SemanticScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs);
+		Compiler(std::shared_ptr<CompilerScope> global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs);
+		Compiler() = default;
 		~Compiler() = default;
 
 		void start();
@@ -84,11 +118,11 @@ namespace visitor {
 		void visit(ASTBlockNode*) override;
 		void visit(ASTContinueNode*) override;
 		void visit(ASTBreakNode*) override;
-		void visit(ASTSwitchNode*) override;
 		void visit(ASTEnumNode*) override;
 		void visit(ASTTryCatchNode*) override;
 		void visit(ASTThrowNode*) override;
 		void visit(ASTReticencesNode*) override;
+		void visit(ASTSwitchNode*) override;
 		void visit(ASTElseIfNode*) override;
 		void visit(ASTIfNode*) override;
 		void visit(ASTForNode*) override;
@@ -126,4 +160,4 @@ namespace visitor {
 	};
 }
 
-#endif // !SEMANTIC_ANALYSIS_HPP
+#endif // !COMPILER_HPP
