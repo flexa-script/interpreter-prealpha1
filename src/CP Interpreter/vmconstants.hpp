@@ -3,8 +3,11 @@
 
 #include <cstdint>
 
+#include "types.hpp"
+
 enum OpCode : int16_t {
 	OP_RES,
+	//OP_PUSH_CONST,
 	OP_PUSH_UNDEFINED,
 	OP_PUSH_VOID,
 	OP_PUSH_BOOL,
@@ -12,14 +15,13 @@ enum OpCode : int16_t {
 	OP_PUSH_FLOAT,
 	OP_PUSH_CHAR,
 	OP_PUSH_STRING,
-	//OP_PUSH_ANY_BOOL,
-	//OP_PUSH_ANY_INT,
-	//OP_PUSH_ANY_FLOAT,
-	//OP_PUSH_ANY_CHAR,
-	//OP_PUSH_ANY_STRING,
+	// variable ops
+	OP_SET_TYPE,
+	OP_SET_ARRAY_DIM,
+	OP_SET_ARRAY_SIZE,
+	OP_SET_USE_REF,
 	OP_LOAD_VAR,
 	OP_STORE_VAR,
-	//OP_STORE_CONST,
 	OP_OR,
 	OP_AND,
 	OP_BIT_OR,

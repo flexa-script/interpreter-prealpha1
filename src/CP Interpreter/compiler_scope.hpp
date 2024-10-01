@@ -12,11 +12,11 @@ using namespace parser;
 
 namespace visitor {
 	typedef std::map<std::string, StructureDefinition> interpreter_struct_list_t;
-	typedef std::map<std::string, Variable*> interpreter_variable_list_t;
+	typedef std::map<std::string, size_t> interpreter_variable_list_t;
 	typedef std::tuple<std::string, TypeDefinition, ASTExprNode*, bool> interpreter_parameter_t;
 	typedef std::vector<interpreter_parameter_t> interpreter_parameter_list_t;
-	typedef std::tuple<interpreter_parameter_list_t, ASTBlockNode*, TypeDefinition> interpreter_function_t;
-	typedef std::multimap<std::string, std::pair<interpreter_function_t, cp_int>> interpreter_function_list_t;
+	typedef std::pair<interpreter_function_t, cp_int> interpreter_function_t;
+	typedef std::multimap<std::string, interpreter_function_t> interpreter_function_list_t;
 
 	class Interpreter;
 
@@ -41,7 +41,7 @@ namespace visitor {
 			std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict = true);
 		bool already_declared_function_name(const std::string& identifier);
 
-		Variable* declare_variable(const std::string& identifier, Variable*);
+		Variable* declare_variable(const std::string& identifier);
 		void declare_function(const std::string& identifier, interpreter_parameter_list_t variables, ASTBlockNode* block, TypeDefinition type);
 		void declare_structure_definition(const std::string& identifier, std::map<std::string, VariableDefinition>, unsigned int, unsigned int);
 

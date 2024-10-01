@@ -86,32 +86,17 @@ void Compiler::visit(ASTUsingNode* astnode) {
 	}
 }
 
-void Compiler::visit(ASTNamespaceManagerNode* astnode) {
-	//set_curr_pos(astnode->row, astnode->col);
-
-	//const auto& nmspace = get_namespace(current_program->alias);
-
-	//if (astnode->image == "as") {
-	//	program_nmspaces[nmspace].push_back(astnode->nmspace);
-	//}
-	//else {
-	//	size_t pos = std::distance(program_nmspaces[nmspace].begin(),
-	//		std::find(program_nmspaces[nmspace].begin(),
-	//			program_nmspaces[nmspace].end(), astnode->nmspace));
-	//	program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + pos);
-	//}
-}
+void Compiler::visit(ASTNamespaceManagerNode* astnode) {}
 
 void Compiler::visit(ASTEnumNode* astnode) {
 	const auto& nmspace = get_namespace();
 
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
-		bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_PUSH_INT, byteoperand(i)});
-		bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_STORE_VAR, byteoperand(uint8_t(0)) });
+		bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_PUSH_INT, byteopnd8(i) });
+		bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_SET_TYPE, byteopnd8(Type::T_INT) });
+		bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_STORE_VAR, byteopnd_n });
 
-		scopes[nmspace].back()->declare_variable(astnode->identifiers[i],
-			new Variable(Type::T_INT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(),
-				"", "", new Value(cp_int(i))));
+		scopes[nmspace].back()->declare_variable(astnode->identifiers[i]);
 	}
 }
 
@@ -122,39 +107,21 @@ void Compiler::visit(ASTDeclarationNode* astnode) {
 		astnode->expr->accept(this);
 	}
 	else {
-		bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_PUSH_UNDEFINED, byteoperand(uint8_t(0)) });
+		bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_PUSH_UNDEFINED, byteopnd_n });
 	}
 
-	bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_STORE_VAR, byteoperand(uint8_t(0)) });
-
-	Value* new_value;
-
-	if (current_expression_value->use_ref) {
-		new_value = current_expression_value;
+	bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_SET_ARRAY_DIM, byteopnd8(astnode->dim.size()) });
+	for (auto& c : astnode->dim) {
+		c->accept(this);
+		bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_SET_ARRAY_SIZE, byteopnd_n });
 	}
-	else {
-		new_value = new Value(current_expression_value);
-	}
+	bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_SET_TYPE, byteopnd8(astnode->type) });
 
-	auto& astnode_type_name = astnode->type_name.empty() ? new_value->type_name : astnode->type_name;
+	// todo parse {1} array build
 
-	auto new_var = new Variable(astnode->type,
-		astnode->array_type, astnode->dim,
-		astnode_type_name, astnode->type_name_space,
-		new_value);
+	bytecode_program.push_back(BytecodeInstruction{ OpCode::OP_STORE_VAR, byteopnd_f });
 
-	if ((!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, evaluate_access_vector_ptr) ||
-		is_array(new_var->type) && !is_any(new_var->array_type)
-		&& !TypeDefinition::match_type(*new_var, *new_value, evaluate_access_vector_ptr, false, true))
-		&& astnode->expr && !is_undefined(new_value->type)) {
-		ExceptionHandler::throw_declaration_type_err(astnode->identifier, *new_var, *new_value, evaluate_access_vector_ptr);
-	}
-
-	check_build_array(new_value, astnode->dim);
-
-	normalize_type(new_var, new_value);
-
-	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
+	scopes[nmspace].back()->declare_variable(astnode->identifier);
 }
 
 void Compiler::visit(ASTUnpackedDeclarationNode* astnode) {

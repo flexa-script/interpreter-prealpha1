@@ -5,7 +5,11 @@
 
 #include "vmconstants.hpp"
 
-#define byteoperand(x) reinterpret_cast<uint8_t*>(x)
+#define byteopnd(x) reinterpret_cast<uint8_t*>(x)
+#define byteopnd8(x) byteopnd(uint8_t(x))
+#define byteopnd_n byteopnd8(0)
+#define byteopnd_t byteopnd8(true)
+#define byteopnd_f byteopnd8(false)
 
 struct BytecodeInstruction {
 	OpCode opcode;

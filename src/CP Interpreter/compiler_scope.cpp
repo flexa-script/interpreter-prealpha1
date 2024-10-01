@@ -49,9 +49,8 @@ bool CompilerScope::already_declared_function_name(const std::string& identifier
 	}
 }
 
-Variable* CompilerScope::declare_variable(const std::string& identifier, Variable* value) {
-	variable_symbol_table[identifier] = value;
-	return value;
+void CompilerScope::declare_variable(const std::string& identifier) {
+	variable_symbol_table[identifier] = variable_symbol_table.size();
 }
 
 void CompilerScope::declare_structure_definition(const std::string& name, std::map<std::string, VariableDefinition> variables, unsigned int row, unsigned int col) {
