@@ -141,7 +141,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		astnode_type_name, astnode->type_name_space,
 		new_value);
 
-	if ((!TypeDefinition::is_any_or_match_type(new_var, *new_var, nullptr, *new_value, evaluate_access_vector_ptr) ||
+	if ((!TypeDefinition::is_any_or_match_type(*new_var, *new_value, evaluate_access_vector_ptr) ||
 		is_array(new_var->type) && !is_any(new_var->array_type)
 		&& !TypeDefinition::match_type(*new_var, *new_value, evaluate_access_vector_ptr, false, true))
 		&& astnode->expr && !is_undefined(new_value->type)) {
@@ -202,7 +202,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		&& astnode->identifier_vector.size() == 1
 		&& astnode->identifier_vector[0].access_vector.size() == 0
 		&& !has_string_access) {
-		if (!TypeDefinition::is_any_or_match_type(variable, *variable, nullptr, *ptr_value, evaluate_access_vector_ptr) ||
+		if (!TypeDefinition::is_any_or_match_type(*variable, *ptr_value, evaluate_access_vector_ptr) ||
 			is_array(variable->type) && !is_any(variable->array_type)
 			&& !TypeDefinition::match_type(*variable, *ptr_value, evaluate_access_vector_ptr, false, true)) {
 			ExceptionHandler::throw_mismatched_type_err(*variable, *ptr_value, evaluate_access_vector_ptr);
@@ -266,9 +266,7 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 			value = char_value;
 		}
 
-		if (!TypeDefinition::is_any_or_match_type(
-			&curr_func_ret_type, curr_func_ret_type,
-			nullptr, *returned_value, evaluate_access_vector_ptr)) {
+		if (!TypeDefinition::is_any_or_match_type(curr_func_ret_type, *returned_value, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_return_type_err(current_this_name.top(),
 				curr_func_ret_type, *returned_value, evaluate_access_vector_ptr);
 		}

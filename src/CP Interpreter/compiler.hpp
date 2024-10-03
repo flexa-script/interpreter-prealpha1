@@ -26,13 +26,17 @@ namespace visitor {
 	private:
 		std::vector<BytecodeInstruction> bytecode_program;
 
+		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&Compiler::evaluate_access_vector, this, std::placeholders::_1);
 		std::vector<std::string> nmspaces;
 		std::vector<std::string> parsed_libs;
 		std::string current_namespace;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
-		std::stack<FunctionDefinition&> current_function;
+		std::stack<std::pair<FunctionDefinition, size_t>&> current_function;
+		TypeDefinition current_expression;
 
 	private:
+		std::vector<unsigned int> evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector);
+
 		std::shared_ptr<CompilerScope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
 		std::shared_ptr<CompilerScope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
 		std::shared_ptr<CompilerScope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);

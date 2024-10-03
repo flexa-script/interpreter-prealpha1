@@ -11,15 +11,15 @@ CompilerScope::CompilerScope() = default;
 
 CompilerScope::~CompilerScope() = default;
 
-std::pair<StructureDefinition, cp_int> CompilerScope::find_declared_structure_definition(const std::string& identifier) {
+std::pair<StructureDefinition, size_t> CompilerScope::find_declared_structure_definition(const std::string& identifier) {
 	return structure_symbol_table[identifier];
 }
 
-std::pair<TypeDefinition, cp_int> CompilerScope::find_declared_variable(const std::string& identifier) {
+std::pair<TypeDefinition, size_t> CompilerScope::find_declared_variable(const std::string& identifier) {
 	return variable_symbol_table[identifier];
 }
 
-std::pair<FunctionDefinition, cp_int>& CompilerScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
+std::pair<FunctionDefinition, size_t>& CompilerScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
 	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
@@ -139,27 +139,27 @@ bool CompilerScope::already_declared_function(const std::string& identifier, con
 	}
 }
 
-cp_int CompilerScope::declare_structure_definition(const std::string& name, const std::map<std::string, VariableDefinition>& variables, unsigned int row, unsigned int col) {
+size_t CompilerScope::declare_structure_definition(const std::string& name, const std::map<std::string, VariableDefinition>& variables, unsigned int row, unsigned int col) {
 	StructureDefinition str_def(name, variables, row, col);
 	auto id = structure_symbol_table.size();
 	structure_symbol_table[name] = std::make_pair(str_def, id);
 	return id;
 }
 
-cp_int CompilerScope::declare_variable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
+size_t CompilerScope::declare_variable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
 	const std::string& type_name, const std::string& type_name_space, unsigned int row, unsigned int col) {
 	auto id = variable_symbol_table.size();
 	variable_symbol_table[identifier] = std::make_pair(TypeDefinition(type, array_type, dim, type_name, type_name_space), id);
 	return id;
 }
 
-cp_int CompilerScope::declare_variable(const std::string& identifier, TypeDefinition var) {
+size_t CompilerScope::declare_variable(const std::string& identifier, TypeDefinition var) {
 	auto id = variable_symbol_table.size();
 	variable_symbol_table[identifier] = std::make_pair(var, id);
 	return id;
 }
 
-cp_int CompilerScope::declare_function(const std::string& identifier, Type type, const std::string& type_name, const std::string& type_name_space,
+size_t CompilerScope::declare_function(const std::string& identifier, Type type, const std::string& type_name, const std::string& type_name_space,
 	Type array_type, const std::vector<ASTExprNode*>& dim, const std::vector<TypeDefinition>& signature,
 	const std::vector<VariableDefinition>& parameters, ASTBlockNode* block, unsigned int row, unsigned int col) {
 	FunctionDefinition fun(identifier, type, type_name, type_name_space, array_type, dim, signature, parameters, block, row, col);
@@ -168,14 +168,14 @@ cp_int CompilerScope::declare_function(const std::string& identifier, Type type,
 	return id;
 }
 
-cp_int CompilerScope::declare_variable_function(const std::string& identifier, unsigned int row, unsigned int col) {
+size_t CompilerScope::declare_variable_function(const std::string& identifier, unsigned int row, unsigned int col) {
 	FunctionDefinition fun(identifier, row, col);
 	auto id = function_symbol_table.size();
 	function_symbol_table.insert(std::make_pair(identifier, std::make_pair(fun, id)));
 	return id;
 }
 
-cp_int CompilerScope::declare_basic_function(const std::string& identifier, Type type, std::vector<TypeDefinition> signature,
+size_t CompilerScope::declare_basic_function(const std::string& identifier, Type type, std::vector<TypeDefinition> signature,
 	std::vector<VariableDefinition> parameters, ASTBlockNode* block, unsigned int row, unsigned int col) {
 	FunctionDefinition fun(identifier, type, "", "", Type::T_UNDEFINED, std::vector<ASTExprNode*>(), signature, parameters, block, row, col);
 	auto id = function_symbol_table.size();
@@ -183,7 +183,7 @@ cp_int CompilerScope::declare_basic_function(const std::string& identifier, Type
 	return id;
 }
 
-cp_int CompilerScope::declare_array_function(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
+size_t CompilerScope::declare_array_function(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
 	const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters, ASTBlockNode* block, unsigned int row, unsigned int col) {
 	FunctionDefinition fun(identifier, type, "", "", array_type, dim, signature, parameters, block, row, col);
 	auto id = function_symbol_table.size();
@@ -191,7 +191,7 @@ cp_int CompilerScope::declare_array_function(const std::string& identifier, Type
 	return id;
 }
 
-cp_int CompilerScope::declare_struct_function(const std::string& identifier, Type type, const std::string& type_name, const std::string& type_name_space,
+size_t CompilerScope::declare_struct_function(const std::string& identifier, Type type, const std::string& type_name, const std::string& type_name_space,
 	const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters, ASTBlockNode* block, unsigned int row, unsigned int col) {
 	FunctionDefinition fun(identifier, type, type_name, type_name_space, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), signature, parameters, block, row, col);
 	auto id = function_symbol_table.size();

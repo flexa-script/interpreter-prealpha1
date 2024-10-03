@@ -405,8 +405,6 @@ void SemanticAnalyser::visit(ASTFunctionExpression* astnode) {
 
 	fun->accept(this);
 
-	current_function.pop();
-
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_FUNCTION;
 	current_expression.dim = fun->dim;
