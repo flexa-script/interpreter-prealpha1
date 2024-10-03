@@ -53,7 +53,7 @@ typedef char cp_char;
 typedef std::string cp_string;
 typedef std::pair<Value**, size_t> cp_array;
 typedef std::map<std::string, Value*> cp_struct;
-typedef std::pair<std::string, std::string> cp_function;
+typedef size_t cp_function;
 
 class SemanticVariable;
 class Variable;
@@ -79,6 +79,8 @@ public:
 		const std::vector<ASTExprNode*>& dim,
 		const std::string& type_name, const std::string& type_name_space);
 
+	TypeDefinition(Type type);
+
 	TypeDefinition();
 
 	static TypeDefinition get_basic(Type type);
@@ -87,7 +89,7 @@ public:
 	static TypeDefinition get_struct(const std::string& type_name,
 		const std::string& type_name_space);
 
-	static bool is_any_or_match_type(TypeDefinition* lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype,
+	static bool is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype,
 		dim_eval_func_t evaluate_access_vector, bool strict = false, bool strict_array = false);
 	static bool match_type(TypeDefinition ltype, TypeDefinition rtype, dim_eval_func_t evaluate_access_vector, bool strict = false, bool strict_array = false);
 	static bool match_type_bool(TypeDefinition ltype, TypeDefinition rtype);
@@ -160,15 +162,17 @@ public:
 
 class SemanticValue : public TypeDefinition, public CodePosition {
 public:
-	SemanticVariable* ref;
 	long long hash;
 	bool is_const;
 	bool is_sub;
+	std::shared_ptr<SemanticVariable> ref;
 
 	// complete constructor
 	SemanticValue(Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
 		const std::string& type_name, const std::string& type_name_space, long long hash,
 		bool is_const, unsigned int row, unsigned int col);
+
+	SemanticValue(Type type, long long hash, bool is_const, unsigned int row, unsigned int col);
 
 	SemanticValue(TypeDefinition type_definition, long long hash,
 		bool is_const, unsigned int row, unsigned int col);
@@ -181,17 +185,19 @@ public:
 
 	SemanticValue();
 
-	void copy_from(SemanticValue* value);
+	void copy_from(const SemanticValue& value);
 };
 
 class SemanticVariable : public TypeDefinition, public CodePosition {
 public:
 	std::string identifier;
-	SemanticValue* value;
+	std::shared_ptr<SemanticValue> value;
 	bool is_const;
 
 	SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
-		const std::string& type_name, const std::string& type_name_space, SemanticValue* value, bool is_const, unsigned int row, unsigned int col);
+		const std::string& type_name, const std::string& type_name_space, std::shared_ptr<SemanticValue> value, bool is_const, unsigned int row, unsigned int col);
+
+	SemanticVariable(const std::string& identifier, Type type, std::shared_ptr<SemanticValue> value, bool is_const, unsigned int row, unsigned int col);
 
 	SemanticVariable();
 

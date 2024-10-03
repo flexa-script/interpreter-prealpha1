@@ -1,112 +1,59 @@
+#include <utility>
 #include <iostream>
-#include <cmath>
 
 #include "compiler_scope.hpp"
-//#include "interpreter.hpp"
 #include "vendor/axeutils.hpp"
 
 using namespace visitor;
 using namespace parser;
 
-CompilerScope::CompilerScope(const std::string& name) : name(name) {}
+CompilerScope::CompilerScope() = default;
 
-CompilerScope::CompilerScope() : name("") { }
+CompilerScope::~CompilerScope() = default;
 
-std::string CompilerScope::get_name() {
-	return name;
-}
-
-void CompilerScope::set_name(const std::string& name) {
-	this->name = name;
-}
-
-bool CompilerScope::already_declared_variable(const std::string& identifier) {
-	return variable_symbol_table.find(identifier) != variable_symbol_table.end();
-}
-
-bool CompilerScope::already_declared_structure_definition(const std::string& identifier) {
-	return structure_symbol_table.find(identifier) != structure_symbol_table.end();
-}
-
-bool CompilerScope::already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
-	std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector_ptr, bool strict) {
-	try {
-		find_declared_function(identifier, signature, evaluate_access_vector_ptr, strict);
-		return true;
-	}
-	catch (...) {
-		return false;
-	}
-}
-
-bool CompilerScope::already_declared_function_name(const std::string& identifier) {
-	try {
-		find_declared_functions(identifier);
-		return true;
-	}
-	catch (...) {
-		return false;
-	}
-}
-
-void CompilerScope::declare_variable(const std::string& identifier) {
-	variable_symbol_table[identifier] = variable_symbol_table.size();
-}
-
-void CompilerScope::declare_structure_definition(const std::string& name, std::map<std::string, VariableDefinition> variables, unsigned int row, unsigned int col) {
-	StructureDefinition type(name, variables, row, col);
-	structure_symbol_table[name] = (type);
-}
-
-void CompilerScope::declare_function(const std::string& identifier, interpreter_parameter_list_t variables, parser::ASTBlockNode* block, TypeDefinition type) {
-	function_symbol_table.insert(std::make_pair(identifier, std::make_pair(std::make_tuple(variables, block, type), function_symbol_table.size())));
-}
-
-StructureDefinition CompilerScope::find_declared_structure_definition(const std::string& identifier) {
+std::pair<StructureDefinition, cp_int> CompilerScope::find_declared_structure_definition(const std::string& identifier) {
 	return structure_symbol_table[identifier];
 }
 
-Variable* CompilerScope::find_declared_variable(const std::string& identifier) {
-	auto var = variable_symbol_table[identifier];
-	var->value->reset_ref();
-	return var;
+std::pair<TypeDefinition, cp_int> CompilerScope::find_declared_variable(const std::string& identifier) {
+	return variable_symbol_table[identifier];
 }
 
-cp_int CompilerScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
-	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector_ptr, bool strict) {
+std::pair<FunctionDefinition, cp_int>& CompilerScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
+	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
 	if (std::distance(funcs.first, funcs.second) == 0) {
-		throw std::runtime_error("something went wrong searching '" + identifier + "'");
+		throw std::runtime_error("something went wrong when determining the type of '" + identifier + "'");
 	}
 
 	for (auto& it = funcs.first; it != funcs.second; ++it) {
-		if (!signature) {
-			return it->second.second;
+		if (it->second.first.is_var || !signature) {
+			return it->second;
 		}
 
-		auto& func_params = std::get<0>(it->second.first);
+		auto& func_sig = it->second.first.signature;
 		bool rest = false;
 		auto found = true;
 		TypeDefinition stype;
 		TypeDefinition ftype;
-		size_t func_sig_size = func_params.size();
+		size_t func_sig_size = func_sig.size();
 		size_t call_sig_size = signature->size();
 
 		// if signatures size match, handle normal cases
 		if (func_sig_size == call_sig_size) {
 			for (size_t i = 0; i < call_sig_size; ++i) {
-				ftype = std::get<1>(func_params.at(i));
+				ftype = func_sig.at(i);
 				stype = signature->at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr, strict)) {
+				if (!TypeDefinition::is_any_or_match_type(ftype, stype, evaluate_access_vector, strict || stype.use_ref)) {
 					found = false;
 					break;
 				}
 			}
 
 			if (found) {
-				return it->second.second;
+				return it->second;
 			}
 		}
 
@@ -115,30 +62,30 @@ cp_int CompilerScope::find_declared_function(const std::string& identifier, cons
 		if (func_sig_size >= 1 && func_sig_size < call_sig_size) {
 			for (size_t i = 0; i < call_sig_size; ++i) {
 				if (!rest) {
-					ftype = std::get<1>(func_params.at(i));
+					ftype = func_sig.at(i);
 
-					if (std::get<3>(std::get<0>(it->second.first)[i])) {
+					if (it->second.first.parameters[i].is_rest) {
 						rest = true;
 						if (is_array(ftype.type)) {
 							ftype = TypeDefinition(ftype.array_type, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), ftype.type_name, ftype.type_name_space);
 						}
 					}
 
-					if (!std::get<3>(std::get<0>(it->second.first)[i]) && i == func_params.size() - 1) {
+					if (!it->second.first.parameters[i].is_rest && i == func_sig.size() -1) {
 						found = false;
 						break;
 					}
 				}
 				stype = signature->at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr, strict)) {
+				if (!TypeDefinition::is_any_or_match_type(ftype, stype, evaluate_access_vector, strict || stype.use_ref)) {
 					found = false;
 					break;
 				}
 			}
 
 			if (found) {
-				return it->second.second;
+				return it->second;
 			}
 		}
 
@@ -147,16 +94,16 @@ cp_int CompilerScope::find_declared_function(const std::string& identifier, cons
 		if (func_sig_size > call_sig_size) {
 			for (size_t i = 0; i < func_sig_size; ++i) {
 				if (i < call_sig_size) {
-					ftype = std::get<1>(func_params.at(i));
+					ftype = func_sig.at(i);
 					stype = signature->at(i);
 
-					if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr, strict)) {
+					if (!TypeDefinition::is_any_or_match_type(ftype, stype, evaluate_access_vector, strict || stype.use_ref)) {
 						found = false;
 						break;
 					}
 				}
 				else {
-					if (!std::get<2>(std::get<0>(it->second.first)[i])) {
+					if (!it->second.first.parameters[i].default_value) {
 						found = false;
 						break;
 					}
@@ -165,19 +112,89 @@ cp_int CompilerScope::find_declared_function(const std::string& identifier, cons
 
 			// if found and exactly signature size (not rest)
 			if (found) {
-				return it->second.second;
+				return it->second;
 			}
 		}
 	}
 
-	throw std::runtime_error("something went wrong searching '" + identifier + "'");
+	throw std::runtime_error("definition of '" + identifier + "' function not found");
 }
 
-std::pair<interpreter_function_list_t::iterator, interpreter_function_list_t::iterator>
-CompilerScope::find_declared_functions(const std::string& identifier) {
-	auto funcs = function_symbol_table.equal_range(identifier);
-	if (std::distance(funcs.first, funcs.second) == 0) {
-		throw std::runtime_error("something went wrong searching '" + identifier + "'");
+bool CompilerScope::already_declared_structure_definition(const std::string& identifier) {
+	return structure_symbol_table.find(identifier) != structure_symbol_table.end();
+}
+
+bool CompilerScope::already_declared_variable(const std::string& identifier) {
+	return variable_symbol_table.find(identifier) != variable_symbol_table.end();
+}
+
+bool CompilerScope::already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
+	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict) {
+	try {
+		find_declared_function(identifier, signature, evaluate_access_vector, strict);
+		return true;
 	}
-	return funcs;
+	catch (...) {
+		return false;
+	}
+}
+
+cp_int CompilerScope::declare_structure_definition(const std::string& name, const std::map<std::string, VariableDefinition>& variables, unsigned int row, unsigned int col) {
+	StructureDefinition str_def(name, variables, row, col);
+	auto id = structure_symbol_table.size();
+	structure_symbol_table[name] = std::make_pair(str_def, id);
+	return id;
+}
+
+cp_int CompilerScope::declare_variable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
+	const std::string& type_name, const std::string& type_name_space, unsigned int row, unsigned int col) {
+	auto id = variable_symbol_table.size();
+	variable_symbol_table[identifier] = std::make_pair(TypeDefinition(type, array_type, dim, type_name, type_name_space), id);
+	return id;
+}
+
+cp_int CompilerScope::declare_variable(const std::string& identifier, TypeDefinition var) {
+	auto id = variable_symbol_table.size();
+	variable_symbol_table[identifier] = std::make_pair(var, id);
+	return id;
+}
+
+cp_int CompilerScope::declare_function(const std::string& identifier, Type type, const std::string& type_name, const std::string& type_name_space,
+	Type array_type, const std::vector<ASTExprNode*>& dim, const std::vector<TypeDefinition>& signature,
+	const std::vector<VariableDefinition>& parameters, ASTBlockNode* block, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, type, type_name, type_name_space, array_type, dim, signature, parameters, block, row, col);
+	auto id = function_symbol_table.size();
+	function_symbol_table.insert(std::make_pair(identifier, std::make_pair(fun, id)));
+	return id;
+}
+
+cp_int CompilerScope::declare_variable_function(const std::string& identifier, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, row, col);
+	auto id = function_symbol_table.size();
+	function_symbol_table.insert(std::make_pair(identifier, std::make_pair(fun, id)));
+	return id;
+}
+
+cp_int CompilerScope::declare_basic_function(const std::string& identifier, Type type, std::vector<TypeDefinition> signature,
+	std::vector<VariableDefinition> parameters, ASTBlockNode* block, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, type, "", "", Type::T_UNDEFINED, std::vector<ASTExprNode*>(), signature, parameters, block, row, col);
+	auto id = function_symbol_table.size();
+	function_symbol_table.insert(std::make_pair(identifier, std::make_pair(fun, id)));
+	return id;
+}
+
+cp_int CompilerScope::declare_array_function(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
+	const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters, ASTBlockNode* block, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, type, "", "", array_type, dim, signature, parameters, block, row, col);
+	auto id = function_symbol_table.size();
+	function_symbol_table.insert(std::make_pair(identifier, std::make_pair(fun, id)));
+	return id;
+}
+
+cp_int CompilerScope::declare_struct_function(const std::string& identifier, Type type, const std::string& type_name, const std::string& type_name_space,
+	const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters, ASTBlockNode* block, unsigned int row, unsigned int col) {
+	FunctionDefinition fun(identifier, type, type_name, type_name_space, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), signature, parameters, block, row, col);
+	auto id = function_symbol_table.size();
+	function_symbol_table.insert(std::make_pair(identifier, std::make_pair(fun, id)));
+	return id;
 }

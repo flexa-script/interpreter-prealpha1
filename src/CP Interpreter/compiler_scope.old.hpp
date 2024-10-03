@@ -1,0 +1,59 @@
+#ifndef INTERPRETER_SCOPE_HPP
+#define INTERPRETER_SCOPE_HPP
+
+#include <map>
+#include <stack>
+
+#include "visitor.hpp"
+#include "ast.hpp"
+
+using namespace visitor;
+using namespace parser;
+
+namespace visitor {
+	typedef std::map<std::string, StructureDefinition> interpreter_struct_list_t;
+	typedef std::map<std::string, size_t> interpreter_variable_list_t;
+	typedef std::tuple<std::string, TypeDefinition, ASTExprNode*, bool> interpreter_parameter_t;
+	typedef std::vector<interpreter_parameter_t> interpreter_parameter_list_t;
+	typedef std::pair<interpreter_function_t, cp_int> interpreter_function_t;
+	typedef std::multimap<std::string, interpreter_function_t> interpreter_function_list_t;
+
+	class Interpreter;
+
+	class CompilerScope {
+	public:
+		bool has_string_access = false;
+
+	private:
+		std::string name;
+		interpreter_struct_list_t structure_symbol_table;
+		interpreter_variable_list_t variable_symbol_table;
+		interpreter_function_list_t function_symbol_table;
+
+	public:
+		CompilerScope();
+		CompilerScope(const std::string& name);
+		~CompilerScope() = default;
+
+		bool already_declared_structure_definition(const std::string& identifier);
+		bool already_declared_variable(const std::string& identifier);
+		bool already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
+			std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict = true);
+		bool already_declared_function_name(const std::string& identifier);
+
+		cp_int declare_variable(const std::string& identifier);
+		void declare_function(const std::string& identifier, interpreter_parameter_list_t variables, ASTBlockNode* block, TypeDefinition type);
+		void declare_structure_definition(const std::string& identifier, std::map<std::string, VariableDefinition>, unsigned int, unsigned int);
+
+		StructureDefinition find_declared_structure_definition(const std::string& identifier);
+		cp_int find_declared_variable(const std::string& identifier);
+		cp_int find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
+			std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict = true);
+		std::pair<interpreter_function_list_t::iterator, interpreter_function_list_t::iterator> find_declared_functions(const std::string& identifier);
+
+		std::string get_name();
+		void set_name(const std::string& name);
+	};
+}
+
+#endif // !INTERPRETER_SCOPE_HPP

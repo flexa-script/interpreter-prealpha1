@@ -15,11 +15,11 @@ StructureDefinition SemanticScope::find_declared_structure_definition(const std:
 	return structure_symbol_table[identifier];
 }
 
-SemanticVariable* SemanticScope::find_declared_variable(const std::string& identifier) {
+std::shared_ptr<SemanticVariable> SemanticScope::find_declared_variable(const std::string& identifier) {
 	return variable_symbol_table[identifier];
 }
 
-FunctionDefinition* SemanticScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
+FunctionDefinition& SemanticScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
 	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
@@ -29,7 +29,7 @@ FunctionDefinition* SemanticScope::find_declared_function(const std::string& ide
 
 	for (auto& it = funcs.first; it != funcs.second; ++it) {
 		if (it->second.is_var || !signature) {
-			return &it->second;
+			return it->second;
 		}
 
 		auto& func_sig = it->second.signature;
@@ -46,14 +46,14 @@ FunctionDefinition* SemanticScope::find_declared_function(const std::string& ide
 				ftype = func_sig.at(i);
 				stype = signature->at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict || stype.use_ref)) {
+				if (!TypeDefinition::is_any_or_match_type(ftype, stype, evaluate_access_vector, strict || stype.use_ref)) {
 					found = false;
 					break;
 				}
 			}
 
 			if (found) {
-				return &it->second;
+				return it->second;
 			}
 		}
 
@@ -78,14 +78,14 @@ FunctionDefinition* SemanticScope::find_declared_function(const std::string& ide
 				}
 				stype = signature->at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict || stype.use_ref)) {
+				if (!TypeDefinition::is_any_or_match_type(ftype, stype, evaluate_access_vector, strict || stype.use_ref)) {
 					found = false;
 					break;
 				}
 			}
 
 			if (found) {
-				return &it->second;
+				return it->second;
 			}
 		}
 
@@ -97,7 +97,7 @@ FunctionDefinition* SemanticScope::find_declared_function(const std::string& ide
 					ftype = func_sig.at(i);
 					stype = signature->at(i);
 
-					if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector, strict || stype.use_ref)) {
+					if (!TypeDefinition::is_any_or_match_type(ftype, stype, evaluate_access_vector, strict || stype.use_ref)) {
 						found = false;
 						break;
 					}
@@ -112,7 +112,7 @@ FunctionDefinition* SemanticScope::find_declared_function(const std::string& ide
 
 			// if found and exactly signature size (not rest)
 			if (found) {
-				return &it->second;
+				return it->second;
 			}
 		}
 	}
@@ -145,13 +145,13 @@ void SemanticScope::declare_structure_definition(const std::string& name, const 
 }
 
 void SemanticScope::declare_variable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
-	const std::string& type_name, const std::string& type_name_space, SemanticValue* value, bool is_const, unsigned int row, unsigned int col) {
-	SemanticVariable* var = new SemanticVariable(identifier, type, array_type, dim,
+	const std::string& type_name, const std::string& type_name_space, std::shared_ptr<SemanticValue> value, bool is_const, unsigned int row, unsigned int col) {
+	std::shared_ptr<SemanticVariable> var = std::make_shared<SemanticVariable>(identifier, type, array_type, dim,
 		type_name, type_name_space, value, is_const, row, col);
 	variable_symbol_table[identifier] = var;
 }
 
-void SemanticScope::declare_variable(const std::string& identifier, SemanticVariable* var) {
+void SemanticScope::declare_variable(const std::string& identifier, std::shared_ptr<SemanticVariable> var) {
 	variable_symbol_table[identifier] = var;
 }
 
@@ -183,20 +183,4 @@ void SemanticScope::declare_struct_function(const std::string& identifier, Type 
 	const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters, ASTBlockNode* block, unsigned int row, unsigned int col) {
 	FunctionDefinition fun(identifier, type, type_name, type_name_space, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), signature, parameters, block, row, col);
 	function_symbol_table.insert(std::make_pair(identifier, fun));
-}
-
-void SemanticScope::change_variable_type_name(const std::string& identifier, const std::string& type_name) {
-	variable_symbol_table[identifier]->value->type_name = type_name;
-}
-
-void SemanticScope::change_variable_type(const std::string& identifier, Type type) {
-	variable_symbol_table[identifier]->value->type = type;
-}
-
-void SemanticScope::change_variable_value_type_name(const std::string& identifier, const std::string& type_name) {
-	variable_symbol_table[identifier]->value->type_name = type_name;
-}
-
-void SemanticScope::change_variable_value_type(const std::string& identifier, Type type) {
-	variable_symbol_table[identifier]->value->type = type;
 }

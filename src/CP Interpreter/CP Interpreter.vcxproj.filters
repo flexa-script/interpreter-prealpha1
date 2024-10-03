@@ -168,9 +168,6 @@
     <ClInclude Include="vmconstants.hpp">
       <Filter>Header Files\core\vm</Filter>
     </ClInclude>
-    <ClInclude Include="compiler.hpp">
-      <Filter>Header Files\core\visitor</Filter>
-    </ClInclude>
     <ClInclude Include="bytecode.hpp">
       <Filter>Header Files\core\vm</Filter>
     </ClInclude>
@@ -178,6 +175,9 @@
       <Filter>Header Files\core\vm</Filter>
     </ClInclude>
     <ClInclude Include="compiler_scope.hpp">
+      <Filter>Header Files\core\visitor</Filter>
+    </ClInclude>
+    <ClInclude Include="compiler.hpp">
       <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
   </ItemGroup>
@@ -275,14 +275,14 @@
     <ClCompile Include="vmconstants.cpp">
       <Filter>Source Files\core\vm</Filter>
     </ClCompile>
-    <ClCompile Include="compiler.cpp">
-      <Filter>Source Files\core\visitor</Filter>
-    </ClCompile>
     <ClCompile Include="bytecode.cpp">
       <Filter>Source Files\core\vm</Filter>
     </ClCompile>
     <ClCompile Include="variant.cpp">
       <Filter>Source Files\core\vm</Filter>
+    </ClCompile>
+    <ClCompile Include="compiler.cpp">
+      <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
     <ClCompile Include="compiler_scope.cpp">
       <Filter>Source Files\core\visitor</Filter>

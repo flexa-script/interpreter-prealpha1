@@ -8,6 +8,8 @@
 #include <xutility>
 #include <functional>
 
+#include "vmconstants.hpp"
+#include "bytecode.hpp"
 #include "ast.hpp"
 #include "semantic_scope.hpp"
 
@@ -19,7 +21,7 @@ namespace visitor {
 	class SemanticAnalyser : Visitor {
 	public:
 		std::map<std::string, void*> builtin_functions;
-		std::map<std::string, std::vector<SemanticScope*>> scopes;
+		std::map<std::string, std::vector<std::shared_ptr<SemanticScope>>> scopes;
 
 	private:
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&SemanticAnalyser::evaluate_access_vector, this, std::placeholders::_1);
@@ -27,7 +29,7 @@ namespace visitor {
 		std::vector<std::string> parsed_libs;
 		std::string current_namespace;
 		SemanticValue current_expression;
-		std::stack<FunctionDefinition*> current_function;
+		std::stack<FunctionDefinition&> current_function;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		bool exception = false;
 		bool is_switch = false;
@@ -45,12 +47,12 @@ namespace visitor {
 
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector);
 
-		SemanticScope* get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
-		SemanticScope* get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-		SemanticScope* get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
+		std::shared_ptr<SemanticScope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<SemanticScope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<SemanticScope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
 
 		TypeDefinition do_operation(const std::string& op, TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, bool is_expr = true);
-		SemanticValue* access_value(SemanticValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
+		std::shared_ptr<SemanticValue> access_value(std::shared_ptr<SemanticValue> value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
 
 		bool namespace_exists(const std::string& nmspace);
 		const std::string& get_namespace(const std::string& nmspace = "") const override;
@@ -62,7 +64,7 @@ namespace visitor {
 		std::string msg_header() override;
 
 	public:
-		SemanticAnalyser(SemanticScope* global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs);
+		SemanticAnalyser(std::shared_ptr<SemanticScope> global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs);
 		~SemanticAnalyser() = default;
 
 		void start();
