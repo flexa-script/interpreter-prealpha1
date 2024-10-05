@@ -11,6 +11,15 @@
 #define byteopnd_t byteopnd8(true)
 #define byteopnd_f byteopnd8(false)
 
+uint8_t* byteopnd_s(std::string str) {
+	const char* cs = reinterpret_cast<const char*>(str.size());
+	const char* cstr = str.c_str();
+	char* concat{ new char[strlen(cs) + strlen(cstr) + 1] };
+	strcpy(concat, cs);
+	strcat(concat, cstr);
+	return byteopnd(concat);
+}
+
 struct BytecodeInstruction {
 	OpCode opcode;
 	uint8_t* operand;

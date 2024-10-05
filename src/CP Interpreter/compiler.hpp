@@ -32,7 +32,7 @@ namespace visitor {
 		std::string current_namespace;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		std::stack<std::pair<FunctionDefinition, size_t>&> current_function;
-		TypeDefinition current_expression;
+		//TypeDefinition current_expression;
 
 	private:
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector);
