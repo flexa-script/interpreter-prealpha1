@@ -8,6 +8,7 @@
 enum OpCode : int16_t {
 	OP_RES,
 	// value ops
+	OP_POP,
 	OP_PUSH_UNDEFINED,
 	OP_PUSH_VOID,
 	OP_PUSH_BOOL,
@@ -21,7 +22,6 @@ enum OpCode : int16_t {
 	OP_CREATE_STRUCT,
 	OP_SET_FIELD,
 	// variable ops
-	OP_SET_VAR_IDENTIFIER,
 	OP_SET_VAR_TYPE,
 	OP_SET_VAR_ARRAY_DIM,
 	OP_SET_VAR_ARRAY_SIZE,
@@ -29,10 +29,23 @@ enum OpCode : int16_t {
 	OP_LOAD_VAR,
 	OP_STORE_VAR,
 	// function ops
+	OP_FUN_START,
+	OP_FUN_PARAM_END,
+	OP_FUN_END,
 	OP_CALL,
 	OP_RETURN,
-	OP_FUN_START,
-	OP_FUN_END,
+	// coditional
+	OP_SWITCH,
+	OP_CASE_LABEL,
+	OP_CONTINUE,
+	OP_BREAK,
+	OP_TRY_START,
+	OP_TRY_END,
+	OP_THROW,
+	OP_JUMP,
+	OP_JUMP_IF_FALSE,
+	OP_JUMP_IF_FALSE_OR_NEXT,
+	OP_JUMP_IF_TRUE,
 	// expression ops
 	OP_OR,
 	OP_AND,
@@ -57,14 +70,6 @@ enum OpCode : int16_t {
 	OP_NOT,
 	OP_BIT_NOT,
 	OP_EXP,
-	OP_JUMP,
-	OP_JUMP_IF_FALSE,
-	OP_JUMP_IF_TRUE,
-	OP_CONTINUE,
-	OP_BREAK,
-	OP_TRY_START,
-	OP_TRY_END,
-	OP_THROW,
 	OP_TRAP,
 	OP_HALT
 };

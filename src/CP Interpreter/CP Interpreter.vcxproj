@@ -55,7 +55,6 @@
     <ClInclude Include="builtin.hpp" />
     <ClInclude Include="bytecode.hpp" />
     <ClInclude Include="compiler.hpp" />
-    <ClInclude Include="compiler_scope.hpp" />
     <ClInclude Include="console.hpp" />
     <ClInclude Include="datetime.hpp" />
     <ClInclude Include="exception_handler.hpp" />
@@ -92,7 +91,6 @@
     <ClCompile Include="builtin.cpp" />
     <ClCompile Include="bytecode.cpp" />
     <ClCompile Include="compiler.cpp" />
-    <ClCompile Include="compiler_scope.cpp" />
     <ClCompile Include="console.cpp" />
     <ClCompile Include="datetime.cpp" />
     <ClCompile Include="exception_handler.cpp" />
