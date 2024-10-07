@@ -365,200 +365,182 @@ void Compiler::visit(ASTStructConstructorNode* astnode) {
 }
 
 void Compiler::visit(ASTIdentifierNode* astnode) {
-	// subvalues??
+	// TODO: handle subvalues
 	add_instruction(OpCode::OP_LOAD_VAR, byteopnd_s(astnode->identifier));
 }
 
 void Compiler::visit(ASTBinaryExprNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
 	astnode->left->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	auto lexpr = current_expression;
-
 	astnode->right->accept(this);
 
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
+	auto op = OpCode::OP_RES;
+
+	if (astnode->op == "or") {
+		op = OpCode::OP_OR;
+	}
+	else if (astnode->op == "and") {
+		op = OpCode::OP_AND;
+	}
+	else if (astnode->op == "|") {
+		op = OpCode::OP_BIT_OR;
+	}
+	else if (astnode->op == "^") {
+		op = OpCode::OP_BIT_XOR;
+	}
+	else if (astnode->op == "&") {
+		op = OpCode::OP_BIT_AND;
+	}
+	else if (astnode->op == "==") {
+		op = OpCode::OP_EQL;
+	}
+	else if (astnode->op == "!=") {
+		op = OpCode::OP_DIF;
+	}
+	else if (astnode->op == "<") {
+		op = OpCode::OP_LT;
+	}
+	else if (astnode->op == "<=") {
+		op = OpCode::OP_LTE;
+	}
+	else if (astnode->op == ">") {
+		op = OpCode::OP_GT;
+	}
+	else if (astnode->op == ">=") {
+		op = OpCode::OP_GTE;
+	}
+	else if (astnode->op == "<=>") {
+		op = OpCode::OP_SPACE_SHIP;
+	}
+	else if (astnode->op == "<<") {
+		op = OpCode::OP_LEFT_SHIFT;
+	}
+	else if (astnode->op == ">>") {
+		op = OpCode::OP_RIGHT_SHIFT;
+	}
+	else if (astnode->op == "+") {
+		op = OpCode::OP_ADD;
+	}
+	else if (astnode->op == "-") {
+		op = OpCode::OP_SUB;
+	}
+	else if (astnode->op == "*") {
+		op = OpCode::OP_MUL;
+	}
+	else if (astnode->op == "/") {
+		op = OpCode::OP_DIV;
+	}
+	else if (astnode->op == "%") {
+		op = OpCode::OP_REMAINDER;
+	}
+	else if (astnode->op == "/%") {
+		op = OpCode::OP_FLOOR_DIV;
+	}
+	else if (astnode->op == "**") {
+		op = OpCode::OP_EXP;
 	}
 
-	auto rexpr = current_expression;
-
-	current_expression = SemanticValue(do_operation(astnode->op, lexpr, lexpr, nullptr, rexpr, true), 0, false, 0, 0);
-	current_expression.is_const = lexpr.is_const && rexpr.is_const;
+	add_instruction(op, byteopnd_n);
 }
 
 void Compiler::visit(ASTUnaryExprNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
+	auto op = OpCode::OP_RES;
+
+	if (astnode->unary_op == "ref") {
+		op = OpCode::OP_REF;
+	}
+	else if (astnode->unary_op == "unref") {
+		op = OpCode::OP_UNREF;
+	}
+	else if (astnode->unary_op == "-") {
+		add_instruction(OpCode::OP_PUSH_INT, byteopnd8(0));
+		op = OpCode::OP_SUB;
+	}
+	else if (astnode->unary_op == "++") {
+		add_instruction(OpCode::OP_PUSH_INT, byteopnd8(1));
+		op = OpCode::OP_ADD;
+	}
+	else if (astnode->unary_op == "--") {
+		add_instruction(OpCode::OP_PUSH_INT, byteopnd8(1));
+		op = OpCode::OP_SUB;
+	}
+	else if (astnode->unary_op == "not") {
+		op = OpCode::OP_NOT;
+	}
+	else if (astnode->unary_op == "~") {
+		op = OpCode::OP_BIT_NOT;
+	}
 
 	astnode->expr->accept(this);
 
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
-		if (astnode->unary_op == "ref") {
-			current_expression.use_ref = true;
-		}
-		if (astnode->unary_op == "unref") {
-			current_expression.use_ref = false;
-		}
-	}
-	else {
-		switch (current_expression.type) {
-		case Type::T_INT:
-			if (astnode->unary_op != "+" && astnode->unary_op != "-"
-				&& astnode->unary_op != "--" && astnode->unary_op != "++"
-				&& astnode->unary_op != "~") {
-				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of int expression");
-			}
-			break;
-		case Type::T_FLOAT:
-			if (astnode->unary_op != "+" && astnode->unary_op != "-"
-				&& astnode->unary_op != "--" && astnode->unary_op != "++") {
-				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of float expression");
-			}
-			break;
-		case Type::T_BOOL:
-			if (astnode->unary_op != "not") {
-				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of boolean expression");
-			}
-			break;
-		case Type::T_ANY:
-			if (astnode->unary_op != "not" && astnode->unary_op != "~"
-				&& astnode->unary_op != "+" && astnode->unary_op != "-"
-				&& astnode->unary_op != "--" && astnode->unary_op != "++") {
-				throw std::runtime_error("operator '" + astnode->unary_op + "' in front of boolean expression");
-			}
-			break;
-		default:
-			throw std::runtime_error("incompatible unary operator '" + astnode->unary_op +
-				"' in front of " + type_str(current_expression.type) + " expression");
-		}
-	}
+	add_instruction(op, byteopnd_n);
 }
 
 void Compiler::visit(ASTTernaryNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
 	astnode->condition->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
 	astnode->value_if_true->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
 	astnode->value_if_false->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
+	add_instruction(OpCode::OP_TERNARY, byteopnd_n);
 }
 
 void Compiler::visit(ASTInNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
+	// TODO: binary expression?
 	astnode->value->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	auto valtype = current_expression.type;
-
 	astnode->collection->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	auto coltype = current_expression.type;
-	auto colarrtype = current_expression.type;
-
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_BOOL;
-
-	if (is_any(valtype)
-		&& (is_any(coltype)
-			|| is_array(coltype)
-			&& is_any(colarrtype))) {
-		return;
-	}
-
-	if (!match_type(valtype, colarrtype)
-		&& !is_any(valtype) && !is_any(coltype) && !is_any(colarrtype)
-		&& is_string(valtype) && !is_string(coltype)
-		&& is_char(valtype) && !is_string(coltype)) {
-		throw std::runtime_error("types don't match '" + type_str(valtype) + "' and '" + type_str(coltype) + "'");
-	}
-
-	if (!is_collection(coltype) && !is_any(coltype)) {
-		throw std::runtime_error("invalid type '" + type_str(coltype) + "', value must be a array or string");
-	}
-
+	add_instruction(OpCode::OP_IN, byteopnd_n);
 }
 
 void Compiler::visit(ASTTypeParseNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
 	astnode->expr->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
+	if (is_bool(astnode->type)) {
+		add_instruction(OpCode::OP_PUSH_BOOL, byteopnd8(false));
 	}
-
-	if ((is_array(current_expression.type) || is_struct(current_expression.type))
-		&& !is_string(astnode->type)) {
-		throw std::runtime_error("invalid type conversion from "
-			+ type_str(current_expression.type) + " to " + type_str(astnode->type));
+	else if (is_int(astnode->type)) {
+		add_instruction(OpCode::OP_PUSH_INT, byteopnd8(0));
 	}
-
-	current_expression = SemanticValue();
-	current_expression.type = astnode->type;
+	else if (is_float(astnode->type)) {
+		add_instruction(OpCode::OP_PUSH_FLOAT, byteopnd8(0));
+	}
+	else if (is_char(astnode->type)) {
+		add_instruction(OpCode::OP_PUSH_CHAR, byteopnd8('\0'));
+	}
+	else if (is_string(astnode->type)) {
+		add_instruction(OpCode::OP_PUSH_STRING, byteopnd_s(""));
+	}
+	add_instruction(OpCode::OP_TYPE_PARSE, byteopnd8(astnode->type));
 }
 
 void Compiler::visit(ASTNullNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_VOID;
+	add_instruction(OpCode::OP_PUSH_VOID, byteopnd_n);
 }
 
 void Compiler::visit(ASTThisNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
-	current_expression = SemanticValue();
-	current_expression.type = Type::T_STRING;
+	add_instruction(OpCode::OP_PUSH_STRING, byteopnd_s(get_namespace()));
 }
 
 void Compiler::visit(ASTTypingNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
 	astnode->expr->accept(this);
 
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
+	if (astnode->image == "typeid") {
+		add_instruction(OpCode::OP_TYPEID, byteopnd_n);
 	}
-
-	current_expression = SemanticValue();
-	if (astnode->image == "typeid" || astnode->image == "refid") {
-		current_expression.type = Type::T_INT;
-	}
+	else if (astnode->image == "refid") {
+		add_instruction(OpCode::OP_REFID, byteopnd_n);
+		}
 	else if (astnode->image == "typeof") {
-		current_expression.type = Type::T_STRING;
+		add_instruction(OpCode::OP_TYPEOF, byteopnd_n);
 	}
 	else {
-		current_expression.type = Type::T_BOOL;
+		auto type = Type::T_UNDEFINED;
+		if (astnode->image == "is_any") {
+			type = Type::T_ANY;
+		}
+		else if (astnode->image == "is_array") {
+			type = Type::T_ARRAY;
+		}
+		else if (astnode->image == "is_struct") {
+			type = Type::T_STRUCT;
+		}
+		add_instruction(OpCode::OP_IS_TYPE, byteopnd8(type));
 	}
 }
 
