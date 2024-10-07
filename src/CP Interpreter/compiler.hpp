@@ -23,15 +23,17 @@ namespace visitor {
 
 	private:
 		std::vector<BytecodeInstruction> bytecode_program;
-		std::stack<size_t> deviation_stack;
 		size_t pointer = 0;
 		std::vector<std::string> parsed_libs;
+		std::stack<std::string> current_namespace;
 
 	private:
 		void add_instruction(OpCode opcode, uint8_t* operand);
 		void replace_last_operand(uint8_t* operand);
+		void type_definition_operations(TypeDefinition type);
 
-		bool namespace_exists(const std::string& nmspace);
+		bool push_namespace(const std::string nmspace);
+		void pop_namespace(bool pop);
 		const std::string& get_namespace(const std::string& nmspace = "") const override;
 		const std::string& get_namespace(const ASTProgramNode* program, const std::string& nmspace = "") const override;
 

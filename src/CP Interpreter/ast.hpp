@@ -311,7 +311,7 @@ namespace parser {
 		virtual long long hash(Visitor*) override;
 	};
 
-	class ASTFunctionExpression : public ASTExprNode, public TypeDefinition {
+	class ASTFunctionExpression : public ASTExprNode {
 	public:
 		ASTFunctionDefinitionNode* fun;
 
