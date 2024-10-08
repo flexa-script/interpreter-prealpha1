@@ -33,6 +33,9 @@ enum OpCode : int16_t {
 	OP_SET_VAR_USE_REF,
 	OP_LOAD_VAR,
 	OP_STORE_VAR,
+	OP_LOAD_SUB_ID,
+	OP_LOAD_SUB_IX,
+	OP_STORE_SUB,
 	// function ops
 	OP_FUN_START,
 	OP_FUN_PARAM_END,

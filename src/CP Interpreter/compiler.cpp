@@ -68,7 +68,6 @@ void Compiler::visit(ASTEnumNode* astnode) {
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		add_instruction(OpCode::OP_PUSH_INT, byteopnd8(i));
 		add_instruction(OpCode::OP_SET_TYPE, byteopnd8(Type::T_INT));
-		add_instruction(OpCode::OP_SET_NAME_SPACE, byteopnd_s(get_namespace()));
 		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(astnode->identifiers[i]));
 	}
 }
@@ -79,9 +78,9 @@ void Compiler::visit(ASTDeclarationNode* astnode) {
 	type_definition_operations(*astnode);
 
 	if (astnode->expr) {
+		// TODO: parse {1} array build
+		// maybe call "astnode->expr->accept(this);" for each dimension...
 		astnode->expr->accept(this);
-
-		// todo parse {1} array build
 	}
 	else {
 		add_instruction(OpCode::OP_PUSH_UNDEFINED, byteopnd_n);
@@ -102,7 +101,16 @@ void Compiler::visit(ASTAssignmentNode* astnode) {
 	auto pop = push_namespace(astnode->nmspace);
 
 	astnode->expr->accept(this);
-	add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(astnode->identifier));
+
+	if (has_sub_value(astnode->identifier_vector)) {
+		access_sub_value_operations(astnode->identifier_vector);
+		add_instruction(OpCode::OP_STORE_SUB, byteopnd_n);
+	}
+	else {
+		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(astnode->identifier));
+	}
+
+	//store_sub_value_operations(astnode->identifier_vector);
 
 	pop_namespace(pop);
 }
@@ -126,6 +134,8 @@ void Compiler::visit(ASTFunctionCallNode* astnode) {
 	}
 
 	add_instruction(OpCode::OP_CALL, byteopnd_s(astnode->identifier));
+
+	access_sub_value_operations(astnode->identifier_vector);
 
 	pop_namespace(pop);
 }
@@ -342,7 +352,7 @@ void Compiler::visit(ASTLiteralNode<cp_char>* astnode) {
 }
 
 void Compiler::visit(ASTLiteralNode<cp_string>* astnode) {
-	add_instruction(OpCode::OP_PUSH_CHAR, byteopnd_s(astnode->val));
+	add_instruction(OpCode::OP_PUSH_STRING, byteopnd_s(astnode->val));
 }
 
 void Compiler::visit(ASTArrayConstructorNode* astnode) {
@@ -367,8 +377,12 @@ void Compiler::visit(ASTStructConstructorNode* astnode) {
 }
 
 void Compiler::visit(ASTIdentifierNode* astnode) {
-	// TODO: handle subvalues
-	add_instruction(OpCode::OP_LOAD_VAR, byteopnd_s(astnode->identifier));
+	if (has_sub_value(astnode->identifier_vector)) {
+		access_sub_value_operations(astnode->identifier_vector);
+	}
+	else {
+		add_instruction(OpCode::OP_LOAD_VAR, byteopnd_s(astnode->identifier));
+	}
 }
 
 void Compiler::visit(ASTBinaryExprNode* astnode) {
@@ -546,22 +560,18 @@ void Compiler::visit(ASTTypingNode* astnode) {
 	}
 }
 
-void Compiler::build_access_path(std::vector<Identifier> identifier_vector) {
-	std::string path;
-	for (auto id : identifier_vector) {
-		path += id.identifier;
-		if (id.access_vector.size() > 0) {
-			add_instruction(OpCode::OP_PUSH_STRING, byteopnd_s(get_namespace()));
-		}
-	}
+bool Compiler::has_sub_value(std::vector<Identifier> identifier_vector) {
+	return identifier_vector.size() > 1 || identifier_vector[0].access_vector.size() > 0;
 }
 
 void Compiler::type_definition_operations(TypeDefinition type) {
-	add_instruction(OpCode::OP_SET_NAME_SPACE, byteopnd_s(get_namespace()));
 
 	add_instruction(OpCode::OP_SET_TYPE, byteopnd8(type.type));
 
 	if (!type.type_name.empty()) {
+		if (!type.type_name_space.empty()) {
+			add_instruction(OpCode::OP_SET_NAME_SPACE, byteopnd_s(type.type_name_space));
+		}
 		add_instruction(OpCode::OP_SET_TYPE_NAME, byteopnd_s(type.type_name));
 	}
 
@@ -572,6 +582,49 @@ void Compiler::type_definition_operations(TypeDefinition type) {
 		for (auto& s : type.dim) {
 			s->accept(this);
 			add_instruction(OpCode::OP_SET_ARRAY_SIZE, byteopnd_n);
+		}
+	}
+}
+
+//void Compiler::store_sub_value_operations(std::vector<Identifier> identifier_vector) {
+//	if (has_sub_value(identifier_vector)) {
+//		add_instruction(OpCode::OP_LOAD_VAR, byteopnd_s(identifier_vector[0].identifier));
+//
+//		for (size_t i = 0; i < identifier_vector.size(); ++i) {
+//			const auto& id = identifier_vector[i];
+//
+//			if (i > 0) {
+//				add_instruction(OpCode::OP_LOAD_SUB_ID, byteopnd_s(id.identifier));
+//			}
+//
+//			for (auto av : id.access_vector) {
+//				av->accept(this);
+//				add_instruction(OpCode::OP_LOAD_SUB_IX, byteopnd_n);
+//			}
+//		}
+//
+//		add_instruction(OpCode::OP_STORE_SUB, byteopnd_n);
+//	}
+//	else {
+//		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(identifier_vector[0].identifier));
+//	}
+//}
+
+void Compiler::access_sub_value_operations(std::vector<Identifier> identifier_vector) {
+	if (has_sub_value(identifier_vector)) {
+		add_instruction(OpCode::OP_LOAD_VAR, byteopnd_s(identifier_vector[0].identifier));
+
+		for (size_t i = 0; i < identifier_vector.size(); ++i) {
+			const auto& id = identifier_vector[i];
+
+			if (i > 0) {
+				add_instruction(OpCode::OP_LOAD_SUB_ID, byteopnd_s(id.identifier));
+			}
+
+			for (auto av : id.access_vector) {
+				av->accept(this);
+				add_instruction(OpCode::OP_LOAD_SUB_IX, byteopnd_n);
+			}
 		}
 	}
 }
@@ -617,6 +670,10 @@ long long Compiler::hash(ASTLiteralNode<cp_char>* astnode) { return 0; }
 long long Compiler::hash(ASTLiteralNode<cp_string>* astnode) { return 0; }
 
 long long Compiler::hash(ASTIdentifierNode* astnode) { return 0; }
+
+std::string Compiler::build_namespace(const std::string& identifier) const {
+	return current_namespace.top() + ":" + identifier;
+}
 
 const std::string& Compiler::get_namespace(const std::string& nmspace) const {
 	return current_namespace.top();
