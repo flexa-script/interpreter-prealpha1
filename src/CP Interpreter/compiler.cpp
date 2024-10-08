@@ -34,6 +34,7 @@ void Compiler::visit(ASTProgramNode* astnode) {
 			throw std::runtime_error(ex.what());
 		}
 	}
+	add_instruction(OpCode::OP_HALT, byteopnd_n);
 	pop_namespace(pop);
 }
 
@@ -67,6 +68,7 @@ void Compiler::visit(ASTEnumNode* astnode) {
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		add_instruction(OpCode::OP_PUSH_INT, byteopnd8(i));
 		add_instruction(OpCode::OP_SET_TYPE, byteopnd8(Type::T_INT));
+		add_instruction(OpCode::OP_SET_NAME_SPACE, byteopnd_s(get_namespace()));
 		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(astnode->identifiers[i]));
 	}
 }
@@ -110,7 +112,7 @@ void Compiler::visit(ASTReturnNode* astnode) {
 		astnode->expr->accept(this);
 	}
 	else {
-		//add_instruction(OpCode::OP_PUSH_UNDEFINED, byteopnd_n);
+		add_instruction(OpCode::OP_PUSH_UNDEFINED, byteopnd_n);
 	}
 
 	add_instruction(OpCode::OP_RETURN, byteopnd_n);
@@ -541,6 +543,16 @@ void Compiler::visit(ASTTypingNode* astnode) {
 			type = Type::T_STRUCT;
 		}
 		add_instruction(OpCode::OP_IS_TYPE, byteopnd8(type));
+	}
+}
+
+void Compiler::build_access_path(std::vector<Identifier> identifier_vector) {
+	std::string path;
+	for (auto id : identifier_vector) {
+		path += id.identifier;
+		if (id.access_vector.size() > 0) {
+			add_instruction(OpCode::OP_PUSH_STRING, byteopnd_s(get_namespace()));
+		}
 	}
 }
 

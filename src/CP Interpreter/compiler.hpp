@@ -32,6 +32,8 @@ namespace visitor {
 		void replace_last_operand(uint8_t* operand);
 		void type_definition_operations(TypeDefinition type);
 
+		void build_access_path(std::vector<Identifier> identifier_vector);
+
 		bool push_namespace(const std::string nmspace);
 		void pop_namespace(bool pop);
 		const std::string& get_namespace(const std::string& nmspace = "") const override;

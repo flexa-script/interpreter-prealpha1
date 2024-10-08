@@ -52,8 +52,8 @@ typedef long double cp_float;
 typedef char cp_char;
 typedef std::string cp_string;
 typedef std::pair<Value**, size_t> cp_array;
-typedef std::map<std::string, Value*> cp_struct;
-typedef size_t cp_function;
+typedef std::unordered_map<std::string, Value*> cp_struct;
+typedef std::pair<std::string, std::string> cp_function;
 
 class SemanticVariable;
 class Variable;
