@@ -15,7 +15,7 @@ using namespace parser;
 using namespace lexer;
 
 Compiler::Compiler(ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
-	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
+	: Visitor(programs, main_program, default_namespace) {
 	auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
 	//builtin->register_functions(this);
 };
@@ -25,7 +25,7 @@ void Compiler::start() {
 }
 
 void Compiler::visit(ASTProgramNode* astnode) {
-	auto pop = push_namespace(astnode->alias.empty() ? default_namespace : astnode->alias);
+	auto pop = push_namespace(default_namespace);
 	for (const auto& statement : astnode->statements) {
 		try {
 			statement->accept(this);
@@ -123,8 +123,6 @@ void Compiler::visit(ASTAssignmentNode* astnode) {
 		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(astnode->identifier));
 	}
 
-	//store_sub_value_operations(astnode->identifier_vector);
-
 	pop_namespace(pop);
 }
 
@@ -145,6 +143,8 @@ void Compiler::visit(ASTFunctionCallNode* astnode) {
 	for (const auto& param : astnode->parameters) {
 		param->accept(this);
 	}
+
+	nmspace_array_operations();
 
 	add_instruction(OpCode::OP_CALL, byteopnd_s(astnode->identifier));
 
@@ -280,10 +280,12 @@ void Compiler::visit(ASTForEachNode* astnode) {
 
 	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
 		for (auto decl : idnode->declarations) {
+			nmspace_array_operations();
 			add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(decl->identifier));
 		}
 	}
 	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl)) {
+		nmspace_array_operations();
 		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(idnode->identifier));
 	}
 
@@ -636,6 +638,7 @@ void Compiler::type_definition_operations(TypeDefinition type) {
 
 void Compiler::access_sub_value_operations(std::vector<Identifier> identifier_vector) {
 	if (has_sub_value(identifier_vector)) {
+		nmspace_array_operations();
 		add_instruction(OpCode::OP_LOAD_VAR, byteopnd_s(identifier_vector[0].identifier));
 
 		for (size_t i = 0; i < identifier_vector.size(); ++i) {
