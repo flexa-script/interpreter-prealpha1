@@ -33,7 +33,6 @@ namespace visitor {
 		void replace_last_operand(uint8_t* operand);
 
 		void type_definition_operations(TypeDefinition type);
-		//void store_sub_value_operations(std::vector<Identifier> identifier_vector);
 		void access_sub_value_operations(std::vector<Identifier> identifier_vector);
 		void nmspace_array_operations();
 

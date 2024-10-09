@@ -81,7 +81,7 @@ void Compiler::visit(ASTEnumNode* astnode) {
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		add_instruction(OpCode::OP_PUSH_INT, byteopnd8(i));
 		add_instruction(OpCode::OP_SET_TYPE, byteopnd8(Type::T_INT));
-		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(astnode->identifiers[i]));
+		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(build_namespace(astnode->identifiers[i])));
 	}
 }
 
@@ -99,7 +99,7 @@ void Compiler::visit(ASTDeclarationNode* astnode) {
 		add_instruction(OpCode::OP_PUSH_UNDEFINED, byteopnd_n);
 	}
 
-	add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(astnode->identifier));
+	add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(build_namespace(astnode->identifier)));
 
 	pop_namespace(pop);
 }
@@ -117,11 +117,11 @@ void Compiler::visit(ASTAssignmentNode* astnode) {
 
 	if (has_sub_value(astnode->identifier_vector)) {
 		access_sub_value_operations(astnode->identifier_vector);
-		add_instruction(OpCode::OP_STORE_SUB, byteopnd_n);
+		add_instruction(OpCode::OP_ASSIGN_SUB, byteopnd_n);
 	}
 	else {
-		// TODO: create assign var
-		//add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(astnode->identifier));
+		nmspace_array_operations();
+		add_instruction(OpCode::OP_ASSIGN_VAR, byteopnd_s(build_namespace(astnode->identifier)));
 	}
 
 	pop_namespace(pop);
@@ -158,7 +158,7 @@ void Compiler::visit(ASTFunctionDefinitionNode* astnode) {
 	auto pop = push_namespace(astnode->type_name_space);
 
 	if (astnode->block) {
-		add_instruction(OpCode::OP_FUN_START, byteopnd_s(astnode->identifier));
+		add_instruction(OpCode::OP_FUN_START, byteopnd_s(build_namespace(astnode->identifier)));
 
 		type_definition_operations(*astnode);
 
@@ -282,12 +282,12 @@ void Compiler::visit(ASTForEachNode* astnode) {
 	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
 		for (auto decl : idnode->declarations) {
 			nmspace_array_operations();
-			add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(decl->identifier));
+			add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(build_namespace(decl->identifier)));
 		}
 	}
 	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl)) {
 		nmspace_array_operations();
-		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(idnode->identifier));
+		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(build_namespace(idnode->identifier)));
 	}
 
 	astnode->block->accept(this);
@@ -613,30 +613,6 @@ void Compiler::type_definition_operations(TypeDefinition type) {
 		}
 	}
 }
-
-//void Compiler::store_sub_value_operations(std::vector<Identifier> identifier_vector) {
-//	if (has_sub_value(identifier_vector)) {
-//		add_instruction(OpCode::OP_LOAD_VAR, byteopnd_s(identifier_vector[0].identifier));
-//
-//		for (size_t i = 0; i < identifier_vector.size(); ++i) {
-//			const auto& id = identifier_vector[i];
-//
-//			if (i > 0) {
-//				add_instruction(OpCode::OP_LOAD_SUB_ID, byteopnd_s(id.identifier));
-//			}
-//
-//			for (auto av : id.access_vector) {
-//				av->accept(this);
-//				add_instruction(OpCode::OP_LOAD_SUB_IX, byteopnd_n);
-//			}
-//		}
-//
-//		add_instruction(OpCode::OP_STORE_SUB, byteopnd_n);
-//	}
-//	else {
-//		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(identifier_vector[0].identifier));
-//	}
-//}
 
 void Compiler::access_sub_value_operations(std::vector<Identifier> identifier_vector) {
 	if (has_sub_value(identifier_vector)) {
