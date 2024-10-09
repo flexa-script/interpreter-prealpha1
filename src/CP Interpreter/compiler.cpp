@@ -120,7 +120,8 @@ void Compiler::visit(ASTAssignmentNode* astnode) {
 		add_instruction(OpCode::OP_STORE_SUB, byteopnd_n);
 	}
 	else {
-		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(astnode->identifier));
+		// TODO: create assign var
+		//add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(astnode->identifier));
 	}
 
 	pop_namespace(pop);
@@ -396,6 +397,7 @@ void Compiler::visit(ASTIdentifierNode* astnode) {
 		access_sub_value_operations(astnode->identifier_vector);
 	}
 	else {
+		nmspace_array_operations();
 		add_instruction(OpCode::OP_LOAD_VAR, byteopnd_s(astnode->identifier));
 	}
 }

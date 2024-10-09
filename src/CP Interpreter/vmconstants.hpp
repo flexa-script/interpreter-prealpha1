@@ -21,8 +21,6 @@ enum OpCode : int16_t {
 	OP_SET_ELEMENT,
 	OP_CREATE_STRUCT,
 	OP_SET_FIELD,
-	//OP_ITERATOR_START,
-	//OP_ITERATOR_ADD,
 	// type operators
 	OP_SET_TYPE,
 	OP_SET_TYPE_NAME,
@@ -43,8 +41,6 @@ enum OpCode : int16_t {
 	OP_CALL,
 	OP_RETURN,
 	// coditional
-	//OP_SWITCH,
-	//OP_CASE_LABEL,
 	OP_CONTINUE,
 	OP_BREAK,
 	OP_TRY_START,
