@@ -100,7 +100,7 @@ void SemanticAnalyser::visit(ASTNamespaceManagerNode* astnode) {
 		throw std::runtime_error("namespace '" + astnode->nmspace + "' is not valid ");
 	}
 
-	if (astnode->image == "as") {
+	if (astnode->image == "include") {
 		program_nmspaces[nmspace].push_back(astnode->nmspace);
 	}
 	else {

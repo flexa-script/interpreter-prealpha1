@@ -55,8 +55,8 @@ ASTNode* Parser::parse_program_statement() {
 	switch (current_token.type) {
 	case TOK_USING:
 		return parse_using_statement();
-	case TOK_AS:
-	case TOK_REVOKE:
+	case TOK_INCLUDE:
+	case TOK_EXCLUDE:
 		return parse_namespace_manager_statement();
 	case TOK_FUN:
 		return parse_function_statement();

@@ -25,6 +25,7 @@ namespace visitor {
 		std::vector<BytecodeInstruction> bytecode_program;
 		size_t pointer = 0;
 		std::vector<std::string> parsed_libs;
+		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		std::stack<std::string> current_namespace;
 
 	private:
@@ -34,6 +35,7 @@ namespace visitor {
 		void type_definition_operations(TypeDefinition type);
 		//void store_sub_value_operations(std::vector<Identifier> identifier_vector);
 		void access_sub_value_operations(std::vector<Identifier> identifier_vector);
+		void nmspace_array_operations();
 
 		bool has_sub_value(std::vector<Identifier> identifier_vector);
 

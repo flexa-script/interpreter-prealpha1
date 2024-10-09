@@ -56,13 +56,26 @@ void Compiler::visit(ASTUsingNode* astnode) {
 		auto prev_program = current_program;
 		current_program = program;
 		auto pop = push_namespace(program->alias);
+		program_nmspaces[get_namespace()].push_back(default_namespace);
 		start();
 		current_program = prev_program;
 		pop_namespace(pop);
 	}
 }
 
-void Compiler::visit(ASTNamespaceManagerNode* astnode) {}
+void Compiler::visit(ASTNamespaceManagerNode* astnode) {
+	const auto& nmspace = get_namespace();
+
+	if (astnode->image == "include") {
+		program_nmspaces[nmspace].push_back(astnode->nmspace);
+	}
+	else {
+		size_t pos = std::distance(program_nmspaces[nmspace].begin(),
+			std::find(program_nmspaces[nmspace].begin(),
+				program_nmspaces[nmspace].end(), astnode->nmspace));
+		program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + pos);
+	}
+}
 
 void Compiler::visit(ASTEnumNode* astnode) {
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
@@ -562,6 +575,17 @@ void Compiler::visit(ASTTypingNode* astnode) {
 
 bool Compiler::has_sub_value(std::vector<Identifier> identifier_vector) {
 	return identifier_vector.size() > 1 || identifier_vector[0].access_vector.size() > 0;
+}
+
+void Compiler::nmspace_array_operations() {
+	const auto& nmspace = get_namespace();
+	auto size = program_nmspaces[nmspace].size();
+
+	add_instruction(OpCode::OP_CREATE_ARRAY, byteopnd(size));
+	for (size_t i = 0; i < size; ++i) {
+		add_instruction(OpCode::OP_PUSH_STRING, byteopnd_s(program_nmspaces[nmspace][i]));
+		add_instruction(OpCode::OP_SET_ELEMENT, byteopnd(i));
+	}
 }
 
 void Compiler::type_definition_operations(TypeDefinition type) {
