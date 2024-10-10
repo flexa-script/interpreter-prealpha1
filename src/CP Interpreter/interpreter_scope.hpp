@@ -10,9 +10,11 @@
 using namespace visitor;
 using namespace parser;
 
+// TODO: general change from string to const
+
 namespace visitor {
 	typedef std::map<std::string, StructureDefinition> interpreter_struct_list_t;
-	typedef std::map<std::string, Variable*> interpreter_variable_list_t;
+	typedef std::map<std::string, std::shared_ptr<Variable>> interpreter_variable_list_t;
 	typedef std::tuple<std::string, TypeDefinition, ASTExprNode*, bool> interpreter_parameter_t;
 	typedef std::vector<interpreter_parameter_t> interpreter_parameter_list_t;
 	typedef std::tuple<interpreter_parameter_list_t, ASTBlockNode*, TypeDefinition> interpreter_function_t;
@@ -35,18 +37,18 @@ namespace visitor {
 		InterpreterScope(std::string);
 		~InterpreterScope() = default;
 
-		bool already_declared_structure_definition(std::string);
-		bool already_declared_variable(std::string);
+		bool already_declared_structure_definition(std::string identifier);
+		bool already_declared_variable(std::string identifier);
 		bool already_declared_function(std::string identifier, const std::vector<TypeDefinition>* signature,
 			std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict = true);
 		bool already_declared_function_name(std::string identifier);
 
-		Variable* declare_variable(std::string, Variable*);
+		std::shared_ptr<Variable> declare_variable(std::string, std::shared_ptr<Variable>);
 		void declare_function(std::string identifier, interpreter_parameter_list_t variables, ASTBlockNode* block, TypeDefinition type);
 		void declare_structure_definition(std::string, std::map<std::string, VariableDefinition>, unsigned int, unsigned int);
 
 		StructureDefinition find_declared_structure_definition(std::string);
-		Variable* find_declared_variable(std::string);
+		std::shared_ptr<Variable> find_declared_variable(std::string);
 		interpreter_function_t* find_declared_function(std::string identifier, const std::vector<TypeDefinition>* signature,
 			std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict = true);
 		std::pair<interpreter_function_list_t::iterator, interpreter_function_list_t::iterator> find_declared_functions(std::string identifier);

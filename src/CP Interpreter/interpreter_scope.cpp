@@ -49,7 +49,7 @@ bool InterpreterScope::already_declared_function_name(std::string identifier) {
 	}
 }
 
-Variable* InterpreterScope::declare_variable(std::string identifier, Variable* value) {
+std::shared_ptr<Variable> InterpreterScope::declare_variable(std::string identifier, std::shared_ptr<Variable> value) {
 	variable_symbol_table[identifier] = value;
 	return value;
 }
@@ -67,7 +67,7 @@ StructureDefinition InterpreterScope::find_declared_structure_definition(std::st
 	return structure_symbol_table[identifier];
 }
 
-Variable* InterpreterScope::find_declared_variable(std::string identifier) {
+std::shared_ptr<Variable> InterpreterScope::find_declared_variable(std::string identifier) {
 	auto var = variable_symbol_table[identifier];
 	var->value->reset_ref();
 	return var;
@@ -100,7 +100,7 @@ interpreter_function_t* InterpreterScope::find_declared_function(std::string ide
 				ftype = std::get<1>(func_params.at(i));
 				stype = signature->at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr, strict)) {
+				if (!TypeDefinition::is_any_or_match_type(ftype, stype, evaluate_access_vector_ptr, strict)) {
 					found = false;
 					break;
 				}
@@ -132,7 +132,7 @@ interpreter_function_t* InterpreterScope::find_declared_function(std::string ide
 				}
 				stype = signature->at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr, strict)) {
+				if (!TypeDefinition::is_any_or_match_type(ftype, stype, evaluate_access_vector_ptr, strict)) {
 					found = false;
 					break;
 				}
@@ -151,7 +151,7 @@ interpreter_function_t* InterpreterScope::find_declared_function(std::string ide
 					ftype = std::get<1>(func_params.at(i));
 					stype = signature->at(i);
 
-					if (!TypeDefinition::is_any_or_match_type(&ftype, ftype, nullptr, stype, evaluate_access_vector_ptr, strict)) {
+					if (!TypeDefinition::is_any_or_match_type(ftype, stype, evaluate_access_vector_ptr, strict)) {
 						found = false;
 						break;
 					}

@@ -8,7 +8,6 @@
 #include <xutility>
 #include <functional>
 
-#include "vmconstants.hpp"
 #include "bytecode.hpp"
 #include "ast.hpp"
 

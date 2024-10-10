@@ -63,7 +63,7 @@ namespace visitor {
 		cp_array build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i);
 		cp_array build_undefined_array(const std::vector<ASTExprNode*>& dim, long long i);
 
-		void normalize_type(Variable* var, Value* val);
+		void normalize_type(std::shared_ptr<Variable> var, Value* val);
 		Value* do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr = false, cp_int str_pos = 0);
 		cp_int do_spaceship_operation(const std::string& op, Value* lval, Value* rval);
 		cp_bool do_relational_operation(const std::string& op, Value* lval, Value* rval);

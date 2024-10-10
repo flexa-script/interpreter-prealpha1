@@ -1,7 +1,6 @@
 # CP Interpreter
 
 ## TODO
-- [X] Rewrite EBNF
 - [X] Add load file from arguments
 - [X] Rewrite the lexer
 - [X] Change expression evaluation to left to right
@@ -10,6 +9,7 @@
 - [X] Add collum on throwed errors
 - [X] Add 'this' token to get current function name
 - [X] Add const support
+- [ ] Add unpacked declaration statement to unpack struct values
 - [X] Add char type
 - [X] Add any type
 - [X] Add array type
@@ -52,8 +52,8 @@
         - [x] <<=, >>=
         - [x] &=, ^=, |=
     - [X] namespace
-    - [X] as namespace
-    - [X] revoke namespace
+    - [X] include namespace
+    - [X] exclude namespace
     - [X] exit
     - [X] enum
     - [X] try catch throw

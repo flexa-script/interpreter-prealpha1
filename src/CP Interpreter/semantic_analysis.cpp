@@ -3,7 +3,6 @@
 
 #include "semantic_analysis.hpp"
 #include "exception_handler.hpp"
-#include "graphics.hpp"
 #include "token.hpp"
 #include "builtin.hpp"
 
@@ -117,7 +116,8 @@ void SemanticAnalyser::visit(ASTEnumNode* astnode) {
 	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		auto value = std::make_shared<SemanticValue>(Type::T_INT, i, true, astnode->row, astnode->col);
-		auto variable = std::make_shared<SemanticVariable>(Type::T_INT, value, true, astnode->row, astnode->col);
+		auto variable = std::make_shared<SemanticVariable>(astnode->identifiers[i], Type::T_INT, true, astnode->row, astnode->col);
+		variable->set_value(value);
 		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], variable);
 	}
 }
@@ -173,8 +173,8 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 		astnode->identifier, astnode->type,
 		astnode->array_type, astnode->dim,
 		astnode_type_name, astnode->type_name_space,
-		new_value, astnode->is_const,
-		astnode->row, astnode->col);
+		astnode->is_const, astnode->row, astnode->col);
+	new_var->set_value(new_value);
 
 	if (!TypeDefinition::is_any_or_match_type(*new_var, *new_value, evaluate_access_vector_ptr)
 		&& astnode->expr && !is_undefined(new_value->type)) {

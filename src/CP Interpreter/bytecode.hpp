@@ -1,6 +1,7 @@
 #ifndef BYTECODE_HPP
 #define BYTECODE_HPP
 
+#include <iostream>
 #include <cstdint>
 
 #include "vmconstants.hpp"
@@ -10,16 +11,7 @@
 #define byteopnd_n byteopnd8(0)
 #define byteopnd_t byteopnd8(true)
 #define byteopnd_f byteopnd8(false)
-
-uint8_t* byteopnd_s(std::string str) {
-	const char* cs = reinterpret_cast<const char*>(str.size());
-	const char* cstr = str.c_str();
-	size_t size = strlen(cs) + strlen(cstr) + 1;
-	char* concat{ new char[size] };
-	strcpy_s(concat, size, cs);
-	strcat_s(concat, size, cstr);
-	return byteopnd(concat);
-}
+uint8_t* byteopnd_s(const std::string& str);
 
 struct BytecodeInstruction {
 	OpCode opcode;

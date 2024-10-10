@@ -17,7 +17,7 @@ program_statement     = using_stm ";"
 statement             = struct_decl ";"
                       | variable_decl ";"
                       | constant_decl ";"
-                      (* | unpacked_decl ";" *)
+                      | unpacked_decl ";"
                       | assignment ";"
                       | if_statement
                       | switch_statement

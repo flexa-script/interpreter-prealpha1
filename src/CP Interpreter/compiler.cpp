@@ -2,8 +2,6 @@
 #include <utility>
 
 #include "compiler.hpp"
-#include "exception_handler.hpp"
-#include "graphics.hpp"
 #include "token.hpp"
 #include "builtin.hpp"
 

@@ -4,13 +4,12 @@
 #include <iomanip>
 #include <filesystem>
 
+#include "cpinterpreter.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
-#include "semantic_analysis.hpp"
 #include "compiler.hpp"
 #include "vendor/axeutils.hpp"
 #include "cputil.hpp"
-#include "cpinterpreter.hpp"
 #include "libfinder.hpp"
 
 CPInterpreter::CPInterpreter(const std::string& project_root, std::vector<std::string>&& files)

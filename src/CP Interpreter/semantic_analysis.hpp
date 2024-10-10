@@ -8,8 +8,6 @@
 #include <xutility>
 #include <functional>
 
-#include "vmconstants.hpp"
-#include "bytecode.hpp"
 #include "ast.hpp"
 #include "semantic_scope.hpp"
 
@@ -29,7 +27,7 @@ namespace visitor {
 		std::vector<std::string> parsed_libs;
 		std::string current_namespace;
 		SemanticValue current_expression;
-		std::stack<FunctionDefinition&> current_function;
+		std::stack<FunctionDefinition> current_function;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		bool exception = false;
 		bool is_switch = false;

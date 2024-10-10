@@ -147,7 +147,8 @@ void SemanticScope::declare_structure_definition(const std::string& name, const 
 void SemanticScope::declare_variable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
 	const std::string& type_name, const std::string& type_name_space, std::shared_ptr<SemanticValue> value, bool is_const, unsigned int row, unsigned int col) {
 	std::shared_ptr<SemanticVariable> var = std::make_shared<SemanticVariable>(identifier, type, array_type, dim,
-		type_name, type_name_space, value, is_const, row, col);
+		type_name, type_name_space, is_const, row, col);
+	var->set_value(value);
 	variable_symbol_table[identifier] = var;
 }
 

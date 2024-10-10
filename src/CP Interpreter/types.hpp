@@ -188,18 +188,21 @@ public:
 	void copy_from(const SemanticValue& value);
 };
 
-class SemanticVariable : public TypeDefinition, public CodePosition {
+class SemanticVariable : public TypeDefinition, public CodePosition, public std::enable_shared_from_this<SemanticVariable> {
 public:
 	std::string identifier;
 	std::shared_ptr<SemanticValue> value;
 	bool is_const;
 
 	SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
-		const std::string& type_name, const std::string& type_name_space, std::shared_ptr<SemanticValue> value, bool is_const, unsigned int row, unsigned int col);
+		const std::string& type_name, const std::string& type_name_space, bool is_const, unsigned int row, unsigned int col);
 
-	SemanticVariable(const std::string& identifier, Type type, std::shared_ptr<SemanticValue> value, bool is_const, unsigned int row, unsigned int col);
+	SemanticVariable(const std::string& identifier, Type type, bool is_const, unsigned int row, unsigned int col);
 
 	SemanticVariable();
+
+	void set_value(std::shared_ptr<SemanticValue> value);
+	std::shared_ptr<SemanticValue> get_value();
 
 	Type def_type(Type type);
 	Type def_array_type(Type array_type, const std::vector<ASTExprNode*>& dim);
@@ -215,7 +218,7 @@ public:
 	std::shared_ptr<cp_array> arr = nullptr;
 	std::shared_ptr<cp_struct> str = nullptr;
 	std::shared_ptr<cp_function> fun = nullptr;
-	Variable* ref = nullptr;
+	std::shared_ptr<Variable> ref = nullptr;
 
 	Value(Type type, Type array_type, std::vector<ASTExprNode*> dim,
 		const std::string& type_name, const std::string& type_name_space,
@@ -228,7 +231,6 @@ public:
 	Value(cp_array, Type array_type, std::vector<ASTExprNode*> dim, std::string type_name = "", std::string type_name_space = "");
 	Value(cp_struct, std::string type_name, std::string type_name_space);
 	Value(cp_function);
-	Value(Variable*);
 	Value(Type type);
 	Value(Type array_type, std::vector<ASTExprNode*> dim, std::string type_name = "", std::string type_name_space = "");
 	Value(std::string type_name, std::string type_name_space);
@@ -274,13 +276,13 @@ public:
 	bool equals(Value* value);
 };
 
-class Variable : public TypeDefinition {
+class Variable : public TypeDefinition, public std::enable_shared_from_this<Variable> {
 public:
 	Value* value;
 
 	Variable(Type type, Type array_type, std::vector<ASTExprNode*> dim,
-		const std::string& type_name, const std::string& type_name_space, Value* value);
-	Variable(Value* value);
+		const std::string& type_name, const std::string& type_name_space);
+	Variable(TypeDefinition value);
 	Variable();
 	~Variable();
 

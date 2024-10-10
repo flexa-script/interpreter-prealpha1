@@ -2,6 +2,7 @@
 #define CPINTERPRETER_HPP
 
 #include "cpsource.hpp"
+#include "semantic_analysis.hpp"
 
 class CPInterpreter {
 private:

@@ -107,9 +107,9 @@ void Interpreter::visit(ASTEnumNode* astnode) {
 
 	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
-		scopes[nmspace].back()->declare_variable(astnode->identifiers[i],
-			new Variable(Type::T_INT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(),
-				"", "", new Value(cp_int(i))));
+		auto var = std::make_shared<Variable>(Type::T_INT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "");
+		var->set_value(new Value(cp_int(i)));
+		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], var);
 	}
 }
 
@@ -136,10 +136,10 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 
 	auto& astnode_type_name = astnode->type_name.empty() ? new_value->type_name : astnode->type_name;
 
-	auto new_var = new Variable(astnode->type,
+	auto new_var = std::make_shared<Variable>(astnode->type,
 		astnode->array_type, astnode->dim,
-		astnode_type_name, astnode->type_name_space,
-		new_value);
+	astnode_type_name, astnode->type_name_space);
+	new_var->set_value(new_value);
 
 	if ((!TypeDefinition::is_any_or_match_type(*new_var, *new_value, evaluate_access_vector_ptr) ||
 		is_array(new_var->type) && !is_any(new_var->array_type)
@@ -175,7 +175,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		throw std::runtime_error(ex.what());
 	}
 
-	Variable* variable = astscope->find_declared_variable(astnode->identifier);
+	std::shared_ptr<Variable> variable = astscope->find_declared_variable(astnode->identifier);
 	Value* value = access_value(astscope, variable->get_value(), astnode->identifier_vector);
 
 	astnode->expr->accept(this);
@@ -1220,7 +1220,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 		return;
 	}
 
-	Variable* variable = id_scope->find_declared_variable(astnode->identifier);
+	std::shared_ptr<Variable> variable = id_scope->find_declared_variable(astnode->identifier);
 	auto sub_val = access_value(id_scope, variable->get_value(), astnode->identifier_vector);
 	sub_val->reset_ref();
 
@@ -2605,7 +2605,7 @@ cp_array Interpreter::do_operation(cp_array lval, cp_array rval, const std::stri
 	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");
 }
 
-void Interpreter::normalize_type(Variable* var, Value* val) {
+void Interpreter::normalize_type(std::shared_ptr<Variable> var, Value* val) {
 	if (is_string(var->type) && is_char(val->type)) {
 		val->type = var->type;
 		val->set(cp_string{ val->get_c() });
@@ -2665,7 +2665,7 @@ long long Interpreter::hash(ASTIdentifierNode* astnode) {
 		throw std::runtime_error(ex.what());
 	}
 
-	Variable* variable = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
+	std::shared_ptr<Variable> variable = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	auto value = access_value(id_scope, variable->get_value(), astnode->identifier_vector);
 
 	switch (value->type) {
@@ -2749,7 +2749,9 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 					curr_scope->declare_variable(pname, current_value->ref);
 				}
 				else {
-					curr_scope->declare_variable(pname, new Variable(current_value));
+					auto var = std::make_shared<Variable>(*current_value);
+					var->set_value(current_value);
+					curr_scope->declare_variable(pname, var);
 				}
 			}
 
@@ -2789,7 +2791,10 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			}
 		}
 		else {
-			curr_scope->declare_variable(pname, new Variable(new Value(current_expression_value)));
+			auto val = new Value(current_expression_value);
+			auto var = std::make_shared<Variable>(*val);
+			var->set_value(val);
+			curr_scope->declare_variable(pname, var);
 		}
 	}
 
@@ -2801,7 +2806,11 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		}
 		auto arr = cp_array(rarr, vec.size());
 		rest->set(arr, Type::T_ANY, std::vector<ASTExprNode*>());
-		curr_scope->declare_variable(rest_name, new Variable(new Value(rest)));
+
+		auto val = new Value(rest);
+		auto var = std::make_shared<Variable>(*val);
+		var->set_value(val);
+		curr_scope->declare_variable(rest_name, var);
 	}
 
 	current_function_defined_parameters.pop();

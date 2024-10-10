@@ -340,21 +340,27 @@ void SemanticValue::copy_from(const SemanticValue& value) {
 }
 
 SemanticVariable::SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
-	const std::string& type_name, const std::string& type_name_space, std::shared_ptr<SemanticValue> value, bool is_const, unsigned int row, unsigned int col)
+	const std::string& type_name, const std::string& type_name_space, bool is_const, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(def_type(type), def_array_type(array_type, dim), dim, type_name, type_name_space),
-	identifier(identifier), value(value), is_const(is_const) {
-	value->ref = std::make_shared<SemanticVariable>(this);
-}
+	identifier(identifier), value(nullptr), is_const(is_const) {}
 
-SemanticVariable::SemanticVariable(const std::string& identifier, Type type, std::shared_ptr<SemanticValue> value, bool is_const, unsigned int row, unsigned int col)
+SemanticVariable::SemanticVariable(const std::string& identifier, Type type, bool is_const, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(def_type(type)),
-	identifier(identifier), value(value), is_const(is_const) {
-	value->ref = std::make_shared<SemanticVariable>(this);
-}
+	identifier(identifier), value(nullptr), is_const(is_const) {}
 
 SemanticVariable::SemanticVariable()
 	: CodePosition(0, 0), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
 	identifier(""), value(nullptr), is_const(false) {}
+
+void SemanticVariable::set_value(std::shared_ptr<SemanticValue> value) {
+	this->value = value;
+	this->value->ref = shared_from_this();
+}
+
+std::shared_ptr<SemanticValue> SemanticVariable::get_value() {
+	value->ref = shared_from_this();
+	return value;
+}
 
 Type SemanticVariable::def_type(Type type) {
 	return is_void(type) || is_undefined(type) ? Type::T_ANY : type;
@@ -401,10 +407,6 @@ Value::Value(cp_struct rawv, std::string type_name, std::string type_name_space)
 }
 
 Value::Value(cp_function rawv) {
-	set(rawv);
-}
-
-Value::Value(Variable* rawv) {
 	set(rawv);
 }
 
@@ -675,33 +677,29 @@ bool Value::equals(Value* value) {
 }
 
 Variable::Variable(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,
-	const std::string& type_name, const std::string& type_name_space, Value* value)
+	const std::string& type_name, const std::string& type_name_space)
 	: TypeDefinition(def_type(type), def_array_type(array_type, dim),
 		std::move(dim), type_name, type_name_space),
-	value(value) {
-	value->ref = this;
-}
+	value(nullptr) {}
 
 Variable::Variable()
 	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", ""),
 	value(nullptr) {}
 
-Variable::Variable(Value* v)
-	: TypeDefinition(def_type(v->type), def_array_type(v->array_type, dim),
-		v->dim, v->type_name, v->type_name_space),
-	value(v) {
-	value->ref = this;
-}
+Variable::Variable(TypeDefinition v)
+	: TypeDefinition(def_type(v.type), def_array_type(v.array_type, dim),
+		v.dim, v.type_name, v.type_name_space),
+	value(nullptr) {}
 
 Variable::~Variable() = default;
 
 void Variable::set_value(Value* val) {
 	value = val;
-	value->ref = this;
+	value->ref = shared_from_this();
 }
 
 Value* Variable::get_value() {
-	value->ref = this;
+	value->ref = shared_from_this();
 	return value;
 }
 
