@@ -29,7 +29,7 @@ int CPRepl::execute() {
 	std::cout << NAME << " " << VER << " [" << YEAR << "]\n";
 	std::cout << "Type \"#help\" for more information.\n";
 
-	visitor::SemanticScope semantic_global_scope;
+	std::shared_ptr<visitor::SemanticScope> semantic_global_scope = std::make_shared<visitor::SemanticScope>();
 	std::shared_ptr<visitor::InterpreterScope> interpreter_global_scope = std::make_shared<visitor::InterpreterScope>();
 
 	while (true) {
@@ -108,12 +108,13 @@ int CPRepl::execute() {
 			}
 
 			// check if it's all ok using a temp global scope
-			visitor::SemanticScope temp = semantic_global_scope;
-			visitor::SemanticAnalyser temp_semantic_analyser(&temp, program, programs);
+			std::shared_ptr<visitor::SemanticScope> temp = std::make_shared<visitor::SemanticScope>(*semantic_global_scope);
+			visitor::SemanticAnalyser temp_semantic_analyser(temp, program, programs);
 			temp_semantic_analyser.start();
 
-			visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, program, programs);
+			visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, program, programs);
 			semantic_analyser.start();
+
 			visitor::Interpreter interpreter(interpreter_global_scope, program, programs);
 			interpreter.visit(program);
 

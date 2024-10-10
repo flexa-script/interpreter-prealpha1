@@ -21,7 +21,11 @@ enum OpCode : int16_t {
 	OP_SET_ELEMENT,
 	OP_CREATE_STRUCT,
 	OP_SET_FIELD,
-	// type operators
+	// struct type ops
+	OP_STRUCT_START,
+	OP_STRUCT_SET_VAR,
+	OP_STRUCT_END,
+	// type ops
 	OP_SET_TYPE,
 	OP_SET_TYPE_NAME,
 	OP_SET_NAME_SPACE,
@@ -59,7 +63,6 @@ enum OpCode : int16_t {
 	OP_TYPEID,
 	OP_TYPEOF,
 	OP_TYPE_PARSE,
-	OP_TYPE_PARSE,
 	OP_TERNARY,
 	OP_IN,
 	OP_OR,
@@ -82,8 +85,6 @@ enum OpCode : int16_t {
 	OP_DIV,
 	OP_REMAINDER,
 	OP_FLOOR_DIV,
-	//OP_INCREMENT,
-	//OP_DECREMENT,
 	OP_NOT,
 	OP_BIT_NOT,
 	OP_EXP,

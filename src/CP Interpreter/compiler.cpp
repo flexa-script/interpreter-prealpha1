@@ -91,8 +91,6 @@ void Compiler::visit(ASTDeclarationNode* astnode) {
 	type_definition_operations(*astnode);
 
 	if (astnode->expr) {
-		// TODO: parse {1} array build
-		// maybe call "astnode->expr->accept(this);" for each dimension...
 		astnode->expr->accept(this);
 	}
 	else {
@@ -349,7 +347,16 @@ void Compiler::visit(ASTDoWhileNode* astnode) {
 	add_instruction(OpCode::OP_JUMP_IF_TRUE, byteopnd8(pointer));
 }
 
-void Compiler::visit(ASTStructDefinitionNode* astnode) {}
+void Compiler::visit(ASTStructDefinitionNode* astnode) {
+	add_instruction(OpCode::OP_STRUCT_START, byteopnd_s(astnode->identifier));
+
+	for (const auto& var : astnode->variables) {
+		type_definition_operations(var.second);
+		add_instruction(OpCode::OP_STRUCT_SET_VAR, byteopnd_s(var.first));
+	}
+	
+	add_instruction(OpCode::OP_STRUCT_END, byteopnd_s(astnode->identifier));
+}
 
 void Compiler::visit(ASTLiteralNode<cp_bool>* astnode) {
 	add_instruction(OpCode::OP_PUSH_BOOL, byteopnd(astnode->val));

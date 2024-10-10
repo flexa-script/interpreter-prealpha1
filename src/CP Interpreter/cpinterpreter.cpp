@@ -7,7 +7,7 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "semantic_analysis.hpp"
-#include "interpreter.hpp"
+#include "compiler.hpp"
 #include "vendor/axeutils.hpp"
 #include "cputil.hpp"
 #include "cpinterpreter.hpp"
@@ -75,8 +75,7 @@ void CPInterpreter::parse_programs(const std::vector<CPSource>& source_programs,
 int CPInterpreter::interpreter() {
 	const std::vector<CPSource>& source_programs = load_programs(files);
 
-	visitor::SemanticScope semantic_global_scope;
-	std::shared_ptr<visitor::InterpreterScope> interpreter_global_scope = std::make_shared<visitor::InterpreterScope>();
+	std::shared_ptr<visitor::SemanticScope> semantic_global_scope = std::make_shared<visitor::SemanticScope>();
 
 	try {
 		parser::ASTProgramNode* main_program = nullptr;
@@ -95,13 +94,18 @@ int CPInterpreter::interpreter() {
 			}
 		} while (cplibs_size > 0);
 
-		visitor::SemanticAnalyser semantic_analyser(&semantic_global_scope, main_program, programs);
+		visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, main_program, programs);
 		semantic_analyser.start();
 
-		visitor::Interpreter interpreter(interpreter_global_scope, main_program, programs);
-		interpreter.start();
+		// compile
+		visitor::Compiler compiler(main_program, programs);
+		compiler.start();
 
-		return interpreter.current_expression_value->get_i();
+		// execute
+		//visitor::Interpreter interpreter(interpreter_global_scope, main_program, programs);
+		//interpreter.start();
+
+		return 0;//interpreter.current_expression_value->get_i();
 	}
 	catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;

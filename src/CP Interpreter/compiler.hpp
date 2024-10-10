@@ -1,5 +1,5 @@
-#ifndef SEMANTIC_ANALYSIS_HPP
-#define SEMANTIC_ANALYSIS_HPP
+#ifndef COMPILER_HPP
+#define COMPILER_HPP
 
 #include <memory>
 #include <map>
@@ -19,10 +19,10 @@ namespace visitor {
 
 	class Compiler : Visitor {
 	public:
+		std::vector<BytecodeInstruction> bytecode_program;
 		std::map<std::string, void*> builtin_functions;
 
 	private:
-		std::vector<BytecodeInstruction> bytecode_program;
 		size_t pointer = 0;
 		std::vector<std::string> parsed_libs;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
@@ -106,4 +106,4 @@ namespace visitor {
 	};
 }
 
-#endif // !SEMANTIC_ANALYSIS_HPP
+#endif // !COMPILER_HPP

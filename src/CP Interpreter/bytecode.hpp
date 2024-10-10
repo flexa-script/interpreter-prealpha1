@@ -14,9 +14,10 @@
 uint8_t* byteopnd_s(std::string str) {
 	const char* cs = reinterpret_cast<const char*>(str.size());
 	const char* cstr = str.c_str();
-	char* concat{ new char[strlen(cs) + strlen(cstr) + 1] };
-	strcpy(concat, cs);
-	strcat(concat, cstr);
+	size_t size = strlen(cs) + strlen(cstr) + 1;
+	char* concat{ new char[size] };
+	strcpy_s(concat, size, cs);
+	strcat_s(concat, size, cstr);
 	return byteopnd(concat);
 }
 

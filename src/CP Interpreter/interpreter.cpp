@@ -1115,7 +1115,7 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 
 		Value* str_value = current_expression_value;
 
-		if (!TypeDefinition::is_any_or_match_type(&var_type_struct, var_type_struct, nullptr, *current_expression_value, evaluate_access_vector_ptr)) {
+		if (!TypeDefinition::is_any_or_match_type(var_type_struct, *current_expression_value, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_struct_type_err(astnode->nmspace, astnode->type_name, var_type_struct, evaluate_access_vector_ptr);
 		}
 
