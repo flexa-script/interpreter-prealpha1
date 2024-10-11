@@ -28,9 +28,9 @@ statement             = struct_decl ";"
                       | do_while_statement ";"
                       | return_statement ";"
                       | throw_statement ";"
+                      | exit_statement ";"
                       | "continue" ";"
                       | "break" ";"
-                      | "exit" ";"
                       | expression ";"
 
 using_stm             = "using" path_identifier
@@ -87,7 +87,9 @@ case_block            = block | { statement }
 
 return_statement      = "return" [ expression ]
 
-throw_statement       = "throw" [ expression ]
+exit_statement      = "exit" "(" expression ")"
+
+throw_statement       = "throw" expression
 
 variable_decl         = "var" formal_param [ "=" expression ]
 
