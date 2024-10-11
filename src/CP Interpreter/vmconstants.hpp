@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 
-enum OpCode : int16_t {
+enum OpCode : uint16_t {
 	OP_RES,
 	// value ops
 	OP_POP,
@@ -91,7 +91,8 @@ enum OpCode : int16_t {
 	OP_REF,
 	OP_UNREF,
 	OP_TRAP,
-	OP_HALT
+	OP_HALT,
+	OP_ERROR = 0xFFFF
 };
 
 const std::string OP_NAMES[] = {

@@ -10,8 +10,6 @@
 using namespace visitor;
 using namespace parser;
 
-// TODO: general change from string to const
-
 namespace visitor {
 	typedef std::map<std::string, StructureDefinition> interpreter_struct_list_t;
 	typedef std::map<std::string, std::shared_ptr<Variable>> interpreter_variable_list_t;
@@ -34,27 +32,27 @@ namespace visitor {
 
 	public:
 		InterpreterScope();
-		InterpreterScope(std::string);
+		InterpreterScope(const std::string& name);
 		~InterpreterScope() = default;
 
-		bool already_declared_structure_definition(std::string identifier);
-		bool already_declared_variable(std::string identifier);
-		bool already_declared_function(std::string identifier, const std::vector<TypeDefinition>* signature,
+		bool already_declared_structure_definition(const std::string& identifier);
+		bool already_declared_variable(const std::string& identifier);
+		bool already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
 			std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict = true);
-		bool already_declared_function_name(std::string identifier);
+		bool already_declared_function_name(const std::string& identifier);
 
-		std::shared_ptr<Variable> declare_variable(std::string, std::shared_ptr<Variable>);
-		void declare_function(std::string identifier, interpreter_parameter_list_t variables, ASTBlockNode* block, TypeDefinition type);
-		void declare_structure_definition(std::string, std::map<std::string, VariableDefinition>, unsigned int, unsigned int);
+		std::shared_ptr<Variable> declare_variable(const std::string&, std::shared_ptr<Variable>);
+		void declare_function(const std::string& identifier, interpreter_parameter_list_t variables, ASTBlockNode* block, TypeDefinition type);
+		void declare_structure_definition(const std::string&, std::map<std::string, VariableDefinition>, unsigned int, unsigned int);
 
-		StructureDefinition find_declared_structure_definition(std::string);
-		std::shared_ptr<Variable> find_declared_variable(std::string);
-		interpreter_function_t* find_declared_function(std::string identifier, const std::vector<TypeDefinition>* signature,
+		StructureDefinition find_declared_structure_definition(const std::string& identifier);
+		std::shared_ptr<Variable> find_declared_variable(const std::string& identifier);
+		interpreter_function_t* find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
 			std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector, bool strict = true);
-		std::pair<interpreter_function_list_t::iterator, interpreter_function_list_t::iterator> find_declared_functions(std::string identifier);
+		std::pair<interpreter_function_list_t::iterator, interpreter_function_list_t::iterator> find_declared_functions(const std::string& identifier);
 
-		std::string get_name();
-		void set_name(std::string);
+		const std::string& get_name();
+		void set_name(const std::string& name);
 	};
 }
 

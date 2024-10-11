@@ -20,7 +20,6 @@ namespace axe {
 		static std::string join(const std::vector<std::string>& strings, const char* const delim);
 		static std::vector<std::string> split(const std::string& str, char delimiter);
 		static std::vector<std::string> split(std::string s, const std::string& delimiter);
-		static bool contains(const std::vector<std::string>& c, const std::string& v);
 
 		static long long hashcode(const std::string& str);
 
@@ -28,8 +27,12 @@ namespace axe {
 
 	class CollectionUtils {
 	public:
+		//template<typename Container, typename T>
+		//static bool contains(const Container& c, const T& value);
 		template<typename Container, typename T>
-		static bool contains(const Container& c, const T& value);
+		static bool contains(const Container& c, const T& value) {
+			return std::find(c.begin(), c.end(), value) != c.end();
+		}
 	};
 
 	class PathUtils {

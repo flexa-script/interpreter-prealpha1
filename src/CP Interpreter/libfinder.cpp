@@ -37,7 +37,7 @@ void LibFinder::visit(ASTUsingNode* astnode) {
 	auto program = programs[libname];
 
 	// if wasn't parsed yet
-	if (!axe::StringUtils::contains(libs, libname)) {
+	if (!axe::CollectionUtils::contains(libs, libname)) {
 		libs.push_back(libname);
 		auto prev_program = current_program;
 		current_program = program;

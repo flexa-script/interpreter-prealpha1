@@ -71,7 +71,7 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 	current_program->libs.push_back(libname);
 
 	// if can't parsed yet
-	if (!axe::StringUtils::contains(parsed_libs, libname)) {
+	if (!axe::CollectionUtils::contains(parsed_libs, libname)) {
 		parsed_libs.push_back(libname);
 		auto prev_program = current_program;
 		current_program = program;

@@ -39,6 +39,7 @@ namespace visitor {
 
 		bool has_sub_value(std::vector<Identifier> identifier_vector);
 
+		std::vector<std::string> get_unique_namespaces();
 		bool push_namespace(const std::string nmspace);
 		void pop_namespace(bool pop);
 		std::string build_namespace(const std::string& identifier) const;

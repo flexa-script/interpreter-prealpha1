@@ -19,11 +19,13 @@ Compiler::Compiler(ASTProgramNode* main_program, std::map<std::string, ASTProgra
 };
 
 void Compiler::start() {
+	auto pop = push_namespace(default_namespace);
 	visit(current_program);
+	add_instruction(OpCode::OP_HALT, nullptr);
+	pop_namespace(pop);
 }
 
 void Compiler::visit(ASTProgramNode* astnode) {
-	auto pop = push_namespace(default_namespace);
 	for (const auto& statement : astnode->statements) {
 		try {
 			statement->accept(this);
@@ -32,8 +34,6 @@ void Compiler::visit(ASTProgramNode* astnode) {
 			throw std::runtime_error(ex.what());
 		}
 	}
-	add_instruction(OpCode::OP_HALT, nullptr);
-	pop_namespace(pop);
 }
 
 void Compiler::visit(ASTUsingNode* astnode) {
@@ -49,13 +49,13 @@ void Compiler::visit(ASTUsingNode* astnode) {
 	current_program->libs.push_back(libname);
 
 	// if can't parsed yet
-	if (!axe::StringUtils::contains(parsed_libs, libname)) {
-		parsed_libs.push_back(libname);
+	if (!axe::CollectionUtils::contains(parsed_libs, libname)) {
 		auto prev_program = current_program;
 		current_program = program;
-		auto pop = push_namespace(program->alias);
+		parsed_libs.push_back(libname);
+		auto pop = push_namespace(current_program->alias);
 		program_nmspaces[get_namespace()].push_back(default_namespace);
-		start();
+		visit(current_program);
 		current_program = prev_program;
 		pop_namespace(pop);
 	}
@@ -592,13 +592,12 @@ bool Compiler::has_sub_value(std::vector<Identifier> identifier_vector) {
 }
 
 void Compiler::nmspace_array_operations() {
-	// todo: check duplicates
-	const auto& nmspace = get_namespace();
-	auto size = program_nmspaces[nmspace].size();
+	const auto& nmspaces = get_unique_namespaces();
+	auto size = nmspaces.size();
 
 	add_instruction(OpCode::OP_CREATE_ARRAY, size_t(size));
 	for (size_t i = 0; i < size; ++i) {
-		add_instruction(OpCode::OP_PUSH_STRING, cp_string(program_nmspaces[nmspace][i]));
+		add_instruction(OpCode::OP_PUSH_STRING, cp_string(nmspaces[i]));
 		add_instruction(OpCode::OP_SET_ELEMENT, size_t(i));
 	}
 }
@@ -663,6 +662,19 @@ void Compiler::replace_last_operand(size_t pos, T operand) {
 	bytecode_program[pos].operand = BytecodeInstruction::to_byteopnd(operand);
 }
 
+std::vector<std::string> Compiler::get_unique_namespaces() {
+	const auto& curr_program_nmspaces = program_nmspaces[get_namespace()];
+	std::vector<std::string> nmspaces;
+
+	for (const auto& nmspace : curr_program_nmspaces) {
+		if (!axe::CollectionUtils::contains(nmspaces, nmspace)) {
+			nmspaces.push_back(nmspace);
+		}
+	}
+
+	return nmspaces;
+}
+
 bool Compiler::push_namespace(const std::string nmspace) {
 	if (!nmspace.empty()) {
 		current_namespace.push(nmspace);
@@ -670,6 +682,7 @@ bool Compiler::push_namespace(const std::string nmspace) {
 	}
 	return false;
 }
+
 void Compiler::pop_namespace(bool pop) {
 	if (pop) {
 		current_namespace.pop();

@@ -94,10 +94,6 @@ namespace axe {
 		return tokens;
 	}
 
-	bool StringUtils::contains(const std::vector<std::string>& c, const std::string& v) {
-		return std::find(c.begin(), c.end(), v) != c.end();
-	}
-
 	long long StringUtils::hashcode(const std::string& str) {
 		long long h = 0;
 		for (size_t i = 0; i < str.size(); ++i) {
@@ -109,15 +105,10 @@ namespace axe {
 
 	// CollectionUtils
 
-	template<>
-	bool CollectionUtils::contains(const std::string& str, const std::string& substr) {
-		return str.find(substr) != std::string::npos;
-	}
-
-	template<typename Container, typename T>
-	bool CollectionUtils::contains(const Container& c, const T& value) {
-		return std::find(c.begin(), c.end(), value) != c.end();
-	}
+	//template<typename Container, typename T>
+	//bool CollectionUtils::contains(const Container& c, const T& value) {
+	//	return std::find(c.begin(), c.end(), value) != c.end();
+	//}
 
 
 	// PathUtils

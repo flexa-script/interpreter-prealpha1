@@ -59,13 +59,13 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	auto program = programs[libname];
 
 	// add lib to current program
-	if (axe::StringUtils::contains(current_program->libs, libname)) {
+	if (axe::CollectionUtils::contains(current_program->libs, libname)) {
 		throw std::runtime_error("lib '" + libname + "' already declared in " + current_program->name);
 	}
 	current_program->libs.push_back(libname);
 
 	// if can't parsed yet
-	if (!axe::StringUtils::contains(parsed_libs, libname)) {
+	if (!axe::CollectionUtils::contains(parsed_libs, libname)) {
 		if (!program->alias.empty()) {
 			nmspaces.push_back(program->alias);
 		}
@@ -92,7 +92,7 @@ void SemanticAnalyser::visit(ASTNamespaceManagerNode* astnode) {
 
 	const auto& nmspace = get_namespace(current_program->alias);
 
-	if (!axe::StringUtils::contains(nmspaces, astnode->nmspace)) {
+	if (!axe::CollectionUtils::contains(nmspaces, astnode->nmspace)) {
 		throw std::runtime_error("namespace '" + astnode->nmspace + "' not found");
 	}
 	if (astnode->nmspace == default_namespace) {

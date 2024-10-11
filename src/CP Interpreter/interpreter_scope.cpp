@@ -8,27 +8,27 @@
 using namespace visitor;
 using namespace parser;
 
-InterpreterScope::InterpreterScope(std::string name) : name(name) {}
+InterpreterScope::InterpreterScope(const std::string& name) : name(name) {}
 
 InterpreterScope::InterpreterScope() : name("") { }
 
-std::string InterpreterScope::get_name() {
+const std::string& InterpreterScope::get_name() {
 	return name;
 }
 
-void InterpreterScope::set_name(std::string name) {
+void InterpreterScope::set_name(const std::string& name) {
 	this->name = name;
 }
 
-bool InterpreterScope::already_declared_variable(std::string identifier) {
+bool InterpreterScope::already_declared_variable(const std::string& identifier) {
 	return variable_symbol_table.find(identifier) != variable_symbol_table.end();
 }
 
-bool InterpreterScope::already_declared_structure_definition(std::string identifier) {
+bool InterpreterScope::already_declared_structure_definition(const std::string& identifier) {
 	return structure_symbol_table.find(identifier) != structure_symbol_table.end();
 }
 
-bool InterpreterScope::already_declared_function(std::string identifier, const std::vector<TypeDefinition>* signature,
+bool InterpreterScope::already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
 	std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector_ptr, bool strict) {
 	try {
 		find_declared_function(identifier, signature, evaluate_access_vector_ptr, strict);
@@ -39,7 +39,7 @@ bool InterpreterScope::already_declared_function(std::string identifier, const s
 	}
 }
 
-bool InterpreterScope::already_declared_function_name(std::string identifier) {
+bool InterpreterScope::already_declared_function_name(const std::string& identifier) {
 	try {
 		find_declared_functions(identifier);
 		return true;
@@ -49,31 +49,31 @@ bool InterpreterScope::already_declared_function_name(std::string identifier) {
 	}
 }
 
-std::shared_ptr<Variable> InterpreterScope::declare_variable(std::string identifier, std::shared_ptr<Variable> value) {
+std::shared_ptr<Variable> InterpreterScope::declare_variable(const std::string& identifier, std::shared_ptr<Variable> value) {
 	variable_symbol_table[identifier] = value;
 	return value;
 }
 
-void InterpreterScope::declare_structure_definition(std::string name, std::map<std::string, VariableDefinition> variables, unsigned int row, unsigned int col) {
+void InterpreterScope::declare_structure_definition(const std::string& name, std::map<std::string, VariableDefinition> variables, unsigned int row, unsigned int col) {
 	StructureDefinition type(name, variables, row, col);
 	structure_symbol_table[name] = (type);
 }
 
-void InterpreterScope::declare_function(std::string identifier, interpreter_parameter_list_t variables, parser::ASTBlockNode* block, TypeDefinition type) {
+void InterpreterScope::declare_function(const std::string& identifier, interpreter_parameter_list_t variables, parser::ASTBlockNode* block, TypeDefinition type) {
 	function_symbol_table.insert(std::make_pair(identifier, std::make_tuple(variables, block, type)));
 }
 
-StructureDefinition InterpreterScope::find_declared_structure_definition(std::string identifier) {
+StructureDefinition InterpreterScope::find_declared_structure_definition(const std::string& identifier) {
 	return structure_symbol_table[identifier];
 }
 
-std::shared_ptr<Variable> InterpreterScope::find_declared_variable(std::string identifier) {
-	auto var = variable_symbol_table[identifier];
+std::shared_ptr<Variable> InterpreterScope::find_declared_variable(const std::string& identifier) {
+	auto& var = variable_symbol_table[identifier];
 	var->value->reset_ref();
 	return var;
 }
 
-interpreter_function_t* InterpreterScope::find_declared_function(std::string identifier, const std::vector<TypeDefinition>* signature,
+interpreter_function_t* InterpreterScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
 	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector_ptr, bool strict) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
@@ -175,7 +175,7 @@ interpreter_function_t* InterpreterScope::find_declared_function(std::string ide
 }
 
 std::pair<interpreter_function_list_t::iterator, interpreter_function_list_t::iterator>
-InterpreterScope::find_declared_functions(std::string identifier) {
+InterpreterScope::find_declared_functions(const std::string& identifier) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 	if (std::distance(funcs.first, funcs.second) == 0) {
 		throw std::runtime_error("something went wrong searching '" + identifier + "'");
