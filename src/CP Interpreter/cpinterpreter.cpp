@@ -100,6 +100,8 @@ int CPInterpreter::interpreter() {
 		visitor::Compiler compiler(main_program, programs);
 		compiler.start();
 
+		BytecodeInstruction::write_bytecode_table(compiler.bytecode_program, "C:\\Users\\Carlos\\repos\\cp-lang\\" + source_programs[0].name + ".cpt");
+
 		// execute
 		//visitor::Interpreter interpreter(interpreter_global_scope, main_program, programs);
 		//interpreter.start();

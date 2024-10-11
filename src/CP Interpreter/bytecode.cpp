@@ -1,10 +1,166 @@
+#include <fstream>
+#include <iomanip>
+
 #include "bytecode.hpp"
 
-uint8_t* byteopnd_s(const std::string& str) {
-    uint64_t size = static_cast<uint64_t>(str.size());
-    size_t total_size = sizeof(size) + str.size();
-    uint8_t* concat = new uint8_t[total_size];
-    std::memcpy(concat, &size, sizeof(size));
-    std::memcpy(concat + sizeof(size), str.data(), str.size());
-    return byteopnd(concat);
+//uint8_t* byteopnd_s(const std::string& str) {
+//    uint64_t size = static_cast<uint64_t>(str.size());
+//    size_t total_size = sizeof(size) + str.size();
+//    uint8_t* concat = new uint8_t[total_size];
+//    std::memcpy(concat, &size, sizeof(size));
+//    std::memcpy(concat + sizeof(size), str.data(), str.size());
+//    return byteopnd(concat);
+//}
+
+BytecodeInstruction::BytecodeInstruction(OpCode opcode, uint8_t* operand)
+	: opcode(opcode), operand(operand) {}
+
+BytecodeInstruction::BytecodeInstruction(OpCode opcode, uint8_t operand)
+	: opcode(opcode), operand(to_byteopnd(operand)) {}
+
+BytecodeInstruction::BytecodeInstruction(OpCode opcode, size_t operand)
+	: opcode(opcode), operand(to_byteopnd(operand)) {}
+
+BytecodeInstruction::BytecodeInstruction(OpCode opcode, cp_bool operand)
+	: opcode(opcode), operand(to_byteopnd(operand)) {}
+
+BytecodeInstruction::BytecodeInstruction(OpCode opcode, cp_int operand)
+	: opcode(opcode), operand(to_byteopnd(operand)) {}
+
+BytecodeInstruction::BytecodeInstruction(OpCode opcode, cp_float operand)
+	: opcode(opcode), operand(to_byteopnd(operand)) {}
+
+BytecodeInstruction::BytecodeInstruction(OpCode opcode, cp_char operand)
+	: opcode(opcode), operand(to_byteopnd(operand)) {}
+
+BytecodeInstruction::BytecodeInstruction(OpCode opcode, const cp_string& operand)
+	: opcode(opcode), operand(to_byteopnd(operand)) {}
+
+uint8_t BytecodeInstruction::get_uint8_operand() const {
+	return *operand;
+}
+
+size_t BytecodeInstruction::get_size_operand() const {
+	return *reinterpret_cast<size_t*>(operand);
+}
+
+cp_bool BytecodeInstruction::get_bool_operand() const {
+	return *reinterpret_cast<cp_bool*>(operand);
+}
+
+cp_int BytecodeInstruction::get_int_operand() const {
+	return *reinterpret_cast<cp_int*>(operand);
+}
+
+cp_float BytecodeInstruction::get_float_operand() const {
+	return *reinterpret_cast<cp_float*>(operand);
+}
+
+cp_char BytecodeInstruction::get_char_operand() const {
+	return *reinterpret_cast<cp_char*>(operand);
+}
+
+cp_string BytecodeInstruction::get_string_operand() const {
+	uint64_t size;
+	std::memcpy(&size, operand, sizeof(uint64_t));
+
+	std::string result(reinterpret_cast<char*>(operand + sizeof(uint64_t)), size);
+	return result;
+}
+
+template <typename T>
+uint8_t* BytecodeInstruction::to_byteopnd(T value) {
+	static_assert(std::is_arithmetic<T>::value, "Only arithmetic types are supported");
+
+	uint8_t* buffer = new uint8_t[sizeof(T)];
+
+	std::memcpy(buffer, &value, sizeof(T));
+
+	return buffer;
+}
+
+uint8_t* BytecodeInstruction::to_byteopnd(const std::string& str) {
+	uint64_t size = static_cast<uint64_t>(str.size());
+	size_t total_size = sizeof(size) + str.size();
+
+	uint8_t* buffer = new uint8_t[total_size];
+
+	std::memcpy(buffer, &size, sizeof(size));
+	std::memcpy(buffer + sizeof(size), str.data(), str.size());
+
+	return buffer;
+}
+
+void BytecodeInstruction::write_bytecode_table(const std::vector<BytecodeInstruction>& instructions, const std::string& filename) {
+	std::ofstream file(filename);
+
+	if (!file.is_open()) {
+		std::cerr << "Error opening file: " << filename << std::endl;
+		return;
+	}
+
+	for (const auto& instruction : instructions) {
+		file << "0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(instruction.opcode) << "\t";
+
+		file << OP_NAMES[static_cast<int>(instruction.opcode)];
+		
+		file << std::setw(22 - OP_NAMES[static_cast<int>(instruction.opcode)].size()) << std::setfill(' ') << "\t" << std::dec;
+
+		switch (instruction.opcode)
+		{
+		case OP_SET_TYPE:
+		case OP_TYPE_PARSE:
+		case OP_IS_TYPE:
+			file << int(instruction.get_uint8_operand());
+			break;
+		case OP_SET_ARRAY_DIM:
+		case OP_SET_ELEMENT:
+		case OP_JUMP:
+		case OP_JUMP_IF_FALSE:
+		case OP_JUMP_IF_FALSE_OR_NEXT:
+		case OP_JUMP_IF_TRUE:
+		case OP_JUMP_IF_TRUE_OR_NEXT:
+			file << instruction.get_size_operand();
+			break;
+		case OP_PUSH_BOOL:
+			file << instruction.get_bool_operand();
+			break;
+		case OP_PUSH_INT:
+			file << int(instruction.get_int_operand());
+			break;
+		case OP_PUSH_FLOAT:
+			file << instruction.get_float_operand();
+			break;
+		case OP_PUSH_CHAR:
+			file << instruction.get_char_operand();
+			break;
+		case OP_PUSH_STRING:
+		case OP_PUSH_FUNCTION:
+		case OP_CREATE_STRUCT:
+		case OP_SET_FIELD:
+		case OP_SET_TYPE_NAME:
+		case OP_SET_TYPE_NAME_SPACE:
+		case OP_STRUCT_START:
+		case OP_LOAD_VAR:
+		case OP_STORE_VAR:
+		case OP_FUN_START:
+		case OP_CALL:
+		case OP_ASSIGN_VAR:
+		case OP_LOAD_SUB_ID:
+			file << instruction.get_string_operand();
+			break;
+		case OP_CREATE_ARRAY:
+			file << instruction.get_bool_operand();
+			break;
+		default:
+			if (instruction.operand) {
+				file << instruction.operand;
+			}
+			break;
+		}
+
+		file << std::endl;
+	}
+
+	file.close();
 }

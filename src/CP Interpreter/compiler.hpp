@@ -28,8 +28,10 @@ namespace visitor {
 		std::stack<std::string> current_namespace;
 
 	private:
-		void add_instruction(OpCode opcode, uint8_t* operand);
-		void replace_last_operand(uint8_t* operand);
+		template <typename T>
+		size_t add_instruction(OpCode opcode, T operand);
+		template <typename T>
+		void replace_last_operand(size_t pos, T operand);
 
 		void type_definition_operations(TypeDefinition type);
 		void access_sub_value_operations(std::vector<Identifier> identifier_vector);

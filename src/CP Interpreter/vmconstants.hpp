@@ -2,8 +2,7 @@
 #define VMCONSTANTS_HPP
 
 #include <cstdint>
-
-//#include "types.hpp"
+#include <string>
 
 enum OpCode : int16_t {
 	OP_RES,
@@ -28,11 +27,11 @@ enum OpCode : int16_t {
 	// type ops
 	OP_SET_TYPE,
 	OP_SET_TYPE_NAME,
-	OP_SET_NAME_SPACE,
+	OP_SET_TYPE_NAME_SPACE,
 	OP_SET_ARRAY_DIM,
 	OP_SET_ARRAY_SIZE,
 	// variable ops
-	OP_SET_VAR_USE_REF,
+	OP_SET_VAR_USE_REF, // todo: chek places to use
 	OP_LOAD_VAR,
 	OP_STORE_VAR,
 	OP_ASSIGN_VAR,
@@ -57,6 +56,7 @@ enum OpCode : int16_t {
 	OP_JUMP_IF_FALSE,
 	OP_JUMP_IF_FALSE_OR_NEXT,
 	OP_JUMP_IF_TRUE,
+	OP_JUMP_IF_TRUE_OR_NEXT,
 	// expression ops
 	OP_IS_TYPE,
 	OP_REFID,
@@ -92,6 +92,96 @@ enum OpCode : int16_t {
 	OP_UNREF,
 	OP_TRAP,
 	OP_HALT
+};
+
+const std::string OP_NAMES[] = {
+	"RES",
+	// value ops
+	"POP",
+	"PUSH_UNDEFINED",
+	"PUSH_VOID",
+	"PUSH_BOOL",
+	"PUSH_INT",
+	"PUSH_FLOAT",
+	"PUSH_CHAR",
+	"PUSH_STRING",
+	"PUSH_FUNCTION",
+	"CREATE_ARRAY",
+	"SET_ELEMENT",
+	"CREATE_STRUCT",
+	"SET_FIELD",
+	// struct type ops
+	"STRUCT_START",
+	"STRUCT_SET_VAR",
+	"STRUCT_END",
+	// type ops
+	"SET_TYPE",
+	"SET_TYPE_NAME",
+	"SET_NAME_SPACE",
+	"SET_ARRAY_DIM",
+	"SET_ARRAY_SIZE",
+	// variable ops
+	"SET_VAR_USE_REF",
+	"LOAD_VAR",
+	"STORE_VAR",
+	"ASSIGN_VAR",
+	"LOAD_SUB_ID",
+	"LOAD_SUB_IX",
+	"ASSIGN_SUB",
+	// function ops
+	"FUN_START",
+	"FUN_PARAM_END",
+	"FUN_END",
+	"CALL",
+	"RETURN",
+	// coditional
+	"CONTINUE",
+	"BREAK",
+	"TRY_START",
+	"TRY_END",
+	"THROW",
+	"GET_ITERATOR",
+	"NEXT_ELEMENT",
+	"JUMP",
+	"JUMP_IF_FALSE",
+	"JUMP_IF_FALSE_OR_NEXT",
+	"JUMP_IF_TRUE",
+	"JUMP_IF_TRUE_OR_NEXT",
+	// expression ops
+	"IS_TYPE",
+	"REFID",
+	"TYPEID",
+	"TYPEOF",
+	"TYPE_PARSE",
+	"TERNARY",
+	"IN",
+	"OR",
+	"AND",
+	"BIT_OR",
+	"BIT_XOR",
+	"BIT_AND",
+	"EQL",
+	"DIF",
+	"LT",
+	"LTE",
+	"GT",
+	"GTE",
+	"SPACE_SHIP",
+	"LEFT_SHIFT",
+	"RIGHT_SHIFT",
+	"ADD",
+	"SUB",
+	"MUL",
+	"DIV",
+	"REMAINDER",
+	"FLOOR_DIV",
+	"NOT",
+	"BIT_NOT",
+	"EXP",
+	"REF",
+	"UNREF",
+	"TRAP",
+	"HALT"
 };
 
 #endif // !VMCONSTANTS_HPP

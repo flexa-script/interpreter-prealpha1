@@ -32,7 +32,7 @@ void Compiler::visit(ASTProgramNode* astnode) {
 			throw std::runtime_error(ex.what());
 		}
 	}
-	add_instruction(OpCode::OP_HALT, byteopnd_n);
+	add_instruction(OpCode::OP_HALT, nullptr);
 	pop_namespace(pop);
 }
 
@@ -77,9 +77,9 @@ void Compiler::visit(ASTNamespaceManagerNode* astnode) {
 
 void Compiler::visit(ASTEnumNode* astnode) {
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
-		add_instruction(OpCode::OP_PUSH_INT, byteopnd8(i));
-		add_instruction(OpCode::OP_SET_TYPE, byteopnd8(Type::T_INT));
-		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(build_namespace(astnode->identifiers[i])));
+		add_instruction(OpCode::OP_PUSH_INT, cp_int(i));
+		add_instruction(OpCode::OP_SET_TYPE, uint8_t(Type::T_INT));
+		add_instruction(OpCode::OP_STORE_VAR, cp_string(build_namespace(astnode->identifiers[i])));
 	}
 }
 
@@ -92,10 +92,10 @@ void Compiler::visit(ASTDeclarationNode* astnode) {
 		astnode->expr->accept(this);
 	}
 	else {
-		add_instruction(OpCode::OP_PUSH_UNDEFINED, byteopnd_n);
+		add_instruction(OpCode::OP_PUSH_UNDEFINED, nullptr);
 	}
 
-	add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(build_namespace(astnode->identifier)));
+	add_instruction(OpCode::OP_STORE_VAR, cp_string(build_namespace(astnode->identifier)));
 
 	pop_namespace(pop);
 }
@@ -113,11 +113,11 @@ void Compiler::visit(ASTAssignmentNode* astnode) {
 
 	if (has_sub_value(astnode->identifier_vector)) {
 		access_sub_value_operations(astnode->identifier_vector);
-		add_instruction(OpCode::OP_ASSIGN_SUB, byteopnd_n);
+		add_instruction(OpCode::OP_ASSIGN_SUB, nullptr);
 	}
 	else {
 		nmspace_array_operations();
-		add_instruction(OpCode::OP_ASSIGN_VAR, byteopnd_s(build_namespace(astnode->identifier)));
+		add_instruction(OpCode::OP_ASSIGN_VAR, cp_string(build_namespace(astnode->identifier)));
 	}
 
 	pop_namespace(pop);
@@ -128,10 +128,10 @@ void Compiler::visit(ASTReturnNode* astnode) {
 		astnode->expr->accept(this);
 	}
 	else {
-		add_instruction(OpCode::OP_PUSH_UNDEFINED, byteopnd_n);
+		add_instruction(OpCode::OP_PUSH_UNDEFINED, nullptr);
 	}
 
-	add_instruction(OpCode::OP_RETURN, byteopnd_n);
+	add_instruction(OpCode::OP_RETURN, nullptr);
 }
 
 void Compiler::visit(ASTFunctionCallNode* astnode) {
@@ -143,7 +143,7 @@ void Compiler::visit(ASTFunctionCallNode* astnode) {
 
 	nmspace_array_operations();
 
-	add_instruction(OpCode::OP_CALL, byteopnd_s(astnode->identifier));
+	add_instruction(OpCode::OP_CALL, cp_string(astnode->identifier));
 
 	access_sub_value_operations(astnode->identifier_vector);
 
@@ -154,7 +154,7 @@ void Compiler::visit(ASTFunctionDefinitionNode* astnode) {
 	auto pop = push_namespace(astnode->type_name_space);
 
 	if (astnode->block) {
-		add_instruction(OpCode::OP_FUN_START, byteopnd_s(build_namespace(astnode->identifier)));
+		add_instruction(OpCode::OP_FUN_START, cp_string(build_namespace(astnode->identifier)));
 
 		type_definition_operations(*astnode);
 
@@ -167,11 +167,11 @@ void Compiler::visit(ASTFunctionDefinitionNode* astnode) {
 			}
 		}
 
-		add_instruction(OpCode::OP_FUN_PARAM_END, byteopnd_n);
+		add_instruction(OpCode::OP_FUN_PARAM_END, nullptr);
 
 		astnode->block->accept(this);
 
-		add_instruction(OpCode::OP_FUN_END, byteopnd_n);
+		add_instruction(OpCode::OP_FUN_END, nullptr);
 	}
 
 	pop_namespace(pop);
@@ -180,7 +180,7 @@ void Compiler::visit(ASTFunctionDefinitionNode* astnode) {
 void Compiler::visit(ASTFunctionExpression* astnode) {
 	astnode->fun->identifier = axe::UUID::generate();
 	astnode->fun->accept(this);
-	add_instruction(OpCode::OP_PUSH_FUNCTION, byteopnd_s(astnode->fun->identifier));
+	add_instruction(OpCode::OP_PUSH_FUNCTION, cp_string(astnode->fun->identifier));
 }
 
 void Compiler::visit(ASTBlockNode* astnode) {
@@ -191,61 +191,66 @@ void Compiler::visit(ASTBlockNode* astnode) {
 
 void Compiler::visit(ASTExitNode* astnode) {
 	astnode->exit_code->accept(this);
-	add_instruction(OpCode::OP_HALT, byteopnd_n);
+	add_instruction(OpCode::OP_HALT, nullptr);
 }
 
 void Compiler::visit(ASTContinueNode* astnode) {
-	add_instruction(OpCode::OP_CONTINUE, byteopnd_n);
+	add_instruction(OpCode::OP_CONTINUE, nullptr);
 }
 
 void Compiler::visit(ASTBreakNode* astnode) {
-	add_instruction(OpCode::OP_BREAK, byteopnd_n);
+	add_instruction(OpCode::OP_BREAK, nullptr);
 }
 
 void Compiler::visit(ASTSwitchNode* astnode) {
 	astnode->condition->accept(this);
 
 	for (size_t i = 0; i < astnode->statements.size(); ++i) {
+		size_t ip = 0;
+
 		for (const auto& [key, value] : astnode->parsed_case_blocks) {
 			if (i == value || i == astnode->default_block) {
-				add_instruction(OpCode::OP_JUMP_IF_FALSE_OR_NEXT, nullptr);
+				ip = add_instruction(OpCode::OP_JUMP_IF_FALSE_OR_NEXT, nullptr);
 			}
 		}
-		add_instruction(OpCode::OP_POP, byteopnd_n);
+
+		add_instruction(OpCode::OP_POP, nullptr);
+
 		astnode->statements[i]->accept(this);
-		replace_last_operand(byteopnd8(pointer));
+
+		replace_last_operand(ip, size_t(pointer));
 	}
 }
 
 void Compiler::visit(ASTElseIfNode* astnode) {
 	astnode->condition->accept(this);
 
-	add_instruction(OpCode::OP_JUMP_IF_FALSE, nullptr);
+	auto ip = add_instruction(OpCode::OP_JUMP_IF_FALSE, nullptr);
 
 	astnode->block->accept(this);
 
-	replace_last_operand(byteopnd8(pointer));
+	replace_last_operand(ip, size_t(pointer));
 }
 
 void Compiler::visit(ASTIfNode* astnode) {
 	astnode->condition->accept(this);
 
-	add_instruction(OpCode::OP_JUMP_IF_FALSE, nullptr);
+	auto ip = add_instruction(OpCode::OP_JUMP_IF_FALSE, nullptr);
 
 	astnode->if_block->accept(this);
 
-	replace_last_operand(byteopnd8(pointer));
+	replace_last_operand(ip, size_t(pointer));
 
 	for (const auto& elif : astnode->else_ifs) {
 		elif->accept(this);
 	}
 
 	if (astnode->else_block) {
-		add_instruction(OpCode::OP_JUMP_IF_FALSE, nullptr);
+		auto eip = add_instruction(OpCode::OP_JUMP_IF_FALSE, nullptr);
 
 		astnode->else_block->accept(this);
 
-		replace_last_operand(byteopnd8(pointer));
+		replace_last_operand(eip, size_t(pointer));
 	}
 }
 
@@ -261,66 +266,66 @@ void Compiler::visit(ASTForNode* astnode) {
 	if (astnode->dci[2]) {
 		astnode->dci[2]->accept(this);
 	}
-	add_instruction(OpCode::OP_JUMP_IF_TRUE, byteopnd8(start));
+	add_instruction(OpCode::OP_JUMP_IF_TRUE, size_t(start));
 }
 
 void Compiler::visit(ASTForEachNode* astnode) {
 	astnode->collection->accept(this);
 
-	add_instruction(OpCode::OP_GET_ITERATOR, byteopnd_n);
+	add_instruction(OpCode::OP_GET_ITERATOR, nullptr);
 
 	astnode->itdecl->accept(this);
 
-	add_instruction(OpCode::OP_NEXT_ELEMENT, byteopnd_n);
+	add_instruction(OpCode::OP_NEXT_ELEMENT, nullptr);
 
 	auto start = pointer;
 
 	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
 		for (auto decl : idnode->declarations) {
 			nmspace_array_operations();
-			add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(build_namespace(decl->identifier)));
+			add_instruction(OpCode::OP_STORE_VAR, cp_string(build_namespace(decl->identifier)));
 		}
 	}
 	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl)) {
 		nmspace_array_operations();
-		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(build_namespace(idnode->identifier)));
+		add_instruction(OpCode::OP_STORE_VAR, cp_string(build_namespace(idnode->identifier)));
 	}
 
 	astnode->block->accept(this);
 
-	add_instruction(OpCode::OP_NEXT_ELEMENT, byteopnd_n);
+	add_instruction(OpCode::OP_NEXT_ELEMENT, nullptr);
 
-	add_instruction(OpCode::OP_JUMP_IF_TRUE, byteopnd8(start));
+	add_instruction(OpCode::OP_JUMP_IF_TRUE, size_t(start));
 }
 
 void Compiler::visit(ASTTryCatchNode* astnode) {
-	add_instruction(OpCode::OP_TRY_START, byteopnd_n);
+	add_instruction(OpCode::OP_TRY_START, nullptr);
 
 	astnode->try_block->accept(this);
 
-	add_instruction(OpCode::OP_TRY_END, byteopnd_n);
+	add_instruction(OpCode::OP_TRY_END, nullptr);
 
-	add_instruction(OpCode::OP_JUMP_IF_TRUE, nullptr);
+	auto ip = add_instruction(OpCode::OP_JUMP_IF_TRUE, nullptr);
 
 	astnode->decl->accept(this);
 
 	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
 		for (auto decl : idnode->declarations) {
-			add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(decl->identifier));
+			add_instruction(OpCode::OP_STORE_VAR, cp_string(decl->identifier));
 		}
 	}
 	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
-		add_instruction(OpCode::OP_STORE_VAR, byteopnd_s(idnode->identifier));
+		add_instruction(OpCode::OP_STORE_VAR, cp_string(idnode->identifier));
 	}
 
 	astnode->catch_block->accept(this);
 
-	replace_last_operand(byteopnd8(pointer));
+	replace_last_operand(ip, size_t(pointer));
 }
 
 void Compiler::visit(parser::ASTThrowNode* astnode) {
 	astnode->error->accept(this);
-	add_instruction(OpCode::OP_THROW, byteopnd_n);
+	add_instruction(OpCode::OP_THROW, nullptr);
 }
 
 void Compiler::visit(ASTReticencesNode* astnode) {}
@@ -328,11 +333,11 @@ void Compiler::visit(ASTReticencesNode* astnode) {}
 void Compiler::visit(ASTWhileNode* astnode) {
 	astnode->condition->accept(this);
 
-	add_instruction(OpCode::OP_JUMP_IF_FALSE, nullptr);
+	auto ip = add_instruction(OpCode::OP_JUMP_IF_FALSE, nullptr);
 
 	astnode->block->accept(this);
 
-	replace_last_operand(byteopnd8(pointer));
+	replace_last_operand(ip, size_t(pointer));
 }
 
 void Compiler::visit(ASTDoWhileNode* astnode) {
@@ -342,58 +347,58 @@ void Compiler::visit(ASTDoWhileNode* astnode) {
 
 	astnode->condition->accept(this);
 
-	add_instruction(OpCode::OP_JUMP_IF_TRUE, byteopnd8(pointer));
+	add_instruction(OpCode::OP_JUMP_IF_TRUE, size_t(pointer));
 }
 
 void Compiler::visit(ASTStructDefinitionNode* astnode) {
-	add_instruction(OpCode::OP_STRUCT_START, byteopnd_s(astnode->identifier));
+	add_instruction(OpCode::OP_STRUCT_START, cp_string(astnode->identifier));
 
 	for (const auto& var : astnode->variables) {
 		type_definition_operations(var.second);
-		add_instruction(OpCode::OP_STRUCT_SET_VAR, byteopnd_s(var.first));
+		add_instruction(OpCode::OP_STRUCT_SET_VAR, cp_string(var.first));
 	}
 	
-	add_instruction(OpCode::OP_STRUCT_END, byteopnd_s(astnode->identifier));
+	add_instruction(OpCode::OP_STRUCT_END, nullptr);
 }
 
 void Compiler::visit(ASTLiteralNode<cp_bool>* astnode) {
-	add_instruction(OpCode::OP_PUSH_BOOL, byteopnd(astnode->val));
+	add_instruction(OpCode::OP_PUSH_BOOL, cp_bool(astnode->val));
 }
 
 void Compiler::visit(ASTLiteralNode<cp_int>* astnode) {
-	add_instruction(OpCode::OP_PUSH_INT, byteopnd(astnode->val));
+	add_instruction(OpCode::OP_PUSH_INT, cp_int(astnode->val));
 }
 
 void Compiler::visit(ASTLiteralNode<cp_float>* astnode) {
-	add_instruction(OpCode::OP_PUSH_FLOAT, byteopnd(&astnode->val));
+	add_instruction(OpCode::OP_PUSH_FLOAT, cp_float(astnode->val));
 }
 
 void Compiler::visit(ASTLiteralNode<cp_char>* astnode) {
-	add_instruction(OpCode::OP_PUSH_CHAR, byteopnd(astnode->val));
+	add_instruction(OpCode::OP_PUSH_CHAR, cp_char(astnode->val));
 }
 
 void Compiler::visit(ASTLiteralNode<cp_string>* astnode) {
-	add_instruction(OpCode::OP_PUSH_STRING, byteopnd_s(astnode->val));
+	add_instruction(OpCode::OP_PUSH_STRING, cp_string(astnode->val));
 }
 
 void Compiler::visit(ASTArrayConstructorNode* astnode) {
 	auto size = astnode->values.size();
 
-	add_instruction(OpCode::OP_CREATE_ARRAY, byteopnd(size));
+	add_instruction(OpCode::OP_CREATE_ARRAY, size_t(size));
 
 	for (size_t i = 0; i < size; ++i) {
 		astnode->values[i]->accept(this);
-		add_instruction(OpCode::OP_SET_ELEMENT, byteopnd(i));
+		add_instruction(OpCode::OP_SET_ELEMENT, size_t(i));
 	}
 }
 
 void Compiler::visit(ASTStructConstructorNode* astnode) {
-	add_instruction(OpCode::OP_SET_TYPE_NAME, byteopnd_s(astnode->nmspace));
-	add_instruction(OpCode::OP_CREATE_STRUCT, byteopnd_s(astnode->type_name));
+	add_instruction(OpCode::OP_SET_TYPE_NAME, cp_string(astnode->nmspace));
+	add_instruction(OpCode::OP_CREATE_STRUCT, cp_string(astnode->type_name));
 
 	for (const auto& expr : astnode->values) {
 		expr.second->accept(this);
-		add_instruction(OpCode::OP_SET_ELEMENT, byteopnd_s(expr.first));
+		add_instruction(OpCode::OP_SET_FIELD, cp_string(expr.first));
 	}
 }
 
@@ -403,7 +408,7 @@ void Compiler::visit(ASTIdentifierNode* astnode) {
 	}
 	else {
 		nmspace_array_operations();
-		add_instruction(OpCode::OP_LOAD_VAR, byteopnd_s(astnode->identifier));
+		add_instruction(OpCode::OP_LOAD_VAR, cp_string(astnode->identifier));
 	}
 }
 
@@ -477,7 +482,7 @@ void Compiler::visit(ASTBinaryExprNode* astnode) {
 		op = OpCode::OP_EXP;
 	}
 
-	add_instruction(op, byteopnd_n);
+	add_instruction(op, nullptr);
 }
 
 void Compiler::visit(ASTUnaryExprNode* astnode) {
@@ -490,15 +495,15 @@ void Compiler::visit(ASTUnaryExprNode* astnode) {
 		op = OpCode::OP_UNREF;
 	}
 	else if (astnode->unary_op == "-") {
-		add_instruction(OpCode::OP_PUSH_INT, byteopnd8(0));
+		add_instruction(OpCode::OP_PUSH_INT, cp_int(0));
 		op = OpCode::OP_SUB;
 	}
 	else if (astnode->unary_op == "++") {
-		add_instruction(OpCode::OP_PUSH_INT, byteopnd8(1));
+		add_instruction(OpCode::OP_PUSH_INT, cp_int(1));
 		op = OpCode::OP_ADD;
 	}
 	else if (astnode->unary_op == "--") {
-		add_instruction(OpCode::OP_PUSH_INT, byteopnd8(1));
+		add_instruction(OpCode::OP_PUSH_INT, cp_int(1));
 		op = OpCode::OP_SUB;
 	}
 	else if (astnode->unary_op == "not") {
@@ -510,62 +515,62 @@ void Compiler::visit(ASTUnaryExprNode* astnode) {
 
 	astnode->expr->accept(this);
 
-	add_instruction(op, byteopnd_n);
+	add_instruction(op, nullptr);
 }
 
 void Compiler::visit(ASTTernaryNode* astnode) {
 	astnode->condition->accept(this);
 	astnode->value_if_true->accept(this);
 	astnode->value_if_false->accept(this);
-	add_instruction(OpCode::OP_TERNARY, byteopnd_n);
+	add_instruction(OpCode::OP_TERNARY, nullptr);
 }
 
 void Compiler::visit(ASTInNode* astnode) {
 	// TODO: binary expression?
 	astnode->value->accept(this);
 	astnode->collection->accept(this);
-	add_instruction(OpCode::OP_IN, byteopnd_n);
+	add_instruction(OpCode::OP_IN, nullptr);
 }
 
 void Compiler::visit(ASTTypeParseNode* astnode) {
 	astnode->expr->accept(this);
 	if (is_bool(astnode->type)) {
-		add_instruction(OpCode::OP_PUSH_BOOL, byteopnd8(false));
+		add_instruction(OpCode::OP_PUSH_BOOL, cp_bool(false));
 	}
 	else if (is_int(astnode->type)) {
-		add_instruction(OpCode::OP_PUSH_INT, byteopnd8(0));
+		add_instruction(OpCode::OP_PUSH_INT, cp_int(0));
 	}
 	else if (is_float(astnode->type)) {
-		add_instruction(OpCode::OP_PUSH_FLOAT, byteopnd8(0));
+		add_instruction(OpCode::OP_PUSH_FLOAT, cp_float(0));
 	}
 	else if (is_char(astnode->type)) {
-		add_instruction(OpCode::OP_PUSH_CHAR, byteopnd8('\0'));
+		add_instruction(OpCode::OP_PUSH_CHAR, cp_char('\0'));
 	}
 	else if (is_string(astnode->type)) {
-		add_instruction(OpCode::OP_PUSH_STRING, byteopnd_s(""));
+		add_instruction(OpCode::OP_PUSH_STRING, cp_string(""));
 	}
-	add_instruction(OpCode::OP_TYPE_PARSE, byteopnd8(astnode->type));
+	add_instruction(OpCode::OP_TYPE_PARSE, uint8_t(astnode->type));
 }
 
 void Compiler::visit(ASTNullNode* astnode) {
-	add_instruction(OpCode::OP_PUSH_VOID, byteopnd_n);
+	add_instruction(OpCode::OP_PUSH_VOID, nullptr);
 }
 
 void Compiler::visit(ASTThisNode* astnode) {
-	add_instruction(OpCode::OP_PUSH_STRING, byteopnd_s(get_namespace()));
+	add_instruction(OpCode::OP_PUSH_STRING, cp_string(get_namespace()));
 }
 
 void Compiler::visit(ASTTypingNode* astnode) {
 	astnode->expr->accept(this);
 
 	if (astnode->image == "typeid") {
-		add_instruction(OpCode::OP_TYPEID, byteopnd_n);
+		add_instruction(OpCode::OP_TYPEID, nullptr);
 	}
 	else if (astnode->image == "refid") {
-		add_instruction(OpCode::OP_REFID, byteopnd_n);
+		add_instruction(OpCode::OP_REFID, nullptr);
 		}
 	else if (astnode->image == "typeof") {
-		add_instruction(OpCode::OP_TYPEOF, byteopnd_n);
+		add_instruction(OpCode::OP_TYPEOF, nullptr);
 	}
 	else {
 		auto type = Type::T_UNDEFINED;
@@ -578,7 +583,7 @@ void Compiler::visit(ASTTypingNode* astnode) {
 		else if (astnode->image == "is_struct") {
 			type = Type::T_STRUCT;
 		}
-		add_instruction(OpCode::OP_IS_TYPE, byteopnd8(type));
+		add_instruction(OpCode::OP_IS_TYPE, uint8_t(type));
 	}
 }
 
@@ -587,34 +592,40 @@ bool Compiler::has_sub_value(std::vector<Identifier> identifier_vector) {
 }
 
 void Compiler::nmspace_array_operations() {
+	// todo: check duplicates
 	const auto& nmspace = get_namespace();
 	auto size = program_nmspaces[nmspace].size();
 
-	add_instruction(OpCode::OP_CREATE_ARRAY, byteopnd(size));
+	add_instruction(OpCode::OP_CREATE_ARRAY, size_t(size));
 	for (size_t i = 0; i < size; ++i) {
-		add_instruction(OpCode::OP_PUSH_STRING, byteopnd_s(program_nmspaces[nmspace][i]));
-		add_instruction(OpCode::OP_SET_ELEMENT, byteopnd(i));
+		add_instruction(OpCode::OP_PUSH_STRING, cp_string(program_nmspaces[nmspace][i]));
+		add_instruction(OpCode::OP_SET_ELEMENT, size_t(i));
 	}
 }
 
 void Compiler::type_definition_operations(TypeDefinition type) {
 
-	add_instruction(OpCode::OP_SET_TYPE, byteopnd8(type.type));
+	add_instruction(OpCode::OP_SET_TYPE, uint8_t(type.type));
 
 	if (!type.type_name.empty()) {
 		if (!type.type_name_space.empty()) {
-			add_instruction(OpCode::OP_SET_NAME_SPACE, byteopnd_s(type.type_name_space));
+			add_instruction(OpCode::OP_SET_TYPE_NAME_SPACE, cp_string(type.type_name_space));
 		}
-		add_instruction(OpCode::OP_SET_TYPE_NAME, byteopnd_s(type.type_name));
+		add_instruction(OpCode::OP_SET_TYPE_NAME, cp_string(type.type_name));
 	}
 
 	auto dim = type.dim.size();
 
 	if (dim > 0) {
-		add_instruction(OpCode::OP_SET_ARRAY_DIM, byteopnd8(dim));
-		for (auto& s : type.dim) {
-			s->accept(this);
-			add_instruction(OpCode::OP_SET_ARRAY_SIZE, byteopnd_n);
+		add_instruction(OpCode::OP_SET_ARRAY_DIM, size_t(dim));
+		for (const auto s : type.dim) {
+			if (s) {
+				s->accept(this);
+			}
+			else {
+				add_instruction(OpCode::OP_PUSH_INT, cp_int(0));
+			}
+			add_instruction(OpCode::OP_SET_ARRAY_SIZE, nullptr);
 		}
 	}
 }
@@ -622,36 +633,34 @@ void Compiler::type_definition_operations(TypeDefinition type) {
 void Compiler::access_sub_value_operations(std::vector<Identifier> identifier_vector) {
 	if (has_sub_value(identifier_vector)) {
 		nmspace_array_operations();
-		add_instruction(OpCode::OP_LOAD_VAR, byteopnd_s(identifier_vector[0].identifier));
+		add_instruction(OpCode::OP_LOAD_VAR, cp_string(identifier_vector[0].identifier));
 
 		for (size_t i = 0; i < identifier_vector.size(); ++i) {
 			const auto& id = identifier_vector[i];
 
 			if (i > 0) {
-				add_instruction(OpCode::OP_LOAD_SUB_ID, byteopnd_s(id.identifier));
+				add_instruction(OpCode::OP_LOAD_SUB_ID, cp_string(id.identifier));
 			}
 
 			for (auto av : id.access_vector) {
 				av->accept(this);
-				add_instruction(OpCode::OP_LOAD_SUB_IX, byteopnd_n);
+				add_instruction(OpCode::OP_LOAD_SUB_IX, size_t(0));
 			}
 		}
 	}
 }
 
-void Compiler::add_instruction(OpCode opcode, uint8_t* operand) {
-	bytecode_program.push_back(BytecodeInstruction{ opcode, operand });
+template <typename T>
+size_t Compiler::add_instruction(OpCode opcode, T operand) {
+	auto ins_pointer = pointer;
+	bytecode_program.push_back(BytecodeInstruction(opcode, operand));
 	++pointer;
+	return ins_pointer;
 }
 
-void Compiler::replace_last_operand(uint8_t* operand) {
-	for (size_t i = bytecode_program.size() - 1; i > 0; --i) {
-		if (!bytecode_program[i].operand) {
-			bytecode_program[i].operand = operand;
-			break;
-		}
-		if (i == 0) break;
-	}
+template <typename T>
+void Compiler::replace_last_operand(size_t pos, T operand) {
+	bytecode_program[pos].operand = BytecodeInstruction::to_byteopnd(operand);
 }
 
 bool Compiler::push_namespace(const std::string nmspace) {
