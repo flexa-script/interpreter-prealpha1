@@ -19,6 +19,7 @@ public:
 	OpCode opcode;
 	uint8_t* operand;
 
+	BytecodeInstruction();
 	BytecodeInstruction(OpCode opcode, uint8_t* operand);
 	BytecodeInstruction(OpCode opcode, uint8_t operand);
 	BytecodeInstruction(OpCode opcode, size_t operand);

@@ -59,6 +59,8 @@
     <ClInclude Include="datetime.hpp" />
     <ClInclude Include="exception_handler.hpp" />
     <ClInclude Include="files.hpp" />
+    <ClInclude Include="garbage_collector.hpp" />
+    <ClInclude Include="gcobject.hpp" />
     <ClInclude Include="graphics.hpp" />
     <ClInclude Include="cpinterpreter.hpp" />
     <ClInclude Include="cprepl.hpp" />
@@ -83,6 +85,7 @@
     <ClInclude Include="vendor\axeutils.hpp" />
     <ClInclude Include="vendor\axeuuid.hpp" />
     <ClInclude Include="vendor\axewatch.hpp" />
+    <ClInclude Include="virtual_machine.hpp" />
     <ClInclude Include="visitor.hpp" />
     <ClInclude Include="vmconstants.hpp" />
   </ItemGroup>
@@ -95,6 +98,8 @@
     <ClCompile Include="datetime.cpp" />
     <ClCompile Include="exception_handler.cpp" />
     <ClCompile Include="files.cpp" />
+    <ClCompile Include="garbage_collector.cpp" />
+    <ClCompile Include="gcobject.cpp" />
     <ClCompile Include="graphics.cpp" />
     <ClCompile Include="cpinterpreter.cpp" />
     <ClCompile Include="cprepl.cpp" />
@@ -119,6 +124,7 @@
     <ClCompile Include="vendor\axegraphics.cpp" />
     <ClCompile Include="vendor\axelogging.cpp" />
     <ClCompile Include="vendor\axeutils.cpp" />
+    <ClCompile Include="virtual_machine.cpp" />
     <ClCompile Include="visitor.cpp" />
     <ClCompile Include="vmconstants.cpp" />
   </ItemGroup>

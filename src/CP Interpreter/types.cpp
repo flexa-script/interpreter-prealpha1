@@ -398,6 +398,10 @@ Value::Value(cp_string rawv) {
 	set(rawv);
 }
 
+Value::Value(cp_array rawv) {
+	set(rawv);
+}
+
 Value::Value(cp_array rawv, Type array_type, std::vector<ASTExprNode*> dim, std::string type_name, std::string type_name_space) {
 	set(rawv, array_type, dim, type_name, type_name_space);
 }
@@ -430,42 +434,48 @@ Value::~Value() = default;
 
 void Value::set(cp_bool b) {
 	unset();
-	this->b = std::shared_ptr<cp_bool>(new cp_bool(b));
+	this->b = b;
 	type = Type::T_BOOL;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_int i) {
 	unset();
-	this->i = std::shared_ptr<cp_int>(new cp_int(i));
+	this->i = i;
 	type = Type::T_INT;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_float f) {
 	unset();
-	this->f = std::shared_ptr<cp_float>(new cp_float(f));
+	this->f = f;
 	type = Type::T_FLOAT;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_char c) {
 	unset();
-	this->c = std::shared_ptr<cp_char>(new cp_char(c));
+	this->c = c;
 	type = Type::T_CHAR;
 	array_type = Type::T_UNDEFINED;
 }
 
 void Value::set(cp_string s) {
 	unset();
-	this->s = std::shared_ptr<cp_string>(new cp_string(s));
+	this->s = s;
 	type = Type::T_STRING;
 	array_type = Type::T_UNDEFINED;
 }
 
+void Value::set(cp_array arr) {
+	unset();
+	this->arr = arr;
+	type = Type::T_ARRAY;
+}
+
 void Value::set(cp_array arr, Type array_type, std::vector<ASTExprNode*> dim, std::string type_name, std::string type_name_space) {
 	unset();
-	this->arr = std::shared_ptr<cp_array>(new cp_array(arr));
+	this->arr = arr;
 	type = Type::T_ARRAY;
 	this->array_type = array_type;
 	this->type_name = type_name;
@@ -474,7 +484,7 @@ void Value::set(cp_array arr, Type array_type, std::vector<ASTExprNode*> dim, st
 
 void Value::set(cp_struct str, std::string type_name, std::string type_name_space) {
 	unset();
-	this->str = std::shared_ptr<cp_struct>(new cp_struct(str));
+	this->str = str;
 	type = Type::T_STRUCT;
 	array_type = Type::T_UNDEFINED;
 	this->type_name = type_name;
@@ -483,65 +493,41 @@ void Value::set(cp_struct str, std::string type_name, std::string type_name_spac
 
 void Value::set(cp_function fun) {
 	unset();
-	this->fun = std::shared_ptr<cp_function>(new cp_function(fun));
+	this->fun = fun;
 	type = Type::T_FUNCTION;
 	array_type = Type::T_UNDEFINED;
 }
 
 cp_bool Value::get_b() const {
-	if (b) {
-		return *b;
-	}
-	return false;
+	return b;
 }
 
 cp_int Value::get_i() const {
-	if (i) {
-		return *i;
-	}
-	return 0;
+	return i;
 }
 
 cp_float Value::get_f() const {
-	if (f) {
-		return *f;
-	}
-	return 0;
+	return f;
 }
 
 cp_char Value::get_c() const {
-	if (c) {
-		return *c;
-	}
-	return '\0';
+	return c;
 }
 
 cp_string Value::get_s() const {
-	if (s) {
-		return *s;
-	}
-	return "";
+	return s;
 }
 
 cp_array Value::get_arr() const {
-	if (arr) {
-		return *arr;
-	}
-	return cp_array();
+	return arr;
 }
 
 cp_struct Value::get_str() const {
-	if (str) {
-		return *str;
-	}
-	return cp_struct();
+	return str;
 }
 
 cp_function Value::get_fun() const {
-	if (fun) {
-		return *fun;
-	}
-	return cp_function();
+	return fun;
 }
 
 void Value::set_type(Type type) {
@@ -553,14 +539,14 @@ void Value::set_arr_type(Type arr_type) {
 }
 
 void Value::unset() {
-	this->b = nullptr;
-	this->i = nullptr;
-	this->f = nullptr;
-	this->c = nullptr;
-	this->s = nullptr;
-	this->arr = nullptr;
-	this->str = nullptr;
-	this->fun = nullptr;
+	this->b = false;
+	this->i = 0;
+	this->f = 0l;
+	this->c = '\0';
+	this->s = "";
+	this->arr = cp_array();
+	this->str = cp_struct();
+	this->fun = cp_function();
 }
 
 void Value::set_null() {
@@ -583,27 +569,27 @@ long double Value::value_hash() const {
 	case Type::T_VOID:
 		throw std::runtime_error("value is null");
 	case Type::T_BOOL:
-		return (long double)*b;
+		return (long double)b;
 	case Type::T_INT:
-		return (long double)*i;
+		return (long double)i;
 	case Type::T_FLOAT:
-		return (long double)*f;
+		return (long double)f;
 	case Type::T_CHAR:
-		return (long double)*c;
+		return (long double)c;
 	case Type::T_STRING:
-		return (long double)axe::StringUtils::hashcode(*s);
+		return (long double)axe::StringUtils::hashcode(s);
 	case Type::T_ANY:
 		throw std::runtime_error("value is any");
 	case Type::T_ARRAY: {
 		long double h = 0;
-		for (size_t i = 0; i < arr->second; ++i) {
-			h = h * 31 + arr->first[i]->value_hash();
+		for (size_t i = 0; i < arr.second; ++i) {
+			h = h * 31 + arr.first[i]->value_hash();
 		}
 		return h;
 	}
 	case Type::T_STRUCT: {
 		long double h = 0;
-		for (const auto& v : *str) {
+		for (const auto& v : str) {
 			h += v.second->value_hash();
 		}
 		return h;
@@ -613,21 +599,21 @@ long double Value::value_hash() const {
 	}
 }
 
-void Value::copy_array(std::shared_ptr<cp_array> arr) {
-	if (!arr) {
-		this->arr = nullptr;
+void Value::copy_array(cp_array arr) {
+	if (arr.second==0) {
+		this->arr = cp_array();
 		return;
 	}
 
-	auto rarr = new Value * [arr->second];
+	auto rarr = new Value * [arr.second];
 
-	for (size_t i = 0; i < arr->second; ++i) {
-		Value* currval = arr->first[i];
+	for (size_t i = 0; i < arr.second; ++i) {
+		Value* currval = arr.first[i];
 		Value* val = currval ? new Value(currval) : nullptr;
 		rarr[i] = val;
 	}
 
-	this->arr = std::shared_ptr<cp_array>(new cp_array(rarr, arr->second));
+	this->arr = cp_array(rarr, arr.second);
 }
 
 void Value::copy_from(Value* value) {
@@ -649,12 +635,12 @@ void Value::copy_from(Value* value) {
 }
 
 bool Value::equals_array(cp_array arr) {
-	if (this->arr->second != arr.second) {
+	if (this->arr.second != arr.second) {
 		return false;
 	}
 
 	for (size_t i = 0; i < arr.second; ++i) {
-		if (!this->arr->first[i]->equals(arr.first[i])) {
+		if (!this->arr.first[i]->equals(arr.first[i])) {
 			return false;
 		}
 	}
@@ -672,8 +658,25 @@ bool Value::equals(Value* value) {
 		f == value->f &&
 		c == value->c &&
 		s == value->s &&
-		equals_array(*value->arr) &&
+		equals_array(value->arr) &&
 		str == value->str;
+}
+
+std::vector<GCObject*> Value::get_references() {
+	std::vector<GCObject*> references;
+
+	if (is_array(type)) {
+		for (size_t i = 0; i < arr.second; ++i) {
+			references.push_back(arr.first[i]);
+		}
+	}
+	if (is_struct(type)) {
+		for (const auto& sub : str) {
+			references.push_back(sub.second);
+		}
+	}
+
+	return references;
 }
 
 Variable::Variable(parser::Type type, parser::Type array_type, std::vector<ASTExprNode*> dim,

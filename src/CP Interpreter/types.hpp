@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <functional>
 
+#include "garbage_collector.hpp"
+
 namespace parser {
 	enum class Type {
 		T_UNDEFINED, T_VOID, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ARRAY, T_STRUCT, T_ANY, T_FUNCTION
@@ -51,7 +53,7 @@ typedef int64_t cp_int;
 typedef long double cp_float;
 typedef char cp_char;
 typedef std::string cp_string;
-typedef std::pair<Value**, size_t> cp_array;
+typedef std::vector<Value*> cp_array;
 typedef std::unordered_map<std::string, Value*> cp_struct;
 typedef std::pair<std::string, std::string> cp_function;
 
@@ -208,16 +210,16 @@ public:
 	Type def_array_type(Type array_type, const std::vector<ASTExprNode*>& dim);
 };
 
-class Value : public TypeDefinition {
+class Value : public TypeDefinition, public GCObject {
 public:
-	std::shared_ptr<cp_bool> b = nullptr;
-	std::shared_ptr<cp_int> i = nullptr;
-	std::shared_ptr<cp_float> f = nullptr;
-	std::shared_ptr<cp_char> c = nullptr;
-	std::shared_ptr<cp_string> s = nullptr;
-	std::shared_ptr<cp_array> arr = nullptr;
-	std::shared_ptr<cp_struct> str = nullptr;
-	std::shared_ptr<cp_function> fun = nullptr;
+	cp_bool b;
+	cp_int i;
+	cp_float f;
+	cp_char c;
+	cp_string s;
+	cp_array arr;
+	cp_struct str;
+	cp_function fun;
 	std::shared_ptr<Variable> ref = nullptr;
 
 	Value(Type type, Type array_type, std::vector<ASTExprNode*> dim,
@@ -228,6 +230,7 @@ public:
 	Value(cp_float);
 	Value(cp_char);
 	Value(cp_string);
+	Value(cp_array);
 	Value(cp_array, Type array_type, std::vector<ASTExprNode*> dim, std::string type_name = "", std::string type_name_space = "");
 	Value(cp_struct, std::string type_name, std::string type_name_space);
 	Value(cp_function);
@@ -244,6 +247,7 @@ public:
 	void set(cp_float);
 	void set(cp_char);
 	void set(cp_string);
+	void set(cp_array);
 	void set(cp_array, Type array_type, std::vector<ASTExprNode*> dim, std::string type_name = "", std::string type_name_space = "");
 	void set(cp_struct, std::string type_name, std::string type_name_space);
 	void set(cp_function);
@@ -269,11 +273,13 @@ public:
 
 	long double value_hash() const;
 
-	void copy_array(std::shared_ptr<cp_array> arr);
+	void copy_array(cp_array arr);
 	void copy_from(Value* value);
 
 	bool equals_array(cp_array arr);
 	bool equals(Value* value);
+
+	virtual std::vector<GCObject*> get_references() override;
 };
 
 class Variable : public TypeDefinition, public std::enable_shared_from_this<Variable> {

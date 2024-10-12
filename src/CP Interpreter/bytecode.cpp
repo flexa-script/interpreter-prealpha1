@@ -12,6 +12,9 @@
 //    return byteopnd(concat);
 //}
 
+BytecodeInstruction::BytecodeInstruction()
+	: opcode(OpCode::OP_RES), operand(nullptr) {}
+
 BytecodeInstruction::BytecodeInstruction(OpCode opcode, uint8_t* operand)
 	: opcode(opcode), operand(operand) {}
 
