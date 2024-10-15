@@ -33,13 +33,13 @@ void Input::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["is_key_pressed"] = [this, visitor]() {
 		int key = visitor->builtin_arguments[0]->get_i();
-		visitor->current_expression_value = new Value(cp_bool(current_key_state[key]));
+		visitor->current_expression_value = new RuntimeValue(cp_bool(current_key_state[key]));
 
 		};
 
 	visitor->builtin_functions["is_key_released"] = [this, visitor]() {
 		int key = visitor->builtin_arguments[0]->get_i();
-		visitor->current_expression_value = new Value(cp_bool(previous_key_state[key] && !current_key_state[key]));
+		visitor->current_expression_value = new RuntimeValue(cp_bool(previous_key_state[key] && !current_key_state[key]));
 
 		};
 
@@ -48,9 +48,9 @@ void Input::register_functions(visitor::Interpreter* visitor) {
 		GetCursorPos(&point);
 
 		cp_struct str = cp_struct();
-		str["x"] = new Value(cp_int(point.x * 2 * 0.905));
-		str["y"] = new Value(cp_int(point.y * 2 * 0.875));
-		Value* res = new Value(str, "Point", "cp");
+		str["x"] = new RuntimeValue(cp_int(point.x * 2 * 0.905));
+		str["y"] = new RuntimeValue(cp_int(point.y * 2 * 0.875));
+		RuntimeValue* res = new RuntimeValue(str, "Point", "cp");
 
 		visitor->current_expression_value = res;
 
@@ -66,7 +66,7 @@ void Input::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions["is_mouse_button_pressed"] = [this, visitor]() {
 		int button = visitor->builtin_arguments[0]->get_i();
 		bool is_pressed = (GetAsyncKeyState(button) & 0x8000) != 0;
-		visitor->current_expression_value = new Value(cp_bool(is_pressed));
+		visitor->current_expression_value = new RuntimeValue(cp_bool(is_pressed));
 
 		};
 }

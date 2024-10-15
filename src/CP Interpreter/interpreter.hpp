@@ -9,32 +9,32 @@
 #include "types.hpp"
 #include "visitor.hpp"
 #include "ast.hpp"
-#include "interpreter_scope.hpp"
+#include "scope.hpp"
+#include "meta_visitor.hpp"
 
 using namespace visitor;
 using namespace parser;
 
 namespace visitor {
-	class Interpreter : public Visitor {
+	class Interpreter : public Visitor, public MetaVisitor {
 	public:
 		std::map<std::string, std::function<void()>> builtin_functions;
-		std::vector<Value*> builtin_arguments;
-		Value* current_expression_value;
-		std::map<std::string, std::vector<std::shared_ptr<InterpreterScope>>> scopes;
+		std::vector<RuntimeValue*> builtin_arguments;
+		RuntimeValue* current_expression_value;
+		std::map<std::string, std::vector<std::shared_ptr<Scope>>> scopes;
 
-		std::string parse_value_to_string(const Value* value);
+		std::string parse_value_to_string(const RuntimeValue* value);
 
 	private:
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&Interpreter::evaluate_access_vector, this, std::placeholders::_1);
-		std::vector<std::string> parsed_libs;
 		std::string function_call_name;
 		std::string return_from_function_name;
 		std::stack<std::vector<TypeDefinition>> current_function_signature;
 		std::stack<std::vector<Identifier>> current_function_call_identifier_vector;
 		std::stack<std::string> current_function_nmspace;
-		std::stack<interpreter_parameter_list_t> current_function_defined_parameters;
-		std::stack<std::vector<Value*>> current_function_calling_arguments;
-		std::stack<TypeDefinition> current_function_return_type;
+		std::stack<FunctionDefinition> current_function;
+		std::stack<std::vector<VariableDefinition>> current_function_defined_parameters;
+		std::stack<std::vector<RuntimeValue*>> current_function_calling_arguments;
 		std::stack<std::string> current_this_name;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 		size_t is_switch = 0;
@@ -47,7 +47,7 @@ namespace visitor {
 		bool has_string_access = false;
 		bool exception = false;
 
-		std::vector<ASTExprNode*> current_expression_array_dim;
+		std::vector<void*> current_expression_array_dim;
 		int current_expression_array_dim_max = 0;
 		TypeDefinition current_expression_array_type;
 		bool is_max = false;
@@ -56,48 +56,46 @@ namespace visitor {
 		std::vector<uintptr_t> printed;
 
 	private:
-		std::vector<unsigned int> evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector);
+		std::vector<unsigned int> evaluate_access_vector(const std::vector<void*>& expr_access_vector);
 		std::vector<unsigned int> calculate_array_dim_size(const cp_array& arr);
 
-		void check_build_array(Value* new_value, std::vector<ASTExprNode*> dim);
-		cp_array build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i);
-		cp_array build_undefined_array(const std::vector<ASTExprNode*>& dim, long long i);
+		void check_build_array(RuntimeValue* new_value, std::vector<void*> dim);
+		cp_array build_array(const std::vector<void*>& dim, RuntimeValue* init_value, long long i);
+		cp_array build_undefined_array(const std::vector<void*>& dim, long long i);
 
-		void normalize_type(std::shared_ptr<Variable> var, Value* val);
-		Value* do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr = false, cp_int str_pos = 0);
-		cp_int do_spaceship_operation(const std::string& op, Value* lval, Value* rval);
-		cp_bool do_relational_operation(const std::string& op, Value* lval, Value* rval);
+		void normalize_type(std::shared_ptr<RuntimeVariable> var, RuntimeValue* val);
+		RuntimeValue* do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, bool is_expr = false, cp_int str_pos = 0);
+		cp_int do_spaceship_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval);
+		cp_bool do_relational_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval);
 		cp_int do_operation(cp_int lval, cp_int rval, const std::string& op);
 		cp_float do_operation(cp_float lval, cp_float rval, const std::string& op);
 		cp_string do_operation(cp_string lval, cp_string rval, const std::string& op);
 		cp_array do_operation(cp_array lval, cp_array rval, const std::string& op);
 
 		std::string parse_array_to_string(const cp_array& arr_value);
-		std::string parse_struct_to_string(const  Value* value);
+		std::string parse_struct_to_string(const  RuntimeValue* value);
 
-		std::shared_ptr<InterpreterScope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
-		std::shared_ptr<InterpreterScope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-		std::shared_ptr<InterpreterScope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
-		std::shared_ptr<InterpreterScope> get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<Scope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<Scope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<Scope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
+		std::shared_ptr<Scope> get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
 
-		Value* set_value(std::shared_ptr<InterpreterScope> scope, const std::vector<Identifier>& identifier_vector, Value* new_value);
-		Value* access_value(const std::shared_ptr<InterpreterScope> scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
+		RuntimeValue* set_value(std::shared_ptr<Scope> scope, const std::vector<Identifier>& identifier_vector, RuntimeValue* new_value);
+		RuntimeValue* access_value(const std::shared_ptr<Scope> scope, RuntimeValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
 
 		void call_builtin_function(const std::string& identifier);
 		void declare_function_block_parameters(const std::string& nmspace);
 
-		cp_bool equals_value(const Value* lval, const Value* rval);
+		cp_bool equals_value(const RuntimeValue* lval, const RuntimeValue* rval);
 		cp_bool equals_array(const cp_array& larr, const cp_array& rarr);
 		cp_bool equals_struct(const cp_struct& lstr, const cp_struct& rstr);
 
-		const std::string& get_current_namespace();
-		const std::string& get_namespace(const std::string& nmspace = "") const override;
-		const std::string& get_namespace(const ASTProgramNode* program, const std::string& nmspace = "") const override;
+		//const std::string& get_current_namespace();
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;
 
 	public:
-		Interpreter(std::shared_ptr<InterpreterScope> global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs);
+		Interpreter(std::shared_ptr<Scope> global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs);
 		Interpreter() = default;
 		~Interpreter() = default;
 

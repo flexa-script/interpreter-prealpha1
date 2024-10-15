@@ -19,10 +19,10 @@ Compiler::Compiler(ASTProgramNode* main_program, std::map<std::string, ASTProgra
 };
 
 void Compiler::start() {
-	auto pop = push_namespace(default_namespace);
-	visit(current_program);
-	add_instruction(OpCode::OP_HALT, nullptr);
+	auto pop = push_namespace(cp_string(default_namespace));
+	visit(current_program.top());
 	pop_namespace(pop);
+	add_instruction(OpCode::OP_HALT, nullptr);
 }
 
 void Compiler::visit(ASTProgramNode* astnode) {
@@ -46,45 +46,31 @@ void Compiler::visit(ASTUsingNode* astnode) {
 	auto program = programs[libname];
 
 	// add lib to current program
-	current_program->libs.push_back(libname);
+	current_program.top()->libs.push_back(libname);
 
 	// if can't parsed yet
 	if (!axe::CollectionUtils::contains(parsed_libs, libname)) {
-		auto prev_program = current_program;
-		current_program = program;
+		current_program.push(program);
 		parsed_libs.push_back(libname);
-		auto pop = push_namespace(current_program->alias);
-		program_nmspaces[get_namespace()].push_back(default_namespace);
-		visit(current_program);
-		current_program = prev_program;
+		auto pop = push_namespace(cp_string(program->alias));
+		visit(program);
+		current_program.pop();
 		pop_namespace(pop);
 	}
 }
 
-void Compiler::visit(ASTNamespaceManagerNode* astnode) {
-	const auto& nmspace = get_namespace();
-
-	if (astnode->image == "include") {
-		program_nmspaces[nmspace].push_back(astnode->nmspace);
-	}
-	else {
-		size_t pos = std::distance(program_nmspaces[nmspace].begin(),
-			std::find(program_nmspaces[nmspace].begin(),
-				program_nmspaces[nmspace].end(), astnode->nmspace));
-		program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + pos);
-	}
-}
+void Compiler::visit(ASTNamespaceManagerNode* astnode) {}
 
 void Compiler::visit(ASTEnumNode* astnode) {
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		add_instruction(OpCode::OP_PUSH_INT, cp_int(i));
 		add_instruction(OpCode::OP_SET_TYPE, uint8_t(Type::T_INT));
-		add_instruction(OpCode::OP_STORE_VAR, cp_string(build_namespace(astnode->identifiers[i])));
+		add_instruction(OpCode::OP_STORE_VAR, cp_string(astnode->identifiers[i]));
 	}
 }
 
 void Compiler::visit(ASTDeclarationNode* astnode) {
-	auto pop = push_namespace(astnode->type_name_space);
+	auto pop = push_namespace(cp_string(astnode->type_name_space));
 
 	type_definition_operations(*astnode);
 
@@ -95,7 +81,7 @@ void Compiler::visit(ASTDeclarationNode* astnode) {
 		add_instruction(OpCode::OP_PUSH_UNDEFINED, nullptr);
 	}
 
-	add_instruction(OpCode::OP_STORE_VAR, cp_string(build_namespace(astnode->identifier)));
+	add_instruction(OpCode::OP_STORE_VAR, cp_string(astnode->identifier));
 
 	pop_namespace(pop);
 }
@@ -107,7 +93,7 @@ void Compiler::visit(ASTUnpackedDeclarationNode* astnode) {
 }
 
 void Compiler::visit(ASTAssignmentNode* astnode) {
-	auto pop = push_namespace(astnode->nmspace);
+	auto pop = push_namespace(cp_string(astnode->nmspace));
 
 	astnode->expr->accept(this);
 
@@ -116,8 +102,7 @@ void Compiler::visit(ASTAssignmentNode* astnode) {
 		add_instruction(OpCode::OP_ASSIGN_SUB, nullptr);
 	}
 	else {
-		nmspace_array_operations();
-		add_instruction(OpCode::OP_ASSIGN_VAR, cp_string(build_namespace(astnode->identifier)));
+		add_instruction(OpCode::OP_ASSIGN_VAR, cp_string(astnode->identifier));
 	}
 
 	pop_namespace(pop);
@@ -135,13 +120,11 @@ void Compiler::visit(ASTReturnNode* astnode) {
 }
 
 void Compiler::visit(ASTFunctionCallNode* astnode) {
-	auto pop = push_namespace(astnode->nmspace);
+	auto pop = push_namespace(cp_string(astnode->nmspace));
 
 	for (const auto& param : astnode->parameters) {
 		param->accept(this);
 	}
-
-	nmspace_array_operations();
 
 	add_instruction(OpCode::OP_CALL, cp_string(astnode->identifier));
 
@@ -151,12 +134,25 @@ void Compiler::visit(ASTFunctionCallNode* astnode) {
 }
 
 void Compiler::visit(ASTFunctionDefinitionNode* astnode) {
-	auto pop = push_namespace(astnode->type_name_space);
+	auto pop = push_namespace(cp_string(astnode->type_name_space));
 
 	if (astnode->block) {
-		add_instruction(OpCode::OP_FUN_START, cp_string(build_namespace(astnode->identifier)));
-
+		// function will be defined here
 		type_definition_operations(*astnode);
+		add_instruction(OpCode::OP_FUN_START, cp_string(astnode->identifier));
+
+		for (auto& param : astnode->parameters) {
+			type_definition_operations(param);
+			add_instruction(OpCode::OP_SET_DEFAULT_VALUE, param.default_value);
+			add_instruction(OpCode::OP_SET_IS_REST, param.is_rest);
+			add_instruction(OpCode::OP_FUN_SET_PARAM, cp_string(param.identifier));
+		}
+
+		// call will start here, function metadata will be stored with at starting pointer
+		add_instruction(OpCode::OP_FUN_END, nullptr);
+
+		// at this point, vm will jump to OP_FUN_END
+		auto id = add_instruction(OpCode::OP_JUMP, nullptr);
 
 		for (auto& param : astnode->parameters) {
 			if (param.default_value) {
@@ -167,11 +163,12 @@ void Compiler::visit(ASTFunctionDefinitionNode* astnode) {
 			}
 		}
 
-		add_instruction(OpCode::OP_FUN_PARAM_END, nullptr);
-
 		astnode->block->accept(this);
 
-		add_instruction(OpCode::OP_FUN_END, nullptr);
+		// it will return to prev
+		add_instruction(OpCode::OP_RETURN, nullptr);
+
+		replace_last_operand(id, pointer);
 	}
 
 	pop_namespace(pop);
@@ -214,7 +211,7 @@ void Compiler::visit(ASTSwitchNode* astnode) {
 			}
 		}
 
-		add_instruction(OpCode::OP_POP, nullptr);
+		add_instruction(OpCode::OP_POP_CONSTANT, nullptr);
 
 		astnode->statements[i]->accept(this);
 
@@ -282,13 +279,11 @@ void Compiler::visit(ASTForEachNode* astnode) {
 
 	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
 		for (auto decl : idnode->declarations) {
-			nmspace_array_operations();
-			add_instruction(OpCode::OP_STORE_VAR, cp_string(build_namespace(decl->identifier)));
+			add_instruction(OpCode::OP_STORE_VAR, cp_string(decl->identifier));
 		}
 	}
 	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl)) {
-		nmspace_array_operations();
-		add_instruction(OpCode::OP_STORE_VAR, cp_string(build_namespace(idnode->identifier)));
+		add_instruction(OpCode::OP_STORE_VAR, cp_string(idnode->identifier));
 	}
 
 	astnode->block->accept(this);
@@ -347,7 +342,7 @@ void Compiler::visit(ASTDoWhileNode* astnode) {
 
 	astnode->condition->accept(this);
 
-	add_instruction(OpCode::OP_JUMP_IF_TRUE, size_t(pointer));
+	add_instruction(OpCode::OP_JUMP_IF_TRUE, size_t(start));
 }
 
 void Compiler::visit(ASTStructDefinitionNode* astnode) {
@@ -357,7 +352,7 @@ void Compiler::visit(ASTStructDefinitionNode* astnode) {
 		type_definition_operations(var.second);
 		add_instruction(OpCode::OP_STRUCT_SET_VAR, cp_string(var.first));
 	}
-	
+
 	add_instruction(OpCode::OP_STRUCT_END, nullptr);
 }
 
@@ -407,7 +402,6 @@ void Compiler::visit(ASTIdentifierNode* astnode) {
 		access_sub_value_operations(astnode->identifier_vector);
 	}
 	else {
-		nmspace_array_operations();
 		add_instruction(OpCode::OP_LOAD_VAR, cp_string(astnode->identifier));
 	}
 }
@@ -557,7 +551,7 @@ void Compiler::visit(ASTNullNode* astnode) {
 }
 
 void Compiler::visit(ASTThisNode* astnode) {
-	add_instruction(OpCode::OP_PUSH_STRING, cp_string(get_namespace()));
+	add_instruction(OpCode::OP_PUSH_NAMESPACE_STACK, nullptr);
 }
 
 void Compiler::visit(ASTTypingNode* astnode) {
@@ -591,17 +585,6 @@ bool Compiler::has_sub_value(std::vector<Identifier> identifier_vector) {
 	return identifier_vector.size() > 1 || identifier_vector[0].access_vector.size() > 0;
 }
 
-void Compiler::nmspace_array_operations() {
-	const auto& nmspaces = get_unique_namespaces();
-	auto size = nmspaces.size();
-
-	add_instruction(OpCode::OP_CREATE_ARRAY, size_t(size));
-	for (size_t i = 0; i < size; ++i) {
-		add_instruction(OpCode::OP_PUSH_STRING, cp_string(nmspaces[i]));
-		add_instruction(OpCode::OP_SET_ELEMENT, size_t(i));
-	}
-}
-
 void Compiler::type_definition_operations(TypeDefinition type) {
 
 	add_instruction(OpCode::OP_SET_TYPE, uint8_t(type.type));
@@ -616,22 +599,21 @@ void Compiler::type_definition_operations(TypeDefinition type) {
 	auto dim = type.dim.size();
 
 	if (dim > 0) {
-		add_instruction(OpCode::OP_SET_ARRAY_DIM, size_t(dim));
 		for (const auto s : type.dim) {
 			if (s) {
-				s->accept(this);
+				static_cast<ASTExprNode*>(s)->accept(this);
 			}
 			else {
 				add_instruction(OpCode::OP_PUSH_INT, cp_int(0));
 			}
 			add_instruction(OpCode::OP_SET_ARRAY_SIZE, nullptr);
 		}
+		//add_instruction(OpCode::OP_SET_ARRAY_DIM, size_t(dim));
 	}
 }
 
 void Compiler::access_sub_value_operations(std::vector<Identifier> identifier_vector) {
 	if (has_sub_value(identifier_vector)) {
-		nmspace_array_operations();
 		add_instruction(OpCode::OP_LOAD_VAR, cp_string(identifier_vector[0].identifier));
 
 		for (size_t i = 0; i < identifier_vector.size(); ++i) {
@@ -642,7 +624,7 @@ void Compiler::access_sub_value_operations(std::vector<Identifier> identifier_ve
 			}
 
 			for (auto av : id.access_vector) {
-				av->accept(this);
+				static_cast<ASTExprNode*>(av)->accept(this);
 				add_instruction(OpCode::OP_LOAD_SUB_IX, size_t(0));
 			}
 		}
@@ -662,22 +644,9 @@ void Compiler::replace_last_operand(size_t pos, T operand) {
 	bytecode_program[pos].operand = BytecodeInstruction::to_byteopnd(operand);
 }
 
-std::vector<std::string> Compiler::get_unique_namespaces() {
-	const auto& curr_program_nmspaces = program_nmspaces[get_namespace()];
-	std::vector<std::string> nmspaces;
-
-	for (const auto& nmspace : curr_program_nmspaces) {
-		if (!axe::CollectionUtils::contains(nmspaces, nmspace)) {
-			nmspaces.push_back(nmspace);
-		}
-	}
-
-	return nmspaces;
-}
-
 bool Compiler::push_namespace(const std::string nmspace) {
 	if (!nmspace.empty()) {
-		current_namespace.push(nmspace);
+		auto pop = push_namespace(cp_string(nmspace));
 		return true;
 	}
 	return false;
@@ -685,36 +654,8 @@ bool Compiler::push_namespace(const std::string nmspace) {
 
 void Compiler::pop_namespace(bool pop) {
 	if (pop) {
-		current_namespace.pop();
+		pop_namespace(pop);
 	}
-}
-
-long long Compiler::hash(ASTExprNode* astnode) { return 0; }
-
-long long Compiler::hash(ASTLiteralNode<cp_bool>* astnode) { return 0; }
-
-long long Compiler::hash(ASTLiteralNode<cp_int>* astnode) { return 0; }
-
-long long Compiler::hash(ASTLiteralNode<cp_float>* astnode) { return 0; }
-
-long long Compiler::hash(ASTLiteralNode<cp_char>* astnode) { return 0; }
-
-long long Compiler::hash(ASTLiteralNode<cp_string>* astnode) { return 0; }
-
-long long Compiler::hash(ASTIdentifierNode* astnode) { return 0; }
-
-std::string Compiler::build_namespace(const std::string& identifier) const {
-	return current_namespace.top() + ":" + identifier;
-}
-
-const std::string& Compiler::get_namespace(const std::string& nmspace) const {
-	return current_namespace.top();
-}
-
-const std::string& Compiler::get_namespace(const parser::ASTProgramNode* program, const std::string& nmspace) const {
-	return nmspace.empty() ? (
-		program->alias.empty() ? default_namespace : program->alias
-		) : nmspace;
 }
 
 void Compiler::set_curr_pos(unsigned int row, unsigned int col) {
@@ -723,5 +664,5 @@ void Compiler::set_curr_pos(unsigned int row, unsigned int col) {
 }
 
 std::string Compiler::msg_header() {
-	return "(CMP) " + current_program->name + '[' + std::to_string(curr_row) + ':' + std::to_string(curr_col) + "]: ";
+	return "(CMP) " + current_program.top()->name + '[' + std::to_string(curr_row) + ':' + std::to_string(curr_col) + "]: ";
 }

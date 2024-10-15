@@ -16,7 +16,7 @@ using namespace parser;
 
 namespace visitor {
 
-	class Compiler : Visitor {
+	class Compiler : public Visitor, public NamespaceManager {
 	public:
 		std::vector<BytecodeInstruction> bytecode_program;
 		std::map<std::string, void*> builtin_functions;
@@ -24,8 +24,6 @@ namespace visitor {
 	private:
 		size_t pointer = 0;
 		std::vector<std::string> parsed_libs;
-		std::map<std::string, std::vector<std::string>> program_nmspaces;
-		std::stack<std::string> current_namespace;
 
 	private:
 		template <typename T>
@@ -35,17 +33,11 @@ namespace visitor {
 
 		void type_definition_operations(TypeDefinition type);
 		void access_sub_value_operations(std::vector<Identifier> identifier_vector);
-		void nmspace_array_operations();
 
 		bool has_sub_value(std::vector<Identifier> identifier_vector);
 
-		std::vector<std::string> get_unique_namespaces();
-		bool push_namespace(const std::string nmspace);
-		void pop_namespace(bool pop);
-		std::string build_namespace(const std::string& identifier) const;
-		const std::string& get_namespace(const std::string& nmspace = "") const override;
-		const std::string& get_namespace(const ASTProgramNode* program, const std::string& nmspace = "") const override;
-
+		bool push_namespace(const std::string nmspace) override;
+		void pop_namespace(bool pop) override;
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;
 

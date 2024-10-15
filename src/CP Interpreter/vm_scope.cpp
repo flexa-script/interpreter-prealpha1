@@ -29,7 +29,7 @@ bool InterpreterScope::already_declared_structure_definition(const std::string& 
 }
 
 bool InterpreterScope::already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
-	std::function<std::vector<unsigned int>(const std::vector<parser::ASTExprNode*>&)> evaluate_access_vector_ptr, bool strict) {
+	dim_eval_func_t evaluate_access_vector_ptr, bool strict) {
 	try {
 		find_declared_function(identifier, signature, evaluate_access_vector_ptr, strict);
 		return true;
@@ -49,7 +49,7 @@ bool InterpreterScope::already_declared_function_name(const std::string& identif
 	}
 }
 
-std::shared_ptr<Variable> InterpreterScope::declare_variable(const std::string& identifier, std::shared_ptr<Variable> value) {
+std::shared_ptr<RuntimeVariable> InterpreterScope::declare_variable(const std::string& identifier, std::shared_ptr<RuntimeVariable> value) {
 	variable_symbol_table[identifier] = value;
 	return value;
 }
@@ -67,13 +67,13 @@ StructureDefinition InterpreterScope::find_declared_structure_definition(const s
 	return structure_symbol_table[identifier];
 }
 
-std::shared_ptr<Variable> InterpreterScope::find_declared_variable(const std::string& identifier) {
+std::shared_ptr<RuntimeVariable> InterpreterScope::find_declared_variable(const std::string& identifier) {
 	auto& var = variable_symbol_table[identifier];
 	var->value->reset_ref();
 	return var;
 }
 
-interpreter_function_t* InterpreterScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
+FunctionDefinition& InterpreterScope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
 	std::function<std::vector<unsigned int>(const std::vector<ASTExprNode*>&)> evaluate_access_vector_ptr, bool strict) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
@@ -83,7 +83,7 @@ interpreter_function_t* InterpreterScope::find_declared_function(const std::stri
 
 	for (auto& it = funcs.first; it != funcs.second; ++it) {
 		if (!signature) {
-			return &it->second;
+			return it->second;
 		}
 
 		auto& func_params = std::get<0>(it->second);

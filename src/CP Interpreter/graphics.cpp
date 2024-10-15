@@ -35,15 +35,15 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["create_window"] = [this, visitor]() {
 		// initialize window struct values
-		Value* win = new Value(parser::Type::T_STRUCT);
+		RuntimeValue* win = new RuntimeValue(parser::Type::T_STRUCT);
 
 		cp_struct str = cp_struct();
-		str["title"] = new Value(visitor->builtin_arguments[0]);
-		str["width"] = new Value(visitor->builtin_arguments[1]);
-		str["height"] = new Value(visitor->builtin_arguments[2]);
+		str["title"] = new RuntimeValue(visitor->builtin_arguments[0]);
+		str["width"] = new RuntimeValue(visitor->builtin_arguments[1]);
+		str["height"] = new RuntimeValue(visitor->builtin_arguments[2]);
 
 		// create a new window graphic engine
-		str[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
+		str[INSTANCE_ID_NAME] = new RuntimeValue(parser::Type::T_INT);
 		str[INSTANCE_ID_NAME]->set(cp_int(new axe::Window()));
 
 		// initialize window graphic engine and return value
@@ -64,7 +64,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["clear_screen"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -80,31 +80,31 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["get_current_width"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
 		if (!win->get_str()[INSTANCE_ID_NAME]->get_i()) {
 			throw std::runtime_error("Window is corrupted");
 		}
-		visitor->current_expression_value=new Value(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_width()));
+		visitor->current_expression_value=new RuntimeValue(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_width()));
 
 		};
 
 	visitor->builtin_functions["get_current_height"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
 		if (!win->get_str()[INSTANCE_ID_NAME]->get_i()) {
 			throw std::runtime_error("Window is corrupted");
 		}
-		visitor->current_expression_value = new Value(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_height()));
+		visitor->current_expression_value = new RuntimeValue(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_height()));
 
 		};
 
 	visitor->builtin_functions["draw_pixel"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -122,7 +122,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_line"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -142,7 +142,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_rect"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -162,7 +162,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["fill_rect"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -182,7 +182,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_circle"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -201,7 +201,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["fill_circle"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -221,16 +221,16 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["create_font"] = [this, visitor]() {
 		// initialize image struct values
-		Value* font_value = new Value(parser::Type::T_STRUCT);
+		RuntimeValue* font_value = new RuntimeValue(parser::Type::T_STRUCT);
 
 		auto str = cp_struct();
-		str["size"] = new Value(visitor->builtin_arguments[0]);
-		str["name"] = new Value(visitor->builtin_arguments[1]);
-		str["weight"] = new Value(visitor->builtin_arguments[2]);
-		str["italic"] = new Value(visitor->builtin_arguments[3]);
-		str["underline"] = new Value(visitor->builtin_arguments[4]);
-		str["strike"] = new Value(visitor->builtin_arguments[5]);
-		str["orientation"] = new Value(visitor->builtin_arguments[6]);
+		str["size"] = new RuntimeValue(visitor->builtin_arguments[0]);
+		str["name"] = new RuntimeValue(visitor->builtin_arguments[1]);
+		str["weight"] = new RuntimeValue(visitor->builtin_arguments[2]);
+		str["italic"] = new RuntimeValue(visitor->builtin_arguments[3]);
+		str["underline"] = new RuntimeValue(visitor->builtin_arguments[4]);
+		str["strike"] = new RuntimeValue(visitor->builtin_arguments[5]);
+		str["orientation"] = new RuntimeValue(visitor->builtin_arguments[6]);
 
 		auto font = axe::Font::create_font(
 			str["size"]->get_i(),
@@ -244,7 +244,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (!font) {
 			throw std::runtime_error("there was an error creating font");
 		}
-		str[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
+		str[INSTANCE_ID_NAME] = new RuntimeValue(parser::Type::T_INT);
 		str[INSTANCE_ID_NAME]->set(cp_int(font));
 
 		font_value->set(str, "Font", "cp");
@@ -254,7 +254,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_text"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -268,7 +268,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		int g = (int)visitor->builtin_arguments[4]->get_str()["g"]->get_i();
 		int b = (int)visitor->builtin_arguments[4]->get_str()["b"]->get_i();
 
-		Value* font_value = visitor->builtin_arguments[5];
+		RuntimeValue* font_value = visitor->builtin_arguments[5];
 		if (parser::is_void(font_value->type)) {
 			throw std::exception("font is null");
 		}
@@ -282,7 +282,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["get_text_size"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -290,7 +290,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		std::string text = visitor->builtin_arguments[1]->get_s();
-		Value* font_value = visitor->builtin_arguments[2];
+		RuntimeValue* font_value = visitor->builtin_arguments[2];
 		if (parser::is_void(font_value->type)) {
 			throw std::exception("font is null");
 		}
@@ -302,10 +302,10 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		auto point = ((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_text_size(text, font);
 
 		cp_struct str = cp_struct();
-		str["width"] = new Value(cp_int(point.cx * 2 * 0.905));
-		str["height"] = new Value(cp_int(point.cy * 2 * 0.875));
+		str["width"] = new RuntimeValue(cp_int(point.cx * 2 * 0.905));
+		str["height"] = new RuntimeValue(cp_int(point.cy * 2 * 0.875));
 
-		Value* res = new Value(str, "Size", "cp");
+		RuntimeValue* res = new RuntimeValue(str, "Size", "cp");
 
 		visitor->current_expression_value = res;
 
@@ -313,22 +313,22 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["load_image"] = [this, visitor]() {
 		// initialize image struct values
-		Value* img = new Value(parser::Type::T_STRUCT);
+		RuntimeValue* img = new RuntimeValue(parser::Type::T_STRUCT);
 
 		auto str = cp_struct();
-		str["path"] = new Value(visitor->builtin_arguments[0]);
+		str["path"] = new RuntimeValue(visitor->builtin_arguments[0]);
 
 		// loads image
 		auto image = axe::Image::load_image(str["path"]->get_s());
 		if (!image) {
 			throw std::runtime_error("there was an error loading image");
 		}
-		str[INSTANCE_ID_NAME] = new Value(parser::Type::T_INT);
+		str[INSTANCE_ID_NAME] = new RuntimeValue(parser::Type::T_INT);
 		str[INSTANCE_ID_NAME]->set(cp_int(image));
 
-		str["width"] = new Value(parser::Type::T_INT);
+		str["width"] = new RuntimeValue(parser::Type::T_INT);
 		str["width"]->set(cp_int(image->width));
-		str["height"] = new Value(parser::Type::T_INT);
+		str["height"] = new RuntimeValue(parser::Type::T_INT);
 		str["height"]->set(cp_int(image->height));
 
 		img->set(str, "Image", "cp");
@@ -338,7 +338,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_image"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (parser::is_void(win->type)) {
 			throw std::exception("window is null");
 		}
@@ -346,7 +346,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (!window) {
 			throw std::runtime_error("there was an error handling window");
 		}
-		Value* img = visitor->builtin_arguments[1];
+		RuntimeValue* img = visitor->builtin_arguments[1];
 		if (parser::is_void(img->type)) {
 			throw std::exception("window is null");
 		}
@@ -361,7 +361,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["update"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (!parser::is_void(win->type)) {
 			if (((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 				((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->update();
@@ -371,7 +371,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["destroy_window"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
+		RuntimeValue* win = visitor->builtin_arguments[0];
 		if (!parser::is_void(win->type)) {
 			if (((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 				((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->~Window();
@@ -382,8 +382,8 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["is_quit"] = [this, visitor]() {
-		Value* win = visitor->builtin_arguments[0];
-		auto val = new Value(parser::Type::T_BOOL);
+		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto val = new RuntimeValue(parser::Type::T_BOOL);
 		if (!parser::is_void(win->type)) {
 			if (((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 				val->set(cp_bool(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->is_quit()));

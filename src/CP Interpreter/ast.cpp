@@ -7,14 +7,14 @@
 using namespace visitor;
 using namespace parser;
 
-Identifier::Identifier(const std::string& identifier, const std::vector<ASTExprNode*>& access_vector)
+Identifier::Identifier(const std::string& identifier, const std::vector<void*>& access_vector)
 	: identifier(identifier), access_vector(access_vector) {}
 
 Identifier::Identifier(const std::string& identifier)
 	: identifier(identifier) {}
 
 Identifier::Identifier()
-	: identifier(""), access_vector(std::vector<ASTExprNode*>()) {}
+	: identifier(""), access_vector(std::vector<void*>()) {}
 
 ASTProgramNode::ASTProgramNode(const std::string& name, const std::string& alias, const std::vector<ASTNode*>& statements)
 	: ASTNode(row, col), name(name), alias(alias), statements(statements), libs(std::vector<std::string>()) {}
@@ -25,7 +25,7 @@ ASTUsingNode::ASTUsingNode(const std::vector<std::string>& library, unsigned int
 ASTNamespaceManagerNode::ASTNamespaceManagerNode(const std::string& image, const std::string& nmspace, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), image(image), nmspace(nmspace) {}
 
-ASTDeclarationNode::ASTDeclarationNode(const std::string& identifier, Type type, Type array_type, const std::vector<ASTExprNode*>& dim,
+ASTDeclarationNode::ASTDeclarationNode(const std::string& identifier, Type type, Type array_type, const std::vector<void*>& dim,
 	const std::string& type_name, const std::string& type_name_space, ASTExprNode* expr, bool is_const, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
 	identifier(identifier), expr(expr), is_const(is_const) {}
@@ -96,7 +96,7 @@ ASTStructDefinitionNode::ASTStructDefinitionNode(const std::string& identifier, 
 	: ASTStatementNode(row, col), identifier(identifier), variables(variables) {}
 
 ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(const std::string& identifier, const std::vector<VariableDefinition>& parameters,
-	Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, const std::vector<ASTExprNode*>& dim,
+	Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
 	ASTBlockNode* block, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
 	identifier(identifier), parameters(parameters), block(block) {

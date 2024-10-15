@@ -9,26 +9,25 @@
 #include <functional>
 
 #include "ast.hpp"
-#include "semantic_scope.hpp"
+#include "scope.hpp"
+#include "meta_visitor.hpp"
 
 using namespace visitor;
 using namespace parser;
 
 namespace visitor {
 
-	class SemanticAnalyser : Visitor {
+	class SemanticAnalyser : public Visitor, public MetaVisitor {
 	public:
 		std::map<std::string, void*> builtin_functions;
-		std::map<std::string, std::vector<std::shared_ptr<SemanticScope>>> scopes;
+		std::map<std::string, std::vector<std::shared_ptr<Scope>>> scopes;
 
 	private:
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&SemanticAnalyser::evaluate_access_vector, this, std::placeholders::_1);
 		std::vector<std::string> nmspaces;
-		std::vector<std::string> parsed_libs;
-		std::string current_namespace;
 		SemanticValue current_expression;
 		std::stack<FunctionDefinition> current_function;
-		std::map<std::string, std::vector<std::string>> program_nmspaces;
+		std::stack<std::string> current_namespace;
 		bool exception = false;
 		bool is_switch = false;
 		bool is_loop = false;
@@ -43,26 +42,24 @@ namespace visitor {
 
 		void equals_value(const SemanticValue& lval, const SemanticValue& rval);
 
-		std::vector<unsigned int> evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector);
+		std::vector<unsigned int> evaluate_access_vector(const std::vector<void*>& expr_access_vector);
 
-		std::shared_ptr<SemanticScope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
-		std::shared_ptr<SemanticScope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-		std::shared_ptr<SemanticScope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
+		std::shared_ptr<Scope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<Scope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<Scope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
 
 		TypeDefinition do_operation(const std::string& op, TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, bool is_expr = true);
 		std::shared_ptr<SemanticValue> access_value(std::shared_ptr<SemanticValue> value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
 
-		bool namespace_exists(const std::string& nmspace);
-		const std::string& get_namespace(const std::string& nmspace = "") const override;
-		const std::string& get_namespace(const ASTProgramNode* program, const std::string& nmspace = "") const override;
-
 		void check_is_struct_exists(Type type, const std::string& nmspace, const std::string& identifier);
+
+		bool namespace_exists(const std::string& nmspace);
 
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;
 
 	public:
-		SemanticAnalyser(std::shared_ptr<SemanticScope> global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs);
+		SemanticAnalyser(std::shared_ptr<Scope> global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs);
 		~SemanticAnalyser() = default;
 
 		void start();

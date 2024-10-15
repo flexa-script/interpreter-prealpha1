@@ -11,16 +11,16 @@ DateTime::~DateTime() = default;
 
 cp_struct DateTime::tm_to_date_time(time_t t, tm* tm) {
 	cp_struct dt_str = cp_struct();
-	dt_str["timestamp"] = new Value(cp_int(t));
-	dt_str["second"] = new Value(cp_int(tm->tm_sec));
-	dt_str["minute"] = new Value(cp_int(tm->tm_min));
-	dt_str["hour"] = new Value(cp_int(tm->tm_hour));
-	dt_str["day"] = new Value(cp_int(tm->tm_mday));
-	dt_str["month"] = new Value(cp_int(tm->tm_mon + 1));
-	dt_str["year"] = new Value(cp_int(tm->tm_year));
-	dt_str["week_day"] = new Value(cp_int(tm->tm_wday));
-	dt_str["year_day"] = new Value(cp_int(tm->tm_yday));
-	dt_str["is_dst"] = new Value(cp_int(tm->tm_isdst));
+	dt_str["timestamp"] = new RuntimeValue(cp_int(t));
+	dt_str["second"] = new RuntimeValue(cp_int(tm->tm_sec));
+	dt_str["minute"] = new RuntimeValue(cp_int(tm->tm_min));
+	dt_str["hour"] = new RuntimeValue(cp_int(tm->tm_hour));
+	dt_str["day"] = new RuntimeValue(cp_int(tm->tm_mday));
+	dt_str["month"] = new RuntimeValue(cp_int(tm->tm_mon + 1));
+	dt_str["year"] = new RuntimeValue(cp_int(tm->tm_year));
+	dt_str["week_day"] = new RuntimeValue(cp_int(tm->tm_wday));
+	dt_str["year_day"] = new RuntimeValue(cp_int(tm->tm_yday));
+	dt_str["is_dst"] = new RuntimeValue(cp_int(tm->tm_isdst));
 
 	return dt_str;
 }
@@ -59,7 +59,7 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 			t = mktime(tm);
 		}
 
-		visitor->current_expression_value = new Value(tm_to_date_time(t, tm), "DateTime", "cp");
+		visitor->current_expression_value = new RuntimeValue(tm_to_date_time(t, tm), "DateTime", "cp");
 
 		};
 
@@ -70,7 +70,7 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 		tm* tm = new struct tm();
 		gmtime_s(tm, &t);
 
-		visitor->current_expression_value = new Value(tm_to_date_time(t, tm), "DateTime", "cp");
+		visitor->current_expression_value = new RuntimeValue(tm_to_date_time(t, tm), "DateTime", "cp");
 
 		};
 
@@ -82,7 +82,7 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 		char buffer[80];
 		strftime(buffer, 80, fmt.c_str(), tm);
 
-		visitor->current_expression_value = new Value(std::string{ buffer });
+		visitor->current_expression_value = new RuntimeValue(std::string{ buffer });
 
 		};
 
@@ -94,7 +94,7 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 		char buffer[80];
 		strftime(buffer, 80, fmt.c_str(), tm);
 
-		visitor->current_expression_value = new Value(std::string{ buffer });
+		visitor->current_expression_value = new RuntimeValue(std::string{ buffer });
 
 		};
 
@@ -108,7 +108,7 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("Error trying to convert date/time to ASCII string");
 		}
 
-		visitor->current_expression_value = new Value(std::string{ buffer });
+		visitor->current_expression_value = new RuntimeValue(std::string{ buffer });
 
 		};
 
@@ -122,12 +122,12 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("Error trying to convert date/time to ASCII string");
 		}
 
-		visitor->current_expression_value = new Value(std::string{ buffer });
+		visitor->current_expression_value = new RuntimeValue(std::string{ buffer });
 
 		};
 
 	visitor->builtin_functions["clock"] = [this, visitor]() {
-		visitor->current_expression_value = new Value(cp_int(clock()));
+		visitor->current_expression_value = new RuntimeValue(cp_int(clock()));
 
 		};
 

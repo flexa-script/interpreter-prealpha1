@@ -66,14 +66,12 @@ namespace visitor {
 	public:
 		std::map<std::string, ASTProgramNode*> programs;
 		ASTProgramNode* main_program;
-		ASTProgramNode* current_program;
+		std::stack<ASTProgramNode*> current_program;
+		std::vector<std::string> parsed_libs;
 		int curr_row;
 		int curr_col;
 
 		Visitor(const std::map<std::string, ASTProgramNode*>& programs, ASTProgramNode* main_program, const std::string& current_this_name);
-
-		virtual const std::string& get_namespace(const std::string& nmspace = "") const = 0;
-		virtual const std::string& get_namespace(const ASTProgramNode* program, const std::string& nmspace = "") const = 0;
 
 		virtual void set_curr_pos(unsigned int row, unsigned int col) = 0;
 		virtual std::string msg_header() = 0;
@@ -120,14 +118,6 @@ namespace visitor {
 		virtual void visit(ASTNullNode*) = 0;
 		virtual void visit(ASTThisNode*) = 0;
 		virtual void visit(ASTTypingNode*) = 0;
-
-		virtual long long hash(ASTExprNode*) = 0;
-		virtual long long hash(ASTIdentifierNode*) = 0;
-		virtual long long hash(ASTLiteralNode<cp_bool>*) = 0;
-		virtual long long hash(ASTLiteralNode<cp_int>*) = 0;
-		virtual long long hash(ASTLiteralNode<cp_float>*) = 0;
-		virtual long long hash(ASTLiteralNode<cp_char>*) = 0;
-		virtual long long hash(ASTLiteralNode<cp_string>*) = 0;
 	};
 }
 

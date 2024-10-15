@@ -6,8 +6,12 @@
 
 enum OpCode : uint16_t {
 	OP_RES,
+	// namespace ops
+	OP_POP_NAMESPACE,
+	OP_PUSH_NAMESPACE,
+	OP_PUSH_NAMESPACE_STACK,
 	// value ops
-	OP_POP,
+	OP_POP_CONSTANT,
 	OP_PUSH_UNDEFINED,
 	OP_PUSH_VOID,
 	OP_PUSH_BOOL,
@@ -28,10 +32,11 @@ enum OpCode : uint16_t {
 	OP_SET_TYPE,
 	OP_SET_TYPE_NAME,
 	OP_SET_TYPE_NAME_SPACE,
-	OP_SET_ARRAY_DIM,
 	OP_SET_ARRAY_SIZE,
+	OP_SET_DEFAULT_VALUE,
+	OP_SET_IS_REST,
 	// variable ops
-	OP_SET_VAR_USE_REF, // todo: chek places to use
+	OP_SET_USE_REF, // todo: chek places to use (assign, expr, func param etc.)
 	OP_LOAD_VAR,
 	OP_STORE_VAR,
 	OP_ASSIGN_VAR,
@@ -40,7 +45,7 @@ enum OpCode : uint16_t {
 	OP_ASSIGN_SUB,
 	// function ops
 	OP_FUN_START,
-	OP_FUN_PARAM_END,
+	OP_FUN_SET_PARAM,
 	OP_FUN_END,
 	OP_CALL,
 	OP_RETURN,

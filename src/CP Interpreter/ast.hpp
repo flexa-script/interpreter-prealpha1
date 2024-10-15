@@ -16,9 +16,9 @@ namespace parser {
 	class Identifier {
 	public:
 		std::string identifier;
-		std::vector<ASTExprNode*> access_vector;
+		std::vector<void*> access_vector;
 
-		Identifier(const std::string& identifier, const std::vector<ASTExprNode*>& access_vector);
+		Identifier(const std::string& identifier, const std::vector<void*>& access_vector);
 
 		Identifier(const std::string& identifier);
 
@@ -90,7 +90,7 @@ namespace parser {
 		bool is_const;
 
 		ASTDeclarationNode(const std::string& identifier, Type type, Type array_type,
-			const std::vector<ASTExprNode*>& dim, const std::string& type_name,
+			const std::vector<void*>& dim, const std::string& type_name,
 			const std::string& type_name_space, ASTExprNode* expr, bool is_const,
 			unsigned int row, unsigned int col);
 
@@ -294,7 +294,7 @@ namespace parser {
 		ASTBlockNode* block;
 
 		ASTFunctionDefinitionNode(const std::string& identifier, const std::vector<VariableDefinition>& parameters,
-			Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, const std::vector<ASTExprNode*>& dim,
+			Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
 			ASTBlockNode* block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;

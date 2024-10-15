@@ -2,16 +2,20 @@
 #define GARBAGE_COLLECTOR_HPP
 
 #include <vector>
+#include <stack>
 #include <unordered_set>
 
 #include "gcobject.hpp"
+#include "types.hpp"
 
 class GarbageCollector {
 private:
     std::vector<GCObject*> heap;
     std::unordered_set<GCObject*> roots;
+    std::stack<RuntimeValue*>* value_stack;
 
 public:
+    GarbageCollector(std::stack<RuntimeValue*>* value_stack);
     ~GarbageCollector();
 
     GCObject* allocate(GCObject* obj);

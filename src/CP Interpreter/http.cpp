@@ -24,7 +24,7 @@ void HTTP::register_functions(visitor::SemanticAnalyser* visitor) {
 void HTTP::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["request"] = [this, visitor]() {
-		Value* config_value = visitor->builtin_arguments[0];
+		RuntimeValue* config_value = visitor->builtin_arguments[0];
 		if (parser::is_void(config_value->type)) {
 			throw std::exception("Config is null");
 		}
@@ -153,14 +153,14 @@ void HTTP::register_functions(visitor::Interpreter* visitor) {
 		// create response struct
 		cp_struct res_str;
 		auto status = axe::StringUtils::split(response_lines[0], ' ');
-		res_str["http_version"] = new Value(cp_string(status[0]));
-		res_str["status"] = new Value(cp_int(stoll(status[1])));
-		res_str["status_description"] = new Value(cp_string(status[2]));
+		res_str["http_version"] = new RuntimeValue(cp_string(status[0]));
+		res_str["status"] = new RuntimeValue(cp_int(stoll(status[1])));
+		res_str["status_description"] = new RuntimeValue(cp_string(status[2]));
 		// prepare cp instructions
 		cp_struct res_headers_str;
-		res_headers_str["root"] = new Value(Type::T_VOID);
-		res_headers_str["size"] = new Value(cp_int(0));
-		auto headers_value = new Value(res_headers_str, "Dictionary", "cp");
+		res_headers_str["root"] = new RuntimeValue(Type::T_VOID);
+		res_headers_str["size"] = new RuntimeValue(cp_int(0));
+		auto headers_value = new RuntimeValue(res_headers_str, "Dictionary", "cp");
 		auto header_identifier = new ASTIdentifierNode(std::vector<Identifier>{ Identifier("headers_value") }, "cp", 0, 0);
 		auto identifier_vector = std::vector<Identifier>{ Identifier("emplace") };
 		auto fcall = new ASTFunctionCallNode("cp", identifier_vector, std::vector<ASTExprNode*>(), 0, 0);
@@ -198,10 +198,10 @@ void HTTP::register_functions(visitor::Interpreter* visitor) {
 		visitor->scopes["cp"].pop_back();
 
 		res_str["headers"] = headers_value;
-		res_str["data"] = new Value(cp_string(res_body));
-		res_str["raw"] = new Value(cp_string(raw_response));
+		res_str["data"] = new RuntimeValue(cp_string(res_body));
+		res_str["raw"] = new RuntimeValue(cp_string(raw_response));
 
-		visitor->current_expression_value = new Value(res_str, "HttpResponse", "cp");
+		visitor->current_expression_value = new RuntimeValue(res_str, "HttpResponse", "cp");
 
 		};
 

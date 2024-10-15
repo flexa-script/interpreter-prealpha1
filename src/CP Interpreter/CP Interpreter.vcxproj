@@ -69,13 +69,14 @@
     <ClInclude Include="http.hpp" />
     <ClInclude Include="input.hpp" />
     <ClInclude Include="interpreter.hpp" />
-    <ClInclude Include="interpreter_scope.hpp" />
     <ClInclude Include="lexer.hpp" />
-    <ClInclude Include="libfinder.hpp" />
+    <ClInclude Include="linker.hpp" />
+    <ClInclude Include="meta_visitor.hpp" />
     <ClInclude Include="module.hpp" />
+    <ClInclude Include="namespace_manager.hpp" />
     <ClInclude Include="parser.hpp" />
     <ClInclude Include="semantic_analysis.hpp" />
-    <ClInclude Include="semantic_scope.hpp" />
+    <ClInclude Include="scope.hpp" />
     <ClInclude Include="sound.hpp" />
     <ClInclude Include="token.hpp" />
     <ClInclude Include="types.hpp" />
@@ -88,6 +89,7 @@
     <ClInclude Include="virtual_machine.hpp" />
     <ClInclude Include="visitor.hpp" />
     <ClInclude Include="vmconstants.hpp" />
+    <ClInclude Include="vm_scope.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ast.cpp" />
@@ -108,14 +110,15 @@
     <ClCompile Include="http.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="interpreter.cpp" />
-    <ClCompile Include="interpreter_scope.cpp" />
     <ClCompile Include="lexer.cpp" />
-    <ClCompile Include="libfinder.cpp" />
+    <ClCompile Include="linker.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="meta_visitor.cpp" />
     <ClCompile Include="module.cpp" />
+    <ClCompile Include="namespace_manager.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="semantic_analysis.cpp" />
-    <ClCompile Include="semantic_scope.cpp" />
+    <ClCompile Include="scope.cpp" />
     <ClCompile Include="sound.cpp" />
     <ClCompile Include="token.cpp" />
     <ClCompile Include="token_constants.hpp" />
@@ -127,6 +130,7 @@
     <ClCompile Include="virtual_machine.cpp" />
     <ClCompile Include="visitor.cpp" />
     <ClCompile Include="vmconstants.cpp" />
+    <ClCompile Include="vm_scope.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

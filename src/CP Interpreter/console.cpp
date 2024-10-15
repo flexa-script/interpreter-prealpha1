@@ -28,7 +28,7 @@ void Console::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["is_console_visible"] = [this, visitor]() {
-		visitor->current_expression_value = new Value(cp_bool(::IsWindowVisible(::GetConsoleWindow())));
+		visitor->current_expression_value = new RuntimeValue(cp_bool(::IsWindowVisible(::GetConsoleWindow())));
 
 		};
 

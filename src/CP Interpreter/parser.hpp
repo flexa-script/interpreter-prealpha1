@@ -101,7 +101,7 @@ namespace parser {
 		cp_float parse_float_literal();
 		cp_char parse_char_literal();
 		cp_string parse_string_literal();
-		std::vector<ASTExprNode*> parse_dimension_vector();
+		std::vector<void*> parse_dimension_vector();
 		Identifier parse_identifier();
 		std::vector<Identifier> parse_identifier_vector();
 

@@ -247,7 +247,7 @@ VariableDefinition* Parser::parse_struct_var_def() {
 	Type type = Type::T_UNDEFINED;
 	Type array_type = Type::T_UNDEFINED;
 	ASTExprNode* expr_size;
-	auto dim = std::vector<ASTExprNode*>();
+	auto dim = std::vector<void*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -621,7 +621,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition(const std::string& 
 	std::string type_name = "";
 	std::string type_name_space = "";
 	ASTBlockNode* block = nullptr;
-	auto dim_vector = std::vector<ASTExprNode*>();
+	auto dim_vector = std::vector<void*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1125,8 +1125,8 @@ ASTIdentifierNode* Parser::parse_identifier_node() {
 	return new ASTIdentifierNode(identifier_vector, nmspace, row, col);
 }
 
-std::vector<ASTExprNode*> Parser::parse_dimension_vector() {
-	std::vector<ASTExprNode*> access_vector = std::vector<ASTExprNode*>();
+std::vector<void*> Parser::parse_dimension_vector() {
+	std::vector<void*> access_vector = std::vector<void*>();
 
 	if (current_token.type == TOK_LEFT_BRACE) {
 		do {
@@ -1150,7 +1150,7 @@ std::vector<ASTExprNode*> Parser::parse_dimension_vector() {
 
 Identifier Parser::parse_identifier() {
 	std::string identifier = "";
-	std::vector<ASTExprNode*> access_vector = std::vector<ASTExprNode*>();
+	std::vector<void*> access_vector = std::vector<void*>();
 
 	identifier = current_token.value;
 
@@ -1207,7 +1207,7 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 	std::string type_name = "";
 	std::string type_name_space = "";
 	ASTExprNode* expr;
-	auto dim_vector = std::vector<ASTExprNode*>();
+	auto dim_vector = std::vector<void*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 	bool is_const = current_token.type == TOK_CONST;
@@ -1304,7 +1304,7 @@ VariableDefinition* Parser::parse_formal_param() {
 	Type type = Type::T_UNDEFINED;
 	Type array_type = Type::T_UNDEFINED;
 	ASTExprNode* def_expr;
-	auto dim = std::vector<ASTExprNode*>();
+	auto dim = std::vector<void*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 

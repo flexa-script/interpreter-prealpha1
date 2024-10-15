@@ -10,7 +10,7 @@
 #include "compiler.hpp"
 #include "vendor/axeutils.hpp"
 #include "cputil.hpp"
-#include "libfinder.hpp"
+#include "linker.hpp"
 
 CPInterpreter::CPInterpreter(const std::string& project_root, std::vector<std::string>&& files)
 	: project_root(axe::PathUtils::normalize_path_sep(project_root)),
@@ -74,7 +74,7 @@ void CPInterpreter::parse_programs(const std::vector<CPSource>& source_programs,
 int CPInterpreter::interpreter() {
 	const std::vector<CPSource>& source_programs = load_programs(files);
 
-	std::shared_ptr<visitor::SemanticScope> semantic_global_scope = std::make_shared<visitor::SemanticScope>();
+	std::shared_ptr<visitor::Scope> semantic_global_scope = std::make_shared<visitor::Scope>();
 
 	try {
 		parser::ASTProgramNode* main_program = nullptr;
@@ -82,7 +82,7 @@ int CPInterpreter::interpreter() {
 		parse_programs(source_programs, &main_program, &programs);
 		size_t cplibs_size = 0;
 		do {
-			visitor::LibFinder libfinder(main_program, programs);
+			visitor::Linker libfinder(main_program, programs);
 			libfinder.start();
 
 			cplibs_size = libfinder.lib_names.size();

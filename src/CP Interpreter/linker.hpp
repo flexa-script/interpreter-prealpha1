@@ -6,7 +6,7 @@
 
 namespace visitor {
 
-	class LibFinder : Visitor {
+	class Linker : Visitor {
 	public:
 		std::vector<std::string> lib_names;
 
@@ -14,7 +14,7 @@ namespace visitor {
 		std::vector<std::string> libs;
 
 	public:
-		LibFinder(ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs);
+		Linker(ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs);
 
 		void start();
 
@@ -62,16 +62,6 @@ namespace visitor {
 		void visit(ASTThisNode*) override;
 		void visit(ASTTypingNode*) override;
 
-		long long hash(ASTExprNode*) override;
-		long long hash(ASTIdentifierNode*) override;
-		long long hash(ASTLiteralNode<cp_bool>*) override;
-		long long hash(ASTLiteralNode<cp_int>*) override;
-		long long hash(ASTLiteralNode<cp_float>*) override;
-		long long hash(ASTLiteralNode<cp_char>*) override;
-		long long hash(ASTLiteralNode<cp_string>*) override;
-
-		const std::string& get_namespace(const std::string& nmspace = "") const override;
-		const std::string& get_namespace(const ASTProgramNode* program, const std::string& nmspace = "") const override;
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;
 	};

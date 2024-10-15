@@ -15,7 +15,7 @@
 using namespace lexer;
 
 VirtualMachine::VirtualMachine(std::vector<BytecodeInstruction> instructions)
-	: instructions(instructions) {}
+	: instructions(instructions), gc(GarbageCollector(&value_stack)) {}
 
 void VirtualMachine::run() {
 
@@ -31,54 +31,119 @@ void VirtualMachine::run() {
 
 }
 
+void VirtualMachine::push_empty(Type type) {
+	auto val = gc.allocate(new RuntimeValue(type));
+	value_stack.push(dynamic_cast<RuntimeValue*>(val));
+}
+
+void VirtualMachine::push_constant(RuntimeValue* value) {
+	auto val = gc.allocate(value);
+	value_stack.push(dynamic_cast<RuntimeValue*>(val));
+}
+
+void VirtualMachine::push_function_constant(const std::string& identifier) {
+	auto fdef = axe::StringUtils::split(identifier, ":");
+	push_constant(new RuntimeValue(cp_function(fdef[0], fdef[1])));
+}
+
+void VirtualMachine::binary_operation(const std::string& op) {
+	auto rval = value_stack.top();
+	value_stack.pop();
+	auto lval = value_stack.top();
+	value_stack.pop();
+	push_constant(do_operation(op, lval, rval, true));
+}
+
+void VirtualMachine::unary_operation(const std::string& op) {
+	auto value = value_stack.top();
+
+	if (op == "ref" || op == "unref") {
+		if (op == "unref") {
+			value->use_ref = false;
+		}
+		else if (op == "ref") {
+			value->use_ref = true;
+		}
+	}
+	else {
+		if (!value->use_ref) {
+			value_stack.pop();
+			push_constant(new RuntimeValue(value));
+		}
+
+		switch (value->type) {
+		case Type::T_INT:
+			if (op == "-") {
+				value->set(cp_int(-value->get_i()));
+			}
+			else if (op == "~") {
+				value->set(cp_int(~value->get_i()));
+			}
+			break;
+		case Type::T_FLOAT:
+			if (op == "-") {
+				value->set(cp_float(-value->get_f()));
+			}
+			break;
+		case Type::T_BOOL:
+			value->set(cp_bool(!value->get_b()));
+			break;
+		default:
+			throw std::runtime_error("incompatible unary operator '" + op +
+				"' in front of " + type_str(value->type) + " expression");
+		}
+	}
+}
+
 void VirtualMachine::decode_operation() {
 	switch (current_instruction.opcode) {
 	case OP_RES:
 		throw std::runtime_error("operation error");
 		break;
 
-		// Operações de valor
-	case OP_POP:
+		// namespace operations
+	case OP_POP_NAMESPACE:
+		namespace_stack.push(current_instruction.get_string_operand());
+		break;
+	case OP_PUSH_NAMESPACE:
+		namespace_stack.pop();
+		break;
+	case OP_PUSH_NAMESPACE_STACK:
+		push_constant(new RuntimeValue(namespace_stack.top()));
+		break;
+
+		// constant operations
+	case OP_POP_CONSTANT:
 		value_stack.pop();
 		break;
 	case OP_PUSH_UNDEFINED:
-		auto val = gc.allocate(new Value());
-		value_stack.push(dynamic_cast<Value*>(val));
+		push_empty(Type::T_UNDEFINED);
 		break;
 	case OP_PUSH_VOID:
-		auto val = gc.allocate(new Value(Type::T_VOID));
-		value_stack.push(dynamic_cast<Value*>(val));
+		push_empty(Type::T_VOID);
 		break;
 	case OP_PUSH_BOOL:
-		auto val = gc.allocate(new Value(current_instruction.get_bool_operand()));
-		value_stack.push(dynamic_cast<Value*>(val));
+		push_constant(new RuntimeValue(current_instruction.get_bool_operand()));
 		break;
 	case OP_PUSH_INT:
-		auto val = gc.allocate(new Value(current_instruction.get_int_operand()));
-		value_stack.push(dynamic_cast<Value*>(val));
+		push_constant(new RuntimeValue(current_instruction.get_int_operand()));
 		break;
 	case OP_PUSH_FLOAT:
-		auto val = gc.allocate(new Value(current_instruction.get_float_operand()));
-		value_stack.push(dynamic_cast<Value*>(val));
+		push_constant(new RuntimeValue(current_instruction.get_float_operand()));
 		break;
 	case OP_PUSH_CHAR:
-		auto val = gc.allocate(new Value(current_instruction.get_char_operand()));
-		value_stack.push(dynamic_cast<Value*>(val));
+		push_constant(new RuntimeValue(current_instruction.get_char_operand()));
 		break;
 	case OP_PUSH_STRING:
-		auto val = gc.allocate(new Value(current_instruction.get_string_operand()));
-		value_stack.push(dynamic_cast<Value*>(val));
+		push_constant(new RuntimeValue(current_instruction.get_string_operand()));
 		break;
-	case OP_PUSH_FUNCTION: {
-		auto fdef = axe::StringUtils::split(current_instruction.get_string_operand(), ":");
-		auto val = gc.allocate(new Value(cp_function(fdef[0], fdef[1])));
-		value_stack.push(dynamic_cast<Value*>(val));
+	case OP_PUSH_FUNCTION:
+		push_function_constant(current_instruction.get_string_operand());
 		break;
-	}
 	case OP_CREATE_ARRAY:
 		auto size = current_instruction.get_size_operand();
-		auto val = gc.allocate(new Value(cp_array(size)));
-		value_stack.push(dynamic_cast<Value*>(val));
+		auto val = gc.allocate(new RuntimeValue(cp_array(size)));
+		value_stack.push(dynamic_cast<RuntimeValue*>(val));
 		break;
 	case OP_SET_ELEMENT:
 		auto value = value_stack.top();
@@ -87,8 +152,8 @@ void VirtualMachine::decode_operation() {
 		break;
 	case OP_CREATE_STRUCT: {
 		auto sdef = axe::StringUtils::split(current_instruction.get_string_operand(), ":");
-		auto val = gc.allocate(new Value(cp_struct(), sdef[1], sdef[0]));
-		value_stack.push(dynamic_cast<Value*>(val));
+		auto val = gc.allocate(new RuntimeValue(cp_struct(), sdef[1], sdef[0]));
+		value_stack.push(dynamic_cast<RuntimeValue*>(val));
 		break;
 	}
 	case OP_SET_FIELD:
@@ -97,217 +162,270 @@ void VirtualMachine::decode_operation() {
 		value_stack.top()->str[current_instruction.get_string_operand()] = value;
 		break;
 
-		// Operações de tipo de struct
+		// struct definition operations
 	case OP_STRUCT_START:
-		// Código para OP_STRUCT_START
+		struct_def_build_stack.push(StructureDefinition(current_instruction.get_string_operand()));
 		break;
-	case OP_STRUCT_SET_VAR:
-		// Código para OP_STRUCT_SET_VAR
+	case OP_STRUCT_SET_VAR: {
+		auto var_id = current_instruction.get_string_operand();
+
+		std::vector<void*> dim;
+		for (auto s : set_array_dim) {
+			dim.push_back(s);
+		}
+
+		auto var = VariableDefinition(var_id,
+			set_type, set_type_name, set_type_name_space, set_array_type,
+			dim, set_default_value, set_is_rest, 0, 0);
+
+		struct_def_build_stack.top().variables[var_id] = var;
+
+		cleanup_type_set();
+
 		break;
+	}
 	case OP_STRUCT_END:
-		// Código para OP_STRUCT_END
+		auto& str = struct_def_build_stack.top();
+		struct_def_build_stack.pop();
+		scopes[namespace_stack.top()].back()->declare_structure_definition(str);
 		break;
 
-		// Operações de tipo
+		// typing operations
 	case OP_SET_TYPE:
-		// Código para OP_SET_TYPE
+		set_type = (Type)current_instruction.get_uint8_operand();
 		break;
 	case OP_SET_TYPE_NAME:
-		// Código para OP_SET_TYPE_NAME
+		set_type_name = current_instruction.get_string_operand();
 		break;
 	case OP_SET_TYPE_NAME_SPACE:
-		// Código para OP_SET_TYPE_NAME_SPACE
-		break;
-	case OP_SET_ARRAY_DIM:
-		// Código para OP_SET_ARRAY_DIM
+		set_type_name_space = current_instruction.get_string_operand();
 		break;
 	case OP_SET_ARRAY_SIZE:
-		// Código para OP_SET_ARRAY_SIZE
+		auto value = value_stack.top();
+		value_stack.pop();
+		set_array_dim.push_back(value);
+		break;
+	case OP_SET_USE_REF:
+		// todo
+		break;
+	case OP_SET_DEFAULT_VALUE:
+		set_default_value = value_stack.top();
+		value_stack.pop();
+		break;
+	case OP_SET_IS_REST:
+		set_is_rest = current_instruction.get_bool_operand();
 		break;
 
-		// Operações de variável
-	case OP_SET_VAR_USE_REF:
-		// Código para OP_SET_VAR_USE_REF
-		break;
+		// variable operations
 	case OP_LOAD_VAR:
-		// Código para OP_LOAD_VAR
+		// todo
+
 		break;
 	case OP_STORE_VAR:
-		// Código para OP_STORE_VAR
+		// todo OP_FUN_START
 		break;
 	case OP_ASSIGN_VAR:
-		// Código para OP_ASSIGN_VAR
+		// todo OP_ASSIGN_VAR
 		break;
 	case OP_LOAD_SUB_ID:
-		// Código para OP_LOAD_SUB_ID
+		// todo OP_LOAD_SUB_ID
 		break;
 	case OP_LOAD_SUB_IX:
-		// Código para OP_LOAD_SUB_IX
+		// todo OP_LOAD_SUB_IX
 		break;
 	case OP_ASSIGN_SUB:
-		// Código para OP_ASSIGN_SUB
+		// todo OP_ASSIGN_SUB
 		break;
 
-		// Operações de função
-	case OP_FUN_START:
-		// Código para OP_FUN_START
+		// function operations
+	case OP_FUN_START: {
+		std::vector<void*> dim;
+		for (auto s : set_array_dim) {
+			dim.push_back(s);
+		}
+
+		func_def_build_stack.push(FunctionDefinition(current_instruction.get_string_operand(), set_type, set_type_name,
+			set_type_name_space, set_array_type, dim));
+
+		cleanup_type_set();
+
 		break;
-	case OP_FUN_PARAM_END:
-		// Código para OP_FUN_PARAM_END
+	}
+	case OP_FUN_SET_PARAM: {
+		auto var_id = current_instruction.get_string_operand();
+
+		std::vector<void*> dim;
+		for (auto s : set_array_dim) {
+			dim.push_back(s);
+		}
+
+		auto var = VariableDefinition(var_id,
+			set_type, set_type_name, set_type_name_space, set_array_type,
+			dim, set_default_value, set_is_rest, 0, 0);
+
+		func_def_build_stack.top().signature.push_back(var);
+		func_def_build_stack.top().parameters.push_back(var);
+
+		cleanup_type_set();
+
 		break;
+	}
 	case OP_FUN_END:
-		// Código para OP_FUN_END
+		auto& fun = func_def_build_stack.top();
+		func_def_build_stack.pop();
+		fun.pointer = pc + 2;
+		scopes[namespace_stack.top()].back()->declare_function(fun);
 		break;
 	case OP_CALL:
-		// Código para OP_CALL
+		return_stack.push(pc + 1);
 		break;
 	case OP_RETURN:
-		// Código para OP_RETURN
+		pc = return_stack.top();
+		return_stack.pop();
 		break;
 
-		// Condicionais
+		// conditional operations
 	case OP_CONTINUE:
-		// Código para OP_CONTINUE
+		// todo OP_CONTINUE
 		break;
 	case OP_BREAK:
-		// Código para OP_BREAK
+		// todo OP_BREAK
 		break;
 	case OP_TRY_START:
-		// Código para OP_TRY_START
+		// todo OP_TRY_START
 		break;
 	case OP_TRY_END:
-		// Código para OP_TRY_END
+		// todo OP_TRY_END
 		break;
 	case OP_THROW:
-		// Código para OP_THROW
+		// todo OP_THROW
 		break;
 	case OP_GET_ITERATOR:
-		// Código para OP_GET_ITERATOR
+		// todo OP_GET_ITERATOR
 		break;
 	case OP_NEXT_ELEMENT:
-		// Código para OP_NEXT_ELEMENT
+		// todo OP_NEXT_ELEMENT
 		break;
 	case OP_JUMP:
-		// Código para OP_JUMP
+		// todo OP_JUMP
 		break;
 	case OP_JUMP_IF_FALSE:
-		// Código para OP_JUMP_IF_FALSE
+		// todo OP_JUMP_IF_FALSE
 		break;
 	case OP_JUMP_IF_FALSE_OR_NEXT:
-		// Código para OP_JUMP_IF_FALSE_OR_NEXT
+		// todo OP_JUMP_IF_FALSE_OR_NEXT
 		break;
 	case OP_JUMP_IF_TRUE:
-		// Código para OP_JUMP_IF_TRUE
+		// todo OP_JUMP_IF_TRUE
 		break;
 	case OP_JUMP_IF_TRUE_OR_NEXT:
-		// Código para OP_JUMP_IF_TRUE_OR_NEXT
+		// todo OP_JUMP_IF_TRUE_OR_NEXT
 		break;
 
-		// Operações de expressão
+		// expression operations
 	case OP_IS_TYPE:
-		// Código para OP_IS_TYPE
+		// todo OP_IS_TYPE
 		break;
 	case OP_REFID:
-		// Código para OP_REFID
+		// todo OP_REFID
 		break;
 	case OP_TYPEID:
-		// Código para OP_TYPEID
+		// todo OP_TYPEID
 		break;
 	case OP_TYPEOF:
-		// Código para OP_TYPEOF
+		// todo OP_TYPEOF
 		break;
 	case OP_TYPE_PARSE:
-		// Código para OP_TYPE_PARSE
+		// todo OP_TYPE_PARSE
 		break;
 	case OP_TERNARY:
-		// Código para OP_TERNARY
+		// todo OP_TERNARY
 		break;
 	case OP_IN:
-		// Código para OP_IN
+		// todo OP_IN
 		break;
 	case OP_OR:
-		// Código para OP_OR
+		binary_operation("or");
 		break;
 	case OP_AND:
-		// Código para OP_AND
+		binary_operation("and");
 		break;
 	case OP_BIT_OR:
-		// Código para OP_BIT_OR
+		binary_operation("|");
 		break;
 	case OP_BIT_XOR:
-		// Código para OP_BIT_XOR
+		binary_operation("^");
 		break;
 	case OP_BIT_AND:
-		// Código para OP_BIT_AND
+		binary_operation("&");
 		break;
 	case OP_EQL:
-		// Código para OP_EQL
+		binary_operation("==");
 		break;
 	case OP_DIF:
-		// Código para OP_DIF
+		binary_operation("!=");
 		break;
 	case OP_LT:
-		// Código para OP_LT
+		binary_operation("<");
 		break;
 	case OP_LTE:
-		// Código para OP_LTE
+		binary_operation("<=");
 		break;
 	case OP_GT:
-		// Código para OP_GT
+		binary_operation(">");
 		break;
 	case OP_GTE:
-		// Código para OP_GTE
+		binary_operation("=>");
 		break;
 	case OP_SPACE_SHIP:
-		// Código para OP_SPACE_SHIP
+		binary_operation("<=>");
 		break;
 	case OP_LEFT_SHIFT:
-		// Código para OP_LEFT_SHIFT
+		binary_operation("<<");
 		break;
 	case OP_RIGHT_SHIFT:
-		// Código para OP_RIGHT_SHIFT
+		binary_operation(">>");
 		break;
 	case OP_ADD:
-		// Código para OP_ADD
+		binary_operation("+");
 		break;
 	case OP_SUB:
-		// Código para OP_SUB
+		binary_operation("-");
 		break;
 	case OP_MUL:
-		// Código para OP_MUL
+		binary_operation("*");
 		break;
 	case OP_DIV:
-		// Código para OP_DIV
+		binary_operation("/");
 		break;
 	case OP_REMAINDER:
-		// Código para OP_REMAINDER
+		binary_operation("%");
 		break;
 	case OP_FLOOR_DIV:
-		// Código para OP_FLOOR_DIV
+		binary_operation("/%");
 		break;
 	case OP_NOT:
-		// Código para OP_NOT
+		unary_operation("not");
 		break;
 	case OP_BIT_NOT:
-		// Código para OP_BIT_NOT
+		unary_operation("~");
 		break;
 	case OP_EXP:
-		// Código para OP_EXP
+		binary_operation("**");
 		break;
 	case OP_REF:
-		// Código para OP_REF
+		unary_operation("ref");
 		break;
 	case OP_UNREF:
-		// Código para OP_UNREF
+		unary_operation("unref");
 		break;
 	case OP_TRAP:
-		// Código para OP_TRAP
 		break;
 	case OP_HALT:
-		// Código para OP_HALT
+		pc = instructions.size();
 		break;
 	case OP_ERROR:
-		// Código para OP_ERROR
+		std::cerr << "Operation error" << std::endl;
 		break;
 
 	default:
@@ -322,6 +440,16 @@ bool VirtualMachine::get_next() {
 	}
 	current_instruction = instructions[pc++];
 	return true;
+}
+
+void VirtualMachine::cleanup_type_set() {
+	set_type = Type::T_UNDEFINED;
+	set_type_name = "";
+	set_type_name_space = "";
+	set_array_type = Type::T_UNDEFINED;
+	set_array_dim = std::vector<RuntimeValue*>();
+	set_default_value = nullptr;
+	set_is_rest = false;
 }
 
 void VirtualMachine::visit(ASTProgramNode* astnode) {
@@ -344,7 +472,7 @@ void VirtualMachine::visit(ASTProgramNode* astnode) {
 	if (astnode->statements.size() > 1
 		|| astnode->statements.size() > 0
 		&& !dynamic_cast<ASTExprNode*>(astnode->statements[0])) {
-		current_expression_value = new Value(Type::T_UNDEFINED);
+		current_expression_value = new RuntimeValue(Type::T_UNDEFINED);
 	}
 }
 
@@ -399,8 +527,8 @@ void VirtualMachine::visit(ASTEnumNode* astnode) {
 
 	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
-		auto var = std::make_shared<Variable>(Type::T_INT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "");
-		var->set_value(new Value(cp_int(i)));
+		auto var = std::make_shared<RuntimeVariable>(Type::T_INT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "");
+		var->set_value(new RuntimeValue(cp_int(i)));
 		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], var);
 	}
 }
@@ -414,21 +542,21 @@ void VirtualMachine::visit(ASTDeclarationNode* astnode) {
 		astnode->expr->accept(this);
 	}
 	else {
-		current_expression_value = new Value(Type::T_UNDEFINED);
+		current_expression_value = new RuntimeValue(Type::T_UNDEFINED);
 	}
 
-	Value* new_value;
+	RuntimeValue* new_value;
 
 	if (current_expression_value->use_ref) {
 		new_value = current_expression_value;
 	}
 	else {
-		new_value = new Value(current_expression_value);
+		new_value = new RuntimeValue(current_expression_value);
 	}
 
 	auto& astnode_type_name = astnode->type_name.empty() ? new_value->type_name : astnode->type_name;
 
-	auto new_var = std::make_shared<Variable>(astnode->type,
+	auto new_var = std::make_shared<RuntimeVariable>(astnode->type,
 		astnode->array_type, astnode->dim,
 		astnode_type_name, astnode->type_name_space);
 	new_var->set_value(new_value);
@@ -467,18 +595,18 @@ void VirtualMachine::visit(ASTAssignmentNode* astnode) {
 		throw std::runtime_error(ex.what());
 	}
 
-	std::shared_ptr<Variable> variable = astscope->find_declared_variable(astnode->identifier);
-	Value* value = access_value(astscope, variable->get_value(), astnode->identifier_vector);
+	std::shared_ptr<RuntimeVariable> variable = astscope->find_declared_variable(astnode->identifier);
+	RuntimeValue* value = access_value(astscope, variable->get_value(), astnode->identifier_vector);
 
 	astnode->expr->accept(this);
 
 	auto ptr_value = current_expression_value;
-	Value* new_value = nullptr;
+	RuntimeValue* new_value = nullptr;
 	if (ptr_value->use_ref) {
 		new_value = ptr_value;
 	}
 	else {
-		new_value = new Value(ptr_value);
+		new_value = new RuntimeValue(ptr_value);
 	}
 
 	auto arr = new_value->get_arr();
@@ -506,7 +634,7 @@ void VirtualMachine::visit(ASTAssignmentNode* astnode) {
 	}
 	else {
 		if (astnode->identifier_vector.size() == 1 && astnode->identifier_vector[0].access_vector.size() == 0) {
-			variable->set_value(new Value(variable->get_value()));
+			variable->set_value(new RuntimeValue(variable->get_value()));
 			value = variable->get_value();
 		}
 
@@ -544,8 +672,8 @@ void VirtualMachine::visit(ASTReturnNode* astnode) {
 		std::shared_ptr<InterpreterScope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
 
 		astnode->expr->accept(this);
-		Value* returned_value = current_expression_value;
-		Value* value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
+		RuntimeValue* returned_value = current_expression_value;
+		RuntimeValue* value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
 
 		if (value->type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
 			has_string_access = false;
@@ -553,7 +681,7 @@ void VirtualMachine::visit(ASTReturnNode* astnode) {
 			current_function_call_identifier_vector.top().back().access_vector[current_function_call_identifier_vector.top().back().access_vector.size() - 1]->accept(this);
 			auto pos = value->get_i();
 
-			auto char_value = new Value(Type::T_CHAR);
+			auto char_value = new RuntimeValue(Type::T_CHAR);
 			char_value->set(cp_char(str[pos]));
 			value = char_value;
 		}
@@ -567,11 +695,11 @@ void VirtualMachine::visit(ASTReturnNode* astnode) {
 			current_expression_value = value;
 		}
 		else {
-			current_expression_value = new Value(value);
+			current_expression_value = new RuntimeValue(value);
 		}
 	}
 	else {
-		current_expression_value = new Value(Type::T_UNDEFINED);
+		current_expression_value = new RuntimeValue(Type::T_UNDEFINED);
 	}
 
 	for (long long i = scopes[nmspace].size() - 1; i >= 0; --i) {
@@ -591,19 +719,19 @@ void VirtualMachine::visit(ASTFunctionCallNode* astnode) {
 	std::vector<Identifier> identifier_vector = astnode->identifier_vector;
 	bool strict = true;
 	std::vector<TypeDefinition> signature;
-	std::vector<Value*> function_arguments;
+	std::vector<RuntimeValue*> function_arguments;
 
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
 
 		signature.push_back(*current_expression_value);
 
-		Value* pvalue = nullptr;
+		RuntimeValue* pvalue = nullptr;
 		if (current_expression_value->use_ref) {
 			pvalue = current_expression_value;
 		}
 		else {
-			pvalue = new Value(current_expression_value);
+			pvalue = new RuntimeValue(current_expression_value);
 		}
 
 		function_arguments.push_back(pvalue);
@@ -704,7 +832,7 @@ void VirtualMachine::visit(ASTFunctionExpression* astnode) {
 
 	scopes[nmspace].back()->declare_function(identifier, params, fun->block, *fun);
 
-	auto value = new Value(Type::T_FUNCTION);
+	auto value = new RuntimeValue(Type::T_FUNCTION);
 	value->set(cp_function(nmspace, identifier));
 	current_expression_value = value;
 }
@@ -894,7 +1022,7 @@ void VirtualMachine::visit(ASTForNode* astnode) {
 		}
 	}
 	else {
-		current_expression_value = new Value(Type::T_BOOL);
+		current_expression_value = new RuntimeValue(Type::T_BOOL);
 		current_expression_value->set(true);
 	}
 
@@ -932,7 +1060,7 @@ void VirtualMachine::visit(ASTForNode* astnode) {
 			}
 		}
 		else {
-			current_expression_value = new Value(Type::T_BOOL);
+			current_expression_value = new RuntimeValue(Type::T_BOOL);
 			current_expression_value->set(true);
 		}
 
@@ -998,7 +1126,7 @@ void VirtualMachine::visit(ASTForEachNode* astnode) {
 			set_value(
 				scopes[nmspace].back(),
 				std::vector<Identifier>{Identifier(itdecl->identifier)},
-				new Value(cp_char(val)));
+				new RuntimeValue(cp_char(val)));
 
 			astnode->block->accept(this);
 
@@ -1037,9 +1165,9 @@ void VirtualMachine::visit(ASTForEachNode* astnode) {
 				}
 
 				auto str = cp_struct();
-				str["key"] = new Value(cp_string(val.first));
+				str["key"] = new RuntimeValue(cp_string(val.first));
 				str["value"] = val.second;
-				auto str_value = new Value(str, "cp", "Pair");
+				auto str_value = new RuntimeValue(str, "cp", "Pair");
 
 				set_value(
 					scopes[nmspace].back(),
@@ -1053,7 +1181,7 @@ void VirtualMachine::visit(ASTForEachNode* astnode) {
 
 				std::shared_ptr<InterpreterScope> back_scope = scopes[nmspace].back();
 				auto decl_key = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
-				decl_key->set_value(new Value(cp_string(val.first)));
+				decl_key->set_value(new RuntimeValue(cp_string(val.first)));
 
 				back_scope = scopes[nmspace].back();
 				auto decl_val = back_scope->find_declared_variable(idnode->declarations[1]->identifier);
@@ -1111,7 +1239,7 @@ void VirtualMachine::visit(ASTTryCatchNode* astnode) {
 
 			std::shared_ptr<InterpreterScope> back_scope = scopes[nmspace].back();
 			auto decl_val = back_scope->find_declared_variable(idnode->declarations[0]->identifier);
-			decl_val->set_value(new Value(cp_string(ex.what())));
+			decl_val->set_value(new RuntimeValue(cp_string(ex.what())));
 		}
 		else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
 			if (!is_any(current_expression_value->ref->type)
@@ -1122,9 +1250,9 @@ void VirtualMachine::visit(ASTTryCatchNode* astnode) {
 					+ "' declaration in foreach loop");
 			}
 
-			Value* value = new Value(Type::T_STRUCT);
+			RuntimeValue* value = new RuntimeValue(Type::T_STRUCT);
 			value->get_str() = cp_struct();
-			value->get_str()["error"] = new Value(cp_string(ex.what()));
+			value->get_str()["error"] = new RuntimeValue(cp_string(ex.what()));
 			value->type_name_space = "cp";
 			value->type_name = "Exception";
 
@@ -1167,7 +1295,7 @@ void VirtualMachine::visit(parser::ASTThrowNode* astnode) {
 void VirtualMachine::visit(parser::ASTReticencesNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new Value(Type::T_UNDEFINED);
+	auto value = new RuntimeValue(Type::T_UNDEFINED);
 	value->set_undefined();
 	current_expression_value = value;
 }
@@ -1269,7 +1397,7 @@ void VirtualMachine::visit(ASTStructDefinitionNode* astnode) {
 void VirtualMachine::visit(ASTLiteralNode<cp_bool>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new Value(Type::T_BOOL);
+	auto value = new RuntimeValue(Type::T_BOOL);
 	value->set(astnode->val);
 	current_expression_value = value;
 }
@@ -1277,7 +1405,7 @@ void VirtualMachine::visit(ASTLiteralNode<cp_bool>* astnode) {
 void VirtualMachine::visit(ASTLiteralNode<cp_int>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new Value(Type::T_INT);
+	auto value = new RuntimeValue(Type::T_INT);
 	value->set(astnode->val);
 	current_expression_value = value;
 }
@@ -1285,7 +1413,7 @@ void VirtualMachine::visit(ASTLiteralNode<cp_int>* astnode) {
 void VirtualMachine::visit(ASTLiteralNode<cp_float>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new Value(Type::T_FLOAT);
+	auto value = new RuntimeValue(Type::T_FLOAT);
 	value->set(astnode->val);
 	current_expression_value = value;
 }
@@ -1293,7 +1421,7 @@ void VirtualMachine::visit(ASTLiteralNode<cp_float>* astnode) {
 void VirtualMachine::visit(ASTLiteralNode<cp_char>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new Value(Type::T_CHAR);
+	auto value = new RuntimeValue(Type::T_CHAR);
 	value->set(astnode->val);
 	current_expression_value = value;
 }
@@ -1301,7 +1429,7 @@ void VirtualMachine::visit(ASTLiteralNode<cp_char>* astnode) {
 void VirtualMachine::visit(ASTLiteralNode<cp_string>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new Value(Type::T_STRING);
+	auto value = new RuntimeValue(Type::T_STRING);
 	value->set(astnode->val);
 	current_expression_value = value;
 }
@@ -1309,9 +1437,9 @@ void VirtualMachine::visit(ASTLiteralNode<cp_string>* astnode) {
 void VirtualMachine::visit(ASTArrayConstructorNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new Value(Type::T_ARRAY);
+	auto value = new RuntimeValue(Type::T_ARRAY);
 	Type arr_t = Type::T_ANY;
-	cp_array arr = cp_array(new Value * [astnode->values.size()], astnode->values.size());
+	cp_array arr = cp_array(new RuntimeValue * [astnode->values.size()], astnode->values.size());
 
 	if (current_expression_array_dim.size() == 0) {
 		current_expression_array_type = TypeDefinition();
@@ -1340,12 +1468,12 @@ void VirtualMachine::visit(ASTArrayConstructorNode* astnode) {
 			}
 		}
 
-		Value* arr_value = nullptr;
+		RuntimeValue* arr_value = nullptr;
 		if (current_expression_value->use_ref) {
 			arr_value = current_expression_value;
 		}
 		else {
-			arr_value = new Value(current_expression_value);
+			arr_value = new RuntimeValue(current_expression_value);
 		}
 		arr.first[i] = arr_value;
 	}
@@ -1393,7 +1521,7 @@ void VirtualMachine::visit(ASTStructConstructorNode* astnode) {
 	}
 	auto type_struct = curr_scope->find_declared_structure_definition(astnode->type_name);
 
-	auto value = new Value(Type::T_STRUCT);
+	auto value = new RuntimeValue(Type::T_STRUCT);
 
 	auto str = cp_struct();
 
@@ -1405,14 +1533,14 @@ void VirtualMachine::visit(ASTStructConstructorNode* astnode) {
 
 		expr.second->accept(this);
 
-		Value* str_value = current_expression_value;
+		RuntimeValue* str_value = current_expression_value;
 
 		if (!TypeDefinition::is_any_or_match_type(var_type_struct, *current_expression_value, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_struct_type_err(astnode->nmspace, astnode->type_name, var_type_struct, evaluate_access_vector_ptr);
 		}
 
 		if (!current_expression_value->use_ref) {
-			str_value = new Value(str_value);
+			str_value = new RuntimeValue(str_value);
 		}
 
 		std::vector<unsigned int> dim;
@@ -1435,7 +1563,7 @@ void VirtualMachine::visit(ASTStructConstructorNode* astnode) {
 	// declare rest values as null
 	for (auto& struct_var_def : type_struct.variables) {
 		if (str.find(struct_var_def.first) == str.end()) {
-			Value* str_value = new Value(struct_var_def.second.type);
+			RuntimeValue* str_value = new RuntimeValue(struct_var_def.second.type);
 			str_value->set_null();
 			str[struct_var_def.first] = str_value;
 		}
@@ -1456,7 +1584,7 @@ void VirtualMachine::visit(ASTIdentifierNode* astnode) {
 	catch (...) {
 		const auto& dim = astnode->identifier_vector[0].access_vector;
 		auto type = Type::T_UNDEFINED;
-		auto expression_value = new Value(Type::T_UNDEFINED);
+		auto expression_value = new RuntimeValue(Type::T_UNDEFINED);
 
 		if (astnode->identifier == "bool") {
 			type = Type::T_BOOL;
@@ -1485,7 +1613,7 @@ void VirtualMachine::visit(ASTIdentifierNode* astnode) {
 					auto fun = cp_function();
 					fun.first = nmspace;
 					fun.second = astnode->identifier;
-					current_expression_value = new Value(Type::T_FUNCTION);
+					current_expression_value = new RuntimeValue(Type::T_FUNCTION);
 					current_expression_value->set(fun);
 					return;
 				}
@@ -1503,16 +1631,16 @@ void VirtualMachine::visit(ASTIdentifierNode* astnode) {
 		if (dim.size() > 0) {
 			cp_array arr = build_array(dim, expression_value, dim.size() - 1);
 
-			current_expression_value = new Value(arr, type, dim);
+			current_expression_value = new RuntimeValue(arr, type, dim);
 		}
 		else {
-			current_expression_value = new Value(expression_value);
+			current_expression_value = new RuntimeValue(expression_value);
 		}
 
 		return;
 	}
 
-	std::shared_ptr<Variable> variable = id_scope->find_declared_variable(astnode->identifier);
+	std::shared_ptr<RuntimeVariable> variable = id_scope->find_declared_variable(astnode->identifier);
 	auto sub_val = access_value(id_scope, variable->get_value(), astnode->identifier_vector);
 	sub_val->reset_ref();
 
@@ -1524,7 +1652,7 @@ void VirtualMachine::visit(ASTIdentifierNode* astnode) {
 		astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1]->accept(this);
 		auto pos = current_expression_value->get_i();
 
-		auto char_value = new Value(Type::T_CHAR);
+		auto char_value = new RuntimeValue(Type::T_CHAR);
 		char_value->set(cp_char(str[pos]));
 		current_expression_value = char_value;
 	}
@@ -1534,12 +1662,12 @@ void VirtualMachine::visit(ASTBinaryExprNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->left->accept(this);
-	Value* l_value = nullptr;
+	RuntimeValue* l_value = nullptr;
 	if (current_expression_value->use_ref) {
 		l_value = current_expression_value;
 	}
 	else {
-		l_value = new Value(current_expression_value);
+		l_value = new RuntimeValue(current_expression_value);
 	}
 
 	if (is_bool(current_expression_value->type) && astnode->op == "and" && !current_expression_value->get_b()) {
@@ -1547,12 +1675,12 @@ void VirtualMachine::visit(ASTBinaryExprNode* astnode) {
 	}
 
 	astnode->right->accept(this);
-	Value* r_value = nullptr;
+	RuntimeValue* r_value = nullptr;
 	if (current_expression_value->use_ref) {
 		r_value = current_expression_value;
 	}
 	else {
-		r_value = new Value(current_expression_value);
+		r_value = new RuntimeValue(current_expression_value);
 	}
 
 	current_expression_value = do_operation(astnode->op, l_value, r_value, true, 0);
@@ -1574,7 +1702,7 @@ void VirtualMachine::visit(ASTInNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->value->accept(this);
-	Value expr_val = Value(current_expression_value);
+	RuntimeValue expr_val = RuntimeValue(current_expression_value);
 	astnode->collection->accept(this);
 	bool res = false;
 
@@ -1599,7 +1727,7 @@ void VirtualMachine::visit(ASTInNode* astnode) {
 		}
 	}
 
-	auto value = new Value(cp_bool(res));
+	auto value = new RuntimeValue(cp_bool(res));
 	current_expression_value = value;
 }
 
@@ -1620,7 +1748,7 @@ void VirtualMachine::visit(ASTUnaryExprNode* astnode) {
 	}
 	else {
 		if (!current_expression_value->use_ref) {
-			current_expression_value = new Value(current_expression_value);
+			current_expression_value = new RuntimeValue(current_expression_value);
 		}
 
 		switch (current_expression_value->type) {
@@ -1687,7 +1815,7 @@ void VirtualMachine::visit(ASTTypeParseNode* astnode) {
 
 	astnode->expr->accept(this);
 
-	Value* new_value = new Value();
+	RuntimeValue* new_value = new RuntimeValue();
 
 	switch (astnode->type) {
 	case Type::T_BOOL:
@@ -1798,13 +1926,13 @@ void VirtualMachine::visit(ASTTypeParseNode* astnode) {
 void VirtualMachine::visit(ASTNullNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	current_expression_value = new Value(Type::T_VOID);
+	current_expression_value = new RuntimeValue(Type::T_VOID);
 }
 
 void VirtualMachine::visit(ASTThisNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	current_expression_value = new Value(cp_string(current_this_name.top()));
+	current_expression_value = new RuntimeValue(cp_string(current_this_name.top()));
 }
 
 void VirtualMachine::visit(ASTTypingNode* astnode) {
@@ -1813,12 +1941,12 @@ void VirtualMachine::visit(ASTTypingNode* astnode) {
 	astnode->expr->accept(this);
 
 	if (astnode->image == "refid") {
-		current_expression_value = new Value(cp_int(current_expression_value));
+		current_expression_value = new RuntimeValue(cp_int(current_expression_value));
 		return;
 	}
 
 	if (astnode->image == "is_any") {
-		auto value = new Value(Type::T_BOOL);
+		auto value = new RuntimeValue(Type::T_BOOL);
 		value->set(cp_bool(
 			(current_expression_value->ref
 				&& (is_any(current_expression_value->ref->type))
@@ -1827,13 +1955,13 @@ void VirtualMachine::visit(ASTTypingNode* astnode) {
 		return;
 	}
 	else if (astnode->image == "is_array") {
-		auto value = new Value(Type::T_BOOL);
+		auto value = new RuntimeValue(Type::T_BOOL);
 		value->set(cp_bool(is_array(current_expression_value->type) || current_expression_value->dim.size() > 0));
 		current_expression_value = value;
 		return;
 	}
 	else if (astnode->image == "is_struct") {
-		auto value = new Value(Type::T_BOOL);
+		auto value = new RuntimeValue(Type::T_BOOL);
 		value->set(cp_bool(is_struct(current_expression_value->type) || is_struct(current_expression_value->array_type)));
 		current_expression_value = value;
 		return;
@@ -1875,18 +2003,18 @@ void VirtualMachine::visit(ASTTypingNode* astnode) {
 	}
 
 	if (astnode->image == "typeid") {
-		auto value = new Value(Type::T_INT);
+		auto value = new RuntimeValue(Type::T_INT);
 		value->set(cp_int(axe::StringUtils::hashcode(str_type)));
 		current_expression_value = value;
 	}
 	else {
-		auto value = new Value(Type::T_STRING);
+		auto value = new RuntimeValue(Type::T_STRING);
 		value->set(cp_string(str_type));
 		current_expression_value = value;
 	}
 }
 
-cp_bool VirtualMachine::equals_value(const Value* lval, const Value* rval) {
+cp_bool VirtualMachine::equals_value(const RuntimeValue* lval, const RuntimeValue* rval) {
 	if (lval->use_ref) {
 		return lval == rval;
 	}
@@ -2028,7 +2156,7 @@ std::shared_ptr<InterpreterScope> VirtualMachine::get_inner_most_functions_scope
 	return scopes[nmspace][i];
 }
 
-Value* VirtualMachine::set_value(std::shared_ptr<InterpreterScope> scope, const std::vector<parser::Identifier>& identifier_vector, Value* new_value) {
+RuntimeValue* VirtualMachine::set_value(std::shared_ptr<InterpreterScope> scope, const std::vector<parser::Identifier>& identifier_vector, RuntimeValue* new_value) {
 	auto var = scope->find_declared_variable(identifier_vector[0].identifier);
 
 	if (identifier_vector.size() == 1 && identifier_vector[0].access_vector.size() == 0) {
@@ -2036,8 +2164,8 @@ Value* VirtualMachine::set_value(std::shared_ptr<InterpreterScope> scope, const 
 		return var->get_value();
 	}
 
-	Value* before_value = nullptr;
-	Value* value = var->get_value();
+	RuntimeValue* before_value = nullptr;
+	RuntimeValue* value = var->get_value();
 	size_t i = 0;
 
 	while (i < identifier_vector.size()) {
@@ -2102,8 +2230,8 @@ Value* VirtualMachine::set_value(std::shared_ptr<InterpreterScope> scope, const 
 	return value;
 }
 
-Value* VirtualMachine::access_value(const std::shared_ptr<InterpreterScope> scope, Value* value, const std::vector<Identifier>& identifier_vector, size_t i) {
-	Value* next_value = value;
+RuntimeValue* VirtualMachine::access_value(const std::shared_ptr<InterpreterScope> scope, RuntimeValue* value, const std::vector<Identifier>& identifier_vector, size_t i) {
+	RuntimeValue* next_value = value;
 
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
@@ -2156,7 +2284,7 @@ Value* VirtualMachine::access_value(const std::shared_ptr<InterpreterScope> scop
 	return next_value;
 }
 
-void VirtualMachine::check_build_array(Value* new_value, std::vector<ASTExprNode*> dim) {
+void VirtualMachine::check_build_array(RuntimeValue* new_value, std::vector<ASTExprNode*> dim) {
 	if (is_array(new_value->type) && dim.size() > 0) {
 		auto arr = new_value->get_arr();
 
@@ -2182,8 +2310,8 @@ void VirtualMachine::check_build_array(Value* new_value, std::vector<ASTExprNode
 	}
 }
 
-cp_array VirtualMachine::build_array(const std::vector<ASTExprNode*>& dim, Value* init_value, long long i) {
-	Value** raw_arr;
+cp_array VirtualMachine::build_array(const std::vector<ASTExprNode*>& dim, RuntimeValue* init_value, long long i) {
+	RuntimeValue** raw_arr;
 
 	if (dim.size() - 1 == i) {
 		current_expression_array_type = TypeDefinition();
@@ -2199,10 +2327,10 @@ cp_array VirtualMachine::build_array(const std::vector<ASTExprNode*>& dim, Value
 		size = current_expression_value->get_i();
 	}
 
-	raw_arr = new Value * [size];
+	raw_arr = new RuntimeValue * [size];
 
 	for (size_t j = 0; j < size; ++j) {
-		auto val = new Value(init_value);
+		auto val = new RuntimeValue(init_value);
 
 		if (is_undefined(current_expression_array_type.type) || is_array(current_expression_array_type.type)) {
 			current_expression_array_type = *val;
@@ -2224,7 +2352,7 @@ cp_array VirtualMachine::build_array(const std::vector<ASTExprNode*>& dim, Value
 			--curr_dim_i;
 		}
 
-		auto val = new Value(arr, current_expression_array_type.array_type, curr_arr_dim,
+		auto val = new RuntimeValue(arr, current_expression_array_type.array_type, curr_arr_dim,
 			current_expression_array_type.type_name, current_expression_array_type.type_name_space);
 
 		return build_array(dim, val, i);
@@ -2234,7 +2362,7 @@ cp_array VirtualMachine::build_array(const std::vector<ASTExprNode*>& dim, Value
 }
 
 cp_array VirtualMachine::build_undefined_array(const std::vector<ASTExprNode*>& dim, long long i) {
-	Value** raw_arr;
+	RuntimeValue** raw_arr;
 
 	if (dim.size() - 1 == i) {
 		current_expression_array_type = TypeDefinition();
@@ -2250,7 +2378,7 @@ cp_array VirtualMachine::build_undefined_array(const std::vector<ASTExprNode*>& 
 		size = current_expression_value->get_i();
 	}
 
-	raw_arr = new Value * [size] { nullptr };
+	raw_arr = new RuntimeValue * [size] { nullptr };
 
 	auto arr = cp_array(raw_arr, size);
 
@@ -2292,7 +2420,7 @@ std::vector<unsigned int> VirtualMachine::evaluate_access_vector(const std::vect
 	return access_vector;
 }
 
-std::string VirtualMachine::parse_value_to_string(const Value* value) {
+std::string VirtualMachine::parse_value_to_string(const RuntimeValue* value) {
 	std::string str = "";
 	if (print_level == 0) {
 		printed.clear();
@@ -2388,7 +2516,7 @@ std::string VirtualMachine::parse_array_to_string(const cp_array& arr_value) {
 	return s.str();
 }
 
-std::string VirtualMachine::parse_struct_to_string(const Value* value) {
+std::string VirtualMachine::parse_struct_to_string(const RuntimeValue* value) {
 	auto str_value = value->get_str();
 	std::stringstream s = std::stringstream();
 	if (!value->type_name_space.empty()) {
@@ -2409,14 +2537,14 @@ std::string VirtualMachine::parse_struct_to_string(const Value* value) {
 	return s.str();
 }
 
-Value* VirtualMachine::do_operation(const std::string& op, Value* lval, Value* rval, bool is_expr, cp_int str_pos) {
+RuntimeValue* VirtualMachine::do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, bool is_expr, cp_int str_pos) {
 	Type l_var_type = lval->ref ? lval->ref->type : lval->type;
 	Type l_var_array_type = lval->ref ? lval->ref->array_type : lval->array_type;
 	Type l_type = is_undefined(lval->type) ? l_var_type : lval->type;
 	Type r_var_type = rval->ref ? rval->ref->type : rval->type;
 	Type r_var_array_type = rval->ref ? rval->ref->array_type : rval->array_type;
 	Type r_type = rval->type;
-	Value* res_value = nullptr;
+	RuntimeValue* res_value = nullptr;
 
 	if (is_void(r_type) && op == "=") {
 		lval->set_null();
@@ -2430,14 +2558,14 @@ Value* VirtualMachine::do_operation(const std::string& op, Value* lval, Value* r
 
 	if ((is_void(l_type) || is_void(r_type))
 		&& Token::is_equality_op(op)) {
-		return new Value((cp_bool)((op == "==") ?
+		return new RuntimeValue((cp_bool)((op == "==") ?
 			match_type(l_type, r_type)
 			: !match_type(l_type, r_type)));
 	}
 
 	if (lval->use_ref
 		&& Token::is_equality_op(op)) {
-		return new Value((cp_bool)((op == "==") ?
+		return new RuntimeValue((cp_bool)((op == "==") ?
 			lval == rval
 			: lval != rval));
 	}
@@ -2457,16 +2585,16 @@ Value* VirtualMachine::do_operation(const std::string& op, Value* lval, Value* r
 			lval->set(rval->get_b());
 		}
 		else if (op == "and") {
-			res_value = new Value((cp_bool)(lval->get_b() && rval->get_b()));
+			res_value = new RuntimeValue((cp_bool)(lval->get_b() && rval->get_b()));
 		}
 		else if (op == "or") {
-			res_value = new Value((cp_bool)(lval->get_b() || rval->get_b()));
+			res_value = new RuntimeValue((cp_bool)(lval->get_b() || rval->get_b()));
 		}
 		else if (op == "==") {
-			res_value = new Value((cp_bool)(lval->get_b() == rval->get_b()));
+			res_value = new RuntimeValue((cp_bool)(lval->get_b() == rval->get_b()));
 		}
 		else if (op == "!=") {
-			res_value = new Value((cp_bool)(lval->get_b() != rval->get_b()));
+			res_value = new RuntimeValue((cp_bool)(lval->get_b() != rval->get_b()));
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
@@ -2483,7 +2611,7 @@ Value* VirtualMachine::do_operation(const std::string& op, Value* lval, Value* r
 		if (is_expr
 			&& is_numeric(l_type)
 			&& op == "<=>") {
-			res_value = new Value((cp_int)(do_spaceship_operation(op, lval, rval)));
+			res_value = new RuntimeValue((cp_int)(do_spaceship_operation(op, lval, rval)));
 
 			break;
 		}
@@ -2491,7 +2619,7 @@ Value* VirtualMachine::do_operation(const std::string& op, Value* lval, Value* r
 		if (is_expr
 			&& is_numeric(l_type)
 			&& Token::is_relational_op(op)) {
-			res_value = new Value(do_relational_operation(op, lval, rval));
+			res_value = new RuntimeValue(do_relational_operation(op, lval, rval));
 
 			break;
 		}
@@ -2502,7 +2630,7 @@ Value* VirtualMachine::do_operation(const std::string& op, Value* lval, Value* r
 			cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
 			cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
-			res_value = new Value((cp_bool)(op == "==" ?
+			res_value = new RuntimeValue((cp_bool)(op == "==" ?
 				l == r : l != r));
 
 			break;
@@ -2533,7 +2661,7 @@ Value* VirtualMachine::do_operation(const std::string& op, Value* lval, Value* r
 		if (is_expr
 			&& is_numeric(l_type)
 			&& op == "<=>") {
-			res_value = new Value(do_spaceship_operation(op, lval, rval));
+			res_value = new RuntimeValue(do_spaceship_operation(op, lval, rval));
 
 			break;
 		}
@@ -2552,7 +2680,7 @@ Value* VirtualMachine::do_operation(const std::string& op, Value* lval, Value* r
 			cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
 			cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
-			res_value = new Value((cp_bool)(op == "==" ?
+			res_value = new RuntimeValue((cp_bool)(op == "==" ?
 				l == r : l != r));
 
 			break;
@@ -2579,7 +2707,7 @@ Value* VirtualMachine::do_operation(const std::string& op, Value* lval, Value* r
 		if (is_expr
 			&& is_char(l_type)
 			&& Token::is_equality_op(op)) {
-			res_value = new Value((cp_bool)(op == "==" ?
+			res_value = new RuntimeValue((cp_bool)(op == "==" ?
 				lval->get_c() == rval->get_c()
 				: lval->get_c() != lval->get_c()));
 
@@ -2633,7 +2761,7 @@ Value* VirtualMachine::do_operation(const std::string& op, Value* lval, Value* r
 				int x = 0;
 			}
 
-			res_value = new Value((cp_bool)(op == "==" ?
+			res_value = new RuntimeValue((cp_bool)(op == "==" ?
 				lval->get_s() == rval->get_s()
 				: lval->get_s() != rval->get_s()));
 
@@ -2661,7 +2789,7 @@ Value* VirtualMachine::do_operation(const std::string& op, Value* lval, Value* r
 		if (is_expr
 			&& is_array(l_type)
 			&& Token::is_equality_op(op)) {
-			res_value = new Value((cp_bool)(op == "==" ?
+			res_value = new RuntimeValue((cp_bool)(op == "==" ?
 				equals_value(lval, rval)
 				: !equals_value(lval, rval)));
 
@@ -2692,7 +2820,7 @@ Value* VirtualMachine::do_operation(const std::string& op, Value* lval, Value* r
 		if (is_expr
 			&& is_struct(l_type)
 			&& Token::is_equality_op(op)) {
-			res_value = new Value((cp_bool)(op == "==" ?
+			res_value = new RuntimeValue((cp_bool)(op == "==" ?
 				equals_value(lval, rval)
 				: !equals_value(lval, rval)));
 
@@ -2733,7 +2861,7 @@ Value* VirtualMachine::do_operation(const std::string& op, Value* lval, Value* r
 	return res_value;
 }
 
-cp_bool VirtualMachine::do_relational_operation(const std::string& op, Value* lval, Value* rval) {
+cp_bool VirtualMachine::do_relational_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval) {
 	cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
 	cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
@@ -2752,7 +2880,7 @@ cp_bool VirtualMachine::do_relational_operation(const std::string& op, Value* lv
 	ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 }
 
-cp_int VirtualMachine::do_spaceship_operation(const std::string& op, Value* lval, Value* rval) {
+cp_int VirtualMachine::do_spaceship_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval) {
 	cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
 	cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
@@ -2869,7 +2997,7 @@ cp_string VirtualMachine::do_operation(cp_string lval, cp_string rval, const std
 
 cp_array VirtualMachine::do_operation(cp_array lval, cp_array rval, const std::string& op) {
 	if (op == "=") {
-		Value** result = new Value * [rval.second];
+		RuntimeValue** result = new RuntimeValue * [rval.second];
 		for (size_t i = 0; i < rval.second; ++i) {
 			result[i] = rval.first[i];
 		}
@@ -2877,17 +3005,17 @@ cp_array VirtualMachine::do_operation(cp_array lval, cp_array rval, const std::s
 	}
 	else if (op == "+=" || op == "+") {
 		auto size = lval.second + rval.second;
-		Value** result = new Value * [size];
+		RuntimeValue** result = new RuntimeValue * [size];
 
-		std::sort(lval.first, lval.first + lval.second, [](const Value* a, const Value* b) {
+		std::sort(lval.first, lval.first + lval.second, [](const RuntimeValue* a, const RuntimeValue* b) {
 			return a->value_hash() < b->value_hash();
 			});
 
-		std::sort(rval.first, rval.first + rval.second, [](const Value* a, const Value* b) {
+		std::sort(rval.first, rval.first + rval.second, [](const RuntimeValue* a, const RuntimeValue* b) {
 			return a->value_hash() < b->value_hash();
 			});
 
-		std::merge(lval.first, lval.first + lval.second, rval.first, rval.first + rval.second, result, [](const Value* a, const Value* b) {
+		std::merge(lval.first, lval.first + lval.second, rval.first, rval.first + rval.second, result, [](const RuntimeValue* a, const RuntimeValue* b) {
 			return a->value_hash() < b->value_hash();
 			});
 
@@ -2897,7 +3025,7 @@ cp_array VirtualMachine::do_operation(cp_array lval, cp_array rval, const std::s
 	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");
 }
 
-void VirtualMachine::normalize_type(std::shared_ptr<Variable> var, Value* val) {
+void VirtualMachine::normalize_type(std::shared_ptr<RuntimeVariable> var, RuntimeValue* val) {
 	if (is_string(var->type) && is_char(val->type)) {
 		val->type = var->type;
 		val->set(cp_string{ val->get_c() });
@@ -2957,7 +3085,7 @@ long long VirtualMachine::hash(ASTIdentifierNode* astnode) {
 		throw std::runtime_error(ex.what());
 	}
 
-	std::shared_ptr<Variable> variable = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
+	std::shared_ptr<RuntimeVariable> variable = id_scope->find_declared_variable(astnode->identifier_vector[0].identifier);
 	auto value = access_value(id_scope, variable->get_value(), astnode->identifier_vector);
 
 	switch (value->type) {
@@ -2979,7 +3107,7 @@ long long VirtualMachine::hash(ASTIdentifierNode* astnode) {
 void VirtualMachine::declare_function_block_parameters(const std::string& nmspace) {
 	auto curr_scope = scopes[nmspace].back();
 	auto rest_name = std::string();
-	auto vec = std::vector<Value*>();
+	auto vec = std::vector<RuntimeValue*>();
 	size_t i = 0;
 
 	if (current_function_calling_arguments.size() == 0 || current_function_defined_parameters.size() == 0) {
@@ -3012,12 +3140,12 @@ void VirtualMachine::declare_function_block_parameters(const std::string& nmspac
 		}
 
 		// is reference : not reference
-		Value* current_value = nullptr;
+		RuntimeValue* current_value = nullptr;
 		if (current_function_calling_argument->use_ref) {
 			current_value = current_function_calling_argument;
 		}
 		else {
-			current_value = new Value(current_function_calling_argument);
+			current_value = new RuntimeValue(current_function_calling_argument);
 			current_value->ref = nullptr;
 		}
 
@@ -3041,7 +3169,7 @@ void VirtualMachine::declare_function_block_parameters(const std::string& nmspac
 					curr_scope->declare_variable(pname, current_value->ref);
 				}
 				else {
-					auto var = std::make_shared<Variable>(*current_value);
+					auto var = std::make_shared<RuntimeVariable>(*current_value);
 					var->set_value(current_value);
 					curr_scope->declare_variable(pname, var);
 				}
@@ -3083,24 +3211,24 @@ void VirtualMachine::declare_function_block_parameters(const std::string& nmspac
 			}
 		}
 		else {
-			auto val = new Value(current_expression_value);
-			auto var = std::make_shared<Variable>(*val);
+			auto val = new RuntimeValue(current_expression_value);
+			auto var = std::make_shared<RuntimeVariable>(*val);
 			var->set_value(val);
 			curr_scope->declare_variable(pname, var);
 		}
 	}
 
 	if (vec.size() > 0) {
-		auto rest = new Value(Type::T_ANY, std::vector<ASTExprNode*>());
-		auto rarr = new Value * [vec.size()];
+		auto rest = new RuntimeValue(Type::T_ANY, std::vector<ASTExprNode*>());
+		auto rarr = new RuntimeValue * [vec.size()];
 		for (size_t i = 0; i < vec.size(); ++i) {
 			rarr[i] = vec[i];
 		}
 		auto arr = cp_array(rarr, vec.size());
 		rest->set(arr, Type::T_ANY, std::vector<ASTExprNode*>());
 
-		auto val = new Value(rest);
-		auto var = std::make_shared<Variable>(*val);
+		auto val = new RuntimeValue(rest);
+		auto var = std::make_shared<RuntimeVariable>(*val);
 		var->set_value(val);
 		curr_scope->declare_variable(rest_name, var);
 	}
@@ -3111,17 +3239,17 @@ void VirtualMachine::declare_function_block_parameters(const std::string& nmspac
 
 void VirtualMachine::call_builtin_function(const std::string& identifier) {
 	std::string nmspace = get_namespace();
-	auto vec = std::vector<Value*>();
+	auto vec = std::vector<RuntimeValue*>();
 	size_t i = 0;
 
 	for (i = 0; i < current_function_calling_arguments.top().size(); ++i) {
 		// is reference : not reference
-		Value* current_value = nullptr;
+		RuntimeValue* current_value = nullptr;
 		if (current_function_calling_arguments.top()[i]->use_ref) {
 			current_value = current_function_calling_arguments.top()[i];
 		}
 		else {
-			current_value = new Value(current_function_calling_arguments.top()[i]);
+			current_value = new RuntimeValue(current_function_calling_arguments.top()[i]);
 			current_value->ref = nullptr;
 		}
 
@@ -3147,12 +3275,12 @@ void VirtualMachine::call_builtin_function(const std::string& identifier) {
 		const auto& pname = std::get<0>(current_function_defined_parameters.top()[i]);
 		std::get<2>(current_function_defined_parameters.top()[i])->accept(this);
 
-		builtin_arguments.push_back(new Value(current_expression_value));
+		builtin_arguments.push_back(new RuntimeValue(current_expression_value));
 	}
 
 	if (vec.size() > 0) {
-		auto rest = new Value(Type::T_ANY, std::vector<ASTExprNode*>());
-		auto rarr = new Value * [vec.size()];
+		auto rest = new RuntimeValue(Type::T_ANY, std::vector<ASTExprNode*>());
+		auto rarr = new RuntimeValue * [vec.size()];
 		for (size_t i = 0; i < vec.size(); ++i) {
 			rarr[i] = vec[i];
 		}
