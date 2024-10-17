@@ -6,6 +6,7 @@
 
 int main(int argc, const char* argv[]) {
 	bool debug = false;
+	std::string engine = "ast";
 	int result = 0;
 
 	SetConsoleOutputCP(CP_UTF8);
@@ -16,9 +17,18 @@ int main(int argc, const char* argv[]) {
 
 	std::vector<std::string> files;
 	std::string project_root = "";
-	for (size_t i = 1; i < argc; ++i) {
+	size_t i = 0;
+	while (++i < argc) {
 		if (argv[i] == "-d" || argv[i] == "--debug") {
 			debug = true;
+			continue;
+		}
+		if (argv[i] == "-e" || argv[i] == "--engine") {
+			++i;
+			if (i >= argc) {
+				throw std::runtime_error("invalid engine command operand");
+			}
+			engine = argv[i];
 			continue;
 		}
 		if (project_root == "") {
@@ -28,7 +38,7 @@ int main(int argc, const char* argv[]) {
 		files.push_back(argv[i]);
 	}
 
-	auto interpreter = CPInterpreter(project_root, std::move(files));
+	auto interpreter = CPInterpreter(project_root, std::move(files), debug, engine);
 
 	auto sw = axe::ChronoStopwatch();
 	sw.start();

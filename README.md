@@ -2,6 +2,7 @@
 
 ## TODO
 - [X] Add load file from arguments
+- [ ] Send rest arguments to cp program
 - [X] Rewrite the lexer
 - [X] Change expression evaluation to left to right
 - [X] Add and precedence

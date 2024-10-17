@@ -11,11 +11,14 @@
 #include "vendor/axeutils.hpp"
 #include "cputil.hpp"
 #include "linker.hpp"
+#include "interpreter.hpp"
+#include "virtual_machine.hpp"
 
-CPInterpreter::CPInterpreter(const std::string& project_root, std::vector<std::string>&& files)
+CPInterpreter::CPInterpreter(const std::string& project_root, std::vector<std::string>&& files,
+	bool debug, const std::string& engine)
 	: project_root(axe::PathUtils::normalize_path_sep(project_root)),
 	cp_root(axe::PathUtils::normalize_path_sep(axe::PathUtils::get_current_path() + "libs")),
-	files(std::move(files)) {}
+	files(std::move(files)), debug(debug), engine(engine) {}
 
 int CPInterpreter::execute() {
 	if (files.size() > 0) {
@@ -75,6 +78,7 @@ int CPInterpreter::interpreter() {
 	const std::vector<CPSource>& source_programs = load_programs(files);
 
 	std::shared_ptr<visitor::Scope> semantic_global_scope = std::make_shared<visitor::Scope>();
+	std::shared_ptr<visitor::Scope> interpreter_global_scope = std::make_shared<visitor::Scope>();
 
 	try {
 		parser::ASTProgramNode* main_program = nullptr;
@@ -96,17 +100,28 @@ int CPInterpreter::interpreter() {
 		visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, main_program, programs);
 		semantic_analyser.start();
 
-		// compile
-		visitor::Compiler compiler(main_program, programs);
-		compiler.start();
+		long long result = 0;
 
-		BytecodeInstruction::write_bytecode_table(compiler.bytecode_program, project_root + "\\" + source_programs[0].name + ".cpt");
+		if (engine == "ast") {
+			visitor::Interpreter interpreter(interpreter_global_scope, main_program, programs);
+			interpreter.start();
+			result = interpreter.current_expression_value->get_i();
+		}
+		else {
+			// compile
+			visitor::Compiler compiler(main_program, programs);
+			compiler.start();
 
-		// execute
-		//visitor::Interpreter interpreter(interpreter_global_scope, main_program, programs);
-		//interpreter.start();
+			BytecodeInstruction::write_bytecode_table(compiler.bytecode_program, project_root + "\\" + source_programs[0].name + ".cpt");
 
-		return 0;//interpreter.current_expression_value->get_i();
+			// execute
+			VirtualMachine vm(compiler.bytecode_program);
+			vm.run();
+
+			result = vm.value_stack.top()->get_i();
+		}
+
+		return result;
 	}
 	catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;

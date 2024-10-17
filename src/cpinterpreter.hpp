@@ -9,9 +9,11 @@ private:
 	std::string project_root;
 	std::string cp_root;
 	std::vector<std::string> files;
+	bool debug;
+	std::string engine;
 
 public:
-	CPInterpreter(const std::string& project_root, std::vector<std::string>&& files);
+	CPInterpreter(const std::string& project_root, std::vector<std::string>&& files, bool debug, const std::string& engine);
 
 	int execute();
 

@@ -1,5 +1,5 @@
-#ifndef INTERPRETER_HPP
-#define INTERPRETER_HPP
+#ifndef VIRTUAL_MACHINE_HPP
+#define VIRTUAL_MACHINE_HPP
 
 #include <memory>
 #include <map>
@@ -20,6 +20,7 @@ using namespace parser;
 
 class VirtualMachine : public MetaVisitor {
 public:
+	std::stack<RuntimeValue*> value_stack;
 	std::map<std::string, std::function<void()>> builtin_functions;
 	std::vector<RuntimeValue*> builtin_arguments;
 	std::unordered_map<std::string, std::vector<std::shared_ptr<visitor::Scope>>> scopes;
@@ -31,7 +32,6 @@ private:
 	std::vector<BytecodeInstruction> instructions;
 	BytecodeInstruction current_instruction;
 	GarbageCollector gc;
-	std::stack<RuntimeValue*> value_stack;
 	std::stack<StructureDefinition> struct_def_build_stack;
 	std::stack<FunctionDefinition> func_def_build_stack;
 	std::stack<size_t> return_stack;
@@ -125,4 +125,4 @@ public:
 };
 
 
-#endif // !INTERPRETER_HPP
+#endif // !VIRTUAL_MACHINE_HPP
