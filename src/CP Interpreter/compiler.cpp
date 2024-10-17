@@ -657,7 +657,7 @@ void Compiler::replace_last_operand(size_t pos, T operand) {
 
 bool Compiler::push_namespace(const std::string nmspace) {
 	if (!nmspace.empty()) {
-		auto pop = push_namespace(cp_string(nmspace));
+		add_instruction(OpCode::OP_PUSH_NAMESPACE, nmspace);
 		return true;
 	}
 	return false;
@@ -665,9 +665,17 @@ bool Compiler::push_namespace(const std::string nmspace) {
 
 void Compiler::pop_namespace(bool pop) {
 	if (pop) {
-		pop_namespace(pop);
+		add_instruction(OpCode::OP_POP_NAMESPACE, nullptr);
 	}
 }
+
+long long Compiler::hash(ASTExprNode*) { return 0; }
+long long Compiler::hash(ASTLiteralNode<cp_bool>*) { return 0; }
+long long Compiler::hash(ASTLiteralNode<cp_int>*) { return 0; }
+long long Compiler::hash(ASTLiteralNode<cp_float>*) { return 0; }
+long long Compiler::hash(ASTLiteralNode<cp_char>*) { return 0; }
+long long Compiler::hash(ASTLiteralNode<cp_string>*) { return 0; }
+long long Compiler::hash(ASTIdentifierNode*) { return 0; }
 
 void Compiler::set_curr_pos(unsigned int row, unsigned int col) {
 	curr_row = row;

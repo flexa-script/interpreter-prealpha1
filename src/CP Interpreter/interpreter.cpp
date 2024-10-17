@@ -2570,8 +2570,8 @@ cp_array Interpreter::do_operation(cp_array lval, cp_array rval, const std::stri
 		return rval;
 	}
 	else if (op == "+=" || op == "+") {
-		auto size = lval.size() + rval.size();
-		cp_array result = cp_array(size);
+		//auto size = lval.size() + rval.size();
+		//cp_array result = cp_array(size);
 
 		//std::sort(lval.begin(), lval.end(), [](const RuntimeValue* a, const RuntimeValue* b) {
 		//	return a->value_hash() < b->value_hash();
@@ -2588,6 +2588,7 @@ cp_array Interpreter::do_operation(cp_array lval, cp_array rval, const std::stri
 		lval.insert(lval.end(), rval.begin(), rval.end());
 
 		return lval;
+		//return result;
 	}
 
 	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");

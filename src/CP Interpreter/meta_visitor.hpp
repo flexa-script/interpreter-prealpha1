@@ -25,10 +25,9 @@ namespace visitor {
 		std::stack<std::string> current_namespace;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
 
-		MetaVisitor();
-		virtual ~MetaVisitor() = 0;
+		MetaVisitor() = default;
+		virtual ~MetaVisitor() = default;
 
-		//std::vector<std::string> get_unique_namespaces();
 		bool push_namespace(const std::string nmspace);
 		void pop_namespace(bool pop);
 		const std::string& get_namespace() const;

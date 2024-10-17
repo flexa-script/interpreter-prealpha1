@@ -47,15 +47,15 @@ void VirtualMachine::push_function_constant(const std::string& identifier) {
 }
 
 void VirtualMachine::binary_operation(const std::string& op) {
-	auto rval = value_stack.top();
+	RuntimeValue* rval = value_stack.top();
 	value_stack.pop();
-	auto lval = value_stack.top();
+	RuntimeValue* lval = value_stack.top();
 	value_stack.pop();
 	push_constant(do_operation(op, lval, rval, true));
 }
 
 void VirtualMachine::unary_operation(const std::string& op) {
-	auto value = value_stack.top();
+	RuntimeValue* value = value_stack.top();
 
 	if (op == "ref" || op == "unref") {
 		if (op == "unref") {
@@ -105,7 +105,7 @@ void VirtualMachine::function_call_operation() {
 	std::vector<RuntimeValue*> function_arguments;
 
 	while (!value_stack.empty()) {
-		auto value = value_stack.top();
+		RuntimeValue* value = value_stack.top();
 		value_stack.pop();
 
 		signature.insert(signature.begin(), *value);
@@ -208,27 +208,30 @@ void VirtualMachine::decode_operation() {
 	case OP_PUSH_FUNCTION:
 		push_function_constant(current_instruction.get_string_operand());
 		break;
-	case OP_CREATE_ARRAY:
+	case OP_CREATE_ARRAY:{
 		auto size = current_instruction.get_size_operand();
 		auto val = gc.allocate(new RuntimeValue(cp_array(size)));
 		value_stack.push(dynamic_cast<RuntimeValue*>(val));
 		break;
-	case OP_SET_ELEMENT:
-		auto value = value_stack.top();
+	}
+	case OP_SET_ELEMENT: {
+		RuntimeValue* value = value_stack.top();
 		value_stack.pop();
 		value_stack.top()->arr[current_instruction.get_size_operand()] = value;
 		break;
+	}
 	case OP_CREATE_STRUCT: {
 		auto sdef = axe::StringUtils::split(current_instruction.get_string_operand(), ":");
 		auto val = gc.allocate(new RuntimeValue(cp_struct(), sdef[1], sdef[0]));
 		value_stack.push(dynamic_cast<RuntimeValue*>(val));
 		break;
 	}
-	case OP_SET_FIELD:
-		auto value = value_stack.top();
+	case OP_SET_FIELD:{
+		RuntimeValue* value = value_stack.top();
 		value_stack.pop();
 		value_stack.top()->str[current_instruction.get_string_operand()] = value;
 		break;
+	}
 
 		// struct definition operations
 	case OP_STRUCT_START:
@@ -252,11 +255,12 @@ void VirtualMachine::decode_operation() {
 
 		break;
 	}
-	case OP_STRUCT_END:
+	case OP_STRUCT_END:{
 		auto& str = struct_def_build_stack.top();
 		struct_def_build_stack.pop();
 		scopes[get_namespace()].back()->declare_structure_definition(str);
 		break;
+	}
 
 		// typing operations
 	case OP_SET_TYPE:
@@ -268,11 +272,12 @@ void VirtualMachine::decode_operation() {
 	case OP_SET_TYPE_NAME_SPACE:
 		set_type_name_space = current_instruction.get_string_operand();
 		break;
-	case OP_SET_ARRAY_SIZE:
-		auto value = value_stack.top();
+	case OP_SET_ARRAY_SIZE:{
+		RuntimeValue* value = value_stack.top();
 		value_stack.pop();
 		set_array_dim.push_back(value);
 		break;
+	}
 	case OP_SET_USE_REF:
 		// todo
 		break;
@@ -338,12 +343,13 @@ void VirtualMachine::decode_operation() {
 
 		break;
 	}
-	case OP_FUN_END:
+	case OP_FUN_END:{
 		auto& fun = func_def_build_stack.top();
 		func_def_build_stack.pop();
 		fun.pointer = pc + 2;
 		scopes[get_namespace()].back()->declare_function(fun);
 		break;
+	}
 	case OP_CALL:
 		function_call_operation();
 		break;
@@ -1222,22 +1228,25 @@ cp_array VirtualMachine::do_operation(cp_array lval, cp_array rval, const std::s
 		return rval;
 	}
 	else if (op == "+=" || op == "+") {
-		auto size = lval.size() + rval.size();
-		cp_array result = cp_array(size);
+		//auto size = lval.size() + rval.size();
+		//cp_array result = cp_array(size);
 
-		std::sort(lval.begin(), lval.end(), [](const RuntimeValue* a, const RuntimeValue* b) {
-			return a->value_hash() < b->value_hash();
-			});
+		//std::sort(lval.begin(), lval.end(), [](const RuntimeValue* a, const RuntimeValue* b) {
+		//	return a->value_hash() < b->value_hash();
+		//	});
 
-		std::sort(rval.begin(), rval.end(), [](const RuntimeValue* a, const RuntimeValue* b) {
-			return a->value_hash() < b->value_hash();
-			});
+		//std::sort(rval.begin(), rval.end(), [](const RuntimeValue* a, const RuntimeValue* b) {
+		//	return a->value_hash() < b->value_hash();
+		//	});
 
-		std::merge(lval.begin(), lval.end(), rval.begin(), rval.end(), result, [](const RuntimeValue* a, const RuntimeValue* b) {
-			return a->value_hash() < b->value_hash();
-			});
+		//std::merge(lval.begin(), lval.end(), rval.begin(), rval.end(), result, [](const RuntimeValue* a, const RuntimeValue* b) {
+		//	return a->value_hash() < b->value_hash();
+		//	});
 
-		return result;
+		lval.insert(lval.end(), rval.begin(), rval.end());
+
+		return lval;
+		//return result;
 	}
 
 	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");

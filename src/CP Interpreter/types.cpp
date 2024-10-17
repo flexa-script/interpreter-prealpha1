@@ -306,6 +306,16 @@ StructureDefinition::StructureDefinition(const std::string& identifier)
 StructureDefinition::StructureDefinition()
 	: CodePosition(row, col), identifier(""), variables(std::map<std::string, VariableDefinition>()) {}
 
+Variable::Variable(const std::string& identifier, Type type, Type array_type, const std::vector<void*>& dim,
+	const std::string& type_name, const std::string& type_name_space)
+	: TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(), type_name, type_name_space) {}
+
+Variable::Variable(TypeDefinition value)
+	: TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(), type_name, type_name_space) {}
+
+Variable::Variable()
+	: TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(), type_name, type_name_space) {}
+
 SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, const std::vector<void*>& dim,
 	const std::string& type_name, const std::string& type_name_space, long long hash,
 	bool is_const, unsigned int row, unsigned int col)
