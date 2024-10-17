@@ -89,7 +89,6 @@
     <ClInclude Include="virtual_machine.hpp" />
     <ClInclude Include="visitor.hpp" />
     <ClInclude Include="vmconstants.hpp" />
-    <ClInclude Include="vm_scope.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ast.cpp" />
@@ -130,7 +129,6 @@
     <ClCompile Include="virtual_machine.cpp" />
     <ClCompile Include="visitor.cpp" />
     <ClCompile Include="vmconstants.cpp" />
-    <ClCompile Include="vm_scope.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

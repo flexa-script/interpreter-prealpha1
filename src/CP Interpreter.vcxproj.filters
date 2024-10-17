@@ -73,6 +73,12 @@
     <Filter Include="Source Files\core\vm">
       <UniqueIdentifier>{36e3625e-54ff-4a32-9625-883ffbcf4489}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\core\gc">
+      <UniqueIdentifier>{6a357d25-5c1f-481b-a15d-4408888fe872}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\gc">
+      <UniqueIdentifier>{1f322f0a-165f-42cd-9334-9017bf5ef995}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lexer.hpp">
@@ -94,12 +100,6 @@
       <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
     <ClInclude Include="visitor.hpp">
-      <Filter>Header Files\core\visitor</Filter>
-    </ClInclude>
-    <ClInclude Include="semantic_scope.hpp">
-      <Filter>Header Files\core\visitor</Filter>
-    </ClInclude>
-    <ClInclude Include="interpreter_scope.hpp">
       <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
     <ClInclude Include="cpinterpreter.hpp">
@@ -138,9 +138,6 @@
     <ClInclude Include="console.hpp">
       <Filter>Header Files\modules\cp.core</Filter>
     </ClInclude>
-    <ClInclude Include="libfinder.hpp">
-      <Filter>Header Files\core\visitor</Filter>
-    </ClInclude>
     <ClInclude Include="exception_handler.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
@@ -177,6 +174,27 @@
     <ClInclude Include="compiler.hpp">
       <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
+    <ClInclude Include="garbage_collector.hpp">
+      <Filter>Header Files\core\gc</Filter>
+    </ClInclude>
+    <ClInclude Include="gcobject.hpp">
+      <Filter>Header Files\core\gc</Filter>
+    </ClInclude>
+    <ClInclude Include="linker.hpp">
+      <Filter>Header Files\core\visitor</Filter>
+    </ClInclude>
+    <ClInclude Include="meta_visitor.hpp">
+      <Filter>Header Files\core\visitor</Filter>
+    </ClInclude>
+    <ClInclude Include="namespace_manager.hpp">
+      <Filter>Header Files\core\visitor</Filter>
+    </ClInclude>
+    <ClInclude Include="virtual_machine.hpp">
+      <Filter>Header Files\core\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="scope.hpp">
+      <Filter>Header Files\core\visitor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -198,12 +216,6 @@
       <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
     <ClCompile Include="semantic_analysis.cpp">
-      <Filter>Source Files\core\visitor</Filter>
-    </ClCompile>
-    <ClCompile Include="semantic_scope.cpp">
-      <Filter>Source Files\core\visitor</Filter>
-    </ClCompile>
-    <ClCompile Include="interpreter_scope.cpp">
       <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
     <ClCompile Include="visitor.cpp">
@@ -242,9 +254,6 @@
     <ClCompile Include="console.cpp">
       <Filter>Source Files\modules\cp.core</Filter>
     </ClCompile>
-    <ClCompile Include="libfinder.cpp">
-      <Filter>Source Files\core\visitor</Filter>
-    </ClCompile>
     <ClCompile Include="exception_handler.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
@@ -280,6 +289,27 @@
     </ClCompile>
     <ClCompile Include="compiler.cpp">
       <Filter>Source Files\core\visitor</Filter>
+    </ClCompile>
+    <ClCompile Include="garbage_collector.cpp">
+      <Filter>Source Files\core\gc</Filter>
+    </ClCompile>
+    <ClCompile Include="gcobject.cpp">
+      <Filter>Source Files\core\gc</Filter>
+    </ClCompile>
+    <ClCompile Include="linker.cpp">
+      <Filter>Source Files\core\visitor</Filter>
+    </ClCompile>
+    <ClCompile Include="meta_visitor.cpp">
+      <Filter>Source Files\core\visitor</Filter>
+    </ClCompile>
+    <ClCompile Include="namespace_manager.cpp">
+      <Filter>Source Files\core\visitor</Filter>
+    </ClCompile>
+    <ClCompile Include="scope.cpp">
+      <Filter>Source Files\core\visitor</Filter>
+    </ClCompile>
+    <ClCompile Include="virtual_machine.cpp">
+      <Filter>Source Files\core\vm</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
