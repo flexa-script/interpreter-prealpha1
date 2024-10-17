@@ -95,5 +95,13 @@ void Linker::visit(ASTTypingNode*) {}
 void Linker::visit(ASTNullNode*) {}
 void Linker::visit(ASTThisNode*) {}
 
+long long Linker::hash(ASTExprNode*) { return 0; }
+long long Linker::hash(ASTLiteralNode<cp_bool>*) { return 0; }
+long long Linker::hash(ASTLiteralNode<cp_int>*) { return 0; }
+long long Linker::hash(ASTLiteralNode<cp_float>*) { return 0; }
+long long Linker::hash(ASTLiteralNode<cp_char>*) { return 0; }
+long long Linker::hash(ASTLiteralNode<cp_string>*) { return 0; }
+long long Linker::hash(ASTIdentifierNode*) { return 0; }
+
 void Linker::set_curr_pos(unsigned int, unsigned int) {}
 std::string Linker::msg_header() { return ""; }

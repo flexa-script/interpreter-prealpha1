@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
+#include <stack>
 #include <stdexcept>
 #include <functional>
 
@@ -118,6 +120,14 @@ namespace visitor {
 		virtual void visit(ASTNullNode*) = 0;
 		virtual void visit(ASTThisNode*) = 0;
 		virtual void visit(ASTTypingNode*) = 0;
+
+		virtual long long hash(ASTExprNode*) = 0;
+		virtual long long hash(ASTIdentifierNode*) = 0;
+		virtual long long hash(ASTLiteralNode<cp_bool>*) = 0;
+		virtual long long hash(ASTLiteralNode<cp_int>*) = 0;
+		virtual long long hash(ASTLiteralNode<cp_float>*) = 0;
+		virtual long long hash(ASTLiteralNode<cp_char>*) = 0;
+		virtual long long hash(ASTLiteralNode<cp_string>*) = 0;
 	};
 }
 

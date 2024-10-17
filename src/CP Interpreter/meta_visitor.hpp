@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <stack>
 #include <map>
 
 #include "types.hpp"
@@ -31,14 +32,6 @@ namespace visitor {
 		bool push_namespace(const std::string nmspace);
 		void pop_namespace(bool pop);
 		const std::string& get_namespace() const;
-
-		virtual long long hash(ASTExprNode*) = 0;
-		virtual long long hash(ASTIdentifierNode*) = 0;
-		virtual long long hash(ASTLiteralNode<cp_bool>*) = 0;
-		virtual long long hash(ASTLiteralNode<cp_int>*) = 0;
-		virtual long long hash(ASTLiteralNode<cp_float>*) = 0;
-		virtual long long hash(ASTLiteralNode<cp_char>*) = 0;
-		virtual long long hash(ASTLiteralNode<cp_string>*) = 0;
 	};
 }
 

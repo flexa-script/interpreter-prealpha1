@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <functional>
 
-#include "garbage_collector.hpp"
+#include "gcobject.hpp"
 
 namespace parser {
 	enum class Type {
@@ -144,6 +144,9 @@ public:
 		const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
 		const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters,
 		ASTBlockNode* block, unsigned int row, unsigned int col);
+
+	FunctionDefinition(const std::string& identifier, Type type,
+		const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters);
 
 	FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
 		const std::string& type_name_space, Type array_type, const std::vector<void*>& dim);

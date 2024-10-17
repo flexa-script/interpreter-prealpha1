@@ -453,7 +453,8 @@ void SemanticAnalyser::visit(ASTBlockNode* astnode) {
 				var_expr->col = param.col;
 
 				auto v = std::make_shared<SemanticVariable>(param.identifier, param.type, param.array_type,
-					param.dim, param.type_name, param.type_name_space, var_expr, false, param.row, param.col);
+					param.dim, param.type_name, param.type_name_space, false, param.row, param.col);
+
 				scopes[nmspace].back()->declare_variable(v);
 			}
 		}

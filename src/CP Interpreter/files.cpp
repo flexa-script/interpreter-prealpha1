@@ -98,7 +98,7 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 			// buffer to store readed data
 			char* buffer = new char[buffer_size];
 
-			RuntimeValue** arr = new RuntimeValue*[buffer_size];
+			cp_array arr = cp_array(buffer_size);
 
 			// read all bytes
 			if (fs->read(buffer, buffer_size)) {
@@ -108,7 +108,7 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 					arr[i] = val;
 				}
 			}
-			rval->set(cp_array(arr, buffer_size), Type::T_CHAR, std::vector<ASTExprNode*>());
+			rval->set(arr, Type::T_CHAR, std::vector<void*>());
 
 			delete[] buffer;
 
@@ -131,12 +131,12 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 
 			auto arr = visitor->builtin_arguments[1]->get_arr();
 
-			std::streamsize buffer_size = arr.second;
+			std::streamsize buffer_size = arr.size();
 
 			char* buffer = new char[buffer_size];
 
 			for (size_t i = 0; i < buffer_size; ++i) {
-				buffer[i] = arr.first[i]->get_c();
+				buffer[i] = arr[i]->get_c();
 			}
 
 			fs->write(buffer, sizeof(buffer));

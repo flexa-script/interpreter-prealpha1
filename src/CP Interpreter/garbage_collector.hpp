@@ -12,10 +12,10 @@ class GarbageCollector {
 private:
     std::vector<GCObject*> heap;
     std::unordered_set<GCObject*> roots;
-    std::stack<RuntimeValue*>* value_stack;
+    std::stack<RuntimeValue*> value_stack;
 
 public:
-    GarbageCollector(std::stack<RuntimeValue*>* value_stack);
+    GarbageCollector(std::stack<RuntimeValue*>& value_stack);
     ~GarbageCollector();
 
     GCObject* allocate(GCObject* obj);

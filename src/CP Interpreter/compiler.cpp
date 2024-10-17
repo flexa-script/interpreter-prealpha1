@@ -59,7 +59,14 @@ void Compiler::visit(ASTUsingNode* astnode) {
 	}
 }
 
-void Compiler::visit(ASTNamespaceManagerNode* astnode) {}
+void Compiler::visit(ASTNamespaceManagerNode* astnode) {
+	if (astnode->image == "include") {
+		add_instruction(OpCode::OP_INCLUDE_NAMESPACE, cp_string(astnode->nmspace));
+	}
+	else {
+		add_instruction(OpCode::OP_EXCLUDE_NAMESPACE, cp_string(astnode->nmspace));
+	}
+}
 
 void Compiler::visit(ASTEnumNode* astnode) {
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
@@ -157,7 +164,7 @@ void Compiler::visit(ASTFunctionDefinitionNode* astnode) {
 		for (auto& param : astnode->parameters) {
 			if (param.default_value) {
 				auto param_dcl = std::make_unique<ASTDeclarationNode>(param.identifier, param.type, param.array_type,
-					param.dim, param.type_name, param.type_name_space, param.default_value, false,
+					param.dim, param.type_name, param.type_name_space, static_cast<ASTExprNode*>(param.default_value), false,
 					astnode->row, astnode->col);
 				param_dcl->accept(this);
 			}
@@ -192,7 +199,7 @@ void Compiler::visit(ASTExitNode* astnode) {
 }
 
 void Compiler::visit(ASTContinueNode* astnode) {
-	add_instruction(OpCode::OP_CONTINUE, nullptr);
+	add_instruction(OpCode::OP_JUMP, size_t(deviation_stack.top()));
 }
 
 void Compiler::visit(ASTBreakNode* astnode) {
@@ -201,12 +208,14 @@ void Compiler::visit(ASTBreakNode* astnode) {
 
 void Compiler::visit(ASTSwitchNode* astnode) {
 	astnode->condition->accept(this);
+	add_instruction(OpCode::OP_STORE_COMP, nullptr);
 
 	for (size_t i = 0; i < astnode->statements.size(); ++i) {
 		size_t ip = 0;
 
 		for (const auto& [key, value] : astnode->parsed_case_blocks) {
-			if (i == value || i == astnode->default_block) {
+			if (i == value) {
+				add_instruction(OpCode::OP_PUSH_INT, size_t(key));
 				ip = add_instruction(OpCode::OP_JUMP_IF_FALSE_OR_NEXT, nullptr);
 			}
 		}
@@ -217,6 +226,8 @@ void Compiler::visit(ASTSwitchNode* astnode) {
 
 		replace_last_operand(ip, size_t(pointer));
 	}
+
+	add_instruction(OpCode::OP_RELEASE_COMP, nullptr);
 }
 
 void Compiler::visit(ASTElseIfNode* astnode) {

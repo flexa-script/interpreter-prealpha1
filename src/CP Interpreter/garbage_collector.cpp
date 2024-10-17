@@ -1,6 +1,6 @@
 #include "garbage_collector.hpp"
 
-GarbageCollector::GarbageCollector(std::stack<RuntimeValue*>* value_stack)
+GarbageCollector::GarbageCollector(std::stack<RuntimeValue*>& value_stack)
 	: value_stack(value_stack) {}
 
 GarbageCollector::~GarbageCollector() {
@@ -27,7 +27,7 @@ void GarbageCollector::mark() {
 		mark_object(root);
 	}
 
-	const std::deque<RuntimeValue*>& value_stack_container = value_stack->_Get_container();
+	const std::deque<RuntimeValue*>& value_stack_container = value_stack._Get_container();
 
 	for (GCObject* root : value_stack_container) {
 		mark_object(root);

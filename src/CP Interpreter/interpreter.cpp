@@ -109,7 +109,7 @@ void Interpreter::visit(ASTEnumNode* astnode) {
 
 	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
-		auto var = std::make_shared<RuntimeVariable>(Type::T_INT, Type::T_UNDEFINED, std::vector<ASTExprNode*>(), "", "");
+		auto var = std::make_shared<RuntimeVariable>(Type::T_INT, Type::T_UNDEFINED, std::vector<void*>(), "", "");
 		var->set_value(new RuntimeValue(cp_int(i)));
 		scopes[nmspace].back()->declare_variable(var);
 	}
@@ -375,6 +375,8 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	current_function_signature.pop();
 	current_function_nmspace.pop();
 	current_this_name.pop();
+
+	pop_namespace(pop);
 }
 
 void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
@@ -2571,19 +2573,21 @@ cp_array Interpreter::do_operation(cp_array lval, cp_array rval, const std::stri
 		auto size = lval.size() + rval.size();
 		cp_array result = cp_array(size);
 
-		std::sort(lval.begin(), lval.end(), [](const RuntimeValue* a, const RuntimeValue* b) {
-			return a->value_hash() < b->value_hash();
-			});
+		//std::sort(lval.begin(), lval.end(), [](const RuntimeValue* a, const RuntimeValue* b) {
+		//	return a->value_hash() < b->value_hash();
+		//	});
 
-		std::sort(rval.begin(), rval.end(), [](const RuntimeValue* a, const RuntimeValue* b) {
-			return a->value_hash() < b->value_hash();
-			});
+		//std::sort(rval.begin(), rval.end(), [](const RuntimeValue* a, const RuntimeValue* b) {
+		//	return a->value_hash() < b->value_hash();
+		//	});
 
-		std::merge(lval.begin(), lval.end(), rval.begin(), rval.end(), result, [](const RuntimeValue* a, const RuntimeValue* b) {
-			return a->value_hash() < b->value_hash();
-			});
+		//std::merge(lval.begin(), lval.end(), rval.begin(), rval.end(), result, [](const RuntimeValue* a, const RuntimeValue* b) {
+		//	return a->value_hash() < b->value_hash();
+		//	});
 
-		return result;
+		lval.insert(lval.end(), rval.begin(), rval.end());
+
+		return lval;
 	}
 
 	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");

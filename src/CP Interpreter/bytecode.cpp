@@ -116,7 +116,6 @@ void BytecodeInstruction::write_bytecode_table(const std::vector<BytecodeInstruc
 		case OP_IS_TYPE:
 			file << int(instruction.get_uint8_operand());
 			break;
-		case OP_SET_ARRAY_DIM:
 		case OP_SET_ELEMENT:
 		case OP_JUMP:
 		case OP_JUMP_IF_FALSE:

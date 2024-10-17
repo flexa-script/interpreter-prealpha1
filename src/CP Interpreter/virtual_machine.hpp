@@ -12,10 +12,13 @@
 #include "types.hpp"
 #include "visitor.hpp"
 #include "ast.hpp"
+#include "meta_visitor.hpp"
+#include "garbage_collector.hpp"
 
+using namespace visitor;
 using namespace parser;
 
-class VirtualMachine {
+class VirtualMachine : public MetaVisitor {
 public:
 	std::map<std::string, std::function<void()>> builtin_functions;
 	std::vector<RuntimeValue*> builtin_arguments;
@@ -31,7 +34,6 @@ private:
 	std::stack<RuntimeValue*> value_stack;
 	std::stack<StructureDefinition> struct_def_build_stack;
 	std::stack<FunctionDefinition> func_def_build_stack;
-	std::stack<std::string> namespace_stack;
 	std::stack<size_t> return_stack;
 
 	Type set_type;
@@ -42,7 +44,11 @@ private:
 	RuntimeValue* set_default_value;
 	bool set_is_rest;
 
-	//dim_eval_func_t evaluate_access_vector_ptr = std::bind(&VirtualMachine::evaluate_access_vector, this, std::placeholders::_1);
+	dim_eval_func_t evaluate_access_vector_ptr = std::bind(&VirtualMachine::evaluate_access_vector, this, std::placeholders::_1);
+
+	size_t print_level = 0;
+	std::vector<uintptr_t> printed;
+
 	//std::vector<std::string> parsed_libs;
 	//std::string function_call_name;
 	//std::string return_from_function_name;
@@ -79,7 +85,6 @@ private:
 	void cleanup_type_set();
 
 	void push_empty(Type type);
-	void push_empty(Type type);
 	void push_constant(RuntimeValue* value);
 	void push_function_constant(const std::string& identifier);
 	//void push_array();
@@ -87,15 +92,8 @@ private:
 	//void push_struct();
 	void binary_operation(const std::string& op);
 	void unary_operation(const std::string& op);
+	void function_call_operation();
 
-	std::vector<unsigned int> evaluate_access_vector(const std::vector<ASTExprNode*>& expr_access_vector);
-	std::vector<unsigned int> calculate_array_dim_size(const cp_array& arr);
-
-	void check_build_array(RuntimeValue* new_value, std::vector<ASTExprNode*> dim);
-	cp_array build_array(const std::vector<ASTExprNode*>& dim, RuntimeValue* init_value, long long i);
-	cp_array build_undefined_array(const std::vector<ASTExprNode*>& dim, long long i);
-
-	void normalize_type(std::shared_ptr<RuntimeVariable> var, RuntimeValue* val);
 	RuntimeValue* do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, bool is_expr = false, cp_int str_pos = 0);
 	cp_int do_spaceship_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval);
 	cp_bool do_relational_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval);
@@ -107,26 +105,16 @@ private:
 	std::string parse_array_to_string(const cp_array& arr_value);
 	std::string parse_struct_to_string(const  RuntimeValue* value);
 
-	std::shared_ptr<InterpreterScope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
-	std::shared_ptr<InterpreterScope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-	std::shared_ptr<InterpreterScope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
-	std::shared_ptr<InterpreterScope> get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
-
-	RuntimeValue* set_value(std::shared_ptr<InterpreterScope> scope, const std::vector<Identifier>& identifier_vector, RuntimeValue* new_value);
-	RuntimeValue* access_value(const std::shared_ptr<InterpreterScope> scope, RuntimeValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
-
-	void call_builtin_function(const std::string& identifier);
-	void declare_function_block_parameters(const std::string& nmspace);
+	std::shared_ptr<Scope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
+	std::shared_ptr<Scope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
+	std::shared_ptr<Scope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
+	std::shared_ptr<Scope> get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
 
 	cp_bool equals_value(const RuntimeValue* lval, const RuntimeValue* rval);
 	cp_bool equals_array(const cp_array& larr, const cp_array& rarr);
 	cp_bool equals_struct(const cp_struct& lstr, const cp_struct& rstr);
 
-	const std::string& get_current_namespace();
-	const std::string& get_namespace(const std::string& nmspace = "") const override;
-	const std::string& get_namespace(const ASTProgramNode* program, const std::string& nmspace = "") const override;
-	void set_curr_pos(unsigned int row, unsigned int col) override;
-	std::string msg_header() override;
+	std::vector<unsigned int> evaluate_access_vector(const std::vector<void*>& expr_access_vector);
 
 public:
 	VirtualMachine(std::vector<BytecodeInstruction> instructions);
@@ -134,57 +122,6 @@ public:
 	~VirtualMachine() = default;
 
 	void run();
-
-	void visit(ASTProgramNode*) override;
-	void visit(ASTUsingNode*) override;
-	void visit(ASTNamespaceManagerNode*) override;
-	void visit(ASTDeclarationNode*) override;
-	void visit(ASTUnpackedDeclarationNode*) override;
-	void visit(ASTAssignmentNode*) override;
-	void visit(ASTReturnNode*) override;
-	void visit(ASTExitNode*) override;
-	void visit(ASTBlockNode*) override;
-	void visit(ASTContinueNode*) override;
-	void visit(ASTBreakNode*) override;
-	void visit(ASTEnumNode*) override;
-	void visit(ASTTryCatchNode*) override;
-	void visit(ASTThrowNode*) override;
-	void visit(ASTReticencesNode*) override;
-	void visit(ASTSwitchNode*) override;
-	void visit(ASTElseIfNode*) override;
-	void visit(ASTIfNode*) override;
-	void visit(ASTForNode*) override;
-	void visit(ASTForEachNode*) override;
-	void visit(ASTWhileNode*) override;
-	void visit(ASTDoWhileNode*) override;
-	void visit(ASTFunctionDefinitionNode*) override;
-	void visit(ASTStructDefinitionNode*) override;
-	void visit(ASTLiteralNode<cp_bool>*) override;
-	void visit(ASTLiteralNode<cp_int>*) override;
-	void visit(ASTLiteralNode<cp_float>*) override;
-	void visit(ASTLiteralNode<cp_char>*) override;
-	void visit(ASTLiteralNode<cp_string>*) override;
-	void visit(ASTFunctionExpression*) override;
-	void visit(ASTArrayConstructorNode*) override;
-	void visit(ASTStructConstructorNode*) override;
-	void visit(ASTBinaryExprNode*) override;
-	void visit(ASTUnaryExprNode*) override;
-	void visit(ASTIdentifierNode*) override;
-	void visit(ASTTernaryNode*) override;
-	void visit(ASTInNode*) override;
-	void visit(ASTFunctionCallNode*) override;
-	void visit(ASTTypeParseNode*) override;
-	void visit(ASTNullNode*) override;
-	void visit(ASTThisNode*) override;
-	void visit(ASTTypingNode*) override;
-
-	long long hash(ASTExprNode*) override;
-	long long hash(ASTIdentifierNode*) override;
-	long long hash(ASTLiteralNode<cp_bool>*) override;
-	long long hash(ASTLiteralNode<cp_int>*) override;
-	long long hash(ASTLiteralNode<cp_float>*) override;
-	long long hash(ASTLiteralNode<cp_char>*) override;
-	long long hash(ASTLiteralNode<cp_string>*) override;
 };
 
 

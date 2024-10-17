@@ -10,6 +10,7 @@
 
 #include "bytecode.hpp"
 #include "ast.hpp"
+#include "namespace_manager.hpp"
 
 using namespace visitor;
 using namespace parser;
@@ -23,6 +24,7 @@ namespace visitor {
 
 	private:
 		size_t pointer = 0;
+		std::stack<size_t> deviation_stack;
 		std::vector<std::string> parsed_libs;
 
 	private:

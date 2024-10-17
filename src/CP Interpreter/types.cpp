@@ -263,6 +263,11 @@ FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type,
 	: CodePosition(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
 	identifier(identifier), parameters(parameters), signature(signature), block(block) {}
 
+FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type,
+	const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters)
+	: CodePosition(), TypeDefinition(type),
+	identifier(identifier), parameters(parameters), signature(signature), block(nullptr) {}
+
 FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
 	const std::string& type_name_space, Type array_type, const std::vector<void*>& dim)
 	: CodePosition(), TypeDefinition(type, array_type, dim, type_name, type_name_space),
@@ -349,16 +354,16 @@ void SemanticValue::copy_from(const SemanticValue& value) {
 
 SemanticVariable::SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<void*>& dim,
 	const std::string& type_name, const std::string& type_name_space, bool is_const, unsigned int row, unsigned int col)
-	: CodePosition(row, col), TypeDefinition(def_type(type), def_array_type(array_type, dim), dim, type_name, type_name_space),
-	identifier(identifier), value(nullptr), is_const(is_const) {}
+	: CodePosition(row, col), Variable(identifier, def_type(type), def_array_type(array_type, dim), dim, type_name, type_name_space),
+	value(nullptr), is_const(is_const) {}
 
 SemanticVariable::SemanticVariable(const std::string& identifier, Type type, bool is_const, unsigned int row, unsigned int col)
-	: CodePosition(row, col), TypeDefinition(def_type(type)),
-	identifier(identifier), value(nullptr), is_const(is_const) {}
+	: CodePosition(row, col), Variable(identifier, def_type(type), Type::T_UNDEFINED, std::vector<void*>(), "", ""),
+	value(nullptr), is_const(is_const) {}
 
 SemanticVariable::SemanticVariable()
-	: CodePosition(0, 0), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", ""),
-	identifier(""), value(nullptr), is_const(false) {}
+	: CodePosition(0, 0), Variable("", Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", ""),
+	value(nullptr), is_const(false) {}
 
 void SemanticVariable::set_value(std::shared_ptr<SemanticValue> value) {
 	this->value = value;
@@ -690,16 +695,16 @@ std::vector<GCObject*> RuntimeValue::get_references() {
 
 RuntimeVariable::RuntimeVariable(parser::Type type, parser::Type array_type, std::vector<void*> dim,
 	const std::string& type_name, const std::string& type_name_space)
-	: TypeDefinition(def_type(type), def_array_type(array_type, dim),
+	: Variable("", def_type(type), def_array_type(array_type, dim),
 		std::move(dim), type_name, type_name_space),
 	value(nullptr) {}
 
 RuntimeVariable::RuntimeVariable()
-	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", ""),
+	: Variable("", Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", ""),
 	value(nullptr) {}
 
 RuntimeVariable::RuntimeVariable(TypeDefinition v)
-	: TypeDefinition(def_type(v.type), def_array_type(v.array_type, dim),
+	: Variable("", def_type(v.type), def_array_type(v.array_type, dim),
 		v.dim, v.type_name, v.type_name_space),
 	value(nullptr) {}
 
