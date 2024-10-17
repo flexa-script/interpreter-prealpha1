@@ -308,13 +308,14 @@ StructureDefinition::StructureDefinition()
 
 Variable::Variable(const std::string& identifier, Type type, Type array_type, const std::vector<void*>& dim,
 	const std::string& type_name, const std::string& type_name_space)
-	: TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(), type_name, type_name_space) {}
+	: TypeDefinition(type, array_type, dim, type_name, type_name_space),
+	identifier(identifier) {}
 
 Variable::Variable(TypeDefinition value)
-	: TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(), type_name, type_name_space) {}
+	: TypeDefinition(value) {}
 
 Variable::Variable()
-	: TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(), type_name, type_name_space) {}
+	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", "") {}
 
 SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, const std::vector<void*>& dim,
 	const std::string& type_name, const std::string& type_name_space, long long hash,
