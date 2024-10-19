@@ -18,7 +18,9 @@ StructureDefinition Scope::find_declared_structure_definition(const std::string&
 }
 
 std::shared_ptr<Variable> Scope::find_declared_variable(const std::string& identifier) {
-	return variable_symbol_table[identifier];
+	auto& var = variable_symbol_table[identifier];
+	var->reset_ref();
+	return var;
 }
 
 FunctionDefinition& Scope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
@@ -165,10 +167,10 @@ void Scope::declare_structure_definition(StructureDefinition structure) {
 	structure_symbol_table[structure.identifier] = structure;
 }
 
-void Scope::declare_variable(std::shared_ptr<Variable> variable) {
-	variable_symbol_table[variable->identifier] = variable;
+void Scope::declare_variable(const std::string& identifier, std::shared_ptr<Variable> variable) {
+	variable_symbol_table[identifier] = variable;
 }
 
-void Scope::declare_function(FunctionDefinition function) {
-	function_symbol_table.insert(std::make_pair(function.identifier, function));
+void Scope::declare_function(const std::string& identifier, FunctionDefinition function) {
+	function_symbol_table.insert(std::make_pair(identifier, function));
 }

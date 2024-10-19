@@ -226,7 +226,7 @@ bool TypeDefinition::match_array_dim(TypeDefinition ltype, TypeDefinition rtype,
 }
 
 void TypeDefinition::reset_ref() {
-	use_ref = false;
+	use_ref = is_struct(type);
 }
 
 VariableDefinition::VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,
@@ -393,6 +393,12 @@ Type SemanticVariable::def_type(Type type) {
 Type SemanticVariable::def_array_type(Type array_type, const std::vector<void*>& dim) {
 	return is_void(array_type) || is_undefined(array_type) && dim.size() > 0 ? Type::T_ANY : array_type;
 }
+
+void SemanticVariable::reset_ref() {
+	TypeDefinition::reset_ref();
+	use_ref = value && (use_ref || is_struct(value->type));
+}
+
 
 RuntimeValue::RuntimeValue(Type type, Type array_type, std::vector<void*> dim,
 	const std::string& type_name, const std::string& type_name_space,
@@ -704,19 +710,19 @@ std::vector<GCObject*> RuntimeValue::get_references() {
 	return references;
 }
 
-RuntimeVariable::RuntimeVariable(parser::Type type, parser::Type array_type, std::vector<void*> dim,
+RuntimeVariable::RuntimeVariable(const std::string& identifier, parser::Type type, parser::Type array_type, std::vector<void*> dim,
 	const std::string& type_name, const std::string& type_name_space)
-	: Variable("", def_type(type), def_array_type(array_type, dim),
+	: Variable(identifier, def_type(type), def_array_type(array_type, dim),
 		std::move(dim), type_name, type_name_space),
+	value(nullptr) {}
+
+RuntimeVariable::RuntimeVariable(const std::string& identifier, TypeDefinition v)
+	: Variable(identifier, def_type(v.type), def_array_type(v.array_type, dim),
+		v.dim, v.type_name, v.type_name_space),
 	value(nullptr) {}
 
 RuntimeVariable::RuntimeVariable()
 	: Variable("", Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", ""),
-	value(nullptr) {}
-
-RuntimeVariable::RuntimeVariable(TypeDefinition v)
-	: Variable("", def_type(v.type), def_array_type(v.array_type, dim),
-		v.dim, v.type_name, v.type_name_space),
 	value(nullptr) {}
 
 RuntimeVariable::~RuntimeVariable() = default;
@@ -737,4 +743,9 @@ Type RuntimeVariable::def_type(Type type) {
 
 Type RuntimeVariable::def_array_type(Type array_type, const std::vector<void*>& dim) {
 	return is_void(array_type) || is_undefined(array_type) && dim.size() > 0 ? Type::T_ANY : array_type;
+}
+
+void RuntimeVariable::reset_ref() {
+	TypeDefinition::reset_ref();
+	use_ref = value && (use_ref || is_struct(value->type));
 }

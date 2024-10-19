@@ -93,7 +93,7 @@ void Interpreter::visit(ASTNamespaceManagerNode* astnode) {
 
 	const auto& nmspace = get_namespace();
 
-	if (astnode->image == "as") {
+	if (astnode->image == "include") {
 		program_nmspaces[nmspace].push_back(astnode->nmspace);
 	}
 	else {
@@ -109,9 +109,9 @@ void Interpreter::visit(ASTEnumNode* astnode) {
 
 	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
-		auto var = std::make_shared<RuntimeVariable>(Type::T_INT, Type::T_UNDEFINED, std::vector<void*>(), "", "");
+		auto var = std::make_shared<RuntimeVariable>(astnode->identifiers[i], Type::T_INT, Type::T_UNDEFINED, std::vector<void*>(), "", "");
 		var->set_value(new RuntimeValue(cp_int(i)));
-		scopes[nmspace].back()->declare_variable(var);
+		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], var);
 	}
 }
 
@@ -138,7 +138,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 
 	auto& astnode_type_name = astnode->type_name.empty() ? new_value->type_name : astnode->type_name;
 
-	auto new_var = std::make_shared<RuntimeVariable>(astnode->type,
+	auto new_var = std::make_shared<RuntimeVariable>(astnode->identifier, astnode->type,
 		astnode->array_type, astnode->dim,
 	astnode_type_name, astnode->type_name_space);
 	new_var->set_value(new_value);
@@ -154,7 +154,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 
 	normalize_type(new_var, new_value);
 
-	scopes[nmspace].back()->declare_variable(new_var);
+	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
 	pop_namespace(pop);
 }
 
@@ -392,7 +392,7 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 	catch (...) {
 		auto f = FunctionDefinition(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
 			astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
-		scopes[nmspace].back()->declare_function(f);
+		scopes[nmspace].back()->declare_function(astnode->identifier, f);
 	}
 	pop_namespace(pop);
 }
@@ -479,7 +479,6 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 
 	scopes[nmspace].push_back(std::make_shared<Scope>());
 
-	long long pos = -1;
 	if (astnode->case_blocks.size() > 0) {
 		astnode->condition->accept(this);
 		TypeDefinition cond_type = *current_expression_value;
@@ -494,6 +493,7 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 		}
 	}
 
+	long long pos;
 	try {
 		auto hash = astnode->condition->hash(this);
 		pos = astnode->parsed_case_blocks.at(hash);
@@ -756,11 +756,11 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 				}
 
 				std::shared_ptr<Scope> back_scope = scopes[nmspace].back();
-				auto decl_key = std::reinterpret_pointer_cast<RuntimeVariable>(back_scope->find_declared_variable(idnode->declarations[0]->identifier));
+				auto decl_key = std::dynamic_pointer_cast<RuntimeVariable>(back_scope->find_declared_variable(idnode->declarations[0]->identifier));
 				decl_key->set_value(new RuntimeValue(cp_string(val.first)));
 
 				back_scope = scopes[nmspace].back();
-				auto decl_val = std::reinterpret_pointer_cast<RuntimeVariable>(back_scope->find_declared_variable(idnode->declarations[1]->identifier));
+				auto decl_val = std::dynamic_pointer_cast<RuntimeVariable>(back_scope->find_declared_variable(idnode->declarations[1]->identifier));
 				decl_val->set_value(val.second);
 			}
 
@@ -814,7 +814,7 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 			}
 
 			std::shared_ptr<Scope> back_scope = scopes[nmspace].back();
-			auto decl_val = std::reinterpret_pointer_cast<RuntimeVariable>(back_scope->find_declared_variable(idnode->declarations[0]->identifier));
+			auto decl_val = std::dynamic_pointer_cast<RuntimeVariable>(back_scope->find_declared_variable(idnode->declarations[0]->identifier));
 			decl_val->set_value(new RuntimeValue(cp_string(ex.what())));
 		}
 		else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
@@ -1758,7 +1758,7 @@ RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::ve
 		auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
 		if (access_vector.size() > 0) {
-			auto current_val = value->arr;
+			auto& current_val = value->arr;
 			size_t s = 0;
 			size_t access_pos = 0;
 
@@ -2730,17 +2730,17 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 				auto funcs = get_inner_most_functions_scope(current_function_calling_argument->get_fun().first,
 					current_function_calling_argument->get_fun().second)->find_declared_functions(current_function_calling_argument->get_fun().second);
 				for (auto& it = funcs.first; it != funcs.second; ++it) {
-					curr_scope->declare_function(it->second);
+					curr_scope->declare_function(pname, it->second);
 				}
 			}
 			else {
 				if (current_value->use_ref && current_value->ref) {
-					curr_scope->declare_variable(current_value->ref);
+					curr_scope->declare_variable(pname, current_value->ref);
 				}
 				else {
-					auto var = std::make_shared<RuntimeVariable>(*current_value);
+					auto var = std::make_shared<RuntimeVariable>(pname, *current_value);
 					var->set_value(current_value);
-					curr_scope->declare_variable(var);
+					curr_scope->declare_variable(pname, var);
 				}
 			}
 
@@ -2774,14 +2774,14 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			auto funcs = get_inner_most_functions_scope(current_expression_value->get_fun().first,
 				current_expression_value->get_fun().second)->find_declared_functions(current_expression_value->get_fun().second);
 			for (auto& it = funcs.first; it != funcs.second; ++it) {
-				curr_scope->declare_function(it->second);
+				curr_scope->declare_function(pname, it->second);
 			}
 		}
 		else {
 			auto val = new RuntimeValue(current_expression_value);
-			auto var = std::make_shared<RuntimeVariable>(*val);
+			auto var = std::make_shared<RuntimeVariable>(pname, *val);
 			var->set_value(val);
-			curr_scope->declare_variable(var);
+			curr_scope->declare_variable(pname, var);
 		}
 	}
 
@@ -2791,9 +2791,9 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			arr[i] = vec[i];
 		}
 		auto rest = new RuntimeValue(arr, Type::T_ANY, std::vector<void*>());
-		auto var = std::make_shared<RuntimeVariable>(*rest);
+		auto var = std::make_shared<RuntimeVariable>(rest_name, *rest);
 		var->set_value(rest);
-		curr_scope->declare_variable(var);
+		curr_scope->declare_variable(rest_name, var);
 	}
 
 	current_function_defined_parameters.pop();

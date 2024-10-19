@@ -34,8 +34,8 @@ namespace visitor {
 		bool already_declared_function_name(const std::string& identifier);
 
 		void declare_structure_definition(StructureDefinition structure);
-		void declare_function(FunctionDefinition function);
-		void declare_variable(std::shared_ptr<Variable> variable);
+		void declare_function(const std::string& identifier, FunctionDefinition function);
+		void declare_variable(const std::string& identifier, std::shared_ptr<Variable> variable);
 
 		StructureDefinition find_declared_structure_definition(const std::string& identifier);
 		FunctionDefinition& find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,

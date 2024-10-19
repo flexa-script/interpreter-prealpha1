@@ -104,7 +104,7 @@ public:
 	static bool match_type_function(TypeDefinition ltype, TypeDefinition rtype);
 	static bool match_array_dim(TypeDefinition ltype, TypeDefinition rtype, dim_eval_func_t evaluate_access_vector);
 
-	void reset_ref();
+	virtual void reset_ref();
 };
 
 class VariableDefinition : public TypeDefinition, public CodePosition {
@@ -183,7 +183,6 @@ public:
 	Variable();
 
 	virtual ~Variable() = default;
-
 };
 
 class SemanticValue : public TypeDefinition, public CodePosition {
@@ -231,6 +230,8 @@ public:
 
 	Type def_type(Type type);
 	Type def_array_type(Type array_type, const std::vector<void*>& dim);
+
+	void reset_ref() override;
 };
 
 class RuntimeValue : public TypeDefinition, public GCObject {
@@ -309,9 +310,9 @@ class RuntimeVariable : public Variable, public std::enable_shared_from_this<Run
 public:
 	RuntimeValue* value;
 
-	RuntimeVariable(Type type, Type array_type, std::vector<void*> dim,
+	RuntimeVariable(const std::string& identifier, Type type, Type array_type, std::vector<void*> dim,
 		const std::string& type_name, const std::string& type_name_space);
-	RuntimeVariable(TypeDefinition value);
+	RuntimeVariable(const std::string& identifier, TypeDefinition value);
 	RuntimeVariable();
 	~RuntimeVariable();
 
@@ -320,6 +321,8 @@ public:
 
 	Type def_type(Type type);
 	Type def_array_type(Type array_type, const std::vector<void*>& dim);
+
+	void reset_ref() override;
 };
 
 #endif // !TYPES_HPP

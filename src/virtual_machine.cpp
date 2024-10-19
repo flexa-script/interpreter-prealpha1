@@ -347,7 +347,7 @@ void VirtualMachine::decode_operation() {
 		auto& fun = func_def_build_stack.top();
 		func_def_build_stack.pop();
 		fun.pointer = pc + 2;
-		scopes[get_namespace()].back()->declare_function(fun);
+		scopes[get_namespace()].back()->declare_function(fun.identifier, fun);
 		break;
 	}
 	case OP_CALL:

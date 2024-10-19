@@ -335,7 +335,7 @@ ASTBreakNode* Parser::parse_break_statement() {
 ASTSwitchNode* Parser::parse_switch_statement() {
 	ASTExprNode* condition;
 	std::map<ASTExprNode*, unsigned int>* case_blocks = new std::map<ASTExprNode*, unsigned int>();
-	long default_block = -1;
+	long default_block = 0;
 	std::vector<ASTNode*>* statements = new std::vector<ASTNode*>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
@@ -390,6 +390,8 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 			}
 		}
 	}
+
+	default_block = statements->size();
 
 	return new ASTSwitchNode(condition, *statements, *case_blocks, default_block, row, col);
 }
