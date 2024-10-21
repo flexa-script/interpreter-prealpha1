@@ -84,6 +84,8 @@ private:
 
 	void cleanup_type_set();
 
+	RuntimeValue* alocate_value(RuntimeValue* value);
+
 	void push_empty(Type type);
 	void push_constant(RuntimeValue* value);
 	void push_function_constant(const std::string& identifier);
@@ -93,6 +95,9 @@ private:
 	void binary_operation(const std::string& op);
 	void unary_operation(const std::string& op);
 	void function_call_operation();
+	void throw_operation();
+
+	RuntimeValue* get_stack_top();
 
 	RuntimeValue* do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, bool is_expr = false, cp_int str_pos = 0);
 	cp_int do_spaceship_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval);

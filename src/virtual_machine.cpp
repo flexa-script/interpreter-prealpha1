@@ -36,6 +36,10 @@ void VirtualMachine::push_empty(Type type) {
 	value_stack.push(dynamic_cast<RuntimeValue*>(val));
 }
 
+RuntimeValue* VirtualMachine::alocate_value(RuntimeValue* value) {
+	return dynamic_cast<RuntimeValue*>(gc.allocate(value));
+}
+
 void VirtualMachine::push_constant(RuntimeValue* value) {
 	auto val = gc.allocate(value);
 	value_stack.push(dynamic_cast<RuntimeValue*>(val));
@@ -151,6 +155,29 @@ void VirtualMachine::function_call_operation() {
 	pc = declfun.pointer;
 }
 
+void VirtualMachine::throw_operation() {
+	auto value = get_stack_top();
+
+	if (is_struct(value->type)
+		&& value->type_name == "Exception") {
+		try {
+			get_inner_most_struct_definition_scope("cp", "Exception");
+		}
+		catch (...) {
+			throw std::runtime_error("struct 'cp::Exception' not found");
+		}
+
+		throw std::exception(value->get_str()["error"]->get_s().c_str());
+	}
+	else if (is_string(value->type)) {
+		throw std::runtime_error(value->get_s());
+	}
+	else {
+		throw std::runtime_error("expected cp::Exception struct or string in throw");
+	}
+
+}
+
 void VirtualMachine::decode_operation() {
 	switch (current_instruction.opcode) {
 	case OP_RES:
@@ -215,8 +242,7 @@ void VirtualMachine::decode_operation() {
 		break;
 	}
 	case OP_SET_ELEMENT: {
-		RuntimeValue* value = value_stack.top();
-		value_stack.pop();
+		RuntimeValue* value = get_stack_top();
 		value_stack.top()->arr[current_instruction.get_size_operand()] = value;
 		break;
 	}
@@ -227,8 +253,7 @@ void VirtualMachine::decode_operation() {
 		break;
 	}
 	case OP_SET_FIELD:{
-		RuntimeValue* value = value_stack.top();
-		value_stack.pop();
+		RuntimeValue* value = get_stack_top();
 		value_stack.top()->str[current_instruction.get_string_operand()] = value;
 		break;
 	}
@@ -273,8 +298,7 @@ void VirtualMachine::decode_operation() {
 		set_type_name_space = current_instruction.get_string_operand();
 		break;
 	case OP_SET_ARRAY_SIZE:{
-		RuntimeValue* value = value_stack.top();
-		value_stack.pop();
+		RuntimeValue* value = get_stack_top();
 		set_array_dim.push_back(value);
 		break;
 	}
@@ -292,7 +316,6 @@ void VirtualMachine::decode_operation() {
 		// variable operations
 	case OP_LOAD_VAR:
 		// todo
-
 		break;
 	case OP_STORE_VAR:
 		// todo OP_FUN_START
@@ -372,7 +395,7 @@ void VirtualMachine::decode_operation() {
 		// todo OP_TRY_END
 		break;
 	case OP_THROW:
-		// todo OP_THROW
+		throw_operation();
 		break;
 	case OP_GET_ITERATOR:
 		// todo OP_GET_ITERATOR
@@ -398,10 +421,26 @@ void VirtualMachine::decode_operation() {
 
 		// expression operations
 	case OP_IS_TYPE:
-		// todo OP_IS_TYPE
+		Type type = static_cast<Type>(current_instruction.get_uint8_operand());
+		auto value = get_stack_top();
+		RuntimeValue* res_value = new RuntimeValue(Type::T_BOOL);
+		if (is_any(type)) {
+			res_value->set(cp_bool(
+				(value->ref && (is_any(value->ref->type))
+					|| is_any(value->ref->array_type))));
+			return;
+		}
+		else if (is_array(type)) {
+			res_value->set(cp_bool(is_array(value->type) || value->dim.size() > 0));
+			return;
+		}
+		else if (is_struct(type)) {
+			res_value->set(cp_bool(is_struct(value->type) || is_struct(value->array_type)));
+			return;
+		}
 		break;
 	case OP_REFID:
-		// todo OP_REFID
+		push_constant(new RuntimeValue(cp_int(get_stack_top())));
 		break;
 	case OP_TYPEID:
 		// todo OP_TYPEID
@@ -506,6 +545,12 @@ void VirtualMachine::decode_operation() {
 		std::cerr << "Unknow operation" << std::endl;
 		break;
 	}
+}
+
+RuntimeValue* VirtualMachine::get_stack_top() {
+	auto value = value_stack.top();
+	value_stack.pop();
+	return value;
 }
 
 bool VirtualMachine::get_next() {

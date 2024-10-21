@@ -19,28 +19,17 @@
 // 	print("def");
 // }
 
-fun sort(arr[]: any, comparator: function = null): any[] {
-	var arr_size = len(arr);
-	for (var j = 0; j < arr_size; j++) {
-		for (var i = 0; i < arr_size - 1; i++) {
-			var res = false;
+// struct Foo {
+// 	var bar: int;
+// 	var qux: string;
+// };
 
-			if (comparator != null) {
-				res = comparator(arr[i], arr[i + 1]);
-			} else {
-				res = arr[i] > arr[i + 1];
-			}
+// var foo = Foo {
+// 	bar=10,
+// 	qux="word"
+// };
 
-			if (res) {
-				var aux = arr[i + 1];
-				arr[i + 1] = arr[i];
-				arr[i] = aux;
-			}
-		}
-	}
-	return arr;
-}
+// var [bar, qux] = foo;
 
-var arr = {3,1,5,0,2};
-
-print(sort(arr));
+// println(bar);
+// println(qux);
