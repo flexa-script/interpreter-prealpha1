@@ -1051,6 +1051,10 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 			current_expression.type = Type::T_STRING;
 			return;
 		}
+		else if (astnode->identifier == "function") {
+			current_expression.type = Type::T_FUNCTION;
+		}
+
 		try {
 			curr_scope = get_inner_most_struct_definition_scope(
 				nmspace, astnode->identifier);

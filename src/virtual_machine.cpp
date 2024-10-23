@@ -178,10 +178,121 @@ void VirtualMachine::throw_operation() {
 
 }
 
+void VirtualMachine::type_parse_operation() {
+	Type type = Type(current_instruction.get_uint8_operand());
+	auto value = get_stack_top();
+	RuntimeValue* new_value = new RuntimeValue();
+
+	switch (type) {
+	case Type::T_BOOL:
+		switch (value->type) {
+		case Type::T_BOOL:
+			new_value->copy_from(value);
+			break;
+		case Type::T_INT:
+			new_value->set(cp_bool(value->get_i() != 0));
+			break;
+		case Type::T_FLOAT:
+			new_value->set(cp_bool(value->get_f() != .0));
+			break;
+		case Type::T_CHAR:
+			new_value->set(cp_bool(value->get_c() != '\0'));
+			break;
+		case Type::T_STRING:
+			new_value->set(cp_bool(!value->get_s().empty()));
+			break;
+		}
+		break;
+
+	case Type::T_INT:
+		switch (type) {
+		case Type::T_BOOL:
+			new_value->set(cp_int(value->get_b()));
+			break;
+		case Type::T_INT:
+			new_value->copy_from(value);
+			break;
+		case Type::T_FLOAT:
+			new_value->set(cp_int(value->get_f()));
+			break;
+		case Type::T_CHAR:
+			new_value->set(cp_int(value->get_c()));
+			break;
+		case Type::T_STRING:
+			try {
+				new_value->set(cp_int(std::stoll(value->get_s())));
+			}
+			catch (...) {
+				throw std::runtime_error("'" + value->get_s() + "' is not a valid value to parse int");
+			}
+			break;
+		}
+		break;
+
+	case Type::T_FLOAT:
+		switch (value->type) {
+		case Type::T_BOOL:
+			new_value->set(cp_float(value->get_b()));
+			break;
+		case Type::T_INT:
+			new_value->set(cp_float(value->get_i()));
+			break;
+		case Type::T_FLOAT:
+			new_value->copy_from(value);
+			break;
+		case Type::T_CHAR:
+			new_value->set(cp_float(value->get_c()));
+			break;
+		case Type::T_STRING:
+			try {
+				new_value->set(cp_float(std::stold(value->get_s())));
+			}
+			catch (...) {
+				throw std::runtime_error("'" + value->get_s() + "' is not a valid value to parse float");
+			}
+			break;
+		}
+		break;
+
+	case Type::T_CHAR:
+		switch (value->type) {
+		case Type::T_BOOL:
+			new_value->set(cp_char(value->get_b()));
+			break;
+		case Type::T_INT:
+			new_value->set(cp_char(value->get_i()));
+			break;
+		case Type::T_FLOAT:
+			new_value->set(cp_char(value->get_f()));
+			break;
+		case Type::T_CHAR:
+			new_value->copy_from(value);
+			break;
+		case Type::T_STRING:
+			if (new_value->get_s().size() > 1) {
+				throw std::runtime_error("'" + value->get_s() + "' is not a valid value to parse char");
+			}
+			else {
+				new_value->set(cp_char(value->get_s()[0]));
+			}
+			break;
+		}
+		break;
+
+	case Type::T_STRING:
+		new_value->set(cp_string(parse_value_to_string(value)));
+
+	}
+
+	new_value->set_type(type);
+
+	push_constant(new_value);
+}
+
 void VirtualMachine::decode_operation() {
 	switch (current_instruction.opcode) {
 	case OP_RES:
-		throw std::runtime_error("operation error");
+		throw std::runtime_error("Reserved operation");
 		break;
 
 		// namespace operations
@@ -315,7 +426,7 @@ void VirtualMachine::decode_operation() {
 
 		// variable operations
 	case OP_LOAD_VAR:
-		// todo
+		// todo OP_LOAD_VAR
 		break;
 	case OP_STORE_VAR:
 		// todo OP_FUN_START
@@ -420,7 +531,7 @@ void VirtualMachine::decode_operation() {
 		break;
 
 		// expression operations
-	case OP_IS_TYPE:
+	case OP_IS_TYPE: {
 		Type type = static_cast<Type>(current_instruction.get_uint8_operand());
 		auto value = get_stack_top();
 		RuntimeValue* res_value = new RuntimeValue(Type::T_BOOL);
@@ -439,17 +550,22 @@ void VirtualMachine::decode_operation() {
 			return;
 		}
 		break;
+	}
 	case OP_REFID:
 		push_constant(new RuntimeValue(cp_int(get_stack_top())));
 		break;
-	case OP_TYPEID:
-		// todo OP_TYPEID
+	case OP_TYPEID: {
+		auto typeof = build_type();
+		push_constant(new RuntimeValue(cp_string(typeof)));
 		break;
-	case OP_TYPEOF:
-		// todo OP_TYPEOF
+	}
+	case OP_TYPEOF: {
+		auto typeof = build_type();
+		push_constant(new RuntimeValue(cp_int(axe::StringUtils::hashcode(typeof))));
 		break;
+	}
 	case OP_TYPE_PARSE:
-		// todo OP_TYPE_PARSE
+		type_parse_operation();
 		break;
 	case OP_TERNARY:
 		// todo OP_TERNARY
@@ -569,6 +685,45 @@ void VirtualMachine::cleanup_type_set() {
 	set_array_dim = std::vector<RuntimeValue*>();
 	set_default_value = nullptr;
 	set_is_rest = false;
+}
+
+std::string VirtualMachine::build_type() {
+	auto curr_value = get_stack_top();
+	auto dim = std::vector<unsigned int>();
+	auto type = is_void(curr_value->type) ? curr_value->type : curr_value->type;
+	std::string str_type = "";
+
+	if (is_array(type)) {
+		dim = evaluate_access_vector(curr_value->dim);
+		type = curr_value->array_type;
+	}
+
+	str_type = type_str(type);
+
+	if (is_struct(type)) {
+		if (dim.size() > 0) {
+			auto arr = curr_value->get_arr()[0];
+			for (size_t i = 0; i < dim.size() - 1; ++i) {
+				arr = arr->get_arr()[0];
+			}
+			str_type = arr->type_name;
+		}
+		else {
+			str_type = curr_value->type_name;
+		}
+	}
+
+	if (dim.size() > 0) {
+		for (size_t i = 0; i < dim.size(); ++i) {
+			str_type += "[" + std::to_string(dim[i]) + "]";
+		}
+	}
+
+	if (is_struct(type) && !curr_value->type_name_space.empty()) {
+		str_type = curr_value->type_name_space + "::" + str_type;
+	}
+
+	return str_type;
 }
 
 cp_bool VirtualMachine::equals_value(const RuntimeValue* lval, const RuntimeValue* rval) {

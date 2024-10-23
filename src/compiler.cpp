@@ -539,21 +539,6 @@ void Compiler::visit(ASTInNode* astnode) {
 
 void Compiler::visit(ASTTypeParseNode* astnode) {
 	astnode->expr->accept(this);
-	if (is_bool(astnode->type)) {
-		add_instruction(OpCode::OP_PUSH_BOOL, cp_bool(false));
-	}
-	else if (is_int(astnode->type)) {
-		add_instruction(OpCode::OP_PUSH_INT, cp_int(0));
-	}
-	else if (is_float(astnode->type)) {
-		add_instruction(OpCode::OP_PUSH_FLOAT, cp_float(0));
-	}
-	else if (is_char(astnode->type)) {
-		add_instruction(OpCode::OP_PUSH_CHAR, cp_char('\0'));
-	}
-	else if (is_string(astnode->type)) {
-		add_instruction(OpCode::OP_PUSH_STRING, cp_string(""));
-	}
 	add_instruction(OpCode::OP_TYPE_PARSE, uint8_t(astnode->type));
 }
 

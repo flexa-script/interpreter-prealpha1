@@ -99,7 +99,7 @@ void Interpreter::visit(ASTNamespaceManagerNode* astnode) {
 	else {
 		size_t pos = std::distance(program_nmspaces[nmspace].begin(),
 			std::find(program_nmspaces[nmspace].begin(),
-			program_nmspaces[nmspace].end(), astnode->nmspace));
+				program_nmspaces[nmspace].end(), astnode->nmspace));
 		program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + pos);
 	}
 }
@@ -140,7 +140,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 
 	auto new_var = std::make_shared<RuntimeVariable>(astnode->identifier, astnode->type,
 		astnode->array_type, astnode->dim,
-	astnode_type_name, astnode->type_name_space);
+		astnode_type_name, astnode->type_name_space);
 	new_var->set_value(new_value);
 
 	if ((!TypeDefinition::is_any_or_match_type(*new_var, *new_value, evaluate_access_vector_ptr) ||
@@ -346,7 +346,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 			}
 		}
 	}
-	
+
 	auto& declfun = func_scope->find_declared_function(identifier, &signature, evaluate_access_vector_ptr, strict);
 
 	current_function.push(declfun);
@@ -806,33 +806,25 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 	catch (std::exception ex) {
 		scopes[nmspace].push_back(std::make_shared<Scope>());
 
-		astnode->decl->accept(this);
-
 		if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
 			if (idnode->declarations.size() != 1) {
 				throw std::runtime_error("invalid number of values");
 			}
-
-			std::shared_ptr<Scope> back_scope = scopes[nmspace].back();
-			auto decl_val = std::dynamic_pointer_cast<RuntimeVariable>(back_scope->find_declared_variable(idnode->declarations[0]->identifier));
-			decl_val->set_value(new RuntimeValue(cp_string(ex.what())));
+			auto exnode = new ASTLiteralNode<cp_string>(ex.what(), astnode->row, astnode->col);
+			idnode->declarations[0]->expr = exnode;
+			idnode->accept(this);
+			idnode->declarations[0]->expr = nullptr;
+			delete exnode;
 		}
 		else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
-			if (!is_any(current_expression_value->ref->type)
-				&& current_expression_value->ref->type_name_space != "cp"
-				&& current_expression_value->ref->type_name != "Pair") {
-				throw std::runtime_error("invalid struct '"
-					+ current_expression_value->ref->type_name
-					+ "' declaration in foreach loop");
-			}
-
-			RuntimeValue* value = new RuntimeValue(Type::T_STRUCT);
-			value->get_str() = cp_struct();
-			value->get_str()["error"] = new RuntimeValue(cp_string(ex.what()));
-			value->type_name_space = "cp";
-			value->type_name = "Exception";
-
-			current_expression_value->ref->set_value(value);
+			std::map<std::string, ASTExprNode*> values = {
+				{"error", new ASTLiteralNode<cp_string>(ex.what(), astnode->row, astnode->col)}
+			};
+			auto exnode = new ASTStructConstructorNode("Pair", "cp", values, astnode->row, astnode->col);
+			idnode->expr = exnode;
+			delete values["error"];
+			delete exnode;
+			idnode->expr = nullptr;
 		}
 		else if (!dynamic_cast<ASTReticencesNode*>(astnode->decl)) {
 			throw std::runtime_error("expected declaration");
@@ -1180,6 +1172,9 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 		}
 		else if (astnode->identifier == "string") {
 			type = Type::T_STRING;
+		}
+		else if (astnode->identifier == "function") {
+			type = Type::T_FUNCTION;
 		}
 
 		if (is_undefined(type)) {

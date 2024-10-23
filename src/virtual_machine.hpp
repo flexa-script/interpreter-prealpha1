@@ -96,8 +96,11 @@ private:
 	void unary_operation(const std::string& op);
 	void function_call_operation();
 	void throw_operation();
+	void type_parse_operation();
 
 	RuntimeValue* get_stack_top();
+
+	std::string build_type();
 
 	RuntimeValue* do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, bool is_expr = false, cp_int str_pos = 0);
 	cp_int do_spaceship_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval);
