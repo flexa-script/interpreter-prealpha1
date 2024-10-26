@@ -185,12 +185,22 @@ public:
 	virtual ~Variable() = default;
 };
 
-class SemanticValue : public TypeDefinition, public CodePosition {
+class Value : public TypeDefinition {
+public:
+	std::shared_ptr<Variable> ref = nullptr;
+
+	Value(Type type, Type array_type, std::vector<void*> dim,
+		const std::string& type_name, const std::string& type_name_space);
+	Value(TypeDefinition type);
+	Value();
+	virtual ~Value() = default;
+};
+
+class SemanticValue : public Value, public CodePosition {
 public:
 	long long hash;
 	bool is_const;
 	bool is_sub;
-	std::shared_ptr<SemanticVariable> ref;
 
 	// complete constructor
 	SemanticValue(Type type, Type array_type, const std::vector<void*>& dim,
@@ -234,7 +244,7 @@ public:
 	void reset_ref() override;
 };
 
-class RuntimeValue : public TypeDefinition, public GCObject {
+class RuntimeValue : public Value, public GCObject {
 public:
 	cp_bool b;
 	cp_int i;
@@ -244,7 +254,6 @@ public:
 	cp_array arr;
 	cp_struct str;
 	cp_function fun;
-	std::shared_ptr<RuntimeVariable> ref = nullptr;
 
 	RuntimeValue(Type type, Type array_type, std::vector<void*> dim,
 		const std::string& type_name, const std::string& type_name_space,

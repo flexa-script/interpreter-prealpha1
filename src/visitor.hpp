@@ -54,6 +54,7 @@ namespace parser {
 	class ASTNullNode;
 	class ASTThisNode;
 	class ASTTypingNode;
+	class ASTValueNode;
 }
 
 using namespace parser;
@@ -120,8 +121,10 @@ namespace visitor {
 		virtual void visit(ASTNullNode*) = 0;
 		virtual void visit(ASTThisNode*) = 0;
 		virtual void visit(ASTTypingNode*) = 0;
+		virtual void visit(ASTValueNode*) = 0;
 
 		virtual long long hash(ASTExprNode*) = 0;
+		virtual long long hash(ASTValueNode*) = 0;
 		virtual long long hash(ASTIdentifierNode*) = 0;
 		virtual long long hash(ASTLiteralNode<cp_bool>*) = 0;
 		virtual long long hash(ASTLiteralNode<cp_int>*) = 0;

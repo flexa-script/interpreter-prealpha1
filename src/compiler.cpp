@@ -577,6 +577,8 @@ void Compiler::visit(ASTTypingNode* astnode) {
 	}
 }
 
+void Compiler::visit(ASTValueNode* astnode) {}
+
 bool Compiler::has_sub_value(std::vector<Identifier> identifier_vector) {
 	return identifier_vector.size() > 1 || identifier_vector[0].access_vector.size() > 0;
 }
@@ -655,6 +657,7 @@ void Compiler::pop_namespace(bool pop) {
 }
 
 long long Compiler::hash(ASTExprNode*) { return 0; }
+long long Compiler::hash(ASTValueNode*) { return 0; }
 long long Compiler::hash(ASTLiteralNode<cp_bool>*) { return 0; }
 long long Compiler::hash(ASTLiteralNode<cp_int>*) { return 0; }
 long long Compiler::hash(ASTLiteralNode<cp_float>*) { return 0; }

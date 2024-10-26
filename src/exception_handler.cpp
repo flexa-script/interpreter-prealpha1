@@ -5,6 +5,11 @@ void ExceptionHandler::throw_operation_err(const std::string op, const TypeDefin
 		+ "' and '" + buid_type_str(rtype, evaluate_access_vector) + "'");
 }
 
+void ExceptionHandler::throw_unary_operation_err(const std::string op, const TypeDefinition& type, dim_eval_func_t evaluate_access_vector) {
+	throw std::runtime_error("incompatible unary operator '" + op +
+		"' in front of " + buid_type_str(type, evaluate_access_vector) + " expression");
+}
+
 void ExceptionHandler::throw_declaration_type_err(const std::string& identifier, const TypeDefinition& ltype, const TypeDefinition& rtype, dim_eval_func_t evaluate_access_vector) {
 	throw std::runtime_error("found " + buid_type_str(rtype, evaluate_access_vector)
 		+ " in definition of '" + identifier

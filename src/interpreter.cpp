@@ -665,12 +665,11 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		for (size_t i = 0; i < colletion.size(); ++i) {
 			auto val = colletion[i];
 
-			astnode->itdecl->accept(this);
-
-			set_value(
-				scopes[nmspace].back(),
-				std::vector<Identifier>{Identifier(itdecl->identifier)},
-				val);
+			auto exnode = new ASTValueNode(val, astnode->row, astnode->col);
+			itdecl->expr = exnode;
+			itdecl->accept(this);
+			itdecl->expr = nullptr;
+			delete exnode;
 
 			astnode->block->accept(this);
 
@@ -699,10 +698,11 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		for (auto val : colletion) {
 			astnode->itdecl->accept(this);
 
-			set_value(
-				scopes[nmspace].back(),
-				std::vector<Identifier>{Identifier(itdecl->identifier)},
-				new RuntimeValue(cp_char(val)));
+			auto exnode = new ASTValueNode(new RuntimeValue(cp_char(val)), astnode->row, astnode->col);
+			itdecl->expr = exnode;
+			itdecl->accept(this);
+			itdecl->expr = nullptr;
+			delete exnode;
 
 			astnode->block->accept(this);
 
@@ -740,28 +740,33 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 						+ "' declaration in foreach loop");
 				}
 
-				auto str = cp_struct();
-				str["key"] = new RuntimeValue(cp_string(val.first));
-				str["value"] = val.second;
-				auto str_value = new RuntimeValue(str, "cp", "Pair");
+				std::map<std::string, ASTExprNode*> values = {
+					{ "key", new ASTLiteralNode<cp_string>(cp_string(val.first), astnode->row, astnode->col) },
+					{ "value", new ASTValueNode(val.second, astnode->row, astnode->col) }
+				};
+				auto exnode = new ASTStructConstructorNode("Pair", "cp", values, astnode->row, astnode->col);
+				itdecl->expr = exnode;
+				itdecl->accept(this);
+				delete values["key"];
+				delete values["value"];
+				delete exnode;
+				itdecl->expr = nullptr;
 
-				set_value(
-					scopes[nmspace].back(),
-					std::vector<Identifier>{Identifier(itdecl->identifier)},
-					str_value);
 			}
 			else if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
 				if (idnode->declarations.size() != 2) {
 					throw std::runtime_error("invalid number of values");
 				}
 
-				std::shared_ptr<Scope> back_scope = scopes[nmspace].back();
-				auto decl_key = std::dynamic_pointer_cast<RuntimeVariable>(back_scope->find_declared_variable(idnode->declarations[0]->identifier));
-				decl_key->set_value(new RuntimeValue(cp_string(val.first)));
-
-				back_scope = scopes[nmspace].back();
-				auto decl_val = std::dynamic_pointer_cast<RuntimeVariable>(back_scope->find_declared_variable(idnode->declarations[1]->identifier));
-				decl_val->set_value(val.second);
+				auto key_node = new ASTLiteralNode<cp_string>(cp_string(val.first), astnode->row, astnode->col);
+				idnode->declarations[0]->expr = key_node;
+				auto val_node = new ASTValueNode(val.second, astnode->row, astnode->col);
+				idnode->declarations[1]->expr = val_node;
+				idnode->accept(this);
+				idnode->declarations[0]->expr = nullptr;
+				idnode->declarations[1]->expr = nullptr;
+				delete key_node;
+				delete val_node;
 			}
 
 			astnode->block->accept(this);
@@ -818,9 +823,9 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 		}
 		else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
 			std::map<std::string, ASTExprNode*> values = {
-				{"error", new ASTLiteralNode<cp_string>(ex.what(), astnode->row, astnode->col)}
+				{ "error", new ASTLiteralNode<cp_string>(ex.what(), astnode->row, astnode->col) }
 			};
-			auto exnode = new ASTStructConstructorNode("Pair", "cp", values, astnode->row, astnode->col);
+			auto exnode = new ASTStructConstructorNode("Exception", "cp", values, astnode->row, astnode->col);
 			idnode->expr = exnode;
 			delete values["error"];
 			delete exnode;
@@ -962,6 +967,11 @@ void Interpreter::visit(ASTStructDefinitionNode* astnode) {
 	auto str = StructureDefinition(astnode->identifier, astnode->variables, astnode->row, astnode->col);
 
 	scopes[get_namespace()].back()->declare_structure_definition(str);
+}
+
+void Interpreter::visit(ASTValueNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+	current_expression_value = dynamic_cast<RuntimeValue*>(astnode->value);
 }
 
 void Interpreter::visit(ASTLiteralNode<cp_bool>* astnode) {
@@ -1311,82 +1321,70 @@ void Interpreter::visit(ASTInNode* astnode) {
 void Interpreter::visit(ASTUnaryExprNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	bool has_assign = false;
-
-	astnode->expr->accept(this);
-
-	if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
-		if (astnode->unary_op == "unref") {
-			current_expression_value->use_ref = false;
+	if (astnode->unary_op == "--" || astnode->unary_op == "++") {
+		auto expr = new ASTLiteralNode<cp_int>(1, astnode->row, astnode->col);
+		if (const auto id = dynamic_cast<ASTIdentifierNode*>(astnode->expr)) {
+			auto assign_node = new ASTAssignmentNode(id->identifier_vector, id->nmspace, astnode->unary_op[0] + "=", expr, astnode->row, astnode->col);
+			assign_node->accept(this);
+			delete assign_node;
 		}
-		else if (astnode->unary_op == "ref") {
-			current_expression_value->use_ref = true;
+		else {
+			auto binex_node = new ASTBinaryExprNode(std::string{ astnode->unary_op[0] }, astnode->expr, expr, astnode->row, astnode->col);
+			binex_node->accept(this);
+			delete binex_node;
 		}
+		delete expr;
 	}
 	else {
-		if (!current_expression_value->use_ref) {
-			current_expression_value = new RuntimeValue(current_expression_value);
-		}
+		astnode->expr->accept(this);
 
-		switch (current_expression_value->type) {
-		case Type::T_INT:
-			if (astnode->unary_op == "-") {
-				current_expression_value->set(cp_int(-current_expression_value->get_i()));
+		if (astnode->unary_op == "ref" || astnode->unary_op == "unref") {
+			if (astnode->unary_op == "unref") {
+				current_expression_value->use_ref = false;
 			}
-			else if (astnode->unary_op == "--") {
-				current_expression_value->set(cp_int(current_expression_value->get_i() - 1));
-				has_assign = true;
+			else if (astnode->unary_op == "ref") {
+				current_expression_value->use_ref = true;
 			}
-			else if (astnode->unary_op == "++") {
-				current_expression_value->set(cp_int(current_expression_value->get_i() + 1));
-				has_assign = true;
+		}
+		else {
+			if (!current_expression_value->use_ref) {
+				current_expression_value = new RuntimeValue(current_expression_value);
 			}
-			else if (astnode->unary_op == "~") {
-				current_expression_value->set(cp_int(~current_expression_value->get_i()));
+
+			switch (current_expression_value->type) {
+			case Type::T_INT:
+				if (astnode->unary_op == "-") {
+					current_expression_value->set(cp_int(-current_expression_value->get_i()));
+				}
+				else if (astnode->unary_op == "~") {
+					current_expression_value->set(cp_int(~current_expression_value->get_i()));
+				}
+				else {
+					ExceptionHandler::throw_unary_operation_err(astnode->unary_op, *current_expression_value, evaluate_access_vector_ptr);
+				}
+				break;
+			case Type::T_FLOAT:
+				if (astnode->unary_op == "-") {
+					current_expression_value->set(cp_float(-current_expression_value->get_f()));
+				}
+				else {
+					ExceptionHandler::throw_unary_operation_err(astnode->unary_op, *current_expression_value, evaluate_access_vector_ptr);
+				}
+				break;
+			case Type::T_BOOL:
+				if (astnode->unary_op == "not") {
+					current_expression_value->set(cp_bool(!current_expression_value->get_b()));
+				}
+				else {
+					ExceptionHandler::throw_unary_operation_err(astnode->unary_op, *current_expression_value, evaluate_access_vector_ptr);
+				}
+				break;
+			default:
+				ExceptionHandler::throw_unary_operation_err(astnode->unary_op, *current_expression_value, evaluate_access_vector_ptr);
 			}
-			break;
-		case Type::T_FLOAT:
-			if (astnode->unary_op == "-") {
-				current_expression_value->set(cp_float(-current_expression_value->get_f()));
-			}
-			else if (astnode->unary_op == "--") {
-				current_expression_value->set(cp_float(current_expression_value->get_f() - 1));
-				has_assign = true;
-			}
-			else if (astnode->unary_op == "++") {
-				current_expression_value->set(cp_float(current_expression_value->get_f() + 1));
-				has_assign = true;
-			}
-			break;
-		case Type::T_BOOL:
-			current_expression_value->set(cp_bool(!current_expression_value->get_b()));
-			break;
-		default:
-			throw std::runtime_error("incompatible unary operator '" + astnode->unary_op +
-				"' in front of " + type_str(current_expression_value->type) + " expression");
 		}
 	}
 
-	if (has_assign) {
-		const auto id = dynamic_cast<ASTIdentifierNode*>(astnode->expr);
-
-		if (!id) {
-			throw std::runtime_error("error unary assign");
-		}
-
-		std::shared_ptr<Scope> id_scope;
-		try {
-			auto pop = push_namespace(id->nmspace);
-			const std::string& nmspace = get_namespace();
-			id_scope = get_inner_most_variable_scope(nmspace, id->identifier);
-			pop_namespace(pop);
-		}
-		catch (std::exception ex) {
-			throw std::runtime_error(ex.what());
-		}
-
-		set_value(id_scope, id->identifier_vector, current_expression_value);
-	}
 }
 
 void Interpreter::visit(ASTTypeParseNode* astnode) {
@@ -2613,6 +2611,24 @@ long long Interpreter::hash(ASTExprNode* astnode) {
 		return static_cast<long long>(current_expression_value->get_c());
 	case Type::T_STRING:
 		return axe::StringUtils::hashcode(current_expression_value->get_s());
+	default:
+		throw std::runtime_error("cannot determine type");
+	}
+}
+
+long long Interpreter::hash(ASTValueNode* astnode) {
+	auto value = dynamic_cast<RuntimeValue*>(astnode->value);
+	switch (value->type) {
+	case Type::T_BOOL:
+		return static_cast<long long>(value->get_b());
+	case Type::T_INT:
+		return static_cast<long long>(value->get_i());
+	case Type::T_FLOAT:
+		return static_cast<long long>(value->get_f());
+	case Type::T_CHAR:
+		return static_cast<long long>(value->get_c());
+	case Type::T_STRING:
+		return axe::StringUtils::hashcode(value->get_s());
 	default:
 		throw std::runtime_error("cannot determine type");
 	}

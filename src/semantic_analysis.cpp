@@ -778,7 +778,7 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 			throw std::runtime_error("struct 'cp::Exception' not found");
 		}
 
-		auto& declared_variable = current_expression.ref;
+		auto declared_variable = std::dynamic_pointer_cast<SemanticVariable>(current_expression.ref);
 		declared_variable->value->type = Type::T_STRUCT;
 		declared_variable->value->type_name = "Exception";
 		declared_variable->value->type_name_space = "cp";
@@ -868,6 +868,11 @@ void SemanticAnalyser::visit(ASTStructDefinitionNode* astnode) {
 	auto str = StructureDefinition(astnode->identifier, astnode->variables, astnode->row, astnode->col);
 
 	scopes[nmspace].back()->declare_structure_definition(str);
+}
+
+void SemanticAnalyser::visit(ASTValueNode* astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+	current_expression = *dynamic_cast<SemanticValue*>(astnode->value);
 }
 
 void SemanticAnalyser::visit(ASTLiteralNode<cp_bool>* astnode) {
@@ -1675,6 +1680,11 @@ long long SemanticAnalyser::hash(ASTLiteralNode<cp_string>* astnode) {
 }
 
 long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
+	astnode->accept(this);
+	return current_expression.hash;
+}
+
+long long SemanticAnalyser::hash(ASTValueNode* astnode) {
 	astnode->accept(this);
 	return current_expression.hash;
 }

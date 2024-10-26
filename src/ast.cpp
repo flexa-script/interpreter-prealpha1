@@ -154,6 +154,9 @@ ASTTypingNode::ASTTypingNode(const std::string& image, ASTExprNode* expr, unsign
 ASTFunctionExpression::ASTFunctionExpression(ASTFunctionDefinitionNode* fun, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), fun(fun) {}
 
+ASTValueNode::ASTValueNode(Value* value, unsigned int row, unsigned int col)
+	: ASTExprNode(row, col), value(value) {}
+
 void ASTLiteralNode<cp_bool>::accept(Visitor* v) {
 	v->visit(this);
 }
@@ -273,6 +276,14 @@ void ASTFunctionExpression::accept(Visitor* v) {
 }
 
 long long ASTFunctionExpression::hash(Visitor* v) { return 0; }
+
+void ASTValueNode::accept(Visitor* v) {
+	v->visit(this);
+}
+
+long long ASTValueNode::hash(Visitor* v) {
+	return v->hash(this);
+}
 
 void ASTDeclarationNode::accept(Visitor* v) {
 	v->visit(this);

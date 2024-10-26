@@ -10,6 +10,7 @@ using namespace parser;
 class ExceptionHandler {
 public:
 	static void throw_operation_err(const std::string op, const TypeDefinition& ltype, const TypeDefinition& rtype, dim_eval_func_t evaluate_access_vector);
+	static void throw_unary_operation_err(const std::string op, const TypeDefinition& type, dim_eval_func_t evaluate_access_vector);
 	static void throw_declaration_type_err(const std::string& identifier, const TypeDefinition& ltype, const TypeDefinition& rtype, dim_eval_func_t evaluate_access_vector);
 	static void throw_return_type_err(const std::string& identifier, const TypeDefinition& ltype, const TypeDefinition& rtype, dim_eval_func_t evaluate_access_vector);
 	static void throw_mismatched_type_err(const TypeDefinition& ltype, const TypeDefinition& rtype, dim_eval_func_t evaluate_access_vector);

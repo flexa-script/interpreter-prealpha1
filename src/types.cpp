@@ -317,38 +317,48 @@ Variable::Variable(TypeDefinition value)
 Variable::Variable()
 	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", "") {}
 
+Value::Value(Type type, Type array_type, std::vector<void*> dim,
+	const std::string& type_name, const std::string& type_name_space)
+	: TypeDefinition(type, array_type, dim, type_name, type_name_space) {}
+
+Value::Value(TypeDefinition type)
+	: TypeDefinition(type) {}
+
+Value::Value()
+	: TypeDefinition() {}
+
 SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, const std::vector<void*>& dim,
 	const std::string& type_name, const std::string& type_name_space, long long hash,
 	bool is_const, unsigned int row, unsigned int col)
-	: CodePosition(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
-	ref(nullptr), hash(hash), is_const(is_const), is_sub(false) {}
+	: CodePosition(row, col), Value(type, array_type, dim, type_name, type_name_space),
+	hash(hash), is_const(is_const), is_sub(false) {}
 
 SemanticValue::SemanticValue(parser::Type type, long long hash,
 	bool is_const, unsigned int row, unsigned int col)
-	: CodePosition(row, col), TypeDefinition(type),
-	ref(nullptr), hash(hash), is_const(is_const), is_sub(false) {}
+	: CodePosition(row, col), Value(type),
+	hash(hash), is_const(is_const), is_sub(false) {}
 
 SemanticValue::SemanticValue(TypeDefinition type_definition, long long hash,
 	bool is_const, unsigned int row, unsigned int col)
 	: CodePosition(row, col),
-	TypeDefinition(type_definition.type, type_definition.array_type,
+	Value(type_definition.type, type_definition.array_type,
 		type_definition.dim, type_definition.type_name, type_definition.type_name_space),
-	ref(nullptr), hash(hash), is_const(is_const), is_sub(false) {}
+	hash(hash), is_const(is_const), is_sub(false) {}
 
 SemanticValue::SemanticValue(VariableDefinition variable_definition, long long hash,
 	bool is_const, unsigned int row, unsigned int col)
 	: CodePosition(row, col),
-	TypeDefinition(variable_definition.type, variable_definition.array_type,
+	Value(variable_definition.type, variable_definition.array_type,
 		variable_definition.dim, variable_definition.type_name, variable_definition.type_name_space),
-	ref(nullptr), hash(hash), is_const(is_const), is_sub(false) {}
+	hash(hash), is_const(is_const), is_sub(false) {}
 
 SemanticValue::SemanticValue(Type type, unsigned int row, unsigned int col)
-	: CodePosition(row, col), TypeDefinition(type),
-	ref(nullptr), hash(0), is_const(false), is_sub(false) {}
+	: CodePosition(row, col), Value(type),
+	hash(0), is_const(false), is_sub(false) {}
 
 SemanticValue::SemanticValue()
-	: CodePosition(), TypeDefinition(),
-	ref(nullptr), hash(0), is_const(false), is_sub(false) {}
+	: CodePosition(), Value(),
+	hash(0), is_const(false), is_sub(false) {}
 
 void SemanticValue::copy_from(const SemanticValue& value) {
 	type = value.type;
@@ -403,10 +413,10 @@ void SemanticVariable::reset_ref() {
 RuntimeValue::RuntimeValue(Type type, Type array_type, std::vector<void*> dim,
 	const std::string& type_name, const std::string& type_name_space,
 	unsigned int row, unsigned int col)
-	: TypeDefinition(type, array_type, dim, type_name, type_name_space) {}
+	: Value(type, array_type, dim, type_name, type_name_space) {}
 
 RuntimeValue::RuntimeValue()
-	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", "") {}
+	: Value(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", "") {}
 
 RuntimeValue::RuntimeValue(cp_bool rawv) {
 	set(rawv);
@@ -445,20 +455,20 @@ RuntimeValue::RuntimeValue(cp_function rawv) {
 }
 
 RuntimeValue::RuntimeValue(Type type)
-	: TypeDefinition(type) {}
+	: Value(type, Type::T_UNDEFINED, std::vector<void*>(), "", "") {}
 
 RuntimeValue::RuntimeValue(Type array_type, std::vector<void*> dim, std::string type_name, std::string type_name_space)
-	: TypeDefinition(Type::T_ARRAY, array_type, dim, type_name, type_name_space) {}
+	: Value(Type::T_ARRAY, array_type, dim, type_name, type_name_space) {}
 
 RuntimeValue::RuntimeValue(std::string type_name, std::string type_name_space)
-	: TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(), type_name, type_name_space) {}
+	: Value(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(), type_name, type_name_space) {}
 
 RuntimeValue::RuntimeValue(RuntimeValue* v) {
 	copy_from(v);
 }
 
 RuntimeValue::RuntimeValue(TypeDefinition v)
-	: TypeDefinition(v.type, v.array_type, v.dim, v.type_name, v.type_name_space) {}
+	: Value(v) {}
 
 RuntimeValue::~RuntimeValue() = default;
 

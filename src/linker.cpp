@@ -94,8 +94,10 @@ void Linker::visit(ASTTypeParseNode*) {}
 void Linker::visit(ASTTypingNode*) {}
 void Linker::visit(ASTNullNode*) {}
 void Linker::visit(ASTThisNode*) {}
+void Linker::visit(ASTValueNode*) {}
 
 long long Linker::hash(ASTExprNode*) { return 0; }
+long long Linker::hash(ASTValueNode*) { return 0; }
 long long Linker::hash(ASTLiteralNode<cp_bool>*) { return 0; }
 long long Linker::hash(ASTLiteralNode<cp_int>*) { return 0; }
 long long Linker::hash(ASTLiteralNode<cp_float>*) { return 0; }

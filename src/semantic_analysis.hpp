@@ -106,8 +106,10 @@ namespace visitor {
 		void visit(ASTNullNode*) override;
 		void visit(ASTThisNode*) override;
 		void visit(ASTTypingNode*) override;
+		void visit(ASTValueNode*) override;
 
 		long long hash(ASTExprNode*) override;
+		long long hash(ASTValueNode*) override;
 		long long hash(ASTIdentifierNode*) override;
 		long long hash(ASTLiteralNode<cp_bool>*) override;
 		long long hash(ASTLiteralNode<cp_int>*) override;

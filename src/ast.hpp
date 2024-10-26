@@ -311,6 +311,16 @@ namespace parser {
 		virtual long long hash(Visitor*) override;
 	};
 
+	class ASTValueNode : public ASTExprNode {
+	public:
+		Value* value;
+
+		ASTValueNode(Value* value, unsigned int row, unsigned int col);
+
+		void accept(Visitor*) override;
+		virtual long long hash(Visitor*) override;
+	};
+
 	class ASTFunctionExpression : public ASTExprNode {
 	public:
 		ASTFunctionDefinitionNode* fun;
