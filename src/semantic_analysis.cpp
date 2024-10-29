@@ -436,14 +436,16 @@ void SemanticAnalyser::visit(ASTBlockNode* astnode) {
 
 	scopes[nmspace].push_back(std::make_shared<Scope>());
 
+	auto& curr_scope = scopes[nmspace].back();
+
 	if (!current_function.empty()) {
 		for (auto& param : current_function.top().parameters) {
 			if (const auto decl = dynamic_cast<VariableDefinition*>(&param)) {
-				declare_function_parameter(nmspace, *decl);
+				declare_function_parameter(curr_scope, *decl);
 			}
 			else if (const auto decls = dynamic_cast<UnpackedVariableDefinition*>(&param)) {
 				for (auto& decl : decls->variables) {
-					declare_function_parameter(nmspace, decl);
+					declare_function_parameter(curr_scope, decl);
 				}
 			}
 		}
@@ -1251,10 +1253,10 @@ void SemanticAnalyser::visit(ASTTypingNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::declare_function_parameter(const std::string& nmspace, const VariableDefinition& param) {
+void SemanticAnalyser::declare_function_parameter(std::shared_ptr<Scope> scope, const VariableDefinition& param) {
 	if (is_function(param.type) || is_any(param.type)) {
 		auto f = FunctionDefinition(param.identifier, param.row, param.row);
-		scopes[nmspace].back()->declare_function(param.identifier, f);
+		scope->declare_function(param.identifier, f);
 	}
 
 	if (!is_function(param.type)) {
@@ -1271,7 +1273,7 @@ void SemanticAnalyser::declare_function_parameter(const std::string& nmspace, co
 
 		v->set_value(var_expr);
 
-		scopes[nmspace].back()->declare_variable(param.identifier, v);
+		scope->declare_variable(param.identifier, v);
 	}
 }
 

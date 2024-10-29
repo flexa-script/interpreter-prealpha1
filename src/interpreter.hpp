@@ -56,7 +56,7 @@ namespace visitor {
 		std::vector<uintptr_t> printed;
 
 	private:
-		void declare_function_parameter(const std::string& nmspace, const VariableDefinition& param);
+		void declare_function_parameter(std::shared_ptr<Scope> scope, const std::string& identifier, RuntimeValue* value);
 
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<void*>& expr_access_vector);
 		std::vector<unsigned int> calculate_array_dim_size(const cp_array& arr);

@@ -40,7 +40,7 @@ namespace visitor {
 	private:
 		bool returns(ASTNode* astnode);
 
-		void declare_function_parameter(const std::string& nmspace, const VariableDefinition& param);
+		void declare_function_parameter(std::shared_ptr<Scope> scope, const VariableDefinition& param);
 
 		void equals_value(const SemanticValue& lval, const SemanticValue& rval);
 

@@ -233,6 +233,9 @@ ParameterDefinition::ParameterDefinition(Type type, Type array_type, const std::
 	const std::string& type_name_space, void* assign_value, bool is_rest)
 	: TypeDefinition(type, array_type, dim, type_name, type_name_space), assign_value(assign_value), is_rest(is_rest) {}
 
+ParameterDefinition::ParameterDefinition(TypeDefinition type_definition, void* assign_value, bool is_rest)
+	: TypeDefinition(type_definition), assign_value(assign_value), is_rest(is_rest) {}
+
 VariableDefinition::VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,
 	const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
 	void* default_value, bool is_rest, unsigned int row, unsigned int col)
@@ -240,7 +243,7 @@ VariableDefinition::VariableDefinition(const std::string& identifier, Type type,
 	identifier(identifier) {}
 
 VariableDefinition::VariableDefinition()
-	: ParameterDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", "", nullptr), CodePosition(0, 0),
+	: ParameterDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", "", nullptr), CodePosition(),
 	identifier("") {}
 
 VariableDefinition VariableDefinition::get_basic(const std::string& identifier, Type type,
@@ -263,6 +266,9 @@ VariableDefinition VariableDefinition::get_struct(const std::string& identifier,
 UnpackedVariableDefinition::UnpackedVariableDefinition(Type type, Type array_type, const std::vector<void*>& dim, const std::string& type_name,
 	const std::string& type_name_space, const std::vector<VariableDefinition>& variables, void* expr_value)
 	: ParameterDefinition(type, array_type, dim, type_name, type_name_space, expr_value), variables(variables) {}
+
+UnpackedVariableDefinition::UnpackedVariableDefinition(TypeDefinition type_definition, const std::vector<VariableDefinition>& variables, void* expr_value)
+	: ParameterDefinition(type_definition, expr_value), variables(variables) {}
 
 FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
 	const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,

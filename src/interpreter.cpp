@@ -2679,8 +2679,24 @@ long long Interpreter::hash(ASTIdentifierNode* astnode) {
 	pop_namespace(pop);
 }
 
-void Interpreter::declare_function_parameter(const std::string& nmspace, const VariableDefinition& param) {
-
+void Interpreter::declare_function_parameter(std::shared_ptr<Scope> scope, const std::string& identifier, RuntimeValue* value) {
+	if (is_function(value->type)) {
+		auto funcs = get_inner_most_functions_scope(value->get_fun().first,
+			value->get_fun().second)->find_declared_functions(value->get_fun().second);
+		for (auto& it = funcs.first; it != funcs.second; ++it) {
+			scope->declare_function(identifier, it->second);
+		}
+	}
+	else {
+		if (value->use_ref && value->ref) {
+			scope->declare_variable(identifier, value->ref);
+		}
+		else {
+			auto var = std::make_shared<RuntimeVariable>(identifier, *value);
+			var->set_value(value);
+			scope->declare_variable(identifier, var);
+		}
+	}
 }
 
 void Interpreter::declare_function_block_parameters(const std::string& nmspace) {
@@ -2732,38 +2748,28 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			vec.push_back(current_value);
 		}
 		else {
-			const auto& pname = current_function_defined_parameters.top()[i].identifier;
+			if (const auto decl = dynamic_cast<VariableDefinition*>(&current_function_defined_parameters.top()[i])) {
+				declare_function_parameter(curr_scope, decl->identifier, current_value);
 
-			if (is_function(current_function_calling_argument->type)) {
-				auto funcs = get_inner_most_functions_scope(current_function_calling_argument->get_fun().first,
-					current_function_calling_argument->get_fun().second)->find_declared_functions(current_function_calling_argument->get_fun().second);
-				for (auto& it = funcs.first; it != funcs.second; ++it) {
-					curr_scope->declare_function(pname, it->second);
-				}
-			}
-			else {
-				if (current_value->use_ref && current_value->ref) {
-					curr_scope->declare_variable(pname, current_value->ref);
-				}
-				else {
-					auto var = std::make_shared<RuntimeVariable>(pname, *current_value);
-					var->set_value(current_value);
-					curr_scope->declare_variable(pname, var);
-				}
-			}
-
-			// is rest
-			if (current_function_defined_parameters.top()[i].is_rest) {
-				rest_name = pname;
-				// if is last parameter and is array
-				if (current_function_defined_parameters.top().size() - 1 == i
-					&& is_array(current_value->type)) {
-					for (size_t i = 0; i < vec.size(); ++i) {
-						vec.push_back(current_value->get_arr()[i]);
+				// is rest
+				if (current_function_defined_parameters.top()[i].is_rest) {
+					rest_name = decl->identifier;
+					// if is last parameter and is array
+					if (current_function_defined_parameters.top().size() - 1 == i
+						&& is_array(current_value->type)) {
+						for (size_t i = 0; i < vec.size(); ++i) {
+							vec.push_back(current_value->get_arr()[i]);
+						}
+					}
+					else {
+						vec.push_back(current_value);
 					}
 				}
-				else {
-					vec.push_back(current_value);
+			}
+			else if (const auto decls = dynamic_cast<UnpackedVariableDefinition*>(&current_function_defined_parameters.top()[i])) {
+				for (auto& decl : decls->variables) {
+					auto sub_value = new RuntimeValue(current_value->get_str()[decl.identifier]);
+					declare_function_parameter(curr_scope, decl.identifier, sub_value);
 				}
 			}
 		}
@@ -2775,21 +2781,17 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			break;
 		}
 
-		const auto& pname = current_function_defined_parameters.top()[i].identifier;
 		static_cast<ASTExprNode*>(current_function_defined_parameters.top()[i].assign_value)->accept(this);
+		auto current_value = new RuntimeValue(current_expression_value);
 
-		if (is_function(current_expression_value->type)) {
-			auto funcs = get_inner_most_functions_scope(current_expression_value->get_fun().first,
-				current_expression_value->get_fun().second)->find_declared_functions(current_expression_value->get_fun().second);
-			for (auto& it = funcs.first; it != funcs.second; ++it) {
-				curr_scope->declare_function(pname, it->second);
-			}
+		if (const auto decl = dynamic_cast<VariableDefinition*>(&current_function_defined_parameters.top()[i])) {
+			declare_function_parameter(curr_scope, decl->identifier, current_value);
 		}
-		else {
-			auto val = new RuntimeValue(current_expression_value);
-			auto var = std::make_shared<RuntimeVariable>(pname, *val);
-			var->set_value(val);
-			curr_scope->declare_variable(pname, var);
+		else if (const auto decls = dynamic_cast<UnpackedVariableDefinition*>(&current_function_defined_parameters.top()[i])) {
+			for (auto& decl : decls->variables) {
+				auto sub_value = new RuntimeValue(current_value->get_str()[decl.identifier]);
+				declare_function_parameter(curr_scope, decl.identifier, current_value);
+			}
 		}
 	}
 

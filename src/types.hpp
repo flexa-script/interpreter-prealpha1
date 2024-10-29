@@ -114,6 +114,8 @@ public:
 
 	ParameterDefinition(Type type, Type array_type, const std::vector<void*>& dim,
 		const std::string& type_name, const std::string& type_name_space, void* assign_value, bool is_rest = false);
+
+	ParameterDefinition(TypeDefinition type_definition, void* assign_value, bool is_rest = false);
 };
 
 class VariableDefinition : public ParameterDefinition, public CodePosition {
@@ -144,6 +146,8 @@ public:
 
 	UnpackedVariableDefinition(Type type, Type array_type, const std::vector<void*>& dim, const std::string& type_name,
 		const std::string& type_name_space, const std::vector<VariableDefinition>& variables, void* expr_value);
+
+	UnpackedVariableDefinition(TypeDefinition type_definition, const std::vector<VariableDefinition>& variables, void* expr_value);
 };
 
 class FunctionDefinition : public TypeDefinition, public CodePosition {

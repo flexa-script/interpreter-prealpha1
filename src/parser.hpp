@@ -29,6 +29,8 @@ namespace parser {
 	private:
 		// parse types and parameters
 		Type parse_type();
+		TypeDefinition parse_unpacked_type_definition();
+		TypeDefinition parse_function_type_definition();
 
 		// statement nodes
 		ASTNode* parse_program_statement();
@@ -94,6 +96,7 @@ namespace parser {
 		std::vector<ASTExprNode*>* parse_actual_params();
 		VariableDefinition* parse_struct_var_def();
 		VariableDefinition* parse_formal_param();
+		VariableDefinition* parse_unpacked_formal_param();
 		ASTExprNode* parse_identifier_expression();
 		ASTIdentifierNode* parse_identifier_node();
 		cp_bool parse_bool_literal();
