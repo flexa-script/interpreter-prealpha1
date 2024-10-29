@@ -33,7 +33,7 @@ namespace visitor {
 		std::stack<std::vector<Identifier>> current_function_call_identifier_vector;
 		std::stack<std::string> current_function_nmspace;
 		std::stack<FunctionDefinition> current_function;
-		std::stack<std::vector<VariableDefinition>> current_function_defined_parameters;
+		std::stack<std::vector<ParameterDefinition>> current_function_defined_parameters;
 		std::stack<std::vector<RuntimeValue*>> current_function_calling_arguments;
 		std::stack<std::string> current_this_name;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
@@ -56,6 +56,8 @@ namespace visitor {
 		std::vector<uintptr_t> printed;
 
 	private:
+		void declare_function_parameter(const std::string& nmspace, const VariableDefinition& param);
+
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<void*>& expr_access_vector);
 		std::vector<unsigned int> calculate_array_dim_size(const cp_array& arr);
 

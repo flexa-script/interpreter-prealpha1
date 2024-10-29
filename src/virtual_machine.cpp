@@ -20,11 +20,16 @@ VirtualMachine::VirtualMachine(std::vector<BytecodeInstruction> instructions)
 void VirtualMachine::run() {
 
 	while (get_next()) {
+		if (try_deep < 0) {
+			break;
+		}
 		try {
 			decode_operation();
 		}
 		catch (std::exception ex) {
-
+			if (try_deep) {
+				--try_deep;
+			}
 			throw std::runtime_error(ex.what());
 		}
 	}
@@ -429,7 +434,7 @@ void VirtualMachine::decode_operation() {
 		// todo OP_LOAD_VAR
 		break;
 	case OP_STORE_VAR:
-		// todo OP_FUN_START
+		// todo OP_STORE_VAR
 		break;
 	case OP_ASSIGN_VAR:
 		// todo OP_ASSIGN_VAR
@@ -500,10 +505,10 @@ void VirtualMachine::decode_operation() {
 		// todo OP_BREAK
 		break;
 	case OP_TRY_START:
-		// todo OP_TRY_START
+		try_deep++;
 		break;
 	case OP_TRY_END:
-		// todo OP_TRY_END
+		try_deep--;
 		break;
 	case OP_THROW:
 		throw_operation();

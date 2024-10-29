@@ -150,7 +150,7 @@ void Compiler::visit(ASTFunctionDefinitionNode* astnode) {
 
 		for (auto& param : astnode->parameters) {
 			type_definition_operations(param);
-			add_instruction(OpCode::OP_SET_DEFAULT_VALUE, param.default_value);
+			add_instruction(OpCode::OP_SET_DEFAULT_VALUE, param.assign_value);
 			add_instruction(OpCode::OP_SET_IS_REST, param.is_rest);
 			add_instruction(OpCode::OP_FUN_SET_PARAM, cp_string(param.identifier));
 		}
@@ -162,9 +162,9 @@ void Compiler::visit(ASTFunctionDefinitionNode* astnode) {
 		auto id = add_instruction(OpCode::OP_JUMP, nullptr);
 
 		for (auto& param : astnode->parameters) {
-			if (param.default_value) {
+			if (param.assign_value) {
 				auto param_dcl = std::make_unique<ASTDeclarationNode>(param.identifier, param.type, param.array_type,
-					param.dim, param.type_name, param.type_name_space, static_cast<ASTExprNode*>(param.default_value), false,
+					param.dim, param.type_name, param.type_name_space, static_cast<ASTExprNode*>(param.assign_value), false,
 					astnode->row, astnode->col);
 				param_dcl->accept(this);
 			}

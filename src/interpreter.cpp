@@ -1324,7 +1324,7 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 	if (astnode->unary_op == "--" || astnode->unary_op == "++") {
 		auto expr = new ASTLiteralNode<cp_int>(1, astnode->row, astnode->col);
 		if (const auto id = dynamic_cast<ASTIdentifierNode*>(astnode->expr)) {
-			auto assign_node = new ASTAssignmentNode(id->identifier_vector, id->nmspace, astnode->unary_op[0] + "=", expr, astnode->row, astnode->col);
+			auto assign_node = new ASTAssignmentNode(id->identifier_vector, id->nmspace, std::string{ astnode->unary_op[0] } + "=", expr, astnode->row, astnode->col);
 			assign_node->accept(this);
 			delete assign_node;
 		}
@@ -2037,16 +2037,9 @@ std::string Interpreter::parse_value_to_string(const RuntimeValue* value) {
 	case Type::T_ARRAY:
 		str = parse_array_to_string(value->get_arr());
 		break;
-	case Type::T_FUNCTION: {
-		//auto funcs = get_inner_most_functions_scope(value->get_fun().first, value->get_fun().second)->find_declared_functions(value->get_fun().second);
-		//for (auto& it = funcs.first; it != funcs.second; ++it) {
-		//	auto& func_name = it->first;
-		//	auto& func_sig = it->second.signature;
-		//	str = ExceptionHandler::buid_signature(func_name, func_sig, evaluate_access_vector_ptr);
-		//}
+	case Type::T_FUNCTION: 
 		str = value->get_fun().first + (value->get_fun().first.empty() ? "" : "::") + value->get_fun().second + "(...)";
 		break;
-	}
 	case Type::T_UNDEFINED:
 		throw std::runtime_error("undefined expression");
 	default:
@@ -2686,8 +2679,12 @@ long long Interpreter::hash(ASTIdentifierNode* astnode) {
 	pop_namespace(pop);
 }
 
+void Interpreter::declare_function_parameter(const std::string& nmspace, const VariableDefinition& param) {
+
+}
+
 void Interpreter::declare_function_block_parameters(const std::string& nmspace) {
-	auto curr_scope = scopes[nmspace].back();
+	auto& curr_scope = scopes[nmspace].back();
 	auto rest_name = std::string();
 	auto vec = std::vector<RuntimeValue*>();
 	size_t i = 0;
@@ -2779,7 +2776,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		}
 
 		const auto& pname = current_function_defined_parameters.top()[i].identifier;
-		static_cast<ASTExprNode*>(current_function_defined_parameters.top()[i].default_value)->accept(this);
+		static_cast<ASTExprNode*>(current_function_defined_parameters.top()[i].assign_value)->accept(this);
 
 		if (is_function(current_expression_value->type)) {
 			auto funcs = get_inner_most_functions_scope(current_expression_value->get_fun().first,
@@ -2846,8 +2843,7 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 			break;
 		}
 
-		const auto& pname = current_function_defined_parameters.top()[i].identifier;
-		static_cast<ASTExprNode*>(current_function_defined_parameters.top()[i].default_value)->accept(this);
+		static_cast<ASTExprNode*>(current_function_defined_parameters.top()[i].assign_value)->accept(this);
 
 		builtin_arguments.push_back(new RuntimeValue(current_expression_value));
 	}

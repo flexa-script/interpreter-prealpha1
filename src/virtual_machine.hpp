@@ -49,6 +49,8 @@ private:
 	size_t print_level = 0;
 	std::vector<uintptr_t> printed;
 
+	long long try_deep = 0;
+
 	//std::vector<std::string> parsed_libs;
 	//std::string function_call_name;
 	//std::string return_from_function_name;

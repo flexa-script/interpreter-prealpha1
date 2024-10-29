@@ -36,7 +36,7 @@ FunctionDefinition& Scope::find_declared_function(const std::string& identifier,
 			return it->second;
 		}
 
-		auto& func_sig = it->second.signature;
+		auto& func_sig = it->second.parameters;
 		bool rest = false;
 		auto found = true;
 		TypeDefinition stype;
@@ -107,7 +107,7 @@ FunctionDefinition& Scope::find_declared_function(const std::string& identifier,
 					}
 				}
 				else {
-					if (!it->second.parameters[i].default_value) {
+					if (!it->second.parameters[i].assign_value) {
 						found = false;
 						break;
 					}

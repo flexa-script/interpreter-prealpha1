@@ -74,7 +74,7 @@ ASTNode* Parser::parse_block_statement() {
 		return parse_enum_statement();
 	case TOK_VAR:
 	case TOK_CONST:
-		return parse_declaration_statement();
+		return parse_undef_declaration_statement();
 	case TOK_STRUCT:
 		return parse_struct_definition();
 	case TOK_TRY:
@@ -617,7 +617,7 @@ ASTFunctionDefinitionNode* Parser::parse_function_statement() {
 }
 
 ASTFunctionDefinitionNode* Parser::parse_function_definition(const std::string& identifier) {
-	std::vector<VariableDefinition> parameters;
+	std::vector<ParameterDefinition> parameters;
 	Type type;
 	Type array_type = parser::Type::T_UNDEFINED;
 	std::string type_name = "";
@@ -630,7 +630,15 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition(const std::string& 
 	if (next_token.type != TOK_RIGHT_BRACKET) {
 		do {
 			consume_token();
-			parameters.push_back(*parse_formal_param());
+			if (current_token.type == TOK_LEFT_BRACE) {
+				std::vector<VariableDefinition> unpack_parameters;
+				while (next_token.type != TOK_RIGHT_BRACE) {
+
+				}
+			}
+			else {
+				parameters.push_back(*parse_formal_param());
+			}
 			consume_token();
 		} while (current_token.type == TOK_COMMA);
 		check_current_token(TOK_RIGHT_BRACKET);

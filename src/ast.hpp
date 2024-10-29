@@ -97,9 +97,14 @@ namespace parser {
 		void accept(Visitor*) override;
 	};
 
-	class ASTUnpackedDeclarationNode : public ASTStatementNode {
+	class ASTUnpackedDeclarationNode : public ASTStatementNode, public TypeDefinition {
 	public:
 		std::vector<ASTDeclarationNode*> declarations;
+
+		ASTUnpackedDeclarationNode(Type type, Type array_type,
+			const std::vector<void*>& dim, const std::string& type_name,
+			const std::string& type_name_space, const std::vector<ASTDeclarationNode*>& identifier_nodes,
+			unsigned int row, unsigned int col);
 
 		ASTUnpackedDeclarationNode(const std::vector<ASTDeclarationNode*>& identifier_nodes,
 			unsigned int row, unsigned int col);
@@ -288,12 +293,11 @@ namespace parser {
 	class ASTFunctionDefinitionNode : public ASTStatementNode, public TypeDefinition {
 	public:
 		std::string identifier;
-		std::vector<VariableDefinition> parameters;
-		std::vector<std::string> variable_names;
+		std::vector<ParameterDefinition> parameters;
 		std::vector<TypeDefinition> signature;
 		ASTBlockNode* block;
 
-		ASTFunctionDefinitionNode(const std::string& identifier, const std::vector<VariableDefinition>& parameters,
+		ASTFunctionDefinitionNode(const std::string& identifier, const std::vector<ParameterDefinition>& parameters,
 			Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
 			ASTBlockNode* block, unsigned int row, unsigned int col);
 

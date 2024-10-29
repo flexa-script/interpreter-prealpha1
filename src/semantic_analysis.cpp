@@ -437,27 +437,14 @@ void SemanticAnalyser::visit(ASTBlockNode* astnode) {
 	scopes[nmspace].push_back(std::make_shared<Scope>());
 
 	if (!current_function.empty()) {
-		for (const auto& param : current_function.top().parameters) {
-			if (is_function(param.type) || is_any(param.type)) {
-				auto f = FunctionDefinition(param.identifier, param.row, param.row);
-				scopes[nmspace].back()->declare_function(param.identifier, f);
+		for (auto& param : current_function.top().parameters) {
+			if (const auto decl = dynamic_cast<VariableDefinition*>(&param)) {
+				declare_function_parameter(nmspace, *decl);
 			}
-
-			if (!is_function(param.type)) {
-				auto var_expr = std::make_shared<SemanticValue>();
-				var_expr->type = param.type;
-				var_expr->array_type = param.array_type;
-				var_expr->type_name = param.type_name;
-				var_expr->dim = param.dim;
-				var_expr->row = param.row;
-				var_expr->col = param.col;
-
-				auto v = std::make_shared<SemanticVariable>(param.identifier, param.type, param.array_type,
-					param.dim, param.type_name, param.type_name_space, false, param.row, param.col);
-
-				v->set_value(var_expr);
-
-				scopes[nmspace].back()->declare_variable(param.identifier, v);
+			else if (const auto decls = dynamic_cast<UnpackedVariableDefinition*>(&param)) {
+				for (auto& decl : decls->variables) {
+					declare_function_parameter(nmspace, decl);
+				}
 			}
 		}
 	}
@@ -639,19 +626,17 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	is_loop = true;
-	TypeDefinition col_type;
+	SemanticValue col_value;
 	const auto& nmspace = get_namespace();
 
 	scopes[nmspace].push_back(std::make_shared<Scope>());
 	std::shared_ptr<Scope> back_scope = scopes[nmspace].back();
 
-	astnode->itdecl->accept(this);
-
 	astnode->collection->accept(this);
-	col_type = current_expression;
+	col_value = current_expression;
 
 	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
-		if (!is_struct(col_type.type) && !is_any(col_type.type)) {
+		if (!is_struct(col_value.type) && !is_any(col_value.type)) {
 			throw std::runtime_error("[key, value] can only be used with struct");
 		}
 
@@ -659,84 +644,66 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 			throw std::runtime_error("invalid number of values");
 		}
 
-		const auto& decl_key = std::dynamic_pointer_cast<SemanticVariable>(back_scope->find_declared_variable(idnode->declarations[0]->identifier));
-		decl_key->value = std::make_shared<SemanticValue>(Type::T_STRING, astnode->row, astnode->col);
-
-		back_scope = scopes[nmspace].back();
-		const auto& decl_val = std::dynamic_pointer_cast<SemanticVariable>(back_scope->find_declared_variable(idnode->declarations[1]->identifier));
-		decl_val->value = std::make_shared<SemanticValue>(Type::T_ANY, astnode->row, astnode->col);
+		auto key_node = new ASTLiteralNode<cp_string>("", astnode->row, astnode->col);
+		idnode->declarations[0]->expr = key_node;
+		auto val_node = new ASTValueNode(new SemanticValue(Type::T_ANY, astnode->row, astnode->col), astnode->row, astnode->col);
+		idnode->declarations[1]->expr = val_node;
+		idnode->accept(this);
+		idnode->declarations[0]->expr = nullptr;
+		idnode->declarations[1]->expr = nullptr;
+		delete key_node;
+		delete val_node;
 	}
 	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl)) {
-		if (!is_array(col_type.type)
-			&& !is_string(col_type.type)
-			&& !is_struct(col_type.type)
-			&& !is_any(col_type.type)) {
+		if (!is_array(col_value.type)
+			&& !is_string(col_value.type)
+			&& !is_struct(col_value.type)
+			&& !is_any(col_value.type)) {
 			throw std::runtime_error("expected iterable in foreach");
 		}
 
-		if (is_struct(col_type.type)) {
-			try {
-				auto s = get_inner_most_struct_definition_scope("cp", "Pair");
+		SemanticValue* value;
+
+		if (is_struct(col_value.type)) {
+			value = new SemanticValue(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(), "Pair", "cp", 0, false, astnode->row, astnode->col);
+		}
+		else if (is_string(col_value.type)) {
+			value = new SemanticValue(Type::T_CHAR, Type::T_UNDEFINED, std::vector<void*>(), "", "", 0, false, astnode->row, astnode->col);
+		}
+		else if (is_any(col_value.type)) {
+			value = new SemanticValue(Type::T_ANY, Type::T_UNDEFINED, std::vector<void*>(), "", "", 0, false, astnode->row, astnode->col);
+		}
+		else if (col_value.dim.size() > 1) {
+			std::vector<void*> dim = col_value.dim;
+			if (dim.size() > 0) {
+				dim.erase(dim.begin());
 			}
-			catch (...) {
-				throw std::runtime_error("struct 'cp::Pair' not found");
-			}
-			col_type = TypeDefinition::get_struct("Pair", "cp");
-		}
-
-		const auto& declared_variable = std::dynamic_pointer_cast<SemanticVariable>(back_scope->find_declared_variable(idnode->identifier));
-
-		if (!match_type(declared_variable->type, col_type.type)
-			&& !match_type(declared_variable->type, col_type.array_type)
-			&& is_char(declared_variable->type) && !is_string(col_type.type)
-			&& !is_any(declared_variable->type)
-			&& !is_any(col_type.type)
-			&& !is_any(col_type.array_type)) {
-			throw std::runtime_error("mismatched types");
-		}
-
-		if (is_struct(col_type.type)) {
-			declared_variable->value->type = Type::T_STRUCT;
-			declared_variable->value->type_name = "Pair";
-			declared_variable->value->type_name_space = "cp";
-			declared_variable->value->array_type = Type::T_UNDEFINED;
-		}
-		else if (is_string(col_type.type)) {
-			declared_variable->value->type = Type::T_CHAR;
-			declared_variable->value->type_name = "";
-			declared_variable->value->type_name_space = "";
-			declared_variable->value->array_type = Type::T_UNDEFINED;
-		}
-		else if (is_any(col_type.type)) {
-			declared_variable->value->type = Type::T_ANY;
-			declared_variable->value->type_name = "";
-			declared_variable->value->type_name_space = "";
-			declared_variable->value->array_type = Type::T_UNDEFINED;
-		}
-		else if (col_type.dim.size() > 1) {
-			if (!is_any(declared_variable->type)) {
-				declared_variable->value->type = declared_variable->type;
-				declared_variable->value->array_type = declared_variable->array_type;
-				declared_variable->value->type_name = declared_variable->type_name;
-				declared_variable->value->type_name_space = declared_variable->type_name_space;
+			if (!is_any(idnode->type)) {
+				value = new SemanticValue(idnode->type, idnode->array_type, dim,
+					idnode->type_name, idnode->type_name_space, 0, false, astnode->row, astnode->col);
 			}
 			else {
-				declared_variable->value->type = col_type.type;
-				declared_variable->value->array_type = current_expression.array_type;
-				if (!current_expression.type_name.empty()) {
-					declared_variable->value->type_name = current_expression.type_name;
-					declared_variable->value->type_name_space = current_expression.type_name_space;
+				value = new SemanticValue(idnode->type, col_value.array_type, dim,
+					"", "", 0, false, astnode->row, astnode->col);
+				if (!col_value.type_name.empty()) {
+					value->type_name = col_value.type_name;
+					value->type_name_space = col_value.type_name_space;
 				}
 			}
 		}
 		else {
-			declared_variable->value->type = col_type.array_type;
-			declared_variable->value->array_type = Type::T_UNDEFINED;
+			value = new SemanticValue(col_value.array_type, Type::T_UNDEFINED, std::vector<void*>(), "", "", 0, false, astnode->row, astnode->col);
 			if (!current_expression.type_name.empty()) {
-				declared_variable->value->type_name = current_expression.type_name;
-				declared_variable->value->type_name_space = current_expression.type_name_space;
+				value->type_name = current_expression.type_name;
+				value->type_name_space = current_expression.type_name_space;
 			}
 		}
+
+		ASTValueNode* exnode = new ASTValueNode(value, astnode->row, astnode->col);
+		idnode->expr = exnode;
+		idnode->accept(this);
+		idnode->expr = nullptr;
+		delete exnode;
 
 	}
 	else {
@@ -758,30 +725,25 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 
 	scopes[nmspace].push_back(std::make_shared<Scope>());
 
-	astnode->decl->accept(this);
-
 	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
 		if (idnode->declarations.size() != 1) {
 			throw std::runtime_error("invalid number of values");
 		}
-
-		std::shared_ptr<Scope> back_scope = scopes[nmspace].back();
-		const auto& decl_key = std::dynamic_pointer_cast<SemanticVariable>(back_scope->find_declared_variable(idnode->declarations[0]->identifier));
-		decl_key->value = std::make_shared<SemanticValue>(Type::T_STRING, astnode->row, astnode->col);
-
+		auto exnode = new ASTLiteralNode<cp_string>("", astnode->row, astnode->col);
+		idnode->declarations[0]->expr = exnode;
+		idnode->accept(this);
+		idnode->declarations[0]->expr = nullptr;
+		delete exnode;
 	}
 	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
-		try {
-			get_inner_most_struct_definition_scope("cp", "Exception");
-		}
-		catch (...) {
-			throw std::runtime_error("struct 'cp::Exception' not found");
-		}
-
-		auto declared_variable = std::dynamic_pointer_cast<SemanticVariable>(current_expression.ref);
-		declared_variable->value->type = Type::T_STRUCT;
-		declared_variable->value->type_name = "Exception";
-		declared_variable->value->type_name_space = "cp";
+		std::map<std::string, ASTExprNode*> values = {
+			{ "error", new ASTLiteralNode<cp_string>("", astnode->row, astnode->col) }
+		};
+		auto exnode = new ASTStructConstructorNode("Exception", "cp", values, astnode->row, astnode->col);
+		idnode->expr = exnode;
+		delete values["error"];
+		delete exnode;
+		idnode->expr = nullptr;
 	}
 	else if (!dynamic_cast<ASTReticencesNode*>(astnode->decl)) {
 		throw std::runtime_error("expected declaration");
@@ -1286,6 +1248,30 @@ void SemanticAnalyser::visit(ASTTypingNode* astnode) {
 	}
 	else {
 		current_expression.type = Type::T_BOOL;
+	}
+}
+
+void SemanticAnalyser::declare_function_parameter(const std::string& nmspace, const VariableDefinition& param) {
+	if (is_function(param.type) || is_any(param.type)) {
+		auto f = FunctionDefinition(param.identifier, param.row, param.row);
+		scopes[nmspace].back()->declare_function(param.identifier, f);
+	}
+
+	if (!is_function(param.type)) {
+		auto var_expr = std::make_shared<SemanticValue>();
+		var_expr->type = param.type;
+		var_expr->array_type = param.array_type;
+		var_expr->type_name = param.type_name;
+		var_expr->dim = param.dim;
+		var_expr->row = param.row;
+		var_expr->col = param.col;
+
+		auto v = std::make_shared<SemanticVariable>(param.identifier, param.type, param.array_type,
+			param.dim, param.type_name, param.type_name_space, false, param.row, param.col);
+
+		v->set_value(var_expr);
+
+		scopes[nmspace].back()->declare_variable(param.identifier, v);
 	}
 }
 

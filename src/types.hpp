@@ -107,11 +107,18 @@ public:
 	virtual void reset_ref();
 };
 
-class VariableDefinition : public TypeDefinition, public CodePosition {
+class ParameterDefinition: public TypeDefinition {
+public:
+	void* assign_value;
+	bool is_rest;
+
+	ParameterDefinition(Type type, Type array_type, const std::vector<void*>& dim,
+		const std::string& type_name, const std::string& type_name_space, void* assign_value, bool is_rest = false);
+};
+
+class VariableDefinition : public ParameterDefinition, public CodePosition {
 public:
 	std::string identifier;
-	void* default_value;
-	bool is_rest;
 
 	VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,
 		const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
@@ -131,22 +138,30 @@ public:
 		bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 };
 
+class UnpackedVariableDefinition : public ParameterDefinition {
+public:
+	std::vector<VariableDefinition> variables;
+
+	UnpackedVariableDefinition(Type type, Type array_type, const std::vector<void*>& dim, const std::string& type_name,
+		const std::string& type_name_space, const std::vector<VariableDefinition>& variables, void* expr_value);
+};
+
 class FunctionDefinition : public TypeDefinition, public CodePosition {
 public:
 	std::string identifier;
 	std::vector<TypeDefinition> signature;
-	std::vector<VariableDefinition> parameters;
+	std::vector<ParameterDefinition> parameters;
 	size_t pointer;
 	ASTBlockNode* block;
 	bool is_var = false;
 
 	FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
 		const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
-		const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters,
+		const std::vector<TypeDefinition>& signature, const std::vector<ParameterDefinition>& parameters,
 		ASTBlockNode* block, unsigned int row, unsigned int col);
 
 	FunctionDefinition(const std::string& identifier, Type type,
-		const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters);
+		const std::vector<TypeDefinition>& signature, const std::vector<ParameterDefinition>& parameters);
 
 	FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
 		const std::string& type_name_space, Type array_type, const std::vector<void*>& dim);

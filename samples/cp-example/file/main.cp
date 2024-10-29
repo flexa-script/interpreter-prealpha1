@@ -19,17 +19,26 @@
 // 	print("def");
 // }
 
-// struct Foo {
-// 	var bar: int;
-// 	var qux: string;
-// };
+fun test([bar, qux]) {
+  println(bar);
+  println(qux);
+}
 
-// var foo = Foo {
-// 	bar=10,
-// 	qux="word"
-// };
+struct Foo {
+	var bar: int;
+	var qux: string;
+};
 
-// var [bar, qux] = foo;
+var foo = Foo {
+	bar=10,
+	qux="word"
+};
 
-// println(bar);
-// println(qux);
+var [bar, qux] = foo;
+
+println("declaration");
+println(bar);
+println(qux);
+
+println("function");
+test(foo);

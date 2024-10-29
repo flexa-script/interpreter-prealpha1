@@ -229,15 +229,19 @@ void TypeDefinition::reset_ref() {
 	use_ref = is_struct(type);
 }
 
+ParameterDefinition::ParameterDefinition(Type type, Type array_type, const std::vector<void*>& dim, const std::string& type_name,
+	const std::string& type_name_space, void* assign_value, bool is_rest)
+	: TypeDefinition(type, array_type, dim, type_name, type_name_space), assign_value(assign_value), is_rest(is_rest) {}
+
 VariableDefinition::VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,
 	const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
 	void* default_value, bool is_rest, unsigned int row, unsigned int col)
-	: CodePosition(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
-	identifier(identifier), default_value(default_value), is_rest(is_rest) {}
+	: ParameterDefinition(type, array_type, dim, type_name, type_name_space, default_value, is_rest), CodePosition(row, col),
+	identifier(identifier) {}
 
 VariableDefinition::VariableDefinition()
-	: CodePosition(0, 0), TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", ""),
-	identifier(""), default_value(nullptr), is_rest(false) {}
+	: ParameterDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", "", nullptr), CodePosition(0, 0),
+	identifier("") {}
 
 VariableDefinition VariableDefinition::get_basic(const std::string& identifier, Type type,
 	void* default_value, bool is_rest, unsigned int row, unsigned int col) {
@@ -256,17 +260,25 @@ VariableDefinition VariableDefinition::get_struct(const std::string& identifier,
 		std::vector<void*>(), default_value, is_rest, row, col);
 }
 
+UnpackedVariableDefinition::UnpackedVariableDefinition(Type type, Type array_type, const std::vector<void*>& dim, const std::string& type_name,
+	const std::string& type_name_space, const std::vector<VariableDefinition>& variables, void* expr_value)
+	: ParameterDefinition(type, array_type, dim, type_name, type_name_space, expr_value), variables(variables) {}
+
 FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
 	const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
-	const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters,
+	const std::vector<TypeDefinition>& signature, const std::vector<ParameterDefinition>& parameters,
 	ASTBlockNode* block, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
-	identifier(identifier), parameters(parameters), signature(signature), block(block) {}
+	identifier(identifier), parameters(parameters), signature(signature), block(block) {
+	check_signature();
+}
 
 FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type,
-	const std::vector<TypeDefinition>& signature, const std::vector<VariableDefinition>& parameters)
+	const std::vector<TypeDefinition>& signature, const std::vector<ParameterDefinition>& parameters)
 	: CodePosition(), TypeDefinition(type),
-	identifier(identifier), parameters(parameters), signature(signature), block(nullptr) {}
+	identifier(identifier), parameters(parameters), signature(signature), block(nullptr) {
+	check_signature();
+}
 
 FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
 	const std::string& type_name_space, Type array_type, const std::vector<void*>& dim)
@@ -275,23 +287,23 @@ FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type,
 
 FunctionDefinition::FunctionDefinition(const std::string& identifier, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(Type::T_ANY, Type::T_UNDEFINED, std::vector<void*>(), "", ""),
-	identifier(identifier), signature(std::vector<TypeDefinition>()), parameters(std::vector<VariableDefinition>()), block(nullptr), is_var(true) {}
+	identifier(identifier), parameters(std::vector<ParameterDefinition>()), block(nullptr), is_var(true) {}
 
 FunctionDefinition::FunctionDefinition()
 	: TypeDefinition(), CodePosition(),
-	identifier(""), signature(std::vector<TypeDefinition>()), parameters(std::vector<VariableDefinition>()), block(nullptr) {}
+	identifier(""), parameters(std::vector<ParameterDefinition>()), block(nullptr) {}
 
 void FunctionDefinition::check_signature() const {
 	bool has_default = false;
 	for (size_t i = 0; i < parameters.size(); ++i) {
 		if (parameters[i].is_rest && parameters.size() - 1 != i) {
-			throw std::runtime_error("'" + identifier + "': the rest parameter must be the last parameter");
+			throw std::runtime_error("rest '" + identifier + "' parameter must be the last parameter");
 		}
-		if (parameters[i].default_value) {
+		if (parameters[i].assign_value) {
 			has_default = true;
 		}
-		if (!parameters[i].default_value && has_default) {
-			throw std::runtime_error("'" + identifier + "': the rest parameter must be the last parameter");
+		if (!parameters[i].assign_value && has_default) {
+			throw std::runtime_error("default values as '" + identifier + "' must be at end");
 		}
 	}
 }
