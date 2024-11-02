@@ -293,11 +293,10 @@ namespace parser {
 	class ASTFunctionDefinitionNode : public ASTStatementNode, public TypeDefinition {
 	public:
 		std::string identifier;
-		std::vector<ParameterDefinition> parameters;
-		std::vector<TypeDefinition> signature;
+		std::vector<TypeDefinition*> parameters;
 		ASTBlockNode* block;
 
-		ASTFunctionDefinitionNode(const std::string& identifier, const std::vector<ParameterDefinition>& parameters,
+		ASTFunctionDefinitionNode(const std::string& identifier, const std::vector<TypeDefinition*>& parameters,
 			Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
 			ASTBlockNode* block, unsigned int row, unsigned int col);
 

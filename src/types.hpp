@@ -107,20 +107,11 @@ public:
 	virtual void reset_ref();
 };
 
-class ParameterDefinition: public TypeDefinition {
-public:
-	void* assign_value;
-	bool is_rest;
-
-	ParameterDefinition(Type type, Type array_type, const std::vector<void*>& dim,
-		const std::string& type_name, const std::string& type_name_space, void* assign_value, bool is_rest = false);
-
-	ParameterDefinition(TypeDefinition type_definition, void* assign_value, bool is_rest = false);
-};
-
-class VariableDefinition : public ParameterDefinition, public CodePosition {
+class VariableDefinition : public TypeDefinition, public CodePosition {
 public:
 	std::string identifier;
+	void* default_value;
+	bool is_rest;
 
 	VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,
 		const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
@@ -128,44 +119,43 @@ public:
 
 	VariableDefinition();
 
-	static VariableDefinition get_basic(const std::string& identifier, Type type,
+	VariableDefinition(const std::string& identifier, Type type,
 		void* default_value = nullptr, bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 
-	static VariableDefinition get_array(const std::string& identifier, Type array_type,
+	VariableDefinition(const std::string& identifier, Type array_type,
 		const std::vector<void*>& dim = std::vector<void*>(), void* default_value = nullptr,
 		bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 
-	static VariableDefinition get_struct(const std::string& identifier,
+	VariableDefinition(const std::string& identifier,
 		const std::string& type_name, const std::string& type_name_space, void* default_value = nullptr,
 		bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 };
 
-class UnpackedVariableDefinition : public ParameterDefinition {
+class UnpackedVariableDefinition : public TypeDefinition {
 public:
 	std::vector<VariableDefinition> variables;
 
 	UnpackedVariableDefinition(Type type, Type array_type, const std::vector<void*>& dim, const std::string& type_name,
-		const std::string& type_name_space, const std::vector<VariableDefinition>& variables, void* expr_value);
+		const std::string& type_name_space, const std::vector<VariableDefinition>& variables);
 
-	UnpackedVariableDefinition(TypeDefinition type_definition, const std::vector<VariableDefinition>& variables, void* expr_value);
+	UnpackedVariableDefinition(TypeDefinition type_definition, const std::vector<VariableDefinition>& variables);
 };
 
 class FunctionDefinition : public TypeDefinition, public CodePosition {
 public:
 	std::string identifier;
-	std::vector<TypeDefinition> signature;
-	std::vector<ParameterDefinition> parameters;
+	std::vector<TypeDefinition*> parameters;
 	size_t pointer;
 	ASTBlockNode* block;
 	bool is_var = false;
 
 	FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
 		const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
-		const std::vector<TypeDefinition>& signature, const std::vector<ParameterDefinition>& parameters,
+		const std::vector<TypeDefinition*>& parameters,
 		ASTBlockNode* block, unsigned int row, unsigned int col);
 
 	FunctionDefinition(const std::string& identifier, Type type,
-		const std::vector<TypeDefinition>& signature, const std::vector<ParameterDefinition>& parameters);
+		const std::vector<TypeDefinition*>& parameters);
 
 	FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
 		const std::string& type_name_space, Type array_type, const std::vector<void*>& dim);

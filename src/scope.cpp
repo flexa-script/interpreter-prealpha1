@@ -23,7 +23,7 @@ std::shared_ptr<Variable> Scope::find_declared_variable(const std::string& ident
 	return var;
 }
 
-FunctionDefinition& Scope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
+FunctionDefinition& Scope::find_declared_function(const std::string& identifier, const std::vector<TypeDefinition*>* signature,
 	dim_eval_func_t evaluate_access_vector, bool strict) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 
@@ -39,8 +39,8 @@ FunctionDefinition& Scope::find_declared_function(const std::string& identifier,
 		auto& func_sig = it->second.parameters;
 		bool rest = false;
 		auto found = true;
-		TypeDefinition stype;
-		TypeDefinition ftype;
+		TypeDefinition* stype;
+		TypeDefinition* ftype;
 		size_t func_sig_size = func_sig.size();
 		size_t call_sig_size = signature->size();
 
@@ -50,7 +50,7 @@ FunctionDefinition& Scope::find_declared_function(const std::string& identifier,
 				ftype = func_sig.at(i);
 				stype = signature->at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(ftype, stype, evaluate_access_vector, strict || stype.use_ref)) {
+				if (!TypeDefinition::is_any_or_match_type(*ftype, *stype, evaluate_access_vector, strict || stype->use_ref)) {
 					found = false;
 					break;
 				}
@@ -68,21 +68,23 @@ FunctionDefinition& Scope::find_declared_function(const std::string& identifier,
 				if (!rest) {
 					ftype = func_sig.at(i);
 
-					if (it->second.parameters[i].is_rest) {
+					auto parameter = dynamic_cast<VariableDefinition*>(it->second.parameters[i]);
+
+					if (parameter && parameter->is_rest) {
 						rest = true;
-						if (is_array(ftype.type)) {
-							ftype = TypeDefinition(ftype.array_type, Type::T_UNDEFINED, std::vector<void*>(), ftype.type_name, ftype.type_name_space);
+						if (is_array(ftype->type)) {
+							ftype = new TypeDefinition(ftype->array_type, Type::T_UNDEFINED, std::vector<void*>(), ftype->type_name, ftype->type_name_space);
 						}
 					}
 
-					if (!it->second.parameters[i].is_rest && i == func_sig.size() - 1) {
+					if (parameter && !parameter->is_rest && i == func_sig.size() - 1) {
 						found = false;
 						break;
 					}
 				}
 				stype = signature->at(i);
 
-				if (!TypeDefinition::is_any_or_match_type(ftype, stype, evaluate_access_vector, strict || stype.use_ref)) {
+				if (!TypeDefinition::is_any_or_match_type(*ftype, *stype, evaluate_access_vector, strict || stype->use_ref)) {
 					found = false;
 					break;
 				}
@@ -101,13 +103,15 @@ FunctionDefinition& Scope::find_declared_function(const std::string& identifier,
 					ftype = func_sig.at(i);
 					stype = signature->at(i);
 
-					if (!TypeDefinition::is_any_or_match_type(ftype, stype, evaluate_access_vector, strict || stype.use_ref)) {
+					if (!TypeDefinition::is_any_or_match_type(*ftype, *stype, evaluate_access_vector, strict || stype->use_ref)) {
 						found = false;
 						break;
 					}
 				}
 				else {
-					if (!it->second.parameters[i].assign_value) {
+					auto parameter = dynamic_cast<VariableDefinition*>(it->second.parameters[i]);
+
+					if (parameter && !parameter->default_value) {
 						found = false;
 						break;
 					}
@@ -142,7 +146,7 @@ bool Scope::already_declared_variable(const std::string& identifier) {
 	return variable_symbol_table.find(identifier) != variable_symbol_table.end();
 }
 
-bool Scope::already_declared_function(const std::string& identifier, const std::vector<TypeDefinition>* signature,
+bool Scope::already_declared_function(const std::string& identifier, const std::vector<TypeDefinition*>* signature,
 	dim_eval_func_t evaluate_access_vector, bool strict) {
 	try {
 		find_declared_function(identifier, signature, evaluate_access_vector, strict);

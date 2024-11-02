@@ -31,6 +31,7 @@ namespace parser {
 		Type parse_type();
 		TypeDefinition parse_unpacked_type_definition();
 		TypeDefinition parse_function_type_definition();
+		TypeDefinition parse_declaration_type_definition(Type ptype = Type::T_UNDEFINED);
 
 		// statement nodes
 		ASTNode* parse_program_statement();
@@ -38,7 +39,7 @@ namespace parser {
 		ASTUsingNode* parse_using_statement();
 		ASTNode* parse_block_statement();
 		ASTDeclarationNode* parse_declaration_statement();
-		ASTStatementNode* parse_undef_declaration_statement();
+		ASTStatementNode* parse_unpacked_declaration_statement();
 		ASTAssignmentNode* parse_assignment_statement(ASTIdentifierNode* idnode);
 		ASTUnaryExprNode* parse_increment_expression(ASTIdentifierNode* idnode);
 		ASTReturnNode* parse_return_statement();

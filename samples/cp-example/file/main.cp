@@ -19,6 +19,25 @@
 // 	print("def");
 // }
 
+fun testl(a, [bar, qux]) {
+  println(a);
+  println(bar);
+  println(qux);
+}
+
+fun testr([bar, qux], b) {
+  println(bar);
+  println(qux);
+  println(b);
+}
+
+fun testb(a, [bar, qux], b) {
+  println(a);
+  println(bar);
+  println(qux);
+  println(b);
+}
+
 fun test([bar, qux]) {
   println(bar);
   println(qux);
@@ -41,4 +60,7 @@ println(bar);
 println(qux);
 
 println("function");
+testl(10, foo);
+testr(foo, 20);
+testb(10, foo, 20);
 test(foo);

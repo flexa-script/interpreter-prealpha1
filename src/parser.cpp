@@ -74,7 +74,7 @@ ASTNode* Parser::parse_block_statement() {
 		return parse_enum_statement();
 	case TOK_VAR:
 	case TOK_CONST:
-		return parse_undef_declaration_statement();
+		return parse_unpacked_declaration_statement();
 	case TOK_STRUCT:
 		return parse_struct_definition();
 	case TOK_TRY:
@@ -239,33 +239,12 @@ ASTStatementNode* Parser::parse_struct_block_variables() {
 	}
 }
 
-VariableDefinition* Parser::parse_struct_var_def() {
-	bool is_rest = false;
-	std::string identifier;
+TypeDefinition Parser::parse_declaration_type_definition(Type ptype) {
+	Type type = ptype;
+	Type array_type = Type::T_UNDEFINED;
+	auto dim = std::vector<void*>();
 	std::string type_name;
 	std::string type_name_space;
-	Type type = Type::T_UNDEFINED;
-	Type array_type = Type::T_UNDEFINED;
-	ASTExprNode* expr_size;
-	auto dim = std::vector<void*>();
-	unsigned int row = current_token.row;
-	unsigned int col = current_token.col;
-
-	if (current_token.type == TOK_RETICENCES) {
-		is_rest = true;
-		consume_token(TOK_IDENTIFIER);
-	}
-	else {
-		check_current_token(TOK_IDENTIFIER);
-	}
-
-	auto id = parse_identifier();
-	identifier = id.identifier;
-	dim = id.access_vector;
-
-	if (dim.size() > 0) {
-		type = Type::T_ARRAY;
-	}
 
 	if (next_token.type == TOK_COLON) {
 		consume_token();
@@ -288,6 +267,8 @@ VariableDefinition* Parser::parse_struct_var_def() {
 				|| current_array_type == parser::Type::T_ARRAY) {
 				current_array_type = parser::Type::T_ANY;
 			}
+
+			array_type = current_array_type;
 		}
 
 		if (current_token.type == TOK_IDENTIFIER) {
@@ -299,19 +280,48 @@ VariableDefinition* Parser::parse_struct_var_def() {
 		type = Type::T_ANY;
 	}
 
-	array_type = current_array_type;
+	return TypeDefinition(type, array_type, dim, type_name, type_name_space);
+}
+
+VariableDefinition* Parser::parse_struct_var_def() {
+	bool is_rest = false;
+	std::string identifier;
+	Type type = Type::T_UNDEFINED;
+	TypeDefinition type_def = Type::T_UNDEFINED;
+	ASTExprNode* expr_size;
+	auto dim = std::vector<void*>();
+	unsigned int row = current_token.row;
+	unsigned int col = current_token.col;
+
+	if (current_token.type == TOK_RETICENCES) {
+		is_rest = true;
+		consume_token(TOK_IDENTIFIER);
+	}
+	else {
+		check_current_token(TOK_IDENTIFIER);
+	}
+
+	auto id = parse_identifier();
+	identifier = id.identifier;
+	dim = id.access_vector;
+	
+	if (dim.size() > 0) {
+		type = Type::T_ARRAY;
+	}
+
+	type_def = parse_declaration_type_definition(type);
 
 	if (is_rest) {
 		auto ndim = new ASTLiteralNode<cp_int>(0, row, col);
-		if (!is_array(type)) {
-			array_type = type;
-			type = Type::T_ARRAY;
+		if (!is_array(type_def.type)) {
+			type_def.array_type = type;
+			type_def.type = Type::T_ARRAY;
 		}
 		dim.insert(dim.begin(), ndim);
 	}
 
-	return new VariableDefinition(identifier, type, type_name,
-		type_name_space, array_type, dim, nullptr, is_rest, row, col);
+	return new VariableDefinition(identifier, type_def.type, type_def.type_name,
+		type_def.type_name_space, type_def.array_type, dim, nullptr, is_rest, row, col);
 };
 
 ASTContinueNode* Parser::parse_continue_statement() {
@@ -469,7 +479,7 @@ ASTTryCatchNode* Parser::parse_try_catch_statement() {
 	else {
 		check_current_token(TOK_VAR);
 		consume_semicolon.push(false);
-		decl = parse_undef_declaration_statement();
+		decl = parse_unpacked_declaration_statement();
 		consume_semicolon.pop();
 	}
 	consume_token(TOK_RIGHT_BRACKET);
@@ -554,7 +564,7 @@ ASTForEachNode* Parser::parse_foreach_statement() {
 	consume_token();
 	consume_semicolon.push(false);
 	check_current_token(TOK_VAR);
-	itdecl = parse_undef_declaration_statement();
+	itdecl = parse_unpacked_declaration_statement();
 	consume_token(TOK_IN);
 	consume_token();
 	collection = parse_foreach_collection();
@@ -685,7 +695,7 @@ TypeDefinition Parser::parse_function_type_definition() {
 }
 
 ASTFunctionDefinitionNode* Parser::parse_function_definition(const std::string& identifier) {
-	std::vector<ParameterDefinition> parameters;
+	std::vector<TypeDefinition*> parameters;
 	TypeDefinition type_def;
 	ASTBlockNode* block = nullptr;
 	unsigned int row = current_token.row;
@@ -695,19 +705,18 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition(const std::string& 
 		do {
 			consume_token();
 			if (current_token.type == TOK_LEFT_BRACE) {
-				consume_token();
 				TypeDefinition unpack_typedef;
 				std::vector<VariableDefinition> unpack_parameters;
-				while (current_token.type == TOK_IDENTIFIER) {
+				do {
+					consume_token();
 					unpack_parameters.push_back(*parse_unpacked_formal_param());
 					consume_token();
-					consume_token();
-				}
+				} while (current_token.type == TOK_COMMA);
 				unpack_typedef = parse_unpacked_type_definition();
-				parameters.push_back(UnpackedVariableDefinition(unpack_typedef, unpack_parameters, nullptr));
+				parameters.push_back(new UnpackedVariableDefinition(unpack_typedef, unpack_parameters));
 			}
 			else {
-				parameters.push_back(*parse_formal_param());
+				parameters.push_back(parse_formal_param());
 			}
 			consume_token();
 		} while (current_token.type == TOK_COMMA);
@@ -1253,10 +1262,8 @@ ASTAssignmentNode* Parser::parse_assignment_statement(ASTIdentifierNode* identif
 
 ASTDeclarationNode* Parser::parse_declaration_statement() {
 	Type type = Type::T_UNDEFINED;
-	current_array_type = Type::T_UNDEFINED;
+	TypeDefinition type_def;
 	std::string identifier;
-	std::string type_name = "";
-	std::string type_name_space = "";
 	ASTExprNode* expr;
 	auto dim_vector = std::vector<void*>();
 	unsigned int row = current_token.row;
@@ -1272,33 +1279,7 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 		type = Type::T_ARRAY;
 	}
 
-	if (next_token.type == TOK_COLON) {
-		consume_token();
-		consume_token();
-
-		if (next_token.type == TOK_LIB_ACESSOR_OP) {
-			type_name_space = current_token.value;
-			consume_token();
-			consume_token();
-		}
-
-		if (type == Type::T_UNDEFINED) {
-			type = parse_type();
-		}
-		else if (type == Type::T_ARRAY) {
-			current_array_type = parse_type();
-
-			if (current_array_type == parser::Type::T_UNDEFINED
-				|| current_array_type == parser::Type::T_VOID
-				|| current_array_type == parser::Type::T_ARRAY) {
-				current_array_type = parser::Type::T_ANY;
-			}
-		}
-
-		if (current_token.type == TOK_IDENTIFIER) {
-			type_name = current_token.value;
-		}
-	}
+	type_def = parse_declaration_type_definition(type);
 
 	if (next_token.type == TOK_EQUALS) {
 		consume_token();
@@ -1311,19 +1292,17 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 
 	check_consume_semicolon();
 
-	if (type == Type::T_UNDEFINED) {
-		type = Type::T_ANY;
-	}
-
-	return new ASTDeclarationNode(identifier, type, current_array_type, dim_vector, type_name, type_name_space, expr, is_const, row, col);
+	return new ASTDeclarationNode(identifier, type_def.type, type_def.array_type, dim_vector, type_def.type_name, type_def.type_name_space, expr, is_const, row, col);
 }
 
-ASTStatementNode* Parser::parse_undef_declaration_statement() {
+ASTStatementNode* Parser::parse_unpacked_declaration_statement() {
 	if (current_token.type == TOK_CONST || next_token.type == TOK_IDENTIFIER) {
 		return parse_declaration_statement();
 	}
 	else if (current_token.type == TOK_VAR && next_token.type == TOK_LEFT_BRACE) {
+		TypeDefinition type_def;
 		std::vector<ASTDeclarationNode*> declarations;
+		ASTExprNode* expr;
 		unsigned int row = current_token.row;
 		unsigned int col = current_token.col;
 
@@ -1340,7 +1319,21 @@ ASTStatementNode* Parser::parse_undef_declaration_statement() {
 
 		consume_token(TOK_RIGHT_BRACE);
 
-		return new ASTUnpackedDeclarationNode(declarations, row, col);
+		type_def = parse_declaration_type_definition();
+
+		if (next_token.type == TOK_EQUALS) {
+			consume_token();
+			consume_token();
+			expr = parse_expression();
+		}
+		else {
+			expr = nullptr;
+		}
+
+		check_consume_semicolon();
+
+		return new ASTUnpackedDeclarationNode(type_def.type, type_def.array_type, type_def.dim,
+			type_def.type_name, type_def.type_name_space, declarations, row, col);
 	}
 	else {
 		throw std::runtime_error(msg_header() + "expected identifier or [");

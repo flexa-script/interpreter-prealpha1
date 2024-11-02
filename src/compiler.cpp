@@ -148,34 +148,34 @@ void Compiler::visit(ASTFunctionDefinitionNode* astnode) {
 		type_definition_operations(*astnode);
 		add_instruction(OpCode::OP_FUN_START, cp_string(astnode->identifier));
 
-		for (auto& param : astnode->parameters) {
-			type_definition_operations(param);
-			add_instruction(OpCode::OP_SET_DEFAULT_VALUE, param.assign_value);
-			add_instruction(OpCode::OP_SET_IS_REST, param.is_rest);
-			//add_instruction(OpCode::OP_FUN_SET_PARAM, cp_string(param.identifier));
-		}
+		//for (auto& param : astnode->parameters) {
+		//	type_definition_operations(param);
+		//	add_instruction(OpCode::OP_SET_DEFAULT_VALUE, param.assign_value);
+		//	add_instruction(OpCode::OP_SET_IS_REST, param.is_rest);
+		//	//add_instruction(OpCode::OP_FUN_SET_PARAM, cp_string(param.identifier));
+		//}
 
-		// call will start here, function metadata will be stored with at starting pointer
-		add_instruction(OpCode::OP_FUN_END, nullptr);
+		//// call will start here, function metadata will be stored with at starting pointer
+		//add_instruction(OpCode::OP_FUN_END, nullptr);
 
-		// at this point, vm will jump to OP_FUN_END
-		auto id = add_instruction(OpCode::OP_JUMP, nullptr);
+		//// at this point, vm will jump to OP_FUN_END
+		//auto id = add_instruction(OpCode::OP_JUMP, nullptr);
 
-		for (auto& param : astnode->parameters) {
-			if (param.assign_value) {
-				//auto param_dcl = std::make_unique<ASTDeclarationNode>(param.identifier, param.type, param.array_type,
-				//	param.dim, param.type_name, param.type_name_space, static_cast<ASTExprNode*>(param.assign_value), false,
-				//	astnode->row, astnode->col);
-				//param_dcl->accept(this);
-			}
-		}
+		//for (auto& param : astnode->parameters) {
+		//	if (param.assign_value) {
+		//		//auto param_dcl = std::make_unique<ASTDeclarationNode>(param.identifier, param.type, param.array_type,
+		//		//	param.dim, param.type_name, param.type_name_space, static_cast<ASTExprNode*>(param.assign_value), false,
+		//		//	astnode->row, astnode->col);
+		//		//param_dcl->accept(this);
+		//	}
+		//}
 
 		astnode->block->accept(this);
 
 		// it will return to prev
 		add_instruction(OpCode::OP_RETURN, nullptr);
 
-		replace_last_operand(id, pointer);
+		//replace_last_operand(id, pointer);
 	}
 
 	pop_namespace(pop);
