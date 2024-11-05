@@ -110,14 +110,14 @@ void VirtualMachine::function_call_operation() {
 	std::string nmspace = get_namespace();
 	std::string identifier = current_instruction.get_string_operand();
 	bool strict = true;
-	std::vector<TypeDefinition> signature;
+	std::vector<TypeDefinition*> signature;
 	std::vector<RuntimeValue*> function_arguments;
 
 	while (!value_stack.empty()) {
 		RuntimeValue* value = value_stack.top();
 		value_stack.pop();
 
-		signature.insert(signature.begin(), *value);
+		signature.insert(signature.begin(), value);
 
 		RuntimeValue* pvalue = nullptr;
 		if (value->use_ref) {
@@ -471,11 +471,10 @@ void VirtualMachine::decode_operation() {
 			dim.push_back(s);
 		}
 
-		auto var = VariableDefinition(var_id,
+		auto var = new VariableDefinition(var_id,
 			set_type, set_type_name, set_type_name_space, set_array_type,
 			dim, set_default_value, set_is_rest, 0, 0);
 
-		func_def_build_stack.top().signature.push_back(var);
 		func_def_build_stack.top().parameters.push_back(var);
 
 		cleanup_type_set();
@@ -831,7 +830,7 @@ std::shared_ptr<Scope> VirtualMachine::get_inner_most_struct_definition_scope(co
 	return scopes[nmspace][i];
 }
 
-std::shared_ptr<Scope> VirtualMachine::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict) {
+std::shared_ptr<Scope> VirtualMachine::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition*>* signature, bool strict) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); --i) {
 		if (i <= 0) {

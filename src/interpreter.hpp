@@ -29,11 +29,11 @@ namespace visitor {
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&Interpreter::evaluate_access_vector, this, std::placeholders::_1);
 		std::string function_call_name;
 		std::string return_from_function_name;
-		std::stack<std::vector<TypeDefinition>> current_function_signature;
+		std::stack<std::vector<TypeDefinition*>> current_function_signature;
 		std::stack<std::vector<Identifier>> current_function_call_identifier_vector;
 		std::stack<std::string> current_function_nmspace;
 		std::stack<FunctionDefinition> current_function;
-		std::stack<std::vector<ParameterDefinition>> current_function_defined_parameters;
+		std::stack<std::vector<TypeDefinition*>> current_function_defined_parameters;
 		std::stack<std::vector<RuntimeValue*>> current_function_calling_arguments;
 		std::stack<std::string> current_this_name;
 		std::map<std::string, std::vector<std::string>> program_nmspaces;
@@ -79,7 +79,7 @@ namespace visitor {
 
 		std::shared_ptr<Scope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
 		std::shared_ptr<Scope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-		std::shared_ptr<Scope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
+		std::shared_ptr<Scope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition*>* signature, bool strict = true);
 		std::shared_ptr<Scope> get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
 
 		RuntimeValue* set_value(std::shared_ptr<Scope> scope, const std::vector<Identifier>& identifier_vector, RuntimeValue* new_value);

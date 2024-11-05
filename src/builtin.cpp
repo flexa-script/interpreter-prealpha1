@@ -19,79 +19,67 @@ Builtin::~Builtin() = default;
 
 void Builtin::register_functions(visitor::SemanticAnalyser* visitor) {
 	std::vector<TypeDefinition*> parameters;
-	VariableDefinition variable;
+	VariableDefinition* variable;
 
 	parameters = std::vector<TypeDefinition*>();
-	variable = VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true);
-	signature.push_back(variable);
+	variable = new VariableDefinition("args", Type::T_ANY, new ASTNullNode(0, 0), true);
+	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("print", FunctionDefinition("print", Type::T_VOID, parameters));
 	visitor->builtin_functions["print"] = nullptr;
 
 
-	signature = std::vector<TypeDefinition>();
 	parameters = std::vector<TypeDefinition*>();
-	variable = VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true);
+	variable = new VariableDefinition("args", Type::T_ANY, new ASTNullNode(0, 0), true);
 	parameters.push_back(variable);
-	signature.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("println", FunctionDefinition("println", Type::T_VOID, parameters));
 	visitor->builtin_functions["println"] = nullptr;
 
 
-	signature = std::vector<TypeDefinition>();
 	parameters = std::vector<TypeDefinition*>();
-	variable = VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true);
+	variable = new VariableDefinition("args", Type::T_ANY, new ASTNullNode(0, 0), true);
 	parameters.push_back(variable);
-	signature.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("read", FunctionDefinition("read", Type::T_STRING, parameters));
 	visitor->builtin_functions["read"] = nullptr;
 
 
-	signature = std::vector<TypeDefinition>();
 	parameters = std::vector<TypeDefinition*>();
 	visitor->scopes[default_namespace].back()->declare_function("readch", FunctionDefinition("readch", Type::T_CHAR, parameters));
 	visitor->builtin_functions["readch"] = nullptr;
 
 
-	signature = std::vector<TypeDefinition>();
 	parameters = std::vector<TypeDefinition*>();
-	variable = VariableDefinition::get_array("arr", Type::T_ANY);
+	variable = new VariableDefinition("arr", Type::T_ANY, std::vector<void*>());
 	parameters.push_back(variable);
-	signature.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("len", FunctionDefinition("len", Type::T_INT, parameters));
 
-	signature = std::vector<TypeDefinition>();
 	parameters = std::vector<TypeDefinition*>();
-	variable = VariableDefinition::get_basic("str", Type::T_STRING);
+	variable = new VariableDefinition("str", Type::T_STRING);
 	parameters.push_back(variable);
-	signature.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("len", FunctionDefinition("len", Type::T_INT, parameters));
 
 	visitor->builtin_functions["len"] = nullptr;
 
 
-	signature = std::vector<TypeDefinition>();
 	parameters = std::vector<TypeDefinition*>();
-	variable = VariableDefinition::get_basic("sleep", Type::T_INT);
+	variable = new VariableDefinition("sleep", Type::T_INT);
 	parameters.push_back(variable);
-	signature.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("sleep", FunctionDefinition("sleep", Type::T_VOID, parameters));
 	visitor->builtin_functions["sleep"] = nullptr;
 
 
-	signature = std::vector<TypeDefinition>();
 	parameters = std::vector<TypeDefinition*>();
-	variable = VariableDefinition::get_basic("cmd", Type::T_STRING);
-	signature.push_back(variable);
+	variable = new VariableDefinition("cmd", Type::T_STRING);
+	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("system", FunctionDefinition("system", Type::T_VOID, parameters));
 	visitor->builtin_functions["system"] = nullptr;
 }
 
 void Builtin::register_functions(visitor::Interpreter* visitor) {
 	std::vector<TypeDefinition*> parameters;
-	VariableDefinition variable;
+	VariableDefinition* variable;
 
 	parameters = std::vector<TypeDefinition*>();
-	variable = VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true);
+	variable = new VariableDefinition("args", Type::T_ANY, new ASTNullNode(0, 0), true);
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("print", FunctionDefinition("print", Type::T_VOID, parameters));
 	visitor->builtin_functions["print"] = [this, visitor]() {
@@ -105,7 +93,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	parameters = std::vector<TypeDefinition*>();
-	variable = VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true);
+	variable = new VariableDefinition("args", Type::T_ANY, new ASTNullNode(0, 0), true);
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("println", FunctionDefinition("println", Type::T_VOID, parameters));
 	visitor->builtin_functions["println"] = nullptr;
@@ -115,9 +103,8 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 		};
 
 
-	signature = std::vector<TypeDefinition>();
 	parameters = std::vector<TypeDefinition*>();
-	variable = VariableDefinition::get_basic("args", Type::T_ANY, new ASTNullNode(0, 0), true);
+	variable = new VariableDefinition("args", Type::T_ANY, new ASTNullNode(0, 0), true);
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("read", FunctionDefinition("read", Type::T_STRING, parameters));
 	visitor->builtin_functions["read"] = [this, visitor]() {
@@ -141,15 +128,13 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 		};
 
 
-	signature = std::vector<TypeDefinition>();
 	parameters = std::vector<TypeDefinition*>();
-	variable = VariableDefinition::get_array("arr", Type::T_ANY);
+	variable = new VariableDefinition("arr", Type::T_ANY, std::vector<void*>());
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("len", FunctionDefinition("len", Type::T_INT, parameters));
 
-	signature = std::vector<TypeDefinition>();
 	parameters = std::vector<TypeDefinition*>();
-	variable = VariableDefinition::get_basic("str", Type::T_STRING);
+	variable = new VariableDefinition("str", Type::T_STRING);
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("len", FunctionDefinition("len", Type::T_INT, parameters));
 
@@ -168,9 +153,8 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 		};
 
 
-	signature = std::vector<TypeDefinition>();
 	parameters = std::vector<TypeDefinition*>();
-	variable = VariableDefinition::get_basic("sleep", Type::T_INT);
+	variable = new VariableDefinition("sleep", Type::T_INT);
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("sleep", FunctionDefinition("sleep", Type::T_VOID, parameters));
 	visitor->builtin_functions["sleep"] = [this, visitor]() {
@@ -179,7 +163,6 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 		};
 
 
-	signature = std::vector<TypeDefinition>();
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("cmd", Type::T_STRING);
 	parameters.push_back(variable);

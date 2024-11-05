@@ -32,11 +32,11 @@ ASTDeclarationNode::ASTDeclarationNode(const std::string& identifier, Type type,
 
 ASTUnpackedDeclarationNode::ASTUnpackedDeclarationNode(Type type, Type array_type, const std::vector<void*>& dim,
 	const std::string& type_name, const std::string& type_name_space, const std::vector<ASTDeclarationNode*>& declarations,
-	unsigned int row, unsigned int col)
+	ASTExprNode* expr, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space), declarations(declarations) {}
 
 ASTUnpackedDeclarationNode::ASTUnpackedDeclarationNode(const std::vector<ASTDeclarationNode*>& declarations,
-	unsigned int row, unsigned int col)
+	ASTExprNode* expr, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), declarations(declarations) {}
 
 ASTAssignmentNode::ASTAssignmentNode(const std::vector<Identifier>& identifier_vector, const std::string& nmspace,
@@ -100,20 +100,11 @@ ASTStructDefinitionNode::ASTStructDefinitionNode(const std::string& identifier, 
 	unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), identifier(identifier), variables(variables) {}
 
-ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(const std::string& identifier, const std::vector<ParameterDefinition>& parameters,
+ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(const std::string& identifier, const std::vector<TypeDefinition*>& parameters,
 	Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
 	ASTBlockNode* block, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
-	identifier(identifier), parameters(parameters), block(block) {
-	// generate signature
-	this->signature = std::vector<TypeDefinition>();
-	
-	for (const auto& param : this->parameters) {
-		//variable_names.push_back(param.identifier);
-		auto td = TypeDefinition(param.type, param.array_type, param.dim, param.type_name, param.type_name_space);
-		signature.push_back(td);
-	}
-}
+	identifier(identifier), parameters(parameters), block(block) {}
 
 ASTArrayConstructorNode::ASTArrayConstructorNode(const std::vector<ASTExprNode*>& values, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), values(values) {}

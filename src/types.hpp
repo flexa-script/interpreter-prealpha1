@@ -113,27 +113,29 @@ public:
 	void* default_value;
 	bool is_rest;
 
-	VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,
-		const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
-		void* default_value, bool is_rest, unsigned int row, unsigned int col);
-
 	VariableDefinition();
+
+	VariableDefinition(const std::string& identifier, Type type,
+		const std::string& type_name, const std::string& type_name_space,
+		Type array_type, const std::vector<void*>& dim,
+		void* default_value, bool is_rest, unsigned int row, unsigned int col);
 
 	VariableDefinition(const std::string& identifier, Type type,
 		void* default_value = nullptr, bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 
-	VariableDefinition(const std::string& identifier, Type array_type,
-		const std::vector<void*>& dim = std::vector<void*>(), void* default_value = nullptr,
-		bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
-
 	VariableDefinition(const std::string& identifier,
-		const std::string& type_name, const std::string& type_name_space, void* default_value = nullptr,
-		bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
+		Type array_type, const std::vector<void*>& dim,
+		const std::string& type_name = "", const std::string& type_name_space = "",
+		void* default_value = nullptr, bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
+
+	VariableDefinition(const std::string& identifier, const std::string& type_name, const std::string& type_name_space,
+		void* default_value = nullptr, bool is_rest = false, unsigned int row = 0, unsigned int col = 0);
 };
 
 class UnpackedVariableDefinition : public TypeDefinition {
 public:
 	std::vector<VariableDefinition> variables;
+	void* assign_value;
 
 	UnpackedVariableDefinition(Type type, Type array_type, const std::vector<void*>& dim, const std::string& type_name,
 		const std::string& type_name_space, const std::vector<VariableDefinition>& variables);

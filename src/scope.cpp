@@ -39,8 +39,8 @@ FunctionDefinition& Scope::find_declared_function(const std::string& identifier,
 		auto& func_sig = it->second.parameters;
 		bool rest = false;
 		auto found = true;
-		TypeDefinition* stype;
-		TypeDefinition* ftype;
+		TypeDefinition* stype = nullptr;
+		TypeDefinition* ftype = nullptr;
 		size_t func_sig_size = func_sig.size();
 		size_t call_sig_size = signature->size();
 

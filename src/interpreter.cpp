@@ -161,7 +161,13 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 void Interpreter::visit(ASTUnpackedDeclarationNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	for (const auto& declaration : astnode->declarations) {
+	for (auto declaration : astnode->declarations) {
+		if (astnode->expr) {
+			auto ids = std::vector<Identifier>{ Identifier(declaration->identifier) };
+			auto access_expr = new ASTIdentifierNode(, "", declaration->row, declaration->col);
+			declaration->expr = new ASTExprNode();
+		}
+
 		declaration->accept(this);
 	}
 }
@@ -303,13 +309,13 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	std::string identifier = astnode->identifier;
 	std::vector<Identifier> identifier_vector = astnode->identifier_vector;
 	bool strict = true;
-	std::vector<TypeDefinition> signature;
+	std::vector<TypeDefinition*> signature;
 	std::vector<RuntimeValue*> function_arguments;
 
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
 
-		signature.push_back(*current_expression_value);
+		signature.push_back(new RuntimeValue(current_expression_value));
 
 		RuntimeValue* pvalue = nullptr;
 		if (current_expression_value->use_ref) {
@@ -386,12 +392,12 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 
 	try {
 		std::shared_ptr<Scope> func_scope = scopes[nmspace].back();
-		auto& declfun = func_scope->find_declared_function(astnode->identifier, &astnode->signature, evaluate_access_vector_ptr, true);
+		auto& declfun = func_scope->find_declared_function(astnode->identifier, &astnode->parameters, evaluate_access_vector_ptr, true);
 		declfun.block = astnode->block;
 	}
 	catch (...) {
 		auto f = FunctionDefinition(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
-			astnode->array_type, astnode->dim, astnode->signature, astnode->parameters, astnode->block, astnode->row, astnode->row);
+			astnode->array_type, astnode->dim, astnode->parameters, astnode->block, astnode->row, astnode->row);
 		scopes[nmspace].back()->declare_function(astnode->identifier, f);
 	}
 	pop_namespace(pop);
@@ -1691,7 +1697,7 @@ std::shared_ptr<Scope> Interpreter::get_inner_most_struct_definition_scope(const
 	return scopes[nmspace][i];
 }
 
-std::shared_ptr<Scope> Interpreter::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict) {
+std::shared_ptr<Scope> Interpreter::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition*>* signature, bool strict) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); --i) {
 		if (i <= 0) {
@@ -2714,23 +2720,23 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		auto current_function_calling_argument = current_function_calling_arguments.top()[i];
 
 		if (current_function_defined_parameters.top().size() > i
-			&& is_string(current_function_defined_parameters.top()[i].type) && is_char(current_function_calling_argument->type)) {
+			&& is_string(current_function_defined_parameters.top()[i]->type) && is_char(current_function_calling_argument->type)) {
 			if (current_function_calling_argument->use_ref
 				&& current_function_calling_argument->ref
 				&& !is_any(current_function_calling_argument->ref->type)) {
 				throw std::runtime_error("cannot reference char to string in function call");
 			}
-			current_function_calling_argument->type = current_function_defined_parameters.top()[i].type;
+			current_function_calling_argument->type = current_function_defined_parameters.top()[i]->type;
 			current_function_calling_argument->set(cp_string{ current_function_calling_argument->get_c() });
 		}
 		else if (current_function_defined_parameters.top().size() > i
-			&& is_float(current_function_defined_parameters.top()[i].type) && is_int(current_function_calling_argument->type)) {
+			&& is_float(current_function_defined_parameters.top()[i]->type) && is_int(current_function_calling_argument->type)) {
 			if (current_function_calling_argument->use_ref
 				&& current_function_calling_argument->ref
 				&& !is_any(current_function_calling_argument->ref->type)) {
 				throw std::runtime_error("cannot reference int to float in function call");
 			}
-			current_function_calling_argument->type = current_function_defined_parameters.top()[i].type;
+			current_function_calling_argument->type = current_function_defined_parameters.top()[i]->type;
 			current_function_calling_argument->set(cp_float(current_function_calling_argument->get_i()));
 		}
 
@@ -2748,11 +2754,11 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			vec.push_back(current_value);
 		}
 		else {
-			if (const auto decl = dynamic_cast<VariableDefinition*>(&current_function_defined_parameters.top()[i])) {
+			if (const auto decl = dynamic_cast<VariableDefinition*>(current_function_defined_parameters.top()[i])) {
 				declare_function_parameter(curr_scope, decl->identifier, current_value);
 
 				// is rest
-				if (current_function_defined_parameters.top()[i].is_rest) {
+				if (decl->is_rest) {
 					rest_name = decl->identifier;
 					// if is last parameter and is array
 					if (current_function_defined_parameters.top().size() - 1 == i
@@ -2766,7 +2772,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 					}
 				}
 			}
-			else if (const auto decls = dynamic_cast<UnpackedVariableDefinition*>(&current_function_defined_parameters.top()[i])) {
+			else if (const auto decls = dynamic_cast<UnpackedVariableDefinition*>(current_function_defined_parameters.top()[i])) {
 				for (auto& decl : decls->variables) {
 					auto sub_value = new RuntimeValue(current_value->get_str()[decl.identifier]);
 					declare_function_parameter(curr_scope, decl.identifier, sub_value);
@@ -2777,21 +2783,15 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 
 	// adds default values
 	for (; i < current_function_defined_parameters.top().size(); ++i) {
-		if (current_function_defined_parameters.top()[i].is_rest) {
-			break;
-		}
-
-		static_cast<ASTExprNode*>(current_function_defined_parameters.top()[i].assign_value)->accept(this);
-		auto current_value = new RuntimeValue(current_expression_value);
-
-		if (const auto decl = dynamic_cast<VariableDefinition*>(&current_function_defined_parameters.top()[i])) {
-			declare_function_parameter(curr_scope, decl->identifier, current_value);
-		}
-		else if (const auto decls = dynamic_cast<UnpackedVariableDefinition*>(&current_function_defined_parameters.top()[i])) {
-			for (auto& decl : decls->variables) {
-				auto sub_value = new RuntimeValue(current_value->get_str()[decl.identifier]);
-				declare_function_parameter(curr_scope, decl.identifier, current_value);
+		if (const auto decl = dynamic_cast<VariableDefinition*>(current_function_defined_parameters.top()[i])) {
+			if (decl->is_rest) {
+				break;
 			}
+
+			static_cast<ASTExprNode*>(decl->default_value)->accept(this);
+			auto current_value = new RuntimeValue(current_expression_value);
+
+			declare_function_parameter(curr_scope, decl->identifier, current_value);
 		}
 	}
 
@@ -2830,24 +2830,28 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 			vec.push_back(current_value);
 		}
 		else {
-			if (current_function_defined_parameters.top()[i].is_rest) {
-				vec.push_back(current_value);
-			}
-			else {
-				builtin_arguments.push_back(current_value);
+			if (const auto decl = dynamic_cast<VariableDefinition*>(current_function_defined_parameters.top()[i])) {
+				if (decl->is_rest) {
+					vec.push_back(current_value);
+				}
+				else {
+					builtin_arguments.push_back(current_value);
+				}
 			}
 		}
 	}
 
 	// adds default values
 	for (; i < current_function_defined_parameters.top().size(); ++i) {
-		if (current_function_defined_parameters.top()[i].is_rest) {
-			break;
+		if (const auto decl = dynamic_cast<VariableDefinition*>(current_function_defined_parameters.top()[i])) {
+			if (decl->is_rest) {
+				break;
+			}
+
+			static_cast<ASTExprNode*>(decl->default_value)->accept(this);
+
+			builtin_arguments.push_back(new RuntimeValue(current_expression_value));
 		}
-
-		static_cast<ASTExprNode*>(current_function_defined_parameters.top()[i].assign_value)->accept(this);
-
-		builtin_arguments.push_back(new RuntimeValue(current_expression_value));
 	}
 
 	if (vec.size() > 0) {

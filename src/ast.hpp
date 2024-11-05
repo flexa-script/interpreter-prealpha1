@@ -100,14 +100,15 @@ namespace parser {
 	class ASTUnpackedDeclarationNode : public ASTStatementNode, public TypeDefinition {
 	public:
 		std::vector<ASTDeclarationNode*> declarations;
+		ASTExprNode* expr;
 
-		ASTUnpackedDeclarationNode(Type type, Type array_type,
-			const std::vector<void*>& dim, const std::string& type_name,
-			const std::string& type_name_space, const std::vector<ASTDeclarationNode*>& identifier_nodes,
+		ASTUnpackedDeclarationNode(Type type, Type array_type, const std::vector<void*>& dim,
+			const std::string& type_name, const std::string& type_name_space,
+			const std::vector<ASTDeclarationNode*>& declarations, ASTExprNode* expr,
 			unsigned int row, unsigned int col);
 
-		ASTUnpackedDeclarationNode(const std::vector<ASTDeclarationNode*>& identifier_nodes,
-			unsigned int row, unsigned int col);
+		ASTUnpackedDeclarationNode(const std::vector<ASTDeclarationNode*>& declarations,
+			ASTExprNode* expr, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};

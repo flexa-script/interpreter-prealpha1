@@ -229,23 +229,24 @@ void TypeDefinition::reset_ref() {
 	use_ref = is_struct(type);
 }
 
+VariableDefinition::VariableDefinition()
+	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", ""), CodePosition(),
+	identifier(""), default_value(nullptr), is_rest(false) {}
+
 VariableDefinition::VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,
 	const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
 	void* default_value, bool is_rest, unsigned int row, unsigned int col)
 	: TypeDefinition(type, array_type, dim, type_name, type_name_space), CodePosition(row, col),
 	identifier(identifier), default_value(default_value), is_rest(is_rest) {}
 
-VariableDefinition::VariableDefinition()
-	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", ""), CodePosition(),
-	identifier("") {}
-
 VariableDefinition::VariableDefinition(const std::string& identifier, Type type,
 	void* default_value, bool is_rest, unsigned int row, unsigned int col)
 	: TypeDefinition(type, Type::T_UNDEFINED, std::vector<void*>(), "", ""), CodePosition(row, col),
 	identifier(identifier), default_value(default_value), is_rest(is_rest) {}
 
-VariableDefinition::VariableDefinition(const std::string& identifier, parser::Type array_type,
-	const std::vector<void*>& dim, void* default_value, bool is_rest, unsigned int row, unsigned int col)
+VariableDefinition::VariableDefinition(const std::string& identifier, parser::Type array_type, const std::vector<void*>& dim,
+	const std::string& type_name, const std::string& type_name_space,
+	void* default_value, bool is_rest, unsigned int row, unsigned int col)
 	: TypeDefinition(Type::T_ARRAY, array_type, dim, "", ""), CodePosition(row, col),
 	identifier(identifier), default_value(default_value), is_rest(is_rest) {}
 

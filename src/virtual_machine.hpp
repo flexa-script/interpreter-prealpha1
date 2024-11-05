@@ -117,7 +117,7 @@ private:
 
 	std::shared_ptr<Scope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
 	std::shared_ptr<Scope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-	std::shared_ptr<Scope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition>* signature, bool strict = true);
+	std::shared_ptr<Scope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition*>* signature, bool strict = true);
 	std::shared_ptr<Scope> get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
 
 	cp_bool equals_value(const RuntimeValue* lval, const RuntimeValue* rval);
