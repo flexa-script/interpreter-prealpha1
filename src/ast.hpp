@@ -107,9 +107,6 @@ namespace parser {
 			const std::vector<ASTDeclarationNode*>& declarations, ASTExprNode* expr,
 			unsigned int row, unsigned int col);
 
-		ASTUnpackedDeclarationNode(const std::vector<ASTDeclarationNode*>& declarations,
-			ASTExprNode* expr, unsigned int row, unsigned int col);
-
 		void accept(Visitor*) override;
 	};
 

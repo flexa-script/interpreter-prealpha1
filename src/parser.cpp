@@ -1333,7 +1333,7 @@ ASTStatementNode* Parser::parse_unpacked_declaration_statement() {
 		check_consume_semicolon();
 
 		return new ASTUnpackedDeclarationNode(type_def.type, type_def.array_type, type_def.dim,
-			type_def.type_name, type_def.type_name_space, declarations, row, col);
+			type_def.type_name, type_def.type_name_space, declarations, expr, row, col);
 	}
 	else {
 		throw std::runtime_error(msg_header() + "expected identifier or [");

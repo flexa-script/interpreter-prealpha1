@@ -160,16 +160,30 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 
 void Interpreter::visit(ASTUnpackedDeclarationNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
+	auto pop = push_namespace(astnode->type_name_space);
+
+	ASTIdentifierNode* var = nullptr;
+	if (astnode->expr) {
+		var = dynamic_cast<ASTIdentifierNode*>(astnode->expr);
+	}
 
 	for (auto declaration : astnode->declarations) {
-		if (astnode->expr) {
-			auto ids = std::vector<Identifier>{ Identifier(declaration->identifier) };
-			auto access_expr = new ASTIdentifierNode(, "", declaration->row, declaration->col);
-			declaration->expr = new ASTExprNode();
+		if (var) {
+			auto ids = var->identifier_vector;
+			ids.push_back(Identifier(declaration->identifier));
+			auto access_expr = new ASTIdentifierNode(ids, var->nmspace, declaration->row, declaration->col);
+			declaration->expr = access_expr;
 		}
 
 		declaration->accept(this);
+
+		if (var) {
+			delete declaration->expr;
+			declaration->expr = nullptr;
+		}
 	}
+
+	pop_namespace(pop);
 }
 
 void Interpreter::visit(ASTAssignmentNode* astnode) {

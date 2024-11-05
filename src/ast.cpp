@@ -33,11 +33,8 @@ ASTDeclarationNode::ASTDeclarationNode(const std::string& identifier, Type type,
 ASTUnpackedDeclarationNode::ASTUnpackedDeclarationNode(Type type, Type array_type, const std::vector<void*>& dim,
 	const std::string& type_name, const std::string& type_name_space, const std::vector<ASTDeclarationNode*>& declarations,
 	ASTExprNode* expr, unsigned int row, unsigned int col)
-	: ASTStatementNode(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space), declarations(declarations) {}
-
-ASTUnpackedDeclarationNode::ASTUnpackedDeclarationNode(const std::vector<ASTDeclarationNode*>& declarations,
-	ASTExprNode* expr, unsigned int row, unsigned int col)
-	: ASTStatementNode(row, col), declarations(declarations) {}
+	: ASTStatementNode(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
+	declarations(declarations), expr(expr) {}
 
 ASTAssignmentNode::ASTAssignmentNode(const std::vector<Identifier>& identifier_vector, const std::string& nmspace,
 	const std::string& op, ASTExprNode* expr, unsigned int row, unsigned int col)

@@ -49,18 +49,24 @@ struct Foo {
 };
 
 var foo = Foo {
-	bar=10,
+	bar=5,
 	qux="word"
 };
 
 var [bar, qux] = foo;
 
-println("declaration");
+println("--- declaration ---");
 println(bar);
 println(qux);
+println("-------------------");
 
-println("function");
+println("--- functions ---");
+println("- testl -");
 testl(10, foo);
+println("- testr -");
 testr(foo, 20);
+println("- testb -");
 testb(10, foo, 20);
+println("- test -");
 test(foo);
+println("-------------------");

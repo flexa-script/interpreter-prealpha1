@@ -201,13 +201,28 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 
 void SemanticAnalyser::visit(ASTUnpackedDeclarationNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
+	auto pop = push_namespace(astnode->type_name_space);
 
-	const auto& nmspace = get_namespace();
-	std::shared_ptr<Scope> current_scope = scopes[nmspace].back();
+	ASTIdentifierNode* var = nullptr;
+	if (astnode->expr) {
+		var = dynamic_cast<ASTIdentifierNode*>(astnode->expr);
+		if (!var) {
+			throw std::runtime_error("expected variable as value of unpacked declaration, but found value");
+		}
+	}
 
 	for (const auto& declaration : astnode->declarations) {
+		if (var) {
+			auto ids = var->identifier_vector;
+			ids.push_back(Identifier(declaration->identifier));
+			auto access_expr = new ASTIdentifierNode(ids, var->nmspace, declaration->row, declaration->col);
+			declaration->expr = access_expr;
+		}
+
 		declaration->accept(this);
 	}
+
+	pop_namespace(pop);
 }
 
 void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {

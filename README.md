@@ -10,7 +10,7 @@
 - [X] Add collum on throwed errors
 - [X] Add 'this' token to get current function name
 - [X] Add const support
-- [ ] Add unpacked declaration statement to unpack struct values
+- [X] Add unpacked declaration statement to unpack struct values
 - [X] Add char type
 - [X] Add any type
 - [X] Add array type
