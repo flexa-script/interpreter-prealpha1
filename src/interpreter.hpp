@@ -11,6 +11,7 @@
 #include "ast.hpp"
 #include "scope.hpp"
 #include "meta_visitor.hpp"
+#include "garbage_collector.hpp"
 
 using namespace visitor;
 using namespace parser;
@@ -26,6 +27,7 @@ namespace visitor {
 		std::string parse_value_to_string(const RuntimeValue* value);
 
 	private:
+		GarbageCollector gc;
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&Interpreter::evaluate_access_vector, this, std::placeholders::_1);
 		std::string function_call_name;
 		std::string return_from_function_name;

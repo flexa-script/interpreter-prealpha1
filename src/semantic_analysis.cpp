@@ -129,9 +129,12 @@ void SemanticAnalyser::visit(ASTEnumNode* astnode) {
 
 void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	auto pop = push_namespace(astnode->type_name_space);
 	const auto& nmspace = get_namespace();
 	std::shared_ptr<Scope> current_scope = scopes[nmspace].back();
+
+	//if (astnode->identifier == "game_window") {
+	//	int x = 0;
+	//}
 
 	if (current_scope->already_declared_variable(astnode->identifier)) {
 		throw std::runtime_error("variable '" + astnode->identifier + "' already declared");
@@ -142,12 +145,14 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	}
 
 	if (is_struct(astnode->type)) {
+		auto pop = push_namespace(astnode->type_name_space);
 		try {
 			std::shared_ptr<Scope> curr_scope = get_inner_most_struct_definition_scope(get_namespace(), astnode->type_name);
 		}
 		catch (...) {
 			throw std::runtime_error("struct '" + astnode->type_name + "' not found");
 		}
+		pop_namespace(pop);
 	}
 
 	if (astnode->expr) {
@@ -196,12 +201,11 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	}
 
 	current_scope->declare_variable(astnode->identifier, new_var);
-	pop_namespace(pop);
 }
 
 void SemanticAnalyser::visit(ASTUnpackedDeclarationNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	auto pop = push_namespace(astnode->type_name_space);
+	//auto pop = push_namespace(astnode->type_name_space);
 
 	ASTIdentifierNode* var = nullptr;
 	if (astnode->expr) {
@@ -222,7 +226,7 @@ void SemanticAnalyser::visit(ASTUnpackedDeclarationNode* astnode) {
 		declaration->accept(this);
 	}
 
-	pop_namespace(pop);
+	//pop_namespace(pop);
 }
 
 void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {

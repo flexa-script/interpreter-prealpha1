@@ -27,7 +27,9 @@ Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, ASTProgramNode* ma
 
 void Interpreter::start() {
 	auto pop = push_namespace(default_namespace);
+	current_this_name.push(get_namespace());
 	visit(current_program.top());
+	current_this_name.pop();
 	pop_namespace(pop);
 }
 
@@ -111,6 +113,7 @@ void Interpreter::visit(ASTEnumNode* astnode) {
 	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		auto var = std::make_shared<RuntimeVariable>(astnode->identifiers[i], Type::T_INT, Type::T_UNDEFINED, std::vector<void*>(), "", "");
+		gc.add_root(var.get());
 		var->set_value(new RuntimeValue(cp_int(i)));
 		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], var);
 	}
@@ -118,7 +121,6 @@ void Interpreter::visit(ASTEnumNode* astnode) {
 
 void Interpreter::visit(ASTDeclarationNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	auto pop = push_namespace(astnode->type_name_space);
 	const auto& nmspace = get_namespace();
 
 	if (astnode->expr) {
@@ -142,6 +144,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	auto new_var = std::make_shared<RuntimeVariable>(astnode->identifier, astnode->type,
 		astnode->array_type, astnode->dim,
 		astnode_type_name, astnode->type_name_space);
+	gc.add_root(new_var.get());
 	new_var->set_value(new_value);
 
 	if ((!TypeDefinition::is_any_or_match_type(*new_var, *new_value, evaluate_access_vector_ptr) ||
@@ -156,12 +159,10 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	normalize_type(new_var, new_value);
 
 	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
-	pop_namespace(pop);
 }
 
 void Interpreter::visit(ASTUnpackedDeclarationNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	auto pop = push_namespace(astnode->type_name_space);
 
 	ASTIdentifierNode* var = nullptr;
 	if (astnode->expr) {
@@ -183,8 +184,6 @@ void Interpreter::visit(ASTUnpackedDeclarationNode* astnode) {
 			declaration->expr = nullptr;
 		}
 	}
-
-	pop_namespace(pop);
 }
 
 void Interpreter::visit(ASTAssignmentNode* astnode) {
@@ -468,6 +467,7 @@ void Interpreter::visit(ASTBlockNode* astnode) {
 	}
 
 	scopes[nmspace].pop_back();
+	gc.collect();
 }
 
 void Interpreter::visit(ASTExitNode* astnode) {
@@ -551,6 +551,7 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 
 	scopes[nmspace].pop_back();
 	--is_switch;
+	gc.collect();
 }
 
 void Interpreter::visit(ASTElseIfNode* astnode) {
@@ -666,6 +667,7 @@ void Interpreter::visit(ASTForNode* astnode) {
 
 	scopes[nmspace].pop_back();
 	--is_loop;
+	gc.collect();
 }
 
 void Interpreter::visit(ASTForEachNode* astnode) {
@@ -817,8 +819,8 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 	}
 
 	scopes[nmspace].pop_back();
-
 	--is_loop;
+	gc.collect();
 }
 
 void Interpreter::visit(ASTTryCatchNode* astnode) {
@@ -827,9 +829,17 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 	const auto& nmspace = get_namespace();
 
 	try {
+		scopes[nmspace].push_back(std::make_shared<Scope>());
+
 		astnode->try_block->accept(this);
+
+		scopes[nmspace].pop_back();
+		gc.collect();
 	}
 	catch (std::exception ex) {
+		scopes[nmspace].pop_back();
+		gc.collect();
+
 		scopes[nmspace].push_back(std::make_shared<Scope>());
 
 		if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
@@ -858,6 +868,7 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 
 		astnode->catch_block->accept(this);
 		scopes[nmspace].pop_back();
+		gc.collect();
 	}
 }
 
@@ -2714,6 +2725,7 @@ void Interpreter::declare_function_parameter(std::shared_ptr<Scope> scope, const
 		}
 		else {
 			auto var = std::make_shared<RuntimeVariable>(identifier, *value);
+			gc.add_root(var.get());
 			var->set_value(value);
 			scope->declare_variable(identifier, var);
 		}
@@ -2817,6 +2829,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		}
 		auto rest = new RuntimeValue(arr, Type::T_ANY, std::vector<void*>());
 		auto var = std::make_shared<RuntimeVariable>(rest_name, *rest);
+		gc.add_root(var.get());
 		var->set_value(rest);
 		curr_scope->declare_variable(rest_name, var);
 	}

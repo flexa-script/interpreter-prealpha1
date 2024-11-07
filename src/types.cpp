@@ -771,3 +771,11 @@ void RuntimeVariable::reset_ref() {
 	TypeDefinition::reset_ref();
 	use_ref = value && (use_ref || is_struct(value->type));
 }
+
+std::vector<GCObject*> RuntimeVariable::get_references() {
+	std::vector<GCObject*> references;
+
+	references.push_back(value);
+
+	return references;
+}

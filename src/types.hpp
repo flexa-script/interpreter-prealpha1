@@ -326,7 +326,7 @@ public:
 	virtual std::vector<GCObject*> get_references() override;
 };
 
-class RuntimeVariable : public Variable, public std::enable_shared_from_this<RuntimeVariable> {
+class RuntimeVariable : public Variable, public GCObject, public std::enable_shared_from_this<RuntimeVariable> {
 public:
 	RuntimeValue* value;
 
@@ -343,6 +343,8 @@ public:
 	Type def_array_type(Type array_type, const std::vector<void*>& dim);
 
 	void reset_ref() override;
+
+	virtual std::vector<GCObject*> get_references() override;
 };
 
 #endif // !TYPES_HPP

@@ -47,7 +47,9 @@ public:
     void add_root(GCObject* obj);
     void remove_root(GCObject* obj);
 
-    void add_root_container(const IterableOfRuntimeValuePtr auto& iterable);
+    void add_root_container(const IterableOfRuntimeValuePtr auto& iterable) {
+        root_containers.emplace_back(std::make_unique<IterableWrapper<std::decay_t<decltype(iterable)>>>(iterable));
+    }
 
     void mark();
     void mark_object(GCObject* obj);

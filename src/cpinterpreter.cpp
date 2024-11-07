@@ -118,7 +118,7 @@ int CPInterpreter::interpreter() {
 			VirtualMachine vm(compiler.bytecode_program);
 			vm.run();
 
-			result = vm.value_stack.top()->get_i();
+			result = vm.value_stack.back()->get_i();
 		}
 
 		return result;

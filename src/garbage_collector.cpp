@@ -21,9 +21,9 @@ void GarbageCollector::remove_root(GCObject* obj) {
 	roots.erase(obj);
 }
 
-void GarbageCollector::add_root_container(const IterableOfRuntimeValuePtr auto& iterable) {
-	root_containers.emplace_back(std::make_unique<IterableWrapper<std::decay_t<decltype(iterable)>>>(iterable));
-}
+//void GarbageCollector::add_root_container(const IterableOfRuntimeValuePtr auto& iterable) {
+//	root_containers.emplace_back(std::make_unique<IterableWrapper<std::decay_t<decltype(iterable)>>>(iterable));
+//}
 
 void GarbageCollector::mark() {
 	for (GCObject* root : roots) {
