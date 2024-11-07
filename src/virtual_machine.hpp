@@ -20,7 +20,7 @@ using namespace parser;
 
 class VirtualMachine : public MetaVisitor {
 public:
-	std::stack<RuntimeValue*> value_stack;
+	std::vector<RuntimeValue*> value_stack;
 	std::map<std::string, std::function<void()>> builtin_functions;
 	std::vector<RuntimeValue*> builtin_arguments;
 	std::unordered_map<std::string, std::vector<std::shared_ptr<visitor::Scope>>> scopes;

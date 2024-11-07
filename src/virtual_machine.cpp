@@ -15,7 +15,9 @@
 using namespace lexer;
 
 VirtualMachine::VirtualMachine(std::vector<BytecodeInstruction> instructions)
-	: instructions(instructions), gc(GarbageCollector(value_stack)) {}
+	: instructions(instructions), gc(GarbageCollector()) {
+	gc.add_root_container(value_stack);
+}
 
 void VirtualMachine::run() {
 
@@ -38,7 +40,7 @@ void VirtualMachine::run() {
 
 void VirtualMachine::push_empty(Type type) {
 	auto val = gc.allocate(new RuntimeValue(type));
-	value_stack.push(dynamic_cast<RuntimeValue*>(val));
+	value_stack.push_back(dynamic_cast<RuntimeValue*>(val));
 }
 
 RuntimeValue* VirtualMachine::alocate_value(RuntimeValue* value) {
@@ -47,7 +49,7 @@ RuntimeValue* VirtualMachine::alocate_value(RuntimeValue* value) {
 
 void VirtualMachine::push_constant(RuntimeValue* value) {
 	auto val = gc.allocate(value);
-	value_stack.push(dynamic_cast<RuntimeValue*>(val));
+	value_stack.push_back(dynamic_cast<RuntimeValue*>(val));
 }
 
 void VirtualMachine::push_function_constant(const std::string& identifier) {
@@ -56,15 +58,15 @@ void VirtualMachine::push_function_constant(const std::string& identifier) {
 }
 
 void VirtualMachine::binary_operation(const std::string& op) {
-	RuntimeValue* rval = value_stack.top();
-	value_stack.pop();
-	RuntimeValue* lval = value_stack.top();
-	value_stack.pop();
+	RuntimeValue* rval = value_stack.back();
+	value_stack.pop_back();
+	RuntimeValue* lval = value_stack.back();
+	value_stack.pop_back();
 	push_constant(do_operation(op, lval, rval, true));
 }
 
 void VirtualMachine::unary_operation(const std::string& op) {
-	RuntimeValue* value = value_stack.top();
+	RuntimeValue* value = value_stack.back();
 
 	if (op == "ref" || op == "unref") {
 		if (op == "unref") {
@@ -76,7 +78,7 @@ void VirtualMachine::unary_operation(const std::string& op) {
 	}
 	else {
 		if (!value->use_ref) {
-			value_stack.pop();
+			value_stack.pop_back();
 			push_constant(new RuntimeValue(value));
 		}
 
@@ -114,8 +116,8 @@ void VirtualMachine::function_call_operation() {
 	std::vector<RuntimeValue*> function_arguments;
 
 	while (!value_stack.empty()) {
-		RuntimeValue* value = value_stack.top();
-		value_stack.pop();
+		RuntimeValue* value = value_stack.back();
+		value_stack.pop_back();
 
 		signature.insert(signature.begin(), value);
 
@@ -325,7 +327,7 @@ void VirtualMachine::decode_operation() {
 
 		// constant operations
 	case OP_POP_CONSTANT:
-		value_stack.pop();
+		value_stack.pop_back();
 		break;
 	case OP_PUSH_UNDEFINED:
 		push_empty(Type::T_UNDEFINED);
@@ -354,23 +356,23 @@ void VirtualMachine::decode_operation() {
 	case OP_CREATE_ARRAY:{
 		auto size = current_instruction.get_size_operand();
 		auto val = gc.allocate(new RuntimeValue(cp_array(size)));
-		value_stack.push(dynamic_cast<RuntimeValue*>(val));
+		value_stack.push_back(dynamic_cast<RuntimeValue*>(val));
 		break;
 	}
 	case OP_SET_ELEMENT: {
 		RuntimeValue* value = get_stack_top();
-		value_stack.top()->arr[current_instruction.get_size_operand()] = value;
+		value_stack.back()->arr[current_instruction.get_size_operand()] = value;
 		break;
 	}
 	case OP_CREATE_STRUCT: {
 		auto sdef = axe::StringUtils::split(current_instruction.get_string_operand(), ":");
 		auto val = gc.allocate(new RuntimeValue(cp_struct(), sdef[1], sdef[0]));
-		value_stack.push(dynamic_cast<RuntimeValue*>(val));
+		value_stack.push_back(dynamic_cast<RuntimeValue*>(val));
 		break;
 	}
 	case OP_SET_FIELD:{
 		RuntimeValue* value = get_stack_top();
-		value_stack.top()->str[current_instruction.get_string_operand()] = value;
+		value_stack.back()->str[current_instruction.get_string_operand()] = value;
 		break;
 	}
 
@@ -422,8 +424,8 @@ void VirtualMachine::decode_operation() {
 		// todo
 		break;
 	case OP_SET_DEFAULT_VALUE:
-		set_default_value = value_stack.top();
-		value_stack.pop();
+		set_default_value = value_stack.back();
+		value_stack.pop_back();
 		break;
 	case OP_SET_IS_REST:
 		set_is_rest = current_instruction.get_bool_operand();
@@ -668,8 +670,8 @@ void VirtualMachine::decode_operation() {
 }
 
 RuntimeValue* VirtualMachine::get_stack_top() {
-	auto value = value_stack.top();
-	value_stack.pop();
+	auto value = value_stack.back();
+	value_stack.pop_back();
 	return value;
 }
 

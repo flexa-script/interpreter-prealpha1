@@ -1,7 +1,6 @@
 #include "garbage_collector.hpp"
 
-GarbageCollector::GarbageCollector(std::stack<RuntimeValue*>& value_stack)
-	: value_stack(value_stack) {}
+GarbageCollector::GarbageCollector() {}
 
 GarbageCollector::~GarbageCollector() {
 	for (GCObject* obj : heap) {
@@ -22,15 +21,25 @@ void GarbageCollector::remove_root(GCObject* obj) {
 	roots.erase(obj);
 }
 
+void GarbageCollector::add_root_container(const IterableOfRuntimeValuePtr auto& iterable) {
+	root_containers.emplace_back(std::make_unique<IterableWrapper<std::decay_t<decltype(iterable)>>>(iterable));
+}
+
 void GarbageCollector::mark() {
 	for (GCObject* root : roots) {
 		mark_object(root);
 	}
 
-	const std::deque<RuntimeValue*>& value_stack_container = value_stack._Get_container();
+	//const std::deque<RuntimeValue*>& value_stack_container = value_stack._Get_container();
 
-	for (GCObject* root : value_stack_container) {
-		mark_object(root);
+	//for (GCObject* root : value_stack_container) {
+	//	mark_object(root);
+	//}
+
+	for (const auto& iterable_ptr : root_containers) {
+		for (auto item : *iterable_ptr) {
+			mark_object(item);
+		}
 	}
 }
 

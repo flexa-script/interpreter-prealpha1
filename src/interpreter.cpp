@@ -8,6 +8,7 @@
 #include "exception_handler.hpp"
 #include "token.hpp"
 #include "builtin.hpp"
+#include "garbage_collector.hpp"
 
 #include "vendor/axeutils.hpp"
 #include "vendor/axewatch.hpp"
