@@ -17,33 +17,6 @@ void GarbageCollector::add_root(std::variant<std::weak_ptr<GCObject>, RuntimeVal
 	roots.push_back(obj);
 }
 
-//void GarbageCollector::remove_root(std::variant<std::weak_ptr<GCObject>, RuntimeValue**> obj) {
-//	std::visit([this](auto&& arg) {
-//		using T = std::decay_t<decltype(arg)>;
-//
-//		if constexpr (std::is_same_v<T, std::weak_ptr<GCObject>>) {
-//			if (auto obj_ptr = arg.lock()) {
-//				auto it = std::find_if(roots.begin(), roots.end(), [&obj_ptr](const std::weak_ptr<GCObject>& root) {
-//					return !root.owner_before(obj_ptr) && !obj_ptr.owner_before(root);
-//					});
-//
-//				if (it != roots.end()) {
-//					roots.erase(it);
-//				}
-//			}
-//		}
-//		else if constexpr (std::is_same_v<T, RuntimeValue**>) {
-//			auto it = std::find_if(roots.begin(), roots.end(), [arg](const RuntimeValue** root) {
-//				return root == arg;
-//				});
-//
-//			if (it != roots.end()) {
-//				roots.erase(it);
-//			}
-//		}
-//		}, obj);
-//}
-
 void GarbageCollector::remove_root(std::variant<std::weak_ptr<GCObject>, RuntimeValue**> obj) {
 	std::visit([this](auto&& arg) {
 		using T = std::decay_t<decltype(arg)>;
@@ -85,9 +58,10 @@ void GarbageCollector::remove_root(std::variant<std::weak_ptr<GCObject>, Runtime
 		}, obj);
 }
 
-//void GarbageCollector::add_root_container(const IterableOfRuntimeValuePtr auto& iterable) {
-//	root_containers.emplace_back(std::make_unique<IterableWrapper<std::decay_t<decltype(iterable)>>>(iterable));
-//}
+void GarbageCollector::add_root_container(std::vector<RuntimeValue*>& root_container) {
+	root_containers.emplace_back(root_container);
+}
+
 
 void GarbageCollector::mark() {
 	size_t i = 0;
@@ -109,14 +83,8 @@ void GarbageCollector::mark() {
 		++i;
 	}
 
-	//const std::deque<RuntimeValue*>& value_stack_container = value_stack._Get_container();
-
-	//for (GCObject* root : value_stack_container) {
-	//	mark_object(root);
-	//}
-
 	for (const auto& iterable_ptr : root_containers) {
-		for (auto item : *iterable_ptr) {
+		for (auto item : iterable_ptr) {
 			mark_object(item);
 		}
 	}

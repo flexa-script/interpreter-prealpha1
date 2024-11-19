@@ -198,7 +198,7 @@ public:
 
 class Value : public TypeDefinition {
 public:
-	std::shared_ptr<Variable> ref = nullptr;
+	std::weak_ptr<Variable> ref;
 
 	Value(Type type, Type array_type, std::vector<void*> dim,
 		const std::string& type_name, const std::string& type_name_space);

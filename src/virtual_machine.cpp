@@ -543,8 +543,8 @@ void VirtualMachine::decode_operation() {
 		RuntimeValue* res_value = new RuntimeValue(Type::T_BOOL);
 		if (is_any(type)) {
 			res_value->set(cp_bool(
-				(value->ref && (is_any(value->ref->type))
-					|| is_any(value->ref->array_type))));
+				(value->ref.lock() && (is_any(value->ref.lock()->type))
+					|| is_any(value->ref.lock()->array_type))));
 			return;
 		}
 		else if (is_array(type)) {
@@ -982,11 +982,11 @@ std::string VirtualMachine::parse_struct_to_string(const RuntimeValue* value) {
 }
 
 RuntimeValue* VirtualMachine::do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, bool is_expr, cp_int str_pos) {
-	Type l_var_type = lval->ref ? lval->ref->type : lval->type;
-	Type l_var_array_type = lval->ref ? lval->ref->array_type : lval->array_type;
+	Type l_var_type = lval->ref.lock() ? lval->ref.lock()->type : lval->type;
+	Type l_var_array_type = lval->ref.lock() ? lval->ref.lock()->array_type : lval->array_type;
 	Type l_type = is_undefined(lval->type) ? l_var_type : lval->type;
-	Type r_var_type = rval->ref ? rval->ref->type : rval->type;
-	Type r_var_array_type = rval->ref ? rval->ref->array_type : rval->array_type;
+	Type r_var_type = rval->ref.lock() ? rval->ref.lock()->type : rval->type;
+	Type r_var_array_type = rval->ref.lock() ? rval->ref.lock()->array_type : rval->array_type;
 	Type r_type = rval->type;
 	RuntimeValue* res_value = nullptr;
 

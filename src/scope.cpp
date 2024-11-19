@@ -176,7 +176,7 @@ void Scope::declare_structure_definition(StructureDefinition structure) {
 	structure_symbol_table[structure.identifier] = structure;
 }
 
-void Scope::declare_variable(const std::string& identifier, std::shared_ptr<Variable> variable) {
+void Scope::declare_variable(const std::string& identifier, const std::shared_ptr<Variable>& variable) {
 	variable_symbol_table[identifier] = variable;
 }
 

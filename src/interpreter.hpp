@@ -28,7 +28,6 @@ namespace visitor {
 
 	private:
 		GarbageCollector gc;
-		//std::vector<RuntimeValue*&> current_expression_value_root;
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&Interpreter::evaluate_access_vector, this, std::placeholders::_1);
 		std::string function_call_name;
 		std::string return_from_function_name;
