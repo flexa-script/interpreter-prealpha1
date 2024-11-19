@@ -6,6 +6,7 @@
 #include <memory>
 #include <ranges>
 #include <type_traits>
+#include <variant>
 
 #include "gcobject.hpp"
 #include "types.hpp"
@@ -35,7 +36,7 @@ struct IterableWrapper : IterableWrapperBase {
 class GarbageCollector {
 private:
     std::vector<GCObject*> heap;
-    std::unordered_set<GCObject*> roots;
+    std::vector<std::variant<std::weak_ptr<GCObject>, RuntimeValue**>> roots;
     std::vector<std::unique_ptr<IterableWrapperBase>> root_containers;
 
 public:
@@ -44,8 +45,8 @@ public:
 
     GCObject* allocate(GCObject* obj);
 
-    void add_root(GCObject* obj);
-    void remove_root(GCObject* obj);
+    void add_root(std::variant<std::weak_ptr<GCObject>, RuntimeValue**> obj);
+    void remove_root(std::variant<std::weak_ptr<GCObject>, RuntimeValue**> obj);
 
     void add_root_container(const IterableOfRuntimeValuePtr auto& iterable) {
         root_containers.emplace_back(std::make_unique<IterableWrapper<std::decay_t<decltype(iterable)>>>(iterable));

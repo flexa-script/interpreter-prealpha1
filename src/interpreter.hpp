@@ -28,6 +28,7 @@ namespace visitor {
 
 	private:
 		GarbageCollector gc;
+		//std::vector<RuntimeValue*&> current_expression_value_root;
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&Interpreter::evaluate_access_vector, this, std::placeholders::_1);
 		std::string function_call_name;
 		std::string return_from_function_name;
@@ -83,6 +84,8 @@ namespace visitor {
 		std::shared_ptr<Scope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
 		std::shared_ptr<Scope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition*>* signature, bool strict = true);
 		std::shared_ptr<Scope> get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
+
+		RuntimeValue* alocate_value(RuntimeValue* value);
 
 		RuntimeValue* set_value(std::shared_ptr<Scope> scope, const std::vector<Identifier>& identifier_vector, RuntimeValue* new_value);
 		RuntimeValue* access_value(const std::shared_ptr<Scope> scope, RuntimeValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);

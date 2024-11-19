@@ -17,12 +17,14 @@
 using namespace lexer;
 
 Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
-	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace),
-	current_expression_value(new RuntimeValue(Type::T_UNDEFINED)) {
+	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
 	scopes[default_namespace].push_back(global_scope);
+	current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 
 	auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
 	builtin->register_functions(this);
+
+	gc.add_root(&current_expression_value);
 }
 
 void Interpreter::start() {
@@ -53,7 +55,7 @@ void Interpreter::visit(ASTProgramNode* astnode) {
 	if (astnode->statements.size() > 1
 		|| astnode->statements.size() > 0
 		&& !dynamic_cast<ASTExprNode*>(astnode->statements[0])) {
-		current_expression_value = new RuntimeValue(Type::T_UNDEFINED);
+		current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 	}
 }
 
@@ -113,10 +115,14 @@ void Interpreter::visit(ASTEnumNode* astnode) {
 	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		auto var = std::make_shared<RuntimeVariable>(astnode->identifiers[i], Type::T_INT, Type::T_UNDEFINED, std::vector<void*>(), "", "");
-		gc.add_root(var.get());
-		var->set_value(new RuntimeValue(cp_int(i)));
+		gc.add_root(var);
+		var->set_value(alocate_value(new RuntimeValue(cp_int(i))));
 		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], var);
 	}
+}
+
+RuntimeValue* Interpreter::alocate_value(RuntimeValue* value) {
+	return dynamic_cast<RuntimeValue*>(gc.allocate(value));
 }
 
 void Interpreter::visit(ASTDeclarationNode* astnode) {
@@ -127,7 +133,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		astnode->expr->accept(this);
 	}
 	else {
-		current_expression_value = new RuntimeValue(Type::T_UNDEFINED);
+		current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 	}
 
 	RuntimeValue* new_value;
@@ -136,7 +142,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 		new_value = current_expression_value;
 	}
 	else {
-		new_value = new RuntimeValue(current_expression_value);
+		new_value = alocate_value(new RuntimeValue(current_expression_value));
 	}
 
 	auto& astnode_type_name = astnode->type_name.empty() ? new_value->type_name : astnode->type_name;
@@ -144,7 +150,7 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	auto new_var = std::make_shared<RuntimeVariable>(astnode->identifier, astnode->type,
 		astnode->array_type, astnode->dim,
 		astnode_type_name, astnode->type_name_space);
-	gc.add_root(new_var.get());
+	gc.add_root(new_var);
 	new_var->set_value(new_value);
 
 	if ((!TypeDefinition::is_any_or_match_type(*new_var, *new_value, evaluate_access_vector_ptr) ||
@@ -210,7 +216,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 		new_value = ptr_value;
 	}
 	else {
-		new_value = new RuntimeValue(ptr_value);
+		new_value = alocate_value(new RuntimeValue(ptr_value));
 	}
 
 	auto arr = new_value->get_arr();
@@ -238,7 +244,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	}
 	else {
 		if (astnode->identifier_vector.size() == 1 && astnode->identifier_vector[0].access_vector.size() == 0) {
-			variable->set_value(new RuntimeValue(variable->get_value()));
+			variable->set_value(alocate_value(new RuntimeValue(variable->get_value())));
 			value = variable->get_value();
 		}
 
@@ -286,7 +292,7 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 			static_cast<ASTExprNode*>(current_function_call_identifier_vector.top().back().access_vector[current_function_call_identifier_vector.top().back().access_vector.size() - 1])->accept(this);
 			auto pos = value->get_i();
 
-			auto char_value = new RuntimeValue(Type::T_CHAR);
+			auto char_value = alocate_value(new RuntimeValue(Type::T_CHAR));
 			char_value->set(cp_char(str[pos]));
 			value = char_value;
 		}
@@ -300,11 +306,11 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 			current_expression_value = value;
 		}
 		else {
-			current_expression_value = new RuntimeValue(value);
+			current_expression_value = alocate_value(new RuntimeValue(value));
 		}
 	}
 	else {
-		current_expression_value = new RuntimeValue(Type::T_UNDEFINED);
+		current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 	}
 
 	for (long long i = scopes[nmspace].size() - 1; i >= 0; --i) {
@@ -329,14 +335,14 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
 
-		signature.push_back(new RuntimeValue(current_expression_value));
+		signature.push_back(alocate_value(new RuntimeValue(current_expression_value)));
 
 		RuntimeValue* pvalue = nullptr;
 		if (current_expression_value->use_ref) {
 			pvalue = current_expression_value;
 		}
 		else {
-			pvalue = new RuntimeValue(current_expression_value);
+			pvalue = alocate_value(new RuntimeValue(current_expression_value));
 		}
 
 		function_arguments.push_back(pvalue);
@@ -428,7 +434,7 @@ void Interpreter::visit(ASTFunctionExpression* astnode) {
 
 	fun->accept(this);
 
-	auto value = new RuntimeValue(Type::T_FUNCTION);
+	auto value = alocate_value(new RuntimeValue(Type::T_FUNCTION));
 	value->set(cp_function(nmspace, fun->identifier));
 	current_expression_value = value;
 }
@@ -620,7 +626,7 @@ void Interpreter::visit(ASTForNode* astnode) {
 		}
 	}
 	else {
-		current_expression_value = new RuntimeValue(Type::T_BOOL);
+		current_expression_value = alocate_value(new RuntimeValue(Type::T_BOOL));
 		current_expression_value->set(true);
 	}
 
@@ -658,7 +664,7 @@ void Interpreter::visit(ASTForNode* astnode) {
 			}
 		}
 		else {
-			current_expression_value = new RuntimeValue(Type::T_BOOL);
+			current_expression_value = alocate_value(new RuntimeValue(Type::T_BOOL));
 			current_expression_value->set(true);
 		}
 
@@ -721,7 +727,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		for (auto val : colletion) {
 			astnode->itdecl->accept(this);
 
-			auto exnode = new ASTValueNode(new RuntimeValue(cp_char(val)), astnode->row, astnode->col);
+			auto exnode = new ASTValueNode(alocate_value(new RuntimeValue(cp_char(val))), astnode->row, astnode->col);
 			itdecl->expr = exnode;
 			itdecl->accept(this);
 			itdecl->expr = nullptr;
@@ -900,7 +906,7 @@ void Interpreter::visit(parser::ASTThrowNode* astnode) {
 void Interpreter::visit(parser::ASTReticencesNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new RuntimeValue(Type::T_UNDEFINED);
+	auto value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 	value->set_undefined();
 	current_expression_value = value;
 }
@@ -1009,7 +1015,7 @@ void Interpreter::visit(ASTValueNode* astnode) {
 void Interpreter::visit(ASTLiteralNode<cp_bool>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new RuntimeValue(Type::T_BOOL);
+	auto value = alocate_value(new RuntimeValue(Type::T_BOOL));
 	value->set(astnode->val);
 	current_expression_value = value;
 }
@@ -1017,7 +1023,7 @@ void Interpreter::visit(ASTLiteralNode<cp_bool>* astnode) {
 void Interpreter::visit(ASTLiteralNode<cp_int>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new RuntimeValue(Type::T_INT);
+	auto value = alocate_value(new RuntimeValue(Type::T_INT));
 	value->set(astnode->val);
 	current_expression_value = value;
 }
@@ -1025,7 +1031,7 @@ void Interpreter::visit(ASTLiteralNode<cp_int>* astnode) {
 void Interpreter::visit(ASTLiteralNode<cp_float>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new RuntimeValue(Type::T_FLOAT);
+	auto value = alocate_value(new RuntimeValue(Type::T_FLOAT));
 	value->set(astnode->val);
 	current_expression_value = value;
 }
@@ -1033,7 +1039,7 @@ void Interpreter::visit(ASTLiteralNode<cp_float>* astnode) {
 void Interpreter::visit(ASTLiteralNode<cp_char>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new RuntimeValue(Type::T_CHAR);
+	auto value = alocate_value(new RuntimeValue(Type::T_CHAR));
 	value->set(astnode->val);
 	current_expression_value = value;
 }
@@ -1041,7 +1047,7 @@ void Interpreter::visit(ASTLiteralNode<cp_char>* astnode) {
 void Interpreter::visit(ASTLiteralNode<cp_string>* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new RuntimeValue(Type::T_STRING);
+	auto value = alocate_value(new RuntimeValue(Type::T_STRING));
 	value->set(astnode->val);
 	current_expression_value = value;
 }
@@ -1049,7 +1055,7 @@ void Interpreter::visit(ASTLiteralNode<cp_string>* astnode) {
 void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = new RuntimeValue(Type::T_ARRAY);
+	auto value = alocate_value(new RuntimeValue(Type::T_ARRAY));
 	Type arr_t = Type::T_ANY;
 	cp_array arr = cp_array(astnode->values.size());
 
@@ -1085,7 +1091,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 			arr_value = current_expression_value;
 		}
 		else {
-			arr_value = new RuntimeValue(current_expression_value);
+			arr_value = alocate_value(new RuntimeValue(current_expression_value));
 		}
 		arr[i] = arr_value;
 	}
@@ -1133,7 +1139,7 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 	}
 	auto type_struct = curr_scope->find_declared_structure_definition(astnode->type_name);
 
-	auto value = new RuntimeValue(Type::T_STRUCT);
+	auto value = alocate_value(new RuntimeValue(Type::T_STRUCT));
 
 	auto str = cp_struct();
 
@@ -1152,7 +1158,7 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 		}
 
 		if (!current_expression_value->use_ref) {
-			str_value = new RuntimeValue(str_value);
+			str_value = alocate_value(new RuntimeValue(str_value));
 		}
 
 		std::vector<unsigned int> dim;
@@ -1175,7 +1181,7 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 	// declare rest values as null
 	for (auto& struct_var_def : type_struct.variables) {
 		if (str.find(struct_var_def.first) == str.end()) {
-			RuntimeValue* str_value = new RuntimeValue(struct_var_def.second.type);
+			RuntimeValue* str_value = alocate_value(new RuntimeValue(struct_var_def.second.type));
 			str_value->set_null();
 			str[struct_var_def.first] = str_value;
 		}
@@ -1198,7 +1204,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	catch (...) {
 		const auto& dim = astnode->identifier_vector[0].access_vector;
 		auto type = Type::T_UNDEFINED;
-		auto expression_value = new RuntimeValue(Type::T_UNDEFINED);
+		auto expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 
 		if (astnode->identifier == "bool") {
 			type = Type::T_BOOL;
@@ -1230,7 +1236,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 					auto fun = cp_function();
 					fun.first = nmspace;
 					fun.second = astnode->identifier;
-					current_expression_value = new RuntimeValue(Type::T_FUNCTION);
+					current_expression_value = alocate_value(new RuntimeValue(Type::T_FUNCTION));
 					current_expression_value->set(fun);
 					return;
 				}
@@ -1248,10 +1254,10 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 		if (dim.size() > 0) {
 			cp_array arr = build_array(dim, expression_value, dim.size() - 1);
 
-			current_expression_value = new RuntimeValue(arr, type, dim);
+			current_expression_value = alocate_value(new RuntimeValue(arr, type, dim));
 		}
 		else {
-			current_expression_value = new RuntimeValue(expression_value);
+			current_expression_value = alocate_value(new RuntimeValue(expression_value));
 		}
 
 		return;
@@ -1269,7 +1275,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 		static_cast<ASTExprNode*>(astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1])->accept(this);
 		auto pos = current_expression_value->get_i();
 
-		auto char_value = new RuntimeValue(Type::T_CHAR);
+		auto char_value = alocate_value(new RuntimeValue(Type::T_CHAR));
 		char_value->set(cp_char(str[pos]));
 		current_expression_value = char_value;
 	}
@@ -1286,7 +1292,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 		l_value = current_expression_value;
 	}
 	else {
-		l_value = new RuntimeValue(current_expression_value);
+		l_value = alocate_value(new RuntimeValue(current_expression_value));
 	}
 
 	if (is_bool(current_expression_value->type) && astnode->op == "and" && !current_expression_value->get_b()) {
@@ -1299,7 +1305,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 		r_value = current_expression_value;
 	}
 	else {
-		r_value = new RuntimeValue(current_expression_value);
+		r_value = alocate_value(new RuntimeValue(current_expression_value));
 	}
 
 	current_expression_value = do_operation(astnode->op, l_value, r_value, true, 0);
@@ -1346,7 +1352,7 @@ void Interpreter::visit(ASTInNode* astnode) {
 		}
 	}
 
-	auto value = new RuntimeValue(cp_bool(res));
+	auto value = alocate_value(new RuntimeValue(cp_bool(res)));
 	current_expression_value = value;
 }
 
@@ -1380,7 +1386,7 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 		}
 		else {
 			if (!current_expression_value->use_ref) {
-				current_expression_value = new RuntimeValue(current_expression_value);
+				current_expression_value = alocate_value(new RuntimeValue(current_expression_value));
 			}
 
 			switch (current_expression_value->type) {
@@ -1424,7 +1430,7 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 
 	astnode->expr->accept(this);
 
-	RuntimeValue* new_value = new RuntimeValue();
+	RuntimeValue* new_value = alocate_value(new RuntimeValue());
 
 	switch (astnode->type) {
 	case Type::T_BOOL:
@@ -1535,13 +1541,13 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 void Interpreter::visit(ASTNullNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	current_expression_value = new RuntimeValue(Type::T_VOID);
+	current_expression_value = alocate_value(new RuntimeValue(Type::T_VOID));
 }
 
 void Interpreter::visit(ASTThisNode* astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	current_expression_value = new RuntimeValue(cp_string(current_this_name.top()));
+	current_expression_value = alocate_value(new RuntimeValue(cp_string(current_this_name.top())));
 }
 
 void Interpreter::visit(ASTTypingNode* astnode) {
@@ -1550,12 +1556,12 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 	astnode->expr->accept(this);
 
 	if (astnode->image == "refid") {
-		current_expression_value = new RuntimeValue(cp_int(current_expression_value));
+		current_expression_value = alocate_value(new RuntimeValue(cp_int(current_expression_value)));
 		return;
 	}
 
 	if (astnode->image == "is_any") {
-		auto value = new RuntimeValue(Type::T_BOOL);
+		auto value = alocate_value(new RuntimeValue(Type::T_BOOL));
 		value->set(cp_bool(
 			(current_expression_value->ref
 				&& (is_any(current_expression_value->ref->type))
@@ -1564,13 +1570,13 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 		return;
 	}
 	else if (astnode->image == "is_array") {
-		auto value = new RuntimeValue(Type::T_BOOL);
+		auto value = alocate_value(new RuntimeValue(Type::T_BOOL));
 		value->set(cp_bool(is_array(current_expression_value->type) || current_expression_value->dim.size() > 0));
 		current_expression_value = value;
 		return;
 	}
 	else if (astnode->image == "is_struct") {
-		auto value = new RuntimeValue(Type::T_BOOL);
+		auto value = alocate_value(new RuntimeValue(Type::T_BOOL));
 		value->set(cp_bool(is_struct(current_expression_value->type) || is_struct(current_expression_value->array_type)));
 		current_expression_value = value;
 		return;
@@ -1612,12 +1618,12 @@ void Interpreter::visit(ASTTypingNode* astnode) {
 	}
 
 	if (astnode->image == "typeid") {
-		auto value = new RuntimeValue(Type::T_INT);
+		auto value = alocate_value(new RuntimeValue(Type::T_INT));
 		value->set(cp_int(axe::StringUtils::hashcode(str_type)));
 		current_expression_value = value;
 	}
 	else {
-		auto value = new RuntimeValue(Type::T_STRING);
+		auto value = alocate_value(new RuntimeValue(Type::T_STRING));
 		value->set(cp_string(str_type));
 		current_expression_value = value;
 	}
@@ -1783,7 +1789,7 @@ RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::ve
 		auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
 		if (access_vector.size() > 0) {
-			auto& current_val = value->arr;
+			auto* current_val = &value->arr;
 			size_t s = 0;
 			size_t access_pos = 0;
 
@@ -1791,14 +1797,14 @@ RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::ve
 				access_pos = access_vector.at(s);
 
 				// break if it is a string, and the string access will be handled in identifier node evaluation
-				if (is_string(current_val[access_pos]->type)) {
-					current_val[access_pos]->get_s()[access_vector.at(s + 1)] = new_value->get_c();
-					return current_val[access_pos];
+				if (is_string((*current_val)[access_pos]->type)) {
+					(*current_val)[access_pos]->get_s()[access_vector.at(s + 1)] = new_value->get_c();
+					return (*current_val)[access_pos];
 				}
-				if (access_pos >= current_val.size()) {
+				if (access_pos >= current_val->size()) {
 					throw std::runtime_error("invalid array position access");
 				}
-				current_val = current_val[access_pos]->arr;
+				current_val = &(*current_val)[access_pos]->arr;
 			}
 			if (is_string(value->type)) {
 				value->get_s()[access_vector.at(s)] = new_value->get_c();
@@ -1806,10 +1812,10 @@ RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::ve
 			}
 			access_pos = access_vector.at(s);
 			if (i == identifier_vector.size() - 1) {
-				current_val[access_pos] = new_value;
+				(*current_val)[access_pos] = new_value;
 			}
 			else {
-				value = current_val[access_pos];
+				value = (*current_val)[access_pos];
 			}
 		}
 
@@ -1845,28 +1851,28 @@ RuntimeValue* Interpreter::access_value(const std::shared_ptr<Scope> scope, Runt
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
 	if (access_vector.size() > 0) {
-		auto current_val = next_value->arr;
+		auto* current_val = &next_value->arr;
 		size_t s = 0;
 		size_t access_pos = 0;
 
 		for (s = 0; s < access_vector.size() - 1; ++s) {
 			access_pos = access_vector.at(s);
 			// break if it is a string, and the string access will be handled in identifier node evaluation
-			if (current_val[access_pos]->type == Type::T_STRING) {
+			if (is_string((*current_val)[access_pos]->type)) {
 				has_string_access = true;
 				break;
 			}
-			if (access_pos >= current_val.size()) {
+			if (access_pos >= current_val->size()) {
 				throw std::runtime_error("invalid array position access");
 			}
-			current_val = current_val[access_pos]->arr;
+			current_val = &(*current_val)[access_pos]->arr;
 		}
 		if (is_string(next_value->type)) {
 			has_string_access = true;
 			return next_value;
 		}
 		access_pos = access_vector.at(s);
-		next_value = current_val[access_pos];
+		next_value = (*current_val)[access_pos];
 	}
 
 	++i;
@@ -1939,7 +1945,7 @@ cp_array Interpreter::build_array(const std::vector<void*>& dim, RuntimeValue* i
 	raw_arr = cp_array(size);
 
 	for (size_t j = 0; j < size; ++j) {
-		auto val = new RuntimeValue(init_value);
+		auto val = alocate_value(new RuntimeValue(init_value));
 
 		if (is_undefined(current_expression_array_type.type) || is_array(current_expression_array_type.type)) {
 			current_expression_array_type = *val;
@@ -1959,8 +1965,8 @@ cp_array Interpreter::build_array(const std::vector<void*>& dim, RuntimeValue* i
 			--curr_dim_i;
 		}
 
-		auto val = new RuntimeValue(raw_arr, current_expression_array_type.array_type, curr_arr_dim,
-			current_expression_array_type.type_name, current_expression_array_type.type_name_space);
+		auto val = alocate_value(new RuntimeValue(raw_arr, current_expression_array_type.array_type, curr_arr_dim,
+			current_expression_array_type.type_name, current_expression_array_type.type_name_space));
 
 		return build_array(dim, val, i);
 	}
@@ -2146,16 +2152,16 @@ RuntimeValue* Interpreter::do_operation(const std::string& op, RuntimeValue* lva
 
 	if ((is_void(l_type) || is_void(r_type))
 		&& Token::is_equality_op(op)) {
-		return new RuntimeValue((cp_bool)((op == "==") ?
+		return alocate_value(new RuntimeValue((cp_bool)((op == "==") ?
 			match_type(l_type, r_type)
-			: !match_type(l_type, r_type)));
+			: !match_type(l_type, r_type))));
 	}
 
 	if (lval->use_ref
 		&& Token::is_equality_op(op)) {
-		return new RuntimeValue((cp_bool)((op == "==") ?
+		return alocate_value(new RuntimeValue((cp_bool)((op == "==") ?
 			lval == rval
-			: lval != rval));
+			: lval != rval)));
 	}
 
 	switch (r_type) {
@@ -2173,16 +2179,16 @@ RuntimeValue* Interpreter::do_operation(const std::string& op, RuntimeValue* lva
 			lval->set(rval->get_b());
 		}
 		else if (op == "and") {
-			res_value = new RuntimeValue((cp_bool)(lval->get_b() && rval->get_b()));
+			res_value = alocate_value(new RuntimeValue((cp_bool)(lval->get_b() && rval->get_b())));
 		}
 		else if (op == "or") {
-			res_value = new RuntimeValue((cp_bool)(lval->get_b() || rval->get_b()));
+			res_value = alocate_value(new RuntimeValue((cp_bool)(lval->get_b() || rval->get_b())));
 		}
 		else if (op == "==") {
-			res_value = new RuntimeValue((cp_bool)(lval->get_b() == rval->get_b()));
+			res_value = alocate_value(new RuntimeValue((cp_bool)(lval->get_b() == rval->get_b())));
 		}
 		else if (op == "!=") {
-			res_value = new RuntimeValue((cp_bool)(lval->get_b() != rval->get_b()));
+			res_value = alocate_value(new RuntimeValue((cp_bool)(lval->get_b() != rval->get_b())));
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
@@ -2199,7 +2205,7 @@ RuntimeValue* Interpreter::do_operation(const std::string& op, RuntimeValue* lva
 		if (is_expr
 			&& is_numeric(l_type)
 			&& op == "<=>") {
-			res_value = new RuntimeValue((cp_int)(do_spaceship_operation(op, lval, rval)));
+			res_value = alocate_value(new RuntimeValue((cp_int)(do_spaceship_operation(op, lval, rval))));
 
 			break;
 		}
@@ -2207,7 +2213,7 @@ RuntimeValue* Interpreter::do_operation(const std::string& op, RuntimeValue* lva
 		if (is_expr
 			&& is_numeric(l_type)
 			&& Token::is_relational_op(op)) {
-			res_value = new RuntimeValue(do_relational_operation(op, lval, rval));
+			res_value = alocate_value(new RuntimeValue(do_relational_operation(op, lval, rval)));
 
 			break;
 		}
@@ -2218,8 +2224,8 @@ RuntimeValue* Interpreter::do_operation(const std::string& op, RuntimeValue* lva
 			cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
 			cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
-			res_value = new RuntimeValue((cp_bool)(op == "==" ?
-				l == r : l != r));
+			res_value = alocate_value(new RuntimeValue((cp_bool)(op == "==" ?
+				l == r : l != r)));
 
 			break;
 		}
@@ -2249,7 +2255,7 @@ RuntimeValue* Interpreter::do_operation(const std::string& op, RuntimeValue* lva
 		if (is_expr
 			&& is_numeric(l_type)
 			&& op == "<=>") {
-			res_value = new RuntimeValue(do_spaceship_operation(op, lval, rval));
+			res_value = alocate_value(new RuntimeValue(do_spaceship_operation(op, lval, rval)));
 
 			break;
 		}
@@ -2268,8 +2274,8 @@ RuntimeValue* Interpreter::do_operation(const std::string& op, RuntimeValue* lva
 			cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
 			cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
-			res_value = new RuntimeValue((cp_bool)(op == "==" ?
-				l == r : l != r));
+			res_value = alocate_value(new RuntimeValue((cp_bool)(op == "==" ?
+				l == r : l != r)));
 
 			break;
 		}
@@ -2295,9 +2301,9 @@ RuntimeValue* Interpreter::do_operation(const std::string& op, RuntimeValue* lva
 		if (is_expr
 			&& is_char(l_type)
 			&& Token::is_equality_op(op)) {
-			res_value = new RuntimeValue((cp_bool)(op == "==" ?
+			res_value = alocate_value(new RuntimeValue((cp_bool)(op == "==" ?
 				lval->get_c() == rval->get_c()
-				: lval->get_c() != lval->get_c()));
+				: lval->get_c() != lval->get_c())));
 
 			break;
 		}
@@ -2349,9 +2355,9 @@ RuntimeValue* Interpreter::do_operation(const std::string& op, RuntimeValue* lva
 				int x = 0;
 			}
 
-			res_value = new RuntimeValue((cp_bool)(op == "==" ?
+			res_value = alocate_value(new RuntimeValue((cp_bool)(op == "==" ?
 				lval->get_s() == rval->get_s()
-				: lval->get_s() != rval->get_s()));
+				: lval->get_s() != rval->get_s())));
 
 			break;
 		}
@@ -2377,9 +2383,9 @@ RuntimeValue* Interpreter::do_operation(const std::string& op, RuntimeValue* lva
 		if (is_expr
 			&& is_array(l_type)
 			&& Token::is_equality_op(op)) {
-			res_value = new RuntimeValue((cp_bool)(op == "==" ?
+			res_value = alocate_value(new RuntimeValue((cp_bool)(op == "==" ?
 				equals_value(lval, rval)
-				: !equals_value(lval, rval)));
+				: !equals_value(lval, rval))));
 
 			break;
 		}
@@ -2408,9 +2414,9 @@ RuntimeValue* Interpreter::do_operation(const std::string& op, RuntimeValue* lva
 		if (is_expr
 			&& is_struct(l_type)
 			&& Token::is_equality_op(op)) {
-			res_value = new RuntimeValue((cp_bool)(op == "==" ?
+			res_value = alocate_value(new RuntimeValue((cp_bool)(op == "==" ?
 				equals_value(lval, rval)
-				: !equals_value(lval, rval)));
+				: !equals_value(lval, rval))));
 
 			break;
 		}
@@ -2725,7 +2731,7 @@ void Interpreter::declare_function_parameter(std::shared_ptr<Scope> scope, const
 		}
 		else {
 			auto var = std::make_shared<RuntimeVariable>(identifier, *value);
-			gc.add_root(var.get());
+			gc.add_root(var);
 			var->set_value(value);
 			scope->declare_variable(identifier, var);
 		}
@@ -2773,7 +2779,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			current_value = current_function_calling_argument;
 		}
 		else {
-			current_value = new RuntimeValue(current_function_calling_argument);
+			current_value = alocate_value(new RuntimeValue(current_function_calling_argument));
 			current_value->ref = nullptr;
 		}
 
@@ -2801,7 +2807,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			}
 			else if (const auto decls = dynamic_cast<UnpackedVariableDefinition*>(current_function_defined_parameters.top()[i])) {
 				for (auto& decl : decls->variables) {
-					auto sub_value = new RuntimeValue(current_value->get_str()[decl.identifier]);
+					auto sub_value = alocate_value(new RuntimeValue(current_value->get_str()[decl.identifier]));
 					declare_function_parameter(curr_scope, decl.identifier, sub_value);
 				}
 			}
@@ -2816,7 +2822,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 			}
 
 			static_cast<ASTExprNode*>(decl->default_value)->accept(this);
-			auto current_value = new RuntimeValue(current_expression_value);
+			auto current_value = alocate_value(new RuntimeValue(current_expression_value));
 
 			declare_function_parameter(curr_scope, decl->identifier, current_value);
 		}
@@ -2827,9 +2833,9 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		for (size_t i = 0; i < vec.size(); ++i) {
 			arr[i] = vec[i];
 		}
-		auto rest = new RuntimeValue(arr, Type::T_ANY, std::vector<void*>());
+		auto rest = alocate_value(new RuntimeValue(arr, Type::T_ANY, std::vector<void*>()));
 		auto var = std::make_shared<RuntimeVariable>(rest_name, *rest);
-		gc.add_root(var.get());
+		gc.add_root(var);
 		var->set_value(rest);
 		curr_scope->declare_variable(rest_name, var);
 	}
@@ -2850,7 +2856,7 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 			current_value = current_function_calling_arguments.top()[i];
 		}
 		else {
-			current_value = new RuntimeValue(current_function_calling_arguments.top()[i]);
+			current_value = alocate_value(new RuntimeValue(current_function_calling_arguments.top()[i]));
 			current_value->ref = nullptr;
 		}
 
@@ -2878,7 +2884,7 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 
 			static_cast<ASTExprNode*>(decl->default_value)->accept(this);
 
-			builtin_arguments.push_back(new RuntimeValue(current_expression_value));
+			builtin_arguments.push_back(alocate_value(new RuntimeValue(current_expression_value)));
 		}
 	}
 
@@ -2887,7 +2893,7 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 		for (size_t i = 0; i < vec.size(); ++i) {
 			arr[i] = vec[i];
 		}
-		auto rest = new RuntimeValue(arr, Type::T_ANY, std::vector<void*>());
+		auto rest = alocate_value(new RuntimeValue(arr, Type::T_ANY, std::vector<void*>()));
 		builtin_arguments.push_back(rest);
 	}
 
