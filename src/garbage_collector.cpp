@@ -74,6 +74,7 @@ void GarbageCollector::mark() {
 				}
 				else {
 					roots.erase(roots.begin() + i);
+					--i;
 				}
 			}
 			else if constexpr (std::is_same_v<T, RuntimeValue**>) {
