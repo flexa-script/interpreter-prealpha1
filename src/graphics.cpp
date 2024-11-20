@@ -35,15 +35,15 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["create_window"] = [this, visitor]() {
 		// initialize window struct values
-		RuntimeValue* win = new RuntimeValue(parser::Type::T_STRUCT);
+		RuntimeValue* win = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRUCT));
 
 		cp_struct str = cp_struct();
-		str["title"] = new RuntimeValue(visitor->builtin_arguments[0]);
-		str["width"] = new RuntimeValue(visitor->builtin_arguments[1]);
-		str["height"] = new RuntimeValue(visitor->builtin_arguments[2]);
+		str["title"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[0]));
+		str["width"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[1]));
+		str["height"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[2]));
 
 		// create a new window graphic engine
-		str[INSTANCE_ID_NAME] = new RuntimeValue(parser::Type::T_INT);
+		str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
 		str[INSTANCE_ID_NAME]->set(cp_int(new axe::Window()));
 
 		// initialize window graphic engine and return value
@@ -87,7 +87,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (!win->get_str()[INSTANCE_ID_NAME]->get_i()) {
 			throw std::runtime_error("Window is corrupted");
 		}
-		visitor->current_expression_value=new RuntimeValue(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_width()));
+		visitor->current_expression_value=visitor->alocate_value(new RuntimeValue(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_width())));
 
 		};
 
@@ -99,7 +99,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (!win->get_str()[INSTANCE_ID_NAME]->get_i()) {
 			throw std::runtime_error("Window is corrupted");
 		}
-		visitor->current_expression_value = new RuntimeValue(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_height()));
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_height())));
 
 		};
 
@@ -221,16 +221,16 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["create_font"] = [this, visitor]() {
 		// initialize image struct values
-		RuntimeValue* font_value = new RuntimeValue(parser::Type::T_STRUCT);
+		RuntimeValue* font_value = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRUCT));
 
 		auto str = cp_struct();
-		str["size"] = new RuntimeValue(visitor->builtin_arguments[0]);
-		str["name"] = new RuntimeValue(visitor->builtin_arguments[1]);
-		str["weight"] = new RuntimeValue(visitor->builtin_arguments[2]);
-		str["italic"] = new RuntimeValue(visitor->builtin_arguments[3]);
-		str["underline"] = new RuntimeValue(visitor->builtin_arguments[4]);
-		str["strike"] = new RuntimeValue(visitor->builtin_arguments[5]);
-		str["orientation"] = new RuntimeValue(visitor->builtin_arguments[6]);
+		str["size"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[0]));
+		str["name"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[1]));
+		str["weight"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[2]));
+		str["italic"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[3]));
+		str["underline"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[4]));
+		str["strike"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[5]));
+		str["orientation"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[6]));
 
 		auto font = axe::Font::create_font(
 			str["size"]->get_i(),
@@ -244,7 +244,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (!font) {
 			throw std::runtime_error("there was an error creating font");
 		}
-		str[INSTANCE_ID_NAME] = new RuntimeValue(parser::Type::T_INT);
+		str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
 		str[INSTANCE_ID_NAME]->set(cp_int(font));
 
 		font_value->set(str, "Font", "cp");
@@ -302,10 +302,10 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		auto point = ((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_text_size(text, font);
 
 		cp_struct str = cp_struct();
-		str["width"] = new RuntimeValue(cp_int(point.cx * 2 * 0.905));
-		str["height"] = new RuntimeValue(cp_int(point.cy * 2 * 0.875));
+		str["width"] = visitor->alocate_value(new RuntimeValue(cp_int(point.cx * 2 * 0.905)));
+		str["height"] = visitor->alocate_value(new RuntimeValue(cp_int(point.cy * 2 * 0.875)));
 
-		RuntimeValue* res = new RuntimeValue(str, "Size", "cp");
+		RuntimeValue* res = visitor->alocate_value(new RuntimeValue(str, "Size", "cp"));
 
 		visitor->current_expression_value = res;
 
@@ -313,22 +313,22 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["load_image"] = [this, visitor]() {
 		// initialize image struct values
-		RuntimeValue* img = new RuntimeValue(parser::Type::T_STRUCT);
+		RuntimeValue* img = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRUCT));
 
 		auto str = cp_struct();
-		str["path"] = new RuntimeValue(visitor->builtin_arguments[0]);
+		str["path"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[0]));
 
 		// loads image
 		auto image = axe::Image::load_image(str["path"]->get_s());
 		if (!image) {
 			throw std::runtime_error("there was an error loading image");
 		}
-		str[INSTANCE_ID_NAME] = new RuntimeValue(parser::Type::T_INT);
+		str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
 		str[INSTANCE_ID_NAME]->set(cp_int(image));
 
-		str["width"] = new RuntimeValue(parser::Type::T_INT);
+		str["width"] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
 		str["width"]->set(cp_int(image->width));
-		str["height"] = new RuntimeValue(parser::Type::T_INT);
+		str["height"] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
 		str["height"]->set(cp_int(image->height));
 
 		img->set(str, "Image", "cp");
@@ -383,7 +383,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["is_quit"] = [this, visitor]() {
 		RuntimeValue* win = visitor->builtin_arguments[0];
-		auto val = new RuntimeValue(parser::Type::T_BOOL);
+		auto val = visitor->alocate_value(new RuntimeValue(parser::Type::T_BOOL));
 		if (!parser::is_void(win->type)) {
 			if (((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 				val->set(cp_bool(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->is_quit()));

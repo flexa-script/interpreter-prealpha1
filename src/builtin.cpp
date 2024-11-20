@@ -83,7 +83,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("print", FunctionDefinition("print", Type::T_VOID, parameters));
 	visitor->builtin_functions["print"] = [this, visitor]() {
-		visitor->current_expression_value = new RuntimeValue(Type::T_UNDEFINED);
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 		if (visitor->builtin_arguments.size() == 0) {
 			return;
 		}
@@ -113,7 +113,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 		}
 		std::string line;
 		std::getline(std::cin, line);
-		visitor->current_expression_value = new RuntimeValue(Type::T_STRING);
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_STRING));
 		visitor->current_expression_value->set(cp_string(std::move(line)));
 		};
 
@@ -123,7 +123,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions["readch"] = [this, visitor]() {
 		while (!_kbhit());
 		char ch = _getch();
-		visitor->current_expression_value = new RuntimeValue(Type::T_CHAR);
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_CHAR));
 		visitor->current_expression_value->set(cp_char(ch));
 		};
 
@@ -140,7 +140,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["len"] = [this, visitor]() {
 		auto& curr_val = visitor->builtin_arguments[0];
-		auto val = new RuntimeValue(Type::T_INT);
+		auto val = visitor->alocate_value(new RuntimeValue(Type::T_INT));
 
 		if (is_array(curr_val->type)) {
 			val->set(cp_int(curr_val->get_arr().size()));
@@ -158,7 +158,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("sleep", FunctionDefinition("sleep", Type::T_VOID, parameters));
 	visitor->builtin_functions["sleep"] = [this, visitor]() {
-		visitor->current_expression_value = new RuntimeValue(Type::T_UNDEFINED);
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 		std::this_thread::sleep_for(std::chrono::milliseconds(visitor->builtin_arguments[0]->get_i()));
 		};
 
@@ -168,7 +168,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("system", FunctionDefinition("system", Type::T_VOID, parameters));
 	visitor->builtin_functions["system"] = [this, visitor]() {
-		visitor->current_expression_value = new RuntimeValue(Type::T_UNDEFINED);
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 		system(visitor->builtin_arguments[0]->get_s().c_str());
 		};
 

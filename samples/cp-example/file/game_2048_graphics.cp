@@ -5,7 +5,7 @@ using cp.core.sound;
 using cp.core.datetime;
 using cp.std.random;
 
-// as namespace cp;
+// include namespace cp;
 
 // global vars
 enum {
@@ -384,6 +384,6 @@ fun is_end_game(): bool {
     return c2;
 }
 
-if (this == "main") {
+if (this == "__default__") {
 	main();
 }

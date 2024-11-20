@@ -12,7 +12,7 @@ namespace modules {
 		DateTime();
 		~DateTime();
 
-		cp_struct tm_to_date_time(time_t t, tm* tm);
+		cp_struct tm_to_date_time(visitor::Interpreter* visitor, time_t t, tm* tm);
 
 		void register_functions(visitor::SemanticAnalyser* visitor) override;
 		void register_functions(visitor::Interpreter* visitor) override;

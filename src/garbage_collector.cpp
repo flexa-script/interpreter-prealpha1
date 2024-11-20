@@ -64,24 +64,27 @@ void GarbageCollector::add_root_container(std::vector<RuntimeValue*>& root_conta
 
 
 void GarbageCollector::mark() {
-	size_t i = 0;
-	while (i < roots.size()) {
-		std::visit([this, i](auto&& arg) {
+	for (auto it = roots.begin(); it != roots.end(); ) {
+		bool should_advance = true;
+		std::visit([this, &it, &should_advance](auto&& arg) {
 			using T = std::decay_t<decltype(arg)>;
 			if constexpr (std::is_same_v<T, std::weak_ptr<GCObject>>) {
 				if (auto root = arg.lock()) {
 					mark_object(root.get());
 				}
 				else {
-					roots.erase(roots.begin() + i);
-					--i;
+					it = roots.erase(it);
+					should_advance = false;
 				}
 			}
 			else if constexpr (std::is_same_v<T, RuntimeValue**>) {
 				mark_object(*arg);
 			}
-			}, roots[i]);
-		++i;
+			}, *it);
+
+		if (should_advance) {
+			++it;
+		}
 	}
 
 	for (const auto& iterable_ptr : root_containers) {

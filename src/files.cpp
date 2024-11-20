@@ -25,18 +25,18 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["open"] = [this, visitor]() {
 		// initialize file struct values
-		RuntimeValue* cpfile = new RuntimeValue(parser::Type::T_STRUCT);
+		RuntimeValue* cpfile = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRUCT));
 
 		cp_struct str = cp_struct();
-		str["path"] = new RuntimeValue(visitor->builtin_arguments[0]);
-		str["mode"] = new RuntimeValue(visitor->builtin_arguments[1]);
+		str["path"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[0]));
+		str["mode"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[1]));
 
 		int parmode = visitor->builtin_arguments[1]->get_i();
 
 		std::fstream* fs = nullptr;
 		try {
 			fs = new std::fstream(visitor->builtin_arguments[0]->get_s(), parmode);
-			str[INSTANCE_ID_NAME] = new RuntimeValue(cp_int(fs));
+			str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(cp_int(fs)));
 			cpfile->set(str, "File", "cp");
 			visitor->current_expression_value = cpfile;
 		}
@@ -48,7 +48,7 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions["read"] = [this, visitor]() {
 		RuntimeValue* cpfile = visitor->builtin_arguments[0];
 		if (!parser::is_void(cpfile->type)) {
-			auto rval = new RuntimeValue(parser::Type::T_STRING);
+			auto rval = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRING));
 			
 			std::fstream* fs = ((std::fstream*)cpfile->get_str()[INSTANCE_ID_NAME]->get_i());
 
@@ -68,7 +68,7 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions["read_line"] = [this, visitor]() {
 		RuntimeValue* cpfile = visitor->builtin_arguments[0];
 		if (!parser::is_void(cpfile->type)) {
-			auto rval = new RuntimeValue(parser::Type::T_STRING);
+			auto rval = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRING));
 
 			std::fstream* fs = ((std::fstream*)cpfile->get_str()[INSTANCE_ID_NAME]->get_i());
 
@@ -83,7 +83,7 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions["read_all_bytes"] = [this, visitor]() {
 		RuntimeValue* cpfile = visitor->builtin_arguments[0];
 		if (!parser::is_void(cpfile->type)) {
-			auto rval = new RuntimeValue(parser::Type::T_ARRAY);
+			auto rval = visitor->alocate_value(new RuntimeValue(parser::Type::T_ARRAY));
 			rval->set_arr_type(parser::Type::T_CHAR);
 
 			std::fstream* fs = ((std::fstream*)cpfile->get_str()[INSTANCE_ID_NAME]->get_i());
@@ -103,7 +103,7 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 			// read all bytes
 			if (fs->read(buffer, buffer_size)) {
 				for (size_t i = 0; i < buffer_size; ++i) {
-					RuntimeValue* val = new RuntimeValue(parser::Type::T_CHAR);
+					RuntimeValue* val = visitor->alocate_value(new RuntimeValue(parser::Type::T_CHAR));
 					val->set(buffer[i]);
 					arr[i] = val;
 				}
@@ -146,7 +146,7 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions["is_open"] = [this, visitor]() {
 		RuntimeValue* cpfile = visitor->builtin_arguments[0];
 		if (!parser::is_void(cpfile->type)) {
-			auto rval = new RuntimeValue(parser::Type::T_BOOL);
+			auto rval = visitor->alocate_value(new RuntimeValue(parser::Type::T_BOOL));
 			rval->set(cp_bool(((std::fstream*)cpfile->get_str()[INSTANCE_ID_NAME]->get_i())->is_open()));
 			visitor->current_expression_value = rval;
 		}
