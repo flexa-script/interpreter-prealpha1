@@ -14,7 +14,8 @@
 class GarbageCollector {
 private:
     std::vector<GCObject*> heap;
-    std::vector<std::variant<std::weak_ptr<GCObject>, RuntimeValue**>> roots;
+    std::vector<std::weak_ptr<GCObject>> roots;
+    std::vector<RuntimeValue**> ptr_roots;
     std::vector<std::vector<RuntimeValue*>> root_containers;
 
 public:
@@ -23,10 +24,14 @@ public:
 
     GCObject* allocate(GCObject* obj);
 
-    void add_root(std::variant<std::weak_ptr<GCObject>, RuntimeValue**> obj);
-    void remove_root(std::variant<std::weak_ptr<GCObject>, RuntimeValue**> obj);
+    void add_root(std::weak_ptr<GCObject> obj);
+    void remove_root(std::weak_ptr<GCObject> obj);
+
+    void add_ptr_root(RuntimeValue** obj);
+    void remove_ptr_root(RuntimeValue** obj);
 
     void add_root_container(std::vector<RuntimeValue*>& root_container);
+    void remove_root_container(std::vector<RuntimeValue*>& root_container);
 
     void mark();
     void mark_object(GCObject* obj);

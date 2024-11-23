@@ -19,7 +19,7 @@ using namespace lexer;
 Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
 	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
 	current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
-	gc.add_root(&current_expression_value);
+	gc.add_ptr_root(&current_expression_value);
 
 	scopes[default_namespace].push_back(global_scope);
 
@@ -331,8 +331,6 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
 
-		signature.push_back(alocate_value(new RuntimeValue(current_expression_value)));
-
 		RuntimeValue* pvalue = nullptr;
 		if (current_expression_value->use_ref) {
 			pvalue = current_expression_value;
@@ -342,6 +340,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 		}
 
 		function_arguments.push_back(pvalue);
+		signature.push_back(pvalue);
 	}
 
 	std::shared_ptr<Scope> func_scope;
@@ -378,6 +377,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	current_function_call_identifier_vector.push(identifier_vector);
 	current_function_nmspace.push(nmspace);
 	current_function_calling_arguments.push(function_arguments);
+	gc.add_root_container(function_arguments);
 
 	auto block = declfun.block;
 	if (block) {
@@ -397,6 +397,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	current_function_signature.pop();
 	current_function_nmspace.pop();
 	current_this_name.pop();
+	gc.remove_root_container(function_arguments);
 
 	pop_namespace(pop);
 }
@@ -1063,6 +1064,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 
 	++current_expression_array_dim_max;
 	if (!is_max) {
+		// TODO: fix memory leak
 		current_expression_array_dim.push_back(new ASTLiteralNode<cp_int>(0, astnode->row, astnode->col));
 	}
 
@@ -1740,7 +1742,7 @@ std::shared_ptr<Scope> Interpreter::get_inner_most_function_scope(const std::str
 					return scopes[prgnmspace][i];
 				}
 			}
-			throw std::runtime_error("something went wrong searching '" + identifier + "' fuction");
+			throw std::runtime_error("something went wrong searching '" + identifier + "' function");
 		}
 	}
 	return scopes[nmspace][i];
@@ -1898,22 +1900,20 @@ RuntimeValue* Interpreter::access_value(const std::shared_ptr<Scope> scope, Runt
 void Interpreter::check_build_array(RuntimeValue* new_value, std::vector<void*> dim) {
 	if (is_array(new_value->type) && dim.size() > 0) {
 		auto arr = new_value->get_arr();
-
-		cp_array* rarr = new cp_array();
+		bool has_array = false;
+		cp_array rarr = cp_array();
 
 		if (arr.size() == 1) {
-			*rarr = build_array(dim, arr[0], dim.size() - 1);
+			has_array = true;
+			rarr = build_array(dim, arr[0], dim.size() - 1);
 		}
 		else if (arr.size() == 0) {
-			*rarr = build_undefined_array(dim, dim.size() - 1);
-		}
-		else {
-			delete rarr;
-			rarr = nullptr;
+			has_array = true;
+			rarr = build_undefined_array(dim, dim.size() - 1);
 		}
 
-		if (rarr) {
-			new_value->set(*rarr, current_expression_array_type.type,
+		if (has_array) {
+			new_value->set(rarr, current_expression_array_type.type,
 				current_expression_array_type.dim,
 				current_expression_array_type.type_name,
 				current_expression_array_type.type_name_space);

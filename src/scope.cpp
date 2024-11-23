@@ -12,11 +12,6 @@ Scope::Scope(std::string name) : name(name) {};
 Scope::Scope() = default;
 
 Scope::~Scope() = default;
-//{
-//	variable_symbol_table.clear();
-//	structure_symbol_table.clear();
-//	function_symbol_table.clear();
-//}
 
 StructureDefinition Scope::find_declared_structure_definition(const std::string& identifier) {
 	return structure_symbol_table[identifier];

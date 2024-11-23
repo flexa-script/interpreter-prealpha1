@@ -719,8 +719,8 @@ std::vector<GCObject*> RuntimeValue::get_references() {
 	std::vector<GCObject*> references;
 
 	if (is_array(type)) {
-		for (size_t i = 0; i < arr.size(); ++i) {
-			references.push_back(arr[i]);
+		for (const auto& val : arr) {
+			references.push_back(val);
 		}
 	}
 	if (is_struct(type)) {

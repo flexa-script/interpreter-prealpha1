@@ -256,6 +256,7 @@ public:
 };
 
 class RuntimeValue : public Value, public GCObject {
+//private:
 public:
 	cp_bool b;
 	cp_int i;
@@ -266,6 +267,7 @@ public:
 	cp_struct str;
 	cp_function fun;
 
+public:
 	RuntimeValue(Type type, Type array_type, std::vector<void*> dim,
 		const std::string& type_name, const std::string& type_name_space,
 		unsigned int row, unsigned int col);

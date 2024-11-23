@@ -2,7 +2,7 @@ using cp.core.console;
 using cp.std.random;
 using cp.core.datetime;
 
-as namespace cp;
+include namespace cp;
 
 const PRINT_HORIZONTAL_LINE = "+---------------------------------------+";
 const PRINT_BLANK_LINE = "                                       ";
@@ -257,7 +257,7 @@ fun is_end_game(c1: bool, c2: bool, board[4][4]: int): bool {
     return c2;
 }
 
-if (this == "game_2048") {
+if (this == "__default__") {
     randomize(create_date_time().timestamp);
     
     var grid[4][4]: int = { 0 };

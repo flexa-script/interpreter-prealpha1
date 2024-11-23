@@ -140,7 +140,8 @@
 - [X] Automatically find and load included libs without to send by command line arguments
 
 ## Known bugs
-- [X] Some function definition are not being found:
+- [ ] Review value copy and equal (mainly cause of ponters)
+- [X] Some function definition are not being found:nd:
     - [X] `var arr = {1, 2, 3, 4, 5, 6}` X `fun arr_size(arr[])`
     - [X] `var arr = {1, 2, 3, 4, 5, 6}` X `fun arr_size(arr[])`
 - [X] Undefined variables cant be assigned

@@ -13,77 +13,65 @@ GCObject* GarbageCollector::allocate(GCObject* obj) {
 	return obj;
 }
 
-void GarbageCollector::add_root(std::variant<std::weak_ptr<GCObject>, RuntimeValue**> obj) {
+void GarbageCollector::add_root(std::weak_ptr<GCObject> obj) {
 	roots.push_back(obj);
 }
 
-void GarbageCollector::remove_root(std::variant<std::weak_ptr<GCObject>, RuntimeValue**> obj) {
-	std::visit([this](auto&& arg) {
-		using T = std::decay_t<decltype(arg)>;
-
-		if constexpr (std::is_same_v<T, std::weak_ptr<GCObject>>) {
-			if (auto obj_ptr = arg.lock()) {
-				auto it = std::find_if(roots.begin(), roots.end(), [&obj_ptr](const auto& root_variant) {
-					return std::visit([&obj_ptr](auto&& root) -> bool {
-						using RootType = std::decay_t<decltype(root)>;
-						if constexpr (std::is_same_v<RootType, std::weak_ptr<GCObject>>) {
-							return !root.owner_before(obj_ptr) && !obj_ptr.owner_before(root);
-						}
-						return false;
-						}, root_variant);
-					});
-
-				if (it != roots.end()) {
-					roots.erase(it);
-				}
+void GarbageCollector::remove_root(std::weak_ptr<GCObject> obj) {
+	if (auto obj_ptr = obj.lock()) {
+		auto it = std::find_if(roots.begin(), roots.end(), [&obj_ptr](const std::weak_ptr<GCObject>& root) {
+			if (auto root_ptr = root.lock()) {
+				return root_ptr == obj_ptr;
 			}
-		}
-		else if constexpr (std::is_same_v<T, RuntimeValue**>) {
-			auto it = std::find_if(roots.begin(), roots.end(), [arg](const auto& root_variant) {
-				return std::visit([arg](auto&& root) -> bool {
-					using RootType = std::decay_t<decltype(root)>;
-					if constexpr (std::is_same_v<RootType, std::weak_ptr<GCObject>>) {
-						if (auto root_ptr = root.lock()) {
-							return root_ptr.get() == *arg;
-						}
-					}
-					return false;
-					}, root_variant);
-				});
+			return false;
+			});
 
-			if (it != roots.end()) {
-				roots.erase(it);
-			}
+		if (it != roots.end()) {
+			roots.erase(it);
 		}
-		}, obj);
+	}
+}
+
+void GarbageCollector::add_ptr_root(RuntimeValue** obj) {
+	ptr_roots.push_back(obj);
+}
+
+void GarbageCollector::remove_ptr_root(RuntimeValue** obj) {
+	auto it = std::find(ptr_roots.begin(), ptr_roots.end(), obj);
+	if (it != ptr_roots.end()) {
+		ptr_roots.erase(it);
+	}
 }
 
 void GarbageCollector::add_root_container(std::vector<RuntimeValue*>& root_container) {
 	root_containers.emplace_back(root_container);
 }
 
+void GarbageCollector::remove_root_container(std::vector<RuntimeValue*>& root_container) {
+	auto it = std::find(root_containers.begin(), root_containers.end(), root_container);
+	if (it != root_containers.end()) {
+		root_containers.erase(it);
+	}
+}
 
 void GarbageCollector::mark() {
-	for (auto it = roots.begin(); it != roots.end(); ) {
-		bool should_advance = true;
-		std::visit([this, &it, &should_advance](auto&& arg) {
-			using T = std::decay_t<decltype(arg)>;
-			if constexpr (std::is_same_v<T, std::weak_ptr<GCObject>>) {
-				if (auto root = arg.lock()) {
-					mark_object(root.get());
-				}
-				else {
-					it = roots.erase(it);
-					should_advance = false;
-				}
-			}
-			else if constexpr (std::is_same_v<T, RuntimeValue**>) {
-				mark_object(*arg);
-			}
-			}, *it);
-
-		if (should_advance) {
+	for (auto it = roots.begin(); it != roots.end();) {
+		if (auto root = it->lock()) {
+			mark_object(root.get());
 			++it;
+		}
+		else {
+			it = roots.erase(it);
+		}
+	}
+
+	for (auto it = ptr_roots.begin(); it != ptr_roots.end();) {
+		if (*it) {
+			mark_object(**it);
+			++it;
+		}
+		else {
+			it = ptr_roots.erase(it);
 		}
 	}
 
@@ -112,6 +100,22 @@ void GarbageCollector::sweep() {
 		else {
 			(*it)->marked = false;
 			++it;
+		}
+	}
+
+	for (auto it = roots.begin(); it != roots.end(); ++it) {
+		if (auto root = it->lock()) {
+			root->marked = false;
+		}
+	}
+
+	for (auto it = ptr_roots.begin(); it != ptr_roots.end(); ++it) {
+		(**it)->marked = false;
+	}
+
+	for (const auto& iterable_ptr : root_containers) {
+		for (auto item : iterable_ptr) {
+			item->marked = false;
 		}
 	}
 }
