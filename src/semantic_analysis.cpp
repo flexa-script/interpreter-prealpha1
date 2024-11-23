@@ -911,6 +911,7 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 
 	++current_expression_array_dim_max;
 	if (!is_max) {
+		// TODO: fix memory leak (it's not so several as in interpreter)
 		current_expression_array_dim.push_back(new ASTLiteralNode<cp_int>(0, astnode->row, astnode->col));
 	}
 

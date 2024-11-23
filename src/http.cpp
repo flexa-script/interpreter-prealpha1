@@ -161,6 +161,7 @@ void HTTP::register_functions(visitor::Interpreter* visitor) {
 		res_headers_str["root"] = visitor->alocate_value(new RuntimeValue(Type::T_VOID));
 		res_headers_str["size"] = visitor->alocate_value(new RuntimeValue(cp_int(0)));
 		auto headers_value = visitor->alocate_value(new RuntimeValue(res_headers_str, "Dictionary", "cp"));
+		// TODO: fix memory leaks caused by runtime created nodes
 		auto header_identifier = new ASTIdentifierNode(std::vector<Identifier>{ Identifier("headers_value") }, "cp", 0, 0);
 		auto identifier_vector = std::vector<Identifier>{ Identifier("emplace") };
 		auto fcall = new ASTFunctionCallNode("cp", identifier_vector, std::vector<ASTExprNode*>(), 0, 0);
