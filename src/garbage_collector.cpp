@@ -13,22 +13,14 @@ GCObject* GarbageCollector::allocate(GCObject* obj) {
 	return obj;
 }
 
-void GarbageCollector::add_root(std::weak_ptr<GCObject> obj) {
+void GarbageCollector::add_root(GCObject* obj) {
 	roots.push_back(obj);
 }
 
-void GarbageCollector::remove_root(std::weak_ptr<GCObject> obj) {
-	if (auto obj_ptr = obj.lock()) {
-		auto it = std::find_if(roots.begin(), roots.end(), [&obj_ptr](const std::weak_ptr<GCObject>& root) {
-			if (auto root_ptr = root.lock()) {
-				return root_ptr == obj_ptr;
-			}
-			return false;
-			});
-
-		if (it != roots.end()) {
-			roots.erase(it);
-		}
+void GarbageCollector::remove_root(GCObject* obj) {
+	auto it = std::find(roots.begin(), roots.end(), obj);
+	if (it != roots.end()) {
+		roots.erase(it);
 	}
 }
 
@@ -40,6 +32,25 @@ void GarbageCollector::remove_ptr_root(RuntimeValue** obj) {
 	auto it = std::find(ptr_roots.begin(), ptr_roots.end(), obj);
 	if (it != ptr_roots.end()) {
 		ptr_roots.erase(it);
+	}
+}
+
+void GarbageCollector::add_var_root(std::weak_ptr<GCObject> obj) {
+	var_roots.push_back(obj);
+}
+
+void GarbageCollector::remove_var_root(std::weak_ptr<GCObject> obj) {
+	if (auto obj_ptr = obj.lock()) {
+		auto it = std::find_if(var_roots.begin(), var_roots.end(), [&obj_ptr](const std::weak_ptr<GCObject>& root) {
+			if (auto root_ptr = root.lock()) {
+				return root_ptr == obj_ptr;
+			}
+			return false;
+			});
+
+		if (it != var_roots.end()) {
+			var_roots.erase(it);
+		}
 	}
 }
 
@@ -56,8 +67,8 @@ void GarbageCollector::remove_root_container(std::vector<RuntimeValue*>& root_co
 
 void GarbageCollector::mark() {
 	for (auto it = roots.begin(); it != roots.end();) {
-		if (auto root = it->lock()) {
-			mark_object(root.get());
+		if (*it) {
+			mark_object(*it);
 			++it;
 		}
 		else {
@@ -72,6 +83,16 @@ void GarbageCollector::mark() {
 		}
 		else {
 			it = ptr_roots.erase(it);
+		}
+	}
+
+	for (auto it = var_roots.begin(); it != var_roots.end();) {
+		if (auto root = it->lock()) {
+			mark_object(root.get());
+			++it;
+		}
+		else {
+			it = var_roots.erase(it);
 		}
 	}
 
@@ -104,13 +125,13 @@ void GarbageCollector::sweep() {
 	}
 
 	for (auto it = roots.begin(); it != roots.end(); ++it) {
+		(*it)->marked = false;
+	}
+
+	for (auto it = var_roots.begin(); it != var_roots.end(); ++it) {
 		if (auto root = it->lock()) {
 			root->marked = false;
 		}
-	}
-
-	for (auto it = ptr_roots.begin(); it != ptr_roots.end(); ++it) {
-		(**it)->marked = false;
 	}
 
 	for (const auto& iterable_ptr : root_containers) {

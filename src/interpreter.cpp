@@ -115,7 +115,7 @@ void Interpreter::visit(std::shared_ptr<ASTEnumNode> astnode) {
 	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		auto var = std::make_shared<RuntimeVariable>(astnode->identifiers[i], Type::T_INT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "");
-		gc.add_root(var);
+		gc.add_var_root(var);
 		var->set_value(alocate_value(new RuntimeValue(cp_int(i))));
 		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], var);
 	}
@@ -124,6 +124,10 @@ void Interpreter::visit(std::shared_ptr<ASTEnumNode> astnode) {
 void Interpreter::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	const auto& nmspace = get_namespace();
+
+	if (astnode->identifier == "spawn") {
+		int x = 0;
+	}
 
 	if (astnode->expr) {
 		astnode->expr->accept(this);
@@ -146,7 +150,7 @@ void Interpreter::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 	auto new_var = std::make_shared<RuntimeVariable>(astnode->identifier, astnode->type,
 		astnode->array_type, astnode->dim,
 		astnode_type_name, astnode->type_name_space);
-	gc.add_root(new_var);
+	gc.add_var_root(new_var);
 	new_var->set_value(new_value);
 
 	if ((!TypeDefinition::is_any_or_match_type(*new_var, *new_value, evaluate_access_vector_ptr) ||
@@ -327,7 +331,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	std::vector<TypeDefinition*> signature;
 	std::vector<RuntimeValue*> function_arguments;
 
-	if (astnode->identifier == "spawn_random" || astnode->identifier == "counts_zero") {
+	if (astnode->identifier == "spawn_random") {
 		int x = 0;
 	}
 
@@ -1283,6 +1287,7 @@ void Interpreter::visit(std::shared_ptr<ASTBinaryExprNode> astnode) {
 	}
 	else {
 		l_value = alocate_value(new RuntimeValue(current_expression_value));
+		gc.add_root(l_value);
 	}
 
 	if (is_bool(current_expression_value->type) && astnode->op == "and" && !current_expression_value->get_b()) {
@@ -1296,9 +1301,13 @@ void Interpreter::visit(std::shared_ptr<ASTBinaryExprNode> astnode) {
 	}
 	else {
 		r_value = alocate_value(new RuntimeValue(current_expression_value));
+		gc.add_root(r_value);
 	}
 
 	current_expression_value = do_operation(astnode->op, l_value, r_value, true, 0);
+
+	gc.remove_root(l_value);
+	gc.remove_root(r_value);
 }
 
 void Interpreter::visit(std::shared_ptr<ASTTernaryNode> astnode) {
@@ -2704,7 +2713,7 @@ void Interpreter::declare_function_parameter(std::shared_ptr<Scope> scope, const
 		}
 		else {
 			auto var = std::make_shared<RuntimeVariable>(identifier, *value);
-			gc.add_root(var);
+			gc.add_var_root(var);
 			var->set_value(value);
 			scope->declare_variable(identifier, var);
 		}
@@ -2808,7 +2817,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		}
 		auto rest = alocate_value(new RuntimeValue(arr, Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>()));
 		auto var = std::make_shared<RuntimeVariable>(rest_name, *rest);
-		gc.add_root(var);
+		gc.add_var_root(var);
 		var->set_value(rest);
 		curr_scope->declare_variable(rest_name, var);
 	}
