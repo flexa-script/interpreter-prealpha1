@@ -20,8 +20,8 @@ public:
 private:
 	std::vector<CPSource> load_programs(const std::vector<std::string>& files);
 
-	void parse_programs(const std::vector<CPSource>& source_programs, ASTProgramNode** main_program,
-		std::map<std::string, ASTProgramNode*>* programs);
+	void parse_programs(const std::vector<CPSource>& source_programs, std::shared_ptr<ASTProgramNode>* main_program,
+		std::map<std::string, std::shared_ptr<ASTProgramNode>>* programs);
 
 	int interpreter();
 

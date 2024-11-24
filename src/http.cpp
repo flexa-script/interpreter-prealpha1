@@ -161,15 +161,14 @@ void HTTP::register_functions(visitor::Interpreter* visitor) {
 		res_headers_str["root"] = visitor->alocate_value(new RuntimeValue(Type::T_VOID));
 		res_headers_str["size"] = visitor->alocate_value(new RuntimeValue(cp_int(0)));
 		auto headers_value = visitor->alocate_value(new RuntimeValue(res_headers_str, "Dictionary", "cp"));
-		// TODO: fix memory leaks caused by runtime created nodes
-		auto header_identifier = new ASTIdentifierNode(std::vector<Identifier>{ Identifier("headers_value") }, "cp", 0, 0);
+		auto header_identifier = std::make_shared<ASTIdentifierNode>(std::vector<Identifier>{ Identifier("headers_value") }, "cp", 0, 0);
 		auto identifier_vector = std::vector<Identifier>{ Identifier("emplace") };
-		auto fcall = new ASTFunctionCallNode("cp", identifier_vector, std::vector<ASTExprNode*>(), 0, 0);
+		auto fcall = std::make_shared<ASTFunctionCallNode>("cp", identifier_vector, std::vector<std::shared_ptr<ASTExprNode>>(), 0, 0);
 
 		visitor->scopes["cp"].push_back(std::make_shared<Scope>());
-		auto curr_scope = visitor->scopes["cp"].back();
-		(new ASTDeclarationNode("headers_value", Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(),
-			"Dictionary", "cp", new ASTNullNode(0, 0), false, 0, 0))->accept(visitor);
+		auto& curr_scope = visitor->scopes["cp"].back();
+		(std::make_shared<ASTDeclarationNode>("headers_value", Type::T_STRUCT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(),
+			"Dictionary", "cp", std::make_shared<ASTNullNode>(0, 0), false, 0, 0))->accept(visitor);
 		auto var = std::dynamic_pointer_cast<RuntimeVariable>(curr_scope->find_declared_variable("headers_value"));
 		var->set_value(headers_value);
 
@@ -185,10 +184,10 @@ void HTTP::register_functions(visitor::Interpreter* visitor) {
 				}
 
 				auto header = axe::StringUtils::split(line, ": ");
-				auto parameters = std::vector<ASTExprNode*> {
+				auto parameters = std::vector<std::shared_ptr<ASTExprNode>> {
 					header_identifier,
-					new ASTLiteralNode<cp_string>(header[0], 0, 0),
-					new ASTLiteralNode<cp_string>(header[1], 0, 0)
+					std::make_shared<ASTLiteralNode<cp_string>>(header[0], 0, 0),
+					std::make_shared<ASTLiteralNode<cp_string>>(header[1], 0, 0)
 				};
 				fcall->parameters = parameters;
 				fcall->accept(visitor);

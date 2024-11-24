@@ -108,7 +108,7 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 					arr[i] = val;
 				}
 			}
-			rval->set(arr, Type::T_CHAR, std::vector<void*>());
+			rval->set(arr, Type::T_CHAR, std::vector<std::shared_ptr<ASTExprNode>>());
 
 			delete[] buffer;
 

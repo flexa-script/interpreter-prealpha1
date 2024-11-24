@@ -16,16 +16,16 @@ namespace parser {
 	class Identifier {
 	public:
 		std::string identifier;
-		std::vector<void*> access_vector;
+		std::vector<std::shared_ptr<ASTExprNode>> access_vector;
 
-		Identifier(const std::string& identifier, const std::vector<void*>& access_vector);
+		Identifier(const std::string& identifier, const std::vector<std::shared_ptr<ASTExprNode>>& access_vector);
 
 		Identifier(const std::string& identifier);
 
 		Identifier();
 	};
 
-	class ASTNode : public CodePosition {
+	class ASTNode : public std::enable_shared_from_this<ASTNode>, public CodePosition {
 	public:
 		ASTNode(unsigned int row, unsigned int col)
 			: CodePosition(row, col) {}
@@ -54,11 +54,11 @@ namespace parser {
 	public:
 		std::string name;
 		std::string alias;
-		std::vector<ASTNode*> statements;
+		std::vector<std::shared_ptr<ASTNode>> statements;
 		std::vector<std::string> libs;
 
 		explicit ASTProgramNode(const std::string& name, const std::string& alias,
-			const std::vector<ASTNode*>& statements);
+			const std::vector<std::shared_ptr<ASTNode>>& statements);
 
 		void accept(Visitor*) override;
 	};
@@ -86,12 +86,12 @@ namespace parser {
 	class ASTDeclarationNode : public ASTStatementNode, public TypeDefinition {
 	public:
 		std::string identifier;
-		ASTExprNode* expr;
+		std::shared_ptr<ASTExprNode> expr;
 		bool is_const;
 
 		ASTDeclarationNode(const std::string& identifier, Type type, Type array_type,
-			const std::vector<void*>& dim, const std::string& type_name,
-			const std::string& type_name_space, ASTExprNode* expr, bool is_const,
+			const std::vector<std::shared_ptr<ASTExprNode>>& dim, const std::string& type_name,
+			const std::string& type_name_space, std::shared_ptr<ASTExprNode> expr, bool is_const,
 			unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
@@ -99,12 +99,12 @@ namespace parser {
 
 	class ASTUnpackedDeclarationNode : public ASTStatementNode, public TypeDefinition {
 	public:
-		std::vector<ASTDeclarationNode*> declarations;
-		ASTExprNode* expr;
+		std::vector<std::shared_ptr<ASTDeclarationNode>> declarations;
+		std::shared_ptr<ASTExprNode> expr;
 
-		ASTUnpackedDeclarationNode(Type type, Type array_type, const std::vector<void*>& dim,
+		ASTUnpackedDeclarationNode(Type type, Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim,
 			const std::string& type_name, const std::string& type_name_space,
-			const std::vector<ASTDeclarationNode*>& declarations, ASTExprNode* expr,
+			const std::vector<std::shared_ptr<ASTDeclarationNode>>& declarations, std::shared_ptr<ASTExprNode> expr,
 			unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
@@ -116,28 +116,28 @@ namespace parser {
 		std::string nmspace;
 		std::vector<Identifier> identifier_vector;
 		std::string op;
-		ASTExprNode* expr;
+		std::shared_ptr<ASTExprNode> expr;
 
 		ASTAssignmentNode(const std::vector<Identifier>& identifier_vector, const std::string& nmspace,
-			const std::string& op, ASTExprNode* expr, unsigned int row, unsigned int col);
+			const std::string& op, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
 
 	class ASTReturnNode : public ASTStatementNode {
 	public:
-		ASTExprNode* expr;
+		std::shared_ptr<ASTExprNode> expr;
 
-		ASTReturnNode(ASTExprNode* expr, unsigned int row, unsigned int col);
+		ASTReturnNode(std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
 
 	class ASTBlockNode : public ASTStatementNode {
 	public:
-		std::vector<ASTNode*> statements;
+		std::vector<std::shared_ptr<ASTNode>> statements;
 
-		ASTBlockNode(const std::vector<ASTNode*>& statements, unsigned int row, unsigned int col);
+		ASTBlockNode(const std::vector<std::shared_ptr<ASTNode>>& statements, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
@@ -158,23 +158,23 @@ namespace parser {
 
 	class ASTExitNode : public ASTStatementNode {
 	public:
-		ASTExprNode* exit_code;
+		std::shared_ptr<ASTExprNode> exit_code;
 
-		ASTExitNode(ASTExprNode* exit_code, unsigned int row, unsigned int col);
+		ASTExitNode(std::shared_ptr<ASTExprNode> exit_code, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
 
 	class ASTSwitchNode : public ASTStatementNode {
 	public:
-		ASTExprNode* condition;
-		std::map<ASTExprNode*, unsigned int> case_blocks;
+		std::shared_ptr<ASTExprNode> condition;
+		std::map<std::shared_ptr<ASTExprNode>, unsigned int> case_blocks;
 		std::map<unsigned int, unsigned int> parsed_case_blocks;
 		unsigned int default_block;
-		std::vector<ASTNode*> statements;
+		std::vector<std::shared_ptr<ASTNode>> statements;
 
-		ASTSwitchNode(ASTExprNode* condition, const std::vector<ASTNode*>& statements,
-			const std::map<ASTExprNode*, unsigned int>& case_blocks,
+		ASTSwitchNode(std::shared_ptr<ASTExprNode> condition, const std::vector<std::shared_ptr<ASTNode>>& statements,
+			const std::map<std::shared_ptr<ASTExprNode>, unsigned int>& case_blocks,
 			unsigned int default_block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
@@ -182,23 +182,23 @@ namespace parser {
 
 	class ASTIfNode : public ASTStatementNode {
 	public:
-		ASTExprNode* condition;
-		ASTBlockNode* if_block;
-		std::vector<ASTElseIfNode*> else_ifs;
-		ASTBlockNode* else_block;
+		std::shared_ptr<ASTExprNode> condition;
+		std::shared_ptr<ASTBlockNode> if_block;
+		std::vector<std::shared_ptr<ASTElseIfNode>> else_ifs;
+		std::shared_ptr<ASTBlockNode> else_block;
 
-		ASTIfNode(ASTExprNode* condition, ASTBlockNode* if_block, const std::vector<ASTElseIfNode*>& else_ifs,
-			ASTBlockNode* else_block, unsigned int row, unsigned int col);
+		ASTIfNode(std::shared_ptr<ASTExprNode> condition, std::shared_ptr<ASTBlockNode> if_block, const std::vector<std::shared_ptr<ASTElseIfNode>>& else_ifs,
+			std::shared_ptr<ASTBlockNode> else_block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
 
 	class ASTElseIfNode : public ASTStatementNode {
 	public:
-		ASTExprNode* condition;
-		ASTBlockNode* block;
+		std::shared_ptr<ASTExprNode> condition;
+		std::shared_ptr<ASTBlockNode> block;
 
-		ASTElseIfNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col);
+		ASTElseIfNode(std::shared_ptr<ASTExprNode> condition, std::shared_ptr<ASTBlockNode> block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
@@ -214,20 +214,20 @@ namespace parser {
 
 	class ASTTryCatchNode : public ASTStatementNode {
 	public:
-		ASTStatementNode* decl;
-		ASTBlockNode* try_block;
-		ASTBlockNode* catch_block;
+		std::shared_ptr<ASTStatementNode> decl;
+		std::shared_ptr<ASTBlockNode> try_block;
+		std::shared_ptr<ASTBlockNode> catch_block;
 
-		ASTTryCatchNode(ASTStatementNode* decl, ASTBlockNode* try_block, ASTBlockNode* catch_block, unsigned int row, unsigned int col);
+		ASTTryCatchNode(std::shared_ptr<ASTStatementNode> decl, std::shared_ptr<ASTBlockNode> try_block, std::shared_ptr<ASTBlockNode> catch_block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
 
 	class ASTThrowNode : public ASTStatementNode {
 	public:
-		ASTExprNode* error;
+		std::shared_ptr<ASTExprNode> error;
 
-		ASTThrowNode(ASTExprNode* error, unsigned int row, unsigned int col);
+		ASTThrowNode(std::shared_ptr<ASTExprNode> error, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
@@ -241,38 +241,38 @@ namespace parser {
 
 	class ASTForNode : public ASTStatementNode {
 	public:
-		std::array<ASTNode*, 3> dci;
-		ASTBlockNode* block;
+		std::array<std::shared_ptr<ASTNode>, 3> dci;
+		std::shared_ptr<ASTBlockNode> block;
 
-		ASTForNode(const std::array<ASTNode*, 3>& dci, ASTBlockNode* block, unsigned int row, unsigned int col);
+		ASTForNode(const std::array<std::shared_ptr<ASTNode>, 3>& dci, std::shared_ptr<ASTBlockNode> block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
 
 	class ASTForEachNode : public ASTStatementNode {
 	public:
-		ASTStatementNode* itdecl;
-		ASTNode* collection;
-		ASTBlockNode* block;
+		std::shared_ptr<ASTStatementNode> itdecl;
+		std::shared_ptr<ASTNode> collection;
+		std::shared_ptr<ASTBlockNode> block;
 
-		ASTForEachNode(ASTStatementNode* itdecl, ASTNode* collection, ASTBlockNode* block, unsigned int row, unsigned int col);
+		ASTForEachNode(std::shared_ptr<ASTStatementNode> itdecl, std::shared_ptr<ASTNode> collection, std::shared_ptr<ASTBlockNode> block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
 
 	class ASTWhileNode : public ASTStatementNode {
 	public:
-		ASTExprNode* condition;
-		ASTBlockNode* block;
+		std::shared_ptr<ASTExprNode> condition;
+		std::shared_ptr<ASTBlockNode> block;
 
-		ASTWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col);
+		ASTWhileNode(std::shared_ptr<ASTExprNode> condition, std::shared_ptr<ASTBlockNode> block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
 
 	class ASTDoWhileNode : public ASTWhileNode {
 	public:
-		ASTDoWhileNode(ASTExprNode* condition, ASTBlockNode* block, unsigned int row, unsigned int col);
+		ASTDoWhileNode(std::shared_ptr<ASTExprNode> condition, std::shared_ptr<ASTBlockNode> block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
@@ -292,11 +292,11 @@ namespace parser {
 	public:
 		std::string identifier;
 		std::vector<TypeDefinition*> parameters;
-		ASTBlockNode* block;
+		std::shared_ptr<ASTBlockNode> block;
 
 		ASTFunctionDefinitionNode(const std::string& identifier, const std::vector<TypeDefinition*>& parameters,
-			Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
-			ASTBlockNode* block, unsigned int row, unsigned int col);
+			Type type, const std::string& type_name, const std::string& type_name_space, Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim,
+			std::shared_ptr<ASTBlockNode> block, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
@@ -324,9 +324,9 @@ namespace parser {
 
 	class ASTFunctionExpression : public ASTExprNode {
 	public:
-		ASTFunctionDefinitionNode* fun;
+		std::shared_ptr<ASTFunctionDefinitionNode> fun;
 
-		ASTFunctionExpression(ASTFunctionDefinitionNode* fun, unsigned int row, unsigned int col);
+		ASTFunctionExpression(std::shared_ptr<ASTFunctionDefinitionNode> fun, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;
@@ -334,9 +334,9 @@ namespace parser {
 
 	class ASTArrayConstructorNode : public ASTExprNode {
 	public:
-		std::vector<ASTExprNode*> values;
+		std::vector<std::shared_ptr<ASTExprNode>> values;
 
-		ASTArrayConstructorNode(const std::vector<ASTExprNode*>& values, unsigned int row, unsigned int col);
+		ASTArrayConstructorNode(const std::vector<std::shared_ptr<ASTExprNode>>& values, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;
@@ -346,10 +346,10 @@ namespace parser {
 	public:
 		std::string type_name;
 		std::string nmspace;
-		std::map<std::string, ASTExprNode*> values;
+		std::map<std::string, std::shared_ptr<ASTExprNode>> values;
 
 		ASTStructConstructorNode(const std::string& type_name, const std::string& nmspace,
-			const std::map<std::string, ASTExprNode*>& values, unsigned int row, unsigned int col);
+			const std::map<std::string, std::shared_ptr<ASTExprNode>>& values, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;
@@ -374,10 +374,10 @@ namespace parser {
 	class ASTBinaryExprNode : public ASTExprNode {
 	public:
 		std::string op;
-		ASTExprNode* left;
-		ASTExprNode* right;
+		std::shared_ptr<ASTExprNode> left;
+		std::shared_ptr<ASTExprNode> right;
 
-		ASTBinaryExprNode(const std::string& op, ASTExprNode* left, ASTExprNode* right, unsigned int row, unsigned int col);
+		ASTBinaryExprNode(const std::string& op, std::shared_ptr<ASTExprNode> left, std::shared_ptr<ASTExprNode> right, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;
@@ -386,9 +386,9 @@ namespace parser {
 	class ASTUnaryExprNode : public ASTExprNode {
 	public:
 		std::string unary_op;
-		ASTExprNode* expr;
+		std::shared_ptr<ASTExprNode> expr;
 
-		ASTUnaryExprNode(const std::string& unary_op, ASTExprNode* expr, unsigned int row, unsigned int col);
+		ASTUnaryExprNode(const std::string& unary_op, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;
@@ -408,11 +408,11 @@ namespace parser {
 
 	class ASTTernaryNode : public ASTExprNode {
 	public:
-		ASTExprNode* condition;
-		ASTExprNode* value_if_true;
-		ASTExprNode* value_if_false;
+		std::shared_ptr<ASTExprNode> condition;
+		std::shared_ptr<ASTExprNode> value_if_true;
+		std::shared_ptr<ASTExprNode> value_if_false;
 
-		ASTTernaryNode(ASTExprNode* condition, ASTExprNode* value_if_true, ASTExprNode* value_if_false, unsigned int row, unsigned int col);
+		ASTTernaryNode(std::shared_ptr<ASTExprNode> condition, std::shared_ptr<ASTExprNode> value_if_true, std::shared_ptr<ASTExprNode> value_if_false, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;
@@ -420,10 +420,10 @@ namespace parser {
 
 	class ASTInNode : public ASTExprNode {
 	public:
-		ASTExprNode* value;
-		ASTExprNode* collection;
+		std::shared_ptr<ASTExprNode> value;
+		std::shared_ptr<ASTExprNode> collection;
 
-		ASTInNode(ASTExprNode* value, ASTExprNode* collection, unsigned int row, unsigned int col);
+		ASTInNode(std::shared_ptr<ASTExprNode> value, std::shared_ptr<ASTExprNode> collection, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;
@@ -434,11 +434,11 @@ namespace parser {
 		std::string identifier;
 		std::string nmspace;
 		std::vector<Identifier> identifier_vector;
-		std::vector<ASTExprNode*> parameters;
+		std::vector<std::shared_ptr<ASTExprNode>> parameters;
 
 		ASTFunctionCallNode(const std::string& nmspace,
 			const std::vector<Identifier>& identifier_vector,
-			const std::vector<ASTExprNode*>& parameters, unsigned int row, unsigned int col);
+			const std::vector<std::shared_ptr<ASTExprNode>>& parameters, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;
@@ -447,9 +447,9 @@ namespace parser {
 	class ASTTypeParseNode : public ASTExprNode {
 	public:
 		Type type;
-		ASTExprNode* expr;
+		std::shared_ptr<ASTExprNode> expr;
 
-		ASTTypeParseNode(Type type, ASTExprNode* expr, unsigned int row, unsigned int col);
+		ASTTypeParseNode(Type type, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;
@@ -458,9 +458,9 @@ namespace parser {
 	class ASTTypingNode : public ASTExprNode {
 	public:
 		std::string image;
-		ASTExprNode* expr;
+		std::shared_ptr<ASTExprNode> expr;
 
-		ASTTypingNode(const std::string& image, ASTExprNode* expr, unsigned int row, unsigned int col);
+		ASTTypingNode(const std::string& image, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;

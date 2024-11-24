@@ -72,7 +72,7 @@ private:
 	//bool has_string_access = false;
 	//bool exception = false;
 
-	//std::vector<ASTExprNode*> current_expression_array_dim;
+	//std::vector<std::shared_ptr<ASTExprNode>> current_expression_array_dim;
 	//int current_expression_array_dim_max = 0;
 	//TypeDefinition current_expression_array_type;
 	//bool is_max = false;
@@ -124,7 +124,7 @@ private:
 	cp_bool equals_array(const cp_array& larr, const cp_array& rarr);
 	cp_bool equals_struct(const cp_struct& lstr, const cp_struct& rstr);
 
-	std::vector<unsigned int> evaluate_access_vector(const std::vector<void*>& expr_access_vector);
+	std::vector<unsigned int> evaluate_access_vector(const std::vector<std::shared_ptr<ASTExprNode>>& expr_access_vector);
 
 public:
 	VirtualMachine(std::vector<BytecodeInstruction> instructions);

@@ -52,14 +52,14 @@ std::vector<CPSource> CPInterpreter::load_programs(const std::vector<std::string
 	return source_programs;
 }
 
-void CPInterpreter::parse_programs(const std::vector<CPSource>& source_programs, parser::ASTProgramNode** main_program,
-	std::map<std::string, parser::ASTProgramNode*>* programs) {
+void CPInterpreter::parse_programs(const std::vector<CPSource>& source_programs, std::shared_ptr<ASTProgramNode>* main_program,
+	std::map<std::string, std::shared_ptr<ASTProgramNode>>* programs) {
 
 	for (const auto& source : source_programs) {
 		lexer::Lexer lexer(source.name, source.source);
 		parser::Parser parser(source.name , &lexer);
 
-		parser::ASTProgramNode* program = parser.parse_program();
+		std::shared_ptr<ASTProgramNode> program = parser.parse_program();
 
 		if (!program) {
 			std::cerr << "Failed to parse program: " << source.name << std::endl;
@@ -81,8 +81,8 @@ int CPInterpreter::interpreter() {
 	std::shared_ptr<visitor::Scope> interpreter_global_scope = std::make_shared<visitor::Scope>();
 
 	try {
-		parser::ASTProgramNode* main_program = nullptr;
-		std::map<std::string, parser::ASTProgramNode*> programs;
+		std::shared_ptr<ASTProgramNode> main_program = nullptr;
+		std::map<std::string, std::shared_ptr<ASTProgramNode>> programs;
 		parse_programs(source_programs, &main_program, &programs);
 		size_t cplibs_size = 0;
 		do {

@@ -15,7 +15,7 @@
 using namespace lexer;
 
 VirtualMachine::VirtualMachine(std::vector<BytecodeInstruction> instructions)
-	: instructions(instructions), gc(GarbageCollector()) {
+	: instructions(instructions), gc(GarbageCollector()), set_default_value(nullptr) {
 	gc.add_root_container(value_stack);
 }
 
@@ -383,14 +383,14 @@ void VirtualMachine::decode_operation() {
 	case OP_STRUCT_SET_VAR: {
 		auto var_id = current_instruction.get_string_operand();
 
-		std::vector<void*> dim;
+		std::vector<std::shared_ptr<ASTExprNode>> dim;
 		for (auto s : set_array_dim) {
-			dim.push_back(s);
+			dim.push_back(std::make_shared<ASTValueNode>(s, 0, 0));
 		}
 
 		auto var = VariableDefinition(var_id,
 			set_type, set_type_name, set_type_name_space, set_array_type,
-			dim, set_default_value, set_is_rest, 0, 0);
+			dim, std::make_shared<ASTValueNode>(set_default_value, 0, 0), set_is_rest, 0, 0);
 
 		struct_def_build_stack.top().variables[var_id] = var;
 
@@ -453,9 +453,9 @@ void VirtualMachine::decode_operation() {
 
 		// function operations
 	case OP_FUN_START: {
-		std::vector<void*> dim;
+		std::vector<std::shared_ptr<ASTExprNode>> dim;
 		for (auto s : set_array_dim) {
-			dim.push_back(s);
+			dim.push_back(std::make_shared<ASTValueNode>(s, 0, 0));
 		}
 
 		func_def_build_stack.push(FunctionDefinition(current_instruction.get_string_operand(), set_type, set_type_name,
@@ -468,14 +468,14 @@ void VirtualMachine::decode_operation() {
 	case OP_FUN_SET_PARAM: {
 		auto var_id = current_instruction.get_string_operand();
 
-		std::vector<void*> dim;
+		std::vector<std::shared_ptr<ASTExprNode>> dim;
 		for (auto s : set_array_dim) {
-			dim.push_back(s);
+			dim.push_back(std::make_shared<ASTValueNode>(s, 0, 0));
 		}
 
 		auto var = new VariableDefinition(var_id,
 			set_type, set_type_name, set_type_name_space, set_array_type,
-			dim, set_default_value, set_is_rest, 0, 0);
+			dim, std::make_shared<ASTValueNode>(set_default_value, 0, 0), set_is_rest, 0, 0);
 
 		func_def_build_stack.top().parameters.push_back(var);
 
@@ -1458,10 +1458,10 @@ cp_array VirtualMachine::do_operation(cp_array lval, cp_array rval, const std::s
 	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");
 }
 
-std::vector<unsigned int> VirtualMachine::evaluate_access_vector(const std::vector<void*>& expr_access_vector) {
+std::vector<unsigned int> VirtualMachine::evaluate_access_vector(const std::vector<std::shared_ptr<ASTExprNode>>& expr_access_vector) {
 	auto access_vector = std::vector<unsigned int>();
 	for (const auto& expr : expr_access_vector) {
-		access_vector.push_back(static_cast<RuntimeValue*>(expr)->get_i());
+		access_vector.push_back(std::dynamic_pointer_cast<RuntimeValue>(expr)->get_i());
 	}
 	return access_vector;
 }

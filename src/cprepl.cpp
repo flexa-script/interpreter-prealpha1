@@ -93,12 +93,12 @@ int CPRepl::execute() {
 		try {
 			lexer::Lexer lexer(prog_name, source);
 			parser::Parser parser(prog_name, &lexer);
-			parser::ASTProgramNode* program;
-			std::map<std::string, parser::ASTProgramNode*> programs;
+			std::shared_ptr<ASTProgramNode> program;
+			std::map<std::string, std::shared_ptr<ASTProgramNode>> programs;
 
 			try {
 				program = parser.parse_program();
-				programs = std::map<std::string, parser::ASTProgramNode*>({ std::pair(prog_name, program) });
+				programs = std::map<std::string, std::shared_ptr<ASTProgramNode>>({ std::pair(prog_name, program) });
 			}
 			catch (const std::exception& e) {
 				std::string err = e.what();

@@ -14,8 +14,8 @@ Parser::Parser(const std::string& name, Lexer* lex) : name(name), lex(lex) {
 	next_token = lex->next_token();
 }
 
-ASTProgramNode* Parser::parse_program() {
-	auto statements = new std::vector<ASTNode*>;
+std::shared_ptr<ASTProgramNode> Parser::parse_program() {
+	auto statements = new std::vector<std::shared_ptr<ASTNode>>;
 	std::string alias = "";
 
 	if (current_token.type == TOK_NAMESPACE) {
@@ -30,10 +30,10 @@ ASTProgramNode* Parser::parse_program() {
 		consume_token();
 	}
 
-	return new ASTProgramNode(name, alias, *statements);
+	return std::make_shared<ASTProgramNode>(name, alias, *statements);
 }
 
-ASTUsingNode* Parser::parse_using_statement() {
+std::shared_ptr<ASTUsingNode> Parser::parse_using_statement() {
 	std::vector<std::string> library = std::vector<std::string>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
@@ -48,10 +48,10 @@ ASTUsingNode* Parser::parse_using_statement() {
 
 	consume_token(TOK_SEMICOLON);
 
-	return new ASTUsingNode(library, row, col);
+	return std::make_shared<ASTUsingNode>(library, row, col);
 }
 
-ASTNode* Parser::parse_program_statement() {
+std::shared_ptr<ASTNode> Parser::parse_program_statement() {
 	switch (current_token.type) {
 	case TOK_USING:
 		return parse_using_statement();
@@ -62,13 +62,13 @@ ASTNode* Parser::parse_program_statement() {
 		return parse_function_statement();
 	default:
 		consume_semicolon.push(true);
-		ASTNode* node = parse_block_statement();
+		std::shared_ptr<ASTNode> node = parse_block_statement();
 		consume_semicolon.pop();
 		return node;
 	}
 }
 
-ASTNode* Parser::parse_block_statement() {
+std::shared_ptr<ASTNode> Parser::parse_block_statement() {
 	switch (current_token.type) {
 	case TOK_ENUM:
 		return parse_enum_statement();
@@ -113,7 +113,7 @@ ASTNode* Parser::parse_block_statement() {
 	}
 }
 
-ASTNamespaceManagerNode* Parser::parse_namespace_manager_statement() {
+std::shared_ptr<ASTNamespaceManagerNode> Parser::parse_namespace_manager_statement() {
 	std::string image = current_token.value;
 	std::string nmspace = "";
 	unsigned int row = current_token.row;
@@ -124,21 +124,21 @@ ASTNamespaceManagerNode* Parser::parse_namespace_manager_statement() {
 	nmspace = current_token.value;
 	consume_token(TOK_SEMICOLON);
 
-	return new ASTNamespaceManagerNode(image, nmspace, row, col);
+	return std::make_shared<ASTNamespaceManagerNode>(image, nmspace, row, col);
 }
 
-ASTExprNode* Parser::parse_statement_expression() {
-	ASTExprNode* expr = parse_expression();
+std::shared_ptr<ASTExprNode> Parser::parse_statement_expression() {
+	std::shared_ptr<ASTExprNode> expr = parse_expression();
 	if (next_token.type != lexer::TOK_EOF) {
 		check_consume_semicolon();
 	}
 	return expr;
 }
 
-ASTReturnNode* Parser::parse_return_statement() {
+std::shared_ptr<ASTReturnNode> Parser::parse_return_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
-	ASTExprNode* expr = nullptr;
+	std::shared_ptr<ASTExprNode> expr = nullptr;
 
 	if (next_token.type != TOK_SEMICOLON) {
 		consume_token();
@@ -147,26 +147,26 @@ ASTReturnNode* Parser::parse_return_statement() {
 
 	check_consume_semicolon();
 
-	return new ASTReturnNode(expr, row, col);
+	return std::make_shared<ASTReturnNode>(expr, row, col);
 }
 
-ASTExitNode* Parser::parse_exit_statement() {
+std::shared_ptr<ASTExitNode> Parser::parse_exit_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
 	consume_token(TOK_LEFT_BRACKET);
 
 	consume_token();
-	ASTExprNode* expr = parse_expression();
+	std::shared_ptr<ASTExprNode> expr = parse_expression();
 
 	consume_token(TOK_RIGHT_BRACKET);
 
 	check_consume_semicolon();
 
-	return new ASTExitNode(expr, row, col);
+	return std::make_shared<ASTExitNode>(expr, row, col);
 }
 
-ASTEnumNode* Parser::parse_enum_statement() {
+std::shared_ptr<ASTEnumNode> Parser::parse_enum_statement() {
 	auto identifiers = std::vector<std::string>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
@@ -186,11 +186,11 @@ ASTEnumNode* Parser::parse_enum_statement() {
 	consume_token(TOK_RIGHT_CURLY);
 	check_consume_semicolon();
 
-	return new ASTEnumNode(identifiers, row, col);
+	return std::make_shared<ASTEnumNode>(identifiers, row, col);
 }
 
-ASTBlockNode* Parser::parse_block() {
-	auto statements = new std::vector<ASTNode*>();
+std::shared_ptr<ASTBlockNode> Parser::parse_block() {
+	auto statements = new std::vector<std::shared_ptr<ASTNode>>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -205,13 +205,13 @@ ASTBlockNode* Parser::parse_block() {
 	}
 
 	if (current_token.type == TOK_RIGHT_CURLY) {
-		return new ASTBlockNode(*statements, row, col);
+		return std::make_shared<ASTBlockNode>(*statements, row, col);
 	}
 	throw std::runtime_error(msg_header() + "reached end of file while parsing");
 }
 
-ASTBlockNode* Parser::parse_struct_block() {
-	auto statements = new std::vector<ASTNode*>;
+std::shared_ptr<ASTBlockNode> Parser::parse_struct_block() {
+	auto statements = new std::vector<std::shared_ptr<ASTNode>>;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -224,12 +224,12 @@ ASTBlockNode* Parser::parse_struct_block() {
 	}
 
 	if (current_token.type == TOK_RIGHT_CURLY) {
-		return new ASTBlockNode(*statements, row, col);
+		return std::make_shared<ASTBlockNode>(*statements, row, col);
 	}
 	throw std::runtime_error(msg_header() + "mismatched scopes: reached end of file while parsing");
 }
 
-ASTStatementNode* Parser::parse_struct_block_variables() {
+std::shared_ptr<ASTStatementNode> Parser::parse_struct_block_variables() {
 	switch (current_token.type) {
 	case TOK_VAR:
 		return parse_declaration_statement();
@@ -242,7 +242,7 @@ ASTStatementNode* Parser::parse_struct_block_variables() {
 TypeDefinition Parser::parse_declaration_type_definition(Type ptype) {
 	Type type = ptype;
 	Type array_type = Type::T_UNDEFINED;
-	auto dim = std::vector<void*>();
+	auto dim = std::vector<std::shared_ptr<ASTExprNode>>();
 	std::string type_name;
 	std::string type_name_space;
 
@@ -288,8 +288,8 @@ VariableDefinition* Parser::parse_struct_var_def() {
 	std::string identifier;
 	Type type = Type::T_UNDEFINED;
 	TypeDefinition type_def = Type::T_UNDEFINED;
-	ASTExprNode* expr_size;
-	auto dim = std::vector<void*>();
+	std::shared_ptr<ASTExprNode> expr_size;
+	auto dim = std::vector<std::shared_ptr<ASTExprNode>>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -312,7 +312,7 @@ VariableDefinition* Parser::parse_struct_var_def() {
 	type_def = parse_declaration_type_definition(type);
 
 	if (is_rest) {
-		auto ndim = new ASTLiteralNode<cp_int>(0, row, col);
+		auto ndim = std::make_shared<ASTLiteralNode<cp_int>>(0, row, col);
 		if (!is_array(type_def.type)) {
 			type_def.array_type = type;
 			type_def.type = Type::T_ARRAY;
@@ -324,29 +324,29 @@ VariableDefinition* Parser::parse_struct_var_def() {
 		type_def.type_name_space, type_def.array_type, dim, nullptr, is_rest, row, col);
 };
 
-ASTContinueNode* Parser::parse_continue_statement() {
+std::shared_ptr<ASTContinueNode> Parser::parse_continue_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
 	check_consume_semicolon();
 
-	return new ASTContinueNode(row, col);
+	return std::make_shared<ASTContinueNode>(row, col);
 }
 
-ASTBreakNode* Parser::parse_break_statement() {
+std::shared_ptr<ASTBreakNode> Parser::parse_break_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
 	check_consume_semicolon();
 
-	return new ASTBreakNode(row, col);
+	return std::make_shared<ASTBreakNode>(row, col);
 }
 
-ASTSwitchNode* Parser::parse_switch_statement() {
-	ASTExprNode* condition;
-	std::map<ASTExprNode*, unsigned int>* case_blocks = new std::map<ASTExprNode*, unsigned int>();
+std::shared_ptr<ASTSwitchNode> Parser::parse_switch_statement() {
+	std::shared_ptr<ASTExprNode> condition;
+	std::map<std::shared_ptr<ASTExprNode>, unsigned int>* case_blocks = new std::map<std::shared_ptr<ASTExprNode>, unsigned int>();
 	long default_block = 0;
-	std::vector<ASTNode*>* statements = new std::vector<ASTNode*>();
+	std::vector<std::shared_ptr<ASTNode>>* statements = new std::vector<std::shared_ptr<ASTNode>>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -360,7 +360,7 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 	while (current_token.type == TOK_CASE) {
 		bool is_block = false;
 		consume_token();
-		ASTExprNode* case_exrp = parse_expression();
+		std::shared_ptr<ASTExprNode> case_exrp = parse_expression();
 		int start_position = statements->size();
 		consume_token();
 		consume_token();
@@ -403,12 +403,12 @@ ASTSwitchNode* Parser::parse_switch_statement() {
 
 	default_block = statements->size();
 
-	return new ASTSwitchNode(condition, *statements, *case_blocks, default_block, row, col);
+	return std::make_shared<ASTSwitchNode>(condition, *statements, *case_blocks, default_block, row, col);
 }
 
-ASTElseIfNode* Parser::parse_else_if_statement() {
-	ASTExprNode* condition;
-	ASTBlockNode* if_block;
+std::shared_ptr<ASTElseIfNode> Parser::parse_else_if_statement() {
+	std::shared_ptr<ASTExprNode> condition;
+	std::shared_ptr<ASTBlockNode> if_block;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -419,14 +419,14 @@ ASTElseIfNode* Parser::parse_else_if_statement() {
 	consume_token(TOK_LEFT_CURLY);
 	if_block = parse_block();
 
-	return new ASTElseIfNode(condition, if_block, row, col);
+	return std::make_shared<ASTElseIfNode>(condition, if_block, row, col);
 }
 
-ASTIfNode* Parser::parse_if_statement() {
-	ASTExprNode* condition;
-	ASTBlockNode* if_block;
-	std::vector<ASTElseIfNode*> else_ifs = std::vector<ASTElseIfNode*>();
-	ASTBlockNode* else_block = nullptr;
+std::shared_ptr<ASTIfNode> Parser::parse_if_statement() {
+	std::shared_ptr<ASTExprNode> condition;
+	std::shared_ptr<ASTBlockNode> if_block;
+	std::vector<std::shared_ptr<ASTElseIfNode>> else_ifs = std::vector<std::shared_ptr<ASTElseIfNode>>();
+	std::shared_ptr<ASTBlockNode> else_block = nullptr;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -456,13 +456,13 @@ ASTIfNode* Parser::parse_if_statement() {
 		}
 	}
 
-	return new ASTIfNode(condition, if_block, else_ifs, else_block, row, col);
+	return std::make_shared<ASTIfNode>(condition, if_block, else_ifs, else_block, row, col);
 }
 
-ASTTryCatchNode* Parser::parse_try_catch_statement() {
-	ASTStatementNode* decl;
-	ASTBlockNode* try_block;
-	ASTBlockNode* catch_block;
+std::shared_ptr<ASTTryCatchNode> Parser::parse_try_catch_statement() {
+	std::shared_ptr<ASTStatementNode> decl;
+	std::shared_ptr<ASTBlockNode> try_block;
+	std::shared_ptr<ASTBlockNode> catch_block;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -474,7 +474,7 @@ ASTTryCatchNode* Parser::parse_try_catch_statement() {
 	consume_token(TOK_LEFT_BRACKET);
 	consume_token();
 	if (current_token.type == TOK_RETICENCES) {
-		decl = new ASTReticencesNode(row, col);
+		decl = std::make_shared<ASTReticencesNode>(row, col);
 	}
 	else {
 		check_current_token(TOK_VAR);
@@ -488,24 +488,24 @@ ASTTryCatchNode* Parser::parse_try_catch_statement() {
 	catch_block = parse_block();
 	check_current_token(TOK_RIGHT_CURLY);
 
-	return new ASTTryCatchNode(decl, try_block, catch_block, row, col);
+	return std::make_shared<ASTTryCatchNode>(decl, try_block, catch_block, row, col);
 }
 
-ASTThrowNode* Parser::parse_throw_statement() {
+std::shared_ptr<ASTThrowNode> Parser::parse_throw_statement() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
-	ASTExprNode* expr;
+	std::shared_ptr<ASTExprNode> expr;
 
 	consume_token();
 	expr = parse_expression();
 	check_consume_semicolon();
 
-	return new ASTThrowNode(expr, row, col);
+	return std::make_shared<ASTThrowNode>(expr, row, col);
 }
 
-ASTForNode* Parser::parse_for_statement() {
-	std::array<ASTNode*, 3> dci = { nullptr };
-	ASTBlockNode* block;
+std::shared_ptr<ASTForNode> Parser::parse_for_statement() {
+	std::array<std::shared_ptr<ASTNode>, 3> dci = { nullptr };
+	std::shared_ptr<ASTBlockNode> block;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -531,11 +531,11 @@ ASTForNode* Parser::parse_for_statement() {
 
 	block = parse_block();
 
-	return new ASTForNode(dci, block, row, col);
+	return std::make_shared<ASTForNode>(dci, block, row, col);
 }
 
-ASTNode* Parser::parse_foreach_collection() {
-	ASTNode* node = nullptr;
+std::shared_ptr<ASTNode> Parser::parse_foreach_collection() {
+	std::shared_ptr<ASTNode> node = nullptr;
 
 	consume_semicolon.push(false);
 	switch (current_token.type) {
@@ -553,10 +553,10 @@ ASTNode* Parser::parse_foreach_collection() {
 	return node;
 }
 
-ASTForEachNode* Parser::parse_foreach_statement() {
-	ASTStatementNode* itdecl;
-	ASTNode* collection;
-	ASTBlockNode* block;
+std::shared_ptr<ASTForEachNode> Parser::parse_foreach_statement() {
+	std::shared_ptr<ASTStatementNode> itdecl;
+	std::shared_ptr<ASTNode> collection;
+	std::shared_ptr<ASTBlockNode> block;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -573,12 +573,12 @@ ASTForEachNode* Parser::parse_foreach_statement() {
 	consume_token(TOK_LEFT_CURLY);
 	block = parse_block();
 
-	return new ASTForEachNode(itdecl, collection, block, row, col);
+	return std::make_shared<ASTForEachNode>(itdecl, collection, block, row, col);
 }
 
-ASTWhileNode* Parser::parse_while_statement() {
-	ASTExprNode* condition;
-	ASTBlockNode* block;
+std::shared_ptr<ASTWhileNode> Parser::parse_while_statement() {
+	std::shared_ptr<ASTExprNode> condition;
+	std::shared_ptr<ASTBlockNode> block;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -589,12 +589,12 @@ ASTWhileNode* Parser::parse_while_statement() {
 	consume_token(TOK_LEFT_CURLY);
 	block = parse_block();
 
-	return new ASTWhileNode(condition, block, row, col);
+	return std::make_shared<ASTWhileNode>(condition, block, row, col);
 }
 
-ASTDoWhileNode* Parser::parse_do_while_statement() {
-	ASTExprNode* condition;
-	ASTBlockNode* block;
+std::shared_ptr<ASTDoWhileNode> Parser::parse_do_while_statement() {
+	std::shared_ptr<ASTExprNode> condition;
+	std::shared_ptr<ASTBlockNode> block;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -609,17 +609,17 @@ ASTDoWhileNode* Parser::parse_do_while_statement() {
 	check_consume_semicolon();
 	consume_semicolon.pop();
 
-	return new ASTDoWhileNode(condition, block, row, col);
+	return std::make_shared<ASTDoWhileNode>(condition, block, row, col);
 }
 
-ASTFunctionExpression* Parser::parse_function_expression() {
+std::shared_ptr<ASTFunctionExpression> Parser::parse_function_expression() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 	consume_token();
-	return new ASTFunctionExpression(parse_function_definition(""), row, col);
+	return std::make_shared<ASTFunctionExpression>(parse_function_definition(""), row, col);
 }
 
-ASTFunctionDefinitionNode* Parser::parse_function_statement() {
+std::shared_ptr<ASTFunctionDefinitionNode> Parser::parse_function_statement() {
 	consume_token(TOK_IDENTIFIER);
 	std::string identifier = current_token.value;
 	consume_token(TOK_LEFT_BRACKET);
@@ -650,13 +650,13 @@ TypeDefinition Parser::parse_unpacked_type_definition() {
 		type = Type::T_ANY;
 	}
 
-	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<void*>(), type_name, type_name_space);
+	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), type_name, type_name_space);
 }
 
 TypeDefinition Parser::parse_function_type_definition() {
 	Type type = Type::T_VOID;
 	Type array_type = parser::Type::T_UNDEFINED;
-	auto dim_vector = std::vector<void*>();
+	auto dim_vector = std::vector<std::shared_ptr<ASTExprNode>>();
 	std::string type_name = "";
 	std::string type_name_space = "";
 
@@ -694,10 +694,10 @@ TypeDefinition Parser::parse_function_type_definition() {
 	return TypeDefinition(type, array_type, dim_vector, type_name, type_name_space);
 }
 
-ASTFunctionDefinitionNode* Parser::parse_function_definition(const std::string& identifier) {
+std::shared_ptr<ASTFunctionDefinitionNode> Parser::parse_function_definition(const std::string& identifier) {
 	std::vector<TypeDefinition*> parameters;
 	TypeDefinition type_def;
-	ASTBlockNode* block = nullptr;
+	std::shared_ptr<ASTBlockNode> block = nullptr;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -737,11 +737,11 @@ ASTFunctionDefinitionNode* Parser::parse_function_definition(const std::string& 
 		}
 	}
 
-	return new ASTFunctionDefinitionNode(identifier, parameters, type_def.type,
+	return std::make_shared<ASTFunctionDefinitionNode>(identifier, parameters, type_def.type,
 		type_def.type_name, type_def.type_name_space, type_def.array_type, type_def.dim, block, row, col);
 }
 
-ASTStructDefinitionNode* Parser::parse_struct_definition() {
+std::shared_ptr<ASTStructDefinitionNode> Parser::parse_struct_definition() {
 	std::string identifier;
 	std::map<std::string, VariableDefinition> variables;
 	unsigned int row = current_token.row;
@@ -764,51 +764,51 @@ ASTStructDefinitionNode* Parser::parse_struct_definition() {
 
 	check_consume_semicolon();
 
-	return new ASTStructDefinitionNode(identifier, variables, row, col);
+	return std::make_shared<ASTStructDefinitionNode>(identifier, variables, row, col);
 }
 
-ASTExprNode* Parser::parse_expression() {
+std::shared_ptr<ASTExprNode> Parser::parse_expression() {
 	return parse_ternary_expression();
 }
 
-ASTExprNode* Parser::parse_ternary_expression() {
+std::shared_ptr<ASTExprNode> Parser::parse_ternary_expression() {
 	auto expr = parse_in_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
 	if (next_token.type == TOK_QMARK) {
-		ASTExprNode* value_if_true;
-		ASTExprNode* value_if_false;
+		std::shared_ptr<ASTExprNode> value_if_true;
+		std::shared_ptr<ASTExprNode> value_if_false;
 		consume_token();
 		consume_token();
 		value_if_true = parse_ternary_expression();
 		consume_token(TOK_COLON);
 		consume_token();
 		value_if_false = parse_ternary_expression();
-		return new ASTTernaryNode(expr, value_if_true, value_if_false, row, col);
+		return std::make_shared<ASTTernaryNode>(expr, value_if_true, value_if_false, row, col);
 	}
 
 	return expr;
 }
 
-ASTExprNode* Parser::parse_in_expression() {
+std::shared_ptr<ASTExprNode> Parser::parse_in_expression() {
 	auto expr = parse_logical_or_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
 	if (next_token.type == TOK_IN) {
-		ASTExprNode* collection;
+		std::shared_ptr<ASTExprNode> collection;
 		consume_token();
 		consume_token();
 		collection = parse_logical_or_expression();
-		return new ASTInNode(expr, collection, row, col);
+		return std::make_shared<ASTInNode>(expr, collection, row, col);
 	}
 
 	return expr;
 }
 
-ASTExprNode* Parser::parse_logical_or_expression() {
-	ASTExprNode* lhs = parse_logical_and_expression();
+std::shared_ptr<ASTExprNode> Parser::parse_logical_or_expression() {
+	std::shared_ptr<ASTExprNode> lhs = parse_logical_and_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -817,14 +817,14 @@ ASTExprNode* Parser::parse_logical_or_expression() {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		auto rhs = parse_logical_and_expression();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+		lhs = std::make_shared<ASTBinaryExprNode>(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parse_logical_and_expression() {
-	ASTExprNode* lhs = parse_bitwise_or_expression();
+std::shared_ptr<ASTExprNode> Parser::parse_logical_and_expression() {
+	std::shared_ptr<ASTExprNode> lhs = parse_bitwise_or_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -833,14 +833,14 @@ ASTExprNode* Parser::parse_logical_and_expression() {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		auto rhs = parse_bitwise_or_expression();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+		lhs = std::make_shared<ASTBinaryExprNode>(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parse_bitwise_or_expression() {
-	ASTExprNode* lhs = parse_bitwise_xor_expression();
+std::shared_ptr<ASTExprNode> Parser::parse_bitwise_or_expression() {
+	std::shared_ptr<ASTExprNode> lhs = parse_bitwise_xor_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -849,14 +849,14 @@ ASTExprNode* Parser::parse_bitwise_or_expression() {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		auto rhs = parse_bitwise_xor_expression();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+		lhs = std::make_shared<ASTBinaryExprNode>(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parse_bitwise_xor_expression() {
-	ASTExprNode* lhs = parse_bitwise_and_expression();
+std::shared_ptr<ASTExprNode> Parser::parse_bitwise_xor_expression() {
+	std::shared_ptr<ASTExprNode> lhs = parse_bitwise_and_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -865,14 +865,14 @@ ASTExprNode* Parser::parse_bitwise_xor_expression() {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		auto rhs = parse_bitwise_and_expression();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+		lhs = std::make_shared<ASTBinaryExprNode>(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parse_bitwise_and_expression() {
-	ASTExprNode* lhs = parse_equality_expression();
+std::shared_ptr<ASTExprNode> Parser::parse_bitwise_and_expression() {
+	std::shared_ptr<ASTExprNode> lhs = parse_equality_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -881,14 +881,14 @@ ASTExprNode* Parser::parse_bitwise_and_expression() {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		auto rhs = parse_equality_expression();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+		lhs = std::make_shared<ASTBinaryExprNode>(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parse_equality_expression() {
-	ASTExprNode* lhs = parse_relational_expression();
+std::shared_ptr<ASTExprNode> Parser::parse_equality_expression() {
+	std::shared_ptr<ASTExprNode> lhs = parse_relational_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -897,14 +897,14 @@ ASTExprNode* Parser::parse_equality_expression() {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		auto rhs = parse_relational_expression();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+		lhs = std::make_shared<ASTBinaryExprNode>(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parse_relational_expression() {
-	ASTExprNode* lhs = parse_spaceship_expression();
+std::shared_ptr<ASTExprNode> Parser::parse_relational_expression() {
+	std::shared_ptr<ASTExprNode> lhs = parse_spaceship_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -913,14 +913,14 @@ ASTExprNode* Parser::parse_relational_expression() {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		auto rhs = parse_spaceship_expression();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+		lhs = std::make_shared<ASTBinaryExprNode>(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parse_spaceship_expression() {
-	ASTExprNode* lhs = parse_bitwise_shift_expression();
+std::shared_ptr<ASTExprNode> Parser::parse_spaceship_expression() {
+	std::shared_ptr<ASTExprNode> lhs = parse_bitwise_shift_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -929,14 +929,14 @@ ASTExprNode* Parser::parse_spaceship_expression() {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		auto rhs = parse_bitwise_shift_expression();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+		lhs = std::make_shared<ASTBinaryExprNode>(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parse_bitwise_shift_expression() {
-	ASTExprNode* lhs = parse_simple_expression();
+std::shared_ptr<ASTExprNode> Parser::parse_bitwise_shift_expression() {
+	std::shared_ptr<ASTExprNode> lhs = parse_simple_expression();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -945,14 +945,14 @@ ASTExprNode* Parser::parse_bitwise_shift_expression() {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		auto rhs = parse_simple_expression();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+		lhs = std::make_shared<ASTBinaryExprNode>(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parse_simple_expression() {
-	ASTExprNode* lhs = parse_term();
+std::shared_ptr<ASTExprNode> Parser::parse_simple_expression() {
+	std::shared_ptr<ASTExprNode> lhs = parse_term();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -961,14 +961,14 @@ ASTExprNode* Parser::parse_simple_expression() {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		auto rhs = parse_term();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+		lhs = std::make_shared<ASTBinaryExprNode>(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parse_term() {
-	ASTExprNode* lhs = parse_exponentiation();
+std::shared_ptr<ASTExprNode> Parser::parse_term() {
+	std::shared_ptr<ASTExprNode> lhs = parse_exponentiation();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -977,14 +977,14 @@ ASTExprNode* Parser::parse_term() {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		auto rhs = parse_exponentiation();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+		lhs = std::make_shared<ASTBinaryExprNode>(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parse_exponentiation() {
-	ASTExprNode* lhs = parse_factor();
+std::shared_ptr<ASTExprNode> Parser::parse_exponentiation() {
+	std::shared_ptr<ASTExprNode> lhs = parse_factor();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -993,13 +993,13 @@ ASTExprNode* Parser::parse_exponentiation() {
 		std::string current_token_value = current_token.value;
 		consume_token();
 		auto rhs = parse_factor();
-		lhs = new ASTBinaryExprNode(current_token_value, lhs, rhs, row, col);
+		lhs = std::make_shared<ASTBinaryExprNode>(current_token_value, lhs, rhs, row, col);
 	}
 
 	return lhs;
 }
 
-ASTExprNode* Parser::parse_factor() {
+std::shared_ptr<ASTExprNode> Parser::parse_factor() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1007,15 +1007,15 @@ ASTExprNode* Parser::parse_factor() {
 
 		// literal cases
 	case TOK_BOOL_LITERAL:
-		return new ASTLiteralNode<cp_bool>(parse_bool_literal(), row, col);
+		return std::make_shared<ASTLiteralNode<cp_bool>>(parse_bool_literal(), row, col);
 	case TOK_INT_LITERAL:
-		return new ASTLiteralNode<cp_int>(parse_int_literal(), row, col);
+		return std::make_shared<ASTLiteralNode<cp_int>>(parse_int_literal(), row, col);
 	case TOK_FLOAT_LITERAL:
-		return new ASTLiteralNode<cp_float>(parse_float_literal(), row, col);
+		return std::make_shared<ASTLiteralNode<cp_float>>(parse_float_literal(), row, col);
 	case TOK_CHAR_LITERAL:
-		return new ASTLiteralNode<cp_char>(parse_char_literal(), row, col);
+		return std::make_shared<ASTLiteralNode<cp_char>>(parse_char_literal(), row, col);
 	case TOK_STRING_LITERAL:
-		return new ASTLiteralNode<cp_string>(parse_string_literal(), row, col);
+		return std::make_shared<ASTLiteralNode<cp_string>>(parse_string_literal(), row, col);
 
 	case TOK_LEFT_CURLY:
 		return parse_array_constructor_node();
@@ -1029,7 +1029,7 @@ ASTExprNode* Parser::parse_factor() {
 		return parse_type_parse_node();
 
 	case TOK_NULL:
-		return new ASTNullNode(row, col);
+		return std::make_shared<ASTNullNode>(row, col);
 
 	case TOK_THIS:
 		return parse_this_node();
@@ -1051,7 +1051,7 @@ ASTExprNode* Parser::parse_factor() {
 		// subexpression case
 	case TOK_LEFT_BRACKET: {
 		consume_token();
-		ASTExprNode* sub_expr = parse_expression();
+		std::shared_ptr<ASTExprNode> sub_expr = parse_expression();
 		consume_token(TOK_RIGHT_BRACKET);
 		return sub_expr;
 	}
@@ -1061,13 +1061,13 @@ ASTExprNode* Parser::parse_factor() {
 	case TOK_UNREF: {
 		std::string current_token_value = current_token.value;
 		consume_token();
-		return new ASTUnaryExprNode(current_token_value, parse_factor(), row, col);
+		return std::make_shared<ASTUnaryExprNode>(current_token_value, parse_factor(), row, col);
 	}
 	case TOK_ADDITIVE_OP:
 	case TOK_NOT: {
 		std::string current_token_value = current_token.value;
 		consume_token();
-		return new ASTUnaryExprNode(current_token_value, parse_exponentiation(), row, col);
+		return std::make_shared<ASTUnaryExprNode>(current_token_value, parse_exponentiation(), row, col);
 	}
 
 	default:
@@ -1075,8 +1075,8 @@ ASTExprNode* Parser::parse_factor() {
 	}
 }
 
-ASTExprNode* Parser::parse_identifier_expression() {
-	ASTIdentifierNode* identifier = parse_identifier_node();
+std::shared_ptr<ASTExprNode> Parser::parse_identifier_expression() {
+	std::shared_ptr<ASTIdentifierNode> identifier = parse_identifier_node();
 
 	switch (next_token.type) {
 	case TOK_LEFT_BRACKET:
@@ -1088,22 +1088,22 @@ ASTExprNode* Parser::parse_identifier_expression() {
 	case TOK_INCREMENT_OP: {
 		consume_token();
 		std::string op = current_token.value;
-		return new ASTUnaryExprNode(op, identifier, identifier->row, identifier->col);
+		return std::make_shared<ASTUnaryExprNode>(op, identifier, identifier->row, identifier->col);
 	}
 	default:
 		return identifier;
 	}
 }
 
-ASTNode* Parser::parse_identifier_statement() {
-	ASTIdentifierNode* identifier = parse_identifier_node();
+std::shared_ptr<ASTNode> Parser::parse_identifier_statement() {
+	std::shared_ptr<ASTIdentifierNode> identifier = parse_identifier_node();
 
 	switch (next_token.type) {
 	case TOK_LEFT_BRACKET: {
 		if (identifier->identifier_vector.size() > 1) {
 			throw std::runtime_error(msg_header() + "unexpected token '" + next_token.value + "'");
 		}
-		ASTFunctionCallNode* expr = parse_function_call_node(identifier);
+		std::shared_ptr<ASTFunctionCallNode> expr = parse_function_call_node(identifier);
 		check_consume_semicolon();
 		return expr;
 	}
@@ -1120,11 +1120,11 @@ ASTNode* Parser::parse_identifier_statement() {
 	}
 }
 
-ASTFunctionCallNode* Parser::parse_function_call_node(ASTIdentifierNode* idnode) {
+std::shared_ptr<ASTFunctionCallNode> Parser::parse_function_call_node(std::shared_ptr<ASTIdentifierNode> idnode) {
 	std::string identifier = std::move(idnode->identifier_vector[0].identifier);
 	std::string nmspace = std::move(idnode->nmspace);
 	auto identifier_vector = std::vector<Identifier>();
-	auto* parameters = new std::vector<ASTExprNode*>();
+	auto* parameters = new std::vector<std::shared_ptr<ASTExprNode>>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1156,19 +1156,19 @@ ASTFunctionCallNode* Parser::parse_function_call_node(ASTIdentifierNode* idnode)
 
 	identifier_vector.emplace(identifier_vector.begin(), id);
 
-	return new ASTFunctionCallNode(nmspace, identifier_vector, *parameters, row, col);
+	return std::make_shared<ASTFunctionCallNode>(nmspace, identifier_vector, *parameters, row, col);
 }
 
-ASTUnaryExprNode* Parser::parse_increment_expression(ASTIdentifierNode* identifier) {
+std::shared_ptr<ASTUnaryExprNode> Parser::parse_increment_expression(std::shared_ptr<ASTIdentifierNode> identifier) {
 	consume_token();
 	std::string op = current_token.value;
 
 	check_consume_semicolon();
 
-	return new ASTUnaryExprNode(op, identifier, identifier->row, identifier->col);
+	return std::make_shared<ASTUnaryExprNode>(op, identifier, identifier->row, identifier->col);
 }
 
-ASTIdentifierNode* Parser::parse_identifier_node() {
+std::shared_ptr<ASTIdentifierNode> Parser::parse_identifier_node() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 	std::string nmspace = "";
@@ -1182,15 +1182,15 @@ ASTIdentifierNode* Parser::parse_identifier_node() {
 
 	identifier_vector = parse_identifier_vector();
 
-	return new ASTIdentifierNode(identifier_vector, nmspace, row, col);
+	return std::make_shared<ASTIdentifierNode>(identifier_vector, nmspace, row, col);
 }
 
-std::vector<void*> Parser::parse_dimension_vector() {
-	std::vector<void*> access_vector = std::vector<void*>();
+std::vector<std::shared_ptr<ASTExprNode>> Parser::parse_dimension_vector() {
+	std::vector<std::shared_ptr<ASTExprNode>> access_vector = std::vector<std::shared_ptr<ASTExprNode>>();
 
 	if (current_token.type == TOK_LEFT_BRACE) {
 		do {
-			ASTExprNode* expr_size = nullptr;
+			std::shared_ptr<ASTExprNode> expr_size = nullptr;
 			consume_token();
 			if (current_token.type != TOK_RIGHT_BRACE) {
 				expr_size = parse_expression();
@@ -1210,7 +1210,7 @@ std::vector<void*> Parser::parse_dimension_vector() {
 
 Identifier Parser::parse_identifier() {
 	std::string identifier = "";
-	std::vector<void*> access_vector = std::vector<void*>();
+	std::vector<std::shared_ptr<ASTExprNode>> access_vector = std::vector<std::shared_ptr<ASTExprNode>>();
 
 	identifier = current_token.value;
 
@@ -1240,11 +1240,11 @@ std::vector<Identifier> Parser::parse_identifier_vector() {
 	return identifier_vector;
 }
 
-ASTAssignmentNode* Parser::parse_assignment_statement(ASTIdentifierNode* identifier) {
+std::shared_ptr<ASTAssignmentNode> Parser::parse_assignment_statement(std::shared_ptr<ASTIdentifierNode> identifier) {
 	std::string op = std::string();
-	ASTExprNode* expr = nullptr;
-	ASTExprNode* expr_size = nullptr;
-	auto access_vector = std::vector<ASTExprNode*>();
+	std::shared_ptr<ASTExprNode> expr = nullptr;
+	std::shared_ptr<ASTExprNode> expr_size = nullptr;
+	auto access_vector = std::vector<std::shared_ptr<ASTExprNode>>();
 
 	consume_token();
 	if (current_token.type != TOK_ADDITIVE_OP && current_token.type != TOK_MULTIPLICATIVE_OP && current_token.type != TOK_EQUALS) {
@@ -1257,15 +1257,15 @@ ASTAssignmentNode* Parser::parse_assignment_statement(ASTIdentifierNode* identif
 
 	check_consume_semicolon();
 
-	return new ASTAssignmentNode(identifier->identifier_vector, identifier->nmspace, op, expr, identifier->row, identifier->col);
+	return std::make_shared<ASTAssignmentNode>(identifier->identifier_vector, identifier->nmspace, op, expr, identifier->row, identifier->col);
 }
 
-ASTDeclarationNode* Parser::parse_declaration_statement() {
+std::shared_ptr<ASTDeclarationNode> Parser::parse_declaration_statement() {
 	Type type = Type::T_UNDEFINED;
 	TypeDefinition type_def;
 	std::string identifier;
-	ASTExprNode* expr;
-	auto dim_vector = std::vector<void*>();
+	std::shared_ptr<ASTExprNode> expr;
+	auto dim_vector = std::vector<std::shared_ptr<ASTExprNode>>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 	bool is_const = current_token.type == TOK_CONST;
@@ -1292,17 +1292,17 @@ ASTDeclarationNode* Parser::parse_declaration_statement() {
 
 	check_consume_semicolon();
 
-	return new ASTDeclarationNode(identifier, type_def.type, type_def.array_type, dim_vector, type_def.type_name, type_def.type_name_space, expr, is_const, row, col);
+	return std::make_shared<ASTDeclarationNode>(identifier, type_def.type, type_def.array_type, dim_vector, type_def.type_name, type_def.type_name_space, expr, is_const, row, col);
 }
 
-ASTStatementNode* Parser::parse_unpacked_declaration_statement() {
+std::shared_ptr<ASTStatementNode> Parser::parse_unpacked_declaration_statement() {
 	if (current_token.type == TOK_CONST || next_token.type == TOK_IDENTIFIER) {
 		return parse_declaration_statement();
 	}
 	else if (current_token.type == TOK_VAR && next_token.type == TOK_LEFT_BRACE) {
 		TypeDefinition type_def;
-		std::vector<ASTDeclarationNode*> declarations;
-		ASTExprNode* expr;
+		std::vector<std::shared_ptr<ASTDeclarationNode>> declarations;
+		std::shared_ptr<ASTExprNode> expr;
 		unsigned int row = current_token.row;
 		unsigned int col = current_token.col;
 
@@ -1332,7 +1332,7 @@ ASTStatementNode* Parser::parse_unpacked_declaration_statement() {
 
 		check_consume_semicolon();
 
-		return new ASTUnpackedDeclarationNode(type_def.type, type_def.array_type, type_def.dim,
+		return std::make_shared<ASTUnpackedDeclarationNode>(type_def.type, type_def.array_type, type_def.dim,
 			type_def.type_name, type_def.type_name_space, declarations, expr, row, col);
 	}
 	else {
@@ -1347,8 +1347,8 @@ VariableDefinition* Parser::parse_formal_param() {
 	std::string type_name_space;
 	Type type = Type::T_UNDEFINED;
 	Type array_type = Type::T_UNDEFINED;
-	ASTExprNode* def_expr;
-	auto dim = std::vector<void*>();
+	std::shared_ptr<ASTExprNode> def_expr;
+	auto dim = std::vector<std::shared_ptr<ASTExprNode>>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1403,7 +1403,7 @@ VariableDefinition* Parser::parse_formal_param() {
 	array_type = current_array_type;
 
 	if (is_rest) {
-		auto ndim = new ASTLiteralNode<cp_int>(0, row, col);
+		auto ndim = std::make_shared<ASTLiteralNode<cp_int>>(0, row, col);
 		if (!is_array(type)) {
 			array_type = type;
 			type = Type::T_ARRAY;
@@ -1430,8 +1430,8 @@ VariableDefinition* Parser::parse_unpacked_formal_param() {
 	std::string type_name_space;
 	Type type = Type::T_UNDEFINED;
 	Type array_type = Type::T_UNDEFINED;
-	ASTExprNode* def_expr;
-	auto dim = std::vector<void*>();
+	std::shared_ptr<ASTExprNode> def_expr;
+	auto dim = std::vector<std::shared_ptr<ASTExprNode>>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1492,8 +1492,8 @@ VariableDefinition* Parser::parse_unpacked_formal_param() {
 		type_name_space, array_type, dim, def_expr, false, row, col);
 }
 
-std::vector<ASTExprNode*>* Parser::parse_actual_params() {
-	auto parameters = new std::vector<ASTExprNode*>();
+std::vector<std::shared_ptr<ASTExprNode>>* Parser::parse_actual_params() {
+	auto parameters = new std::vector<std::shared_ptr<ASTExprNode>>();
 
 	do {
 		consume_token();
@@ -1504,11 +1504,11 @@ std::vector<ASTExprNode*>* Parser::parse_actual_params() {
 	return parameters;
 }
 
-ASTTypingNode* Parser::parse_typing_node() {
+std::shared_ptr<ASTTypingNode> Parser::parse_typing_node() {
 	std::string image = current_token.value;
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
-	ASTExprNode* expr = nullptr;
+	std::shared_ptr<ASTExprNode> expr = nullptr;
 
 	consume_token(TOK_LEFT_BRACKET);
 
@@ -1522,7 +1522,7 @@ ASTTypingNode* Parser::parse_typing_node() {
 	case TOK_STRING_TYPE:
 	case TOK_FUNCTION_TYPE: {
 		auto id = parse_identifier();
-		expr = new ASTIdentifierNode(std::vector{ id }, std::string(), row, col);
+		expr = std::make_shared<ASTIdentifierNode>(std::vector{ id }, std::string(), row, col);
 		break;
 	}
 	default:
@@ -1531,13 +1531,13 @@ ASTTypingNode* Parser::parse_typing_node() {
 
 	consume_token(TOK_RIGHT_BRACKET);
 
-	return new ASTTypingNode(image, expr, row, col);
+	return std::make_shared<ASTTypingNode>(image, expr, row, col);
 }
 
-ASTArrayConstructorNode* Parser::parse_array_constructor_node() {
+std::shared_ptr<ASTArrayConstructorNode> Parser::parse_array_constructor_node() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
-	std::vector<ASTExprNode*> values = std::vector<ASTExprNode*>();
+	std::vector<std::shared_ptr<ASTExprNode>> values = std::vector<std::shared_ptr<ASTExprNode>>();
 
 	if (next_token.type != TOK_RIGHT_CURLY) {
 		do {
@@ -1554,13 +1554,13 @@ ASTArrayConstructorNode* Parser::parse_array_constructor_node() {
 		consume_token(TOK_RIGHT_CURLY);
 	}
 
-	return new ASTArrayConstructorNode(values, row, col);
+	return std::make_shared<ASTArrayConstructorNode>(values, row, col);
 }
 
-ASTStructConstructorNode* Parser::parse_struct_constructor_node(ASTIdentifierNode* idnode) {
+std::shared_ptr<ASTStructConstructorNode> Parser::parse_struct_constructor_node(std::shared_ptr<ASTIdentifierNode> idnode) {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
-	std::map<std::string, ASTExprNode*> values = std::map<std::string, ASTExprNode*>();
+	std::map<std::string, std::shared_ptr<ASTExprNode>> values = std::map<std::string, std::shared_ptr<ASTExprNode>>();
 	std::string nmspace = std::move(idnode->nmspace);
 	std::string type_name = std::move(idnode->identifier_vector[0].identifier);
 
@@ -1584,7 +1584,7 @@ ASTStructConstructorNode* Parser::parse_struct_constructor_node(ASTIdentifierNod
 
 	check_current_token(TOK_RIGHT_CURLY);
 
-	return new ASTStructConstructorNode(type_name, nmspace, values, row, col);
+	return std::make_shared<ASTStructConstructorNode>(type_name, nmspace, values, row, col);
 }
 
 cp_bool Parser::parse_bool_literal(){
@@ -1705,7 +1705,7 @@ cp_string Parser::parse_string_literal() {
 	return str;
 }
 
-ASTTypeParseNode* Parser::parse_type_parse_node() {
+std::shared_ptr<ASTTypeParseNode> Parser::parse_type_parse_node() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 	Type type = parse_type();
@@ -1713,18 +1713,18 @@ ASTTypeParseNode* Parser::parse_type_parse_node() {
 	consume_token(TOK_LEFT_BRACKET);
 
 	consume_token();
-	ASTExprNode* expr = parse_expression();
+	std::shared_ptr<ASTExprNode> expr = parse_expression();
 
 	consume_token(TOK_RIGHT_BRACKET);
 
-	return new ASTTypeParseNode(type, expr, row, col);
+	return std::make_shared<ASTTypeParseNode>(type, expr, row, col);
 }
 
-ASTThisNode* Parser::parse_this_node() {
+std::shared_ptr<ASTThisNode> Parser::parse_this_node() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	return new ASTThisNode(row, col);
+	return std::make_shared<ASTThisNode>(row, col);
 }
 
 void Parser::check_consume_semicolon() {

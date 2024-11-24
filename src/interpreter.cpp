@@ -16,7 +16,7 @@
 
 using namespace lexer;
 
-Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, ASTProgramNode* main_program, const std::map<std::string, ASTProgramNode*>& programs)
+Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, std::shared_ptr<ASTProgramNode> main_program, const std::map<std::string, std::shared_ptr<ASTProgramNode>>& programs)
 	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
 	current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 	gc.add_ptr_root(&current_expression_value);
@@ -35,7 +35,7 @@ void Interpreter::start() {
 	pop_namespace(pop);
 }
 
-void Interpreter::visit(ASTProgramNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTProgramNode> astnode) {
 	for (const auto& statement : astnode->statements) {
 		try {
 			statement->accept(this);
@@ -54,12 +54,12 @@ void Interpreter::visit(ASTProgramNode* astnode) {
 
 	if (astnode->statements.size() > 1
 		|| astnode->statements.size() > 0
-		&& !dynamic_cast<ASTExprNode*>(astnode->statements[0])) {
+		&& !std::dynamic_pointer_cast<ASTExprNode>(astnode->statements[0])) {
 		current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 	}
 }
 
-void Interpreter::visit(ASTUsingNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	std::string libname = axe::StringUtils::join(astnode->library, ".");
@@ -93,7 +93,7 @@ void Interpreter::visit(ASTUsingNode* astnode) {
 	}
 }
 
-void Interpreter::visit(ASTNamespaceManagerNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTNamespaceManagerNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -109,19 +109,19 @@ void Interpreter::visit(ASTNamespaceManagerNode* astnode) {
 	}
 }
 
-void Interpreter::visit(ASTEnumNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTEnumNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
-		auto var = std::make_shared<RuntimeVariable>(astnode->identifiers[i], Type::T_INT, Type::T_UNDEFINED, std::vector<void*>(), "", "");
+		auto var = std::make_shared<RuntimeVariable>(astnode->identifiers[i], Type::T_INT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "");
 		gc.add_root(var);
 		var->set_value(alocate_value(new RuntimeValue(cp_int(i))));
 		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], var);
 	}
 }
 
-void Interpreter::visit(ASTDeclarationNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	const auto& nmspace = get_namespace();
 
@@ -163,32 +163,31 @@ void Interpreter::visit(ASTDeclarationNode* astnode) {
 	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
 }
 
-void Interpreter::visit(ASTUnpackedDeclarationNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTUnpackedDeclarationNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	ASTIdentifierNode* var = nullptr;
+	std::shared_ptr<ASTIdentifierNode> var = nullptr;
 	if (astnode->expr) {
-		var = dynamic_cast<ASTIdentifierNode*>(astnode->expr);
+		var = std::dynamic_pointer_cast<ASTIdentifierNode>(astnode->expr);
 	}
 
-	for (auto declaration : astnode->declarations) {
+	for (auto& declaration : astnode->declarations) {
 		if (var) {
 			auto ids = var->identifier_vector;
 			ids.push_back(Identifier(declaration->identifier));
-			auto access_expr = new ASTIdentifierNode(ids, var->nmspace, declaration->row, declaration->col);
+			auto access_expr = std::make_shared<ASTIdentifierNode>(ids, var->nmspace, declaration->row, declaration->col);
 			declaration->expr = access_expr;
 		}
 
 		declaration->accept(this);
 
 		if (var) {
-			delete declaration->expr;
 			declaration->expr = nullptr;
 		}
 	}
 }
 
-void Interpreter::visit(ASTAssignmentNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->nmspace);
 
@@ -246,7 +245,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 
 		cp_int pos = 0;
 		if (has_string_access) {
-			static_cast<ASTExprNode*>(astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1])->accept(this);
+			std::dynamic_pointer_cast<ASTExprNode>(astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1])->accept(this);
 			pos = current_expression_value->get_i();
 		}
 
@@ -269,7 +268,7 @@ void Interpreter::visit(ASTAssignmentNode* astnode) {
 	pop_namespace(pop);
 }
 
-void Interpreter::visit(ASTReturnNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTReturnNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -285,7 +284,7 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 		if (value->type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
 			has_string_access = false;
 			std::string str = value->get_s();
-			static_cast<ASTExprNode*>(current_function_call_identifier_vector.top().back().access_vector[current_function_call_identifier_vector.top().back().access_vector.size() - 1])->accept(this);
+			std::dynamic_pointer_cast<ASTExprNode>(current_function_call_identifier_vector.top().back().access_vector[current_function_call_identifier_vector.top().back().access_vector.size() - 1])->accept(this);
 			auto pos = value->get_i();
 
 			auto char_value = alocate_value(new RuntimeValue(Type::T_CHAR));
@@ -318,7 +317,7 @@ void Interpreter::visit(ASTReturnNode* astnode) {
 	}
 }
 
-void Interpreter::visit(ASTFunctionCallNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->nmspace);
 	std::string nmspace = get_namespace();
@@ -327,6 +326,10 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	bool strict = true;
 	std::vector<TypeDefinition*> signature;
 	std::vector<RuntimeValue*> function_arguments;
+
+	if (astnode->identifier == "spawn_random" || astnode->identifier == "counts_zero") {
+		int x = 0;
+	}
 
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
@@ -402,7 +405,7 @@ void Interpreter::visit(ASTFunctionCallNode* astnode) {
 	pop_namespace(pop);
 }
 
-void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->type_name_space);
 	const auto& nmspace = get_namespace();
@@ -420,7 +423,7 @@ void Interpreter::visit(ASTFunctionDefinitionNode* astnode) {
 	pop_namespace(pop);
 }
 
-void Interpreter::visit(ASTFunctionExpression* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTFunctionExpression> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -436,7 +439,7 @@ void Interpreter::visit(ASTFunctionExpression* astnode) {
 	current_expression_value = value;
 }
 
-void Interpreter::visit(ASTBlockNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTBlockNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -473,7 +476,7 @@ void Interpreter::visit(ASTBlockNode* astnode) {
 	gc.collect();
 }
 
-void Interpreter::visit(ASTExitNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTExitNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->exit_code->accept(this);
@@ -483,19 +486,19 @@ void Interpreter::visit(ASTExitNode* astnode) {
 	exit_from_program = true;
 }
 
-void Interpreter::visit(ASTContinueNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTContinueNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	continue_block = true;
 }
 
-void Interpreter::visit(ASTBreakNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTBreakNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	break_block = true;
 }
 
-void Interpreter::visit(ASTSwitchNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTSwitchNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -557,7 +560,7 @@ void Interpreter::visit(ASTSwitchNode* astnode) {
 	gc.collect();
 }
 
-void Interpreter::visit(ASTElseIfNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTElseIfNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	executed_elif = false;
@@ -576,7 +579,7 @@ void Interpreter::visit(ASTElseIfNode* astnode) {
 	}
 }
 
-void Interpreter::visit(ASTIfNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTIfNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->condition->accept(this);
@@ -605,7 +608,7 @@ void Interpreter::visit(ASTIfNode* astnode) {
 	executed_elif = false;
 }
 
-void Interpreter::visit(ASTForNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTForNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -673,7 +676,7 @@ void Interpreter::visit(ASTForNode* astnode) {
 	gc.collect();
 }
 
-void Interpreter::visit(ASTForEachNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTForEachNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -683,7 +686,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 
 	scopes[nmspace].push_back(std::make_shared<Scope>());
 
-	auto itdecl = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl);
+	auto itdecl = std::dynamic_pointer_cast<ASTDeclarationNode>(astnode->itdecl);
 
 	switch (current_expression_value->type) {
 	case Type::T_ARRAY: {
@@ -691,11 +694,10 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		for (size_t i = 0; i < colletion.size(); ++i) {
 			auto val = colletion[i];
 
-			auto exnode = new ASTValueNode(val, astnode->row, astnode->col);
+			auto exnode = std::make_shared<ASTValueNode>(val, astnode->row, astnode->col);
 			itdecl->expr = exnode;
 			itdecl->accept(this);
 			itdecl->expr = nullptr;
-			delete exnode;
 
 			astnode->block->accept(this);
 
@@ -724,11 +726,10 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 		for (auto val : colletion) {
 			astnode->itdecl->accept(this);
 
-			auto exnode = new ASTValueNode(alocate_value(new RuntimeValue(cp_char(val))), astnode->row, astnode->col);
+			auto exnode = std::make_shared<ASTValueNode>(alocate_value(new RuntimeValue(cp_char(val))), astnode->row, astnode->col);
 			itdecl->expr = exnode;
 			itdecl->accept(this);
 			itdecl->expr = nullptr;
-			delete exnode;
 
 			astnode->block->accept(this);
 
@@ -766,33 +767,28 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 						+ "' declaration in foreach loop");
 				}
 
-				std::map<std::string, ASTExprNode*> values = {
-					{ "key", new ASTLiteralNode<cp_string>(cp_string(val.first), astnode->row, astnode->col) },
-					{ "value", new ASTValueNode(val.second, astnode->row, astnode->col) }
+				std::map<std::string, std::shared_ptr<ASTExprNode>> values = {
+					{ "key", std::make_shared<ASTLiteralNode<cp_string>>(cp_string(val.first), astnode->row, astnode->col) },
+					{ "value", std::make_shared<ASTValueNode>(val.second, astnode->row, astnode->col) }
 				};
-				auto exnode = new ASTStructConstructorNode("Pair", "cp", values, astnode->row, astnode->col);
+				auto exnode = std::make_shared<ASTStructConstructorNode>("Pair", "cp", values, astnode->row, astnode->col);
 				itdecl->expr = exnode;
 				itdecl->accept(this);
-				delete values["key"];
-				delete values["value"];
-				delete exnode;
 				itdecl->expr = nullptr;
 
 			}
-			else if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
+			else if (const auto idnode = std::dynamic_pointer_cast<ASTUnpackedDeclarationNode>(astnode->itdecl)) {
 				if (idnode->declarations.size() != 2) {
 					throw std::runtime_error("invalid number of values");
 				}
 
-				auto key_node = new ASTLiteralNode<cp_string>(cp_string(val.first), astnode->row, astnode->col);
+				auto key_node = std::make_shared<ASTLiteralNode<cp_string>>(cp_string(val.first), astnode->row, astnode->col);
 				idnode->declarations[0]->expr = key_node;
-				auto val_node = new ASTValueNode(val.second, astnode->row, astnode->col);
+				auto val_node = std::make_shared<ASTValueNode>(val.second, astnode->row, astnode->col);
 				idnode->declarations[1]->expr = val_node;
 				idnode->accept(this);
 				idnode->declarations[0]->expr = nullptr;
 				idnode->declarations[1]->expr = nullptr;
-				delete key_node;
-				delete val_node;
 			}
 
 			astnode->block->accept(this);
@@ -826,7 +822,7 @@ void Interpreter::visit(ASTForEachNode* astnode) {
 	gc.collect();
 }
 
-void Interpreter::visit(ASTTryCatchNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -845,27 +841,24 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 
 		scopes[nmspace].push_back(std::make_shared<Scope>());
 
-		if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
+		if (const auto idnode = std::dynamic_pointer_cast<ASTUnpackedDeclarationNode>(astnode->decl)) {
 			if (idnode->declarations.size() != 1) {
 				throw std::runtime_error("invalid number of values");
 			}
-			auto exnode = new ASTLiteralNode<cp_string>(ex.what(), astnode->row, astnode->col);
+			auto exnode = std::make_shared<ASTLiteralNode<cp_string>>(ex.what(), astnode->row, astnode->col);
 			idnode->declarations[0]->expr = exnode;
 			idnode->accept(this);
 			idnode->declarations[0]->expr = nullptr;
-			delete exnode;
 		}
-		else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
-			std::map<std::string, ASTExprNode*> values = {
-				{ "error", new ASTLiteralNode<cp_string>(ex.what(), astnode->row, astnode->col) }
+		else if (const auto idnode = std::dynamic_pointer_cast<ASTDeclarationNode>(astnode->decl)) {
+			std::map<std::string, std::shared_ptr<ASTExprNode>> values = {
+				{ "error", std::make_shared<ASTLiteralNode<cp_string>>(ex.what(), astnode->row, astnode->col) }
 			};
-			auto exnode = new ASTStructConstructorNode("Exception", "cp", values, astnode->row, astnode->col);
+			auto exnode = std::make_shared<ASTStructConstructorNode>("Exception", "cp", values, astnode->row, astnode->col);
 			idnode->expr = exnode;
-			delete values["error"];
-			delete exnode;
 			idnode->expr = nullptr;
 		}
-		else if (!dynamic_cast<ASTReticencesNode*>(astnode->decl)) {
+		else if (!std::dynamic_pointer_cast<ASTReticencesNode>(astnode->decl)) {
 			throw std::runtime_error("expected declaration");
 		}
 
@@ -875,7 +868,7 @@ void Interpreter::visit(ASTTryCatchNode* astnode) {
 	}
 }
 
-void Interpreter::visit(parser::ASTThrowNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTThrowNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->error->accept(this);
@@ -900,7 +893,7 @@ void Interpreter::visit(parser::ASTThrowNode* astnode) {
 
 }
 
-void Interpreter::visit(parser::ASTReticencesNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTReticencesNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	auto value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
@@ -908,7 +901,7 @@ void Interpreter::visit(parser::ASTReticencesNode* astnode) {
 	current_expression_value = value;
 }
 
-void Interpreter::visit(ASTWhileNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTWhileNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -955,7 +948,7 @@ void Interpreter::visit(ASTWhileNode* astnode) {
 	--is_loop;
 }
 
-void Interpreter::visit(ASTDoWhileNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTDoWhileNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -996,7 +989,7 @@ void Interpreter::visit(ASTDoWhileNode* astnode) {
 	--is_loop;
 }
 
-void Interpreter::visit(ASTStructDefinitionNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTStructDefinitionNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	auto str = StructureDefinition(astnode->identifier, astnode->variables, astnode->row, astnode->col);
@@ -1004,12 +997,12 @@ void Interpreter::visit(ASTStructDefinitionNode* astnode) {
 	scopes[get_namespace()].back()->declare_structure_definition(str);
 }
 
-void Interpreter::visit(ASTValueNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTValueNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	current_expression_value = dynamic_cast<RuntimeValue*>(astnode->value);
 }
 
-void Interpreter::visit(ASTLiteralNode<cp_bool>* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_bool>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	auto value = alocate_value(new RuntimeValue(Type::T_BOOL));
@@ -1017,7 +1010,7 @@ void Interpreter::visit(ASTLiteralNode<cp_bool>* astnode) {
 	current_expression_value = value;
 }
 
-void Interpreter::visit(ASTLiteralNode<cp_int>* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_int>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	auto value = alocate_value(new RuntimeValue(Type::T_INT));
@@ -1025,7 +1018,7 @@ void Interpreter::visit(ASTLiteralNode<cp_int>* astnode) {
 	current_expression_value = value;
 }
 
-void Interpreter::visit(ASTLiteralNode<cp_float>* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_float>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	auto value = alocate_value(new RuntimeValue(Type::T_FLOAT));
@@ -1033,7 +1026,7 @@ void Interpreter::visit(ASTLiteralNode<cp_float>* astnode) {
 	current_expression_value = value;
 }
 
-void Interpreter::visit(ASTLiteralNode<cp_char>* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_char>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	auto value = alocate_value(new RuntimeValue(Type::T_CHAR));
@@ -1041,7 +1034,7 @@ void Interpreter::visit(ASTLiteralNode<cp_char>* astnode) {
 	current_expression_value = value;
 }
 
-void Interpreter::visit(ASTLiteralNode<cp_string>* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	auto value = alocate_value(new RuntimeValue(Type::T_STRING));
@@ -1049,7 +1042,7 @@ void Interpreter::visit(ASTLiteralNode<cp_string>* astnode) {
 	current_expression_value = value;
 }
 
-void Interpreter::visit(ASTArrayConstructorNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	auto value = alocate_value(new RuntimeValue(Type::T_ARRAY));
@@ -1064,8 +1057,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 
 	++current_expression_array_dim_max;
 	if (!is_max) {
-		// TODO: fix memory leak
-		current_expression_array_dim.push_back(new ASTLiteralNode<cp_int>(0, astnode->row, astnode->col));
+		current_expression_array_dim.push_back(std::make_shared<ASTLiteralNode<cp_int>>(0, astnode->row, astnode->col));
 	}
 
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
@@ -1095,7 +1087,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	}
 
 	if (!is_max) {
-		((ASTLiteralNode<cp_int>*)current_expression_array_dim.back())->val = arr.size();
+		std::dynamic_pointer_cast<ASTLiteralNode<cp_int>>(current_expression_array_dim.back())->val = arr.size();
 	}
 
 	is_max = true;
@@ -1108,7 +1100,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	current_expression_value->type_name_space = current_expression_array_type.type_name_space;
 	--current_expression_array_dim_max;
 	size_t stay = current_expression_array_dim.size() - current_expression_array_dim_max;
-	std::vector<void*> current_expression_array_dim_aux;
+	std::vector<std::shared_ptr<ASTExprNode>> current_expression_array_dim_aux;
 	size_t curr_dim_i = current_expression_array_dim.size() - 1;
 	for (size_t i = 0; i < stay; ++i) {
 		current_expression_array_dim_aux.emplace(current_expression_array_dim_aux.begin(), current_expression_array_dim.at(curr_dim_i));
@@ -1124,7 +1116,7 @@ void Interpreter::visit(ASTArrayConstructorNode* astnode) {
 	}
 }
 
-void Interpreter::visit(ASTStructConstructorNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->nmspace);
 	std::shared_ptr<Scope> curr_scope;
@@ -1191,7 +1183,7 @@ void Interpreter::visit(ASTStructConstructorNode* astnode) {
 	pop_namespace(pop);
 }
 
-void Interpreter::visit(ASTIdentifierNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->nmspace);
 	const auto& nmspace = get_namespace();
@@ -1270,7 +1262,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	if (current_expression_value->type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
 		has_string_access = false;
 		auto str = current_expression_value->get_s();
-		static_cast<ASTExprNode*>(astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1])->accept(this);
+		std::dynamic_pointer_cast<ASTExprNode>(astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1])->accept(this);
 		auto pos = current_expression_value->get_i();
 
 		auto char_value = alocate_value(new RuntimeValue(Type::T_CHAR));
@@ -1281,7 +1273,7 @@ void Interpreter::visit(ASTIdentifierNode* astnode) {
 	pop_namespace(pop);
 }
 
-void Interpreter::visit(ASTBinaryExprNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTBinaryExprNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->left->accept(this);
@@ -1309,7 +1301,7 @@ void Interpreter::visit(ASTBinaryExprNode* astnode) {
 	current_expression_value = do_operation(astnode->op, l_value, r_value, true, 0);
 }
 
-void Interpreter::visit(ASTTernaryNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTTernaryNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->condition->accept(this);
@@ -1321,7 +1313,7 @@ void Interpreter::visit(ASTTernaryNode* astnode) {
 	}
 }
 
-void Interpreter::visit(ASTInNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTInNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->value->accept(this);
@@ -1354,22 +1346,19 @@ void Interpreter::visit(ASTInNode* astnode) {
 	current_expression_value = value;
 }
 
-void Interpreter::visit(ASTUnaryExprNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTUnaryExprNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	if (astnode->unary_op == "--" || astnode->unary_op == "++") {
-		auto expr = new ASTLiteralNode<cp_int>(1, astnode->row, astnode->col);
-		if (const auto id = dynamic_cast<ASTIdentifierNode*>(astnode->expr)) {
-			auto assign_node = new ASTAssignmentNode(id->identifier_vector, id->nmspace, std::string{ astnode->unary_op[0] } + "=", expr, astnode->row, astnode->col);
+		auto expr = std::make_shared<ASTLiteralNode<cp_int>>(1, astnode->row, astnode->col);
+		if (const auto id = std::dynamic_pointer_cast<ASTIdentifierNode>(astnode->expr)) {
+			auto assign_node = std::make_shared<ASTAssignmentNode>(id->identifier_vector, id->nmspace, std::string{ astnode->unary_op[0] } + "=", expr, astnode->row, astnode->col);
 			assign_node->accept(this);
-			delete assign_node;
 		}
 		else {
-			auto binex_node = new ASTBinaryExprNode(std::string{ astnode->unary_op[0] }, astnode->expr, expr, astnode->row, astnode->col);
+			auto binex_node = std::make_shared<ASTBinaryExprNode>(std::string{ astnode->unary_op[0] }, astnode->expr, expr, astnode->row, astnode->col);
 			binex_node->accept(this);
-			delete binex_node;
 		}
-		delete expr;
 	}
 	else {
 		astnode->expr->accept(this);
@@ -1423,7 +1412,7 @@ void Interpreter::visit(ASTUnaryExprNode* astnode) {
 
 }
 
-void Interpreter::visit(ASTTypeParseNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTTypeParseNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->expr->accept(this);
@@ -1536,19 +1525,19 @@ void Interpreter::visit(ASTTypeParseNode* astnode) {
 	current_expression_value = new_value;
 }
 
-void Interpreter::visit(ASTNullNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTNullNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	current_expression_value = alocate_value(new RuntimeValue(Type::T_VOID));
 }
 
-void Interpreter::visit(ASTThisNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTThisNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	current_expression_value = alocate_value(new RuntimeValue(cp_string(current_this_name.top())));
 }
 
-void Interpreter::visit(ASTTypingNode* astnode) {
+void Interpreter::visit(std::shared_ptr<ASTTypingNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->expr->accept(this);
@@ -1897,7 +1886,7 @@ RuntimeValue* Interpreter::access_value(const std::shared_ptr<Scope> scope, Runt
 	return next_value;
 }
 
-void Interpreter::check_build_array(RuntimeValue* new_value, std::vector<void*> dim) {
+void Interpreter::check_build_array(RuntimeValue* new_value, std::vector<std::shared_ptr<ASTExprNode>> dim) {
 	if (is_array(new_value->type) && dim.size() > 0) {
 		auto arr = new_value->get_arr();
 		bool has_array = false;
@@ -1921,7 +1910,7 @@ void Interpreter::check_build_array(RuntimeValue* new_value, std::vector<void*> 
 	}
 }
 
-cp_array Interpreter::build_array(const std::vector<void*>& dim, RuntimeValue* init_value, long long i) {
+cp_array Interpreter::build_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, RuntimeValue* init_value, long long i) {
 	cp_array raw_arr;
 
 	if (dim.size() - 1 == i) {
@@ -1934,7 +1923,7 @@ cp_array Interpreter::build_array(const std::vector<void*>& dim, RuntimeValue* i
 	}
 	else {
 		auto crr_acc = dim[i];
-		static_cast<ASTExprNode*>(crr_acc)->accept(this);
+		std::dynamic_pointer_cast<ASTExprNode>(crr_acc)->accept(this);
 		size = current_expression_value->get_i();
 	}
 
@@ -1954,7 +1943,7 @@ cp_array Interpreter::build_array(const std::vector<void*>& dim, RuntimeValue* i
 
 	if (i >= 0) {
 		size_t stay = dim.size() - i - 1;
-		std::vector<void*> curr_arr_dim;
+		std::vector<std::shared_ptr<ASTExprNode>> curr_arr_dim;
 		size_t curr_dim_i = dim.size() - 1;
 		for (size_t i = 0; i < stay; ++i) {
 			curr_arr_dim.emplace(curr_arr_dim.begin(), dim.at(curr_dim_i));
@@ -1970,7 +1959,7 @@ cp_array Interpreter::build_array(const std::vector<void*>& dim, RuntimeValue* i
 	return raw_arr;
 }
 
-cp_array Interpreter::build_undefined_array(const std::vector<void*>& dim, long long i) {
+cp_array Interpreter::build_undefined_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, long long i) {
 	cp_array raw_arr;
 
 	if (dim.size() - 1 == i) {
@@ -1983,7 +1972,7 @@ cp_array Interpreter::build_undefined_array(const std::vector<void*>& dim, long 
 	}
 	else {
 		auto crr_acc = dim[i];
-		static_cast<ASTExprNode*>(crr_acc)->accept(this);
+		std::dynamic_pointer_cast<ASTExprNode>(crr_acc)->accept(this);
 		size = current_expression_value->get_i();
 	}
 
@@ -2011,12 +2000,12 @@ std::vector<unsigned int> Interpreter::calculate_array_dim_size(const cp_array& 
 	return dim;
 }
 
-std::vector<unsigned int> Interpreter::evaluate_access_vector(const std::vector<void*>& expr_access_vector) {
+std::vector<unsigned int> Interpreter::evaluate_access_vector(const std::vector<std::shared_ptr<ASTExprNode>>& expr_access_vector) {
 	auto access_vector = std::vector<unsigned int>();
 	for (const auto& expr : expr_access_vector) {
 		unsigned int val = 0;
 		if (expr) {
-			static_cast<ASTExprNode*>(expr)->accept(this);
+			std::dynamic_pointer_cast<ASTExprNode>(expr)->accept(this);
 			if (!is_int(current_expression_value->type)) {
 				throw std::runtime_error("array index access must be a integer value");
 			}
@@ -2590,25 +2579,9 @@ cp_array Interpreter::do_operation(cp_array lval, cp_array rval, const std::stri
 		return rval;
 	}
 	else if (op == "+=" || op == "+") {
-		//auto size = lval.size() + rval.size();
-		//cp_array result = cp_array(size);
-
-		//std::sort(lval.begin(), lval.end(), [](const RuntimeValue* a, const RuntimeValue* b) {
-		//	return a->value_hash() < b->value_hash();
-		//	});
-
-		//std::sort(rval.begin(), rval.end(), [](const RuntimeValue* a, const RuntimeValue* b) {
-		//	return a->value_hash() < b->value_hash();
-		//	});
-
-		//std::merge(lval.begin(), lval.end(), rval.begin(), rval.end(), result, [](const RuntimeValue* a, const RuntimeValue* b) {
-		//	return a->value_hash() < b->value_hash();
-		//	});
-
 		lval.insert(lval.end(), rval.begin(), rval.end());
 
 		return lval;
-		//return result;
 	}
 
 	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");
@@ -2629,7 +2602,7 @@ RuntimeValue* Interpreter::alocate_value(RuntimeValue* value) {
 	return dynamic_cast<RuntimeValue*>(gc.allocate(value));
 }
 
-long long Interpreter::hash(ASTExprNode* astnode) {
+long long Interpreter::hash(std::shared_ptr<ASTExprNode> astnode) {
 	astnode->accept(this);
 	switch (current_expression_value->type) {
 	case Type::T_BOOL:
@@ -2647,7 +2620,7 @@ long long Interpreter::hash(ASTExprNode* astnode) {
 	}
 }
 
-long long Interpreter::hash(ASTValueNode* astnode) {
+long long Interpreter::hash(std::shared_ptr<ASTValueNode> astnode) {
 	auto value = dynamic_cast<RuntimeValue*>(astnode->value);
 	switch (value->type) {
 	case Type::T_BOOL:
@@ -2665,27 +2638,27 @@ long long Interpreter::hash(ASTValueNode* astnode) {
 	}
 }
 
-long long Interpreter::hash(ASTLiteralNode<cp_bool>* astnode) {
+long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_bool>> astnode) {
 	return static_cast<long long>(astnode->val);
 }
 
-long long Interpreter::hash(ASTLiteralNode<cp_int>* astnode) {
+long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_int>> astnode) {
 	return static_cast<long long>(astnode->val);
 }
 
-long long Interpreter::hash(ASTLiteralNode<cp_float>* astnode) {
+long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_float>> astnode) {
 	return static_cast<long long>(astnode->val);
 }
 
-long long Interpreter::hash(ASTLiteralNode<cp_char>* astnode) {
+long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_char>> astnode) {
 	return static_cast<long long>(astnode->val);
 }
 
-long long Interpreter::hash(ASTLiteralNode<cp_string>* astnode) {
+long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) {
 	return axe::StringUtils::hashcode(astnode->val);
 }
 
-long long Interpreter::hash(ASTIdentifierNode* astnode) {
+long long Interpreter::hash(std::shared_ptr<ASTIdentifierNode> astnode) {
 	auto pop = push_namespace(astnode->nmspace);
 	std::string nmspace = get_namespace();
 
@@ -2780,7 +2753,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		}
 		else {
 			current_value = alocate_value(new RuntimeValue(current_function_calling_argument));
-			current_value->ref.lock() = nullptr;
+			current_value->ref.reset();
 		}
 
 		if (i >= current_function_defined_parameters.top().size()) {
@@ -2821,7 +2794,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 				break;
 			}
 
-			static_cast<ASTExprNode*>(decl->default_value)->accept(this);
+			std::dynamic_pointer_cast<ASTExprNode>(decl->default_value)->accept(this);
 			auto current_value = alocate_value(new RuntimeValue(current_expression_value));
 
 			declare_function_parameter(curr_scope, decl->identifier, current_value);
@@ -2833,7 +2806,7 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		for (size_t i = 0; i < vec.size(); ++i) {
 			arr[i] = vec[i];
 		}
-		auto rest = alocate_value(new RuntimeValue(arr, Type::T_ANY, std::vector<void*>()));
+		auto rest = alocate_value(new RuntimeValue(arr, Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>()));
 		auto var = std::make_shared<RuntimeVariable>(rest_name, *rest);
 		gc.add_root(var);
 		var->set_value(rest);
@@ -2857,7 +2830,7 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 		}
 		else {
 			current_value = alocate_value(new RuntimeValue(current_function_calling_arguments.top()[i]));
-			current_value->ref.lock() = nullptr;
+			current_value->ref.reset();
 		}
 
 		if (i >= current_function_defined_parameters.top().size()) {
@@ -2882,7 +2855,7 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 				break;
 			}
 
-			static_cast<ASTExprNode*>(decl->default_value)->accept(this);
+			std::dynamic_pointer_cast<ASTExprNode>(decl->default_value)->accept(this);
 
 			builtin_arguments.push_back(alocate_value(new RuntimeValue(current_expression_value)));
 		}
@@ -2893,7 +2866,7 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 		for (size_t i = 0; i < vec.size(); ++i) {
 			arr[i] = vec[i];
 		}
-		auto rest = alocate_value(new RuntimeValue(arr, Type::T_ANY, std::vector<void*>()));
+		auto rest = alocate_value(new RuntimeValue(arr, Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>()));
 		builtin_arguments.push_back(rest);
 	}
 

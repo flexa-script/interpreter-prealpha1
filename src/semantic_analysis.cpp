@@ -13,7 +13,7 @@ using namespace visitor;
 using namespace parser;
 using namespace lexer;
 
-SemanticAnalyser::SemanticAnalyser(std::shared_ptr<Scope> global_scope, ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs)
+SemanticAnalyser::SemanticAnalyser(std::shared_ptr<Scope> global_scope, std::shared_ptr<ASTProgramNode> main_program, std::map<std::string, std::shared_ptr<ASTProgramNode>> programs)
 	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace), is_max(false) {
 	scopes[default_namespace].push_back(global_scope);
 
@@ -27,7 +27,7 @@ void SemanticAnalyser::start() {
 	pop_namespace(pop);
 }
 
-void SemanticAnalyser::visit(ASTProgramNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTProgramNode> astnode) {
 	for (const auto& statement : astnode->statements) {
 		try {
 			statement->accept(this);
@@ -45,7 +45,7 @@ void SemanticAnalyser::visit(ASTProgramNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTUsingNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	std::string libname = axe::StringUtils::join(astnode->library, ".");
@@ -92,7 +92,7 @@ void SemanticAnalyser::visit(ASTUsingNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTNamespaceManagerNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTNamespaceManagerNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -115,7 +115,7 @@ void SemanticAnalyser::visit(ASTNamespaceManagerNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTEnumNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTEnumNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -127,7 +127,7 @@ void SemanticAnalyser::visit(ASTEnumNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	const auto& nmspace = get_namespace();
 	std::shared_ptr<Scope> current_scope = scopes[nmspace].back();
@@ -203,13 +203,13 @@ void SemanticAnalyser::visit(ASTDeclarationNode* astnode) {
 	current_scope->declare_variable(astnode->identifier, new_var);
 }
 
-void SemanticAnalyser::visit(ASTUnpackedDeclarationNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTUnpackedDeclarationNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	//auto pop = push_namespace(astnode->type_name_space);
 
-	ASTIdentifierNode* var = nullptr;
+	std::shared_ptr<ASTIdentifierNode> var = nullptr;
 	if (astnode->expr) {
-		var = dynamic_cast<ASTIdentifierNode*>(astnode->expr);
+		var = std::dynamic_pointer_cast<ASTIdentifierNode>(astnode->expr);
 		if (!var) {
 			throw std::runtime_error("expected variable as value of unpacked declaration, but found value");
 		}
@@ -219,7 +219,7 @@ void SemanticAnalyser::visit(ASTUnpackedDeclarationNode* astnode) {
 		if (var) {
 			auto ids = var->identifier_vector;
 			ids.push_back(Identifier(declaration->identifier));
-			auto access_expr = new ASTIdentifierNode(ids, var->nmspace, declaration->row, declaration->col);
+			auto access_expr = std::make_shared<ASTIdentifierNode>(ids, var->nmspace, declaration->row, declaration->col);
 			declaration->expr = access_expr;
 		}
 
@@ -229,7 +229,7 @@ void SemanticAnalyser::visit(ASTUnpackedDeclarationNode* astnode) {
 	//pop_namespace(pop);
 }
 
-void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->nmspace);
 
@@ -298,7 +298,7 @@ void SemanticAnalyser::visit(ASTAssignmentNode* astnode) {
 	pop_namespace(pop);
 }
 
-void SemanticAnalyser::visit(ASTReturnNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTReturnNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	if (astnode->expr) {
@@ -319,7 +319,7 @@ void SemanticAnalyser::visit(ASTReturnNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->nmspace);
 	const auto& nmspace = get_namespace();
@@ -366,7 +366,7 @@ void SemanticAnalyser::visit(ASTFunctionCallNode* astnode) {
 	current_function.pop();
 }
 
-void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->type_name_space);
 	const auto& nmspace = get_namespace();
@@ -426,10 +426,10 @@ void SemanticAnalyser::visit(ASTFunctionDefinitionNode* astnode) {
 	pop_namespace(pop);
 }
 
-void SemanticAnalyser::visit(ASTFunctionExpression* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionExpression> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto fun = dynamic_cast<ASTFunctionDefinitionNode*>(astnode->fun);
+	auto fun = std::dynamic_pointer_cast<ASTFunctionDefinitionNode>(astnode->fun);
 
 	FunctionDefinition tempfun = FunctionDefinition("", fun->type, fun->type_name, fun->type_name_space,
 		fun->array_type, fun->dim, fun->parameters, fun->block, fun->row, fun->col);
@@ -448,7 +448,7 @@ void SemanticAnalyser::visit(ASTFunctionExpression* astnode) {
 	current_expression.col = fun->col;
 }
 
-void SemanticAnalyser::visit(ASTBlockNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTBlockNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -477,7 +477,7 @@ void SemanticAnalyser::visit(ASTBlockNode* astnode) {
 	scopes[nmspace].pop_back();
 }
 
-void SemanticAnalyser::visit(ASTExitNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTExitNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->exit_code->accept(this);
@@ -491,7 +491,7 @@ void SemanticAnalyser::visit(ASTExitNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTContinueNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTContinueNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	if (!is_loop) {
@@ -499,7 +499,7 @@ void SemanticAnalyser::visit(ASTContinueNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTBreakNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTBreakNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	if (!is_loop && !is_switch) {
@@ -507,7 +507,7 @@ void SemanticAnalyser::visit(ASTBreakNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTSwitchNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	is_switch = true;
@@ -569,7 +569,7 @@ void SemanticAnalyser::visit(ASTSwitchNode* astnode) {
 	is_switch = false;
 }
 
-void SemanticAnalyser::visit(ASTElseIfNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTElseIfNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->condition->accept(this);
@@ -586,7 +586,7 @@ void SemanticAnalyser::visit(ASTElseIfNode* astnode) {
 	astnode->block->accept(this);
 }
 
-void SemanticAnalyser::visit(ASTIfNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTIfNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->condition->accept(this);
@@ -611,7 +611,7 @@ void SemanticAnalyser::visit(ASTIfNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTForNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTForNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	is_loop = true;
@@ -643,7 +643,7 @@ void SemanticAnalyser::visit(ASTForNode* astnode) {
 	is_loop = false;
 }
 
-void SemanticAnalyser::visit(ASTForEachNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTForEachNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	is_loop = true;
@@ -656,7 +656,7 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 	astnode->collection->accept(this);
 	col_value = current_expression;
 
-	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->itdecl)) {
+	if (const auto idnode = std::dynamic_pointer_cast<ASTUnpackedDeclarationNode>(astnode->itdecl)) {
 		if (!is_struct(col_value.type) && !is_any(col_value.type)) {
 			throw std::runtime_error("[key, value] can only be used with struct");
 		}
@@ -665,17 +665,15 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 			throw std::runtime_error("invalid number of values");
 		}
 
-		auto key_node = new ASTLiteralNode<cp_string>("", astnode->row, astnode->col);
+		auto key_node = std::make_shared<ASTLiteralNode<cp_string>>("", astnode->row, astnode->col);
 		idnode->declarations[0]->expr = key_node;
-		auto val_node = new ASTValueNode(new SemanticValue(Type::T_ANY, astnode->row, astnode->col), astnode->row, astnode->col);
+		auto val_node = std::make_shared<ASTValueNode>(new SemanticValue(Type::T_ANY, astnode->row, astnode->col), astnode->row, astnode->col);
 		idnode->declarations[1]->expr = val_node;
 		idnode->accept(this);
 		idnode->declarations[0]->expr = nullptr;
 		idnode->declarations[1]->expr = nullptr;
-		delete key_node;
-		delete val_node;
 	}
-	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->itdecl)) {
+	else if (const auto idnode = std::dynamic_pointer_cast<ASTDeclarationNode>(astnode->itdecl)) {
 		if (!is_array(col_value.type)
 			&& !is_string(col_value.type)
 			&& !is_struct(col_value.type)
@@ -686,16 +684,16 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 		SemanticValue* value;
 
 		if (is_struct(col_value.type)) {
-			value = new SemanticValue(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(), "Pair", "cp", 0, false, astnode->row, astnode->col);
+			value = new SemanticValue(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "Pair", "cp", 0, false, astnode->row, astnode->col);
 		}
 		else if (is_string(col_value.type)) {
-			value = new SemanticValue(Type::T_CHAR, Type::T_UNDEFINED, std::vector<void*>(), "", "", 0, false, astnode->row, astnode->col);
+			value = new SemanticValue(Type::T_CHAR, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "", 0, false, astnode->row, astnode->col);
 		}
 		else if (is_any(col_value.type)) {
-			value = new SemanticValue(Type::T_ANY, Type::T_UNDEFINED, std::vector<void*>(), "", "", 0, false, astnode->row, astnode->col);
+			value = new SemanticValue(Type::T_ANY, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "", 0, false, astnode->row, astnode->col);
 		}
 		else if (col_value.dim.size() > 1) {
-			std::vector<void*> dim = col_value.dim;
+			std::vector<std::shared_ptr<ASTExprNode>> dim = col_value.dim;
 			if (dim.size() > 0) {
 				dim.erase(dim.begin());
 			}
@@ -713,18 +711,17 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 			}
 		}
 		else {
-			value = new SemanticValue(col_value.array_type, Type::T_UNDEFINED, std::vector<void*>(), "", "", 0, false, astnode->row, astnode->col);
+			value = new SemanticValue(col_value.array_type, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "", 0, false, astnode->row, astnode->col);
 			if (!current_expression.type_name.empty()) {
 				value->type_name = current_expression.type_name;
 				value->type_name_space = current_expression.type_name_space;
 			}
 		}
 
-		ASTValueNode* exnode = new ASTValueNode(value, astnode->row, astnode->col);
+		std::shared_ptr<ASTValueNode> exnode = std::make_shared<ASTValueNode>(value, astnode->row, astnode->col);
 		idnode->expr = exnode;
 		idnode->accept(this);
 		idnode->expr = nullptr;
-		delete exnode;
 
 	}
 	else {
@@ -737,7 +734,7 @@ void SemanticAnalyser::visit(ASTForEachNode* astnode) {
 	is_loop = false;
 }
 
-void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -746,27 +743,24 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 
 	scopes[nmspace].push_back(std::make_shared<Scope>());
 
-	if (const auto idnode = dynamic_cast<ASTUnpackedDeclarationNode*>(astnode->decl)) {
+	if (const auto idnode = std::dynamic_pointer_cast<ASTUnpackedDeclarationNode>(astnode->decl)) {
 		if (idnode->declarations.size() != 1) {
 			throw std::runtime_error("invalid number of values");
 		}
-		auto exnode = new ASTLiteralNode<cp_string>("", astnode->row, astnode->col);
+		auto exnode = std::make_shared<ASTLiteralNode<cp_string>>("", astnode->row, astnode->col);
 		idnode->declarations[0]->expr = exnode;
 		idnode->accept(this);
 		idnode->declarations[0]->expr = nullptr;
-		delete exnode;
 	}
-	else if (const auto idnode = dynamic_cast<ASTDeclarationNode*>(astnode->decl)) {
-		std::map<std::string, ASTExprNode*> values = {
-			{ "error", new ASTLiteralNode<cp_string>("", astnode->row, astnode->col) }
+	else if (const auto idnode = std::dynamic_pointer_cast<ASTDeclarationNode>(astnode->decl)) {
+		std::map<std::string, std::shared_ptr<ASTExprNode>> values = {
+			{ "error", std::make_shared<ASTLiteralNode<cp_string>>("", astnode->row, astnode->col) }
 		};
-		auto exnode = new ASTStructConstructorNode("Exception", "cp", values, astnode->row, astnode->col);
+		auto exnode = std::make_shared<ASTStructConstructorNode>("Exception", "cp", values, astnode->row, astnode->col);
 		idnode->expr = exnode;
-		delete values["error"];
-		delete exnode;
 		idnode->expr = nullptr;
 	}
-	else if (!dynamic_cast<ASTReticencesNode*>(astnode->decl)) {
+	else if (!std::dynamic_pointer_cast<ASTReticencesNode>(astnode->decl)) {
 		throw std::runtime_error("expected declaration");
 	}
 
@@ -775,7 +769,7 @@ void SemanticAnalyser::visit(ASTTryCatchNode* astnode) {
 	scopes[nmspace].pop_back();
 }
 
-void SemanticAnalyser::visit(parser::ASTThrowNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTThrowNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->error->accept(this);
@@ -794,30 +788,11 @@ void SemanticAnalyser::visit(parser::ASTThrowNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTReticencesNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTReticencesNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 }
 
-void SemanticAnalyser::visit(ASTWhileNode* astnode) {
-	set_curr_pos(astnode->row, astnode->col);
-
-	is_loop = true;
-	astnode->condition->accept(this);
-
-	if (is_undefined(current_expression.type)) {
-		throw std::runtime_error("undefined expression");
-	}
-
-	if (!is_bool(current_expression.type)
-		&& !is_any(current_expression.type)) {
-		ExceptionHandler::throw_condition_type_err();
-	}
-
-	astnode->block->accept(this);
-	is_loop = false;
-}
-
-void SemanticAnalyser::visit(ASTDoWhileNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTWhileNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	is_loop = true;
@@ -836,7 +811,26 @@ void SemanticAnalyser::visit(ASTDoWhileNode* astnode) {
 	is_loop = false;
 }
 
-void SemanticAnalyser::visit(ASTStructDefinitionNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTDoWhileNode> astnode) {
+	set_curr_pos(astnode->row, astnode->col);
+
+	is_loop = true;
+	astnode->condition->accept(this);
+
+	if (is_undefined(current_expression.type)) {
+		throw std::runtime_error("undefined expression");
+	}
+
+	if (!is_bool(current_expression.type)
+		&& !is_any(current_expression.type)) {
+		ExceptionHandler::throw_condition_type_err();
+	}
+
+	astnode->block->accept(this);
+	is_loop = false;
+}
+
+void SemanticAnalyser::visit(std::shared_ptr<ASTStructDefinitionNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
@@ -853,12 +847,12 @@ void SemanticAnalyser::visit(ASTStructDefinitionNode* astnode) {
 	scopes[nmspace].back()->declare_structure_definition(str);
 }
 
-void SemanticAnalyser::visit(ASTValueNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTValueNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	current_expression = *dynamic_cast<SemanticValue*>(astnode->value);
 }
 
-void SemanticAnalyser::visit(ASTLiteralNode<cp_bool>* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTLiteralNode<cp_bool>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	current_expression = SemanticValue();
@@ -866,7 +860,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_bool>* astnode) {
 	current_expression.is_const = true;
 }
 
-void SemanticAnalyser::visit(ASTLiteralNode<cp_int>* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTLiteralNode<cp_int>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	current_expression = SemanticValue();
@@ -874,7 +868,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_int>* astnode) {
 	current_expression.is_const = true;
 }
 
-void SemanticAnalyser::visit(ASTLiteralNode<cp_float>* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTLiteralNode<cp_float>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	current_expression = SemanticValue();
@@ -882,7 +876,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_float>* astnode) {
 	current_expression.is_const = true;
 }
 
-void SemanticAnalyser::visit(ASTLiteralNode<cp_char>* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTLiteralNode<cp_char>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	current_expression = SemanticValue();
@@ -890,7 +884,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_char>* astnode) {
 	current_expression.is_const = true;
 }
 
-void SemanticAnalyser::visit(ASTLiteralNode<cp_string>* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	current_expression = SemanticValue();
@@ -898,7 +892,7 @@ void SemanticAnalyser::visit(ASTLiteralNode<cp_string>* astnode) {
 	current_expression.is_const = true;
 }
 
-void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto is_const = true;
 	cp_int arr_size = 0;
@@ -911,8 +905,7 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 
 	++current_expression_array_dim_max;
 	if (!is_max) {
-		// TODO: fix memory leak (it's not so several as in interpreter)
-		current_expression_array_dim.push_back(new ASTLiteralNode<cp_int>(0, astnode->row, astnode->col));
+		current_expression_array_dim.push_back(std::make_shared<ASTLiteralNode<cp_int>>(0, astnode->row, astnode->col));
 	}
 
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
@@ -940,7 +933,7 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	}
 
 	if (!is_max) {
-		((ASTLiteralNode<cp_int>*)current_expression_array_dim.back())->val = arr_size;
+		std::dynamic_pointer_cast<ASTLiteralNode<cp_int>>(current_expression_array_dim.back())->val = arr_size;
 	}
 
 	is_max = true;
@@ -953,7 +946,7 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	current_expression.is_const = is_const;
 	--current_expression_array_dim_max;
 	size_t stay = current_expression_array_dim.size() - current_expression_array_dim_max;
-	std::vector<void*> current_expression_array_dim_aux;
+	std::vector<std::shared_ptr<ASTExprNode>> current_expression_array_dim_aux;
 	size_t curr_dim_i = current_expression_array_dim.size() - 1;
 	for (size_t i = 0; i < stay; ++i) {
 		current_expression_array_dim_aux.emplace(current_expression_array_dim_aux.begin(), current_expression_array_dim.at(curr_dim_i));
@@ -969,7 +962,7 @@ void SemanticAnalyser::visit(ASTArrayConstructorNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->nmspace);
 	auto is_const = true;
@@ -1010,7 +1003,7 @@ void SemanticAnalyser::visit(ASTStructConstructorNode* astnode) {
 	pop_namespace(pop);
 }
 
-void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->nmspace);
 	const auto& nmspace = get_namespace();
@@ -1080,7 +1073,7 @@ void SemanticAnalyser::visit(ASTIdentifierNode* astnode) {
 	pop_namespace(pop);
 }
 
-void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTBinaryExprNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->left->accept(this);
@@ -1103,7 +1096,7 @@ void SemanticAnalyser::visit(ASTBinaryExprNode* astnode) {
 	current_expression.is_const = lexpr.is_const && rexpr.is_const;
 }
 
-void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTUnaryExprNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->expr->accept(this);
@@ -1154,7 +1147,7 @@ void SemanticAnalyser::visit(ASTUnaryExprNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTTernaryNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTTernaryNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->condition->accept(this);
@@ -1176,7 +1169,7 @@ void SemanticAnalyser::visit(ASTTernaryNode* astnode) {
 	}
 }
 
-void SemanticAnalyser::visit(ASTInNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTInNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->value->accept(this);
@@ -1219,7 +1212,7 @@ void SemanticAnalyser::visit(ASTInNode* astnode) {
 
 }
 
-void SemanticAnalyser::visit(ASTTypeParseNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTTypeParseNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->expr->accept(this);
@@ -1238,21 +1231,21 @@ void SemanticAnalyser::visit(ASTTypeParseNode* astnode) {
 	current_expression.type = astnode->type;
 }
 
-void SemanticAnalyser::visit(ASTNullNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTNullNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_VOID;
 }
 
-void SemanticAnalyser::visit(ASTThisNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTThisNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_STRING;
 }
 
-void SemanticAnalyser::visit(ASTTypingNode* astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTTypingNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->expr->accept(this);
@@ -1530,13 +1523,13 @@ std::shared_ptr<SemanticValue> SemanticAnalyser::access_value(std::shared_ptr<Se
 	if (access_vector.size() > 0) {
 		if (access_vector.size() == value->dim.size()) {
 			next_value = std::make_shared<SemanticValue>(next_value->array_type, Type::T_UNDEFINED,
-				std::vector<void*>(), next_value->type_name, next_value->type_name_space,
+				std::vector<std::shared_ptr<ASTExprNode>>(), next_value->type_name, next_value->type_name_space,
 				0, false, next_value->row, next_value->col);
 		}
 		else if (access_vector.size() - 1 == value->dim.size()
 			&& is_string(next_value->type)) {
 			next_value = std::make_shared<SemanticValue>(Type::T_CHAR, Type::T_UNDEFINED,
-				std::vector<void*>(), "", "",
+				std::vector<std::shared_ptr<ASTExprNode>>(), "", "",
 				0, false, next_value->row, next_value->col);
 		}
 	}
@@ -1588,10 +1581,10 @@ void SemanticAnalyser::check_is_struct_exists(parser::Type type, const std::stri
 	}
 }
 
-std::vector<unsigned int> SemanticAnalyser::evaluate_access_vector(const std::vector<void*>& expr_access_vector) {
+std::vector<unsigned int> SemanticAnalyser::evaluate_access_vector(const std::vector<std::shared_ptr<ASTExprNode>>& expr_access_vector) {
 	auto access_vector = std::vector<unsigned int>();
 	for (const auto& expr_ptr : expr_access_vector) {
-		auto expr = static_cast<ASTExprNode*>(expr_ptr);
+		auto expr = std::dynamic_pointer_cast<ASTExprNode>(expr_ptr);
 		unsigned int val = 0;
 		if (expr) {
 			expr->accept(this);
@@ -1605,13 +1598,13 @@ std::vector<unsigned int> SemanticAnalyser::evaluate_access_vector(const std::ve
 	return access_vector;
 }
 
-bool SemanticAnalyser::returns(ASTNode* astnode) {
-	if (dynamic_cast<ASTReturnNode*>(astnode)
-		|| dynamic_cast<ASTThrowNode*>(astnode)) {
+bool SemanticAnalyser::returns(std::shared_ptr<ASTNode> astnode) {
+	if (std::dynamic_pointer_cast<ASTReturnNode>(astnode)
+		|| std::dynamic_pointer_cast<ASTThrowNode>(astnode)) {
 		return true;
 	}
 
-	if (const auto& block = dynamic_cast<ASTBlockNode*>(astnode)) {
+	if (const auto& block = std::dynamic_pointer_cast<ASTBlockNode>(astnode)) {
 		for (const auto& blk_stmt : block->statements) {
 			if (returns(blk_stmt)) {
 				return true;
@@ -1619,7 +1612,7 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 		}
 	}
 
-	if (const auto& ifstmt = dynamic_cast<ASTIfNode*>(astnode)) {
+	if (const auto& ifstmt = std::dynamic_pointer_cast<ASTIfNode>(astnode)) {
 		bool ifreturn = returns(ifstmt->if_block);
 		bool elifreturn = true;
 		bool elsereturn = true;
@@ -1635,11 +1628,11 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 		return ifreturn && elifreturn && elsereturn;
 	}
 
-	if (const auto& trycatchstmt = dynamic_cast<ASTTryCatchNode*>(astnode)) {
+	if (const auto& trycatchstmt = std::dynamic_pointer_cast<ASTTryCatchNode>(astnode)) {
 		return returns(trycatchstmt->try_block) && returns(trycatchstmt->catch_block);
 	}
 
-	if (const auto& switchstmt = dynamic_cast<ASTSwitchNode*>(astnode)) {
+	if (const auto& switchstmt = std::dynamic_pointer_cast<ASTSwitchNode>(astnode)) {
 		for (const auto& blk_stmt : switchstmt->statements) {
 			if (returns(blk_stmt)) {
 				return true;
@@ -1647,52 +1640,52 @@ bool SemanticAnalyser::returns(ASTNode* astnode) {
 		}
 	}
 
-	if (const auto& forstmt = dynamic_cast<ASTForNode*>(astnode)) {
+	if (const auto& forstmt = std::dynamic_pointer_cast<ASTForNode>(astnode)) {
 		return returns(forstmt->block);
 	}
 
-	if (const auto& forstmt = dynamic_cast<ASTForEachNode*>(astnode)) {
+	if (const auto& forstmt = std::dynamic_pointer_cast<ASTForEachNode>(astnode)) {
 		return returns(forstmt->block);
 	}
 
-	if (const auto& whilestmt = dynamic_cast<ASTWhileNode*>(astnode)) {
+	if (const auto& whilestmt = std::dynamic_pointer_cast<ASTWhileNode>(astnode)) {
 		return returns(whilestmt->block);
 	}
 
 	return false;
 }
 
-long long SemanticAnalyser::hash(ASTExprNode* astnode) {
+long long SemanticAnalyser::hash(std::shared_ptr<ASTExprNode> astnode) {
 	astnode->accept(this);
 	return 0;
 }
 
-long long SemanticAnalyser::hash(ASTLiteralNode<cp_bool>* astnode) {
+long long SemanticAnalyser::hash(std::shared_ptr<ASTLiteralNode<cp_bool>> astnode) {
 	return static_cast<long long>(astnode->val);
 }
 
-long long SemanticAnalyser::hash(ASTLiteralNode<cp_int>* astnode) {
+long long SemanticAnalyser::hash(std::shared_ptr<ASTLiteralNode<cp_int>> astnode) {
 	return static_cast<long long>(astnode->val);
 }
 
-long long SemanticAnalyser::hash(ASTLiteralNode<cp_float>* astnode) {
+long long SemanticAnalyser::hash(std::shared_ptr<ASTLiteralNode<cp_float>> astnode) {
 	return static_cast<long long>(astnode->val);
 }
 
-long long SemanticAnalyser::hash(ASTLiteralNode<cp_char>* astnode) {
+long long SemanticAnalyser::hash(std::shared_ptr<ASTLiteralNode<cp_char>> astnode) {
 	return static_cast<long long>(astnode->val);
 }
 
-long long SemanticAnalyser::hash(ASTLiteralNode<cp_string>* astnode) {
+long long SemanticAnalyser::hash(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) {
 	return axe::StringUtils::hashcode(astnode->val);
 }
 
-long long SemanticAnalyser::hash(ASTIdentifierNode* astnode) {
+long long SemanticAnalyser::hash(std::shared_ptr<ASTIdentifierNode> astnode) {
 	astnode->accept(this);
 	return current_expression.hash;
 }
 
-long long SemanticAnalyser::hash(ASTValueNode* astnode) {
+long long SemanticAnalyser::hash(std::shared_ptr<ASTValueNode> astnode) {
 	astnode->accept(this);
 	return current_expression.hash;
 }

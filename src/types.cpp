@@ -108,32 +108,32 @@ namespace parser {
 	}
 }
 
-TypeDefinition::TypeDefinition(Type type, Type array_type, const std::vector<void*>& dim,
+TypeDefinition::TypeDefinition(Type type, Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim,
 	const std::string& type_name, const std::string& type_name_space)
 	: type(type), array_type(array_type), dim(dim), type_name(type_name), type_name_space(type_name_space) {
 	reset_ref();
 }
 
 TypeDefinition::TypeDefinition(Type type)
-	: type(type), array_type(Type::T_UNDEFINED), dim(std::vector<void*>()), type_name(""), type_name_space("") {
+	: type(type), array_type(Type::T_UNDEFINED), dim(std::vector<std::shared_ptr<ASTExprNode>>()), type_name(""), type_name_space("") {
 	reset_ref();
 }
 
 TypeDefinition::TypeDefinition()
-	: type(Type::T_UNDEFINED), array_type(Type::T_UNDEFINED), dim(std::vector<void*>()), type_name(""), type_name_space("") {
+	: type(Type::T_UNDEFINED), array_type(Type::T_UNDEFINED), dim(std::vector<std::shared_ptr<ASTExprNode>>()), type_name(""), type_name_space("") {
 	reset_ref();
 }
 
 TypeDefinition TypeDefinition::get_basic(Type type) {
-	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<void*>(), "", "");
+	return TypeDefinition(type, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "");
 }
 
-TypeDefinition TypeDefinition::get_array(Type array_type, const std::vector<void*>& dim) {
+TypeDefinition TypeDefinition::get_array(Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim) {
 	return TypeDefinition(Type::T_ARRAY, array_type, dim, "", "");
 }
 
 TypeDefinition TypeDefinition::get_struct(const std::string& type_name, const std::string& type_name_space) {
-	return TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(), type_name, type_name_space);
+	return TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), type_name, type_name_space);
 }
 
 bool TypeDefinition::is_any_or_match_type(TypeDefinition ltype, TypeDefinition rtype,
@@ -183,9 +183,9 @@ bool TypeDefinition::match_type_string(TypeDefinition ltype, TypeDefinition rtyp
 
 bool TypeDefinition::match_type_array(TypeDefinition ltype, TypeDefinition rtype, dim_eval_func_t evaluate_access_vector, bool strict, bool strict_array) {
 	TypeDefinition latype = TypeDefinition(is_undefined(ltype.array_type) ? Type::T_ANY : ltype.array_type,
-		Type::T_UNDEFINED, std::vector<void*>(), ltype.type_name, ltype.type_name_space);
+		Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), ltype.type_name, ltype.type_name_space);
 	TypeDefinition ratype = TypeDefinition(is_undefined(rtype.array_type) ? Type::T_ANY : rtype.array_type,
-		Type::T_UNDEFINED, std::vector<void*>(), rtype.type_name, rtype.type_name_space);
+		Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), rtype.type_name, rtype.type_name_space);
 
 	return is_array(ltype.type) && is_array(rtype.type)
 		&& (!strict_array && is_any_or_match_type(latype, ratype, evaluate_access_vector, strict, strict_array) ||
@@ -230,33 +230,33 @@ void TypeDefinition::reset_ref() {
 }
 
 VariableDefinition::VariableDefinition()
-	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", ""), CodePosition(),
+	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", ""), CodePosition(),
 	identifier(""), default_value(nullptr), is_rest(false) {}
 
 VariableDefinition::VariableDefinition(const std::string& identifier, Type type, const std::string& type_name,
-	const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
-	void* default_value, bool is_rest, unsigned int row, unsigned int col)
+	const std::string& type_name_space, Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim,
+	std::shared_ptr<ASTExprNode> default_value, bool is_rest, unsigned int row, unsigned int col)
 	: TypeDefinition(type, array_type, dim, type_name, type_name_space), CodePosition(row, col),
 	identifier(identifier), default_value(default_value), is_rest(is_rest) {}
 
 VariableDefinition::VariableDefinition(const std::string& identifier, Type type,
-	void* default_value, bool is_rest, unsigned int row, unsigned int col)
-	: TypeDefinition(type, Type::T_UNDEFINED, std::vector<void*>(), "", ""), CodePosition(row, col),
+	std::shared_ptr<ASTExprNode> default_value, bool is_rest, unsigned int row, unsigned int col)
+	: TypeDefinition(type, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", ""), CodePosition(row, col),
 	identifier(identifier), default_value(default_value), is_rest(is_rest) {}
 
-VariableDefinition::VariableDefinition(const std::string& identifier, parser::Type array_type, const std::vector<void*>& dim,
+VariableDefinition::VariableDefinition(const std::string& identifier, parser::Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim,
 	const std::string& type_name, const std::string& type_name_space,
-	void* default_value, bool is_rest, unsigned int row, unsigned int col)
+	std::shared_ptr<ASTExprNode> default_value, bool is_rest, unsigned int row, unsigned int col)
 	: TypeDefinition(Type::T_ARRAY, array_type, dim, "", ""), CodePosition(row, col),
 	identifier(identifier), default_value(default_value), is_rest(is_rest) {}
 
 VariableDefinition::VariableDefinition(const std::string& identifier,
 	const std::string& type_name, const std::string& type_name_space,
-	void* default_value, bool is_rest, unsigned int row, unsigned int col)
-	: TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(), type_name, type_name_space), CodePosition(row, col),
+	std::shared_ptr<ASTExprNode> default_value, bool is_rest, unsigned int row, unsigned int col)
+	: TypeDefinition(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), type_name, type_name_space), CodePosition(row, col),
 	identifier(identifier), default_value(default_value), is_rest(is_rest) {}
 
-UnpackedVariableDefinition::UnpackedVariableDefinition(Type type, Type array_type, const std::vector<void*>& dim, const std::string& type_name,
+UnpackedVariableDefinition::UnpackedVariableDefinition(Type type, Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim, const std::string& type_name,
 	const std::string& type_name_space, const std::vector<VariableDefinition>& variables)
 	: TypeDefinition(type, array_type, dim, type_name, type_name_space), variables(variables) {}
 
@@ -264,8 +264,8 @@ UnpackedVariableDefinition::UnpackedVariableDefinition(TypeDefinition type_defin
 	: TypeDefinition(type_definition), variables(variables) {}
 
 FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
-	const std::string& type_name_space, Type array_type, const std::vector<void*>& dim,
-	const std::vector<TypeDefinition*>& parameters, ASTBlockNode* block, unsigned int row, unsigned int col)
+	const std::string& type_name_space, Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim,
+	const std::vector<TypeDefinition*>& parameters, std::shared_ptr<ASTBlockNode> block, unsigned int row, unsigned int col)
 	: CodePosition(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
 	identifier(identifier), parameters(parameters), block(block) {
 	check_signature();
@@ -279,12 +279,12 @@ FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type,
 }
 
 FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
-	const std::string& type_name_space, Type array_type, const std::vector<void*>& dim)
+	const std::string& type_name_space, Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim)
 	: CodePosition(), TypeDefinition(type, array_type, dim, type_name, type_name_space),
 	identifier(identifier) {}
 
 FunctionDefinition::FunctionDefinition(const std::string& identifier, unsigned int row, unsigned int col)
-	: CodePosition(row, col), TypeDefinition(Type::T_ANY, Type::T_UNDEFINED, std::vector<void*>(), "", ""),
+	: CodePosition(row, col), TypeDefinition(Type::T_ANY, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", ""),
 	identifier(identifier), parameters(std::vector<TypeDefinition*>()), block(nullptr), is_var(true) {}
 
 FunctionDefinition::FunctionDefinition()
@@ -318,7 +318,7 @@ StructureDefinition::StructureDefinition(const std::string& identifier)
 StructureDefinition::StructureDefinition()
 	: CodePosition(row, col), identifier(""), variables(std::map<std::string, VariableDefinition>()) {}
 
-Variable::Variable(const std::string& identifier, Type type, Type array_type, const std::vector<void*>& dim,
+Variable::Variable(const std::string& identifier, Type type, Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim,
 	const std::string& type_name, const std::string& type_name_space)
 	: TypeDefinition(type, array_type, dim, type_name, type_name_space),
 	identifier(identifier) {}
@@ -327,9 +327,9 @@ Variable::Variable(TypeDefinition value)
 	: TypeDefinition(value) {}
 
 Variable::Variable()
-	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", "") {}
+	: TypeDefinition(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {}
 
-Value::Value(Type type, Type array_type, std::vector<void*> dim,
+Value::Value(Type type, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim,
 	const std::string& type_name, const std::string& type_name_space)
 	: TypeDefinition(type, array_type, dim, type_name, type_name_space) {}
 
@@ -339,7 +339,7 @@ Value::Value(TypeDefinition type)
 Value::Value()
 	: TypeDefinition() {}
 
-SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, const std::vector<void*>& dim,
+SemanticValue::SemanticValue(parser::Type type, parser::Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim,
 	const std::string& type_name, const std::string& type_name_space, long long hash,
 	bool is_const, unsigned int row, unsigned int col)
 	: CodePosition(row, col), Value(type, array_type, dim, type_name, type_name_space),
@@ -385,17 +385,17 @@ void SemanticValue::copy_from(const SemanticValue& value) {
 	col = value.col;
 }
 
-SemanticVariable::SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<void*>& dim,
+SemanticVariable::SemanticVariable(const std::string& identifier, Type type, Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim,
 	const std::string& type_name, const std::string& type_name_space, bool is_const, unsigned int row, unsigned int col)
 	: CodePosition(row, col), Variable(identifier, def_type(type), def_array_type(array_type, dim), dim, type_name, type_name_space),
 	value(nullptr), is_const(is_const) {}
 
 SemanticVariable::SemanticVariable(const std::string& identifier, Type type, bool is_const, unsigned int row, unsigned int col)
-	: CodePosition(row, col), Variable(identifier, def_type(type), Type::T_UNDEFINED, std::vector<void*>(), "", ""),
+	: CodePosition(row, col), Variable(identifier, def_type(type), Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", ""),
 	value(nullptr), is_const(is_const) {}
 
 SemanticVariable::SemanticVariable()
-	: CodePosition(0, 0), Variable("", Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", ""),
+	: CodePosition(0, 0), Variable("", Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", ""),
 	value(nullptr), is_const(false) {}
 
 void SemanticVariable::set_value(std::shared_ptr<SemanticValue> value) {
@@ -412,7 +412,7 @@ Type SemanticVariable::def_type(Type type) {
 	return is_void(type) || is_undefined(type) ? Type::T_ANY : type;
 }
 
-Type SemanticVariable::def_array_type(Type array_type, const std::vector<void*>& dim) {
+Type SemanticVariable::def_array_type(Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim) {
 	return is_void(array_type) || is_undefined(array_type) && dim.size() > 0 ? Type::T_ANY : array_type;
 }
 
@@ -422,13 +422,13 @@ void SemanticVariable::reset_ref() {
 }
 
 
-RuntimeValue::RuntimeValue(Type type, Type array_type, std::vector<void*> dim,
+RuntimeValue::RuntimeValue(Type type, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim,
 	const std::string& type_name, const std::string& type_name_space,
 	unsigned int row, unsigned int col)
 	: Value(type, array_type, dim, type_name, type_name_space) {}
 
 RuntimeValue::RuntimeValue()
-	: Value(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", "") {}
+	: Value(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {}
 
 RuntimeValue::RuntimeValue(cp_bool rawv) {
 	set(rawv);
@@ -454,7 +454,7 @@ RuntimeValue::RuntimeValue(cp_array rawv) {
 	set(rawv);
 }
 
-RuntimeValue::RuntimeValue(cp_array rawv, Type array_type, std::vector<void*> dim, std::string type_name, std::string type_name_space) {
+RuntimeValue::RuntimeValue(cp_array rawv, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name, std::string type_name_space) {
 	set(rawv, array_type, dim, type_name, type_name_space);
 }
 
@@ -467,13 +467,13 @@ RuntimeValue::RuntimeValue(cp_function rawv) {
 }
 
 RuntimeValue::RuntimeValue(Type type)
-	: Value(type, Type::T_UNDEFINED, std::vector<void*>(), "", "") {}
+	: Value(type, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {}
 
-RuntimeValue::RuntimeValue(Type array_type, std::vector<void*> dim, std::string type_name, std::string type_name_space)
+RuntimeValue::RuntimeValue(Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name, std::string type_name_space)
 	: Value(Type::T_ARRAY, array_type, dim, type_name, type_name_space) {}
 
 RuntimeValue::RuntimeValue(std::string type_name, std::string type_name_space)
-	: Value(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<void*>(), type_name, type_name_space) {}
+	: Value(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), type_name, type_name_space) {}
 
 RuntimeValue::RuntimeValue(RuntimeValue* v) {
 	copy_from(v);
@@ -525,7 +525,7 @@ void RuntimeValue::set(cp_array arr) {
 	type = Type::T_ARRAY;
 }
 
-void RuntimeValue::set(cp_array arr, Type array_type, std::vector<void*> dim, std::string type_name, std::string type_name_space) {
+void RuntimeValue::set(cp_array arr, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name, std::string type_name_space) {
 	unset();
 	this->arr = arr;
 	type = Type::T_ARRAY;
@@ -732,7 +732,7 @@ std::vector<GCObject*> RuntimeValue::get_references() {
 	return references;
 }
 
-RuntimeVariable::RuntimeVariable(const std::string& identifier, parser::Type type, parser::Type array_type, std::vector<void*> dim,
+RuntimeVariable::RuntimeVariable(const std::string& identifier, parser::Type type, parser::Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim,
 	const std::string& type_name, const std::string& type_name_space)
 	: Variable(identifier, def_type(type), def_array_type(array_type, dim),
 		std::move(dim), type_name, type_name_space),
@@ -744,7 +744,7 @@ RuntimeVariable::RuntimeVariable(const std::string& identifier, TypeDefinition v
 	value(nullptr) {}
 
 RuntimeVariable::RuntimeVariable()
-	: Variable("", Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<void*>(), "", ""),
+	: Variable("", Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", ""),
 	value(nullptr) {}
 
 RuntimeVariable::~RuntimeVariable() = default;
@@ -763,7 +763,7 @@ Type RuntimeVariable::def_type(Type type) {
 	return is_void(type) || is_undefined(type) ? Type::T_ANY : type;
 }
 
-Type RuntimeVariable::def_array_type(Type array_type, const std::vector<void*>& dim) {
+Type RuntimeVariable::def_array_type(Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim) {
 	return is_void(array_type) || is_undefined(array_type) && dim.size() > 0 ? Type::T_ANY : array_type;
 }
 

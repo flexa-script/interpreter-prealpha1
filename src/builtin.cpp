@@ -22,21 +22,21 @@ void Builtin::register_functions(visitor::SemanticAnalyser* visitor) {
 	VariableDefinition* variable;
 
 	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("args", Type::T_ANY, new ASTNullNode(0, 0), true);
+	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("print", FunctionDefinition("print", Type::T_VOID, parameters));
 	visitor->builtin_functions["print"] = nullptr;
 
 
 	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("args", Type::T_ANY, new ASTNullNode(0, 0), true);
+	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("println", FunctionDefinition("println", Type::T_VOID, parameters));
 	visitor->builtin_functions["println"] = nullptr;
 
 
 	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("args", Type::T_ANY, new ASTNullNode(0, 0), true);
+	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("read", FunctionDefinition("read", Type::T_STRING, parameters));
 	visitor->builtin_functions["read"] = nullptr;
@@ -48,7 +48,7 @@ void Builtin::register_functions(visitor::SemanticAnalyser* visitor) {
 
 
 	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("arr", Type::T_ANY, std::vector<void*>());
+	variable = new VariableDefinition("arr", Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>());
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("len", FunctionDefinition("len", Type::T_INT, parameters));
 
@@ -79,7 +79,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 	VariableDefinition* variable;
 
 	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("args", Type::T_ANY, new ASTNullNode(0, 0), true);
+	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("print", FunctionDefinition("print", Type::T_VOID, parameters));
 	visitor->builtin_functions["print"] = [this, visitor]() {
@@ -93,7 +93,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("args", Type::T_ANY, new ASTNullNode(0, 0), true);
+	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("println", FunctionDefinition("println", Type::T_VOID, parameters));
 	visitor->builtin_functions["println"] = nullptr;
@@ -104,7 +104,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 
 
 	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("args", Type::T_ANY, new ASTNullNode(0, 0), true);
+	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("read", FunctionDefinition("read", Type::T_STRING, parameters));
 	visitor->builtin_functions["read"] = [this, visitor]() {
@@ -129,7 +129,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 
 
 	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("arr", Type::T_ANY, std::vector<void*>());
+	variable = new VariableDefinition("arr", Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>());
 	parameters.push_back(variable);
 	visitor->scopes[default_namespace].back()->declare_function("len", FunctionDefinition("len", Type::T_INT, parameters));
 

@@ -1,188 +1,61 @@
-using cp.core.graphics;
 using cp.core.console;
-using cp.core.input;
-using cp.core.sound;
-using cp.core.datetime;
 using cp.std.random;
+using cp.core.datetime;
 
-// include namespace cp;
+include namespace cp;
 
-// global vars
-enum {
-	ST_MAIN_MENU,
-	ST_PLAYING,
-	ST_END_GAME
-};
-var state = ST_MAIN_MENU;
+const PRINT_HORIZONTAL_LINE = "+---------------------------------------+";
+const PRINT_BLANK_LINE = "                                       ";
 
-var running: bool = true;
-var board[4][4]: int = {0};
-var score = 0;
-
-var game_window: cp::Window;
-var color_black = cp::rgb(0, 0, 0);
-var color_white = cp::rgb(255, 255, 255);
-var color_gray = cp::rgb(187, 173, 160);
-var color_dark_gray = cp::rgb(62, 57, 51);
-
-// function declarations
-fun render();
-fun update();
-fun moves_up();
-fun moves_down();
-fun moves_left();
-fun moves_right();
-fun is_valid_move(v: bool, boardcopy[4][4]: int): bool;
-fun counts_zero(): int;
-fun spawn_random(n: int);
-fun is_end_game(): bool;
-
-fun main() {
-	game_window = cp::create_window("2048", 450, 600);
-    cp::randomize(cp::create_date_time().timestamp);
-    board[3][3] = 2;
-
-    while (running and not cp::is_quit(game_window)) {
-		update();
-		render();
-    }
-	
-	cp::destroy_window(game_window);
-}
-
-fun update() {
-    cp::update_key_states();
-
-	if (state == ST_MAIN_MENU) {
-		state = ST_PLAYING;
-	} else if (state == ST_PLAYING) {
-		var boardcopy[4][4]: int = board;
-		
-		if (cp::is_key_released(cp::KEY_W) or cp::is_key_released(cp::KEY_UP) or cp::is_key_released(cp::KEY_NUMPAD_8)) {
-			moves_up();
-		}
-		else if (cp::is_key_released(cp::KEY_S) or cp::is_key_released(cp::KEY_DOWN) or cp::is_key_released(cp::KEY_NUMPAD_2)) {
-			moves_down();
-		}
-		else if (cp::is_key_released(cp::KEY_A) or cp::is_key_released(cp::KEY_LEFT) or cp::is_key_released(cp::KEY_NUMPAD_4)) {
-			moves_left();
-		}
-		else if (cp::is_key_released(cp::KEY_D) or cp::is_key_released(cp::KEY_RIGHT) or cp::is_key_released(cp::KEY_NUMPAD_6)) {
-			moves_right();
-		}
-
-		var valid: bool = false;
-		valid = is_valid_move(valid, boardcopy);
-
-		if (valid)  {
-			var z: int = counts_zero();
-
-			if (z > 0) {
-				spawn_random(z);
-			}
-
-			z = counts_zero();
-			var end_check: bool = true;
-
-			if (z == 0) {
-				end_check = is_end_game();
-			}
-			
-			if (not end_check) {
-				state = ST_END_GAME;
-			}
-		}
-	} else if (state == ST_END_GAME) {
-		state = ST_MAIN_MENU;
-	}
-
-}
-
-fun get_color(val: int): Color {
+fun set_color(val: int) {
     if (val == 2) {
-        return cp::rgb(238, 228, 218);
+        set_console_color(CL_BLACK, CL_BLUE);
     } else if (val == 4) {
-        return cp::rgb(237, 224, 200);
+        set_console_color(CL_BLACK, CL_GREEN);
     } else if (val == 8) {
-        return cp::rgb(242, 177, 121);
+        set_console_color(CL_BLACK, CL_AQUA);
     } else if (val == 16) {
-        return cp::rgb(245, 149, 99);
+        set_console_color(CL_BLACK, CL_RED);
     } else if (val == 32) {
-        return cp::rgb(246, 124, 95);
+        set_console_color(CL_BLACK, CL_PURPLE);
     } else if (val == 64) {
-        return cp::rgb(246, 94, 59);
+        set_console_color(CL_BLACK, CL_YELLOW);
     } else if (val == 128) {
-        return cp::rgb(237, 207, 114);
+        set_console_color(CL_BLACK, CL_LIGHT_BLUE);
     } else if (val == 256) {
-        return cp::rgb(237, 204, 97);
+        set_console_color(CL_BLACK, CL_LIGHT_GREEN);
     } else if (val == 512) {
-        return cp::rgb(237, 200, 80);
+        set_console_color(CL_BLACK, CL_LIGHT_AQUA);
     } else if (val == 1024) {
-        return cp::rgb(237, 197, 63);
+        set_console_color(CL_BLACK, CL_LIGHT_RED);
     } else if (val == 2048) {
-        return cp::rgb(237, 194, 46);
+        set_console_color(CL_BLACK, CL_LIGHT_PURPLE);
     } else if (val == 4096) {
-        return cp::rgb(62, 57, 51);
+        set_console_color(CL_BLACK, CL_LIGHT_YELLOW);
+    } else if (val == 8192) {
+        set_console_color(CL_BLACK, CL_GRAY);
     } else {
-        return cp::rgb(204, 192, 179);
+        set_console_color(CL_BLACK, CL_WHITE);
     }
 }
 
-fun render() {
-	var cw = cp::get_current_width(game_window);
-	var ch = cp::get_current_height(game_window);
-	
-	var title_font = cp::create_font(int((cw + ch) * 0.09));
-	var sub_title_font = cp::create_font(int((cw + ch) * 0.04));
-	var score_font = cp::create_font(int((cw + ch) * 0.035));
-	
-	cp::clear_screen(game_window, color_black);
-    
-	var padh = cw * 0.025;
-	println("padh: ", padh);
-	var padv = ch * 0.166666666666666666666667;
-	var x = padh;
-	var y = padv + padh;
-	println("cw / 4: ", cw / 4);
-	println("(padh * 5): ", (padh * 5));
-	var box_w = cw / 4 - padh * 5 / 4;
-	println("box_w: ", box_w);
-	var box_h = (ch - padv) / 4 - padh * 5 / 4;
-
-	cp::fill_rect(game_window, 0, 0, int(cw), int(padv), color_white);
-	cp::fill_rect(game_window, 0, int(padv), int(cw), int(ch - padv), color_gray);
-	cp::draw_text(game_window, int(x), int(x), "2048", color_dark_gray, title_font);
-	cp::draw_text(game_window, int(cw * 0.60), int(x), "SCORE:", color_dark_gray, sub_title_font);
-
-	score = 0;
-	for (var i: int = 0; i < 4; i++) {
+fun print_board(board[4][4]: int) {
+    system("cls");
+    print(PRINT_HORIZONTAL_LINE);
+    for (var i: int = 0; i < 4; i++) {
+        print("\n|" + PRINT_BLANK_LINE + "|\n|" + PRINT_BLANK_LINE + "|\n|");
         for (var j: int = 0; j < 4; j++) {
-			score += board[i][j];
-			var num_color = get_color(board[i][j]);
-			var tx = string(board[i][j]);
-			var num_font = cp::create_font(int((cw + ch) * 0.04));
-			var font_size = cp::get_text_size(game_window, tx, num_font);
-			var fw = font_size.width;
-			var fh = font_size.height;
-
-			cp::fill_rect(game_window, int(x), int(y), int(box_w), int(box_h), num_color);
-			cp::draw_text(game_window, int(x + box_w / 2 - fw / 2), int(y + box_h / 2 - fh / 2), tx, board[i][j] > 4 ? color_white : color_dark_gray, num_font);
-			println("x: ", x);
-			x += box_w + padh;
-			println("x: ", x);
+			set_color(board[i][j]);
+            print("\t" + string(board[i][j]));
         }
-		y += box_h + padh;
-		x = padh;
+        set_console_color(CL_BLACK, CL_WHITE);
+        print("\t|\n|" + PRINT_BLANK_LINE + "|");
     }
-	
-	cp::draw_text(game_window, int(cw * 0.60), int(padv * 0.60), string(score), color_dark_gray, score_font);
-
-	println("---------------------------------------------\n");
-
-	cp::update(game_window);
+    print("\n|" + PRINT_BLANK_LINE + "|\n");
+    print(PRINT_HORIZONTAL_LINE);
 }
 
-fun moves_up() {
+fun moves_up(board[4][4]: int) {
     for (var j: int = 0; j < 4; j++) {
         // moves everything close together
         for (var l: int = 0; l < 3; l++) {
@@ -218,7 +91,7 @@ fun moves_up() {
     }
 }
 
-fun moves_down() {
+fun moves_down(board[4][4]: int) {
     for (var j: int = 0; j < 4; j++) {
         // moves everything close together
         for (var l: int = 0; l < 3; l++) {
@@ -254,7 +127,7 @@ fun moves_down() {
     }
 }
 
-fun moves_left() {
+fun moves_left(board[4][4]: int) {
     for (var i: int = 0; i < 4; i++) {
         // moves everything close together
         for (var l: int = 0; l < 3; l++) {
@@ -290,7 +163,7 @@ fun moves_left() {
     }
 }
 
-fun moves_right() {
+fun moves_right(board[4][4]: int) {
     for (var i: int = 0; i < 4; i++) {
         // moves everything close together
         for (var l: int = 0; l < 3; l++) {
@@ -326,7 +199,7 @@ fun moves_right() {
     }
 }
 
-fun is_valid_move(v: bool, boardcopy[4][4]: int): bool {
+fun is_valid_move(v: bool, board[4][4]: int, boardcopy[4][4]: int): bool {
     for (var i: int = 0; i < 4; i++) {
         for (var j: int = 0; j < 4; j++) {
             if (board[i][j] != boardcopy[i][j]) {
@@ -338,7 +211,7 @@ fun is_valid_move(v: bool, boardcopy[4][4]: int): bool {
     return v;
 }
 
-fun counts_zero(): int {
+fun counts_zero(board[4][4]: int): int {
     var n: int = 0;
     for (var i: int = 0; i < 4; i++) {
         for (var j: int = 0; j < 4; j++) {
@@ -349,7 +222,7 @@ fun counts_zero(): int {
     return n;
 }
 
-fun spawn_random(n: int) {
+fun spawn_random(n: int, board[4][4]: int) {
     var spawn: int = 1 + (cp::randi() % n);
     var p: int = 0;
     var spawn2: bool = true;
@@ -366,9 +239,9 @@ fun spawn_random(n: int) {
     }
 }
 
-fun is_end_game(): bool {
-    var c1 = false;
-    var c2 = true;
+fun is_end_game(c1: bool, c2: bool, board[4][4]: int): bool {
+    c1 = false;
+    c2 = true;
     for (var i: int = 0; i < 4; i++) {
         for (var j: int = 0; j < 4; j++) {
             if (j > 0 and board[i][j] == board[i][j - 1]) {
@@ -385,5 +258,66 @@ fun is_end_game(): bool {
 }
 
 if (this == "__default__") {
-	main();
+    randomize(create_date_time().timestamp);
+    
+    var grid[4][4]: int = { 0 };
+
+    grid[3][3] = 2;
+
+    print_board(grid);
+
+    var direction: string;
+    var end: bool = false;
+
+    while (not end) {
+        var gridcopy[4][4]: int = { 0 };
+        
+        for (var i: int = 0; i < 4; i++) {
+            for (var j: int = 0; j < 4; j++) {
+                gridcopy[i][j] = grid[i][j];
+            }
+        }
+        
+        direction = readch();
+        
+        if (direction == "w") {
+            moves_up(ref grid);
+        }
+        else if (direction == "s") {
+            moves_down(ref grid);
+        }
+        else if (direction == "a") {
+            moves_left(ref grid);
+        }
+        else if (direction == "d") {
+            moves_right(ref grid);
+        }
+
+        var valid: bool = false;
+        valid = is_valid_move(valid, grid, gridcopy);
+
+        if (valid)  {
+            var z: int = counts_zero(grid);
+
+            if (z > 0) {
+                spawn_random(z, ref grid);
+            }
+
+            print_board(grid);
+            z = counts_zero(grid);
+            var cont: bool = false;
+            var cont2: bool = true;
+
+            if (z == 0) {
+                cont2 = is_end_game(cont, cont2, grid);
+            }
+            
+            if (not cont2) {
+                end = true;
+                print("GAME OVER\n");
+                // exit(0);
+            }
+        }
+    }
+
 }

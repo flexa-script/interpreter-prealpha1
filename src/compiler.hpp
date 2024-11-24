@@ -20,7 +20,7 @@ namespace visitor {
 	class Compiler : public Visitor, public NamespaceManager {
 	public:
 		std::vector<BytecodeInstruction> bytecode_program;
-		std::map<std::string, void*> builtin_functions;
+		std::map<std::string, std::shared_ptr<ASTExprNode>> builtin_functions;
 
 	private:
 		size_t pointer = 0;
@@ -44,63 +44,63 @@ namespace visitor {
 		std::string msg_header() override;
 
 	public:
-		Compiler(ASTProgramNode* main_program, std::map<std::string, ASTProgramNode*> programs);
+		Compiler(std::shared_ptr<ASTProgramNode> main_program, std::map<std::string, std::shared_ptr<ASTProgramNode>> programs);
 		~Compiler() = default;
 
 		void start();
 
-		void visit(ASTProgramNode*) override;
-		void visit(ASTUsingNode*) override;
-		void visit(ASTNamespaceManagerNode*) override;
-		void visit(ASTDeclarationNode*) override;
-		void visit(ASTUnpackedDeclarationNode*) override;
-		void visit(ASTAssignmentNode*) override;
-		void visit(ASTReturnNode*) override;
-		void visit(ASTExitNode*) override;
-		void visit(ASTBlockNode*) override;
-		void visit(ASTContinueNode*) override;
-		void visit(ASTBreakNode*) override;
-		void visit(ASTSwitchNode*) override;
-		void visit(ASTEnumNode*) override;
-		void visit(ASTTryCatchNode*) override;
-		void visit(ASTThrowNode*) override;
-		void visit(ASTReticencesNode*) override;
-		void visit(ASTElseIfNode*) override;
-		void visit(ASTIfNode*) override;
-		void visit(ASTForNode*) override;
-		void visit(ASTForEachNode*) override;
-		void visit(ASTWhileNode*) override;
-		void visit(ASTDoWhileNode*) override;
-		void visit(ASTFunctionDefinitionNode*) override;
-		void visit(ASTStructDefinitionNode*) override;
-		void visit(ASTLiteralNode<cp_bool>*) override;
-		void visit(ASTLiteralNode<cp_int>*) override;
-		void visit(ASTLiteralNode<cp_float>*) override;
-		void visit(ASTLiteralNode<cp_char>*) override;
-		void visit(ASTLiteralNode<cp_string>*) override;
-		void visit(ASTFunctionExpression*) override;
-		void visit(ASTArrayConstructorNode*) override;
-		void visit(ASTStructConstructorNode*) override;
-		void visit(ASTBinaryExprNode*) override;
-		void visit(ASTUnaryExprNode*) override;
-		void visit(ASTIdentifierNode*) override;
-		void visit(ASTTernaryNode*) override;
-		void visit(ASTInNode*) override;
-		void visit(ASTFunctionCallNode*) override;
-		void visit(ASTTypeParseNode*) override;
-		void visit(ASTNullNode*) override;
-		void visit(ASTThisNode*) override;
-		void visit(ASTTypingNode*) override;
-		void visit(ASTValueNode*) override;
+		void visit(std::shared_ptr<ASTProgramNode>) override;
+		void visit(std::shared_ptr<ASTUsingNode>) override;
+		void visit(std::shared_ptr<ASTNamespaceManagerNode>) override;
+		void visit(std::shared_ptr<ASTDeclarationNode>) override;
+		void visit(std::shared_ptr<ASTUnpackedDeclarationNode>) override;
+		void visit(std::shared_ptr<ASTAssignmentNode>) override;
+		void visit(std::shared_ptr<ASTReturnNode>) override;
+		void visit(std::shared_ptr<ASTExitNode>) override;
+		void visit(std::shared_ptr<ASTBlockNode>) override;
+		void visit(std::shared_ptr<ASTContinueNode>) override;
+		void visit(std::shared_ptr<ASTBreakNode>) override;
+		void visit(std::shared_ptr<ASTSwitchNode>) override;
+		void visit(std::shared_ptr<ASTEnumNode>) override;
+		void visit(std::shared_ptr<ASTTryCatchNode>) override;
+		void visit(std::shared_ptr<ASTThrowNode>) override;
+		void visit(std::shared_ptr<ASTReticencesNode>) override;
+		void visit(std::shared_ptr<ASTElseIfNode>) override;
+		void visit(std::shared_ptr<ASTIfNode>) override;
+		void visit(std::shared_ptr<ASTForNode>) override;
+		void visit(std::shared_ptr<ASTForEachNode>) override;
+		void visit(std::shared_ptr<ASTWhileNode>) override;
+		void visit(std::shared_ptr<ASTDoWhileNode>) override;
+		void visit(std::shared_ptr<ASTFunctionDefinitionNode>) override;
+		void visit(std::shared_ptr<ASTStructDefinitionNode>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<cp_bool>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<cp_int>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<cp_float>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<cp_char>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<cp_string>>) override;
+		void visit(std::shared_ptr<ASTFunctionExpression>) override;
+		void visit(std::shared_ptr<ASTArrayConstructorNode>) override;
+		void visit(std::shared_ptr<ASTStructConstructorNode>) override;
+		void visit(std::shared_ptr<ASTBinaryExprNode>) override;
+		void visit(std::shared_ptr<ASTUnaryExprNode>) override;
+		void visit(std::shared_ptr<ASTIdentifierNode>) override;
+		void visit(std::shared_ptr<ASTTernaryNode>) override;
+		void visit(std::shared_ptr<ASTInNode>) override;
+		void visit(std::shared_ptr<ASTFunctionCallNode>) override;
+		void visit(std::shared_ptr<ASTTypeParseNode>) override;
+		void visit(std::shared_ptr<ASTNullNode>) override;
+		void visit(std::shared_ptr<ASTThisNode>) override;
+		void visit(std::shared_ptr<ASTTypingNode>) override;
+		void visit(std::shared_ptr<ASTValueNode>) override;
 
-		long long hash(ASTExprNode*) override;
-		long long hash(ASTValueNode*) override;
-		long long hash(ASTIdentifierNode*) override;
-		long long hash(ASTLiteralNode<cp_bool>*) override;
-		long long hash(ASTLiteralNode<cp_int>*) override;
-		long long hash(ASTLiteralNode<cp_float>*) override;
-		long long hash(ASTLiteralNode<cp_char>*) override;
-		long long hash(ASTLiteralNode<cp_string>*) override;
+		long long hash(std::shared_ptr<ASTExprNode>) override;
+		long long hash(std::shared_ptr<ASTValueNode>) override;
+		long long hash(std::shared_ptr<ASTIdentifierNode>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<cp_bool>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<cp_int>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<cp_float>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<cp_char>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<cp_string>>) override;
 	};
 }
 
