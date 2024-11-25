@@ -7,9 +7,13 @@
 
 using namespace modules;
 
-Input::Input() {}
+Input::Input() : running(false) {
+	start();
+}
 
-Input::~Input() = default;
+Input::~Input() {
+	stop();
+}
 
 void Input::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["update_key_states"] = nullptr;
@@ -33,13 +37,29 @@ void Input::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["is_key_pressed"] = [this, visitor]() {
 		int key = visitor->builtin_arguments[0]->get_i();
-		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(cp_bool(current_key_state[key])));
+		bool is_pressed = false;
+
+		{
+			std::lock_guard<std::mutex> lock(state_mutex);
+			is_pressed = current_key_state[key];
+		}
+
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(cp_bool(is_pressed)));
 
 		};
 
 	visitor->builtin_functions["is_key_released"] = [this, visitor]() {
 		int key = visitor->builtin_arguments[0]->get_i();
-		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(cp_bool(previous_key_state[key] && !current_key_state[key])));
+
+		bool is_released = false;
+
+		{
+			std::lock_guard<std::mutex> lock(state_mutex);
+			is_released = previous_key_state[key] && !current_key_state[key];
+			previous_key_state[key] = false;
+		}
+
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(cp_bool(is_released)));
 
 		};
 
@@ -69,4 +89,34 @@ void Input::register_functions(visitor::Interpreter* visitor) {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(cp_bool(is_pressed)));
 
 		};
+}
+
+void Input::key_update_loop() {
+	while (running) {
+		{
+			std::lock_guard<std::mutex> lock(state_mutex);
+			for (int i = 0; i < KEY_COUNT; ++i) {
+				bool current = GetAsyncKeyState(i) & 0x8000;
+				previous_key_state[i] = previous_key_state[i] || current;
+				current_key_state[i] = current;
+			}
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
+}
+
+void Input::start() {
+	if (!running) {
+		running = true;
+		key_update_thread = std::thread(&Input::key_update_loop, this);
+	}
+}
+
+void Input::stop() {
+	if (running) {
+		running = false;
+		if (key_update_thread.joinable()) {
+			key_update_thread.join();
+		}
+	}
 }

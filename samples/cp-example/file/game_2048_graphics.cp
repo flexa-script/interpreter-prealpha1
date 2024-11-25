@@ -51,8 +51,6 @@ fun main() {
 }
 
 fun update() {
-    cp::update_key_states();
-
 	if (state == ST_MAIN_MENU) {
 		state = ST_PLAYING;
 	} else if (state == ST_PLAYING) {
@@ -139,14 +137,10 @@ fun render() {
 	cp::clear_screen(game_window, color_black);
     
 	var padh = cw * 0.025;
-	println("padh: ", padh);
 	var padv = ch * 0.166666666666666666666667;
 	var x = padh;
 	var y = padv + padh;
-	println("cw / 4: ", cw / 4);
-	println("(padh * 5): ", (padh * 5));
 	var box_w = cw / 4 - padh * 5 / 4;
-	println("box_w: ", box_w);
 	var box_h = (ch - padv) / 4 - padh * 5 / 4;
 
 	cp::fill_rect(game_window, 0, 0, int(cw), int(padv), color_white);
@@ -167,17 +161,13 @@ fun render() {
 
 			cp::fill_rect(game_window, int(x), int(y), int(box_w), int(box_h), num_color);
 			cp::draw_text(game_window, int(x + box_w / 2 - fw / 2), int(y + box_h / 2 - fh / 2), tx, board[i][j] > 4 ? color_white : color_dark_gray, num_font);
-			println("x: ", x);
 			x += box_w + padh;
-			println("x: ", x);
         }
 		y += box_h + padh;
 		x = padh;
     }
 	
 	cp::draw_text(game_window, int(cw * 0.60), int(padv * 0.60), string(score), color_dark_gray, score_font);
-
-	println("---------------------------------------------\n");
 
 	cp::update(game_window);
 }
