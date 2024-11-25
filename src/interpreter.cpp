@@ -1065,7 +1065,7 @@ void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 	}
 
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
-		const auto expr = astnode->values[i];
+		const auto& expr = astnode->values[i];
 
 		expr->accept(this);
 

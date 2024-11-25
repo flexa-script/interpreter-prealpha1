@@ -482,7 +482,16 @@ RuntimeValue::RuntimeValue(RuntimeValue* v) {
 RuntimeValue::RuntimeValue(TypeDefinition v)
 	: Value(v) {}
 
-RuntimeValue::~RuntimeValue() = default;
+RuntimeValue::~RuntimeValue() {
+	if (str) {
+		for (auto& var : *str) {
+			if (var.first == modules::Module::INSTANCE_ID_NAME) {
+				delete reinterpret_cast<void*>(*var.second->i);
+			}
+		}
+	}
+	unset();
+};
 
 void RuntimeValue::set(cp_bool b) {
 	unset();
