@@ -639,6 +639,14 @@ void RuntimeValue::unset() {
 	delete this->arr;
 	delete this->str;
 	delete this->fun;
+	this->b = nullptr;
+	this->i = nullptr;
+	this->f = nullptr;
+	this->c = nullptr;
+	this->s = nullptr;
+	this->arr = nullptr;
+	this->str = nullptr;
+	this->fun = nullptr;
 }
 
 void RuntimeValue::set_null() {
@@ -730,34 +738,6 @@ void RuntimeValue::copy_from(RuntimeValue* value) {
 	ref = value->ref;
 	use_ref = value->use_ref;
 }
-
-//bool RuntimeValue::equals_array(cp_array arr) {
-//	if (this->arr->size() != arr.size()) {
-//		return false;
-//	}
-//
-//	for (size_t i = 0; i < arr.size(); ++i) {
-//		if (!this->arr[i]->equals(arr[i])) {
-//			return false;
-//		}
-//	}
-//
-//	return true;
-//}
-//
-//bool RuntimeValue::equals(RuntimeValue* value) {
-//	return type == value->type &&
-//		type_name == value->type_name &&
-//		type_name_space == value->type_name_space &&
-//		array_type == value->array_type &&
-//		b == value->b &&
-//		i == value->i &&
-//		f == value->f &&
-//		c == value->c &&
-//		s == value->s &&
-//		equals_array(value->arr) &&
-//		str == value->str;
-//}
 
 std::vector<GCObject*> RuntimeValue::get_references() {
 	std::vector<GCObject*> references;
