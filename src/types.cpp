@@ -486,48 +486,48 @@ RuntimeValue::~RuntimeValue() = default;
 
 void RuntimeValue::set(cp_bool b) {
 	unset();
-	this->b = b;
+	this->b = new cp_bool(b);
 	type = Type::T_BOOL;
 	array_type = Type::T_UNDEFINED;
 }
 
 void RuntimeValue::set(cp_int i) {
 	unset();
-	this->i = i;
+	this->i = new cp_int(i);
 	type = Type::T_INT;
 	array_type = Type::T_UNDEFINED;
 }
 
 void RuntimeValue::set(cp_float f) {
 	unset();
-	this->f = f;
+	this->f = new cp_float(f);
 	type = Type::T_FLOAT;
 	array_type = Type::T_UNDEFINED;
 }
 
 void RuntimeValue::set(cp_char c) {
 	unset();
-	this->c = c;
+	this->c = new cp_char(c);
 	type = Type::T_CHAR;
 	array_type = Type::T_UNDEFINED;
 }
 
 void RuntimeValue::set(cp_string s) {
 	unset();
-	this->s = s;
+	this->s = new cp_string(s);
 	type = Type::T_STRING;
 	array_type = Type::T_UNDEFINED;
 }
 
 void RuntimeValue::set(cp_array arr) {
 	unset();
-	this->arr = arr;
+	this->arr = new cp_array(arr);
 	type = Type::T_ARRAY;
 }
 
 void RuntimeValue::set(cp_array arr, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name, std::string type_name_space) {
 	unset();
-	this->arr = arr;
+	this->arr = new cp_array(arr);
 	type = Type::T_ARRAY;
 	this->array_type = array_type;
 	this->type_name = type_name;
@@ -536,7 +536,7 @@ void RuntimeValue::set(cp_array arr, Type array_type, std::vector<std::shared_pt
 
 void RuntimeValue::set(cp_struct str, std::string type_name, std::string type_name_space) {
 	unset();
-	this->str = str;
+	this->str = new cp_struct(str);
 	type = Type::T_STRUCT;
 	array_type = Type::T_UNDEFINED;
 	this->type_name = type_name;
@@ -545,40 +545,80 @@ void RuntimeValue::set(cp_struct str, std::string type_name, std::string type_na
 
 void RuntimeValue::set(cp_function fun) {
 	unset();
-	this->fun = fun;
+	this->fun = new cp_function(fun);
 	type = Type::T_FUNCTION;
 	array_type = Type::T_UNDEFINED;
 }
 
 cp_bool RuntimeValue::get_b() const {
-	return b;
+	if (!b) return cp_bool();
+	return *b;
 }
 
 cp_int RuntimeValue::get_i() const {
-	return i;
+	if (!i) return cp_int();
+	return *i;
 }
 
 cp_float RuntimeValue::get_f() const {
-	return f;
+	if (!f) return cp_float();
+	return *f;
 }
 
 cp_char RuntimeValue::get_c() const {
-	return c;
+	if (!c) return cp_char();
+	return *c;
 }
 
 cp_string RuntimeValue::get_s() const {
-	return s;
+	if (!s) return cp_string();
+	return *s;
 }
 
 cp_array RuntimeValue::get_arr() const {
-	return arr;
+	if (!arr) return cp_array();
+	return *arr;
 }
 
 cp_struct RuntimeValue::get_str() const {
-	return str;
+	if (!str) return cp_struct();
+	return *str;
 }
 
 cp_function RuntimeValue::get_fun() const {
+	if (!fun) return cp_function();
+	return *fun;
+}
+
+cp_bool* RuntimeValue::get_raw_b() {
+	return b;
+}
+
+cp_int* RuntimeValue::get_raw_i() {
+	return i;
+}
+
+cp_float* RuntimeValue::get_raw_f() {
+	return f;
+}
+
+cp_char* RuntimeValue::get_raw_c() {
+	return c;
+}
+
+cp_string* RuntimeValue::get_raw_s() {
+	return s;
+}
+
+cp_array* RuntimeValue::get_raw_arr() {
+	return arr;
+}
+
+cp_struct* RuntimeValue::get_raw_str() {
+	return str;
+}
+
+cp_function* RuntimeValue::get_raw_fun() {
 	return fun;
 }
 
@@ -591,14 +631,14 @@ void RuntimeValue::set_arr_type(Type arr_type) {
 }
 
 void RuntimeValue::unset() {
-	this->b = false;
-	this->i = 0;
-	this->f = 0l;
-	this->c = '\0';
-	this->s = "";
-	this->arr = cp_array();
-	this->str = cp_struct();
-	this->fun = cp_function();
+	delete this->b;
+	delete this->i;
+	delete this->f;
+	delete this->c;
+	delete this->s;
+	delete this->arr;
+	delete this->str;
+	delete this->fun;
 }
 
 void RuntimeValue::set_null() {
@@ -621,27 +661,27 @@ long double RuntimeValue::value_hash() const {
 	case Type::T_VOID:
 		throw std::runtime_error("value is null");
 	case Type::T_BOOL:
-		return (long double)b;
+		return (long double)*b;
 	case Type::T_INT:
-		return (long double)i;
+		return (long double)*i;
 	case Type::T_FLOAT:
-		return (long double)f;
+		return (long double)*f;
 	case Type::T_CHAR:
-		return (long double)c;
+		return (long double)*c;
 	case Type::T_STRING:
-		return (long double)axe::StringUtils::hashcode(s);
+		return (long double)axe::StringUtils::hashcode(*s);
 	case Type::T_ANY:
 		throw std::runtime_error("value is any");
 	case Type::T_ARRAY: {
 		long double h = 0;
-		for (size_t i = 0; i < arr.size(); ++i) {
-			h = h * 31 + arr[i]->value_hash();
+		for (size_t i = 0; i < arr->size(); ++i) {
+			h = h * 31 + (*arr)[i]->value_hash();
 		}
 		return h;
 	}
 	case Type::T_STRUCT: {
 		long double h = 0;
-		for (const auto& v : str) {
+		for (const auto& v : *str) {
 			h += v.second->value_hash();
 		}
 		return h;
@@ -651,80 +691,84 @@ long double RuntimeValue::value_hash() const {
 	}
 }
 
-void RuntimeValue::copy_array(cp_array arr) {
-	if (arr.size() == 0) {
-		this->arr = cp_array();
-		return;
-	}
-
-	auto rarr = cp_array(arr.size());
-
-	for (size_t i = 0; i < arr.size(); ++i) {
-		RuntimeValue* currval = arr[i];
-		RuntimeValue* val = currval ? new RuntimeValue(currval) : nullptr;
-		rarr[i] = val;
-	}
-
-	this->arr = cp_array(rarr);
-}
-
 void RuntimeValue::copy_from(RuntimeValue* value) {
 	type = value->type;
 	type_name = value->type_name;
 	type_name_space = value->type_name_space;
 	array_type = value->array_type;
 	dim = value->dim;
-	b = value->b;
-	i = value->i;
-	f = value->f;
-	c = value->c;
-	s = value->s;
-	//copy_array(value->arr);
-	arr = value->arr;
-	str = value->str;
-	fun = value->fun;
+	unset();
+	switch (type)
+	{
+	case parser::Type::T_BOOL:
+		b = new cp_bool(*value->b);
+		break;
+	case parser::Type::T_INT:
+		i = new cp_int(*value->i);
+		break;
+	case parser::Type::T_FLOAT:
+		f = new cp_float(*value->f);
+		break;
+	case parser::Type::T_CHAR:
+		c = new cp_char(*value->c);
+		break;
+	case parser::Type::T_STRING:
+		s = new cp_string(*value->s);
+		break;
+	case parser::Type::T_ARRAY:
+		arr = new cp_array(*value->arr);
+		break;
+	case parser::Type::T_STRUCT:
+		str = new cp_struct(*value->str);
+		break;
+	case parser::Type::T_FUNCTION:
+		fun = new cp_function(*value->fun);
+		break;
+	default:
+		break;
+	}
 	ref = value->ref;
 	use_ref = value->use_ref;
 }
 
-bool RuntimeValue::equals_array(cp_array arr) {
-	if (this->arr.size() != arr.size()) {
-		return false;
-	}
-
-	for (size_t i = 0; i < arr.size(); ++i) {
-		if (!this->arr[i]->equals(arr[i])) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
-bool RuntimeValue::equals(RuntimeValue* value) {
-	return type == value->type &&
-		type_name == value->type_name &&
-		type_name_space == value->type_name_space &&
-		array_type == value->array_type &&
-		b == value->b &&
-		i == value->i &&
-		f == value->f &&
-		c == value->c &&
-		s == value->s &&
-		equals_array(value->arr) &&
-		str == value->str;
-}
+//bool RuntimeValue::equals_array(cp_array arr) {
+//	if (this->arr->size() != arr.size()) {
+//		return false;
+//	}
+//
+//	for (size_t i = 0; i < arr.size(); ++i) {
+//		if (!this->arr[i]->equals(arr[i])) {
+//			return false;
+//		}
+//	}
+//
+//	return true;
+//}
+//
+//bool RuntimeValue::equals(RuntimeValue* value) {
+//	return type == value->type &&
+//		type_name == value->type_name &&
+//		type_name_space == value->type_name_space &&
+//		array_type == value->array_type &&
+//		b == value->b &&
+//		i == value->i &&
+//		f == value->f &&
+//		c == value->c &&
+//		s == value->s &&
+//		equals_array(value->arr) &&
+//		str == value->str;
+//}
 
 std::vector<GCObject*> RuntimeValue::get_references() {
 	std::vector<GCObject*> references;
 
 	if (is_array(type)) {
-		for (const auto& val : arr) {
+		for (const auto& val : *arr) {
 			references.push_back(val);
 		}
 	}
 	if (is_struct(type)) {
-		for (const auto& sub : str) {
+		for (const auto& sub : *str) {
 			references.push_back(sub.second);
 		}
 	}

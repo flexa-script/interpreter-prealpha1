@@ -256,16 +256,15 @@ public:
 };
 
 class RuntimeValue : public Value, public GCObject {
-//private:
-public:
-	cp_bool b;
-	cp_int i;
-	cp_float f;
-	cp_char c;
-	cp_string s;
-	cp_array arr;
-	cp_struct str;
-	cp_function fun;
+private:
+	cp_bool* b;
+	cp_int* i;
+	cp_float* f;
+	cp_char* c;
+	cp_string* s;
+	cp_array* arr;
+	cp_struct* str;
+	cp_function* fun;
 
 public:
 	RuntimeValue(Type type, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim,
@@ -307,6 +306,15 @@ public:
 	cp_struct get_str() const;
 	cp_function get_fun() const;
 
+	cp_bool* get_raw_b();
+	cp_int* get_raw_i();
+	cp_float* get_raw_f();
+	cp_char* get_raw_c();
+	cp_string* get_raw_s();
+	cp_array* get_raw_arr();
+	cp_struct* get_raw_str();
+	cp_function* get_raw_fun();
+
 	void unset();
 
 	void set_null();
@@ -322,8 +330,8 @@ public:
 	void copy_array(cp_array arr);
 	void copy_from(RuntimeValue* value);
 
-	bool equals_array(cp_array arr);
-	bool equals(RuntimeValue* value);
+	//bool equals_array(cp_array arr);
+	//bool equals(RuntimeValue* value);
 
 	virtual std::vector<GCObject*> get_references() override;
 };
