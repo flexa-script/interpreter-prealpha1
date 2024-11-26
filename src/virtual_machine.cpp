@@ -361,7 +361,7 @@ void VirtualMachine::decode_operation() {
 	}
 	case OP_SET_ELEMENT: {
 		RuntimeValue* value = get_stack_top();
-		(*value_stack.back()->get_raw_arr())[current_instruction.get_size_operand()] = value;
+		value->set_sub(current_instruction.get_size_operand(), value);
 		break;
 	}
 	case OP_CREATE_STRUCT: {
@@ -372,7 +372,7 @@ void VirtualMachine::decode_operation() {
 	}
 	case OP_SET_FIELD:{
 		RuntimeValue* value = get_stack_top();
-		(*value_stack.back()->get_raw_str())[current_instruction.get_string_operand()] = value;
+		value->set_sub(current_instruction.get_string_operand(), value);
 		break;
 	}
 

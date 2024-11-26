@@ -296,6 +296,8 @@ public:
 	void set(cp_array, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name = "", std::string type_name_space = "");
 	void set(cp_struct, std::string type_name, std::string type_name_space);
 	void set(cp_function);
+	void set_sub(std::string identifier, RuntimeValue* sub_value);
+	void set_sub(size_t index, RuntimeValue* sub_value);
 
 	cp_bool get_b() const;
 	cp_int get_i() const;
@@ -306,14 +308,14 @@ public:
 	cp_struct get_str() const;
 	cp_function get_fun() const;
 
-	cp_bool* get_raw_b();
-	cp_int* get_raw_i();
-	cp_float* get_raw_f();
-	cp_char* get_raw_c();
-	cp_string* get_raw_s();
-	cp_array* get_raw_arr();
-	cp_struct* get_raw_str();
-	cp_function* get_raw_fun();
+	//cp_bool* get_raw_b();
+	//cp_int* get_raw_i();
+	//cp_float* get_raw_f();
+	//cp_char* get_raw_c();
+	//cp_string* get_raw_s();
+	//cp_array* get_raw_arr();
+	//cp_struct* get_raw_str();
+	//cp_function* get_raw_fun();
 
 	void unset();
 

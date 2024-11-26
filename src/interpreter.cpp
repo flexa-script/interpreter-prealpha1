@@ -1785,7 +1785,7 @@ RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::ve
 		auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
 		if (access_vector.size() > 0) {
-			auto* current_val = value->get_raw_arr();
+			auto current_val = value->get_arr();
 			size_t s = 0;
 			size_t access_pos = 0;
 
@@ -1793,14 +1793,14 @@ RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::ve
 				access_pos = access_vector.at(s);
 
 				// break if it is a string, and the string access will be handled in identifier node evaluation
-				if (is_string((*current_val)[access_pos]->type)) {
-					(*current_val)[access_pos]->get_s()[access_vector.at(s + 1)] = new_value->get_c();
-					return (*current_val)[access_pos];
+				if (is_string(current_val[access_pos]->type)) {
+					current_val[access_pos]->get_s()[access_vector.at(s + 1)] = new_value->get_c();
+					return current_val[access_pos];
 				}
-				if (access_pos >= current_val->size()) {
+				if (access_pos >= current_val.size()) {
 					throw std::runtime_error("invalid array position access");
 				}
-				current_val = (*current_val)[access_pos]->get_raw_arr();
+				current_val = current_val[access_pos]->get_arr();
 			}
 			if (is_string(value->type)) {
 				value->get_s()[access_vector.at(s)] = new_value->get_c();
@@ -1808,10 +1808,10 @@ RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::ve
 			}
 			access_pos = access_vector.at(s);
 			if (i == identifier_vector.size() - 1) {
-				(*current_val)[access_pos] = new_value;
+				current_val[access_pos] = new_value;
 			}
 			else {
-				value = (*current_val)[access_pos];
+				value = current_val[access_pos];
 			}
 		}
 
@@ -1830,7 +1830,7 @@ RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::ve
 			}
 
 			if (i == identifier_vector.size() - 1 && identifier_vector[i].access_vector.size() == 0) {
-				value->get_raw_str()->at(identifier_vector[i].identifier) = new_value;
+				value->set_sub(identifier_vector[i].identifier, new_value);
 			}
 			else {
 				value = value->get_str()[identifier_vector[i].identifier];
@@ -1847,28 +1847,28 @@ RuntimeValue* Interpreter::access_value(const std::shared_ptr<Scope> scope, Runt
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
 	if (access_vector.size() > 0) {
-		auto* current_val = next_value->get_raw_arr();
+		auto current_val = next_value->get_arr();
 		size_t s = 0;
 		size_t access_pos = 0;
 
 		for (s = 0; s < access_vector.size() - 1; ++s) {
 			access_pos = access_vector.at(s);
 			// break if it is a string, and the string access will be handled in identifier node evaluation
-			if (is_string((*current_val)[access_pos]->type)) {
+			if (is_string(current_val[access_pos]->type)) {
 				has_string_access = true;
 				break;
 			}
-			if (access_pos >= current_val->size()) {
+			if (access_pos >= current_val.size()) {
 				throw std::runtime_error("invalid array position access");
 			}
-			current_val = (*current_val)[access_pos]->get_raw_arr();
+			current_val = current_val[access_pos]->get_arr();
 		}
 		if (is_string(next_value->type)) {
 			has_string_access = true;
 			return next_value;
 		}
 		access_pos = access_vector.at(s);
-		next_value = (*current_val)[access_pos];
+		next_value = current_val[access_pos];
 	}
 
 	++i;
