@@ -311,5 +311,8 @@
     <ClCompile Include="virtual_machine.cpp">
       <Filter>Source Files\core\vm</Filter>
     </ClCompile>
+    <ClCompile Include="token_constants.cpp">
+      <Filter>Source Files\core\lexer</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

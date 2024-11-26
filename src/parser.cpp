@@ -15,7 +15,7 @@ Parser::Parser(const std::string& name, Lexer* lex) : name(name), lex(lex) {
 }
 
 std::shared_ptr<ASTProgramNode> Parser::parse_program() {
-	auto statements = new std::vector<std::shared_ptr<ASTNode>>;
+	auto statements = std::vector<std::shared_ptr<ASTNode>>();
 	std::string alias = "";
 
 	if (current_token.type == TOK_NAMESPACE) {
@@ -26,15 +26,15 @@ std::shared_ptr<ASTProgramNode> Parser::parse_program() {
 	}
 
 	while (current_token.type != TOK_EOF) {
-		statements->push_back(parse_program_statement());
+		statements.push_back(parse_program_statement());
 		consume_token();
 	}
 
-	return std::make_shared<ASTProgramNode>(name, alias, *statements);
+	return std::make_shared<ASTProgramNode>(name, alias, statements);
 }
 
 std::shared_ptr<ASTUsingNode> Parser::parse_using_statement() {
-	std::vector<std::string> library = std::vector<std::string>();
+	auto library = std::vector<std::string>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -190,7 +190,7 @@ std::shared_ptr<ASTEnumNode> Parser::parse_enum_statement() {
 }
 
 std::shared_ptr<ASTBlockNode> Parser::parse_block() {
-	auto statements = new std::vector<std::shared_ptr<ASTNode>>();
+	auto statements = std::vector<std::shared_ptr<ASTNode>>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -199,19 +199,19 @@ std::shared_ptr<ASTBlockNode> Parser::parse_block() {
 		&& current_token.type != TOK_ERROR
 		&& current_token.type != TOK_EOF) {
 		consume_semicolon.push(true);
-		statements->push_back(parse_block_statement());
+		statements.push_back(parse_block_statement());
 		consume_semicolon.pop();
 		consume_token();
 	}
 
 	if (current_token.type == TOK_RIGHT_CURLY) {
-		return std::make_shared<ASTBlockNode>(*statements, row, col);
+		return std::make_shared<ASTBlockNode>(statements, row, col);
 	}
 	throw std::runtime_error(msg_header() + "reached end of file while parsing");
 }
 
 std::shared_ptr<ASTBlockNode> Parser::parse_struct_block() {
-	auto statements = new std::vector<std::shared_ptr<ASTNode>>;
+	auto statements = std::vector<std::shared_ptr<ASTNode>>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -219,12 +219,12 @@ std::shared_ptr<ASTBlockNode> Parser::parse_struct_block() {
 	while (current_token.type != TOK_RIGHT_CURLY
 		&& current_token.type != TOK_ERROR
 		&& current_token.type != TOK_EOF) {
-		statements->push_back(parse_struct_block_variables());
+		statements.push_back(parse_struct_block_variables());
 		consume_token();
 	}
 
 	if (current_token.type == TOK_RIGHT_CURLY) {
-		return std::make_shared<ASTBlockNode>(*statements, row, col);
+		return std::make_shared<ASTBlockNode>(statements, row, col);
 	}
 	throw std::runtime_error(msg_header() + "mismatched scopes: reached end of file while parsing");
 }
@@ -344,9 +344,9 @@ std::shared_ptr<ASTBreakNode> Parser::parse_break_statement() {
 
 std::shared_ptr<ASTSwitchNode> Parser::parse_switch_statement() {
 	std::shared_ptr<ASTExprNode> condition;
-	std::map<std::shared_ptr<ASTExprNode>, unsigned int>* case_blocks = new std::map<std::shared_ptr<ASTExprNode>, unsigned int>();
+	std::map<std::shared_ptr<ASTExprNode>, unsigned int> case_blocks = std::map<std::shared_ptr<ASTExprNode>, unsigned int>();
 	long default_block = 0;
-	std::vector<std::shared_ptr<ASTNode>>* statements = new std::vector<std::shared_ptr<ASTNode>>();
+	std::vector<std::shared_ptr<ASTNode>> statements = std::vector<std::shared_ptr<ASTNode>>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -361,12 +361,12 @@ std::shared_ptr<ASTSwitchNode> Parser::parse_switch_statement() {
 		bool is_block = false;
 		consume_token();
 		std::shared_ptr<ASTExprNode> case_exrp = parse_expression();
-		int start_position = statements->size();
+		int start_position = statements.size();
 		consume_token();
 		consume_token();
 
 		if (current_token.type == TOK_LEFT_CURLY) {
-			statements->push_back(parse_block());
+			statements.push_back(parse_block());
 			consume_token();
 		}
 		else {
@@ -374,36 +374,36 @@ std::shared_ptr<ASTSwitchNode> Parser::parse_switch_statement() {
 				&& current_token.type != TOK_RIGHT_CURLY && current_token.type != TOK_ERROR
 				&& current_token.type != TOK_EOF) {
 				consume_semicolon.push(true);
-				statements->push_back(parse_block_statement());
+				statements.push_back(parse_block_statement());
 				consume_semicolon.pop();
 				consume_token();
 			}
 		}
-		case_blocks->emplace(case_exrp, start_position);
+		case_blocks.emplace(case_exrp, start_position);
 	}
 
 	if (current_token.type == TOK_DEFAULT) {
 		bool is_block = false;
-		default_block = statements->size();
+		default_block = statements.size();
 		consume_token();
 		consume_token();
 		if (current_token.type == TOK_LEFT_CURLY) {
-			statements->push_back(parse_block());
+			statements.push_back(parse_block());
 			consume_token();
 		}
 		else {
 			while (current_token.type != TOK_RIGHT_CURLY && current_token.type != TOK_ERROR && current_token.type != TOK_EOF) {
 				consume_semicolon.push(true);
-				statements->push_back(parse_block_statement());
+				statements.push_back(parse_block_statement());
 				consume_semicolon.pop();
 				consume_token();
 			}
 		}
 	}
 
-	default_block = statements->size();
+	default_block = statements.size();
 
-	return std::make_shared<ASTSwitchNode>(condition, *statements, *case_blocks, default_block, row, col);
+	return std::make_shared<ASTSwitchNode>(condition, statements, case_blocks, default_block, row, col);
 }
 
 std::shared_ptr<ASTElseIfNode> Parser::parse_else_if_statement() {
@@ -1124,7 +1124,7 @@ std::shared_ptr<ASTFunctionCallNode> Parser::parse_function_call_node(std::share
 	std::string identifier = std::move(idnode->identifier_vector[0].identifier);
 	std::string nmspace = std::move(idnode->nmspace);
 	auto identifier_vector = std::vector<Identifier>();
-	auto* parameters = new std::vector<std::shared_ptr<ASTExprNode>>();
+	auto parameters = std::vector<std::shared_ptr<ASTExprNode>>();
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
@@ -1156,7 +1156,7 @@ std::shared_ptr<ASTFunctionCallNode> Parser::parse_function_call_node(std::share
 
 	identifier_vector.emplace(identifier_vector.begin(), id);
 
-	return std::make_shared<ASTFunctionCallNode>(nmspace, identifier_vector, *parameters, row, col);
+	return std::make_shared<ASTFunctionCallNode>(nmspace, identifier_vector, parameters, row, col);
 }
 
 std::shared_ptr<ASTUnaryExprNode> Parser::parse_increment_expression(std::shared_ptr<ASTIdentifierNode> identifier) {
@@ -1492,12 +1492,12 @@ VariableDefinition* Parser::parse_unpacked_formal_param() {
 		type_name_space, array_type, dim, def_expr, false, row, col);
 }
 
-std::vector<std::shared_ptr<ASTExprNode>>* Parser::parse_actual_params() {
-	auto parameters = new std::vector<std::shared_ptr<ASTExprNode>>();
+std::vector<std::shared_ptr<ASTExprNode>> Parser::parse_actual_params() {
+	auto parameters = std::vector<std::shared_ptr<ASTExprNode>>();
 
 	do {
 		consume_token();
-		parameters->push_back(parse_expression());
+		parameters.push_back(parse_expression());
 		consume_token();
 	} while (current_token.type == TOK_COMMA);
 

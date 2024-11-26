@@ -94,7 +94,7 @@ namespace parser {
 		std::shared_ptr<ASTTypingNode> parse_typing_node();
 
 		// special
-		std::vector<std::shared_ptr<ASTExprNode>>* parse_actual_params();
+		std::vector<std::shared_ptr<ASTExprNode>> parse_actual_params();
 		VariableDefinition* parse_struct_var_def();
 		VariableDefinition* parse_formal_param();
 		VariableDefinition* parse_unpacked_formal_param();
