@@ -308,16 +308,14 @@ public:
 	cp_struct get_str() const;
 	cp_function get_fun() const;
 
-	//cp_bool* get_raw_b();
-	//cp_int* get_raw_i();
-	//cp_float* get_raw_f();
-	//cp_char* get_raw_c();
-	//cp_string* get_raw_s();
-	//cp_array* get_raw_arr();
-	//cp_struct* get_raw_str();
-	//cp_function* get_raw_fun();
-
-	void unset();
+	cp_bool* get_raw_b();
+	cp_int* get_raw_i();
+	cp_float* get_raw_f();
+	cp_char* get_raw_c();
+	cp_string* get_raw_s();
+	cp_array* get_raw_arr();
+	cp_struct* get_raw_str();
+	cp_function* get_raw_fun();
 
 	void set_null();
 	void set_undefined();
@@ -333,6 +331,9 @@ public:
 	void copy_from(RuntimeValue* value);
 
 	virtual std::vector<GCObject*> get_references() override;
+
+private:
+	void unset();
 };
 
 class RuntimeVariable : public Variable, public GCObject, public std::enable_shared_from_this<RuntimeVariable> {

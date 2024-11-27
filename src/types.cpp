@@ -460,39 +460,48 @@ RuntimeValue::RuntimeValue()
 	: Value(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 }
 
-RuntimeValue::RuntimeValue(cp_bool rawv) {
+RuntimeValue::RuntimeValue(cp_bool rawv)
+	: Value(Type::T_BOOL, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
 
-RuntimeValue::RuntimeValue(cp_int rawv) {
+RuntimeValue::RuntimeValue(cp_int rawv)
+	: Value(Type::T_INT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
 
-RuntimeValue::RuntimeValue(cp_float rawv) {
+RuntimeValue::RuntimeValue(cp_float rawv)
+	: Value(Type::T_FLOAT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
 
-RuntimeValue::RuntimeValue(cp_char rawv) {
+RuntimeValue::RuntimeValue(cp_char rawv)
+	: Value(Type::T_CHAR, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
 
-RuntimeValue::RuntimeValue(cp_string rawv) {
+RuntimeValue::RuntimeValue(cp_string rawv)
+	: Value(Type::T_STRING, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
 
-RuntimeValue::RuntimeValue(cp_array rawv) {
+RuntimeValue::RuntimeValue(cp_array rawv)
+	: Value(Type::T_ARRAY, Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
 
-RuntimeValue::RuntimeValue(cp_array rawv, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name, std::string type_name_space) {
+RuntimeValue::RuntimeValue(cp_array rawv, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name, std::string type_name_space)
+	: Value(Type::T_ARRAY, array_type, dim, type_name, type_name_space) {
 	set(rawv, array_type, dim, type_name, type_name_space);
 }
 
-RuntimeValue::RuntimeValue(cp_struct rawv, std::string type_name, std::string type_name_space) {
+RuntimeValue::RuntimeValue(cp_struct rawv, std::string type_name, std::string type_name_space)
+	: Value(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), type_name, type_name_space) {
 	set(rawv, type_name, type_name_space);
 }
 
-RuntimeValue::RuntimeValue(cp_function rawv) {
+RuntimeValue::RuntimeValue(cp_function rawv)
+	: Value(Type::T_FUNCTION, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
 
@@ -643,37 +652,37 @@ cp_function RuntimeValue::get_fun() const {
 	return *fun;
 }
 
-//cp_bool* RuntimeValue::get_raw_b() {
-//	return b;
-//}
-//
-//cp_int* RuntimeValue::get_raw_i() {
-//	return i;
-//}
-//
-//cp_float* RuntimeValue::get_raw_f() {
-//	return f;
-//}
-//
-//cp_char* RuntimeValue::get_raw_c() {
-//	return c;
-//}
-//
-//cp_string* RuntimeValue::get_raw_s() {
-//	return s;
-//}
-//
-//cp_array* RuntimeValue::get_raw_arr() {
-//	return arr;
-//}
-//
-//cp_struct* RuntimeValue::get_raw_str() {
-//	return str;
-//}
-//
-//cp_function* RuntimeValue::get_raw_fun() {
-//	return fun;
-//}
+cp_bool* RuntimeValue::get_raw_b() {
+	return b;
+}
+
+cp_int* RuntimeValue::get_raw_i() {
+	return i;
+}
+
+cp_float* RuntimeValue::get_raw_f() {
+	return f;
+}
+
+cp_char* RuntimeValue::get_raw_c() {
+	return c;
+}
+
+cp_string* RuntimeValue::get_raw_s() {
+	return s;
+}
+
+cp_array* RuntimeValue::get_raw_arr() {
+	return arr;
+}
+
+cp_struct* RuntimeValue::get_raw_str() {
+	return str;
+}
+
+cp_function* RuntimeValue::get_raw_fun() {
+	return fun;
+}
 
 void RuntimeValue::set_type(Type type) {
 	this->type = type;
@@ -684,35 +693,35 @@ void RuntimeValue::set_arr_type(Type arr_type) {
 }
 
 void RuntimeValue::unset() {
-	if (this->b) {
+	if (this->b && reinterpret_cast<uintptr_t>(this->b) != 0xdddddddddddddddd) {
 		delete this->b;
 		this->b = nullptr;
 	}
-	if (this->i) {
+	if (this->i && reinterpret_cast<uintptr_t>(this->i) != 0xdddddddddddddddd) {
 		delete this->i;
 		this->i = nullptr;
 	}
-	if (this->f) {
+	if (this->f && reinterpret_cast<uintptr_t>(this->f) != 0xdddddddddddddddd) {
 		delete this->f;
 		this->f = nullptr;
 	}
-	if (this->c) {
+	if (this->c && reinterpret_cast<uintptr_t>(this->c) != 0xdddddddddddddddd) {
 		delete this->c;
 		this->c = nullptr;
 	}
-	if (this->s) {
+	if (this->s && reinterpret_cast<uintptr_t>(this->s) != 0xdddddddddddddddd) {
 		delete this->s;
 		this->s = nullptr;
 	}
-	if (this->arr) {
+	if (this->arr && reinterpret_cast<uintptr_t>(this->arr) != 0xdddddddddddddddd) {
 		delete this->arr;
 		this->arr = nullptr;
 	}
-	if (this->str) {
+	if (this->str && reinterpret_cast<uintptr_t>(this->str) != 0xdddddddddddddddd) {
 		delete this->str;
 		this->str = nullptr;
 	}
-	if (this->fun) {
+	if (this->fun && reinterpret_cast<uintptr_t>(this->fun) != 0xdddddddddddddddd) {
 		delete this->fun;
 		this->fun = nullptr;
 	}
@@ -720,11 +729,13 @@ void RuntimeValue::unset() {
 
 
 void RuntimeValue::set_null() {
-	copy_from(new RuntimeValue(Type::T_VOID));
+	auto v = RuntimeValue(Type::T_VOID);
+	copy_from(&v);
 }
 
 void RuntimeValue::set_undefined() {
-	copy_from(new RuntimeValue(Type::T_UNDEFINED));
+	auto v = RuntimeValue(Type::T_UNDEFINED);
+	copy_from(&v);
 }
 
 bool RuntimeValue::has_value() {
@@ -765,7 +776,7 @@ long double RuntimeValue::value_hash() const {
 		return h;
 	}
 	default:
-		throw std::runtime_error("invalid type encountered");
+		throw std::runtime_error("cannot hash invalid type");
 	}
 }
 

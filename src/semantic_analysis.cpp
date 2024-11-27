@@ -132,10 +132,6 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 	const auto& nmspace = get_namespace();
 	std::shared_ptr<Scope> current_scope = scopes[nmspace].back();
 
-	//if (astnode->identifier == "game_window") {
-	//	int x = 0;
-	//}
-
 	if (current_scope->already_declared_variable(astnode->identifier)) {
 		throw std::runtime_error("variable '" + astnode->identifier + "' already declared");
 	}

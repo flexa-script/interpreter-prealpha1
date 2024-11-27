@@ -125,10 +125,6 @@ void Interpreter::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	const auto& nmspace = get_namespace();
 
-	if (astnode->identifier == "spawn") {
-		int x = 0;
-	}
-
 	if (astnode->expr) {
 		astnode->expr->accept(this);
 	}
@@ -331,9 +327,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	std::vector<TypeDefinition*> signature;
 	std::vector<RuntimeValue*> function_arguments;
 
-	if (astnode->identifier == "spawn_random") {
-		int x = 0;
-	}
+	gc.add_root_container(function_arguments);
 
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
@@ -384,7 +378,6 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	current_function_call_identifier_vector.push(identifier_vector);
 	current_function_nmspace.push(nmspace);
 	current_function_calling_arguments.push(function_arguments);
-	gc.add_root_container(function_arguments);
 
 	auto block = declfun.block;
 	if (block) {
@@ -1049,7 +1042,6 @@ void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) {
 void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto value = alocate_value(new RuntimeValue(Type::T_ARRAY));
 	Type arr_t = Type::T_ANY;
 	cp_array arr = cp_array(astnode->values.size());
 
@@ -1096,6 +1088,7 @@ void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 
 	is_max = true;
 
+	auto value = alocate_value(new RuntimeValue(Type::T_ARRAY));
 	value->set(arr, arr_t, current_expression_array_dim, current_expression_array_type.type_name, current_expression_array_type.type_name_space);
 
 	current_expression_value = value;
@@ -1132,8 +1125,6 @@ void Interpreter::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
 		throw std::runtime_error("error trying to find struct definition");
 	}
 	auto type_struct = curr_scope->find_declared_structure_definition(astnode->type_name);
-
-	auto value = alocate_value(new RuntimeValue(Type::T_STRUCT));
 
 	auto str = cp_struct();
 
@@ -1181,6 +1172,7 @@ void Interpreter::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
 		}
 	}
 
+	auto value = alocate_value(new RuntimeValue(Type::T_STRUCT));
 	value->set(str, astnode->type_name, astnode->nmspace);
 	current_expression_value = value;
 
@@ -1785,7 +1777,7 @@ RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::ve
 		auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
 		if (access_vector.size() > 0) {
-			auto current_val = value->get_arr();
+			auto current_val = value->get_raw_arr();
 			size_t s = 0;
 			size_t access_pos = 0;
 
@@ -1793,14 +1785,14 @@ RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::ve
 				access_pos = access_vector.at(s);
 
 				// break if it is a string, and the string access will be handled in identifier node evaluation
-				if (is_string(current_val[access_pos]->type)) {
-					current_val[access_pos]->get_s()[access_vector.at(s + 1)] = new_value->get_c();
-					return current_val[access_pos];
+				if (is_string((*current_val)[access_pos]->type)) {
+					(*current_val)[access_pos]->get_s()[access_vector.at(s + 1)] = new_value->get_c();
+					return (*current_val)[access_pos];
 				}
-				if (access_pos >= current_val.size()) {
+				if (access_pos >= current_val->size()) {
 					throw std::runtime_error("invalid array position access");
 				}
-				current_val = current_val[access_pos]->get_arr();
+				current_val = (*current_val)[access_pos]->get_raw_arr();
 			}
 			if (is_string(value->type)) {
 				value->get_s()[access_vector.at(s)] = new_value->get_c();
@@ -1808,10 +1800,10 @@ RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::ve
 			}
 			access_pos = access_vector.at(s);
 			if (i == identifier_vector.size() - 1) {
-				current_val[access_pos] = new_value;
+				(*current_val)[access_pos] = new_value;
 			}
 			else {
-				value = current_val[access_pos];
+				value = (*current_val)[access_pos];
 			}
 		}
 
