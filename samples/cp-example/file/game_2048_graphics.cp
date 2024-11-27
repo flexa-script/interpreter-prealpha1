@@ -54,7 +54,13 @@ fun update() {
 	if (state == ST_MAIN_MENU) {
 		state = ST_PLAYING;
 	} else if (state == ST_PLAYING) {
-		var boardcopy[4][4]: int = board;
+		var boardcopy[4][4]: int = { 0 };
+        
+        for (var i: int = 0; i < 4; i++) {
+            for (var j: int = 0; j < 4; j++) {
+                boardcopy[i][j] = board[i][j];
+            }
+        }
 		
 		if (cp::is_key_released(cp::KEY_W) or cp::is_key_released(cp::KEY_UP) or cp::is_key_released(cp::KEY_NUMPAD_8)) {
 			moves_up();

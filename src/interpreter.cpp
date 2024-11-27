@@ -327,7 +327,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	std::vector<TypeDefinition*> signature;
 	std::vector<RuntimeValue*> function_arguments;
 
-	gc.add_root_container(function_arguments);
+	gc.add_root_container(&function_arguments);
 
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
@@ -397,7 +397,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	current_function_signature.pop();
 	current_function_nmspace.pop();
 	current_this_name.pop();
-	gc.remove_root_container(function_arguments);
+	gc.remove_root_container(&function_arguments);
 
 	pop_namespace(pop);
 }

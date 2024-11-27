@@ -16,7 +16,7 @@ using namespace lexer;
 
 VirtualMachine::VirtualMachine(std::vector<BytecodeInstruction> instructions)
 	: instructions(instructions), gc(GarbageCollector()), set_default_value(nullptr) {
-	gc.add_root_container(value_stack);
+	gc.add_root_container(&value_stack);
 }
 
 void VirtualMachine::run() {

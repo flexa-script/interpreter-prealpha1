@@ -54,11 +54,11 @@ void GarbageCollector::remove_var_root(std::weak_ptr<GCObject> obj) {
 	}
 }
 
-void GarbageCollector::add_root_container(std::vector<RuntimeValue*>& root_container) {
+void GarbageCollector::add_root_container(std::vector<RuntimeValue*>* root_container) {
 	root_containers.emplace_back(root_container);
 }
 
-void GarbageCollector::remove_root_container(std::vector<RuntimeValue*>& root_container) {
+void GarbageCollector::remove_root_container(std::vector<RuntimeValue*>* root_container) {
 	auto it = std::find(root_containers.begin(), root_containers.end(), root_container);
 	if (it != root_containers.end()) {
 		root_containers.erase(it);
@@ -97,7 +97,7 @@ void GarbageCollector::mark() {
 	}
 
 	for (const auto& iterable_ptr : root_containers) {
-		for (auto item : iterable_ptr) {
+		for (auto item : *iterable_ptr) {
 			mark_object(item);
 		}
 	}
@@ -135,7 +135,7 @@ void GarbageCollector::sweep() {
 	}
 
 	for (const auto& iterable_ptr : root_containers) {
-		for (auto item : iterable_ptr) {
+		for (auto item : *iterable_ptr) {
 			item->marked = false;
 		}
 	}

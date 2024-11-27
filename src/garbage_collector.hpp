@@ -17,7 +17,7 @@ private:
     std::vector<GCObject*> roots;
     std::vector<RuntimeValue**> ptr_roots;
     std::vector<std::weak_ptr<GCObject>> var_roots;
-    std::vector<std::vector<RuntimeValue*>> root_containers;
+    std::vector<std::vector<RuntimeValue*>*> root_containers;
 
 public:
     GarbageCollector();
@@ -34,8 +34,8 @@ public:
     void add_ptr_root(RuntimeValue** obj);
     void remove_ptr_root(RuntimeValue** obj);
 
-    void add_root_container(std::vector<RuntimeValue*>& root_container);
-    void remove_root_container(std::vector<RuntimeValue*>& root_container);
+    void add_root_container(std::vector<RuntimeValue*>* root_container);
+    void remove_root_container(std::vector<RuntimeValue*>* root_container);
 
     void mark();
     void mark_object(GCObject* obj);
