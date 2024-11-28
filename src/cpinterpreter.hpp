@@ -1,24 +1,23 @@
 #ifndef CPINTERPRETER_HPP
 #define CPINTERPRETER_HPP
 
+#include "argparse.hpp"
 #include "cpsource.hpp"
 #include "semantic_analysis.hpp"
 
 class CPInterpreter {
 private:
-	std::string project_root;
 	std::string cp_root;
-	std::vector<std::string> files;
-	bool debug;
-	std::string engine;
+	std::string project_root;
+	CpCliArgs args;
 
 public:
-	CPInterpreter(const std::string& project_root, std::vector<std::string>&& files, bool debug, const std::string& engine);
+	CPInterpreter(const CpCliArgs& args);
 
 	int execute();
 
 private:
-	std::vector<CPSource> load_programs(const std::vector<std::string>& files);
+	std::vector<CPSource> load_programs(const std::vector<std::string>& sources);
 
 	void parse_programs(const std::vector<CPSource>& source_programs, std::shared_ptr<ASTProgramNode>* main_program,
 		std::map<std::string, std::shared_ptr<ASTProgramNode>>* programs);

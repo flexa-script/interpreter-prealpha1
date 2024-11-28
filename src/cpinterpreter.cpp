@@ -14,25 +14,24 @@
 #include "interpreter.hpp"
 #include "virtual_machine.hpp"
 
-CPInterpreter::CPInterpreter(const std::string& project_root, std::vector<std::string>&& files,
-	bool debug, const std::string& engine)
-	: project_root(axe::PathUtils::normalize_path_sep(project_root)),
+CPInterpreter::CPInterpreter(const CpCliArgs& args)
+	: project_root(axe::PathUtils::normalize_path_sep(args.workspace)),
 	cp_root(axe::PathUtils::normalize_path_sep(axe::PathUtils::get_current_path() + "libs")),
-	files(std::move(files)), debug(debug), engine(engine) {}
+	args(args) {}
 
 int CPInterpreter::execute() {
-	if (files.size() > 0) {
+	if (args.sources.size() > 0) {
 		return interpreter();
 	}
 
 	return 0;
 }
 
-std::vector<CPSource> CPInterpreter::load_programs(const std::vector<std::string>& files) {
+std::vector<CPSource> CPInterpreter::load_programs(const std::vector<std::string>& sources) {
 	std::vector<CPSource> source_programs;
 
-	for (size_t i = 0; i < files.size(); ++i) {
-		auto current_file_path = std::string{ std::filesystem::path::preferred_separator } + axe::PathUtils::normalize_path_sep(files[i]);
+	for (size_t i = 0; i < sources.size(); ++i) {
+		auto current_file_path = std::string{ std::filesystem::path::preferred_separator } + axe::PathUtils::normalize_path_sep(sources[i]);
 		std::string current_full_path = "";
 
 		if (std::filesystem::exists(project_root + current_file_path)) {
@@ -45,7 +44,7 @@ std::vector<CPSource> CPInterpreter::load_programs(const std::vector<std::string
 			throw std::runtime_error("file not found: '" + current_file_path + "'");
 		}
 
-		auto program = CPSource(CPUtil::get_lib_name(files[i]), CPUtil::load_source(current_full_path));
+		auto program = CPSource(CPUtil::get_lib_name(sources[i]), CPUtil::load_source(current_full_path));
 		source_programs.push_back(program);
 	}
 
@@ -75,7 +74,7 @@ void CPInterpreter::parse_programs(const std::vector<CPSource>& source_programs,
 }
 
 int CPInterpreter::interpreter() {
-	const std::vector<CPSource>& source_programs = load_programs(files);
+	const std::vector<CPSource>& source_programs = load_programs(args.sources);
 
 	std::shared_ptr<visitor::Scope> semantic_global_scope = std::make_shared<visitor::Scope>();
 	std::shared_ptr<visitor::Scope> interpreter_global_scope = std::make_shared<visitor::Scope>();
@@ -97,13 +96,13 @@ int CPInterpreter::interpreter() {
 			}
 		} while (cplibs_size > 0);
 
-		visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, main_program, programs);
+		visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, main_program, programs, args.cpargs);
 		semantic_analyser.start();
 
 		long long result = 0;
 
-		if (engine == "ast") {
-			visitor::Interpreter interpreter(interpreter_global_scope, main_program, programs);
+		if (args.engine == "ast") {
+			visitor::Interpreter interpreter(interpreter_global_scope, main_program, programs, args.cpargs);
 			interpreter.start();
 			result = interpreter.current_expression_value->get_i();
 		}

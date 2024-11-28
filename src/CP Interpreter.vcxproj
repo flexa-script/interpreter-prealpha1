@@ -51,6 +51,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="argparse.hpp" />
     <ClInclude Include="ast.hpp" />
     <ClInclude Include="builtin.hpp" />
     <ClInclude Include="bytecode.hpp" />

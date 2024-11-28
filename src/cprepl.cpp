@@ -109,13 +109,13 @@ int CPRepl::execute() {
 
 			// check if it's all ok using a temp global scope
 			std::shared_ptr<visitor::Scope> temp = std::make_shared<visitor::Scope>(*semantic_global_scope);
-			visitor::SemanticAnalyser temp_semantic_analyser(temp, program, programs);
+			visitor::SemanticAnalyser temp_semantic_analyser(temp, program, programs, std::vector<std::string>());
 			temp_semantic_analyser.start();
 
-			visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, program, programs);
+			visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, program, programs, std::vector<std::string>());
 			semantic_analyser.start();
 
-			visitor::Interpreter interpreter(interpreter_global_scope, program, programs);
+			visitor::Interpreter interpreter(interpreter_global_scope, program, programs, std::vector<std::string>());
 			interpreter.visit(program);
 
 			if (file_load) {

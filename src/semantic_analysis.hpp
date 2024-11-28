@@ -61,7 +61,8 @@ namespace visitor {
 		std::string msg_header() override;
 
 	public:
-		SemanticAnalyser(std::shared_ptr<Scope> global_scope, std::shared_ptr<ASTProgramNode> main_program, std::map<std::string, std::shared_ptr<ASTProgramNode>> programs);
+		SemanticAnalyser(std::shared_ptr<Scope> global_scope, std::shared_ptr<ASTProgramNode> main_program,
+			std::map<std::string, std::shared_ptr<ASTProgramNode>> programs, const std::vector<std::string>& args);
 		~SemanticAnalyser() = default;
 
 		void start();

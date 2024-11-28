@@ -13,7 +13,8 @@ using namespace visitor;
 using namespace parser;
 using namespace lexer;
 
-SemanticAnalyser::SemanticAnalyser(std::shared_ptr<Scope> global_scope, std::shared_ptr<ASTProgramNode> main_program, std::map<std::string, std::shared_ptr<ASTProgramNode>> programs)
+SemanticAnalyser::SemanticAnalyser(std::shared_ptr<Scope> global_scope, std::shared_ptr<ASTProgramNode> main_program,
+	std::map<std::string, std::shared_ptr<ASTProgramNode>> programs, const std::vector<std::string>& args)
 	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace), is_max(false) {
 	scopes[default_namespace].push_back(global_scope);
 

@@ -90,6 +90,7 @@ namespace visitor {
 
 		void call_builtin_function(const std::string& identifier);
 		void declare_function_block_parameters(const std::string& nmspace);
+		void build_args(const std::vector<std::string>& args);
 
 		cp_bool equals_value(const RuntimeValue* lval, const RuntimeValue* rval);
 		cp_bool equals_array(const cp_array& larr, const cp_array& rarr);
@@ -99,7 +100,8 @@ namespace visitor {
 		std::string msg_header() override;
 
 	public:
-		Interpreter(std::shared_ptr<Scope> global_scope, std::shared_ptr<ASTProgramNode> main_program, const std::map<std::string, std::shared_ptr<ASTProgramNode>>& programs);
+		Interpreter(std::shared_ptr<Scope> global_scope, std::shared_ptr<ASTProgramNode> main_program,
+			const std::map<std::string, std::shared_ptr<ASTProgramNode>>& programs, const std::vector<std::string>& args);
 		Interpreter() = default;
 		~Interpreter() = default;
 

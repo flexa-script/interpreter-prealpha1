@@ -16,7 +16,8 @@
 
 using namespace lexer;
 
-Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, std::shared_ptr<ASTProgramNode> main_program, const std::map<std::string, std::shared_ptr<ASTProgramNode>>& programs)
+Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, std::shared_ptr<ASTProgramNode> main_program,
+	const std::map<std::string, std::shared_ptr<ASTProgramNode>>& programs, const std::vector<std::string>& args)
 	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace) {
 	current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 	gc.add_ptr_root(&current_expression_value);
@@ -25,6 +26,19 @@ Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, std::shared_ptr<AS
 
 	auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
 	builtin->register_functions(this);
+
+	build_args(args);
+}
+
+void Interpreter::build_args(const std::vector<std::string>& args) {
+	auto dim = std::make_shared<>();
+	auto var = std::make_shared<RuntimeVariable>("cpargs", Type::T_INT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "");
+	gc.add_var_root(var);
+	auto arr = cp_array();
+	for (size_t i = 0; i < args.size(); ++i) {
+	}
+	var->set_value(alocate_value(new RuntimeValue(arr, Type::T_ARRAY, Type::T_STRING, dim)));
+	scopes[default_namespace].back()->declare_variable("cpargs", var);
 }
 
 void Interpreter::start() {
