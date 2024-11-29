@@ -382,18 +382,12 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	current_function_nmspace.push(nmspace);
 	current_function_calling_arguments.push(function_arguments);
 
-	auto block = declfun.block;
-	if (block) {
-		function_call_name = identifier;
-		block->accept(this);
+	if (!declfun.block) {
+		throw std::runtime_error("'" + astnode->identifier + "' function definition not found");
 	}
-	else {
-		if (builtin_functions.find(astnode->identifier) == builtin_functions.end() && !block) {
-			throw std::runtime_error("function '" + astnode->identifier + "' definition not found");
-		}
 
-		call_builtin_function(identifier);
-	}
+	function_call_name = identifier;
+	declfun.block->accept(this);
 
 	current_function.pop();
 	current_function_call_identifier_vector.pop();
@@ -411,7 +405,6 @@ void Interpreter::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode> astnode)
 	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
 
 	builtin_functions[astnode->identifier]();
-	builtin_arguments.clear();
 
 	current_expression_value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
 
@@ -2838,69 +2831,69 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 	current_function_calling_arguments.pop();
 }
 
-void Interpreter::call_builtin_function(const std::string& identifier) {
-	std::string nmspace = get_namespace();
-	auto vec = std::vector<RuntimeValue*>();
-	size_t i = 0;
-
-	for (i = 0; i < current_function_calling_arguments.top().size(); ++i) {
-		// is reference : not reference
-		RuntimeValue* current_value = nullptr;
-		if (current_function_calling_arguments.top()[i]->use_ref) {
-			current_value = current_function_calling_arguments.top()[i];
-		}
-		else {
-			current_value = alocate_value(new RuntimeValue(current_function_calling_arguments.top()[i]));
-			current_value->ref.reset();
-		}
-
-		if (i >= current_function_defined_parameters.top().size()) {
-			vec.push_back(current_value);
-		}
-		else {
-			if (const auto decl = dynamic_cast<VariableDefinition*>(current_function_defined_parameters.top()[i])) {
-				if (decl->is_rest) {
-					vec.push_back(current_value);
-				}
-				else {
-					builtin_arguments.push_back(current_value);
-				}
-			}
-		}
-	}
-
-	// adds default values
-	for (; i < current_function_defined_parameters.top().size(); ++i) {
-		if (const auto decl = dynamic_cast<VariableDefinition*>(current_function_defined_parameters.top()[i])) {
-			if (decl->is_rest) {
-				break;
-			}
-
-			std::dynamic_pointer_cast<ASTExprNode>(decl->default_value)->accept(this);
-
-			builtin_arguments.push_back(alocate_value(new RuntimeValue(current_expression_value)));
-		}
-	}
-
-	if (vec.size() > 0) {
-		auto arr = cp_array(vec.size());
-		for (size_t i = 0; i < vec.size(); ++i) {
-			arr[i] = vec[i];
-		}
-		auto rest = alocate_value(new RuntimeValue(arr, Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>()));
-		builtin_arguments.push_back(rest);
-	}
-
-	current_function_defined_parameters.pop();
-	current_function_calling_arguments.pop();
-
-	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
-
-	builtin_functions[identifier]();
-	builtin_arguments.clear();
-
-	current_expression_value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
-}
+//void Interpreter::call_builtin_function(const std::string& identifier) {
+//	std::string nmspace = get_namespace();
+//	auto vec = std::vector<RuntimeValue*>();
+//	size_t i = 0;
+//
+//	for (i = 0; i < current_function_calling_arguments.top().size(); ++i) {
+//		// is reference : not reference
+//		RuntimeValue* current_value = nullptr;
+//		if (current_function_calling_arguments.top()[i]->use_ref) {
+//			current_value = current_function_calling_arguments.top()[i];
+//		}
+//		else {
+//			current_value = alocate_value(new RuntimeValue(current_function_calling_arguments.top()[i]));
+//			current_value->ref.reset();
+//		}
+//
+//		if (i >= current_function_defined_parameters.top().size()) {
+//			vec.push_back(current_value);
+//		}
+//		else {
+//			if (const auto decl = dynamic_cast<VariableDefinition*>(current_function_defined_parameters.top()[i])) {
+//				if (decl->is_rest) {
+//					vec.push_back(current_value);
+//				}
+//				else {
+//					builtin_arguments.push_back(current_value);
+//				}
+//			}
+//		}
+//	}
+//
+//	// adds default values
+//	for (; i < current_function_defined_parameters.top().size(); ++i) {
+//		if (const auto decl = dynamic_cast<VariableDefinition*>(current_function_defined_parameters.top()[i])) {
+//			if (decl->is_rest) {
+//				break;
+//			}
+//
+//			std::dynamic_pointer_cast<ASTExprNode>(decl->default_value)->accept(this);
+//
+//			builtin_arguments.push_back(alocate_value(new RuntimeValue(current_expression_value)));
+//		}
+//	}
+//
+//	if (vec.size() > 0) {
+//		auto arr = cp_array(vec.size());
+//		for (size_t i = 0; i < vec.size(); ++i) {
+//			arr[i] = vec[i];
+//		}
+//		auto rest = alocate_value(new RuntimeValue(arr, Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>()));
+//		builtin_arguments.push_back(rest);
+//	}
+//
+//	current_function_defined_parameters.pop();
+//	current_function_calling_arguments.pop();
+//
+//	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
+//
+//	builtin_functions[identifier]();
+//	builtin_arguments.clear();
+//
+//	current_expression_value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
+//}
 
 void Interpreter::build_args(const std::vector<std::string>& args) {
 	auto dim = std::vector<std::shared_ptr<ASTExprNode>>{ std::make_shared<ASTLiteralNode<cp_int>>(cp_int(args.size()), 0, 0) };

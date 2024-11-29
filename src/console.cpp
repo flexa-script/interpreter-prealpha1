@@ -23,8 +23,13 @@ void Console::register_functions(visitor::SemanticAnalyser* visitor) {
 void Console::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["show_console"] = [this, visitor]() {
-		::ShowWindow(::GetConsoleWindow(), visitor->builtin_arguments[0]->get_b());
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 
+		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "show");
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("show"))->value;
+
+		::ShowWindow(::GetConsoleWindow(), val->get_b());
+		
 		};
 
 	visitor->builtin_functions["is_console_visible"] = [this, visitor]() {
@@ -33,23 +38,48 @@ void Console::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["set_console_color"] = [this, visitor]() {
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
+
+		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "background_color");
+		auto vals = std::vector {
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("background_color"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("foreground_color"))->value
+		};
+
 		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-		SetConsoleTextAttribute(hConsole, visitor->builtin_arguments[0]->get_i() * 16 | visitor->builtin_arguments[1]->get_i());
+		SetConsoleTextAttribute(hConsole, vals[0]->get_i() * 0x10 | vals[1]->get_i());
 
 		};
 
 	visitor->builtin_functions["set_console_cursor_position"] = [this, visitor]() {
-		COORD pos = { visitor->builtin_arguments[0]->get_i(), visitor->builtin_arguments[1]->get_i() };
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
+
+		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "x");
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("y"))->value
+		};
+
+		COORD pos = { vals[0]->get_i(), vals[1]->get_i() };
 		HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
 		SetConsoleCursorPosition(output, pos);
 
 		};
 
 	visitor->builtin_functions["set_console_font"] = [this, visitor]() {
-		auto nfontname = visitor->builtin_arguments[0]->get_s();
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
+
+		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "font_name");
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("font_name"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("font_width"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("font_height"))->value
+		};
+
+		auto nfontname = vals[0]->get_s();
 		auto pfontname = std::wstring(nfontname.begin(), nfontname.end());
-		int pwidth = visitor->builtin_arguments[1]->get_i();
-		int pheight = visitor->builtin_arguments[2]->get_i();
+		int pwidth = vals[1]->get_i();
+		int pheight = vals[2]->get_i();
 
 		CONSOLE_FONT_INFOEX cfi;
 		cfi.cbSize = sizeof(cfi);

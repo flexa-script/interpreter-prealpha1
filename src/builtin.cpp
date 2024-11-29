@@ -58,12 +58,15 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::PRINT], func_decls[BUILTIN_NAMES[BuintinFuncs::PRINT]]);
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
-		if (visitor->builtin_arguments.size() == 0) {
-			return;
+
+		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "args");
+		auto var = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("args"));
+		auto args = var->value->get_arr();
+
+		for (size_t i = 0; i < args.size(); ++i) {
+			std::cout << visitor->parse_value_to_string(args[i]);
 		}
-		for (size_t i = 0; i < visitor->builtin_arguments[0]->get_arr().size(); ++i) {
-			std::cout << visitor->parse_value_to_string(visitor->builtin_arguments[0]->get_arr()[i]);
-		}
+
 		};
 
 	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::PRINTLN], func_decls[BUILTIN_NAMES[BuintinFuncs::PRINTLN]]);
@@ -74,9 +77,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::READ], func_decls[BUILTIN_NAMES[BuintinFuncs::READ]]);
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::READ]] = [this, visitor]() {
-		if (visitor->builtin_arguments.size() > 0) {
-			visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]]();
-		}
+		visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]]();
 		std::string line;
 		std::getline(std::cin, line);
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_STRING));
@@ -94,29 +95,45 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::LEN], func_decls[BUILTIN_NAMES[BuintinFuncs::LEN] + "A"]);
 	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::LEN], func_decls[BUILTIN_NAMES[BuintinFuncs::LEN] + "S"]);
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::LEN]] = [this, visitor]() {
-		auto& curr_val = visitor->builtin_arguments[0];
+		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "it");
+		auto var = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("it"));
+		auto itval = var->value;
+
 		auto val = visitor->alocate_value(new RuntimeValue(Type::T_INT));
 
-		if (is_array(curr_val->type)) {
-			val->set(cp_int(curr_val->get_arr().size()));
+		if (is_array(itval->type)) {
+			val->set(cp_int(itval->get_arr().size()));
 		}
 		else {
-			val->set(cp_int(curr_val->get_s().size()));
+			val->set(cp_int(itval->get_s().size()));
 		}
 
 		visitor->current_expression_value = val;
+
 		};
 
 	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::SLEEP], func_decls[BUILTIN_NAMES[BuintinFuncs::SLEEP]]);
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::SLEEP]] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
-		std::this_thread::sleep_for(std::chrono::milliseconds(visitor->builtin_arguments[0]->get_i()));
+
+		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "ms");
+		auto var = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("ms"));
+		auto ms = var->value->get_i();
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+
 		};
 
 	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::SYSTEM], func_decls[BUILTIN_NAMES[BuintinFuncs::SYSTEM]]);
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::SYSTEM]] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
-		system(visitor->builtin_arguments[0]->get_s().c_str());
+
+		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "cmd");
+		auto var = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("cmd"));
+		auto cmd = var->value->get_s();
+
+		system(cmd.c_str());
+
 		};
 
 }
@@ -144,12 +161,12 @@ void Builtin::build_decls() {
 	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::READCH], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::READCH], Type::T_CHAR, parameters));
 
 	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("arr", Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>());
+	variable = new VariableDefinition("it", Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>());
 	parameters.push_back(variable);
 	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::LEN] + "A", FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::LEN] + "A", Type::T_INT, parameters));
 
 	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("str", Type::T_STRING);
+	variable = new VariableDefinition("it", Type::T_STRING);
 	parameters.push_back(variable);
 	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::LEN] + "S", FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::LEN] + "S", Type::T_INT, parameters));
 
