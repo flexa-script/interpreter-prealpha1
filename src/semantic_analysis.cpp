@@ -20,6 +20,8 @@ SemanticAnalyser::SemanticAnalyser(std::shared_ptr<Scope> global_scope, std::sha
 
 	auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
 	builtin->register_functions(this);
+
+	build_args(args);
 };
 
 void SemanticAnalyser::start() {
@@ -1650,6 +1652,16 @@ bool SemanticAnalyser::returns(std::shared_ptr<ASTNode> astnode) {
 	}
 
 	return false;
+}
+
+void SemanticAnalyser::build_args(const std::vector<std::string>& args) {
+	auto dim = std::vector<std::shared_ptr<ASTExprNode>>{ std::make_shared<ASTLiteralNode<cp_int>>(cp_int(args.size()), 0, 0) };
+
+	auto var = std::make_shared<SemanticVariable>("cpargs", Type::T_ARRAY, Type::T_STRING, dim, "", "", true, 0, 0);
+
+	var->set_value(std::make_shared<SemanticValue>(Type::T_ARRAY, Type::T_STRING, dim, "", "", 0, true, 0, 0));
+
+	scopes[default_namespace].back()->declare_variable("cpargs", var);
 }
 
 long long SemanticAnalyser::hash(std::shared_ptr<ASTExprNode> astnode) {

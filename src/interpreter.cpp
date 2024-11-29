@@ -30,17 +30,6 @@ Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, std::shared_ptr<AS
 	build_args(args);
 }
 
-void Interpreter::build_args(const std::vector<std::string>& args) {
-	auto dim = std::make_shared<>();
-	auto var = std::make_shared<RuntimeVariable>("cpargs", Type::T_INT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "");
-	gc.add_var_root(var);
-	auto arr = cp_array();
-	for (size_t i = 0; i < args.size(); ++i) {
-	}
-	var->set_value(alocate_value(new RuntimeValue(arr, Type::T_ARRAY, Type::T_STRING, dim)));
-	scopes[default_namespace].back()->declare_variable("cpargs", var);
-}
-
 void Interpreter::start() {
 	auto pop = push_namespace(default_namespace);
 	current_this_name.push(get_namespace());
@@ -2075,7 +2064,7 @@ std::string Interpreter::parse_value_to_string(const RuntimeValue* value) {
 	case Type::T_ARRAY:
 		str = parse_array_to_string(value->get_arr());
 		break;
-	case Type::T_FUNCTION: 
+	case Type::T_FUNCTION:
 		str = value->get_fun().first + (value->get_fun().first.empty() ? "" : "::") + value->get_fun().second + "(...)";
 		break;
 	case Type::T_UNDEFINED:
@@ -2894,6 +2883,22 @@ void Interpreter::call_builtin_function(const std::string& identifier) {
 	builtin_arguments.clear();
 
 	current_expression_value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
+}
+
+void Interpreter::build_args(const std::vector<std::string>& args) {
+	auto dim = std::vector<std::shared_ptr<ASTExprNode>>{ std::make_shared<ASTLiteralNode<cp_int>>(cp_int(args.size()), 0, 0) };
+
+	auto var = std::make_shared<RuntimeVariable>("cpargs", Type::T_ARRAY, Type::T_STRING, dim, "", "");
+	gc.add_var_root(var);
+
+	auto arr = cp_array();
+	for (size_t i = 0; i < args.size(); ++i) {
+		arr.push_back(alocate_value(new RuntimeValue(args[i])));
+	}
+
+	var->set_value(alocate_value(new RuntimeValue(arr, Type::T_STRING, dim)));
+
+	scopes[default_namespace].back()->declare_variable("cpargs", var);
 }
 
 void Interpreter::set_curr_pos(unsigned int row, unsigned int col) {

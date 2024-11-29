@@ -92,6 +92,7 @@
     <ClInclude Include="vmconstants.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="argparse.cpp" />
     <ClCompile Include="ast.cpp" />
     <ClCompile Include="builtin.cpp" />
     <ClCompile Include="bytecode.cpp" />

@@ -74,7 +74,14 @@ void CPInterpreter::parse_programs(const std::vector<CPSource>& source_programs,
 }
 
 int CPInterpreter::interpreter() {
-	const std::vector<CPSource>& source_programs = load_programs(args.sources);
+	std::vector<CPSource> source_programs;
+	try {
+		source_programs = load_programs(args.sources);
+	}
+	catch (const std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
 
 	std::shared_ptr<visitor::Scope> semantic_global_scope = std::make_shared<visitor::Scope>();
 	std::shared_ptr<visitor::Scope> interpreter_global_scope = std::make_shared<visitor::Scope>();

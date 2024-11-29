@@ -52,6 +52,7 @@ namespace visitor {
 
 		TypeDefinition do_operation(const std::string& op, TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, bool is_expr = true);
 		std::shared_ptr<SemanticValue> access_value(std::shared_ptr<SemanticValue> value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
+		void build_args(const std::vector<std::string>& args);
 
 		void check_is_struct_exists(Type type, const std::string& nmspace, const std::string& identifier);
 
