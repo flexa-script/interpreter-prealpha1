@@ -13,76 +13,50 @@
 
 using namespace modules;
 
-Builtin::Builtin() {}
+std::string modules::BUILTIN_NAMES[] = {
+	"print",
+	"println",
+	"read",
+	"readch",
+	"len",
+	"sleep",
+	"system"
+};
+
+Builtin::Builtin() {
+	build_decls();
+}
 
 Builtin::~Builtin() = default;
 
 void Builtin::register_functions(visitor::SemanticAnalyser* visitor) {
-	std::vector<TypeDefinition*> parameters;
-	VariableDefinition* variable;
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::PRINT], func_decls[BUILTIN_NAMES[BuintinFuncs::PRINT]]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]] = nullptr;
 
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("print", FunctionDefinition("print", Type::T_VOID, parameters));
-	visitor->builtin_functions["print"] = nullptr;
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::PRINTLN], func_decls[BUILTIN_NAMES[BuintinFuncs::PRINTLN]]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINTLN]] = nullptr;
 
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::READ], func_decls[BUILTIN_NAMES[BuintinFuncs::READ]]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::READ]] = nullptr;
 
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("println", FunctionDefinition("println", Type::T_VOID, parameters));
-	visitor->builtin_functions["println"] = nullptr;
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::READCH], func_decls[BUILTIN_NAMES[BuintinFuncs::READCH]]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::READCH]] = nullptr;
 
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::LEN], func_decls[BUILTIN_NAMES[BuintinFuncs::LEN] + "A"]);
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::LEN], func_decls[BUILTIN_NAMES[BuintinFuncs::LEN] + "S"]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::LEN]] = nullptr;
 
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("read", FunctionDefinition("read", Type::T_STRING, parameters));
-	visitor->builtin_functions["read"] = nullptr;
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::SLEEP], func_decls[BUILTIN_NAMES[BuintinFuncs::SLEEP]]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::SLEEP]] = nullptr;
 
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::SYSTEM], func_decls[BUILTIN_NAMES[BuintinFuncs::SYSTEM]]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::SYSTEM]] = nullptr;
 
-	parameters = std::vector<TypeDefinition*>();
-	visitor->scopes[default_namespace].back()->declare_function("readch", FunctionDefinition("readch", Type::T_CHAR, parameters));
-	visitor->builtin_functions["readch"] = nullptr;
-
-
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("arr", Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>());
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("len", FunctionDefinition("len", Type::T_INT, parameters));
-
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("str", Type::T_STRING);
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("len", FunctionDefinition("len", Type::T_INT, parameters));
-
-	visitor->builtin_functions["len"] = nullptr;
-
-
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("sleep", Type::T_INT);
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("sleep", FunctionDefinition("sleep", Type::T_VOID, parameters));
-	visitor->builtin_functions["sleep"] = nullptr;
-
-
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("cmd", Type::T_STRING);
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("system", FunctionDefinition("system", Type::T_VOID, parameters));
-	visitor->builtin_functions["system"] = nullptr;
 }
 
 void Builtin::register_functions(visitor::Interpreter* visitor) {
-	std::vector<TypeDefinition*> parameters;
-	VariableDefinition* variable;
-
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("print", FunctionDefinition("print", Type::T_VOID, parameters));
-	visitor->builtin_functions["print"] = [this, visitor]() {
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::PRINT], func_decls[BUILTIN_NAMES[BuintinFuncs::PRINT]]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 		if (visitor->builtin_arguments.size() == 0) {
 			return;
@@ -92,24 +66,16 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 		}
 		};
 
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("println", FunctionDefinition("println", Type::T_VOID, parameters));
-	visitor->builtin_functions["println"] = nullptr;
-	visitor->builtin_functions["println"] = [this, visitor]() {
-		visitor->builtin_functions["print"]();
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::PRINTLN], func_decls[BUILTIN_NAMES[BuintinFuncs::PRINTLN]]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINTLN]] = [this, visitor]() {
+		visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]]();
 		std::cout << std::endl;
 		};
 
-
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("read", FunctionDefinition("read", Type::T_STRING, parameters));
-	visitor->builtin_functions["read"] = [this, visitor]() {
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::READ], func_decls[BUILTIN_NAMES[BuintinFuncs::READ]]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::READ]] = [this, visitor]() {
 		if (visitor->builtin_arguments.size() > 0) {
-			visitor->builtin_functions["print"]();
+			visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]]();
 		}
 		std::string line;
 		std::getline(std::cin, line);
@@ -117,28 +83,17 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 		visitor->current_expression_value->set(cp_string(std::move(line)));
 		};
 
-
-	parameters = std::vector<TypeDefinition*>();
-	visitor->scopes[default_namespace].back()->declare_function("readch", FunctionDefinition("readch", Type::T_CHAR, parameters));
-	visitor->builtin_functions["readch"] = [this, visitor]() {
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::READCH], func_decls[BUILTIN_NAMES[BuintinFuncs::READCH]]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::READCH]] = [this, visitor]() {
 		while (!_kbhit());
 		char ch = _getch();
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_CHAR));
 		visitor->current_expression_value->set(cp_char(ch));
 		};
 
-
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("arr", Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>());
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("len", FunctionDefinition("len", Type::T_INT, parameters));
-
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("str", Type::T_STRING);
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("len", FunctionDefinition("len", Type::T_INT, parameters));
-
-	visitor->builtin_functions["len"] = [this, visitor]() {
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::LEN], func_decls[BUILTIN_NAMES[BuintinFuncs::LEN] + "A"]);
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::LEN], func_decls[BUILTIN_NAMES[BuintinFuncs::LEN] + "S"]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::LEN]] = [this, visitor]() {
 		auto& curr_val = visitor->builtin_arguments[0];
 		auto val = visitor->alocate_value(new RuntimeValue(Type::T_INT));
 
@@ -152,24 +107,59 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 		visitor->current_expression_value = val;
 		};
 
-
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("sleep", Type::T_INT);
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("sleep", FunctionDefinition("sleep", Type::T_VOID, parameters));
-	visitor->builtin_functions["sleep"] = [this, visitor]() {
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::SLEEP], func_decls[BUILTIN_NAMES[BuintinFuncs::SLEEP]]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::SLEEP]] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 		std::this_thread::sleep_for(std::chrono::milliseconds(visitor->builtin_arguments[0]->get_i()));
 		};
 
-
-	parameters = std::vector<TypeDefinition*>();
-	variable = new VariableDefinition("cmd", Type::T_STRING);
-	parameters.push_back(variable);
-	visitor->scopes[default_namespace].back()->declare_function("system", FunctionDefinition("system", Type::T_VOID, parameters));
-	visitor->builtin_functions["system"] = [this, visitor]() {
+	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::SYSTEM], func_decls[BUILTIN_NAMES[BuintinFuncs::SYSTEM]]);
+	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::SYSTEM]] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 		system(visitor->builtin_arguments[0]->get_s().c_str());
 		};
 
+}
+
+void Builtin::build_decls() {
+	std::vector<TypeDefinition*> parameters;
+	VariableDefinition* variable;
+
+	parameters = std::vector<TypeDefinition*>();
+	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
+	parameters.push_back(variable);
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::PRINT], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::PRINT], Type::T_VOID, parameters));
+
+	parameters = std::vector<TypeDefinition*>();
+	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
+	parameters.push_back(variable);
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::PRINTLN], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::PRINTLN], Type::T_VOID, parameters));
+
+	parameters = std::vector<TypeDefinition*>();
+	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
+	parameters.push_back(variable);
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::READ], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::READ], Type::T_STRING, parameters));
+
+	parameters = std::vector<TypeDefinition*>();
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::READCH], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::READCH], Type::T_CHAR, parameters));
+
+	parameters = std::vector<TypeDefinition*>();
+	variable = new VariableDefinition("arr", Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>());
+	parameters.push_back(variable);
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::LEN] + "A", FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::LEN] + "A", Type::T_INT, parameters));
+
+	parameters = std::vector<TypeDefinition*>();
+	variable = new VariableDefinition("str", Type::T_STRING);
+	parameters.push_back(variable);
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::LEN] + "S", FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::LEN] + "S", Type::T_INT, parameters));
+
+	parameters = std::vector<TypeDefinition*>();
+	variable = new VariableDefinition("ms", Type::T_INT);
+	parameters.push_back(variable);
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::SLEEP], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::SLEEP], Type::T_VOID, parameters));
+
+	parameters = std::vector<TypeDefinition*>();
+	variable = new VariableDefinition("cmd", Type::T_STRING);
+	parameters.push_back(variable);
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::SYSTEM], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::SYSTEM], Type::T_VOID, parameters));
 }
