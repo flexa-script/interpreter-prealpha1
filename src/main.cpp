@@ -14,6 +14,12 @@ int main(int argc, const char* argv[]) {
 
 	auto args = parse_args(argc, argv);
 
+	if (args.debug) {
+#ifndef __CP_DEBUG__
+#define __CP_DEBUG__
+#endif // !__CP_DEBUG__
+	}
+
 	auto interpreter = CPInterpreter(args);
 
 	auto sw = axe::ChronoStopwatch();

@@ -25,10 +25,6 @@ CpCliArgs parse_args(int argc, const char* argv[]) {
 		if (arg == "-d" || arg == "--debug") {
 			args.debug = true;
 
-#ifndef __CP_DEBUG__
-#define __CP_DEBUG__
-#endif // !__CP_DEBUG__
-
 			continue;
 		}
 		if (arg == "-e" || arg == "--engine") {

@@ -14,7 +14,8 @@ using namespace lexer;
 
 Compiler::Compiler(std::shared_ptr<ASTProgramNode> main_program, std::map<std::string, std::shared_ptr<ASTProgramNode>> programs)
 	: Visitor(programs, main_program, default_namespace) {
-	auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
+
+	//auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
 	//builtin->register_functions(this);
 };
 

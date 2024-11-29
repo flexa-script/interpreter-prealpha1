@@ -6,8 +6,8 @@
 
 #include "builtin.hpp"
 
-#include "interpreter.hpp"
 #include "semantic_analysis.hpp"
+#include "interpreter.hpp"
 
 #include "visitor.hpp"
 

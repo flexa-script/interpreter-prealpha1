@@ -304,10 +304,10 @@ void VirtualMachine::decode_operation() {
 
 		// namespace operations
 	case OP_POP_NAMESPACE:
-		current_namespace.push(current_instruction.get_string_operand());
+		current_namespace.pop();
 		break;
 	case OP_PUSH_NAMESPACE:
-		current_namespace.pop();
+		current_namespace.push(current_instruction.get_string_operand());
 		break;
 	case OP_PUSH_NAMESPACE_STACK:
 		push_constant(new RuntimeValue(current_namespace.top()));
