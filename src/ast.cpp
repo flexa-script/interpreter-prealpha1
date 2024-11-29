@@ -19,6 +19,9 @@ Identifier::Identifier()
 ASTProgramNode::ASTProgramNode(const std::string& name, const std::string& alias, const std::vector<std::shared_ptr<ASTNode>>& statements)
 	: ASTNode(row, col), name(name), alias(alias), statements(statements), libs(std::vector<std::string>()) {}
 
+ASTBuiltinFunctionExecuterNode::ASTBuiltinFunctionExecuterNode(std::string identifier, unsigned int row, unsigned int col)
+	: ASTStatementNode(row, col), identifier(identifier) {}
+
 ASTUsingNode::ASTUsingNode(const std::vector<std::string>& library, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), library(library) {}
 
@@ -372,4 +375,8 @@ void ASTUsingNode::accept(Visitor* v) {
 
 void ASTProgramNode::accept(Visitor* v) {
 	v->visit(std::dynamic_pointer_cast<ASTProgramNode>(shared_from_this()));
+}
+
+void ASTBuiltinFunctionExecuterNode::accept(Visitor* v) {
+	v->visit(std::dynamic_pointer_cast<ASTBuiltinFunctionExecuterNode>(shared_from_this()));
 }

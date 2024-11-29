@@ -55,6 +55,7 @@ namespace parser {
 	class ASTThisNode;
 	class ASTTypingNode;
 	class ASTValueNode;
+	class ASTBuiltinFunctionExecuterNode;
 }
 
 using namespace parser;
@@ -122,6 +123,7 @@ namespace visitor {
 		virtual void visit(std::shared_ptr<ASTThisNode>) = 0;
 		virtual void visit(std::shared_ptr<ASTTypingNode>) = 0;
 		virtual void visit(std::shared_ptr<ASTValueNode>) = 0;
+		virtual void visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode>) = 0;
 
 		virtual long long hash(std::shared_ptr<ASTExprNode>) = 0;
 		virtual long long hash(std::shared_ptr<ASTValueNode>) = 0;

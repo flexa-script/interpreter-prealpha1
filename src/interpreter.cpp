@@ -405,6 +405,18 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	pop_namespace(pop);
 }
 
+void Interpreter::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode> astnode) {
+	std::string nmspace = get_namespace();
+
+	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
+
+	builtin_functions[astnode->identifier]();
+	builtin_arguments.clear();
+
+	current_expression_value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
+
+}
+
 void Interpreter::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->type_name_space);
@@ -416,8 +428,13 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 		declfun.block = astnode->block;
 	}
 	catch (...) {
+		auto& block = astnode->block;
+		if (!block && builtin_functions.find(astnode->identifier) != builtin_functions.end()) {
+
+		}
+
 		auto f = FunctionDefinition(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
-			astnode->array_type, astnode->dim, astnode->parameters, astnode->block, astnode->row, astnode->row);
+			astnode->array_type, astnode->dim, astnode->parameters, block, astnode->row, astnode->row);
 		scopes[nmspace].back()->declare_function(astnode->identifier, f);
 	}
 	pop_namespace(pop);

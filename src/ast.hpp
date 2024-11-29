@@ -63,6 +63,16 @@ namespace parser {
 		void accept(Visitor*) override;
 	};
 
+	class ASTBuiltinFunctionExecuterNode : public ASTStatementNode {
+	public:
+		std::string identifier;
+
+		ASTBuiltinFunctionExecuterNode(std::string identifier,
+			unsigned int row, unsigned int col);
+
+		void accept(Visitor*) override;
+	};
+
 	class ASTUsingNode : public ASTStatementNode {
 	public:
 		std::vector<std::string> library;
