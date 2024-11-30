@@ -62,6 +62,7 @@ namespace visitor {
 		void visit(std::shared_ptr<ASTThisNode>) override;
 		void visit(std::shared_ptr<ASTTypingNode>) override;
 		void visit(std::shared_ptr<ASTValueNode>) override;
+		void visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode>) override;
 
 		long long hash(std::shared_ptr<ASTExprNode>) override;
 		long long hash(std::shared_ptr<ASTValueNode>) override;

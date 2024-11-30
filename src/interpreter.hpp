@@ -20,7 +20,6 @@ namespace visitor {
 	class Interpreter : public Visitor, public MetaVisitor {
 	public:
 		std::map<std::string, std::function<void()>> builtin_functions;
-		std::shared_ptr<Scope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
 		RuntimeValue* current_expression_value;
 		std::map<std::string, std::vector<std::shared_ptr<Scope>>> scopes;
 		GarbageCollector gc;
@@ -80,9 +79,10 @@ namespace visitor {
 		std::string parse_array_to_string(const cp_array& arr_value);
 		std::string parse_struct_to_string(const  RuntimeValue* value);
 
-		std::shared_ptr<Scope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
-		std::shared_ptr<Scope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition*>* signature, bool strict = true);
-		std::shared_ptr<Scope> get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<Scope> get_inner_most_struct_definition_scope(std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<Scope> get_inner_most_function_scope(std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition*>* signature, bool strict = true);
+		std::shared_ptr<Scope> get_inner_most_functions_scope(std::string& nmspace, const std::string& identifier);
+		std::shared_ptr<Scope> get_inner_most_variable_scope(std::string& nmspace, const std::string& identifier);
 
 		RuntimeValue* set_value(std::shared_ptr<Scope> scope, const std::vector<Identifier>& identifier_vector, RuntimeValue* new_value);
 		RuntimeValue* access_value(const std::shared_ptr<Scope> scope, RuntimeValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);

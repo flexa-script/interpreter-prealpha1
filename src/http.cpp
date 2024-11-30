@@ -24,7 +24,10 @@ void HTTP::register_functions(visitor::SemanticAnalyser* visitor) {
 void HTTP::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["request"] = [this, visitor]() {
-		RuntimeValue* config_value = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("config"))->value;
+
+		RuntimeValue* config_value = val;
 		if (parser::is_void(config_value->type)) {
 			throw std::exception("Config is null");
 		}

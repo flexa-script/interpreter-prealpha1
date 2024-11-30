@@ -38,24 +38,37 @@ void DateTime::register_functions(visitor::SemanticAnalyser* visitor) {
 void DateTime::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["create_date_time"] = [this, visitor]() {
+		auto& scope = visitor->scopes["cp"].back();
+
 		tm* tm = new struct tm();
 		time_t t;
 
-		if (visitor->builtin_arguments.size() == 0) {
+		if (scope->total_declared_variables() == 0) {
 			t = time(nullptr);
 			gmtime_s(tm, &t);
 		}
-		else if (visitor->builtin_arguments.size() == 1) {
-			t = visitor->builtin_arguments[0]->get_i();
+		else if (scope->total_declared_variables() == 1) {
+			auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("timestamp"))->value;
+
+			t = val->get_i();
 			gmtime_s(tm, &t);
 		}
 		else {
-			tm->tm_year = visitor->builtin_arguments[0]->get_i() - 1900;
-			tm->tm_mon = visitor->builtin_arguments[1]->get_i() - 1;
-			tm->tm_mday = visitor->builtin_arguments[2]->get_i();
-			tm->tm_hour = visitor->builtin_arguments[3]->get_i();
-			tm->tm_min = visitor->builtin_arguments[4]->get_i();
-			tm->tm_sec = visitor->builtin_arguments[5]->get_i();
+			auto vals = std::vector{
+				std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("year"))->value,
+				std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("month"))->value,
+				std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("day"))->value,
+				std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("hour"))->value,
+				std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("min"))->value,
+				std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("sec"))->value
+			};
+
+			tm->tm_year = vals[0]->get_i() - 1900;
+			tm->tm_mon = vals[1]->get_i() - 1;
+			tm->tm_mday = vals[2]->get_i();
+			tm->tm_hour = vals[3]->get_i();
+			tm->tm_min = vals[4]->get_i();
+			tm->tm_sec = vals[5]->get_i();
 			t = mktime(tm);
 		}
 
@@ -64,8 +77,14 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["diff_date_time"] = [this, visitor]() {
-		time_t lt = visitor->builtin_arguments[0]->get_str()["timestamp"]->get_i();
-		time_t rt = visitor->builtin_arguments[1]->get_str()["timestamp"]->get_i();
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("left_date_time"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("right_date_time"))->value
+		};
+
+		time_t lt = vals[0]->get_str()["timestamp"]->get_i();
+		time_t rt = vals[1]->get_str()["timestamp"]->get_i();
 		time_t t = difftime(lt, rt);
 		tm* tm = new struct tm();
 		gmtime_s(tm, &t);
@@ -75,8 +94,14 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["format_date_time"] = [this, visitor]() {
-		time_t t = visitor->builtin_arguments[0]->get_str()["timestamp"]->get_i();
-		std::string fmt = visitor->builtin_arguments[1]->get_s();
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("date_time"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("format"))->value
+		};
+
+		time_t t = vals[0]->get_str()["timestamp"]->get_i();
+		std::string fmt = vals[1]->get_s();
 		tm* tm = new struct tm();
 		gmtime_s(tm, &t);
 		char buffer[80];
@@ -87,8 +112,14 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["format_local_date_time"] = [this, visitor]() {
-		time_t t = visitor->builtin_arguments[0]->get_str()["timestamp"]->get_i();
-		std::string fmt = visitor->builtin_arguments[1]->get_s();
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("date_time"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("format"))->value
+		};
+
+		time_t t = vals[0]->get_str()["timestamp"]->get_i();
+		std::string fmt = vals[1]->get_s();
 		tm* tm = new struct tm();
 		localtime_s(tm, &t);
 		char buffer[80];
@@ -99,7 +130,10 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["ascii_date_time"] = [this, visitor]() {
-		time_t t = visitor->builtin_arguments[0]->get_str()["timestamp"]->get_i();
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("date_time"))->value;
+
+		time_t t = val->get_str()["timestamp"]->get_i();
 		tm* tm = new struct tm();
 		gmtime_s(tm, &t);
 		char buffer[26];
@@ -113,7 +147,10 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["ascii_local_date_time"] = [this, visitor]() {
-		time_t t = visitor->builtin_arguments[0]->get_str()["timestamp"]->get_i();
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("date_time"))->value;
+
+		time_t t = val->get_str()["timestamp"]->get_i();
 		tm* tm = new struct tm();
 		localtime_s(tm, &t);
 		char buffer[26];

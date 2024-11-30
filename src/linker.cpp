@@ -51,6 +51,8 @@ void Linker::visit(std::shared_ptr<ASTDeclarationNode>) {}
 void Linker::visit(std::shared_ptr<ASTUnpackedDeclarationNode>) {}
 void Linker::visit(std::shared_ptr<ASTAssignmentNode>) {}
 
+
+void Linker::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode>) {}
 void Linker::visit(std::shared_ptr<ASTFunctionCallNode>) {}
 void Linker::visit(std::shared_ptr<ASTFunctionDefinitionNode>) {}
 

@@ -25,7 +25,7 @@ void Console::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions["show_console"] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 
-		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "show");
+		auto& scope = visitor->scopes["cp"].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("show"))->value;
 
 		::ShowWindow(::GetConsoleWindow(), val->get_b());
@@ -40,7 +40,7 @@ void Console::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions["set_console_color"] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 
-		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "background_color");
+		auto& scope = visitor->scopes["cp"].back();
 		auto vals = std::vector {
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("background_color"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("foreground_color"))->value
@@ -54,7 +54,7 @@ void Console::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions["set_console_cursor_position"] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 
-		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "x");
+		auto& scope = visitor->scopes["cp"].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("y"))->value
@@ -69,7 +69,7 @@ void Console::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions["set_console_font"] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 
-		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "font_name");
+		auto& scope = visitor->scopes["cp"].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("font_name"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("font_width"))->value,

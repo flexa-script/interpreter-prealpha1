@@ -141,6 +141,8 @@ void Compiler::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	pop_namespace(pop);
 }
 
+void Compiler::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode> astnode) {}
+
 void Compiler::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 	auto pop = push_namespace(cp_string(astnode->type_name_space));
 

@@ -22,6 +22,7 @@ Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, std::shared_ptr<AS
 	current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 	gc.add_ptr_root(&current_expression_value);
 
+	push_namespace(default_namespace);
 	scopes[default_namespace].push_back(global_scope);
 
 	auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
@@ -31,11 +32,11 @@ Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, std::shared_ptr<AS
 }
 
 void Interpreter::start() {
-	auto pop = push_namespace(default_namespace);
+	//auto pop = push_namespace(default_namespace);
 	current_this_name.push(get_namespace());
 	visit(current_program.top());
 	current_this_name.pop();
-	pop_namespace(pop);
+	//pop_namespace(pop);
 }
 
 void Interpreter::visit(std::shared_ptr<ASTProgramNode> astnode) {
@@ -196,7 +197,7 @@ void Interpreter::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 
 	std::shared_ptr<Scope> astscope;
 	try {
-		const auto& nmspace = get_namespace();
+		auto nmspace = get_namespace();
 		astscope = get_inner_most_variable_scope(nmspace, astnode->identifier);
 	}
 	catch (std::exception ex) {
@@ -274,7 +275,7 @@ void Interpreter::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 void Interpreter::visit(std::shared_ptr<ASTReturnNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	const auto& nmspace = get_namespace();
+	auto nmspace = get_namespace();
 
 	if (astnode->expr) {
 		TypeDefinition curr_func_ret_type = current_function.top();
@@ -372,7 +373,15 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 		}
 	}
 
+	if (identifier == "set_console_color") {
+		int x = 0;
+	}
+
 	auto& declfun = func_scope->find_declared_function(identifier, &signature, evaluate_access_vector_ptr, strict);
+
+	if (!pop) {
+		pop = push_namespace(nmspace);
+	}
 
 	current_function.push(declfun);
 	current_function_defined_parameters.push(declfun.parameters);
@@ -423,7 +432,9 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 	catch (...) {
 		auto& block = astnode->block;
 		if (!block && builtin_functions.find(astnode->identifier) != builtin_functions.end()) {
-
+			block = std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
+				std::make_shared<ASTBuiltinFunctionExecuterNode>(astnode->identifier, astnode->row, astnode->col)
+			}, astnode->row, astnode->col);
 		}
 
 		auto f = FunctionDefinition(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
@@ -886,7 +897,8 @@ void Interpreter::visit(std::shared_ptr<ASTThrowNode> astnode) {
 	if (is_struct(current_expression_value->type)
 		&& current_expression_value->type_name == "Exception") {
 		try {
-			get_inner_most_struct_definition_scope("cp", "Exception");
+			std::string nmspace = "cp";
+			get_inner_most_struct_definition_scope(nmspace, "Exception");
 		}
 		catch (...) {
 			throw std::runtime_error("struct 'cp::Exception' not found");
@@ -1131,7 +1143,7 @@ void Interpreter::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
 	auto pop = push_namespace(astnode->nmspace);
 	std::shared_ptr<Scope> curr_scope;
 	try {
-		const auto& nmspace = get_namespace();
+		auto nmspace = get_namespace();
 		curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->type_name);
 	}
 	catch (...) {
@@ -1195,7 +1207,7 @@ void Interpreter::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
 void Interpreter::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->nmspace);
-	const auto& nmspace = get_namespace();
+	auto nmspace = get_namespace();
 	std::shared_ptr<Scope> id_scope;
 	try {
 		id_scope = get_inner_most_variable_scope(nmspace, astnode->identifier);
@@ -1687,7 +1699,7 @@ cp_bool Interpreter::equals_array(const cp_array& larr, const cp_array& rarr) {
 	return true;
 }
 
-std::shared_ptr<Scope> Interpreter::get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier) {
+std::shared_ptr<Scope> Interpreter::get_inner_most_variable_scope(std::string& nmspace, const std::string& identifier) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
 		if (i <= 0) {
@@ -1699,6 +1711,8 @@ std::shared_ptr<Scope> Interpreter::get_inner_most_variable_scope(const std::str
 					}
 				}
 				if (i >= 0) {
+					// returns real namespace
+					nmspace = prgnmspace;
 					return scopes[prgnmspace][i];
 				}
 			}
@@ -1708,7 +1722,7 @@ std::shared_ptr<Scope> Interpreter::get_inner_most_variable_scope(const std::str
 	return scopes[nmspace][i];
 }
 
-std::shared_ptr<Scope> Interpreter::get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier) {
+std::shared_ptr<Scope> Interpreter::get_inner_most_struct_definition_scope(std::string& nmspace, const std::string& identifier) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); i--) {
 		if (i <= 0) {
@@ -1721,6 +1735,8 @@ std::shared_ptr<Scope> Interpreter::get_inner_most_struct_definition_scope(const
 					}
 				}
 				if (i >= 0) {
+					// returns real namespace
+					nmspace = prgnmspace;
 					return scopes[prgnmspace][i];
 				}
 			}
@@ -1730,7 +1746,7 @@ std::shared_ptr<Scope> Interpreter::get_inner_most_struct_definition_scope(const
 	return scopes[nmspace][i];
 }
 
-std::shared_ptr<Scope> Interpreter::get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition*>* signature, bool strict) {
+std::shared_ptr<Scope> Interpreter::get_inner_most_function_scope(std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition*>* signature, bool strict) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); --i) {
 		if (i <= 0) {
@@ -1742,6 +1758,8 @@ std::shared_ptr<Scope> Interpreter::get_inner_most_function_scope(const std::str
 					}
 				}
 				if (i >= 0) {
+					// returns real namespace
+					nmspace = prgnmspace;
 					return scopes[prgnmspace][i];
 				}
 			}
@@ -1751,7 +1769,7 @@ std::shared_ptr<Scope> Interpreter::get_inner_most_function_scope(const std::str
 	return scopes[nmspace][i];
 }
 
-std::shared_ptr<Scope> Interpreter::get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier) {
+std::shared_ptr<Scope> Interpreter::get_inner_most_functions_scope(std::string& nmspace, const std::string& identifier) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function_name(identifier); --i) {
 		if (i <= 0) {
@@ -1763,6 +1781,8 @@ std::shared_ptr<Scope> Interpreter::get_inner_most_functions_scope(const std::st
 					}
 				}
 				if (i >= 0) {
+					// returns real namespace
+					nmspace = prgnmspace;
 					return scopes[prgnmspace][i];
 				}
 			}
@@ -2706,7 +2726,8 @@ long long Interpreter::hash(std::shared_ptr<ASTIdentifierNode> astnode) {
 
 void Interpreter::declare_function_parameter(std::shared_ptr<Scope> scope, const std::string& identifier, RuntimeValue* value) {
 	if (is_function(value->type)) {
-		auto funcs = get_inner_most_functions_scope(value->get_fun().first,
+		auto nmspace = value->get_fun().first;
+		auto funcs = get_inner_most_functions_scope(nmspace,
 			value->get_fun().second)->find_declared_functions(value->get_fun().second);
 		for (auto& it = funcs.first; it != funcs.second; ++it) {
 			scope->declare_function(identifier, it->second);

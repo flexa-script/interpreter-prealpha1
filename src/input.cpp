@@ -36,7 +36,10 @@ void Input::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["is_key_pressed"] = [this, visitor]() {
-		int key = visitor->builtin_arguments[0]->get_i();
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("key"))->value;
+
+		int key = val->get_i();
 		bool is_pressed = false;
 
 		{
@@ -49,7 +52,10 @@ void Input::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["is_key_released"] = [this, visitor]() {
-		int key = visitor->builtin_arguments[0]->get_i();
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("key"))->value;
+
+		int key = val->get_i();
 
 		bool is_released = false;
 
@@ -77,14 +83,23 @@ void Input::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["set_mouse_position"] = [this, visitor]() {
-		int x = visitor->builtin_arguments[0]->get_i();
-		int y = visitor->builtin_arguments[1]->get_i();
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("y"))->value
+		};
+
+		int x = vals[0]->get_i();
+		int y = vals[1]->get_i();
 		SetCursorPos(x, y);
 
 		};
 
 	visitor->builtin_functions["is_mouse_button_pressed"] = [this, visitor]() {
-		int button = visitor->builtin_arguments[0]->get_i();
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("button"))->value;
+
+		int button = val->get_i();
 		bool is_pressed = (GetAsyncKeyState(button) & 0x8000) != 0;
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(cp_bool(is_pressed)));
 

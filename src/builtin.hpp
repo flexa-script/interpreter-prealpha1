@@ -5,6 +5,8 @@
 
 #include "module.hpp"
 
+class FunctionDefinition;
+
 namespace modules {
 	enum BuintinFuncs {
 		PRINT,

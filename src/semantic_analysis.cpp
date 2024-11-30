@@ -16,6 +16,7 @@ using namespace lexer;
 SemanticAnalyser::SemanticAnalyser(std::shared_ptr<Scope> global_scope, std::shared_ptr<ASTProgramNode> main_program,
 	std::map<std::string, std::shared_ptr<ASTProgramNode>> programs, const std::vector<std::string>& args)
 	: Visitor(programs, main_program, main_program ? main_program->name : default_namespace), is_max(false) {
+	push_namespace(default_namespace);
 	scopes[default_namespace].push_back(global_scope);
 
 	auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
@@ -25,9 +26,9 @@ SemanticAnalyser::SemanticAnalyser(std::shared_ptr<Scope> global_scope, std::sha
 };
 
 void SemanticAnalyser::start() {
-	auto pop = push_namespace(default_namespace);
+	//auto pop = push_namespace(default_namespace);
 	visit(current_program.top());
-	pop_namespace(pop);
+	//pop_namespace(pop);
 }
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTProgramNode> astnode) {
@@ -364,6 +365,8 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	pop_namespace(pop);
 	current_function.pop();
 }
+
+void SemanticAnalyser::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode> astnode) {}
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);

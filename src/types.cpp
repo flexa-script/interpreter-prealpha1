@@ -279,9 +279,9 @@ FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type,
 }
 
 FunctionDefinition::FunctionDefinition(const std::string& identifier, Type type,
-	const std::vector<TypeDefinition*>& parameters)
+	const std::vector<TypeDefinition*>& parameters, std::shared_ptr<ASTBlockNode> block)
 	: CodePosition(), TypeDefinition(type),
-	identifier(identifier), parameters(parameters), block(nullptr) {
+	identifier(identifier), parameters(parameters), block(block) {
 	check_signature();
 }
 

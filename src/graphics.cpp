@@ -34,13 +34,20 @@ void Graphics::register_functions(visitor::SemanticAnalyser* visitor) {
 void Graphics::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["create_window"] = [this, visitor]() {
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("title"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("width"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("height"))->value
+		};
+
 		// initialize window struct values
 		RuntimeValue* win = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRUCT));
 
 		cp_struct str = cp_struct();
-		str["title"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[0]));
-		str["width"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[1]));
-		str["height"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[2]));
+		str["title"] = visitor->alocate_value(new RuntimeValue(vals[0]));
+		str["width"] = visitor->alocate_value(new RuntimeValue(vals[1]));
+		str["height"] = visitor->alocate_value(new RuntimeValue(vals[2]));
 
 		// create a new window graphic engine
 		str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
@@ -64,7 +71,13 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["clear_screen"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("color"))->value
+		};
+
+		RuntimeValue* win = vals[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -72,15 +85,18 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		int r, g, b;
-		r = (int)visitor->builtin_arguments[1]->get_str()["r"]->get_i();
-		g = (int)visitor->builtin_arguments[1]->get_str()["g"]->get_i();
-		b = (int)visitor->builtin_arguments[1]->get_str()["b"]->get_i();
+		r = (int)vals[1]->get_str()["r"]->get_i();
+		g = (int)vals[1]->get_str()["g"]->get_i();
+		b = (int)vals[1]->get_str()["b"]->get_i();
 		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->clear_screen(RGB(r, g, b));
 
 		};
 
 	visitor->builtin_functions["get_current_width"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value;
+
+		RuntimeValue* win = val;
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -92,7 +108,10 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["get_current_height"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value;
+
+		RuntimeValue* win = val;
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -104,7 +123,15 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_pixel"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("y"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("color"))->value
+		};
+
+		RuntimeValue* win = vals[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -112,17 +139,27 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		int x, y, r, g, b;
-		x = (int)visitor->builtin_arguments[1]->get_i();
-		y = (int)visitor->builtin_arguments[2]->get_i();
-		r = (int)visitor->builtin_arguments[3]->get_str()["r"]->get_i();
-		g = (int)visitor->builtin_arguments[3]->get_str()["g"]->get_i();
-		b = (int)visitor->builtin_arguments[3]->get_str()["b"]->get_i();
+		x = (int)vals[1]->get_i();
+		y = (int)vals[2]->get_i();
+		r = (int)vals[3]->get_str()["r"]->get_i();
+		g = (int)vals[3]->get_str()["g"]->get_i();
+		b = (int)vals[3]->get_str()["b"]->get_i();
 		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_pixel(x, y, RGB(r, g, b));
 
 		};
 
 	visitor->builtin_functions["draw_line"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x1"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("y1"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x2"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("y2"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("color"))->value
+		};
+
+		RuntimeValue* win = vals[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -130,19 +167,29 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		int x1, y1, x2, y2, r, g, b;
-		x1 = (int)visitor->builtin_arguments[1]->get_i();
-		y1 = (int)visitor->builtin_arguments[2]->get_i();
-		x2 = (int)visitor->builtin_arguments[3]->get_i();
-		y2 = (int)visitor->builtin_arguments[4]->get_i();
-		r = (int)visitor->builtin_arguments[5]->get_str()["r"]->get_i();
-		g = (int)visitor->builtin_arguments[5]->get_str()["g"]->get_i();
-		b = (int)visitor->builtin_arguments[5]->get_str()["b"]->get_i();
+		x1 = (int)vals[1]->get_i();
+		y1 = (int)vals[2]->get_i();
+		x2 = (int)vals[3]->get_i();
+		y2 = (int)vals[4]->get_i();
+		r = (int)vals[5]->get_str()["r"]->get_i();
+		g = (int)vals[5]->get_str()["g"]->get_i();
+		b = (int)vals[5]->get_str()["b"]->get_i();
 		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_line(x1, y1, x2, y2, RGB(r, g, b));
 
 		};
 
 	visitor->builtin_functions["draw_rect"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("y"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("width"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("height"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("color"))->value
+		};
+
+		RuntimeValue* win = vals[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -150,19 +197,29 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		int x, y, width, height, r, g, b;
-		x = (int)visitor->builtin_arguments[1]->get_i();
-		y = (int)visitor->builtin_arguments[2]->get_i();
-		width = (int)visitor->builtin_arguments[3]->get_i();
-		height = (int)visitor->builtin_arguments[4]->get_i();
-		r = (int)visitor->builtin_arguments[5]->get_str()["r"]->get_i();
-		g = (int)visitor->builtin_arguments[5]->get_str()["g"]->get_i();
-		b = (int)visitor->builtin_arguments[5]->get_str()["b"]->get_i();
+		x = (int)vals[1]->get_i();
+		y = (int)vals[2]->get_i();
+		width = (int)vals[3]->get_i();
+		height = (int)vals[4]->get_i();
+		r = (int)vals[5]->get_str()["r"]->get_i();
+		g = (int)vals[5]->get_str()["g"]->get_i();
+		b = (int)vals[5]->get_str()["b"]->get_i();
 		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_rect(x, y, width, height, RGB(r, g, b));
 
 		};
 
 	visitor->builtin_functions["fill_rect"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("y"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("width"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("height"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("color"))->value
+		};
+
+		RuntimeValue* win = vals[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -170,19 +227,28 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		int x, y, width, height, r, g, b;
-		x = (int)visitor->builtin_arguments[1]->get_i();
-		y = (int)visitor->builtin_arguments[2]->get_i();
-		width = (int)visitor->builtin_arguments[3]->get_i();
-		height = (int)visitor->builtin_arguments[4]->get_i();
-		r = (int)visitor->builtin_arguments[5]->get_str()["r"]->get_i();
-		g = (int)visitor->builtin_arguments[5]->get_str()["g"]->get_i();
-		b = (int)visitor->builtin_arguments[5]->get_str()["b"]->get_i();
+		x = (int)vals[1]->get_i();
+		y = (int)vals[2]->get_i();
+		width = (int)vals[3]->get_i();
+		height = (int)vals[4]->get_i();
+		r = (int)vals[5]->get_str()["r"]->get_i();
+		g = (int)vals[5]->get_str()["g"]->get_i();
+		b = (int)vals[5]->get_str()["b"]->get_i();
 		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->fill_rect(x, y, width, height, RGB(r, g, b));
 
 		};
 
 	visitor->builtin_functions["draw_circle"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("xc"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("yc"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("radius"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("color"))->value
+		};
+
+		RuntimeValue* win = vals[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -190,18 +256,27 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		int xc, yc, radius, r, g, b;
-		xc = (int)visitor->builtin_arguments[1]->get_i();
-		yc = (int)visitor->builtin_arguments[2]->get_i();
-		radius = (int)visitor->builtin_arguments[3]->get_i();
-		r = (int)visitor->builtin_arguments[4]->get_str()["r"]->get_i();
-		g = (int)visitor->builtin_arguments[4]->get_str()["g"]->get_i();
-		b = (int)visitor->builtin_arguments[4]->get_str()["b"]->get_i();
+		xc = (int)vals[1]->get_i();
+		yc = (int)vals[2]->get_i();
+		radius = (int)vals[3]->get_i();
+		r = (int)vals[4]->get_str()["r"]->get_i();
+		g = (int)vals[4]->get_str()["g"]->get_i();
+		b = (int)vals[4]->get_str()["b"]->get_i();
 		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_circle(xc, yc, radius, RGB(r, g, b));
 
 		};
 
 	visitor->builtin_functions["fill_circle"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("xc"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("yc"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("radius"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("color"))->value
+		};
+
+		RuntimeValue* win = vals[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
@@ -209,28 +284,39 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		int xc, yc, radius, r, g, b;
-		xc = (int)visitor->builtin_arguments[1]->get_i();
-		yc = (int)visitor->builtin_arguments[2]->get_i();
-		radius = (int)visitor->builtin_arguments[3]->get_i();
-		r = (int)visitor->builtin_arguments[4]->get_str()["r"]->get_i();
-		g = (int)visitor->builtin_arguments[4]->get_str()["g"]->get_i();
-		b = (int)visitor->builtin_arguments[4]->get_str()["b"]->get_i();
+		xc = (int)vals[1]->get_i();
+		yc = (int)vals[2]->get_i();
+		radius = (int)vals[3]->get_i();
+		r = (int)vals[4]->get_str()["r"]->get_i();
+		g = (int)vals[4]->get_str()["g"]->get_i();
+		b = (int)vals[4]->get_str()["b"]->get_i();
 		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->fill_circle(xc, yc, radius, RGB(r, g, b));
 
 		};
 
 	visitor->builtin_functions["create_font"] = [this, visitor]() {
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("size"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("name"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("weight"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("italic"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("underline"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("strike"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("orientation"))->value
+		};
+
 		// initialize image struct values
 		RuntimeValue* font_value = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRUCT));
 
 		auto str = cp_struct();
-		str["size"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[0]));
-		str["name"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[1]));
-		str["weight"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[2]));
-		str["italic"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[3]));
-		str["underline"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[4]));
-		str["strike"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[5]));
-		str["orientation"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[6]));
+		str["size"] = visitor->alocate_value(new RuntimeValue(vals[0]));
+		str["name"] = visitor->alocate_value(new RuntimeValue(vals[1]));
+		str["weight"] = visitor->alocate_value(new RuntimeValue(vals[2]));
+		str["italic"] = visitor->alocate_value(new RuntimeValue(vals[3]));
+		str["underline"] = visitor->alocate_value(new RuntimeValue(vals[4]));
+		str["strike"] = visitor->alocate_value(new RuntimeValue(vals[5]));
+		str["orientation"] = visitor->alocate_value(new RuntimeValue(vals[6]));
 
 		auto font = axe::Font::create_font(
 			str["size"]->get_i(),
@@ -254,21 +340,31 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_text"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("y"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("text"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("color"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("font"))->value
+		};
+
+		RuntimeValue* win = vals[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
 		if (!((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 			throw std::runtime_error("Window is corrupted");
 		}
-		int x = (int)visitor->builtin_arguments[1]->get_i();
-		int y = (int)visitor->builtin_arguments[2]->get_i();
-		std::string text = visitor->builtin_arguments[3]->get_s();
-		int r = (int)visitor->builtin_arguments[4]->get_str()["r"]->get_i();
-		int g = (int)visitor->builtin_arguments[4]->get_str()["g"]->get_i();
-		int b = (int)visitor->builtin_arguments[4]->get_str()["b"]->get_i();
+		int x = (int)vals[1]->get_i();
+		int y = (int)vals[2]->get_i();
+		std::string text = vals[3]->get_s();
+		int r = (int)vals[4]->get_str()["r"]->get_i();
+		int g = (int)vals[4]->get_str()["g"]->get_i();
+		int b = (int)vals[4]->get_str()["b"]->get_i();
 
-		RuntimeValue* font_value = visitor->builtin_arguments[5];
+		RuntimeValue* font_value = vals[5];
 		if (parser::is_void(font_value->type)) {
 			throw std::exception("font is null");
 		}
@@ -282,15 +378,22 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["get_text_size"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("text"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("font"))->value
+		};
+
+		RuntimeValue* win = vals[0];
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
 		if (!((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 			throw std::runtime_error("Window is corrupted");
 		}
-		std::string text = visitor->builtin_arguments[1]->get_s();
-		RuntimeValue* font_value = visitor->builtin_arguments[2];
+		std::string text = vals[1]->get_s();
+		RuntimeValue* font_value = vals[2];
 		if (parser::is_void(font_value->type)) {
 			throw std::exception("font is null");
 		}
@@ -312,11 +415,14 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["load_image"] = [this, visitor]() {
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("path"))->value;
+
 		// initialize image struct values
 		RuntimeValue* img = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRUCT));
 
 		auto str = cp_struct();
-		str["path"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[0]));
+		str["path"] = visitor->alocate_value(new RuntimeValue(val));
 
 		// loads image
 		auto image = axe::Image::load_image(str["path"]->get_s());
@@ -338,7 +444,15 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_image"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("image"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("y"))->value
+		};
+
+		RuntimeValue* win = vals[0];
 		if (parser::is_void(win->type)) {
 			throw std::exception("window is null");
 		}
@@ -346,7 +460,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (!window) {
 			throw std::runtime_error("there was an error handling window");
 		}
-		RuntimeValue* img = visitor->builtin_arguments[1];
+		RuntimeValue* img = vals[1];
 		if (parser::is_void(img->type)) {
 			throw std::exception("window is null");
 		}
@@ -354,14 +468,17 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (!image) {
 			throw std::runtime_error("there was an error handling image");
 		}
-		int x = (int)visitor->builtin_arguments[2]->get_i();
-		int y = (int)visitor->builtin_arguments[3]->get_i();
+		int x = (int)vals[2]->get_i();
+		int y = (int)vals[3]->get_i();
 		window->draw_image(image, x, y);
 
 		};
 
 	visitor->builtin_functions["update"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value;
+
+		RuntimeValue* win = val;
 		if (!parser::is_void(win->type)) {
 			if (((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 				((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->update();
@@ -371,7 +488,10 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["destroy_window"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value;
+
+		RuntimeValue* win = val;
 		if (!parser::is_void(win->type)) {
 			if (((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 				((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->~Window();
@@ -382,7 +502,8 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["is_quit"] = [this, visitor]() {
-		RuntimeValue* win = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		RuntimeValue* win = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value;
 		auto val = visitor->alocate_value(new RuntimeValue(parser::Type::T_BOOL));
 		if (!parser::is_void(win->type)) {
 			if (((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {

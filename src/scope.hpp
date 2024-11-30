@@ -33,6 +33,8 @@ namespace visitor {
 			dim_eval_func_t evaluate_access_vector, bool strict = true);
 		bool already_declared_function_name(const std::string& identifier);
 
+		size_t total_declared_variables();
+
 		void declare_structure_definition(StructureDefinition structure);
 		void declare_function(const std::string& identifier, FunctionDefinition function);
 		void declare_variable(const std::string& identifier, const std::shared_ptr<Variable>& variable);

@@ -19,23 +19,34 @@ void Files::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["write_bytes"] = nullptr;
 	visitor->builtin_functions["is_open"] = nullptr;
 	visitor->builtin_functions["close"] = nullptr;
+	visitor->builtin_functions["del_file"] = nullptr;
+	visitor->builtin_functions["create_file"] = nullptr;
+	visitor->builtin_functions["create_folder"] = nullptr;
+	visitor->builtin_functions["del_folder"] = nullptr;
+	visitor->builtin_functions["path_exists"] = nullptr;
 }
 
 void Files::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["open"] = [this, visitor]() {
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("path"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("mode"))->value
+		};
+
 		// initialize file struct values
 		RuntimeValue* cpfile = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRUCT));
 
 		cp_struct str = cp_struct();
-		str["path"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[0]));
-		str["mode"] = visitor->alocate_value(new RuntimeValue(visitor->builtin_arguments[1]));
+		str["path"] = visitor->alocate_value(new RuntimeValue(vals[0]));
+		str["mode"] = visitor->alocate_value(new RuntimeValue(vals[1]));
 
-		int parmode = visitor->builtin_arguments[1]->get_i();
+		int parmode = vals[1]->get_i();
 
 		std::fstream* fs = nullptr;
 		try {
-			fs = new std::fstream(visitor->builtin_arguments[0]->get_s(), parmode);
+			fs = new std::fstream(vals[0]->get_s(), parmode);
 			str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(cp_int(fs)));
 			cpfile->set(str, "File", "cp");
 			visitor->current_expression_value = cpfile;
@@ -43,14 +54,16 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 		catch (std::exception ex) {
 			throw std::runtime_error(ex.what());
 		}
-	};
+		};
 
 	visitor->builtin_functions["read"] = [this, visitor]() {
-		RuntimeValue* cpfile = visitor->builtin_arguments[0];
-		if (!parser::is_void(cpfile->type)) {
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value;
+
+		if (!parser::is_void(val->type)) {
 			auto rval = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRING));
-			
-			std::fstream* fs = ((std::fstream*)cpfile->get_str()[INSTANCE_ID_NAME]->get_i());
+
+			std::fstream* fs = ((std::fstream*)val->get_str()[INSTANCE_ID_NAME]->get_i());
 
 			fs->seekg(0);
 
@@ -63,14 +76,16 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 
 			visitor->current_expression_value = rval;
 		}
-	};
+		};
 
 	visitor->builtin_functions["read_line"] = [this, visitor]() {
-		RuntimeValue* cpfile = visitor->builtin_arguments[0];
-		if (!parser::is_void(cpfile->type)) {
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value;
+
+		if (!parser::is_void(val->type)) {
 			auto rval = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRING));
 
-			std::fstream* fs = ((std::fstream*)cpfile->get_str()[INSTANCE_ID_NAME]->get_i());
+			std::fstream* fs = ((std::fstream*)val->get_str()[INSTANCE_ID_NAME]->get_i());
 
 			std::string line;
 			std::getline(*fs, line);
@@ -78,15 +93,17 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 
 			visitor->current_expression_value = rval;
 		}
-	};
+		};
 
 	visitor->builtin_functions["read_all_bytes"] = [this, visitor]() {
-		RuntimeValue* cpfile = visitor->builtin_arguments[0];
-		if (!parser::is_void(cpfile->type)) {
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value;
+
+		if (!parser::is_void(val->type)) {
 			auto rval = visitor->alocate_value(new RuntimeValue(parser::Type::T_ARRAY));
 			rval->set_arr_type(parser::Type::T_CHAR);
 
-			std::fstream* fs = ((std::fstream*)cpfile->get_str()[INSTANCE_ID_NAME]->get_i());
+			std::fstream* fs = ((std::fstream*)val->get_str()[INSTANCE_ID_NAME]->get_i());
 
 			fs->seekg(0);
 
@@ -114,22 +131,34 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 
 			visitor->current_expression_value = rval;
 		}
-	};
+		};
 
 	visitor->builtin_functions["write"] = [this, visitor]() {
-		RuntimeValue* cpfile = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("data"))->value
+		};
+
+		RuntimeValue* cpfile = vals[0];
 		if (!parser::is_void(cpfile->type)) {
 			std::fstream* fs = ((std::fstream*)cpfile->get_str()[INSTANCE_ID_NAME]->get_i());
-			*fs << visitor->builtin_arguments[1]->get_s();
+			*fs << vals[1]->get_s();
 		}
-	};
+		};
 
 	visitor->builtin_functions["write_bytes"] = [this, visitor]() {
-		RuntimeValue* cpfile = visitor->builtin_arguments[0];
+		auto& scope = visitor->scopes["cp"].back();
+		auto vals = std::vector{
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value,
+			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("bytes"))->value
+		};
+
+		RuntimeValue* cpfile = vals[0];
 		if (!parser::is_void(cpfile->type)) {
 			std::fstream* fs = ((std::fstream*)cpfile->get_str()[INSTANCE_ID_NAME]->get_i());
 
-			auto arr = visitor->builtin_arguments[1]->get_arr();
+			auto arr = vals[1]->get_arr();
 
 			std::streamsize buffer_size = arr.size();
 
@@ -141,26 +170,50 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 
 			fs->write(buffer, sizeof(buffer));
 		}
-	};
+		};
 
 	visitor->builtin_functions["is_open"] = [this, visitor]() {
-		RuntimeValue* cpfile = visitor->builtin_arguments[0];
-		if (!parser::is_void(cpfile->type)) {
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value;
+
+		if (!parser::is_void(val->type)) {
 			auto rval = visitor->alocate_value(new RuntimeValue(parser::Type::T_BOOL));
-			rval->set(cp_bool(((std::fstream*)cpfile->get_str()[INSTANCE_ID_NAME]->get_i())->is_open()));
+			rval->set(cp_bool(((std::fstream*)val->get_str()[INSTANCE_ID_NAME]->get_i())->is_open()));
 			visitor->current_expression_value = rval;
 		}
-	};
+		};
 
 	visitor->builtin_functions["close"] = [this, visitor]() {
-		RuntimeValue* cpfile = visitor->builtin_arguments[0];
-		if (!parser::is_void(cpfile->type)) {
-			if (((std::fstream*)cpfile->get_str()[INSTANCE_ID_NAME]->get_i())) {
-				((std::fstream*)cpfile->get_str()[INSTANCE_ID_NAME]->get_i())->close();
-				((std::fstream*)cpfile->get_str()[INSTANCE_ID_NAME]->get_i())->~basic_fstream();
-				cpfile->set_null();
+		auto& scope = visitor->scopes["cp"].back();
+		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value;
+
+		if (!parser::is_void(val->type)) {
+			if (((std::fstream*)val->get_str()[INSTANCE_ID_NAME]->get_i())) {
+				((std::fstream*)val->get_str()[INSTANCE_ID_NAME]->get_i())->close();
+				((std::fstream*)val->get_str()[INSTANCE_ID_NAME]->get_i())->~basic_fstream();
+				val->set_null();
 			}
 		}
-	};
+		};
+
+	visitor->builtin_functions["del_file"] = [this, visitor]() {
+		throw std::runtime_error("'del_file' was not implemented yet");
+		};
+
+	visitor->builtin_functions["create_file"] = [this, visitor]() {
+		throw std::runtime_error("'create_file' was not implemented yet");
+		};
+
+	visitor->builtin_functions["del_folder"] = [this, visitor]() {
+		throw std::runtime_error("'del_folder' was not implemented yet");
+		};
+
+	visitor->builtin_functions["create_folder"] = [this, visitor]() {
+		throw std::runtime_error("'create_folder' was not implemented yet");
+		};
+
+	visitor->builtin_functions["path_exists"] = [this, visitor]() {
+		throw std::runtime_error("'path_exists' was not implemented yet");
+		};
 
 }

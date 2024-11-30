@@ -167,6 +167,11 @@ bool Scope::already_declared_function_name(const std::string& identifier) {
 	}
 }
 
+
+size_t Scope::total_declared_variables() {
+	return variable_symbol_table.size();
+}
+
 void Scope::declare_structure_definition(StructureDefinition structure) {
 	structure_symbol_table[structure.identifier] = structure;
 }

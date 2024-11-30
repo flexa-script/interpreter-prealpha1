@@ -3,6 +3,7 @@
 #include <chrono>
 #include <thread>
 #include <conio.h>
+#include <memory>
 
 #include "builtin.hpp"
 
@@ -59,13 +60,16 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 
-		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "args");
-		auto var = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("args"));
-		auto args = var->value->get_arr();
+		try {
+			auto& scope = visitor->scopes[default_namespace].back();
+			auto var = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("args"));
+			auto args = var->value->get_arr();
 
-		for (size_t i = 0; i < args.size(); ++i) {
-			std::cout << visitor->parse_value_to_string(args[i]);
+			for (size_t i = 0; i < args.size(); ++i) {
+				std::cout << visitor->parse_value_to_string(args[i]);
+			}
 		}
+		catch (...) {}
 
 		};
 
@@ -95,7 +99,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::LEN], func_decls[BUILTIN_NAMES[BuintinFuncs::LEN] + "A"]);
 	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::LEN], func_decls[BUILTIN_NAMES[BuintinFuncs::LEN] + "S"]);
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::LEN]] = [this, visitor]() {
-		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "it");
+		auto& scope = visitor->scopes[default_namespace].back();
 		auto var = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("it"));
 		auto itval = var->value;
 
@@ -116,7 +120,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::SLEEP]] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 
-		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "ms");
+		auto& scope = visitor->scopes[default_namespace].back();
 		auto var = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("ms"));
 		auto ms = var->value->get_i();
 
@@ -128,7 +132,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::SYSTEM]] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 
-		auto scope = visitor->get_inner_most_variable_scope(default_namespace, "cmd");
+		auto& scope = visitor->scopes[default_namespace].back();
 		auto var = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("cmd"));
 		auto cmd = var->value->get_s();
 
@@ -145,38 +149,54 @@ void Builtin::build_decls() {
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
 	parameters.push_back(variable);
-	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::PRINT], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::PRINT], Type::T_VOID, parameters));
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::PRINT], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::PRINT], Type::T_VOID, parameters,
+		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
+		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::PRINT], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
 	parameters.push_back(variable);
-	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::PRINTLN], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::PRINTLN], Type::T_VOID, parameters));
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::PRINTLN], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::PRINTLN], Type::T_VOID, parameters,
+		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
+		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::PRINTLN], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
 	parameters.push_back(variable);
-	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::READ], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::READ], Type::T_STRING, parameters));
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::READ], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::READ], Type::T_STRING, parameters,
+		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
+		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::READ], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
-	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::READCH], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::READCH], Type::T_CHAR, parameters));
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::READCH], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::READCH], Type::T_CHAR, parameters,
+		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
+		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::READCH], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("it", Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>());
 	parameters.push_back(variable);
-	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::LEN] + "A", FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::LEN] + "A", Type::T_INT, parameters));
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::LEN] + "A", FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::LEN] + "A", Type::T_INT, parameters,
+		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
+		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::LEN], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("it", Type::T_STRING);
 	parameters.push_back(variable);
-	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::LEN] + "S", FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::LEN] + "S", Type::T_INT, parameters));
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::LEN] + "S", FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::LEN] + "S", Type::T_INT, parameters,
+		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
+		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::LEN], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("ms", Type::T_INT);
 	parameters.push_back(variable);
-	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::SLEEP], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::SLEEP], Type::T_VOID, parameters));
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::SLEEP], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::SLEEP], Type::T_VOID, parameters,
+		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
+		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::SLEEP], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("cmd", Type::T_STRING);
 	parameters.push_back(variable);
-	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::SYSTEM], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::SYSTEM], Type::T_VOID, parameters));
+	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::SYSTEM], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::SYSTEM], Type::T_VOID, parameters,
+		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
+		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::SYSTEM], 0, 0)}, 0, 0)));
 }

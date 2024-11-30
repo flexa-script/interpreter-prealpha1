@@ -157,7 +157,7 @@ public:
 		std::shared_ptr<ASTBlockNode> block, unsigned int row, unsigned int col);
 
 	FunctionDefinition(const std::string& identifier, Type type,
-		const std::vector<TypeDefinition*>& parameters);
+		const std::vector<TypeDefinition*>& parameters, std::shared_ptr<ASTBlockNode> block);
 
 	FunctionDefinition(const std::string& identifier, Type type, const std::string& type_name,
 		const std::string& type_name_space, Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim);
