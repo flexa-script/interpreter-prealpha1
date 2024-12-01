@@ -14,9 +14,15 @@
 
 using namespace lexer;
 
-VirtualMachine::VirtualMachine(std::vector<BytecodeInstruction> instructions)
+VirtualMachine::VirtualMachine(std::shared_ptr<Scope> global_scope, std::vector<BytecodeInstruction> instructions)
 	: instructions(instructions), gc(GarbageCollector()), set_default_value(nullptr) {
+	cleanup_type_set();
 	gc.add_root_container(&value_stack);
+
+	push_namespace(default_namespace);
+	scopes[default_namespace].push_back(global_scope);
+
+	built_in_libs["builtin"]->register_functions(this);
 }
 
 void VirtualMachine::run() {
@@ -35,6 +41,12 @@ void VirtualMachine::run() {
 			throw std::runtime_error(ex.what());
 		}
 	}
+
+	if (value_stack.empty()) {
+		push_constant(new RuntimeValue(cp_int(0)));
+	}
+
+	gc.collect();
 
 }
 
@@ -115,21 +127,23 @@ void VirtualMachine::function_call_operation() {
 	std::vector<TypeDefinition*> signature;
 	std::vector<RuntimeValue*> function_arguments;
 
-	while (!value_stack.empty()) {
-		RuntimeValue* value = value_stack.back();
-		value_stack.pop_back();
+	//gc.add_root_container(&function_arguments);
 
-		signature.insert(signature.begin(), value);
+	auto ss = value_stack.size();
+	long long l = ss - param_count;
+	for (long long i = ss - 1; i >= l; --i) {
+		RuntimeValue* value = value_stack[i];
 
 		RuntimeValue* pvalue = nullptr;
 		if (value->use_ref) {
 			pvalue = value;
 		}
 		else {
-			pvalue = new RuntimeValue(value);
+			pvalue = alocate_value(new RuntimeValue(value));
 		}
 
 		function_arguments.insert(function_arguments.begin(), pvalue);
+		signature.insert(signature.begin(), pvalue);
 	}
 
 	std::shared_ptr<Scope> func_scope;
@@ -159,7 +173,15 @@ void VirtualMachine::function_call_operation() {
 
 	auto& declfun = func_scope->find_declared_function(identifier, &signature, evaluate_access_vector_ptr, strict);
 
-	pc = declfun.pointer;
+	if (declfun.pointer) {
+		pc = declfun.pointer;
+	}
+	else {
+		return_stack.pop();
+		builtin_functions[identifier]();
+	}
+
+	//gc.remove_root_container(&function_arguments);
 }
 
 void VirtualMachine::throw_operation() {
@@ -296,6 +318,111 @@ void VirtualMachine::type_parse_operation() {
 	push_constant(new_value);
 }
 
+void VirtualMachine::store_var() {
+	const auto& nmspace = get_namespace();
+
+	auto identifier = current_instruction.get_string_operand();
+
+	RuntimeValue* new_value = get_stack_top();
+	if (!new_value->use_ref) {
+		new_value = alocate_value(new RuntimeValue(new_value));
+	}
+
+	auto new_var = std::make_shared<RuntimeVariable>(identifier, set_type,
+		set_array_type, set_array_dim,
+		set_type_name, set_type_name_space);
+	gc.add_var_root(new_var);
+	new_var->set_value(new_value);
+
+	if ((!TypeDefinition::is_any_or_match_type(*new_var, *new_value, evaluate_access_vector_ptr) ||
+		is_array(new_var->type) && !is_any(new_var->array_type)
+		&& !TypeDefinition::match_type(*new_var, *new_value, evaluate_access_vector_ptr, false, true))
+		&& !is_undefined(new_value->type)) {
+		ExceptionHandler::throw_declaration_type_err(identifier, *new_var, *new_value, evaluate_access_vector_ptr);
+	}
+
+	normalize_type(new_var, new_value);
+
+	scopes[nmspace].back()->declare_variable(identifier, new_var);
+
+	cleanup_type_set();
+}
+
+void VirtualMachine::load_var() {
+	auto nmspace = get_namespace();
+
+	auto identifier = current_instruction.get_string_operand();
+
+	std::shared_ptr<Scope> id_scope;
+	try {
+		id_scope = get_inner_most_variable_scope(nmspace, identifier);
+	}
+	catch (...) {
+		//const auto& dim = astnode->identifier_vector[0].access_vector;
+		//auto type = Type::T_UNDEFINED;
+		//auto expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
+
+		//if (astnode->identifier == "bool") {
+		//	type = Type::T_BOOL;
+		//}
+		//else if (astnode->identifier == "int") {
+		//	type = Type::T_INT;
+		//}
+		//else if (astnode->identifier == "float") {
+		//	type = Type::T_FLOAT;
+		//}
+		//else if (astnode->identifier == "char") {
+		//	type = Type::T_CHAR;
+		//}
+		//else if (astnode->identifier == "string") {
+		//	type = Type::T_STRING;
+		//}
+		//else if (astnode->identifier == "function") {
+		//	type = Type::T_FUNCTION;
+		//}
+
+		//if (is_undefined(type)) {
+		//	std::shared_ptr<Scope> curr_scope;
+		//	try {
+		//		curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->identifier);
+		//	}
+		//	catch (...) {
+		//		try {
+		//			curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, nullptr);
+		//			auto fun = cp_function();
+		//			fun.first = nmspace;
+		//			fun.second = astnode->identifier;
+		//			current_expression_value = alocate_value(new RuntimeValue(Type::T_FUNCTION));
+		//			current_expression_value->set(fun);
+		//			return;
+		//		}
+		//		catch (...) {
+		//			throw std::runtime_error("identifier '" + astnode->identifier + "' was not declared");
+		//		}
+		//	}
+		//	type = Type::T_STRUCT;
+		//	auto str = cp_struct();
+		//	expression_value->set(str, astnode->identifier, nmspace);
+		//}
+
+		//expression_value->set_type(type);
+
+		//if (dim.size() > 0) {
+		//	cp_array arr = build_array(dim, expression_value, dim.size() - 1);
+
+		//	current_expression_value = alocate_value(new RuntimeValue(arr, type, dim));
+		//}
+		//else {
+		//	current_expression_value = alocate_value(new RuntimeValue(expression_value));
+		//}
+
+		//return;
+	}
+
+	auto variable = std::dynamic_pointer_cast<RuntimeVariable>(id_scope->find_declared_variable(identifier));
+	value_stack.push_back(variable->get_value());
+}
+
 void VirtualMachine::decode_operation() {
 	switch (current_instruction.opcode) {
 	case OP_RES:
@@ -325,7 +452,7 @@ void VirtualMachine::decode_operation() {
 		break;
 	}
 
-		// constant operations
+							 // constant operations
 	case OP_POP_CONSTANT:
 		value_stack.pop_back();
 		break;
@@ -353,7 +480,7 @@ void VirtualMachine::decode_operation() {
 	case OP_PUSH_FUNCTION:
 		push_function_constant(current_instruction.get_string_operand());
 		break;
-	case OP_CREATE_ARRAY:{
+	case OP_CREATE_ARRAY: {
 		auto size = current_instruction.get_size_operand();
 		auto val = gc.allocate(new RuntimeValue(cp_array(size)));
 		value_stack.push_back(dynamic_cast<RuntimeValue*>(val));
@@ -370,27 +497,22 @@ void VirtualMachine::decode_operation() {
 		value_stack.push_back(dynamic_cast<RuntimeValue*>(val));
 		break;
 	}
-	case OP_SET_FIELD:{
+	case OP_SET_FIELD: {
 		RuntimeValue* value = get_stack_top();
 		value->set_sub(current_instruction.get_string_operand(), value);
 		break;
 	}
 
-		// struct definition operations
+					 // struct definition operations
 	case OP_STRUCT_START:
 		struct_def_build_stack.push(StructureDefinition(current_instruction.get_string_operand()));
 		break;
 	case OP_STRUCT_SET_VAR: {
 		auto var_id = current_instruction.get_string_operand();
 
-		std::vector<std::shared_ptr<ASTExprNode>> dim;
-		for (auto s : set_array_dim) {
-			dim.push_back(std::make_shared<ASTValueNode>(s, 0, 0));
-		}
-
 		auto var = VariableDefinition(var_id,
 			set_type, set_type_name, set_type_name_space, set_array_type,
-			dim, std::make_shared<ASTValueNode>(set_default_value, 0, 0), set_is_rest, 0, 0);
+			set_array_dim, set_default_value, set_is_rest, 0, 0);
 
 		struct_def_build_stack.top().variables[var_id] = var;
 
@@ -398,14 +520,14 @@ void VirtualMachine::decode_operation() {
 
 		break;
 	}
-	case OP_STRUCT_END:{
+	case OP_STRUCT_END: {
 		auto& str = struct_def_build_stack.top();
 		struct_def_build_stack.pop();
 		scopes[get_namespace()].back()->declare_structure_definition(str);
 		break;
 	}
 
-		// typing operations
+					  // typing operations
 	case OP_SET_TYPE:
 		set_type = (Type)current_instruction.get_uint8_operand();
 		break;
@@ -415,16 +537,15 @@ void VirtualMachine::decode_operation() {
 	case OP_SET_TYPE_NAME_SPACE:
 		set_type_name_space = current_instruction.get_string_operand();
 		break;
-	case OP_SET_ARRAY_SIZE:{
-		RuntimeValue* value = get_stack_top();
-		set_array_dim.push_back(value);
+	case OP_SET_ARRAY_SIZE:
+		//RuntimeValue* value = get_stack_top();
+		//set_array_dim.push_back(value);
 		break;
-	}
 	case OP_SET_USE_REF:
 		// todo
 		break;
 	case OP_SET_DEFAULT_VALUE:
-		set_default_value = value_stack.back();
+		set_default_value = std::make_shared<ASTValueNode>(value_stack.back(), 0, 0);
 		value_stack.pop_back();
 		break;
 	case OP_SET_IS_REST:
@@ -433,10 +554,10 @@ void VirtualMachine::decode_operation() {
 
 		// variable operations
 	case OP_LOAD_VAR:
-		// todo OP_LOAD_VAR
+		load_var();
 		break;
 	case OP_STORE_VAR:
-		// todo OP_STORE_VAR
+		store_var();
 		break;
 	case OP_ASSIGN_VAR:
 		// todo OP_ASSIGN_VAR
@@ -453,13 +574,8 @@ void VirtualMachine::decode_operation() {
 
 		// function operations
 	case OP_FUN_START: {
-		std::vector<std::shared_ptr<ASTExprNode>> dim;
-		for (auto s : set_array_dim) {
-			dim.push_back(std::make_shared<ASTValueNode>(s, 0, 0));
-		}
-
 		func_def_build_stack.push(FunctionDefinition(current_instruction.get_string_operand(), set_type, set_type_name,
-			set_type_name_space, set_array_type, dim));
+			set_type_name_space, set_array_type, set_array_dim));
 
 		cleanup_type_set();
 
@@ -468,14 +584,9 @@ void VirtualMachine::decode_operation() {
 	case OP_FUN_SET_PARAM: {
 		auto var_id = current_instruction.get_string_operand();
 
-		std::vector<std::shared_ptr<ASTExprNode>> dim;
-		for (auto s : set_array_dim) {
-			dim.push_back(std::make_shared<ASTValueNode>(s, 0, 0));
-		}
-
 		auto var = new VariableDefinition(var_id,
 			set_type, set_type_name, set_type_name_space, set_array_type,
-			dim, std::make_shared<ASTValueNode>(set_default_value, 0, 0), set_is_rest, 0, 0);
+			set_array_dim, set_default_value, set_is_rest, 0, 0);
 
 		func_def_build_stack.top().parameters.push_back(var);
 
@@ -483,7 +594,10 @@ void VirtualMachine::decode_operation() {
 
 		break;
 	}
-	case OP_FUN_END:{
+	case OP_CALL_PARAM_COUNT:
+		param_count = current_instruction.get_size_operand();
+		break;
+	case OP_FUN_END: {
 		auto& fun = func_def_build_stack.top();
 		func_def_build_stack.pop();
 		fun.pointer = pc + 2;
@@ -688,7 +802,7 @@ void VirtualMachine::cleanup_type_set() {
 	set_type_name = "";
 	set_type_name_space = "";
 	set_array_type = Type::T_UNDEFINED;
-	set_array_dim = std::vector<RuntimeValue*>();
+	set_array_dim = std::vector<std::shared_ptr<ASTExprNode>>();
 	set_default_value = nullptr;
 	set_is_rest = false;
 }
@@ -1434,28 +1548,23 @@ cp_array VirtualMachine::do_operation(cp_array lval, cp_array rval, const std::s
 		return rval;
 	}
 	else if (op == "+=" || op == "+") {
-		//auto size = lval.size() + rval.size();
-		//cp_array result = cp_array(size);
-
-		//std::sort(lval.begin(), lval.end(), [](const RuntimeValue* a, const RuntimeValue* b) {
-		//	return a->value_hash() < b->value_hash();
-		//	});
-
-		//std::sort(rval.begin(), rval.end(), [](const RuntimeValue* a, const RuntimeValue* b) {
-		//	return a->value_hash() < b->value_hash();
-		//	});
-
-		//std::merge(lval.begin(), lval.end(), rval.begin(), rval.end(), result, [](const RuntimeValue* a, const RuntimeValue* b) {
-		//	return a->value_hash() < b->value_hash();
-		//	});
-
 		lval.insert(lval.end(), rval.begin(), rval.end());
 
 		return lval;
-		//return result;
 	}
 
 	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");
+}
+
+void VirtualMachine::normalize_type(std::shared_ptr<RuntimeVariable> var, RuntimeValue* val) {
+	if (is_string(var->type) && is_char(val->type)) {
+		val->type = var->type;
+		val->set(cp_string{ val->get_c() });
+	}
+	else if (is_float(var->type) && is_int(val->type)) {
+		val->type = var->type;
+		val->set(cp_float(val->get_i()));
+	}
 }
 
 std::vector<unsigned int> VirtualMachine::evaluate_access_vector(const std::vector<std::shared_ptr<ASTExprNode>>& expr_access_vector) {

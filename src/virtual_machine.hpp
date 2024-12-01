@@ -21,11 +21,13 @@ using namespace parser;
 class VirtualMachine : public MetaVisitor {
 public:
 	std::vector<RuntimeValue*> value_stack;
-	//std::map<std::string, std::function<void()>> builtin_functions;
-	std::vector<RuntimeValue*> builtin_arguments;
+	size_t param_count = 0;
+	std::map<std::string, std::function<void()>> builtin_functions;
 	std::unordered_map<std::string, std::vector<std::shared_ptr<visitor::Scope>>> scopes;
 
 	std::string parse_value_to_string(const RuntimeValue* value);
+	void push_constant(RuntimeValue* value);
+	RuntimeValue* get_stack_top();
 
 private:
 	size_t pc = 0;
@@ -40,8 +42,8 @@ private:
 	std::string set_type_name;
 	std::string set_type_name_space;
 	Type set_array_type;
-	std::vector<RuntimeValue*> set_array_dim;
-	RuntimeValue* set_default_value;
+	std::vector<std::shared_ptr<ASTExprNode>> set_array_dim;
+	std::shared_ptr<ASTExprNode> set_default_value;
 	bool set_is_rest;
 
 	dim_eval_func_t evaluate_access_vector_ptr = std::bind(&VirtualMachine::evaluate_access_vector, this, std::placeholders::_1);
@@ -89,7 +91,6 @@ private:
 	RuntimeValue* alocate_value(RuntimeValue* value);
 
 	void push_empty(Type type);
-	void push_constant(RuntimeValue* value);
 	void push_function_constant(const std::string& identifier);
 	//void push_array();
 	//void set_element();
@@ -99,8 +100,8 @@ private:
 	void function_call_operation();
 	void throw_operation();
 	void type_parse_operation();
-
-	RuntimeValue* get_stack_top();
+	void store_var();
+	void load_var();
 
 	std::string build_type();
 
@@ -120,6 +121,8 @@ private:
 	std::shared_ptr<Scope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition*>* signature, bool strict = true);
 	std::shared_ptr<Scope> get_inner_most_functions_scope(const std::string& nmspace, const std::string& identifier);
 
+	void normalize_type(std::shared_ptr<RuntimeVariable> var, RuntimeValue* val);
+
 	cp_bool equals_value(const RuntimeValue* lval, const RuntimeValue* rval);
 	cp_bool equals_array(const cp_array& larr, const cp_array& rarr);
 	cp_bool equals_struct(const cp_struct& lstr, const cp_struct& rstr);
@@ -127,7 +130,7 @@ private:
 	std::vector<unsigned int> evaluate_access_vector(const std::vector<std::shared_ptr<ASTExprNode>>& expr_access_vector);
 
 public:
-	VirtualMachine(std::vector<BytecodeInstruction> instructions);
+	VirtualMachine(std::shared_ptr<Scope> global_scope, std::vector<BytecodeInstruction> instructions);
 	VirtualMachine() = default;
 	~VirtualMachine() = default;
 

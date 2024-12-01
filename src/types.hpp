@@ -147,7 +147,7 @@ class FunctionDefinition : public TypeDefinition, public CodePosition {
 public:
 	std::string identifier;
 	std::vector<TypeDefinition*> parameters;
-	size_t pointer;
+	size_t pointer = 0;
 	std::shared_ptr<ASTBlockNode> block;
 	bool is_var = false;
 

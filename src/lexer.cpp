@@ -319,7 +319,7 @@ Token Lexer::process_identifier() {
 		advance();
 	}
 
-	for (size_t i = 0; i < TOKEN_IMAGE_SIZE; ++i) {
+	for (size_t i = 0; i < TOKEN_IMAGE.size(); ++i) {
 		if (identifier == TOKEN_IMAGE[i]) {
 			type = (TokenType)i;
 			break;

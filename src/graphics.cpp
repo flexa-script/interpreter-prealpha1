@@ -520,3 +520,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 
 		};
 }
+
+void Graphics::register_functions(visitor::Compiler* visitor) {}
+
+void Graphics::register_functions(VirtualMachine* vm) {}

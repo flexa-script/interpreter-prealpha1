@@ -135,3 +135,7 @@ void Input::stop() {
 		}
 	}
 }
+
+void Input::register_functions(visitor::Compiler* visitor) {}
+
+void Input::register_functions(VirtualMachine* vm) {}

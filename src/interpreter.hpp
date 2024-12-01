@@ -87,7 +87,6 @@ namespace visitor {
 		RuntimeValue* set_value(std::shared_ptr<Scope> scope, const std::vector<Identifier>& identifier_vector, RuntimeValue* new_value);
 		RuntimeValue* access_value(const std::shared_ptr<Scope> scope, RuntimeValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
 
-		//void call_builtin_function(const std::string& identifier);
 		void declare_function_block_parameters(const std::string& nmspace);
 		void build_args(const std::vector<std::string>& args);
 

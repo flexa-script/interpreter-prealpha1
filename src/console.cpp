@@ -96,3 +96,7 @@ void Console::register_functions(visitor::Interpreter* visitor) {
 		};
 
 }
+
+void Console::register_functions(visitor::Compiler* visitor) {}
+
+void Console::register_functions(VirtualMachine* vm) {}

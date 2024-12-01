@@ -15,6 +15,10 @@ enum {
 };
 var state = ST_MAIN_MENU;
 
+var last_time = cp::clock();
+var fps = 0f;
+var frame_count = 0;
+
 var running: bool = true;
 var board[4][4]: int = {0};
 var score = 0;
@@ -43,6 +47,19 @@ fun main() {
     board[3][3] = 2;
 
     while (running and not cp::is_quit(game_window)) {
+		var current_time = cp::clock();
+		var elapsed_time = (current_time - last_time) / 1000;
+
+        frame_count++;
+		
+        if (elapsed_time >= 1.0) {
+            fps = frame_count / elapsed_time;
+            frame_count = 0;
+            last_time = current_time;
+
+			println("FPS: ", fps);
+        }
+
 		update();
 		render();
     }

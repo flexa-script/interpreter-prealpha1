@@ -4,7 +4,9 @@ GarbageCollector::GarbageCollector() {}
 
 GarbageCollector::~GarbageCollector() {
 	for (GCObject* obj : heap) {
-		delete obj;
+		if (obj) {
+			delete obj;
+		}
 	}
 }
 

@@ -2,6 +2,7 @@
 #define BUILTIN_HPP
 
 #include <unordered_map>
+#include <functional>
 
 #include "module.hpp"
 
@@ -30,6 +31,8 @@ namespace modules {
 
 		void register_functions(visitor::SemanticAnalyser* visitor) override;
 		void register_functions(visitor::Interpreter* visitor) override;
+		void register_functions(visitor::Compiler* visitor) override;
+		void register_functions(VirtualMachine* vm) override;
 
 	private:
 		void build_decls();

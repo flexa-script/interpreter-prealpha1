@@ -2,6 +2,7 @@
 #define TOKEN_CONSTANTS_HPP
 
 #include <string>
+#include <array>
 
 namespace lexer {
 
@@ -88,12 +89,11 @@ namespace lexer {
 		TOK_BITWISE_SHIFT,
 		TOK_COMMENT,
 		TOK_ERROR,
-		TOK_EOF
+		TOK_EOF,
+		TOK_SIZE
 	};
 
-	extern const std::string TOKEN_IMAGE[];
-
-	extern const size_t TOKEN_IMAGE_SIZE;
+	extern const std::array<std::string, TOK_SIZE> TOKEN_IMAGE;
 
 }
 

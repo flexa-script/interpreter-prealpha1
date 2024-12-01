@@ -1,5 +1,6 @@
 #include "visitor.hpp"
 
+#include "builtin.hpp"
 #include "datetime.hpp"
 #include "graphics.hpp"
 #include "files.hpp"
@@ -39,6 +40,7 @@ std::vector<std::string> std_libs = {
 };
 
 std::map<std::string, std::shared_ptr<modules::Module>> built_in_libs = {
+	{"builtin", std::shared_ptr<modules::Builtin>(new modules::Builtin())},
 	{"cp.core.graphics", std::shared_ptr<modules::Graphics>(new modules::Graphics())},
 	{"cp.core.files", std::shared_ptr<modules::Files>(new modules::Files())},
 	{"cp.core.console", std::shared_ptr<modules::Console>(new modules::Console())},

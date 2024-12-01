@@ -38,13 +38,15 @@ namespace visitor {
 
 		bool has_sub_value(std::vector<Identifier> identifier_vector);
 
+		void build_args(const std::vector<std::string>& args);
+
 		bool push_namespace(const std::string nmspace) override;
 		void pop_namespace(bool pop) override;
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;
 
 	public:
-		Compiler(std::shared_ptr<ASTProgramNode> main_program, std::map<std::string, std::shared_ptr<ASTProgramNode>> programs);
+		Compiler(std::shared_ptr<ASTProgramNode> main_program, std::map<std::string, std::shared_ptr<ASTProgramNode>> programs, const std::vector<std::string>& args);
 		~Compiler() = default;
 
 		void start();

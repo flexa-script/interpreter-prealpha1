@@ -19,8 +19,7 @@ SemanticAnalyser::SemanticAnalyser(std::shared_ptr<Scope> global_scope, std::sha
 	push_namespace(default_namespace);
 	scopes[default_namespace].push_back(global_scope);
 
-	auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
-	builtin->register_functions(this);
+	built_in_libs["builtin"]->register_functions(this);
 
 	build_args(args);
 };

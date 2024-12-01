@@ -317,5 +317,8 @@
     <ClCompile Include="token_constants.cpp">
       <Filter>Source Files\core\lexer</Filter>
     </ClCompile>
+    <ClCompile Include="argparse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

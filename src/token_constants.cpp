@@ -1,7 +1,7 @@
 #include "token_constants.hpp"
 
-const std::string lexer::TOKEN_IMAGE[] = {
-		"bool literal",
+const std::array<std::string, lexer::TOK_SIZE> lexer::TOKEN_IMAGE = std::array<std::string, lexer::TOK_SIZE>{
+	"bool literal",
 		"int literal",
 		"float literal",
 		"char literal",
@@ -85,5 +85,3 @@ const std::string lexer::TOKEN_IMAGE[] = {
 		"error token",
 		"EOF token"
 };
-
-const size_t lexer::TOKEN_IMAGE_SIZE = sizeof(TOKEN_IMAGE) / sizeof(std::string);

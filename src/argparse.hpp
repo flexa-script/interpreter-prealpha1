@@ -5,7 +5,7 @@
 #include <vector>
 
 struct CpCliArgs {
-	bool debug;
+	bool debug = false;
 	std::string engine;
 	std::string workspace;
 	std::vector<std::string> sources;

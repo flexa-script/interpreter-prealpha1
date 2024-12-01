@@ -217,3 +217,7 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 		};
 
 }
+
+void Files::register_functions(visitor::Compiler* visitor) {}
+
+void Files::register_functions(VirtualMachine* vm) {}

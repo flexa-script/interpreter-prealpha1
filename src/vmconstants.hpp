@@ -48,6 +48,7 @@ enum OpCode : uint16_t {
 	// function ops
 	OP_FUN_START,
 	OP_FUN_SET_PARAM,
+	OP_CALL_PARAM_COUNT,
 	OP_FUN_END,
 	OP_CALL,
 	OP_RETURN,

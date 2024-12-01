@@ -57,3 +57,7 @@ void Sound::register_functions(visitor::Interpreter* visitor) {
 
 		};
 }
+
+void Sound::register_functions(visitor::Compiler* visitor) {}
+
+void Sound::register_functions(VirtualMachine* vm) {}

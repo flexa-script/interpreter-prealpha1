@@ -16,6 +16,8 @@ namespace modules {
 
 		void register_functions(visitor::SemanticAnalyser* visitor) override;
 		void register_functions(visitor::Interpreter* visitor) override;
+		void register_functions(visitor::Compiler* visitor) override;
+		void register_functions(VirtualMachine* vm) override;
 	};
 }
 

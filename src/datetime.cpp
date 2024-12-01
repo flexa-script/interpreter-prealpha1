@@ -169,3 +169,7 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 		};
 
 }
+
+void DateTime::register_functions(visitor::Compiler* visitor) {}
+
+void DateTime::register_functions(VirtualMachine* vm) {}

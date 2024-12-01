@@ -6,7 +6,9 @@
 namespace visitor {
 	class SemanticAnalyser;
 	class Interpreter;
+	class Compiler;
 }
+class VirtualMachine;
 
 namespace modules {
 	class Module {
@@ -18,6 +20,8 @@ namespace modules {
 
 		virtual void register_functions(visitor::SemanticAnalyser* visitor) = 0;
 		virtual void register_functions(visitor::Interpreter* visitor) = 0;
+		virtual void register_functions(visitor::Compiler* visitor) = 0;
+		virtual void register_functions(VirtualMachine* vm) = 0;
 	};
 }
 

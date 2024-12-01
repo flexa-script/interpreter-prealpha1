@@ -12,11 +12,12 @@ using namespace visitor;
 using namespace parser;
 using namespace lexer;
 
-Compiler::Compiler(std::shared_ptr<ASTProgramNode> main_program, std::map<std::string, std::shared_ptr<ASTProgramNode>> programs)
+Compiler::Compiler(std::shared_ptr<ASTProgramNode> main_program, std::map<std::string, std::shared_ptr<ASTProgramNode>> programs, const std::vector<std::string>& args)
 	: Visitor(programs, main_program, default_namespace) {
 
-	//auto builtin = std::unique_ptr<modules::Builtin>(new modules::Builtin());
-	//builtin->register_functions(this);
+	built_in_libs["builtin"]->register_functions(this);
+
+	build_args(args);
 };
 
 void Compiler::start() {
@@ -134,6 +135,8 @@ void Compiler::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 		param->accept(this);
 	}
 
+	add_instruction(OpCode::OP_CALL_PARAM_COUNT, astnode->parameters.size());
+
 	add_instruction(OpCode::OP_CALL, cp_string(astnode->identifier));
 
 	access_sub_value_operations(astnode->identifier_vector);
@@ -151,34 +154,36 @@ void Compiler::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 		type_definition_operations(*astnode);
 		add_instruction(OpCode::OP_FUN_START, cp_string(astnode->identifier));
 
-		//for (auto& param : astnode->parameters) {
-		//	type_definition_operations(param);
-		//	add_instruction(OpCode::OP_SET_DEFAULT_VALUE, param.assign_value);
-		//	add_instruction(OpCode::OP_SET_IS_REST, param.is_rest);
-		//	//add_instruction(OpCode::OP_FUN_SET_PARAM, cp_string(param.identifier));
-		//}
+		for (auto& param : astnode->parameters) {
+			const auto& var = *dynamic_cast<VariableDefinition*>(param);
+			type_definition_operations(var);
+			//add_instruction(OpCode::OP_SET_DEFAULT_VALUE, var.default_value);
+			add_instruction(OpCode::OP_SET_IS_REST, var.is_rest);
+			add_instruction(OpCode::OP_FUN_SET_PARAM, cp_string(var.identifier));
+		}
 
-		//// call will start here, function metadata will be stored with at starting pointer
-		//add_instruction(OpCode::OP_FUN_END, nullptr);
+		// call will start here, function metadata will be stored with at starting pointer
+		add_instruction(OpCode::OP_FUN_END, nullptr);
 
-		//// at this point, vm will jump to OP_FUN_END
-		//auto id = add_instruction(OpCode::OP_JUMP, nullptr);
+		// at this point, vm will jump to OP_FUN_END
+		auto id = add_instruction(OpCode::OP_JUMP, nullptr);
 
-		//for (auto& param : astnode->parameters) {
-		//	if (param.assign_value) {
-		//		//auto param_dcl = std::make_unique<ASTDeclarationNode>(param.identifier, param.type, param.array_type,
-		//		//	param.dim, param.type_name, param.type_name_space, static_cast<std::shared_ptr<ASTExprNode>>(param.assign_value), false,
-		//		//	astnode->row, astnode->col);
-		//		//param_dcl->accept(this);
-		//	}
-		//}
+		for (auto& param : astnode->parameters) {
+			const auto& var = *dynamic_cast<VariableDefinition*>(param);
+			if (var.default_value) {
+				auto param_dcl = std::make_unique<ASTDeclarationNode>(var.identifier, var.type, var.array_type,
+					var.dim, var.type_name, var.type_name_space, static_cast<std::shared_ptr<ASTExprNode>>(var.default_value), false,
+					astnode->row, astnode->col);
+				param_dcl->accept(this);
+			}
+		}
 
 		astnode->block->accept(this);
 
 		// it will return to prev
 		add_instruction(OpCode::OP_RETURN, nullptr);
 
-		//replace_last_operand(id, pointer);
+		replace_last_operand(id, pointer);
 	}
 
 	pop_namespace(pop);
@@ -600,9 +605,9 @@ void Compiler::type_definition_operations(TypeDefinition type) {
 	auto dim = type.dim.size();
 
 	if (dim > 0) {
-		for (const auto s : type.dim) {
+		for (const auto& s : type.dim) {
 			if (s) {
-				static_cast<std::shared_ptr<ASTExprNode>>(s)->accept(this);
+				s->accept(this);
 			}
 			else {
 				add_instruction(OpCode::OP_PUSH_INT, cp_int(0));
@@ -643,6 +648,22 @@ size_t Compiler::add_instruction(OpCode opcode, T operand) {
 template <typename T>
 void Compiler::replace_last_operand(size_t pos, T operand) {
 	bytecode_program[pos].operand = BytecodeInstruction::to_byteopnd(operand);
+}
+
+void Compiler::build_args(const std::vector<std::string>& args) {
+	//auto dim = std::vector<std::shared_ptr<ASTExprNode>>{ std::make_shared<ASTLiteralNode<cp_int>>(cp_int(args.size()), 0, 0) };
+
+	//auto var = std::make_shared<RuntimeVariable>("cpargs", Type::T_ARRAY, Type::T_STRING, dim, "", "");
+	//gc.add_var_root(var);
+
+	//auto arr = cp_array();
+	//for (size_t i = 0; i < args.size(); ++i) {
+	//	arr.push_back(alocate_value(new RuntimeValue(args[i])));
+	//}
+
+	//var->set_value(alocate_value(new RuntimeValue(arr, Type::T_STRING, dim)));
+
+	//scopes[default_namespace].back()->declare_variable("cpargs", var);
 }
 
 bool Compiler::push_namespace(const std::string nmspace) {

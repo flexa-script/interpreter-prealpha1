@@ -115,13 +115,13 @@ int CPInterpreter::interpreter() {
 		}
 		else {
 			// compile
-			visitor::Compiler compiler(main_program, programs);
+			visitor::Compiler compiler(main_program, programs, args.cpargs);
 			compiler.start();
 
 			BytecodeInstruction::write_bytecode_table(compiler.bytecode_program, project_root + "\\" + source_programs[0].name + ".cpt");
 
 			// execute
-			VirtualMachine vm(compiler.bytecode_program);
+			VirtualMachine vm(interpreter_global_scope, compiler.bytecode_program);
 			vm.run();
 
 			result = vm.value_stack.back()->get_i();

@@ -209,3 +209,7 @@ void HTTP::register_functions(visitor::Interpreter* visitor) {
 		};
 
 }
+
+void HTTP::register_functions(visitor::Compiler* visitor) {}
+
+void HTTP::register_functions(VirtualMachine* vm) {}
