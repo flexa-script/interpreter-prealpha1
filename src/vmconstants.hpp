@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include <array>
 
 enum OpCode : uint16_t {
 	OP_RES,
@@ -32,6 +33,7 @@ enum OpCode : uint16_t {
 	OP_STRUCT_END,
 	// type ops
 	OP_SET_TYPE,
+	OP_SET_ARRAY_TYPE,
 	OP_SET_TYPE_NAME,
 	OP_SET_TYPE_NAME_SPACE,
 	OP_SET_ARRAY_SIZE,
@@ -102,9 +104,10 @@ enum OpCode : uint16_t {
 	OP_UNREF,
 	OP_TRAP,
 	OP_HALT,
+	OP_SIZE,
 	OP_ERROR = 0xFFFF
 };
 
-extern const std::string OP_NAMES[];
+extern const std::array<std::string, OP_SIZE> OP_NAMES;
 
 #endif // !VMCONSTANTS_HPP

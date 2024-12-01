@@ -336,8 +336,7 @@ void VirtualMachine::store_var() {
 
 	if ((!TypeDefinition::is_any_or_match_type(*new_var, *new_value, evaluate_access_vector_ptr) ||
 		is_array(new_var->type) && !is_any(new_var->array_type)
-		&& !TypeDefinition::match_type(*new_var, *new_value, evaluate_access_vector_ptr, false, true))
-		&& !is_undefined(new_value->type)) {
+		&& !TypeDefinition::match_type(*new_var, *new_value, evaluate_access_vector_ptr, false, true))) {
 		ExceptionHandler::throw_declaration_type_err(identifier, *new_var, *new_value, evaluate_access_vector_ptr);
 	}
 
@@ -482,13 +481,12 @@ void VirtualMachine::decode_operation() {
 		break;
 	case OP_CREATE_ARRAY: {
 		auto size = current_instruction.get_size_operand();
-		auto val = gc.allocate(new RuntimeValue(cp_array(size)));
-		value_stack.push_back(dynamic_cast<RuntimeValue*>(val));
+		push_constant(new RuntimeValue(cp_array(size)));
 		break;
 	}
 	case OP_SET_ELEMENT: {
 		RuntimeValue* value = get_stack_top();
-		value->set_sub(current_instruction.get_size_operand(), value);
+		value_stack.back()->set_sub(current_instruction.get_size_operand(), value);
 		break;
 	}
 	case OP_CREATE_STRUCT: {
@@ -527,9 +525,12 @@ void VirtualMachine::decode_operation() {
 		break;
 	}
 
-					  // typing operations
+	// typing operations
 	case OP_SET_TYPE:
 		set_type = (Type)current_instruction.get_uint8_operand();
+		break;
+	case OP_SET_ARRAY_TYPE:
+		set_array_type = (Type)current_instruction.get_uint8_operand();
 		break;
 	case OP_SET_TYPE_NAME:
 		set_type_name = current_instruction.get_string_operand();

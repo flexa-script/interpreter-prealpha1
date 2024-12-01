@@ -592,19 +592,9 @@ bool Compiler::has_sub_value(std::vector<Identifier> identifier_vector) {
 }
 
 void Compiler::type_definition_operations(TypeDefinition type) {
+	if (type.dim.size() > 0) {
+		add_instruction(OpCode::OP_SET_TYPE, uint8_t(Type::T_ARRAY));
 
-	add_instruction(OpCode::OP_SET_TYPE, uint8_t(type.type));
-
-	if (!type.type_name.empty()) {
-		if (!type.type_name_space.empty()) {
-			add_instruction(OpCode::OP_SET_TYPE_NAME_SPACE, cp_string(type.type_name_space));
-		}
-		add_instruction(OpCode::OP_SET_TYPE_NAME, cp_string(type.type_name));
-	}
-
-	auto dim = type.dim.size();
-
-	if (dim > 0) {
 		for (const auto& s : type.dim) {
 			if (s) {
 				s->accept(this);
@@ -614,7 +604,24 @@ void Compiler::type_definition_operations(TypeDefinition type) {
 			}
 			add_instruction(OpCode::OP_SET_ARRAY_SIZE, nullptr);
 		}
+
 		//add_instruction(OpCode::OP_SET_ARRAY_DIM, size_t(dim));
+	}
+	else {
+		add_instruction(OpCode::OP_SET_TYPE, uint8_t(type.type));
+	}
+
+	if (is_array(type.type) || type.dim.size() > 0) {
+		add_instruction(OpCode::OP_SET_ARRAY_TYPE, uint8_t(
+			is_undefined(type.array_type) ? Type::T_ANY : type.array_type
+		));
+	}
+
+	if (!type.type_name.empty()) {
+		if (!type.type_name_space.empty()) {
+			add_instruction(OpCode::OP_SET_TYPE_NAME_SPACE, cp_string(type.type_name_space));
+		}
+		add_instruction(OpCode::OP_SET_TYPE_NAME, cp_string(type.type_name));
 	}
 }
 

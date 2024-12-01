@@ -1,8 +1,6 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
 
-#include <string>
-
 #include "token_constants.hpp"
 
 namespace lexer {
