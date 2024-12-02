@@ -7,6 +7,7 @@
 
 #include "builtin.hpp"
 
+#include "types.hpp"
 #include "semantic_analysis.hpp"
 #include "interpreter.hpp"
 #include "compiler.hpp"
@@ -164,7 +165,7 @@ void Builtin::register_functions(VirtualMachine* vm) {
 			}
 
 			for (size_t i = 0; i < args.size(); ++i) {
-				std::cout << vm->parse_value_to_string(args[i]);
+				std::cout << RuntimeOperations::parse_value_to_string(args[i]);
 			}
 		}
 		catch (...) {}

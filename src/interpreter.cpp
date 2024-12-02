@@ -82,11 +82,14 @@ void Interpreter::visit(std::shared_ptr<ASTUsingNode> astnode) {
 
 		current_program.push(program);
 		auto pop = push_namespace(program->alias);
+		auto nmspace = get_namespace();
 		if (!program->alias.empty()) {
 			scopes[program->alias].push_back(std::make_shared<Scope>());
-			program_nmspaces[get_namespace()].push_back(default_namespace);
+			if (std::find(program_nmspaces[nmspace].begin(), program_nmspaces[nmspace].end(), default_namespace) == program_nmspaces[nmspace].end()) {
+				program_nmspaces[nmspace].push_back(default_namespace);
+			}
 		}
-		current_this_name.push(get_namespace());
+		current_this_name.push(nmspace);
 
 		start();
 
@@ -102,12 +105,12 @@ void Interpreter::visit(std::shared_ptr<ASTNamespaceManagerNode> astnode) {
 	const auto& nmspace = get_namespace();
 
 	if (astnode->image == "include") {
-		program_nmspaces[nmspace].push_back(astnode->nmspace);
+		if (std::find(program_nmspaces[nmspace].begin(), program_nmspaces[nmspace].end(), astnode->nmspace) == program_nmspaces[nmspace].end()) {
+			program_nmspaces[nmspace].push_back(astnode->nmspace);
+		}
 	}
 	else {
-		size_t pos = std::distance(program_nmspaces[nmspace].begin(),
-			std::find(program_nmspaces[nmspace].begin(),
-				program_nmspaces[nmspace].end(), astnode->nmspace));
+		size_t pos = std::distance(program_nmspaces[nmspace].begin(), std::find(program_nmspaces[nmspace].begin(), program_nmspaces[nmspace].end(), astnode->nmspace));
 		program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + pos);
 	}
 }
@@ -278,7 +281,7 @@ void Interpreter::visit(std::shared_ptr<ASTReturnNode> astnode) {
 
 	if (astnode->expr) {
 		TypeDefinition curr_func_ret_type = current_function.top();
-		std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
+		std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top(), evaluate_access_vector_ptr);
 
 		astnode->expr->accept(this);
 		RuntimeValue* returned_value = current_expression_value;
@@ -330,6 +333,10 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	std::vector<TypeDefinition*> signature;
 	std::vector<RuntimeValue*> function_arguments;
 
+	if (identifier == "create_collection") {
+		int x = 0;
+	}
+
 	gc.add_root_container(&function_arguments);
 
 	for (auto& param : astnode->parameters) {
@@ -349,12 +356,12 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 
 	std::shared_ptr<Scope> func_scope;
 	try {
-		func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, strict);
+		func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, evaluate_access_vector_ptr, strict);
 	}
 	catch (...) {
 		try {
 			strict = false;
-			func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, strict);
+			func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, evaluate_access_vector_ptr, strict);
 		}
 		catch (...) {
 			try {
@@ -363,10 +370,10 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 				nmspace = var->value->get_fun().first;
 				identifier = var->value->get_fun().second;
 				identifier_vector = std::vector<Identifier>{ Identifier(identifier) };
-				func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, strict);
+				func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, evaluate_access_vector_ptr, strict);
 			}
 			catch (...) {
-				std::string func_name = ExceptionHandler::buid_signature(astnode->identifier, signature, evaluate_access_vector_ptr);
+				std::string func_name = ExceptionHandler::buid_signature(identifier, signature, evaluate_access_vector_ptr);
 				throw std::runtime_error("function '" + func_name + "' was never declared");
 			}
 		}
@@ -383,7 +390,6 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	current_this_name.push(identifier);
 	current_function_signature.push(signature);
 	current_function_call_identifier_vector.push(identifier_vector);
-	current_function_nmspace.push(nmspace);
 	current_function_calling_arguments.push(function_arguments);
 
 	if (!declfun.block) {
@@ -396,7 +402,6 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	current_function.pop();
 	current_function_call_identifier_vector.pop();
 	current_function_signature.pop();
-	current_function_nmspace.pop();
 	current_this_name.pop();
 	gc.remove_root_container(&function_arguments);
 
@@ -406,7 +411,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 void Interpreter::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode> astnode) {
 	std::string nmspace = get_namespace();
 
-	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top());
+	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top(), evaluate_access_vector_ptr);
 
 	builtin_functions[astnode->identifier]();
 
@@ -1238,7 +1243,7 @@ void Interpreter::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 			}
 			catch (...) {
 				try {
-					curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, nullptr);
+					curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, nullptr, evaluate_access_vector_ptr);
 					auto fun = cp_function();
 					fun.first = nmspace;
 					fun.second = astnode->identifier;
@@ -1692,99 +1697,6 @@ cp_bool Interpreter::equals_array(const cp_array& larr, const cp_array& rarr) {
 	}
 
 	return true;
-}
-
-std::shared_ptr<Scope> Interpreter::get_inner_most_variable_scope(std::string& nmspace, const std::string& identifier) {
-	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
-		if (i <= 0) {
-			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
-				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_variable(identifier); --i) {
-					if (i <= 0) {
-						i = -1;
-						break;
-					}
-				}
-				if (i >= 0) {
-					// returns real namespace
-					nmspace = prgnmspace;
-					return scopes[prgnmspace][i];
-				}
-			}
-			throw std::runtime_error("something went wrong searching '" + identifier + "' variable");
-		}
-	}
-	return scopes[nmspace][i];
-}
-
-std::shared_ptr<Scope> Interpreter::get_inner_most_struct_definition_scope(std::string& nmspace, const std::string& identifier) {
-	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); i--) {
-		if (i <= 0) {
-			bool found = false;
-			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
-				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_structure_definition(identifier); --i) {
-					if (i <= 0) {
-						i = -1;
-						break;
-					}
-				}
-				if (i >= 0) {
-					// returns real namespace
-					nmspace = prgnmspace;
-					return scopes[prgnmspace][i];
-				}
-			}
-			throw std::runtime_error("something went wrong searching '" + identifier + "' struct");
-		}
-	}
-	return scopes[nmspace][i];
-}
-
-std::shared_ptr<Scope> Interpreter::get_inner_most_function_scope(std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition*>* signature, bool strict) {
-	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); --i) {
-		if (i <= 0) {
-			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
-				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); --i) {
-					if (i <= 0) {
-						i = -1;
-						break;
-					}
-				}
-				if (i >= 0) {
-					// returns real namespace
-					nmspace = prgnmspace;
-					return scopes[prgnmspace][i];
-				}
-			}
-			throw std::runtime_error("something went wrong searching '" + identifier + "' function");
-		}
-	}
-	return scopes[nmspace][i];
-}
-
-std::shared_ptr<Scope> Interpreter::get_inner_most_functions_scope(std::string& nmspace, const std::string& identifier) {
-	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function_name(identifier); --i) {
-		if (i <= 0) {
-			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
-				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function_name(identifier); --i) {
-					if (i <= 0) {
-						i = -1;
-						break;
-					}
-				}
-				if (i >= 0) {
-					// returns real namespace
-					nmspace = prgnmspace;
-					return scopes[prgnmspace][i];
-				}
-			}
-			throw std::runtime_error("something went wrong searching '" + identifier + "' fuction");
-		}
-	}
-	return scopes[nmspace][i];
 }
 
 RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::vector<parser::Identifier>& identifier_vector, RuntimeValue* new_value) {

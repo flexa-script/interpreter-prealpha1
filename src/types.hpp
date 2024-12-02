@@ -357,4 +357,33 @@ public:
 	virtual std::vector<GCObject*> get_references() override;
 };
 
+class RuntimeOperations {
+public:
+	static cp_bool equals_value(const RuntimeValue* lval, const RuntimeValue* rval);
+
+	static std::string parse_value_to_string(const RuntimeValue* value, std::vector<uintptr_t> printed = std::vector<uintptr_t>());
+
+	static std::string parse_array_to_string(const cp_array& arr_value, std::vector<uintptr_t> printed);
+
+	static std::string parse_struct_to_string(const RuntimeValue* value, std::vector<uintptr_t> printed);
+
+	static RuntimeValue* do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, dim_eval_func_t evaluate_access_vector_ptr, bool is_expr = false, cp_int str_pos = 0);
+
+	static cp_bool do_relational_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, dim_eval_func_t evaluate_access_vector_ptr);
+
+	static cp_int do_spaceship_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval);
+
+	static cp_int do_operation(cp_int lval, cp_int rval, const std::string& op);
+
+	static cp_float do_operation(cp_float lval, cp_float rval, const std::string& op);
+
+	static cp_string do_operation(cp_string lval, cp_string rval, const std::string& op);
+
+	static cp_array do_operation(cp_array lval, cp_array rval, const std::string& op);
+
+	static void normalize_type(std::shared_ptr<RuntimeVariable> var, RuntimeValue* val);
+	
+	static std::string build_str_type(RuntimeValue* curr_value, dim_eval_func_t evaluate_access_vector_ptr);
+};
+
 #endif // !TYPES_HPP

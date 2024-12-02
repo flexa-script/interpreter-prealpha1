@@ -20,14 +20,12 @@ namespace visitor {
 	class SemanticAnalyser : public Visitor, public MetaVisitor {
 	public:
 		std::map<std::string, std::shared_ptr<ASTExprNode>> builtin_functions;
-		std::map<std::string, std::vector<std::shared_ptr<Scope>>> scopes;
 
 	private:
 		dim_eval_func_t evaluate_access_vector_ptr = std::bind(&SemanticAnalyser::evaluate_access_vector, this, std::placeholders::_1);
 		std::vector<std::string> nmspaces;
 		SemanticValue current_expression;
 		std::stack<FunctionDefinition> current_function;
-		std::stack<std::string> current_namespace;
 		bool exception = false;
 		bool is_switch = false;
 		bool is_loop = false;
@@ -45,10 +43,6 @@ namespace visitor {
 		void equals_value(const SemanticValue& lval, const SemanticValue& rval);
 
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<std::shared_ptr<ASTExprNode>>& expr_access_vector);
-
-		std::shared_ptr<Scope> get_inner_most_struct_definition_scope(const std::string& nmspace, const std::string& identifier);
-		std::shared_ptr<Scope> get_inner_most_variable_scope(const std::string& nmspace, const std::string& identifier);
-		std::shared_ptr<Scope> get_inner_most_function_scope(const std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition*>* signature, bool strict = true);
 
 		TypeDefinition do_operation(const std::string& op, TypeDefinition lvtype, TypeDefinition ltype, TypeDefinition* rvtype, TypeDefinition rtype, bool is_expr = true);
 		std::shared_ptr<SemanticValue> access_value(std::shared_ptr<SemanticValue> value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
