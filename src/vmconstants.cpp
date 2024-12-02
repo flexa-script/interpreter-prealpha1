@@ -1,6 +1,6 @@
 #include "vmconstants.hpp"
 
-const std::array<std::string, OP_SIZE> OP_NAMES = std::array<std::string, OP_SIZE>{
+const std::array<std::string, OP_SIZE> OP_NAMES = {
 	"RES",
 		// namespace ops
 		"POP_NAMESPACE",
@@ -31,8 +31,9 @@ const std::array<std::string, OP_SIZE> OP_NAMES = std::array<std::string, OP_SIZ
 		"SET_ARRAY_TYPE",
 		"SET_TYPE_NAME",
 		"SET_NAME_SPACE",
-		"SET_ARRAY_DIM",
 		"SET_ARRAY_SIZE",
+		"SET_DEFAULT_VALUE",
+		"SET_IS_REST",
 		// variable ops
 		"SET_VAR_USE_REF",
 		"LOAD_VAR",
@@ -49,6 +50,8 @@ const std::array<std::string, OP_SIZE> OP_NAMES = std::array<std::string, OP_SIZ
 		"CALL",
 		"RETURN",
 		// coditional
+		"STORE_COMP",
+		"RELEASE_COMP",
 		"CONTINUE",
 		"BREAK",
 		"TRY_START",
