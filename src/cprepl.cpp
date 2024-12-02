@@ -1,6 +1,7 @@
 #include "cprepl.hpp"
 #include "cputil.hpp"
 #include "vendor/axeutils.hpp"
+#include "types.hpp"
 
 const std::string CPRepl::NAME = "CPLang";
 const std::string CPRepl::VER = "v0.0.1";
@@ -125,7 +126,7 @@ int CPRepl::execute() {
 				// not is undefined and it's an expression
 				if (!parser::is_undefined(interpreter.current_expression_value->type)
 					&& source.find(';') == std::string::npos) {
-					std::cout << interpreter.parse_value_to_string(interpreter.current_expression_value) << std::endl;
+					std::cout << RuntimeOperations::parse_value_to_string(interpreter.current_expression_value) << std::endl;
 				}
 			}
 		}

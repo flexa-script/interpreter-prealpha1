@@ -69,7 +69,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 			auto args = var->value->get_arr();
 
 			for (size_t i = 0; i < args.size(); ++i) {
-				std::cout << visitor->parse_value_to_string(args[i]);
+				std::cout << RuntimeOperations::parse_value_to_string(args[i]);
 			}
 		}
 		catch (...) {}

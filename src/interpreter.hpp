@@ -23,7 +23,6 @@ namespace visitor {
 		RuntimeValue* current_expression_value;
 		GarbageCollector gc;
 
-		std::string parse_value_to_string(const RuntimeValue* value);
 		RuntimeValue* alocate_value(RuntimeValue* value);
 
 	private:
@@ -64,27 +63,11 @@ namespace visitor {
 		cp_array build_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, RuntimeValue* init_value, long long i);
 		cp_array build_undefined_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, long long i);
 
-		void normalize_type(std::shared_ptr<RuntimeVariable> var, RuntimeValue* val);
-		RuntimeValue* do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, bool is_expr = false, cp_int str_pos = 0);
-		cp_int do_spaceship_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval);
-		cp_bool do_relational_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval);
-		cp_int do_operation(cp_int lval, cp_int rval, const std::string& op);
-		cp_float do_operation(cp_float lval, cp_float rval, const std::string& op);
-		cp_string do_operation(cp_string lval, cp_string rval, const std::string& op);
-		cp_array do_operation(cp_array lval, cp_array rval, const std::string& op);
-
-		std::string parse_array_to_string(const cp_array& arr_value);
-		std::string parse_struct_to_string(const  RuntimeValue* value);
-
 		RuntimeValue* set_value(std::shared_ptr<Scope> scope, const std::vector<Identifier>& identifier_vector, RuntimeValue* new_value);
 		RuntimeValue* access_value(const std::shared_ptr<Scope> scope, RuntimeValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
 
 		void declare_function_block_parameters(const std::string& nmspace);
 		void build_args(const std::vector<std::string>& args);
-
-		cp_bool equals_value(const RuntimeValue* lval, const RuntimeValue* rval);
-		cp_bool equals_array(const cp_array& larr, const cp_array& rarr);
-		cp_bool equals_struct(const cp_struct& lstr, const cp_struct& rstr);
 
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;

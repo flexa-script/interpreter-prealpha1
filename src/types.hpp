@@ -367,7 +367,7 @@ public:
 
 	static std::string parse_struct_to_string(const RuntimeValue* value, std::vector<uintptr_t> printed);
 
-	static RuntimeValue* do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, dim_eval_func_t evaluate_access_vector_ptr, bool is_expr = false, cp_int str_pos = 0);
+	static RuntimeValue* do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, dim_eval_func_t evaluate_access_vector_ptr, bool is_expr = false, cp_int str_pos = -1);
 
 	static cp_bool do_relational_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, dim_eval_func_t evaluate_access_vector_ptr);
 

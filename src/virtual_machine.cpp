@@ -67,11 +67,14 @@ void VirtualMachine::push_function_constant(const std::string& identifier) {
 }
 
 void VirtualMachine::binary_operation(const std::string& op) {
-	RuntimeValue* rval = value_stack.back();
-	value_stack.pop_back();
-	RuntimeValue* lval = value_stack.back();
-	value_stack.pop_back();
-	push_constant(RuntimeOperations::do_operation(op, lval, rval, evaluate_access_vector_ptr, true));
+	RuntimeValue* rval = get_stack_top();
+	RuntimeValue* lval = get_stack_top();
+	
+	auto res = RuntimeOperations::do_operation(op, lval, rval, evaluate_access_vector_ptr, true);
+
+	if (res != lval && res != rval) {
+		push_constant(res);
+	}
 }
 
 void VirtualMachine::unary_operation(const std::string& op) {

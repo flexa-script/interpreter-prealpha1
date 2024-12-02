@@ -919,10 +919,6 @@ cp_bool RuntimeOperations::equals_value(const RuntimeValue* lval, const RuntimeV
 
 std::string RuntimeOperations::parse_value_to_string(const RuntimeValue* value, std::vector<uintptr_t> printed) {
 	std::string str = "";
-	//if (deep == 0) {
-	//	printed.clear();
-	//}
-	//++deep;
 	switch (value->type) {
 	case Type::T_VOID:
 		str = "null";
@@ -949,7 +945,6 @@ std::string RuntimeOperations::parse_value_to_string(const RuntimeValue* value, 
 				s << value->type_name_space << "::";
 			}
 			s << value->type_name << "{...}";
-			//s << "<" << value << ">{...}";
 			str = s.str();
 		}
 		else {
@@ -977,7 +972,6 @@ std::string RuntimeOperations::parse_value_to_string(const RuntimeValue* value, 
 	default:
 		throw std::runtime_error("can't determine value type on parsing");
 	}
-	//--deep;
 	return str;
 }
 
@@ -1012,11 +1006,9 @@ std::string RuntimeOperations::parse_struct_to_string(const RuntimeValue* value,
 	}
 	s << value->type_name << "<" << value << ">{";
 	for (auto const& [key, val] : str_value) {
-		if (key != modules::Module::INSTANCE_ID_NAME) {
-			s << key + ":";
-			s << parse_value_to_string(val, printed);
-			s << ",";
-		}
+		s << key + ":";
+		s << parse_value_to_string(val, printed);
+		s << ",";
 	}
 	auto rs = s.str();
 	if (rs[rs.size() - 1] != '{') {
@@ -1033,6 +1025,7 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 	Type r_var_type = rval->ref.lock() ? rval->ref.lock()->type : rval->type;
 	Type r_var_array_type = rval->ref.lock() ? rval->ref.lock()->array_type : rval->array_type;
 	Type r_type = rval->type;
+	bool has_string_access = str_pos >= 0;
 	RuntimeValue* res_value = nullptr;
 
 	if (is_void(r_type) && op == "=") {
@@ -1188,7 +1181,7 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 		break;
 	}
 	case Type::T_CHAR: {
-		if (is_any(l_var_type) && op == "=") {
+		if (is_any(l_var_type) && op == "=" && !has_string_access) {
 			lval->set(rval->get_c());
 			break;
 		}
@@ -1204,7 +1197,17 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 		}
 
 		if (is_string(l_type)) {
-			lval->set(do_operation(lval->get_s(), std::string{ rval->get_c() }, op));
+			if (has_string_access) {
+				if (op != "=") {
+					ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
+				}
+				has_string_access = false;
+				lval->get_s()[str_pos] = rval->get_c();
+				lval->set(lval->get_s());
+			}
+			else {
+				lval->set(do_operation(lval->get_s(), std::string{ rval->get_c() }, op));
+			}
 		}
 		else if (is_char(l_type)) {
 			if (op != "=") {
