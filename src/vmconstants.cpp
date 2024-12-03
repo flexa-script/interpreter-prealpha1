@@ -20,8 +20,10 @@ const std::array<std::string, OP_SIZE> OP_NAMES = {
 		"PUSH_FUNCTION",
 		"CREATE_ARRAY",
 		"SET_ELEMENT",
+		"PUSH_ARRAY",
 		"CREATE_STRUCT",
 		"SET_FIELD",
+		"PUSH_STRUCT",
 		// struct type ops
 		"STRUCT_START",
 		"STRUCT_SET_VAR",

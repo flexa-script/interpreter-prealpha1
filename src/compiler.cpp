@@ -404,16 +404,23 @@ void Compiler::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 		astnode->values[i]->accept(this);
 		add_instruction(OpCode::OP_SET_ELEMENT, size_t(i));
 	}
+
+	add_instruction(OpCode::OP_PUSH_ARRAY, nullptr);
 }
 
 void Compiler::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
-	add_instruction(OpCode::OP_SET_TYPE_NAME, cp_string(astnode->nmspace));
+	auto pop = push_namespace(cp_string(astnode->nmspace));
+
 	add_instruction(OpCode::OP_CREATE_STRUCT, cp_string(astnode->type_name));
 
 	for (const auto& expr : astnode->values) {
 		expr.second->accept(this);
 		add_instruction(OpCode::OP_SET_FIELD, cp_string(expr.first));
 	}
+
+	add_instruction(OpCode::OP_PUSH_STRUCT, nullptr);
+
+	pop_namespace(pop);
 }
 
 void Compiler::visit(std::shared_ptr<ASTIdentifierNode> astnode) {

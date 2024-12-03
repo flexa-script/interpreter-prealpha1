@@ -1058,9 +1058,9 @@ std::string RuntimeOperations::parse_struct_to_string(const RuntimeValue* value,
 	if (!value->type_name_space.empty() && value->type_name_space != default_namespace) {
 		s << value->type_name_space << "::";
 	}
-	s << value->type_name << "<" << value << ">{";
+	s << value->type_name << "{";
 	for (auto const& [key, val] : str_value) {
-		s << key + ":";
+		s << key << ":";
 		s << parse_value_to_string(val, printed);
 		s << ",";
 	}

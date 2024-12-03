@@ -34,6 +34,7 @@ private:
 	GarbageCollector gc;
 	std::stack<StructureDefinition> struct_def_build_stack;
 	std::stack<FunctionDefinition> func_def_build_stack;
+	std::stack<RuntimeValue*> value_build_stack;
 	std::stack<size_t> return_stack;
 
 	Type set_type;

@@ -482,26 +482,33 @@ void VirtualMachine::decode_operation() {
 		break;
 	case OP_CREATE_ARRAY: {
 		auto size = current_instruction.get_size_operand();
-		push_constant(new RuntimeValue(cp_array(size)));
+		value_build_stack.push(new RuntimeValue(cp_array(size)));
 		break;
 	}
 	case OP_SET_ELEMENT: {
 		RuntimeValue* value = get_stack_top();
-		value_stack.back()->set_sub(current_instruction.get_size_operand(), value);
+		value_build_stack.top()->set_sub(current_instruction.get_size_operand(), value);
 		break;
 	}
+	case OP_PUSH_ARRAY:
+		push_constant(value_build_stack.top());
+		value_build_stack.pop();
+		break;
 	case OP_CREATE_STRUCT: {
 		auto type_name_space = get_namespace();
 		auto identifier = current_instruction.get_string_operand();
-		auto val = gc.allocate(new RuntimeValue(cp_struct(), identifier, type_name_space));
-		value_stack.push_back(dynamic_cast<RuntimeValue*>(val));
+		value_build_stack.push(new RuntimeValue(cp_struct(), identifier, type_name_space));
 		break;
 	}
 	case OP_SET_FIELD: {
 		RuntimeValue* value = get_stack_top();
-		value->set_sub(current_instruction.get_string_operand(), value);
+		value_build_stack.top()->set_sub(current_instruction.get_string_operand(), value);
 		break;
 	}
+	case OP_PUSH_STRUCT:
+		push_constant(value_build_stack.top());
+		value_build_stack.pop();
+		break;
 
 					 // struct definition operations
 	case OP_STRUCT_START:
