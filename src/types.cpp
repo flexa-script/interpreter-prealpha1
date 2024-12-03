@@ -697,35 +697,35 @@ void RuntimeValue::set_arr_type(Type arr_type) {
 }
 
 void RuntimeValue::unset() {
-	if (this->b && reinterpret_cast<uintptr_t>(this->b) != 0xdddddddddddddddd) {
+	if (this->b) {
 		delete this->b;
 		this->b = nullptr;
 	}
-	if (this->i && reinterpret_cast<uintptr_t>(this->i) != 0xdddddddddddddddd) {
+	if (this->i) {
 		delete this->i;
 		this->i = nullptr;
 	}
-	if (this->f && reinterpret_cast<uintptr_t>(this->f) != 0xdddddddddddddddd) {
+	if (this->f) {
 		delete this->f;
 		this->f = nullptr;
 	}
-	if (this->c && reinterpret_cast<uintptr_t>(this->c) != 0xdddddddddddddddd) {
+	if (this->c) {
 		delete this->c;
 		this->c = nullptr;
 	}
-	if (this->s && reinterpret_cast<uintptr_t>(this->s) != 0xdddddddddddddddd) {
+	if (this->s) {
 		delete this->s;
 		this->s = nullptr;
 	}
-	if (this->arr && reinterpret_cast<uintptr_t>(this->arr) != 0xdddddddddddddddd) {
+	if (this->arr) {
 		delete this->arr;
 		this->arr = nullptr;
 	}
-	if (this->str && reinterpret_cast<uintptr_t>(this->str) != 0xdddddddddddddddd) {
+	if (this->str) {
 		delete this->str;
 		this->str = nullptr;
 	}
-	if (this->fun && reinterpret_cast<uintptr_t>(this->fun) != 0xdddddddddddddddd) {
+	if (this->fun) {
 		delete this->fun;
 		this->fun = nullptr;
 	}
@@ -892,9 +892,27 @@ std::vector<GCObject*> RuntimeVariable::get_references() {
 	return references;
 }
 
-cp_bool RuntimeOperations::equals_value(const RuntimeValue* lval, const RuntimeValue* rval) {
+cp_bool RuntimeOperations::equals_value(const RuntimeValue* lval, const RuntimeValue* rval, std::vector<uintptr_t> compared) {
 	if (lval->use_ref) {
 		return lval == rval;
+	}
+
+	// to prevent cyclic reference, we add complex structures to compared after the first compare and not compare again
+	switch (lval->type) {
+	case Type::T_ARRAY:
+	case Type::T_STRUCT:
+		if (std::find(compared.begin(), compared.end(), reinterpret_cast<uintptr_t>(lval)) != compared.end()
+			&& std::find(compared.begin(), compared.end(), reinterpret_cast<uintptr_t>(rval)) != compared.end()) {
+			return lval == rval;
+		}
+		else {
+			if (std::find(compared.begin(), compared.end(), reinterpret_cast<uintptr_t>(lval)) == compared.end()) {
+				compared.push_back(reinterpret_cast<uintptr_t>(lval));
+			}
+			if (std::find(compared.begin(), compared.end(), reinterpret_cast<uintptr_t>(rval)) == compared.end()) {
+				compared.push_back(reinterpret_cast<uintptr_t>(rval));
+			}
+		}
 	}
 
 	switch (lval->type) {
@@ -910,11 +928,47 @@ cp_bool RuntimeOperations::equals_value(const RuntimeValue* lval, const RuntimeV
 		return lval->get_c() == rval->get_c();
 	case Type::T_STRING:
 		return lval->get_s() == rval->get_s();
+	//case Type::T_ARRAY:
+	//case Type::T_STRUCT:
+	//	return lval == rval;
 	case Type::T_ARRAY:
+		return RuntimeOperations::equals_array(lval->get_arr(), rval->get_arr(), compared);
 	case Type::T_STRUCT:
-		return lval == rval;
+		return RuntimeOperations::equals_struct(lval->get_str(), rval->get_str(), compared);
 	}
+
 	return false;
+}
+
+cp_bool RuntimeOperations::equals_struct(const cp_struct& lstr, const cp_struct& rstr, std::vector<uintptr_t> compared) {
+	if (lstr.size() != rstr.size()) {
+		return false;
+	}
+
+	for (auto& lval : lstr) {
+		if (rstr.find(lval.first) == rstr.end()) {
+			return false;
+		}
+		if (!equals_value(lval.second, rstr.at(lval.first), compared)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+cp_bool RuntimeOperations::equals_array(const cp_array& larr, const cp_array& rarr, std::vector<uintptr_t> compared) {
+	if (larr.size() != rarr.size()) {
+		return false;
+	}
+
+	for (size_t i = 0; i < larr.size(); ++i) {
+		if (!equals_value(larr[i], rarr[i], compared)) {
+			return false;
+		}
+	}
+
+	return true;
 }
 
 std::string RuntimeOperations::parse_value_to_string(const RuntimeValue* value, std::vector<uintptr_t> printed) {
@@ -983,12 +1037,12 @@ std::string RuntimeOperations::parse_array_to_string(const cp_array& arr_value, 
 		bool iss = is_string(arr_value[i]->type);
 
 		if (isc) s << "'";
-		else if (iss) s << "\"";
+		else if (iss) s << '"';
 
 		s << parse_value_to_string(arr_value[i], printed);
 
 		if (isc) s << "'";
-		else if (iss) s << "\"";
+		else if (iss) s << '"';
 
 		if (i < arr_value.size() - 1) {
 			s << ",";

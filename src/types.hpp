@@ -359,7 +359,11 @@ public:
 
 class RuntimeOperations {
 public:
-	static cp_bool equals_value(const RuntimeValue* lval, const RuntimeValue* rval);
+	static cp_bool equals_value(const RuntimeValue* lval, const RuntimeValue* rval, std::vector<uintptr_t> compared = std::vector<uintptr_t>());
+
+	static cp_bool equals_struct(const cp_struct& lstr, const cp_struct& rstr, std::vector<uintptr_t> compared);
+
+	static cp_bool equals_array(const cp_array& larr, const cp_array& rarr, std::vector<uintptr_t> compared);
 
 	static std::string parse_value_to_string(const RuntimeValue* value, std::vector<uintptr_t> printed = std::vector<uintptr_t>());
 
