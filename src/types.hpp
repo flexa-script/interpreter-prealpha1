@@ -307,6 +307,8 @@ public:
 	cp_array get_arr() const;
 	cp_struct get_str() const;
 	cp_function get_fun() const;
+	RuntimeValue* get_sub(std::string identifier);
+	RuntimeValue* get_sub(size_t index);
 
 	cp_bool* get_raw_b();
 	cp_int* get_raw_i();

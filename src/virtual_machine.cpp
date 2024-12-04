@@ -69,7 +69,7 @@ void VirtualMachine::push_function_constant(const std::string& identifier) {
 void VirtualMachine::binary_operation(const std::string& op) {
 	RuntimeValue* rval = get_stack_top();
 	RuntimeValue* lval = get_stack_top();
-	
+
 	auto res = RuntimeOperations::do_operation(op, lval, rval, evaluate_access_vector_ptr, true);
 
 	if (res != lval && res != rval) {
@@ -480,7 +480,7 @@ void VirtualMachine::decode_operation() {
 	case OP_PUSH_FUNCTION:
 		push_function_constant(current_instruction.get_string_operand());
 		break;
-	case OP_CREATE_ARRAY: {
+	case OP_INIT_ARRAY: {
 		auto size = current_instruction.get_size_operand();
 		value_build_stack.push(new RuntimeValue(cp_array(size)));
 		break;
@@ -494,7 +494,7 @@ void VirtualMachine::decode_operation() {
 		push_constant(value_build_stack.top());
 		value_build_stack.pop();
 		break;
-	case OP_CREATE_STRUCT: {
+	case OP_INIT_STRUCT: {
 		auto type_name_space = get_namespace();
 		auto identifier = current_instruction.get_string_operand();
 		value_build_stack.push(new RuntimeValue(cp_struct(), identifier, type_name_space));
@@ -510,7 +510,7 @@ void VirtualMachine::decode_operation() {
 		value_build_stack.pop();
 		break;
 
-					 // struct definition operations
+		// struct definition operations
 	case OP_STRUCT_START:
 		struct_def_build_stack.push(StructureDefinition(current_instruction.get_string_operand()));
 		break;
@@ -572,12 +572,27 @@ void VirtualMachine::decode_operation() {
 	case OP_ASSIGN_VAR:
 		// todo OP_ASSIGN_VAR
 		break;
-	case OP_LOAD_SUB_ID:
-		// todo OP_LOAD_SUB_ID
+	case OP_LOAD_SUB_ID: {
+		auto id = current_instruction.get_string_operand();
+		auto val = get_stack_top();
+		if (!is_struct(val->type)) {
+			throw std::runtime_error("invalid " + type_str(val->type) + " access, this operation can only be performed on struct values");
+		}
+		value_stack.push_back(val->get_sub(id));
 		break;
-	case OP_LOAD_SUB_IX:
-		// todo OP_LOAD_SUB_IX
+	}
+	case OP_LOAD_SUB_IX: {
+		auto i = get_stack_top();
+		if (!is_int(i->type)) {
+			throw std::runtime_error("invalid type " + type_str(i->type) + " trying to access array");
+		}
+		auto val = get_stack_top();
+		if (!is_array(val->type) && !is_string(val->type)) {
+			throw std::runtime_error("invalid " + type_str(val->type) + " index access, this operation can only be performed on array or string values");
+		}
+		value_stack.push_back(val->get_sub(i->get_i()));
 		break;
+	}
 	case OP_ASSIGN_SUB:
 		// todo OP_ASSIGN_SUB
 		break;
