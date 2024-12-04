@@ -398,7 +398,7 @@ void Compiler::visit(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) {
 void Compiler::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 	auto size = astnode->values.size();
 
-	add_instruction(OpCode::OP_CREATE_ARRAY, size_t(size));
+	add_instruction(OpCode::OP_INIT_ARRAY, size_t(size));
 
 	for (size_t i = 0; i < size; ++i) {
 		astnode->values[i]->accept(this);
@@ -411,7 +411,7 @@ void Compiler::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 void Compiler::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
 	auto pop = push_namespace(cp_string(astnode->nmspace));
 
-	add_instruction(OpCode::OP_CREATE_STRUCT, cp_string(astnode->type_name));
+	add_instruction(OpCode::OP_INIT_STRUCT, cp_string(astnode->type_name));
 
 	for (const auto& expr : astnode->values) {
 		expr.second->accept(this);
@@ -643,8 +643,8 @@ void Compiler::access_sub_value_operations(std::vector<Identifier> identifier_ve
 				add_instruction(OpCode::OP_LOAD_SUB_ID, cp_string(id.identifier));
 			}
 
-			for (auto av : id.access_vector) {
-				static_cast<std::shared_ptr<ASTExprNode>>(av)->accept(this);
+			for (auto& av : id.access_vector) {
+				av->accept(this);
 				add_instruction(OpCode::OP_LOAD_SUB_IX, size_t(0));
 			}
 		}

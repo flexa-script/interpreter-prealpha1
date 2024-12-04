@@ -656,6 +656,16 @@ cp_function RuntimeValue::get_fun() const {
 	return *fun;
 }
 
+RuntimeValue* RuntimeValue::get_sub(std::string identifier) {
+	if (!str) return nullptr;
+	return (*str)[identifier];
+}
+
+RuntimeValue* RuntimeValue::get_sub(size_t index) {
+	if (!arr) return nullptr;
+	return (*arr)[index];
+}
+
 cp_bool* RuntimeValue::get_raw_b() {
 	return b;
 }

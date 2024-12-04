@@ -138,7 +138,7 @@ void BytecodeInstruction::write_bytecode_table(const std::vector<BytecodeInstruc
 			break;
 		case OP_PUSH_STRING:
 		case OP_PUSH_FUNCTION:
-		case OP_CREATE_STRUCT:
+		case OP_INIT_STRUCT:
 		case OP_SET_FIELD:
 		case OP_SET_TYPE_NAME:
 		case OP_SET_TYPE_NAME_SPACE:
@@ -151,7 +151,7 @@ void BytecodeInstruction::write_bytecode_table(const std::vector<BytecodeInstruc
 		case OP_LOAD_SUB_ID:
 			file << instruction.get_string_operand();
 			break;
-		case OP_CREATE_ARRAY:
+		case OP_INIT_ARRAY:
 			file << instruction.get_bool_operand();
 			break;
 		default:
