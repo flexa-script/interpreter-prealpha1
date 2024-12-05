@@ -547,10 +547,12 @@ void VirtualMachine::decode_operation() {
 	case OP_SET_TYPE_NAME_SPACE:
 		set_type_name_space = current_instruction.get_string_operand();
 		break;
-	case OP_SET_ARRAY_SIZE:
+	case OP_SET_ARRAY_SIZE: {
+			// todo: generating bug
 		//RuntimeValue* value = get_stack_top();
-		//set_array_dim.push_back(value);
+		//set_array_dim.push_back(std::make_shared<ASTValueNode>(value, 0, 0));
 		break;
+	}
 	case OP_SET_USE_REF:
 		// todo
 		break;
@@ -569,8 +571,6 @@ void VirtualMachine::decode_operation() {
 	case OP_STORE_VAR:
 		store_var();
 		break;
-	case OP_ASSIGN_VAR:
-		// todo OP_ASSIGN_VAR
 		break;
 	case OP_LOAD_SUB_ID: {
 		auto id = current_instruction.get_string_operand();
@@ -593,11 +593,14 @@ void VirtualMachine::decode_operation() {
 		value_stack.push_back(val->get_sub(i->get_i()));
 		break;
 	}
-	case OP_ASSIGN_SUB:
-		// todo OP_ASSIGN_SUB
+	case OP_ASSIGN: {
+		auto val = get_stack_top();
+		auto new_val = get_stack_top();
+		val->copy_from(new_val);
 		break;
+	}
 
-		// function operations
+				  // function operations
 	case OP_FUN_START: {
 		func_def_build_stack.push(FunctionDefinition(current_instruction.get_string_operand(), set_type, set_type_name,
 			set_type_name_space, set_array_type, set_array_dim));

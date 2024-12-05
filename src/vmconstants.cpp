@@ -40,10 +40,9 @@ const std::array<std::string, OP_SIZE> OP_NAMES = {
 		"SET_VAR_USE_REF",
 		"LOAD_VAR",
 		"STORE_VAR",
-		"ASSIGN_VAR",
 		"LOAD_SUB_ID",
 		"LOAD_SUB_IX",
-		"ASSIGN_SUB",
+		"ASSIGN",
 		// function ops
 		"FUN_START",
 		"FUN_PARAM_END",

@@ -107,11 +107,28 @@ void Compiler::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 	astnode->expr->accept(this);
 
 	if (has_sub_value(astnode->identifier_vector)) {
-		access_sub_value_operations(astnode->identifier_vector);
-		add_instruction(OpCode::OP_ASSIGN_SUB, nullptr);
+		add_instruction(OpCode::OP_LOAD_VAR, cp_string(astnode->identifier));
+
+		for (size_t i = 0; i < astnode->identifier_vector.size() - 1; ++i) {
+			const auto& id = astnode->identifier_vector[i];
+
+			if (i > 0) {
+				add_instruction(OpCode::OP_LOAD_SUB_ID, cp_string(id.identifier));
+			}
+
+			for (auto& av : id.access_vector) {
+				av->accept(this);
+				add_instruction(OpCode::OP_LOAD_SUB_IX, size_t(0));
+			}
+		}
+
+		if (astnode->identifier_vector.size() > 1) {
+			add_instruction(OpCode::OP_ASSIGN_SUB, nullptr);
+		}
 	}
 	else {
-		add_instruction(OpCode::OP_ASSIGN_VAR, cp_string(astnode->identifier));
+		add_instruction(OpCode::OP_LOAD_VAR, cp_string(astnode->identifier));
+		add_instruction(OpCode::OP_ASSIGN, nullptr);
 	}
 
 	pop_namespace(pop);

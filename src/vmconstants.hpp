@@ -45,10 +45,9 @@ enum OpCode : uint16_t {
 	OP_SET_USE_REF, // todo: chek places to use (assign, expr, func param etc.)
 	OP_LOAD_VAR,
 	OP_STORE_VAR,
-	OP_ASSIGN_VAR,
 	OP_LOAD_SUB_ID,
 	OP_LOAD_SUB_IX,
-	OP_ASSIGN_SUB,
+	OP_ASSIGN,
 	// function ops
 	OP_FUN_START,
 	OP_FUN_SET_PARAM,

@@ -147,7 +147,6 @@ void BytecodeInstruction::write_bytecode_table(const std::vector<BytecodeInstruc
 		case OP_STORE_VAR:
 		case OP_FUN_START:
 		case OP_CALL:
-		case OP_ASSIGN_VAR:
 		case OP_LOAD_SUB_ID:
 			file << instruction.get_string_operand();
 			break;
