@@ -129,7 +129,7 @@ std::shared_ptr<ASTNamespaceManagerNode> Parser::parse_namespace_manager_stateme
 
 std::shared_ptr<ASTExprNode> Parser::parse_statement_expression() {
 	std::shared_ptr<ASTExprNode> expr = parse_expression();
-	if (next_token.type != lexer::TOK_EOF) {
+	if (next_token.type != TokenType::TOK_EOF) {
 		check_consume_semicolon();
 	}
 	return expr;

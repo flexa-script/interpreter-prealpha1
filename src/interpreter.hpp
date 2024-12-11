@@ -11,7 +11,7 @@
 #include "ast.hpp"
 #include "scope.hpp"
 #include "meta_visitor.hpp"
-#include "garbage_collector.hpp"
+#include "gc.hpp"
 
 using namespace visitor;
 using namespace parser;

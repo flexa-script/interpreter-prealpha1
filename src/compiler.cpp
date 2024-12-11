@@ -123,7 +123,7 @@ void Compiler::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 		}
 
 		if (astnode->identifier_vector.size() > 1) {
-			add_instruction(OpCode::OP_ASSIGN_SUB, nullptr);
+			//add_instruction(OpCode::OP_ASSIGN_SUB, nullptr);
 		}
 	}
 	else {

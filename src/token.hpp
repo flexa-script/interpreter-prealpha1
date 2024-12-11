@@ -4,6 +4,7 @@
 #include "token_constants.hpp"
 
 namespace lexer {
+
 	class Token {
 	public:
 		TokenType type;
@@ -34,6 +35,7 @@ namespace lexer {
 		static bool is_int_ex_op(const std::string& op);
 		static bool is_float_op(const std::string& op);
 	};
+
 };
 
 #endif // !TOKEN_HPP

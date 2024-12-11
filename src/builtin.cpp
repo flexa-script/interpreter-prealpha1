@@ -11,7 +11,7 @@
 #include "semantic_analysis.hpp"
 #include "interpreter.hpp"
 #include "compiler.hpp"
-#include "virtual_machine.hpp"
+#include "vm.hpp"
 
 #include "visitor.hpp"
 

@@ -257,6 +257,7 @@ public:
 
 class RuntimeValue : public Value, public GCObject {
 private:
+	RuntimeValue* value_ref = nullptr;
 	cp_bool* b = nullptr;
 	cp_int* i = nullptr;
 	cp_float* f = nullptr;

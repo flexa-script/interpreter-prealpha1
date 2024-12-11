@@ -162,7 +162,7 @@
     <ClInclude Include="sound.hpp">
       <Filter>Header Files\modules\cp.core</Filter>
     </ClInclude>
-    <ClInclude Include="vmconstants.hpp">
+    <ClInclude Include="vm_constants.hpp">
       <Filter>Header Files\core\vm</Filter>
     </ClInclude>
     <ClInclude Include="bytecode.hpp">
@@ -174,7 +174,7 @@
     <ClInclude Include="compiler.hpp">
       <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
-    <ClInclude Include="garbage_collector.hpp">
+    <ClInclude Include="gc.hpp">
       <Filter>Header Files\core\gc</Filter>
     </ClInclude>
     <ClInclude Include="gcobject.hpp">
@@ -189,7 +189,7 @@
     <ClInclude Include="namespace_manager.hpp">
       <Filter>Header Files\core\visitor</Filter>
     </ClInclude>
-    <ClInclude Include="virtual_machine.hpp">
+    <ClInclude Include="vm.hpp">
       <Filter>Header Files\core\vm</Filter>
     </ClInclude>
     <ClInclude Include="scope.hpp">
@@ -281,7 +281,7 @@
     <ClCompile Include="sound.cpp">
       <Filter>Source Files\modules\cp.core</Filter>
     </ClCompile>
-    <ClCompile Include="vmconstants.cpp">
+    <ClCompile Include="vm_constants.cpp">
       <Filter>Source Files\core\vm</Filter>
     </ClCompile>
     <ClCompile Include="bytecode.cpp">
@@ -293,7 +293,7 @@
     <ClCompile Include="compiler.cpp">
       <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
-    <ClCompile Include="garbage_collector.cpp">
+    <ClCompile Include="gc.cpp">
       <Filter>Source Files\core\gc</Filter>
     </ClCompile>
     <ClCompile Include="gcobject.cpp">
@@ -311,7 +311,7 @@
     <ClCompile Include="scope.cpp">
       <Filter>Source Files\core\visitor</Filter>
     </ClCompile>
-    <ClCompile Include="virtual_machine.cpp">
+    <ClCompile Include="vm.cpp">
       <Filter>Source Files\core\vm</Filter>
     </ClCompile>
     <ClCompile Include="token_constants.cpp">

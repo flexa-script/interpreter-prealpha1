@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cstdint>
 
-#include "vmconstants.hpp"
+#include "vm_constants.hpp"
 #include "types.hpp"
 
 //#define byteopnd(x) reinterpret_cast<uint8_t*>(x)

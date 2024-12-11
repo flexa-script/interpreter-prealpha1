@@ -7,6 +7,7 @@
 #include "token.hpp"
 
 namespace lexer {
+
     class Lexer {
     public:
         Lexer(const std::string& name, const std::string& source);
@@ -44,6 +45,7 @@ namespace lexer {
 
         static size_t find_mlv_closer(const std::string expr);
     };
+
 };
 
 #endif // !LEXER_HPP

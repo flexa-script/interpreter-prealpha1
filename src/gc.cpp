@@ -1,4 +1,4 @@
-#include "garbage_collector.hpp"
+#include "gc.hpp"
 
 GarbageCollector::GarbageCollector() {}
 

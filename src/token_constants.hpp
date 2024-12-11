@@ -93,8 +93,8 @@ namespace lexer {
 		TOK_SIZE
 	};
 
-	extern const std::array<std::string, TOK_SIZE> TOKEN_IMAGE;
-
 }
+
+extern const std::array<std::string, lexer::TokenType::TOK_SIZE> TOKEN_IMAGE;
 
 #endif // !TOKEN_CONSTANTS_HPP

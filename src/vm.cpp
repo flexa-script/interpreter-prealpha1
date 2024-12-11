@@ -4,7 +4,7 @@
 #include <compare>
 #include <functional>
 
-#include "virtual_machine.hpp"
+#include "vm.hpp"
 #include "exception_handler.hpp"
 
 #include "vendor/axeutils.hpp"

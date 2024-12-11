@@ -608,11 +608,13 @@ void RuntimeValue::set(cp_function fun) {
 
 void RuntimeValue::set_sub(std::string identifier, RuntimeValue* sub_value) {
 	if (!str) return;
+	sub_value->value_ref = this;
 	(*str)[identifier] = sub_value;
 }
 
 void RuntimeValue::set_sub(size_t index, RuntimeValue* sub_value) {
 	if (!arr) return;
+	sub_value->value_ref = this;
 	(*arr)[index] = sub_value;
 }
 
@@ -658,12 +660,16 @@ cp_function RuntimeValue::get_fun() const {
 
 RuntimeValue* RuntimeValue::get_sub(std::string identifier) {
 	if (!str) return nullptr;
-	return (*str)[identifier];
+	auto sub_value = (*str)[identifier];
+	sub_value->value_ref = this;
+	return sub_value;
 }
 
 RuntimeValue* RuntimeValue::get_sub(size_t index) {
 	if (!arr) return nullptr;
-	return (*arr)[index];
+	auto sub_value = (*arr)[index];
+	sub_value->value_ref = this;
+	return sub_value;
 }
 
 cp_bool* RuntimeValue::get_raw_b() {
