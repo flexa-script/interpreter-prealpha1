@@ -25,9 +25,7 @@ SemanticAnalyser::SemanticAnalyser(std::shared_ptr<Scope> global_scope, std::sha
 };
 
 void SemanticAnalyser::start() {
-	//auto pop = push_namespace(default_namespace);
 	visit(current_program.top());
-	//pop_namespace(pop);
 }
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTProgramNode> astnode) {

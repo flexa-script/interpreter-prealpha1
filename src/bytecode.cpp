@@ -155,7 +155,7 @@ void BytecodeInstruction::write_bytecode_table(const std::vector<BytecodeInstruc
 			break;
 		default:
 			if (instruction.operand) {
-				file << instruction.operand;
+				file << instruction.operand << "\t[UNHANDLED]";
 			}
 			break;
 		}
