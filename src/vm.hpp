@@ -45,7 +45,7 @@ private:
 	std::shared_ptr<ASTExprNode> set_default_value;
 	bool set_is_rest;
 
-	dim_eval_func_t evaluate_access_vector_ptr = std::bind(&VirtualMachine::evaluate_access_vector, this, std::placeholders::_1);
+	dim_eval_func_t evaluate_access_vector_ptr = std::bind(&evaluate_access_vector, this, std::placeholders::_1);
 
 	size_t print_level = 0;
 	std::vector<uintptr_t> printed;
@@ -60,6 +60,26 @@ private:
 
 	RuntimeValue* alocate_value(RuntimeValue* value);
 
+	void handle_include_namespace();
+	void handle_exclude_namespace();
+	void handle_init_array();
+	void handle_set_element();
+	void handle_push_array();
+	void handle_init_struct();
+	void handle_set_field();
+	void handle_push_struct();
+	void handle_struct_start();
+	void handle_struct_set_var();
+	void handle_struct_end();
+	void handle_load_sub_id();
+	void handle_load_sub_ix();
+	void handle_assign_var();
+	void handle_assign_sub_id();
+	void handle_assign_sub_ix();
+	void handle_fun_start();
+	void handle_fun_set_param();
+	void handle_fun_end();
+	void handle_is_type();
 	void push_empty(Type type);
 	void push_function_constant(const std::string& identifier);
 	void binary_operation(const std::string& op);

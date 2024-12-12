@@ -118,7 +118,7 @@ void VirtualMachine::unary_operation(const std::string& op) {
 	}
 }
 
-void VirtualMachine::function_call_operation() {
+void VirtualMachine::handle_call() {
 	return_stack.push(pc + 1);
 
 	std::string nmspace = get_namespace();
@@ -184,7 +184,7 @@ void VirtualMachine::function_call_operation() {
 	//gc.remove_root_container(&function_arguments);
 }
 
-void VirtualMachine::throw_operation() {
+void VirtualMachine::handle_throw() {
 	auto value = get_stack_top();
 
 	if (is_struct(value->type)
@@ -208,7 +208,7 @@ void VirtualMachine::throw_operation() {
 
 }
 
-void VirtualMachine::type_parse_operation() {
+void VirtualMachine::handle_type_parse() {
 	Type type = Type(current_instruction.get_uint8_operand());
 	auto value = get_stack_top();
 	RuntimeValue* new_value = new RuntimeValue();
@@ -319,7 +319,7 @@ void VirtualMachine::type_parse_operation() {
 	push_constant(new_value);
 }
 
-void VirtualMachine::store_var() {
+void VirtualMachine::handle_store_var() {
 	const auto& nmspace = get_namespace();
 
 	auto identifier = current_instruction.get_string_operand();
@@ -348,7 +348,7 @@ void VirtualMachine::store_var() {
 	cleanup_type_set();
 }
 
-void VirtualMachine::load_var() {
+void VirtualMachine::handle_load_var() {
 	auto nmspace = get_namespace();
 
 	auto identifier = current_instruction.get_string_operand();
@@ -423,6 +423,165 @@ void VirtualMachine::load_var() {
 	value_stack.push_back(variable->get_value());
 }
 
+void VirtualMachine::handle_include_namespace() {
+	program_nmspaces[get_namespace()].push_back(current_instruction.get_string_operand());
+}
+
+void VirtualMachine::handle_exclude_namespace() {
+	const auto& op_nmspace = current_instruction.get_string_operand();
+	const auto& nmspace = get_namespace();
+	size_t pos = std::distance(program_nmspaces[nmspace].begin(),
+		std::find(program_nmspaces[nmspace].begin(),
+			program_nmspaces[nmspace].end(), op_nmspace));
+	program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + pos);
+}
+
+void VirtualMachine::handle_init_array() {
+	auto size = current_instruction.get_size_operand();
+	value_build_stack.push(new RuntimeValue(cp_array(size)));
+}
+
+void VirtualMachine::handle_set_element() {
+	RuntimeValue* value = get_stack_top();
+	value_build_stack.top()->set_sub(current_instruction.get_size_operand(), value);
+}
+
+void VirtualMachine::handle_push_array() {
+	push_constant(value_build_stack.top());
+	value_build_stack.pop();
+}
+
+void VirtualMachine::handle_init_struct() {
+	auto type_name_space = get_namespace();
+	auto identifier = current_instruction.get_string_operand();
+	value_build_stack.push(new RuntimeValue(cp_struct(), identifier, type_name_space));
+}
+
+void VirtualMachine::handle_set_field() {
+	RuntimeValue* value = get_stack_top();
+	value_build_stack.top()->set_sub(current_instruction.get_string_operand(), value);
+}
+
+void VirtualMachine::handle_push_struct() {
+	push_constant(value_build_stack.top());
+	value_build_stack.pop();
+}
+
+void VirtualMachine::handle_struct_start() {
+	struct_def_build_stack.push(StructureDefinition(current_instruction.get_string_operand()));
+}
+
+void VirtualMachine::handle_struct_set_var() {
+	auto var_id = current_instruction.get_string_operand();
+
+	auto var = VariableDefinition(var_id,
+		set_type, set_type_name, set_type_name_space, set_array_type,
+		set_array_dim, set_default_value, set_is_rest, 0, 0);
+
+	struct_def_build_stack.top().variables[var_id] = var;
+
+	cleanup_type_set();
+}
+
+void VirtualMachine::handle_struct_end() {
+	auto& str = struct_def_build_stack.top();
+	struct_def_build_stack.pop();
+	scopes[get_namespace()].back()->declare_structure_definition(str);
+}
+
+void VirtualMachine::handle_load_sub_id() {
+	auto id = current_instruction.get_string_operand();
+	auto val = get_stack_top();
+	if (!is_struct(val->type)) {
+		throw std::runtime_error("Invalid " + type_str(val->type) + " access, this operation can only be performed on struct values");
+	}
+	value_stack.push_back(val->get_sub(id));
+}
+
+void VirtualMachine::handle_load_sub_ix() {
+	auto i = get_stack_top();
+	if (!is_int(i->type)) {
+		throw std::runtime_error("Invalid type " + type_str(i->type) + " trying to access array");
+	}
+	auto val = get_stack_top();
+	if (!is_array(val->type) && !is_string(val->type)) {
+		throw std::runtime_error("Invalid " + type_str(val->type) + " index access, this operation can only be performed on array or string values");
+	}
+	value_stack.push_back(val->get_sub(i->get_i()));
+}
+
+void VirtualMachine::handle_assign_var() {
+	auto val = get_stack_top();
+	auto new_val = get_stack_top();
+	if (new_val->use_ref) {
+		if (auto val_ref = std::dynamic_pointer_cast<RuntimeVariable>(val->ref.lock())) {
+			val_ref->set_value(val);
+		}
+	}
+	else {
+		val->copy_from(new_val);
+	}
+}
+
+void VirtualMachine::handle_assign_sub_id() {
+	auto id = current_instruction.get_string_operand();
+	auto val = get_stack_top();
+	auto new_val = get_stack_top();
+	val->set_sub(id, new_val);
+}
+
+void VirtualMachine::handle_assign_sub_ix() {
+	auto i = get_stack_top();
+	auto val = get_stack_top();
+	auto new_val = get_stack_top();
+	val->set_sub(i->get_i(), new_val);
+}
+
+void VirtualMachine::handle_fun_start() {
+	func_def_build_stack.push(FunctionDefinition(current_instruction.get_string_operand(), set_type, set_type_name,
+		set_type_name_space, set_array_type, set_array_dim));
+	cleanup_type_set();
+}
+
+void VirtualMachine::handle_fun_set_param() {
+	auto var_id = current_instruction.get_string_operand();
+
+	auto var = new VariableDefinition(var_id,
+		set_type, set_type_name, set_type_name_space, set_array_type,
+		set_array_dim, set_default_value, set_is_rest, 0, 0);
+
+	func_def_build_stack.top().parameters.push_back(var);
+
+	cleanup_type_set();
+}
+
+void VirtualMachine::handle_fun_end() {
+	auto& fun = func_def_build_stack.top();
+	func_def_build_stack.pop();
+	fun.pointer = pc + 2;
+	scopes[get_namespace()].back()->declare_function(fun.identifier, fun);
+}
+
+void VirtualMachine::handle_is_type() {
+	Type type = static_cast<Type>(current_instruction.get_uint8_operand());
+	auto value = get_stack_top();
+	RuntimeValue* res_value = new RuntimeValue(Type::T_BOOL);
+	if (is_any(type)) {
+		res_value->set(cp_bool(
+			(value->ref.lock() && (is_any(value->ref.lock()->type)) ||
+				is_any(value->ref.lock()->array_type))));
+		return;
+	}
+	else if (is_array(type)) {
+		res_value->set(cp_bool(is_array(value->type) || value->dim.size() > 0));
+		return;
+	}
+	else if (is_struct(type)) {
+		res_value->set(cp_bool(is_struct(value->type) || is_struct(value->array_type)));
+		return;
+	}
+}
+
 void VirtualMachine::decode_operation() {
 	switch (current_instruction.opcode) {
 	case OP_RES:
@@ -440,17 +599,12 @@ void VirtualMachine::decode_operation() {
 		push_constant(new RuntimeValue(current_namespace.top()));
 		break;
 	case OP_INCLUDE_NAMESPACE:
-		program_nmspaces[get_namespace()].push_back(current_instruction.get_string_operand());
+		handle_include_namespace();
 		break;
-	case OP_EXCLUDE_NAMESPACE: {
-		const auto& op_nmspace = current_instruction.get_string_operand();
-		const auto& nmspace = get_namespace();
-		size_t pos = std::distance(program_nmspaces[nmspace].begin(),
-			std::find(program_nmspaces[nmspace].begin(),
-				program_nmspaces[nmspace].end(), op_nmspace));
-		program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + pos);
+
+	case OP_EXCLUDE_NAMESPACE:
+		handle_exclude_namespace();
 		break;
-	}
 
 							 // constant operations
 	case OP_POP_CONSTANT:
@@ -480,59 +634,35 @@ void VirtualMachine::decode_operation() {
 	case OP_PUSH_FUNCTION:
 		push_function_constant(current_instruction.get_string_operand());
 		break;
-	case OP_INIT_ARRAY: {
-		auto size = current_instruction.get_size_operand();
-		value_build_stack.push(new RuntimeValue(cp_array(size)));
+	case OP_INIT_ARRAY:
+		handle_init_array();
 		break;
-	}
-	case OP_SET_ELEMENT: {
-		RuntimeValue* value = get_stack_top();
-		value_build_stack.top()->set_sub(current_instruction.get_size_operand(), value);
+	case OP_SET_ELEMENT:
+		handle_set_element();
 		break;
-	}
 	case OP_PUSH_ARRAY:
-		push_constant(value_build_stack.top());
-		value_build_stack.pop();
+		handle_push_array();
 		break;
-	case OP_INIT_STRUCT: {
-		auto type_name_space = get_namespace();
-		auto identifier = current_instruction.get_string_operand();
-		value_build_stack.push(new RuntimeValue(cp_struct(), identifier, type_name_space));
+	case OP_INIT_STRUCT:
+		handle_init_struct();
 		break;
-	}
-	case OP_SET_FIELD: {
-		RuntimeValue* value = get_stack_top();
-		value_build_stack.top()->set_sub(current_instruction.get_string_operand(), value);
+	case OP_SET_FIELD:
+		handle_set_field();
 		break;
-	}
 	case OP_PUSH_STRUCT:
-		push_constant(value_build_stack.top());
-		value_build_stack.pop();
+		handle_push_struct();
 		break;
 
 		// struct definition operations
 	case OP_STRUCT_START:
-		struct_def_build_stack.push(StructureDefinition(current_instruction.get_string_operand()));
+		handle_struct_start();
 		break;
-	case OP_STRUCT_SET_VAR: {
-		auto var_id = current_instruction.get_string_operand();
-
-		auto var = VariableDefinition(var_id,
-			set_type, set_type_name, set_type_name_space, set_array_type,
-			set_array_dim, set_default_value, set_is_rest, 0, 0);
-
-		struct_def_build_stack.top().variables[var_id] = var;
-
-		cleanup_type_set();
-
+	case OP_STRUCT_SET_VAR:
+		handle_struct_set_var();
 		break;
-	}
-	case OP_STRUCT_END: {
-		auto& str = struct_def_build_stack.top();
-		struct_def_build_stack.pop();
-		scopes[get_namespace()].back()->declare_structure_definition(str);
+	case OP_STRUCT_END:
+		handle_struct_end();
 		break;
-	}
 
 					  // typing operations
 	case OP_SET_TYPE:
@@ -547,15 +677,12 @@ void VirtualMachine::decode_operation() {
 	case OP_SET_TYPE_NAME_SPACE:
 		set_type_name_space = current_instruction.get_string_operand();
 		break;
-	case OP_SET_ARRAY_SIZE: {
+	case OP_SET_ARRAY_SIZE:
 			// todo: generating bug
-		//RuntimeValue* value = get_stack_top();
-		//set_array_dim.push_back(std::make_shared<ASTValueNode>(value, 0, 0));
+		//set_array_dim.push_back(std::make_shared<ASTValueNode>(get_stack_top(), 0, 0));
 		break;
-	}
 	case OP_SET_DEFAULT_VALUE:
-		set_default_value = std::make_shared<ASTValueNode>(value_stack.back(), 0, 0);
-		value_stack.pop_back();
+		set_default_value = std::make_shared<ASTValueNode>(get_stack_top(), 0, 0);
 		break;
 	case OP_SET_IS_REST:
 		set_is_rest = current_instruction.get_bool_operand();
@@ -563,94 +690,43 @@ void VirtualMachine::decode_operation() {
 
 		// variable operations
 	case OP_LOAD_VAR:
-		load_var();
+		handle_load_var();
 		break;
 	case OP_STORE_VAR:
-		store_var();
+		handle_store_var();
 		break;
-	case OP_LOAD_SUB_ID: {
-		auto id = current_instruction.get_string_operand();
-		auto val = get_stack_top();
-		if (!is_struct(val->type)) {
-			throw std::runtime_error("invalid " + type_str(val->type) + " access, this operation can only be performed on struct values");
-		}
-		value_stack.push_back(val->get_sub(id));
+	case OP_LOAD_SUB_ID:
+		handle_load_sub_id();
 		break;
-	}
-	case OP_LOAD_SUB_IX: {
-		auto i = get_stack_top();
-		if (!is_int(i->type)) {
-			throw std::runtime_error("invalid type " + type_str(i->type) + " trying to access array");
-		}
-		auto val = get_stack_top();
-		if (!is_array(val->type) && !is_string(val->type)) {
-			throw std::runtime_error("invalid " + type_str(val->type) + " index access, this operation can only be performed on array or string values");
-		}
-		value_stack.push_back(val->get_sub(i->get_i()));
+	case OP_LOAD_SUB_IX:
+		handle_load_sub_ix();
 		break;
-	}
-	case OP_ASSIGN_VAR: {
-		auto val = get_stack_top();
-		auto new_val = get_stack_top();
-		if (new_val->use_ref) {
-			if (auto val_ref = std::dynamic_pointer_cast<RuntimeVariable>(val->ref.lock())) {
-				val_ref->set_value(val);
-			}
-		}
-		else {
-			val->copy_from(new_val);
-		}
+	case OP_ASSIGN_VAR:
+		handle_assign_var();
 		break;
-	}
-	case OP_ASSIGN_SUB_ID: {
-		auto id = current_instruction.get_string_operand();
-		auto val = get_stack_top();
-		auto new_val = get_stack_top();
-		val->set_sub(id, new_val);
+	case OP_ASSIGN_SUB_ID:
+		handle_assign_sub_id();
 		break;
-	}
-	case OP_ASSIGN_SUB_IX: {
-		auto i = get_stack_top();
-		auto val = get_stack_top();
-		auto new_val = get_stack_top();
-		val->set_sub(i->get_i(), new_val);
+	case OP_ASSIGN_SUB_IX:
+		handle_assign_sub_ix();
 		break;
-	}
 
 				  // function operations
-	case OP_FUN_START: {
-		func_def_build_stack.push(FunctionDefinition(current_instruction.get_string_operand(), set_type, set_type_name,
-			set_type_name_space, set_array_type, set_array_dim));
-
-		cleanup_type_set();
-
+	case OP_FUN_START:
+		handle_fun_start();
 		break;
-	}
-	case OP_FUN_SET_PARAM: {
-		auto var_id = current_instruction.get_string_operand();
 
-		auto var = new VariableDefinition(var_id,
-			set_type, set_type_name, set_type_name_space, set_array_type,
-			set_array_dim, set_default_value, set_is_rest, 0, 0);
-
-		func_def_build_stack.top().parameters.push_back(var);
-
-		cleanup_type_set();
-
+	case OP_FUN_SET_PARAM:
+		handle_fun_set_param();
 		break;
-	}
 	case OP_CALL_PARAM_COUNT:
 		param_count = current_instruction.get_size_operand();
 		break;
-	case OP_FUN_END: {
-		auto& fun = func_def_build_stack.top();
-		func_def_build_stack.pop();
-		fun.pointer = pc + 2;
-		scopes[get_namespace()].back()->declare_function(fun.identifier, fun);
+	case OP_FUN_END:
+		handle_fun_end();
 		break;
-	}
 	case OP_CALL:
-		function_call_operation();
+		handle_call();
 		break;
 	case OP_RETURN:
 		pc = return_stack.top();
@@ -671,7 +747,7 @@ void VirtualMachine::decode_operation() {
 		try_deep--;
 		break;
 	case OP_THROW:
-		throw_operation();
+		handle_throw();
 		break;
 	case OP_GET_ITERATOR:
 		// todo OP_GET_ITERATOR
@@ -696,41 +772,32 @@ void VirtualMachine::decode_operation() {
 		break;
 
 		// expression operations
-	case OP_IS_TYPE: {
-		Type type = static_cast<Type>(current_instruction.get_uint8_operand());
-		auto value = get_stack_top();
-		RuntimeValue* res_value = new RuntimeValue(Type::T_BOOL);
-		if (is_any(type)) {
-			res_value->set(cp_bool(
-				(value->ref.lock() && (is_any(value->ref.lock()->type))
-					|| is_any(value->ref.lock()->array_type))));
-			return;
-		}
-		else if (is_array(type)) {
-			res_value->set(cp_bool(is_array(value->type) || value->dim.size() > 0));
-			return;
-		}
-		else if (is_struct(type)) {
-			res_value->set(cp_bool(is_struct(value->type) || is_struct(value->array_type)));
-			return;
-		}
+	case OP_IS_TYPE:
+		handle_is_type();
 		break;
-	}
 	case OP_REFID:
 		push_constant(new RuntimeValue(cp_int(get_stack_top())));
 		break;
-	case OP_TYPEID: {
-		auto typeof = RuntimeOperations::build_str_type(get_stack_top(), evaluate_access_vector_ptr);
-		push_constant(new RuntimeValue(cp_string(typeof)));
+	case OP_TYPEID:
+		push_constant(
+			new RuntimeValue(
+				cp_string(
+					RuntimeOperations::build_str_type(get_stack_top(), evaluate_access_vector_ptr)
+				)
+			)
+		);
 		break;
-	}
-	case OP_TYPEOF: {
-		auto typeof = RuntimeOperations::build_str_type(get_stack_top(), evaluate_access_vector_ptr);
-		push_constant(new RuntimeValue(cp_int(axe::StringUtils::hashcode(typeof))));
+	case OP_TYPEOF:
+		push_constant(
+			new RuntimeValue(
+				cp_int(
+					axe::StringUtils::hashcode(RuntimeOperations::build_str_type(get_stack_top(), evaluate_access_vector_ptr))
+				)
+			)
+		);
 		break;
-	}
 	case OP_TYPE_PARSE:
-		type_parse_operation();
+		handle_type_parse();
 		break;
 	case OP_TERNARY:
 		// todo OP_TERNARY
