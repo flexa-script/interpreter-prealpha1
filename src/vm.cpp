@@ -593,10 +593,31 @@ void VirtualMachine::decode_operation() {
 		value_stack.push_back(val->get_sub(i->get_i()));
 		break;
 	}
-	case OP_ASSIGN: {
+	case OP_ASSIGN_VAR: {
 		auto val = get_stack_top();
 		auto new_val = get_stack_top();
-		val->copy_from(new_val);
+		if (new_val->use_ref) {
+			if (auto val_ref = std::dynamic_pointer_cast<RuntimeVariable>(val->ref.lock())) {
+				val_ref->set_value(val);
+			}
+		}
+		else {
+			val->copy_from(new_val);
+		}
+		break;
+	}
+	case OP_ASSIGN_SUB_ID: {
+		auto id = current_instruction.get_string_operand();
+		auto val = get_stack_top();
+		auto new_val = get_stack_top();
+		val->set_sub(id, new_val);
+		break;
+	}
+	case OP_ASSIGN_SUB_IX: {
+		auto i = get_stack_top();
+		auto val = get_stack_top();
+		auto new_val = get_stack_top();
+		val->set_sub(i->get_i(), new_val);
 		break;
 	}
 

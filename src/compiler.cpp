@@ -109,26 +109,33 @@ void Compiler::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 	if (has_sub_value(astnode->identifier_vector)) {
 		add_instruction(OpCode::OP_LOAD_VAR, cp_string(astnode->identifier));
 
-		for (size_t i = 0; i < astnode->identifier_vector.size() - 1; ++i) {
+		for (size_t i = 0; i < astnode->identifier_vector.size(); ++i) {
 			const auto& id = astnode->identifier_vector[i];
 
 			if (i > 0) {
-				add_instruction(OpCode::OP_LOAD_SUB_ID, cp_string(id.identifier));
+				if (i == astnode->identifier_vector.size() - 1 && id.access_vector.size() == 0) {
+					add_instruction(OpCode::OP_ASSIGN_SUB_ID, cp_string(id.identifier));
+				}
+				else {
+					add_instruction(OpCode::OP_LOAD_SUB_ID, cp_string(id.identifier));
+				}
 			}
 
-			for (auto& av : id.access_vector) {
-				av->accept(this);
-				add_instruction(OpCode::OP_LOAD_SUB_IX, size_t(0));
-			}
-		}
+			for (size_t j = 0; j < id.access_vector.size(); ++j) {
+				id.access_vector[j]->accept(this);
 
-		if (astnode->identifier_vector.size() > 1) {
-			//add_instruction(OpCode::OP_ASSIGN_SUB, nullptr);
+				if (i == astnode->identifier_vector.size() - 1 && j == id.access_vector.size() - 1) {
+					add_instruction(OpCode::OP_ASSIGN_SUB_IX, nullptr);
+				}
+				else {
+					add_instruction(OpCode::OP_LOAD_SUB_IX, nullptr);
+				}
+			}
 		}
 	}
 	else {
 		add_instruction(OpCode::OP_LOAD_VAR, cp_string(astnode->identifier));
-		add_instruction(OpCode::OP_ASSIGN, nullptr);
+		add_instruction(OpCode::OP_ASSIGN_VAR, nullptr);
 	}
 
 	pop_namespace(pop);

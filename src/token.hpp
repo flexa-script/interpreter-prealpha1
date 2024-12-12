@@ -7,15 +7,15 @@ namespace lexer {
 
 	class Token {
 	public:
-		TokenType type;
+		LexTokenType type;
 		std::string value;
 		unsigned int row;
 		unsigned int col;
 
-		Token(TokenType type, const std::string& value, unsigned int row = 0, unsigned int col = 0);
+		Token(LexTokenType type, const std::string& value, unsigned int row = 0, unsigned int col = 0);
 		Token();
 
-		static const std::string& token_image(TokenType type);
+		static const std::string& token_image(LexTokenType type);
 
 		static bool is_assignment_op(const std::string& op);
 		static bool is_assignment_collection_op(const std::string& op);

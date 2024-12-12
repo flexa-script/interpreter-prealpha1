@@ -257,7 +257,6 @@ public:
 
 class RuntimeValue : public Value, public GCObject {
 private:
-	RuntimeValue* value_ref = nullptr;
 	cp_bool* b = nullptr;
 	cp_int* i = nullptr;
 	cp_float* f = nullptr;
@@ -268,6 +267,8 @@ private:
 	cp_function* fun = nullptr;
 
 public:
+	RuntimeValue* value_ref = nullptr;
+
 	RuntimeValue(Type type, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim,
 		const std::string& type_name, const std::string& type_name_space,
 		unsigned int row, unsigned int col);

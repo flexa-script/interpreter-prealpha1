@@ -110,8 +110,8 @@ namespace parser {
 		std::vector<Identifier> parse_identifier_vector();
 
 		void consume_token();
-		void consume_token(TokenType type);
-		void check_current_token(TokenType type) const;
+		void consume_token(LexTokenType type);
+		void check_current_token(LexTokenType type) const;
 		void check_consume_semicolon();
 
 		std::string msg_header() const;

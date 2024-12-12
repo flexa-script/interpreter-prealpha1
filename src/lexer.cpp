@@ -53,7 +53,7 @@ void Lexer::tokenize() {
 		}
 	}
 
-	tokens.push_back(Token(TokenType::TOK_EOF, "EOF", current_col, current_row));
+	tokens.push_back(Token(LexTokenType::TOK_EOF, "EOF", current_col, current_row));
 }
 
 Token Lexer::process_comment() {
@@ -77,7 +77,7 @@ Token Lexer::process_comment() {
 	comment += current_char;
 	advance();
 
-	return Token(TokenType::TOK_COMMENT, comment, row, col);
+	return Token(LexTokenType::TOK_COMMENT, comment, row, col);
 }
 
 Token Lexer::process_string() {
@@ -114,7 +114,7 @@ Token Lexer::process_string() {
 	str += current_char;
 	advance();
 
-	return Token(TokenType::TOK_STRING_LITERAL, str, current_row, start_col);
+	return Token(LexTokenType::TOK_STRING_LITERAL, str, current_row, start_col);
 }
 
 size_t Lexer::find_mlv_closer(const std::string expr) {
@@ -152,7 +152,7 @@ void Lexer::process_multiline_string() {
 			else if (current_char == '$'
 				&& next_char == '{') {
 				str += '"';
-				tokens.push_back(Token(TokenType::TOK_STRING_LITERAL, str, current_row, start_col));
+				tokens.push_back(Token(LexTokenType::TOK_STRING_LITERAL, str, current_row, start_col));
 				advance();
 				advance();
 				auto new_idx = current_index;
@@ -188,7 +188,7 @@ void Lexer::process_multiline_string() {
 
 	str += '"';
 
-	tokens.push_back(Token(TokenType::TOK_STRING_LITERAL, str, current_row, start_col));
+	tokens.push_back(Token(LexTokenType::TOK_STRING_LITERAL, str, current_row, start_col));
 
 	advance();
 }
@@ -210,7 +210,7 @@ Token Lexer::process_char() {
 	chr += current_char;
 	advance();
 
-	return Token(TokenType::TOK_CHAR_LITERAL, chr, current_row, start_col);
+	return Token(LexTokenType::TOK_CHAR_LITERAL, chr, current_row, start_col);
 }
 
 Token Lexer::process_special_number() {
@@ -260,7 +260,7 @@ Token Lexer::process_special_number() {
 
 Token Lexer::process_number() {
 	std::string number;
-	TokenType type;
+	LexTokenType type;
 	bool has_dot = false;
 
 	if (current_char == '0'
@@ -312,7 +312,7 @@ Token Lexer::process_number() {
 
 Token Lexer::process_identifier() {
 	std::string identifier;
-	TokenType type = TokenType::TOK_ERROR;
+	LexTokenType type = LexTokenType::TOK_ERROR;
 
 	while (has_next() && (std::isalnum(current_char) || current_char == '_')) {
 		identifier += current_char;
@@ -321,12 +321,12 @@ Token Lexer::process_identifier() {
 
 	for (size_t i = 0; i < TOKEN_IMAGE.size(); ++i) {
 		if (identifier == TOKEN_IMAGE[i]) {
-			type = (TokenType)i;
+			type = (LexTokenType)i;
 			break;
 		}
 	}
 
-	if (type == TokenType::TOK_ERROR) {
+	if (type == LexTokenType::TOK_ERROR) {
 		if (identifier == "true" || identifier == "false") {
 			type = TOK_BOOL_LITERAL;
 		}
@@ -341,7 +341,7 @@ Token Lexer::process_identifier() {
 Token Lexer::process_symbol() {
 	char symbol;
 	std::string str_symbol;
-	TokenType type;
+	LexTokenType type;
 	bool is_unary = false;
 	bool found = false;
 	bool left_c = false;

@@ -129,7 +129,7 @@ std::shared_ptr<ASTNamespaceManagerNode> Parser::parse_namespace_manager_stateme
 
 std::shared_ptr<ASTExprNode> Parser::parse_statement_expression() {
 	std::shared_ptr<ASTExprNode> expr = parse_expression();
-	if (next_token.type != TokenType::TOK_EOF) {
+	if (next_token.type != LexTokenType::TOK_EOF) {
 		check_consume_semicolon();
 	}
 	return expr;
@@ -1785,12 +1785,12 @@ void Parser::consume_token() {
 	next_token = lex->next_token();
 }
 
-void Parser::consume_token(TokenType type) {
+void Parser::consume_token(LexTokenType type) {
 	consume_token();
 	check_current_token(type);
 }
 
-void Parser::check_current_token(TokenType type) const {
+void Parser::check_current_token(LexTokenType type) const {
 	if (current_token.type != type) {
 		throw std::runtime_error(msg_header() + "expected '" + Token::token_image(type) + "'");
 	}

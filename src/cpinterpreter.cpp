@@ -12,7 +12,7 @@
 #include "cputil.hpp"
 #include "linker.hpp"
 #include "interpreter.hpp"
-#include "virtual_machine.hpp"
+#include "vm.hpp"
 
 CPInterpreter::CPInterpreter(const CpCliArgs& args)
 	: project_root(axe::PathUtils::normalize_path_sep(args.workspace)),
