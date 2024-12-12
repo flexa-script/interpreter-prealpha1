@@ -553,9 +553,6 @@ void VirtualMachine::decode_operation() {
 		//set_array_dim.push_back(std::make_shared<ASTValueNode>(value, 0, 0));
 		break;
 	}
-	case OP_SET_USE_REF:
-		// todo
-		break;
 	case OP_SET_DEFAULT_VALUE:
 		set_default_value = std::make_shared<ASTValueNode>(value_stack.back(), 0, 0);
 		value_stack.pop_back();
@@ -570,7 +567,6 @@ void VirtualMachine::decode_operation() {
 		break;
 	case OP_STORE_VAR:
 		store_var();
-		break;
 		break;
 	case OP_LOAD_SUB_ID: {
 		auto id = current_instruction.get_string_operand();
