@@ -24,6 +24,28 @@ void MetaVisitor::pop_namespace(bool pop) {
 	}
 }
 
+void MetaVisitor::validates_reference_type_assignment(TypeDefinition owner, Value* value) {
+	if (is_string(owner.type) && is_char(value->type)
+		&& value->use_ref && value->ref.lock() && !is_any(value->ref.lock()->type)) {
+		throw std::runtime_error("cannot reference char to string variable");
+	}
+	else if (is_float(owner.type) && is_int(value->type)
+		&& value->use_ref && value->ref.lock() && !is_any(value->ref.lock()->type)) {
+		throw std::runtime_error("cannot reference int to float variable");
+	}
+}
+
+std::shared_ptr<Variable> MetaVisitor::find_inner_most_variable(std::string& nmspace, const std::string& identifier) {
+	std::shared_ptr<Scope> scope;
+	try {
+		scope = get_inner_most_variable_scope(nmspace, identifier);
+	}
+	catch (std::exception ex) {
+		throw std::runtime_error(ex.what());
+	}
+	return scope->find_declared_variable(identifier);
+}
+
 std::shared_ptr<Scope> MetaVisitor::get_inner_most_variable_scope(std::string& nmspace, const std::string& identifier) {
 	long long i;
 	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {

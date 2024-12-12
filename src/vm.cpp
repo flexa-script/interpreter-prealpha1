@@ -341,7 +341,7 @@ void VirtualMachine::handle_store_var() {
 		ExceptionHandler::throw_declaration_type_err(identifier, *new_var, *new_value, evaluate_access_vector_ptr);
 	}
 
-	RuntimeOperations::normalize_type(new_var, new_value);
+	RuntimeOperations::normalize_type(new_var.get(), new_value);
 
 	scopes[nmspace].back()->declare_variable(identifier, new_var);
 

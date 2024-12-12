@@ -31,11 +31,9 @@ Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, std::shared_ptr<AS
 }
 
 void Interpreter::start() {
-	//auto pop = push_namespace(default_namespace);
 	current_this_name.push(get_namespace());
 	visit(current_program.top());
 	current_this_name.pop();
-	//pop_namespace(pop);
 }
 
 void Interpreter::visit(std::shared_ptr<ASTProgramNode> astnode) {
@@ -131,6 +129,7 @@ void Interpreter::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	const auto& nmspace = get_namespace();
 
+	// evaluate assignment expression
 	if (astnode->expr) {
 		astnode->expr->accept(this);
 	}
@@ -140,6 +139,7 @@ void Interpreter::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 
 	RuntimeValue* new_value;
 
+	// check if it's reference
 	if (current_expression_value->use_ref) {
 		new_value = current_expression_value;
 	}
@@ -147,14 +147,14 @@ void Interpreter::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 		new_value = alocate_value(new RuntimeValue(current_expression_value));
 	}
 
-	auto& astnode_type_name = astnode->type_name.empty() ? new_value->type_name : astnode->type_name;
-
+	// creates variable
 	auto new_var = std::make_shared<RuntimeVariable>(astnode->identifier, astnode->type,
 		astnode->array_type, astnode->dim,
-		astnode_type_name, astnode->type_name_space);
+		astnode->type_name, astnode->type_name_space);
 	gc.add_var_root(new_var);
 	new_var->set_value(new_value);
 
+	// validate assignment type
 	if ((!TypeDefinition::is_any_or_match_type(*new_var, *new_value, evaluate_access_vector_ptr) ||
 		is_array(new_var->type) && !is_any(new_var->array_type)
 		&& !TypeDefinition::match_type(*new_var, *new_value, evaluate_access_vector_ptr, false, true))
@@ -162,9 +162,11 @@ void Interpreter::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 		ExceptionHandler::throw_declaration_type_err(astnode->identifier, *new_var, *new_value, evaluate_access_vector_ptr);
 	}
 
+	// chack and fill array if necessary
 	check_build_array(new_value, astnode->dim);
 
-	RuntimeOperations::normalize_type(new_var, new_value);
+	// normalize string and number types
+	RuntimeOperations::normalize_type(new_var.get(), new_value);
 
 	scopes[nmspace].back()->declare_variable(astnode->identifier, new_var);
 }
@@ -172,15 +174,21 @@ void Interpreter::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 void Interpreter::visit(std::shared_ptr<ASTUnpackedDeclarationNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
+	// check if it's an identifier (variable)
 	std::shared_ptr<ASTIdentifierNode> var = nullptr;
 	if (astnode->expr) {
 		var = std::dynamic_pointer_cast<ASTIdentifierNode>(astnode->expr);
 	}
 
 	for (auto& declaration : astnode->declarations) {
+		// if it's a variable, it'll "unpack" struct into declarations
 		if (var) {
+			// get the id vector
 			auto ids = var->identifier_vector;
+			// adds sub value identifier to id vector
+			// the id vector represents the struct value at the end and sub value identifier the struct subvalue
 			ids.push_back(Identifier(declaration->identifier));
+			// creates an identifier node as sub declaration assignment expression
 			auto access_expr = std::make_shared<ASTIdentifierNode>(ids, var->nmspace, declaration->row, declaration->col);
 			declaration->expr = access_expr;
 		}
@@ -197,22 +205,19 @@ void Interpreter::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->nmspace);
 
-	std::shared_ptr<Scope> astscope;
-	try {
-		auto nmspace = get_namespace();
-		astscope = get_inner_most_variable_scope(nmspace, astnode->identifier);
-	}
-	catch (std::exception ex) {
-		throw std::runtime_error(ex.what());
-	}
+	// finds assignment variable
+	auto nmspace = get_namespace();
+	std::shared_ptr<RuntimeVariable> variable = std::dynamic_pointer_cast<RuntimeVariable>(find_inner_most_variable(nmspace, astnode->identifier));
+	RuntimeValue* value = access_value(variable->get_value(), astnode->identifier_vector);
 
-	std::shared_ptr<RuntimeVariable> variable = std::dynamic_pointer_cast<RuntimeVariable>(astscope->find_declared_variable(astnode->identifier));
-	RuntimeValue* value = access_value(astscope, variable->get_value(), astnode->identifier_vector);
-
+	// evaluate assignment expression
 	astnode->expr->accept(this);
 
-	auto ptr_value = current_expression_value;
+	auto ptr_value = current_expression_value; // saves the ptr into and variable to use after
+
 	RuntimeValue* new_value = nullptr;
+
+	// check if it's reference
 	if (ptr_value->use_ref) {
 		new_value = ptr_value;
 	}
@@ -220,15 +225,9 @@ void Interpreter::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 		new_value = alocate_value(new RuntimeValue(ptr_value));
 	}
 
-	auto arr = new_value->get_arr();
-
-	std::vector<unsigned int> dim;
-	if (variable->dim.size() > 0) {
-		dim = evaluate_access_vector(variable->dim);
-	}
-
 	check_build_array(new_value, variable->dim);
 
+	// handle direct assignment
 	if (astnode->op == "="
 		&& astnode->identifier_vector.size() == 1
 		&& astnode->identifier_vector[0].access_vector.size() == 0
@@ -239,16 +238,20 @@ void Interpreter::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 			ExceptionHandler::throw_mismatched_type_err(*variable, *ptr_value, evaluate_access_vector_ptr);
 		}
 
-		RuntimeOperations::normalize_type(variable, new_value);
+		RuntimeOperations::normalize_type(variable.get(), new_value);
 
+		// direct variable assignment
 		variable->set_value(new_value);
 	}
+	// handle sub value assignment
 	else {
+		// if isn't a sub value access, we derreference the variable ptr
 		if (astnode->identifier_vector.size() == 1 && astnode->identifier_vector[0].access_vector.size() == 0) {
 			variable->set_value(alocate_value(new RuntimeValue(variable->get_value())));
 			value = variable->get_value();
 		}
 
+		// gets string access position
 		cp_int pos = -1;
 		if (has_string_access) {
 			std::dynamic_pointer_cast<ASTExprNode>(astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1])->accept(this);
@@ -256,21 +259,18 @@ void Interpreter::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 		}
 
 		if (astnode->op == "=") {
-			if (is_string(variable->type) && is_char(new_value->type)
-				&& new_value->use_ref && new_value->ref.lock() && !is_any(new_value->ref.lock()->type)) {
-				throw std::runtime_error("cannot reference char to string in function call");
-			}
-			else if (is_float(variable->type) && is_int(new_value->type)
-				&& new_value->use_ref && new_value->ref.lock() && !is_any(new_value->ref.lock()->type)) {
-				throw std::runtime_error("cannot reference int to float in function call");
-			}
-			set_value(astscope, astnode->identifier_vector, new_value);
+			validates_reference_type_assignment(*variable, new_value);
+
+			// variable sub value assignment
+			set_value(variable, astnode->identifier_vector, new_value);
 		}
 		else {
-			RuntimeOperations::normalize_type(variable, new_value);
+			RuntimeOperations::normalize_type(variable.get(), new_value);
+			// do value/sub value operation
 			RuntimeOperations::do_operation(astnode->op, value, new_value, evaluate_access_vector_ptr, false, pos);
 		}
 	}
+
 	pop_namespace(pop);
 }
 
@@ -281,11 +281,9 @@ void Interpreter::visit(std::shared_ptr<ASTReturnNode> astnode) {
 
 	if (astnode->expr) {
 		TypeDefinition curr_func_ret_type = current_function.top();
-		std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top(), evaluate_access_vector_ptr);
-
 		astnode->expr->accept(this);
 		RuntimeValue* returned_value = current_expression_value;
-		RuntimeValue* value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
+		RuntimeValue* value = access_value(current_expression_value, current_function_call_identifier_vector.top());
 
 		if (value->type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
 			has_string_access = false;
@@ -407,11 +405,9 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 void Interpreter::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode> astnode) {
 	std::string nmspace = get_namespace();
 
-	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(nmspace, current_function_call_identifier_vector.top()[0].identifier, &current_function_signature.top(), evaluate_access_vector_ptr);
-
 	builtin_functions[astnode->identifier]();
 
-	current_expression_value = access_value(func_scope, current_expression_value, current_function_call_identifier_vector.top());
+	current_expression_value = access_value(current_expression_value, current_function_call_identifier_vector.top());
 
 }
 
@@ -1204,9 +1200,23 @@ void Interpreter::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->nmspace);
 	auto nmspace = get_namespace();
-	std::shared_ptr<Scope> id_scope;
 	try {
-		id_scope = get_inner_most_variable_scope(nmspace, astnode->identifier);
+		auto variable = std::dynamic_pointer_cast<RuntimeVariable>(find_inner_most_variable(nmspace, astnode->identifier));
+		auto sub_val = access_value(variable->get_value(), astnode->identifier_vector);
+		sub_val->reset_ref();
+
+		current_expression_value = sub_val;
+
+		if (current_expression_value->type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
+			has_string_access = false;
+			auto str = current_expression_value->get_s();
+			std::dynamic_pointer_cast<ASTExprNode>(astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1])->accept(this);
+			auto pos = current_expression_value->get_i();
+
+			auto char_value = alocate_value(new RuntimeValue(Type::T_CHAR));
+			char_value->set(cp_char(str[pos]));
+			current_expression_value = char_value;
+		}
 	}
 	catch (...) {
 		const auto& dim = astnode->identifier_vector[0].access_vector;
@@ -1266,25 +1276,6 @@ void Interpreter::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 		else {
 			current_expression_value = alocate_value(new RuntimeValue(expression_value));
 		}
-
-		return;
-	}
-
-	auto variable = std::dynamic_pointer_cast<RuntimeVariable>(id_scope->find_declared_variable(astnode->identifier));
-	auto sub_val = access_value(id_scope, variable->get_value(), astnode->identifier_vector);
-	sub_val->reset_ref();
-
-	current_expression_value = sub_val;
-
-	if (current_expression_value->type == Type::T_STRING && astnode->identifier_vector.back().access_vector.size() > 0 && has_string_access) {
-		has_string_access = false;
-		auto str = current_expression_value->get_s();
-		std::dynamic_pointer_cast<ASTExprNode>(astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1])->accept(this);
-		auto pos = current_expression_value->get_i();
-
-		auto char_value = alocate_value(new RuntimeValue(Type::T_CHAR));
-		char_value->set(cp_char(str[pos]));
-		current_expression_value = char_value;
 	}
 
 	pop_namespace(pop);
@@ -1608,9 +1599,7 @@ void Interpreter::visit(std::shared_ptr<ASTTypingNode> astnode) {
 	}
 }
 
-RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::vector<parser::Identifier>& identifier_vector, RuntimeValue* new_value) {
-	auto var = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable(identifier_vector[0].identifier));
-
+RuntimeValue* Interpreter::set_value(std::shared_ptr<RuntimeVariable> var, const std::vector<parser::Identifier>& identifier_vector, RuntimeValue* new_value) {
 	if (identifier_vector.size() == 1 && identifier_vector[0].access_vector.size() == 0) {
 		var->set_value(new_value);
 		return var->get_value();
@@ -1682,7 +1671,7 @@ RuntimeValue* Interpreter::set_value(std::shared_ptr<Scope> scope, const std::ve
 	return value;
 }
 
-RuntimeValue* Interpreter::access_value(const std::shared_ptr<Scope> scope, RuntimeValue* value, const std::vector<Identifier>& identifier_vector, size_t i) {
+RuntimeValue* Interpreter::access_value(RuntimeValue* value, const std::vector<Identifier>& identifier_vector, size_t i) {
 	RuntimeValue* next_value = value;
 
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
@@ -1729,7 +1718,7 @@ RuntimeValue* Interpreter::access_value(const std::shared_ptr<Scope> scope, Runt
 		next_value = next_value->get_str()[identifier_vector[i].identifier];
 
 		if (identifier_vector[i].access_vector.size() > 0 || i < identifier_vector.size()) {
-			return access_value(scope, next_value, identifier_vector, i);
+			return access_value(next_value, identifier_vector, i);
 		}
 	}
 
@@ -1929,17 +1918,8 @@ long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) 
 long long Interpreter::hash(std::shared_ptr<ASTIdentifierNode> astnode) {
 	auto pop = push_namespace(astnode->nmspace);
 	std::string nmspace = get_namespace();
-
-	std::shared_ptr<Scope> id_scope;
-	try {
-		id_scope = get_inner_most_variable_scope(nmspace, astnode->identifier_vector[0].identifier);
-	}
-	catch (std::exception ex) {
-		throw std::runtime_error(ex.what());
-	}
-
-	auto variable = std::dynamic_pointer_cast<RuntimeVariable>(id_scope->find_declared_variable(astnode->identifier_vector[0].identifier));
-	auto value = access_value(id_scope, variable->get_value(), astnode->identifier_vector);
+	auto variable = std::dynamic_pointer_cast<RuntimeVariable>(find_inner_most_variable(nmspace, astnode->identifier_vector[0].identifier));
+	auto value = access_value(variable->get_value(), astnode->identifier_vector);
 
 	switch (value->type) {
 	case Type::T_BOOL:
@@ -1994,25 +1974,9 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 	for (i = 0; i < current_function_calling_arguments.top().size(); ++i) {
 		auto current_function_calling_argument = current_function_calling_arguments.top()[i];
 
-		if (current_function_defined_parameters.top().size() > i
-			&& is_string(current_function_defined_parameters.top()[i]->type) && is_char(current_function_calling_argument->type)) {
-			if (current_function_calling_argument->use_ref
-				&& current_function_calling_argument->ref.lock()
-				&& !is_any(current_function_calling_argument->ref.lock()->type)) {
-				throw std::runtime_error("cannot reference char to string in function call");
-			}
-			current_function_calling_argument->type = current_function_defined_parameters.top()[i]->type;
-			current_function_calling_argument->set(cp_string{ current_function_calling_argument->get_c() });
-		}
-		else if (current_function_defined_parameters.top().size() > i
-			&& is_float(current_function_defined_parameters.top()[i]->type) && is_int(current_function_calling_argument->type)) {
-			if (current_function_calling_argument->use_ref
-				&& current_function_calling_argument->ref.lock()
-				&& !is_any(current_function_calling_argument->ref.lock()->type)) {
-				throw std::runtime_error("cannot reference int to float in function call");
-			}
-			current_function_calling_argument->type = current_function_defined_parameters.top()[i]->type;
-			current_function_calling_argument->set(cp_float(current_function_calling_argument->get_i()));
+		if (current_function_defined_parameters.top().size() > i) {
+			validates_reference_type_assignment(*current_function_defined_parameters.top()[i], current_function_calling_argument);
+			RuntimeOperations::normalize_type(current_function_defined_parameters.top()[i], current_function_calling_argument);
 		}
 
 		// is reference : not reference

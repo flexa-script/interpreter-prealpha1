@@ -63,8 +63,8 @@ namespace visitor {
 		cp_array build_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, RuntimeValue* init_value, long long i);
 		cp_array build_undefined_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, long long i);
 
-		RuntimeValue* set_value(std::shared_ptr<Scope> scope, const std::vector<Identifier>& identifier_vector, RuntimeValue* new_value);
-		RuntimeValue* access_value(const std::shared_ptr<Scope> scope, RuntimeValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
+		RuntimeValue* set_value(std::shared_ptr<RuntimeVariable> var, const std::vector<Identifier>& identifier_vector, RuntimeValue* new_value);
+		RuntimeValue* access_value(RuntimeValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
 
 		void declare_function_block_parameters(const std::string& nmspace);
 		void build_args(const std::vector<std::string>& args);

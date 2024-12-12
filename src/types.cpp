@@ -1560,17 +1560,16 @@ cp_array RuntimeOperations::do_operation(cp_array lval, cp_array rval, const std
 	throw std::runtime_error("invalid '" + op + "' operator for types 'array' and 'array'");
 }
 
-void RuntimeOperations::normalize_type(std::shared_ptr<RuntimeVariable> var, RuntimeValue* val) {
-	if (is_string(var->type) && is_char(val->type)) {
-		val->type = var->type;
-		val->set(cp_string{ val->get_c() });
+void RuntimeOperations::normalize_type(TypeDefinition* owner, RuntimeValue* value) {
+	if (is_string(owner->type) && is_char(value->type)) {
+		value->type = owner->type;
+		value->set(cp_string{ value->get_c() });
 	}
-	else if (is_float(var->type) && is_int(val->type)) {
-		val->type = var->type;
-		val->set(cp_float(val->get_i()));
+	else if (is_float(owner->type) && is_int(value->type)) {
+		value->type = owner->type;
+		value->set(cp_float(value->get_i()));
 	}
 }
-
 
 std::string RuntimeOperations::build_str_type(RuntimeValue* curr_value, dim_eval_func_t evaluate_access_vector_ptr) {
 	auto dim = std::vector<unsigned int>();
