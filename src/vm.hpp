@@ -45,7 +45,7 @@ private:
 	std::shared_ptr<ASTExprNode> set_default_value;
 	bool set_is_rest;
 
-	dim_eval_func_t evaluate_access_vector_ptr = std::bind(&evaluate_access_vector, this, std::placeholders::_1);
+	dim_eval_func_t evaluate_access_vector_ptr = std::bind(&VirtualMachine::evaluate_access_vector, this, std::placeholders::_1);
 
 	size_t print_level = 0;
 	std::vector<uintptr_t> printed;
