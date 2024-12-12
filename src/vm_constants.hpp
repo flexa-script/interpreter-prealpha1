@@ -42,7 +42,6 @@ enum OpCode : uint16_t {
 	OP_SET_DEFAULT_VALUE,
 	OP_SET_IS_REST,
 	// variable ops
-	OP_SET_USE_REF, // todo: chek places to use (assign, expr, func param etc.)
 	OP_LOAD_VAR,
 	OP_STORE_VAR,
 	OP_ASSIGN_VAR,

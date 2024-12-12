@@ -37,7 +37,6 @@ const std::array<std::string, OP_SIZE> OP_NAMES = {
 	"SET_DEFAULT_VALUE",
 	"SET_IS_REST",
 	// variable ops
-	"SET_VAR_USE_REF",
 	"LOAD_VAR",
 	"STORE_VAR",
 	"ASSIGN_VAR",
