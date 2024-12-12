@@ -60,6 +60,11 @@ private:
 
 	RuntimeValue* alocate_value(RuntimeValue* value);
 
+	void push_empty(Type type);
+	void push_function_constant(const std::string& identifier);
+	void binary_operation(const std::string& op);
+	void unary_operation(const std::string& op);
+
 	void handle_include_namespace();
 	void handle_exclude_namespace();
 	void handle_init_array();
@@ -80,15 +85,11 @@ private:
 	void handle_fun_set_param();
 	void handle_fun_end();
 	void handle_is_type();
-	void push_empty(Type type);
-	void push_function_constant(const std::string& identifier);
-	void binary_operation(const std::string& op);
-	void unary_operation(const std::string& op);
-	void function_call_operation();
-	void throw_operation();
-	void type_parse_operation();
-	void store_var();
-	void load_var();
+	void handle_call();
+	void handle_throw();
+	void handle_type_parse();
+	void handle_store_var();
+	void handle_load_var();
 
 	std::vector<unsigned int> evaluate_access_vector(const std::vector<std::shared_ptr<ASTExprNode>>& expr_access_vector);
 
