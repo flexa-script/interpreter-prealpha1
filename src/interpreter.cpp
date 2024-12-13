@@ -338,12 +338,14 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	std::vector<TypeDefinition*> signature;
 	std::vector<RuntimeValue*> function_arguments;
 
+	// adds function args container to root, to prevent values sweep while evaluating each one
 	gc.add_root_container(&function_arguments);
 
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
 
 		RuntimeValue* pvalue = nullptr;
+		// check if it's reference
 		if (current_expression_value->use_ref) {
 			pvalue = current_expression_value;
 		}
@@ -383,6 +385,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	auto& declfun = func_scope->find_declared_function(identifier, &signature, evaluate_access_vector_ptr, strict);
 
 	if (!pop) {
+		// function actualy is in another namespace
 		pop = push_namespace(nmspace);
 	}
 
@@ -397,6 +400,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 		throw std::runtime_error("'" + astnode->identifier + "' function definition not found");
 	}
 
+	// it's not a stack cause it's one shot use, right it reachs block it's cleaned
 	function_call_name = identifier;
 	declfun.block->accept(this);
 
@@ -415,7 +419,6 @@ void Interpreter::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode> astnode)
 	builtin_functions[astnode->identifier]();
 
 	current_expression_value = access_value(current_expression_value, current_function_call_identifier_vector.top());
-
 }
 
 void Interpreter::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
@@ -424,8 +427,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 	const auto& nmspace = get_namespace();
 
 	try {
-		std::shared_ptr<Scope> func_scope = scopes[nmspace].back();
-		auto& declfun = func_scope->find_declared_function(astnode->identifier, &astnode->parameters, evaluate_access_vector_ptr, true);
+		auto& declfun = scopes[nmspace].back()->find_declared_function(astnode->identifier, &astnode->parameters, evaluate_access_vector_ptr, true);
 		declfun.block = astnode->block;
 	}
 	catch (...) {
