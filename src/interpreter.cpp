@@ -712,18 +712,23 @@ void Interpreter::visit(std::shared_ptr<ASTForEachNode> astnode) {
 	const auto& nmspace = get_namespace();
 	++is_loop;
 
+	// stores colection at current_expression_value 
 	astnode->collection->accept(this);
 
+	// adds a meta scope, to store current collection value
 	scopes[nmspace].push_back(std::make_shared<Scope>());
 
+	// get as declaration node
 	auto itdecl = std::dynamic_pointer_cast<ASTDeclarationNode>(astnode->itdecl);
 
 	switch (current_expression_value->type) {
 	case Type::T_ARRAY: {
+		// if the collection is an array
 		const auto& colletion = current_expression_value->get_arr();
 		for (size_t i = 0; i < colletion.size(); ++i) {
 			auto val = colletion[i];
 
+			// declare each valueat meta block
 			auto exnode = std::make_shared<ASTValueNode>(val, astnode->row, astnode->col);
 			itdecl->expr = exnode;
 			itdecl->accept(this);
@@ -752,10 +757,10 @@ void Interpreter::visit(std::shared_ptr<ASTForEachNode> astnode) {
 		break;
 	}
 	case Type::T_STRING: {
+		// if the collection is a string
 		const auto& colletion = current_expression_value->get_s();
 		for (auto val : colletion) {
-			astnode->itdecl->accept(this);
-
+			// declare each valueat meta block
 			auto exnode = std::make_shared<ASTValueNode>(alocate_value(new RuntimeValue(cp_char(val))), astnode->row, astnode->col);
 			itdecl->expr = exnode;
 			itdecl->accept(this);
@@ -784,23 +789,16 @@ void Interpreter::visit(std::shared_ptr<ASTForEachNode> astnode) {
 		break;
 	}
 	case Type::T_STRUCT: {
+		// if the collection is a struct
 		const auto& colletion = current_expression_value->get_str();
 		for (const auto& val : colletion) {
-			astnode->itdecl->accept(this);
+			auto key = std::make_shared<ASTLiteralNode<cp_string>>(cp_string(val.first), astnode->row, astnode->col);
+			auto value = std::make_shared<ASTValueNode>(val.second, astnode->row, astnode->col);
 
+			// when handling structs, we have a second type of declaration: unpacked declaration
+			// so if itdecl is null, it's a unpacked [key, value]
 			if (itdecl) {
-				if (!is_any(current_expression_value->ref.lock()->type)
-					&& current_expression_value->ref.lock()->type_name_space != "cp"
-					&& current_expression_value->ref.lock()->type_name != "Pair") {
-					throw std::runtime_error("invalid struct '"
-						+ current_expression_value->ref.lock()->type_name
-						+ "' declaration in foreach loop");
-				}
-
-				std::map<std::string, std::shared_ptr<ASTExprNode>> values = {
-					{ "key", std::make_shared<ASTLiteralNode<cp_string>>(cp_string(val.first), astnode->row, astnode->col) },
-					{ "value", std::make_shared<ASTValueNode>(val.second, astnode->row, astnode->col) }
-				};
+				std::map<std::string, std::shared_ptr<ASTExprNode>> values = { { "key", key }, { "value", value } };
 				auto exnode = std::make_shared<ASTStructConstructorNode>("Pair", "cp", values, astnode->row, astnode->col);
 				itdecl->expr = exnode;
 				itdecl->accept(this);
@@ -808,14 +806,13 @@ void Interpreter::visit(std::shared_ptr<ASTForEachNode> astnode) {
 
 			}
 			else if (const auto idnode = std::dynamic_pointer_cast<ASTUnpackedDeclarationNode>(astnode->itdecl)) {
+				// expect a 2 sized unpacked declaration
 				if (idnode->declarations.size() != 2) {
 					throw std::runtime_error("invalid number of values");
 				}
 
-				auto key_node = std::make_shared<ASTLiteralNode<cp_string>>(cp_string(val.first), astnode->row, astnode->col);
-				idnode->declarations[0]->expr = key_node;
-				auto val_node = std::make_shared<ASTValueNode>(val.second, astnode->row, astnode->col);
-				idnode->declarations[1]->expr = val_node;
+				idnode->declarations[0]->expr = key;
+				idnode->declarations[1]->expr = value;
 				idnode->accept(this);
 				idnode->declarations[0]->expr = nullptr;
 				idnode->declarations[1]->expr = nullptr;
@@ -871,19 +868,19 @@ void Interpreter::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 
 		scopes[nmspace].push_back(std::make_shared<Scope>());
 
+		auto error = std::make_shared<ASTLiteralNode<cp_string>>(ex.what(), astnode->row, astnode->col);
+
+		// another place we can use unpacked declaration
 		if (const auto idnode = std::dynamic_pointer_cast<ASTUnpackedDeclarationNode>(astnode->decl)) {
 			if (idnode->declarations.size() != 1) {
 				throw std::runtime_error("invalid number of values");
 			}
-			auto exnode = std::make_shared<ASTLiteralNode<cp_string>>(ex.what(), astnode->row, astnode->col);
-			idnode->declarations[0]->expr = exnode;
+			idnode->declarations[0]->expr = error;
 			idnode->accept(this);
 			idnode->declarations[0]->expr = nullptr;
 		}
 		else if (const auto idnode = std::dynamic_pointer_cast<ASTDeclarationNode>(astnode->decl)) {
-			std::map<std::string, std::shared_ptr<ASTExprNode>> values = {
-				{ "error", std::make_shared<ASTLiteralNode<cp_string>>(ex.what(), astnode->row, astnode->col) }
-			};
+			std::map<std::string, std::shared_ptr<ASTExprNode>> values = { { "error", error } };
 			auto exnode = std::make_shared<ASTStructConstructorNode>("Exception", "cp", values, astnode->row, astnode->col);
 			idnode->expr = exnode;
 			idnode->expr = nullptr;
