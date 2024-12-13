@@ -396,9 +396,9 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	current_function_call_identifier_vector.push(identifier_vector);
 	current_function_calling_arguments.push(function_arguments);
 
-	if (!declfun.block) {
-		throw std::runtime_error("'" + astnode->identifier + "' function definition not found");
-	}
+	//if (!declfun.block) {
+	//	throw std::runtime_error("'" + astnode->identifier + "' function definition not found");
+	//}
 
 	// it's not a stack cause it's one shot use, right it reachs block it's cleaned
 	function_call_name = identifier;
@@ -427,49 +427,51 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 	const auto& nmspace = get_namespace();
 
 	try {
+		// if its already declared, it's a block definition
 		auto& declfun = scopes[nmspace].back()->find_declared_function(astnode->identifier, &astnode->parameters, evaluate_access_vector_ptr, true);
 		declfun.block = astnode->block;
 	}
 	catch (...) {
 		auto& block = astnode->block;
+
+		// if node not has block and it's a builtin, it's create a builtin executor
 		if (!block && builtin_functions.find(astnode->identifier) != builtin_functions.end()) {
 			block = std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
 				std::make_shared<ASTBuiltinFunctionExecuterNode>(astnode->identifier, astnode->row, astnode->col)
 			}, astnode->row, astnode->col);
 		}
 
-		auto f = FunctionDefinition(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
-			astnode->array_type, astnode->dim, astnode->parameters, block, astnode->row, astnode->row);
-		scopes[nmspace].back()->declare_function(astnode->identifier, f);
+		scopes[nmspace].back()->declare_function(astnode->identifier, FunctionDefinition(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
+			astnode->array_type, astnode->dim, astnode->parameters, block, astnode->row, astnode->row));
 	}
+
 	pop_namespace(pop);
 }
 
 void Interpreter::visit(std::shared_ptr<ASTFunctionExpression> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-
 	const auto& nmspace = get_namespace();
 
+	// generate an random identifier and evaluates
 	auto& fun = astnode->fun;
-
 	fun->identifier = axe::UUID::generate();
-
 	fun->accept(this);
 
-	auto value = alocate_value(new RuntimeValue(Type::T_FUNCTION));
-	value->set(cp_function(nmspace, fun->identifier));
-	current_expression_value = value;
+	current_expression_value = alocate_value(new RuntimeValue(cp_function(nmspace, fun->identifier)));
 }
 
 void Interpreter::visit(std::shared_ptr<ASTBlockNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
+	// the one use function_call_name
 	scopes[nmspace].push_back(std::make_shared<Scope>(function_call_name));
 	function_call_name = "";
 
+	// declare all parameters in block if its a function
 	declare_function_block_parameters(nmspace);
 
+	// executes block 
 	for (auto& stmt : astnode->statements) {
 		stmt->accept(this);
 
@@ -524,13 +526,18 @@ void Interpreter::visit(std::shared_ptr<ASTSwitchNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	const auto& nmspace = get_namespace();
-	++is_switch;
+	++is_switch; // use increment due to nested cases
 
 	scopes[nmspace].push_back(std::make_shared<Scope>());
 
+	// if it has case blocks we evaluate condition,
+	// if it's not, we don't need do nothing and save cpu
 	if (astnode->case_blocks.size() > 0) {
+		// here it'll validates if matches type
 		astnode->condition->accept(this);
 		TypeDefinition cond_type = *current_expression_value;
+		// as all cases have same type (guaranted by constant values in semantic analysis),
+		// we just need to evaluate first case to get type
 		for (const auto& expr : astnode->case_blocks) {
 			expr.first->accept(this);
 			break;
@@ -544,13 +551,16 @@ void Interpreter::visit(std::shared_ptr<ASTSwitchNode> astnode) {
 
 	long long pos;
 	try {
+		// if has and match condition
 		auto hash = astnode->condition->hash(this);
 		pos = astnode->parsed_case_blocks.at(hash);
 	}
 	catch (...) {
+		// else we go to default block
 		pos = astnode->default_block;
 	}
 
+	// executes block
 	for (long long i = pos; i < astnode->statements.size(); ++i) {
 		astnode->statements.at(i)->accept(this);
 
@@ -613,15 +623,19 @@ void Interpreter::visit(std::shared_ptr<ASTIfNode> astnode) {
 	bool result = current_expression_value->get_b();
 
 	if (result) {
+		// execute if block
 		astnode->if_block->accept(this);
 	}
 	else {
+		// check each else if block
 		for (auto& elif : astnode->else_ifs) {
 			elif->accept(this);
+			// if entered some, we stops
 			if (executed_elif) {
 				break;
 			}
 		}
+		// if has else block and not executed else if
 		if (astnode->else_block && !executed_elif) {
 			astnode->else_block->accept(this);
 		}
@@ -637,25 +651,37 @@ void Interpreter::visit(std::shared_ptr<ASTForNode> astnode) {
 	++is_loop;
 	scopes[nmspace].push_back(std::make_shared<Scope>());
 
+	// the first statement executes once at start
 	if (astnode->dci[0]) {
 		astnode->dci[0]->accept(this);
 	}
-	if (astnode->dci[1]) {
-		astnode->dci[1]->accept(this);
 
-		if (!is_bool(current_expression_value->type)) {
-			ExceptionHandler::throw_condition_type_err();
+	for (;;) {
+		// the second statement executes after each block execution
+		// and defines the condition for executing the block
+		if (astnode->dci[1]) {
+			astnode->dci[1]->accept(this);
+
+			if (!is_bool(current_expression_value->type)) {
+				ExceptionHandler::throw_condition_type_err();
+			}
 		}
-	}
-	else {
-		current_expression_value = alocate_value(new RuntimeValue(Type::T_BOOL));
-		current_expression_value->set(true);
-	}
+		else {
+			// if empty, execute with no condition
+			current_expression_value = alocate_value(new RuntimeValue(cp_bool(true)));
+		}
 
-	bool result = current_expression_value->get_b();
+		// if result is false
+		if (!current_expression_value->get_b()) {
+			break;
+		}
 
-	while (result) {
 		astnode->block->accept(this);
+
+		// always execute after the block
+		if (astnode->dci[2]) {
+			astnode->dci[2]->accept(this);
+		}
 
 		if (exit_from_program) {
 			return;
@@ -673,24 +699,6 @@ void Interpreter::visit(std::shared_ptr<ASTForNode> astnode) {
 		if (return_from_function) {
 			break;
 		}
-
-		if (astnode->dci[2]) {
-			astnode->dci[2]->accept(this);
-		}
-
-		if (astnode->dci[1]) {
-			astnode->dci[1]->accept(this);
-
-			if (!is_bool(current_expression_value->type)) {
-				ExceptionHandler::throw_condition_type_err();
-			}
-		}
-		else {
-			current_expression_value = alocate_value(new RuntimeValue(Type::T_BOOL));
-			current_expression_value->set(true);
-		}
-
-		result = current_expression_value->get_b();
 	}
 
 	scopes[nmspace].pop_back();
