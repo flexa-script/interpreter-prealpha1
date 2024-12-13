@@ -245,18 +245,11 @@ void Interpreter::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 	}
 	// handle sub value assignment
 	else {
-		// if isn't a sub value access, we derreference the variable ptr
-		if (astnode->identifier_vector.size() == 1 && astnode->identifier_vector[0].access_vector.size() == 0) {
-			variable->set_value(alocate_value(new RuntimeValue(variable->get_value())));
-			value = variable->get_value();
-		}
-
-		// gets string access position
-		cp_int pos = -1;
-		if (has_string_access) {
-			std::dynamic_pointer_cast<ASTExprNode>(astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1])->accept(this);
-			pos = current_expression_value->get_i();
-		}
+		//// if isn't a sub value access, we derreference the variable value ptr
+		//if (astnode->identifier_vector.size() == 1 && astnode->identifier_vector[0].access_vector.size() == 0) {
+		//	variable->set_value(alocate_value(new RuntimeValue(variable->get_value())));
+		//	value = variable->get_value();
+		//}
 
 		if (astnode->op == "=") {
 			validates_reference_type_assignment(*variable, new_value);
@@ -265,6 +258,13 @@ void Interpreter::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 			set_value(variable, astnode->identifier_vector, new_value);
 		}
 		else {
+			// gets string access position
+			cp_int pos = -1;
+			if (has_string_access) {
+				std::dynamic_pointer_cast<ASTExprNode>(astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1])->accept(this);
+				pos = current_expression_value->get_i();
+			}
+
 			RuntimeOperations::normalize_type(variable.get(), new_value);
 			// do value/sub value operation
 			RuntimeOperations::do_operation(astnode->op, value, new_value, evaluate_access_vector_ptr, false, pos);
@@ -280,27 +280,33 @@ void Interpreter::visit(std::shared_ptr<ASTReturnNode> astnode) {
 	auto nmspace = get_namespace();
 
 	if (astnode->expr) {
+		// gets the current function return
 		TypeDefinition curr_func_ret_type = current_function.top();
+		auto curr_func_call_id_vector = current_function_call_identifier_vector.top();
+		// evaluates return expression
 		astnode->expr->accept(this);
+		// keeps return value
 		RuntimeValue* returned_value = current_expression_value;
-		RuntimeValue* value = access_value(current_expression_value, current_function_call_identifier_vector.top());
 
-		if (value->type == Type::T_STRING && current_function_call_identifier_vector.top().back().access_vector.size() > 0 && has_string_access) {
+		// evaluates access vector
+		RuntimeValue* value = access_value(current_expression_value, curr_func_call_id_vector);
+		// handle string char access
+		if (is_string(value->type) && curr_func_call_id_vector.back().access_vector.size() > 0 && has_string_access) {
 			has_string_access = false;
 			std::string str = value->get_s();
-			std::dynamic_pointer_cast<ASTExprNode>(current_function_call_identifier_vector.top().back().access_vector[current_function_call_identifier_vector.top().back().access_vector.size() - 1])->accept(this);
+			curr_func_call_id_vector.back().access_vector[curr_func_call_id_vector.back().access_vector.size() - 1]->accept(this);
 			auto pos = value->get_i();
 
-			auto char_value = alocate_value(new RuntimeValue(Type::T_CHAR));
-			char_value->set(cp_char(str[pos]));
-			value = char_value;
+			value = alocate_value(new RuntimeValue(cp_char(str[pos])));
 		}
 
+		// check types match
 		if (!TypeDefinition::is_any_or_match_type(curr_func_ret_type, *returned_value, evaluate_access_vector_ptr)) {
 			ExceptionHandler::throw_return_type_err(current_function.top().identifier,
 				curr_func_ret_type, *returned_value, evaluate_access_vector_ptr);
 		}
 
+		// check if it's reference
 		if (value->use_ref) {
 			current_expression_value = value;
 		}
@@ -312,6 +318,7 @@ void Interpreter::visit(std::shared_ptr<ASTReturnNode> astnode) {
 		current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 	}
 
+	// return node activates return flow
 	for (long long i = scopes[nmspace].size() - 1; i >= 0; --i) {
 		if (!scopes[nmspace][i]->name.empty()) {
 			return_from_function_name = scopes[nmspace][i]->name;
