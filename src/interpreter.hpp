@@ -66,6 +66,8 @@ namespace visitor {
 		RuntimeValue* set_value(std::shared_ptr<RuntimeVariable> var, const std::vector<Identifier>& identifier_vector, RuntimeValue* new_value);
 		RuntimeValue* access_value(RuntimeValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
 
+		long long hash(RuntimeValue* value);
+
 		void declare_function_block_parameters(const std::string& nmspace);
 		void build_args(const std::vector<std::string>& args);
 

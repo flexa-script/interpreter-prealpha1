@@ -1824,26 +1824,7 @@ RuntimeValue* Interpreter::alocate_value(RuntimeValue* value) {
 	return dynamic_cast<RuntimeValue*>(gc.allocate(value));
 }
 
-long long Interpreter::hash(std::shared_ptr<ASTExprNode> astnode) {
-	astnode->accept(this);
-	switch (current_expression_value->type) {
-	case Type::T_BOOL:
-		return static_cast<long long>(current_expression_value->get_b());
-	case Type::T_INT:
-		return static_cast<long long>(current_expression_value->get_i());
-	case Type::T_FLOAT:
-		return static_cast<long long>(current_expression_value->get_f());
-	case Type::T_CHAR:
-		return static_cast<long long>(current_expression_value->get_c());
-	case Type::T_STRING:
-		return axe::StringUtils::hashcode(current_expression_value->get_s());
-	default:
-		throw std::runtime_error("cannot determine type");
-	}
-}
-
-long long Interpreter::hash(std::shared_ptr<ASTValueNode> astnode) {
-	auto value = dynamic_cast<RuntimeValue*>(astnode->value);
+long long Interpreter::hash(RuntimeValue* value) {
 	switch (value->type) {
 	case Type::T_BOOL:
 		return static_cast<long long>(value->get_b());
@@ -1858,6 +1839,15 @@ long long Interpreter::hash(std::shared_ptr<ASTValueNode> astnode) {
 	default:
 		throw std::runtime_error("cannot determine type");
 	}
+}
+
+long long Interpreter::hash(std::shared_ptr<ASTExprNode> astnode) {
+	astnode->accept(this);
+	return hash(current_expression_value);
+}
+
+long long Interpreter::hash(std::shared_ptr<ASTValueNode> astnode) {
+	return hash(dynamic_cast<RuntimeValue*>(astnode->value));
 }
 
 long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_bool>> astnode) {
@@ -1885,22 +1875,9 @@ long long Interpreter::hash(std::shared_ptr<ASTIdentifierNode> astnode) {
 	std::string nmspace = get_namespace();
 	auto variable = std::dynamic_pointer_cast<RuntimeVariable>(find_inner_most_variable(nmspace, astnode->identifier_vector[0].identifier));
 	auto value = access_value(variable->get_value(), astnode->identifier_vector);
-
-	switch (value->type) {
-	case Type::T_BOOL:
-		return static_cast<long long>(value->get_b());
-	case Type::T_INT:
-		return static_cast<long long>(value->get_i());
-	case Type::T_FLOAT:
-		return static_cast<long long>(value->get_f());
-	case Type::T_CHAR:
-		return static_cast<long long>(value->get_c());
-	case Type::T_STRING:
-		return axe::StringUtils::hashcode(value->get_s());
-	default:
-		throw std::runtime_error("cannot determine type");
-	}
 	pop_namespace(pop);
+
+	return hash(value);
 }
 
 void Interpreter::declare_function_parameter(std::shared_ptr<Scope> scope, const std::string& identifier, RuntimeValue* value) {
