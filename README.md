@@ -1,8 +1,8 @@
 # CP Interpreter
 
 ## TODO
-- [X] Rewrite EBNF
 - [X] Add load file from arguments
+- [X] Send rest arguments to cp program
 - [X] Rewrite the lexer
 - [X] Change expression evaluation to left to right
 - [X] Add and precedence
@@ -10,6 +10,7 @@
 - [X] Add collum on throwed errors
 - [X] Add 'this' token to get current function name
 - [X] Add const support
+- [X] Add unpacked declaration statement to unpack struct values
 - [X] Add char type
 - [X] Add any type
 - [X] Add array type
@@ -52,8 +53,8 @@
         - [x] <<=, >>=
         - [x] &=, ^=, |=
     - [X] namespace
-    - [X] as namespace
-    - [X] revoke namespace
+    - [X] include namespace
+    - [X] exclude namespace
     - [X] exit
     - [X] enum
     - [X] try catch throw
@@ -115,15 +116,15 @@
 - [X] Flex function return, remove mandatory type definition in return
 - [X] Remove struct as bool in expression and change this type of verification to void value comparation (eg: var == null)
 - [X] Move function body parser to caller node (as interpreter), to check parameters of each caller
-- [ ] Improve error system messages
+- [x] Improve error system messages
 - [X] Improve REPL:
     - [X] Now expressions can be executed in statements, dont need more to execute expression parser directly
 - [X] Add a default interface to implements built in functions
 - [X] Add a default interface to implements core libs
-- [ ] General otimizations:
-    - [ ] Remove duplicate codes
+- [x] General otimizations:
+    - [x] Remove duplicate codes
         - [X] Organize semantic duplicated checks
-        - [ ] ...?
+        - [x] ...?
     - [X] Implement detructors
 - [ ] Projects to implement in CP:
     - [ ] https://github.com/bpslib/bps
@@ -139,7 +140,9 @@
 - [X] Automatically find and load included libs without to send by command line arguments
 
 ## Known bugs
-- [X] Some function definition are not being found:
+- [ ] Can't executes returned function
+- [X] Review value copy and equal (mainly cause of ponters)
+- [X] Some function definition are not being found:nd:
     - [X] `var arr = {1, 2, 3, 4, 5, 6}` X `fun arr_size(arr[])`
     - [X] `var arr = {1, 2, 3, 4, 5, 6}` X `fun arr_size(arr[])`
 - [X] Undefined variables cant be assigned
