@@ -35,6 +35,17 @@ void MetaVisitor::validates_reference_type_assignment(TypeDefinition owner, Valu
 	}
 }
 
+StructureDefinition MetaVisitor::find_inner_most_struct(std::string& nmspace, const std::string& identifier) {
+	std::shared_ptr<Scope> scope;
+	try {
+		scope = get_inner_most_struct_definition_scope(nmspace, identifier);
+	}
+	catch (std::exception ex) {
+		throw std::runtime_error(ex.what());
+	}
+	return scope->find_declared_structure_definition(identifier);
+}
+
 std::shared_ptr<Variable> MetaVisitor::find_inner_most_variable(std::string& nmspace, const std::string& identifier) {
 	std::shared_ptr<Scope> scope;
 	try {

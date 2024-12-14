@@ -900,18 +900,17 @@ void Interpreter::visit(std::shared_ptr<ASTThrowNode> astnode) {
 
 	astnode->error->accept(this);
 
-	if (is_struct(current_expression_value->type)
-		&& current_expression_value->type_name == "Exception") {
-		try {
-			std::string nmspace = "cp";
-			get_inner_most_struct_definition_scope(nmspace, "Exception");
-		}
-		catch (...) {
-			throw std::runtime_error("struct 'cp::Exception' not found");
+	// handle Exception struct
+	if (is_struct(current_expression_value->type)) {
+		// check struct type
+		if (current_expression_value->type_name != "Exception"
+			|| current_expression_value->type_name_space != "cp") {
+			throw std::runtime_error("expected cp::Exception not " + ExceptionHandler::buid_type_str(*current_expression_value, evaluate_access_vector_ptr));
 		}
 
 		throw std::exception(current_expression_value->get_str()["error"]->get_s().c_str());
 	}
+	// handle bare string
 	else if (is_string(current_expression_value->type)) {
 		throw std::runtime_error(current_expression_value->get_s());
 	}
@@ -923,10 +922,7 @@ void Interpreter::visit(std::shared_ptr<ASTThrowNode> astnode) {
 
 void Interpreter::visit(std::shared_ptr<ASTReticencesNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-
-	auto value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
-	value->set_undefined();
-	current_expression_value = value;
+	current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 }
 
 void Interpreter::visit(std::shared_ptr<ASTWhileNode> astnode) {
@@ -936,15 +932,18 @@ void Interpreter::visit(std::shared_ptr<ASTWhileNode> astnode) {
 
 	++is_loop;
 
-	astnode->condition->accept(this);
+	for (;;) {
+		// evaluates while condition after each block execution
+		astnode->condition->accept(this);
 
-	if (!is_bool(current_expression_value->type)) {
-		ExceptionHandler::throw_condition_type_err();
-	}
+		if (!is_bool(current_expression_value->type)) {
+			ExceptionHandler::throw_condition_type_err();
+		}
 
-	bool result = current_expression_value->get_b();
+		if(!current_expression_value->get_b()){
+			break;
+		}
 
-	while (result) {
 		astnode->block->accept(this);
 
 		if (exit_from_program) {
@@ -963,14 +962,6 @@ void Interpreter::visit(std::shared_ptr<ASTWhileNode> astnode) {
 		if (return_from_function) {
 			break;
 		}
-
-		astnode->condition->accept(this);
-
-		if (!is_bool(current_expression_value->type)) {
-			ExceptionHandler::throw_condition_type_err();
-		}
-
-		result = current_expression_value->get_b();
 	}
 
 	--is_loop;
@@ -982,8 +973,6 @@ void Interpreter::visit(std::shared_ptr<ASTDoWhileNode> astnode) {
 	const auto& nmspace = get_namespace();
 
 	++is_loop;
-
-	bool result = false;
 
 	do {
 		astnode->block->accept(this);
@@ -1005,24 +994,23 @@ void Interpreter::visit(std::shared_ptr<ASTDoWhileNode> astnode) {
 			break;
 		}
 
+		// executes condition at the end of block
 		astnode->condition->accept(this);
 
 		if (!is_bool(current_expression_value->type)) {
 			ExceptionHandler::throw_condition_type_err();
 		}
 
-		result = current_expression_value->get_b();
-	} while (result);
+	} while (current_expression_value->get_b());
 
 	--is_loop;
 }
 
 void Interpreter::visit(std::shared_ptr<ASTStructDefinitionNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-
-	auto str = StructureDefinition(astnode->identifier, astnode->variables, astnode->row, astnode->col);
-
-	scopes[get_namespace()].back()->declare_structure_definition(str);
+	scopes[get_namespace()].back()->declare_structure_definition(
+		StructureDefinition(astnode->identifier, astnode->variables, astnode->row, astnode->col)
+	);
 }
 
 void Interpreter::visit(std::shared_ptr<ASTValueNode> astnode) {
@@ -1032,57 +1020,47 @@ void Interpreter::visit(std::shared_ptr<ASTValueNode> astnode) {
 
 void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_bool>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-
-	auto value = alocate_value(new RuntimeValue(Type::T_BOOL));
-	value->set(astnode->val);
-	current_expression_value = value;
+	current_expression_value = alocate_value(new RuntimeValue(astnode->val));
 }
 
 void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_int>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-
-	auto value = alocate_value(new RuntimeValue(Type::T_INT));
-	value->set(astnode->val);
-	current_expression_value = value;
+	current_expression_value = alocate_value(new RuntimeValue(astnode->val));
 }
 
 void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_float>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-
-	auto value = alocate_value(new RuntimeValue(Type::T_FLOAT));
-	value->set(astnode->val);
-	current_expression_value = value;
+	current_expression_value = alocate_value(new RuntimeValue(astnode->val));
 }
 
 void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_char>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-
-	auto value = alocate_value(new RuntimeValue(Type::T_CHAR));
-	value->set(astnode->val);
-	current_expression_value = value;
+	current_expression_value = alocate_value(new RuntimeValue(astnode->val));
 }
 
 void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-
-	auto value = alocate_value(new RuntimeValue(Type::T_STRING));
-	value->set(astnode->val);
-	current_expression_value = value;
+	current_expression_value = alocate_value(new RuntimeValue(astnode->val));
 }
 
 void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	Type arr_t = Type::T_ANY;
+	// initialize raw array
 	cp_array arr = cp_array(astnode->values.size());
 
+	// clean array type on start
 	if (current_expression_array_dim.size() == 0) {
 		current_expression_array_type = TypeDefinition();
+		// used to control nested arrays
 		current_expression_array_dim_max = 0;
+		// end of array dimension calculation, reached max
 		is_max = false;
 	}
 
+	// increments array dimension
 	++current_expression_array_dim_max;
+	// if isn't reached max yet, we adds more one dim
 	if (!is_max) {
 		current_expression_array_dim.push_back(std::make_shared<ASTLiteralNode<cp_int>>(0, astnode->row, astnode->col));
 	}
@@ -1092,10 +1070,12 @@ void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 
 		expr->accept(this);
 
+		// if it's undefined or array (nested), it's accepts the first type encountered
 		if (is_undefined(current_expression_array_type.type) || is_array(current_expression_array_type.type)) {
 			current_expression_array_type = *current_expression_value;
 		}
 		else {
+			// else check if is any array
 			if (!match_type(current_expression_array_type.type, current_expression_value->type)
 				&& !is_any(current_expression_value->type) && !is_void(current_expression_value->type)
 				&& !is_array(current_expression_value->type)) {
@@ -1103,6 +1083,7 @@ void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 			}
 		}
 
+		// check if it's a reference
 		RuntimeValue* arr_value = nullptr;
 		if (current_expression_value->use_ref) {
 			arr_value = current_expression_value;
@@ -1110,22 +1091,24 @@ void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 		else {
 			arr_value = alocate_value(new RuntimeValue(current_expression_value));
 		}
+
 		arr[i] = arr_value;
 	}
 
+	// if it isn't reached max yet, we add size
 	if (!is_max) {
 		std::dynamic_pointer_cast<ASTLiteralNode<cp_int>>(current_expression_array_dim.back())->val = arr.size();
 	}
 
+	// as size by dimension is fixed, it's not necessary to check after max (max nested deep)
 	is_max = true;
 
-	auto value = alocate_value(new RuntimeValue(Type::T_ARRAY));
-	value->set(arr, arr_t, current_expression_array_dim, current_expression_array_type.type_name, current_expression_array_type.type_name_space);
+	current_expression_value = alocate_value(
+		new RuntimeValue(arr, current_expression_array_type.type, current_expression_array_dim,
+			current_expression_array_type.type_name, current_expression_array_type.type_name_space)
+	);
 
-	current_expression_value = value;
-	current_expression_value->array_type = current_expression_array_type.type;
-	current_expression_value->type_name = current_expression_array_type.type_name;
-	current_expression_value->type_name_space = current_expression_array_type.type_name_space;
+	// here it's calculate de current dimension of array
 	--current_expression_array_dim_max;
 	size_t stay = current_expression_array_dim.size() - current_expression_array_dim_max;
 	std::vector<std::shared_ptr<ASTExprNode>> current_expression_array_dim_aux;
@@ -1136,6 +1119,7 @@ void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 	}
 	current_expression_value->dim = current_expression_array_dim_aux;
 
+	// final type check
 	if (current_expression_array_dim_max == 0) {
 		if (is_undefined(current_expression_value->array_type)) {
 			current_expression_value->array_type = Type::T_ANY;
@@ -1147,19 +1131,14 @@ void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 void Interpreter::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->nmspace);
-	std::shared_ptr<Scope> curr_scope;
-	try {
-		auto nmspace = get_namespace();
-		curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->type_name);
-	}
-	catch (...) {
-		throw std::runtime_error("error trying to find struct definition");
-	}
-	auto type_struct = curr_scope->find_declared_structure_definition(astnode->type_name);
+
+	auto nmspace = get_namespace();
+	auto type_struct = find_inner_most_struct(nmspace, astnode->type_name);
 
 	auto str = cp_struct();
 
 	for (auto& expr : astnode->values) {
+		// check it is a member
 		if (type_struct.variables.find(expr.first) == type_struct.variables.end()) {
 			ExceptionHandler::throw_struct_member_err(astnode->nmspace, astnode->type_name, expr.first);
 		}

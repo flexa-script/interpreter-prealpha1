@@ -32,6 +32,7 @@ namespace visitor {
 
 		void validates_reference_type_assignment(TypeDefinition owner, Value* value);
 
+		StructureDefinition find_inner_most_struct(std::string& nmspace, const std::string& identifier);
 		std::shared_ptr<Variable> find_inner_most_variable(std::string& nmspace, const std::string& identifier);
 
 		std::shared_ptr<Scope> get_inner_most_struct_definition_scope(std::string& nmspace, const std::string& identifier);
