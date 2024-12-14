@@ -97,7 +97,7 @@ constant_decl         = "const" formal_param "=" expression
 
 unpacked_decl         = "var" "[" formal_param { "," formal_param } "]"
 
-assignment            = var_identifier "=" expression
+assignment            = var_identifier assignment_op expression
 
 expression            = ternary_expression
 
@@ -151,6 +151,9 @@ factor                = literal
                       | r_unary
                       | l_unary
                       | "this"
+
+assignment_op         = "=" | "+=" | "-=" | "*=" | "/=" | "/%=" | "%="
+                      | "**=" | "|=" | "^=" | "&=" | "<<=" | ">>="
 
 shift_op              = "<<" | ">>"
 
