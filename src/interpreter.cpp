@@ -137,13 +137,10 @@ void Interpreter::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 		current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 	}
 
-	RuntimeValue* new_value;
-
 	// check if it's reference
-	if (current_expression_value->use_ref) {
-		new_value = current_expression_value;
-	}
-	else {
+	RuntimeValue* new_value = current_expression_value;
+
+	if (!current_expression_value->use_ref) {
 		new_value = alocate_value(new RuntimeValue(current_expression_value));
 	}
 
@@ -215,13 +212,10 @@ void Interpreter::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 
 	auto ptr_value = current_expression_value; // saves the ptr into and variable to use after
 
-	RuntimeValue* new_value = nullptr;
-
 	// check if it's reference
-	if (ptr_value->use_ref) {
-		new_value = ptr_value;
-	}
-	else {
+	RuntimeValue* new_value = ptr_value;
+
+	if (!ptr_value->use_ref) {
 		new_value = alocate_value(new RuntimeValue(ptr_value));
 	}
 
@@ -307,12 +301,7 @@ void Interpreter::visit(std::shared_ptr<ASTReturnNode> astnode) {
 		}
 
 		// check if it's reference
-		if (value->use_ref) {
-			current_expression_value = value;
-		}
-		else {
-			current_expression_value = alocate_value(new RuntimeValue(value));
-		}
+		current_expression_value = value->use_ref ? value : alocate_value(new RuntimeValue(value));
 	}
 	else {
 		current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
@@ -344,12 +333,9 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
 
-		RuntimeValue* pvalue = nullptr;
 		// check if it's reference
-		if (current_expression_value->use_ref) {
-			pvalue = current_expression_value;
-		}
-		else {
+		RuntimeValue* pvalue = current_expression_value;
+		if (!current_expression_value->use_ref) {
 			pvalue = alocate_value(new RuntimeValue(current_expression_value));
 		}
 
@@ -395,10 +381,6 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	current_function_signature.push(signature);
 	current_function_call_identifier_vector.push(identifier_vector);
 	current_function_calling_arguments.push(function_arguments);
-
-	//if (!declfun.block) {
-	//	throw std::runtime_error("'" + astnode->identifier + "' function definition not found");
-	//}
 
 	// it's not a stack cause it's one shot use, right it reachs block it's cleaned
 	function_call_name = identifier;
@@ -1084,11 +1066,8 @@ void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 		}
 
 		// check if it's a reference
-		RuntimeValue* arr_value = nullptr;
-		if (current_expression_value->use_ref) {
-			arr_value = current_expression_value;
-		}
-		else {
+		RuntimeValue* arr_value = current_expression_value;
+		if (!current_expression_value->use_ref) {
 			arr_value = alocate_value(new RuntimeValue(current_expression_value));
 		}
 
@@ -1152,6 +1131,7 @@ void Interpreter::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
 			ExceptionHandler::throw_struct_type_err(astnode->nmspace, astnode->type_name, var_type_struct, evaluate_access_vector_ptr);
 		}
 
+		// check if it's a reference
 		if (!current_expression_value->use_ref) {
 			str_value = alocate_value(new RuntimeValue(str_value));
 		}
@@ -1182,9 +1162,7 @@ void Interpreter::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
 		}
 	}
 
-	auto value = alocate_value(new RuntimeValue(Type::T_STRUCT));
-	value->set(str, astnode->type_name, astnode->nmspace);
-	current_expression_value = value;
+	current_expression_value = alocate_value(new RuntimeValue(str, astnode->type_name, astnode->nmspace));
 
 	pop_namespace(pop);
 }
@@ -1278,11 +1256,8 @@ void Interpreter::visit(std::shared_ptr<ASTBinaryExprNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->left->accept(this);
-	RuntimeValue* l_value = nullptr;
-	if (current_expression_value->use_ref) {
-		l_value = current_expression_value;
-	}
-	else {
+	RuntimeValue* l_value = current_expression_value;
+	if (!current_expression_value->use_ref) {
 		l_value = alocate_value(new RuntimeValue(current_expression_value));
 		gc.add_root(l_value);
 	}
@@ -1292,11 +1267,8 @@ void Interpreter::visit(std::shared_ptr<ASTBinaryExprNode> astnode) {
 	}
 
 	astnode->right->accept(this);
-	RuntimeValue* r_value = nullptr;
-	if (current_expression_value->use_ref) {
-		r_value = current_expression_value;
-	}
-	else {
+	RuntimeValue* r_value = current_expression_value;
+	if (!current_expression_value->use_ref) {
 		r_value = alocate_value(new RuntimeValue(current_expression_value));
 		gc.add_root(r_value);
 	}
@@ -1973,11 +1945,8 @@ void Interpreter::declare_function_block_parameters(const std::string& nmspace) 
 		}
 
 		// is reference : not reference
-		RuntimeValue* current_value = nullptr;
-		if (current_function_calling_argument->use_ref) {
-			current_value = current_function_calling_argument;
-		}
-		else {
+		RuntimeValue* current_value = current_function_calling_argument;
+		if (!current_function_calling_argument->use_ref) {
 			current_value = alocate_value(new RuntimeValue(current_function_calling_argument));
 			current_value->ref.reset();
 		}
