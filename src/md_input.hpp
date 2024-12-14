@@ -1,5 +1,5 @@
-#ifndef INPUT_HPP
-#define INPUT_HPP
+#ifndef MD_INPUT_HPP
+#define MD_INPUT_HPP
 
 #include <thread>
 #include <atomic>
@@ -9,7 +9,7 @@
 #include "module.hpp"
 
 namespace modules {
-	class Input : public Module {
+	class ModuleInput : public Module {
 	public:
 		static const int KEY_COUNT = 256;
 
@@ -23,17 +23,17 @@ namespace modules {
 		void key_update_loop();
 
 	public:
-		Input();
-		~Input();
+		ModuleInput();
+		~ModuleInput();
 
 		void register_functions(visitor::SemanticAnalyser* visitor) override;
 		void register_functions(visitor::Interpreter* visitor) override;
 		void register_functions(visitor::Compiler* visitor) override;
-		void register_functions(VirtualMachine* vm) override;
+		void register_functions(vm::VirtualMachine* vm) override;
 
 		void start();
 		void stop();
 	};
 }
 
-#endif // !INPUT_HPP
+#endif // !MD_INPUT_HPP

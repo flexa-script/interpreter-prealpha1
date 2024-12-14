@@ -4,10 +4,9 @@
 #include "semantic_analysis.hpp"
 #include "exception_handler.hpp"
 #include "token.hpp"
-#include "builtin.hpp"
+#include "md_builtin.hpp"
 
-#include "vendor/axeutils.hpp"
-#include "vendor/axeuuid.hpp"
+#include "utils.hpp"
 
 using namespace visitor;
 using namespace parser;
@@ -49,7 +48,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTProgramNode> astnode) {
 void SemanticAnalyser::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	std::string libname = axe::StringUtils::join(astnode->library, ".");
+	std::string libname = utils::StringUtils::join(astnode->library, ".");
 
 	if (built_in_libs.find(libname) != built_in_libs.end()) {
 		built_in_libs.find(libname)->second->register_functions(this);
@@ -62,13 +61,13 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	auto program = programs[libname];
 
 	// add lib to current program
-	if (axe::CollectionUtils::contains(current_program.top()->libs, libname)) {
+	if (utils::CollectionUtils::contains(current_program.top()->libs, libname)) {
 		throw std::runtime_error("lib '" + libname + "' already declared in " + current_program.top()->name);
 	}
 	current_program.top()->libs.push_back(libname);
 
 	// if can't parsed yet
-	if (!axe::CollectionUtils::contains(parsed_libs, libname)) {
+	if (!utils::CollectionUtils::contains(parsed_libs, libname)) {
 		if (!program->alias.empty()) {
 			nmspaces.push_back(program->alias);
 		}
@@ -100,7 +99,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTNamespaceManagerNode> astnode) {
 
 	const auto& nmspace = get_namespace();
 
-	if (!axe::CollectionUtils::contains(nmspaces, astnode->nmspace)) {
+	if (!utils::CollectionUtils::contains(nmspaces, astnode->nmspace)) {
 		throw std::runtime_error("namespace '" + astnode->nmspace + "' not found");
 	}
 	if (astnode->nmspace == default_namespace) {
@@ -1619,7 +1618,7 @@ long long SemanticAnalyser::hash(std::shared_ptr<ASTLiteralNode<cp_char>> astnod
 }
 
 long long SemanticAnalyser::hash(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) {
-	return axe::StringUtils::hashcode(astnode->val);
+	return utils::StringUtils::hashcode(astnode->val);
 }
 
 long long SemanticAnalyser::hash(std::shared_ptr<ASTIdentifierNode> astnode) {

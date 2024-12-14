@@ -1,19 +1,21 @@
-#ifndef HTTP_HPP
-#define HTTP_HPP
+#ifndef MD_CONSOLE_HPP
+#define MD_CONSOLE_HPP
+
+#include <functional>
 
 #include "module.hpp"
 
 namespace modules {
-	class HTTP : public Module {
+	class ModuleConsole : public Module {
 	public:
-		HTTP();
-		~HTTP();
+		ModuleConsole();
+		~ModuleConsole();
 
 		void register_functions(visitor::SemanticAnalyser* visitor) override;
 		void register_functions(visitor::Interpreter* visitor) override;
 		void register_functions(visitor::Compiler* visitor) override;
-		void register_functions(VirtualMachine* vm) override;
+		void register_functions(vm::VirtualMachine* vm) override;
 	};
 }
 
-#endif // !HTTP_HPP
+#endif // !MD_CONSOLE_HPP

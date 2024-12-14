@@ -1,7 +1,7 @@
 #ifndef CPINTERPRETER_HPP
 #define CPINTERPRETER_HPP
 
-#include "argparse.hpp"
+#include "cpargparse.hpp"
 #include "cpsource.hpp"
 #include "semantic_analysis.hpp"
 

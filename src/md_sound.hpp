@@ -1,19 +1,19 @@
-#ifndef SOUND_HPP
-#define SOUND_HPP
+#ifndef MD_SOUND_HPP
+#define MD_SOUND_HPP
 
 #include "module.hpp"
 
 namespace modules {
-	class Sound : public Module {
+	class ModuleSound : public Module {
 	public:
-		Sound();
-		~Sound();
+		ModuleSound();
+		~ModuleSound();
 
 		void register_functions(visitor::SemanticAnalyser* visitor) override;
 		void register_functions(visitor::Interpreter* visitor) override;
 		void register_functions(visitor::Compiler* visitor) override;
-		void register_functions(VirtualMachine* vm) override;
+		void register_functions(vm::VirtualMachine* vm) override;
 	};
 }
 
-#endif // !SOUND_HPP
+#endif // !MD_SOUND_HPP

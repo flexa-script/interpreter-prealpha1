@@ -1,5 +1,7 @@
 #include "variant.hpp"
 
+using namespace vm;
+
 std::vector<uint8_t> Variant::encode_varint(uint64_t value) {
 	std::vector<uint8_t> result;
 	while (value > 127) {

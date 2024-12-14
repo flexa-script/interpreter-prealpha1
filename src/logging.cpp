@@ -5,11 +5,11 @@
 #include <chrono>
 #include <ctime>
 
-#include "axelogging.hpp"
+#include "logging.hpp"
 
 #pragma warning(disable : 4996)
 
-using namespace axe;
+using namespace utils;
 
 Logger::Logger(LogLevel level) : level(level), path("") {}
 

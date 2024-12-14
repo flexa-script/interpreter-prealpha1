@@ -1,4 +1,4 @@
-#include "graphics.hpp"
+#include "md_graphics.hpp"
 
 #include "interpreter.hpp"
 #include "semantic_analysis.hpp"
@@ -6,11 +6,11 @@
 using namespace modules;
 using namespace visitor;
 
-Graphics::Graphics() {}
+ModuleGraphics::ModuleGraphics() {}
 
-Graphics::~Graphics() = default;
+ModuleGraphics::~ModuleGraphics() = default;
 
-void Graphics::register_functions(visitor::SemanticAnalyser* visitor) {
+void ModuleGraphics::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["create_window"] = nullptr;
 	visitor->builtin_functions["get_current_width"] = nullptr;
 	visitor->builtin_functions["get_current_height"] = nullptr;
@@ -31,7 +31,7 @@ void Graphics::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["is_quit"] = nullptr;
 }
 
-void Graphics::register_functions(visitor::Interpreter* visitor) {
+void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["create_window"] = [this, visitor]() {
 		auto& scope = visitor->scopes["cp"].back();
@@ -51,10 +51,10 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 
 		// create a new window graphic engine
 		str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
-		str[INSTANCE_ID_NAME]->set(cp_int(new axe::Window()));
+		str[INSTANCE_ID_NAME]->set(cp_int(new utils::Window()));
 
 		// initialize window graphic engine and return value
-		auto res = ((axe::Window*)str[INSTANCE_ID_NAME]->get_i())->initialize(
+		auto res = ((utils::Window*)str[INSTANCE_ID_NAME]->get_i())->initialize(
 			str["title"]->get_s(),
 			(int)str["width"]->get_i(),
 			(int)str["height"]->get_i()
@@ -88,7 +88,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		r = (int)vals[1]->get_str()["r"]->get_i();
 		g = (int)vals[1]->get_str()["g"]->get_i();
 		b = (int)vals[1]->get_str()["b"]->get_i();
-		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->clear_screen(RGB(r, g, b));
+		((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->clear_screen(RGB(r, g, b));
 
 		};
 
@@ -103,7 +103,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (!win->get_str()[INSTANCE_ID_NAME]->get_i()) {
 			throw std::runtime_error("Window is corrupted");
 		}
-		visitor->current_expression_value=visitor->alocate_value(new RuntimeValue(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_width())));
+		visitor->current_expression_value=visitor->alocate_value(new RuntimeValue(cp_int(((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_width())));
 
 		};
 
@@ -118,7 +118,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (!win->get_str()[INSTANCE_ID_NAME]->get_i()) {
 			throw std::runtime_error("Window is corrupted");
 		}
-		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(cp_int(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_height())));
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(cp_int(((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_height())));
 
 		};
 
@@ -144,7 +144,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		r = (int)vals[3]->get_str()["r"]->get_i();
 		g = (int)vals[3]->get_str()["g"]->get_i();
 		b = (int)vals[3]->get_str()["b"]->get_i();
-		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_pixel(x, y, RGB(r, g, b));
+		((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_pixel(x, y, RGB(r, g, b));
 
 		};
 
@@ -174,7 +174,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		r = (int)vals[5]->get_str()["r"]->get_i();
 		g = (int)vals[5]->get_str()["g"]->get_i();
 		b = (int)vals[5]->get_str()["b"]->get_i();
-		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_line(x1, y1, x2, y2, RGB(r, g, b));
+		((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_line(x1, y1, x2, y2, RGB(r, g, b));
 
 		};
 
@@ -193,7 +193,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
-		if (!((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
+		if (!((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		int x, y, width, height, r, g, b;
@@ -204,7 +204,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		r = (int)vals[5]->get_str()["r"]->get_i();
 		g = (int)vals[5]->get_str()["g"]->get_i();
 		b = (int)vals[5]->get_str()["b"]->get_i();
-		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_rect(x, y, width, height, RGB(r, g, b));
+		((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_rect(x, y, width, height, RGB(r, g, b));
 
 		};
 
@@ -223,7 +223,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
-		if (!((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
+		if (!((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		int x, y, width, height, r, g, b;
@@ -234,7 +234,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		r = (int)vals[5]->get_str()["r"]->get_i();
 		g = (int)vals[5]->get_str()["g"]->get_i();
 		b = (int)vals[5]->get_str()["b"]->get_i();
-		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->fill_rect(x, y, width, height, RGB(r, g, b));
+		((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->fill_rect(x, y, width, height, RGB(r, g, b));
 
 		};
 
@@ -252,7 +252,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
-		if (!((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
+		if (!((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		int xc, yc, radius, r, g, b;
@@ -262,7 +262,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		r = (int)vals[4]->get_str()["r"]->get_i();
 		g = (int)vals[4]->get_str()["g"]->get_i();
 		b = (int)vals[4]->get_str()["b"]->get_i();
-		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_circle(xc, yc, radius, RGB(r, g, b));
+		((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_circle(xc, yc, radius, RGB(r, g, b));
 
 		};
 
@@ -280,7 +280,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
-		if (!((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
+		if (!((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		int xc, yc, radius, r, g, b;
@@ -290,7 +290,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		r = (int)vals[4]->get_str()["r"]->get_i();
 		g = (int)vals[4]->get_str()["g"]->get_i();
 		b = (int)vals[4]->get_str()["b"]->get_i();
-		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->fill_circle(xc, yc, radius, RGB(r, g, b));
+		((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->fill_circle(xc, yc, radius, RGB(r, g, b));
 
 		};
 
@@ -318,7 +318,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		str["strike"] = visitor->alocate_value(new RuntimeValue(vals[5]));
 		str["orientation"] = visitor->alocate_value(new RuntimeValue(vals[6]));
 
-		auto font = axe::Font::create_font(
+		auto font = utils::Font::create_font(
 			str["size"]->get_i(),
 			str["name"]->get_s(),
 			str["weight"]->get_i(),
@@ -354,7 +354,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
-		if (!((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
+		if (!((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		int x = (int)vals[1]->get_i();
@@ -368,12 +368,12 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (parser::is_void(font_value->type)) {
 			throw std::exception("font is null");
 		}
-		axe::Font* font = (axe::Font*)font_value->get_str()[INSTANCE_ID_NAME]->get_i();
+		utils::Font* font = (utils::Font*)font_value->get_str()[INSTANCE_ID_NAME]->get_i();
 		if (!font) {
 			throw std::runtime_error("there was an error handling font");
 		}
 
-		((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_text(x, y, text, RGB(r, g, b), font);
+		((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->draw_text(x, y, text, RGB(r, g, b), font);
 
 		};
 
@@ -389,7 +389,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (parser::is_void(win->type)) {
 			throw std::runtime_error("Window is null");
 		}
-		if (!((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
+		if (!((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
 			throw std::runtime_error("Window is corrupted");
 		}
 		std::string text = vals[1]->get_s();
@@ -397,12 +397,12 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (parser::is_void(font_value->type)) {
 			throw std::exception("font is null");
 		}
-		axe::Font* font = (axe::Font*)font_value->get_str()[INSTANCE_ID_NAME]->get_i();
+		utils::Font* font = (utils::Font*)font_value->get_str()[INSTANCE_ID_NAME]->get_i();
 		if (!font) {
 			throw std::runtime_error("there was an error handling font");
 		}
 
-		auto point = ((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_text_size(text, font);
+		auto point = ((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_text_size(text, font);
 
 		cp_struct str = cp_struct();
 		str["width"] = visitor->alocate_value(new RuntimeValue(cp_int(point.cx * 2 * 0.905)));
@@ -425,7 +425,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		str["path"] = visitor->alocate_value(new RuntimeValue(val));
 
 		// loads image
-		auto image = axe::Image::load_image(str["path"]->get_s());
+		auto image = utils::Image::load_image(str["path"]->get_s());
 		if (!image) {
 			throw std::runtime_error("there was an error loading image");
 		}
@@ -456,7 +456,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (parser::is_void(win->type)) {
 			throw std::exception("window is null");
 		}
-		auto window = ((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i());
+		auto window = ((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i());
 		if (!window) {
 			throw std::runtime_error("there was an error handling window");
 		}
@@ -464,7 +464,7 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		if (parser::is_void(img->type)) {
 			throw std::exception("window is null");
 		}
-		auto image = ((axe::Image*)img->get_str()[INSTANCE_ID_NAME]->get_i());
+		auto image = ((utils::Image*)img->get_str()[INSTANCE_ID_NAME]->get_i());
 		if (!image) {
 			throw std::runtime_error("there was an error handling image");
 		}
@@ -480,8 +480,8 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 
 		RuntimeValue* win = val;
 		if (!parser::is_void(win->type)) {
-			if (((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
-				((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->update();
+			if (((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
+				((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->update();
 			}
 		}
 
@@ -493,8 +493,8 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 
 		RuntimeValue* win = val;
 		if (!parser::is_void(win->type)) {
-			if (((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
-				((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->~Window();
+			if (((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
+				((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->~Window();
 				win->set_null();
 			}
 		}
@@ -506,8 +506,8 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		RuntimeValue* win = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value;
 		auto val = visitor->alocate_value(new RuntimeValue(parser::Type::T_BOOL));
 		if (!parser::is_void(win->type)) {
-			if (((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
-				val->set(cp_bool(((axe::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->is_quit()));
+			if (((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
+				val->set(cp_bool(((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->is_quit()));
 			}
 			else {
 				val->set(cp_bool(true));
@@ -521,6 +521,6 @@ void Graphics::register_functions(visitor::Interpreter* visitor) {
 		};
 }
 
-void Graphics::register_functions(visitor::Compiler* visitor) {}
+void ModuleGraphics::register_functions(visitor::Compiler* visitor) {}
 
-void Graphics::register_functions(VirtualMachine* vm) {}
+void ModuleGraphics::register_functions(vm::VirtualMachine* vm) {}

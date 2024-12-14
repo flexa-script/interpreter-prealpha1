@@ -1,13 +1,13 @@
 #include "types.hpp"
 
-#include "vendor/axeutils.hpp"
+#include "utils.hpp"
 
 #include "exception_handler.hpp"
 #include "module.hpp";
-#include "datetime.hpp"
-#include "graphics.hpp"
-#include "files.hpp"
-#include "console.hpp"
+#include "md_datetime.hpp"
+#include "md_graphics.hpp"
+#include "md_files.hpp"
+#include "md_console.hpp"
 
 #include "visitor.hpp"
 #include "token.hpp"
@@ -778,7 +778,7 @@ long double RuntimeValue::value_hash() const {
 	case Type::T_CHAR:
 		return (long double)get_c();
 	case Type::T_STRING:
-		return (long double)axe::StringUtils::hashcode(get_s());
+		return (long double)utils::StringUtils::hashcode(get_s());
 	case Type::T_ANY:
 		throw std::runtime_error("value is any");
 	case Type::T_ARRAY: {

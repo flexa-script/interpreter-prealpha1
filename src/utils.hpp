@@ -1,11 +1,11 @@
-#ifndef AXEUTILS_HPP
-#define AXEUTILS_HPP
+#ifndef UTILS_HPP
+#define UTILS_HPP
 
 #include <string>
 #include <vector>
 #include <list>
 
-namespace axe {
+namespace utils {
 	class StringUtils {
 	public:
 		static std::string ltrim(std::string s);
@@ -27,8 +27,6 @@ namespace axe {
 
 	class CollectionUtils {
 	public:
-		//template<typename Container, typename T>
-		//static bool contains(const Container& c, const T& value);
 		template<typename Container, typename T>
 		static bool contains(const Container& c, const T& value) {
 			return std::find(c.begin(), c.end(), value) != c.end();
@@ -40,6 +38,11 @@ namespace axe {
 		static std::string get_current_path();
 		static std::string normalize_path_sep(const std::string& path);
 	};
+
+	class UUID {
+	public:
+		static std::string generate();
+	};
 }
 
-#endif // !AXEUTILS_HPP
+#endif // !UTILS_HPP

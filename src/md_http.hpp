@@ -1,24 +1,19 @@
-#ifndef FILES_HPP
-#define FILES_HPP
-
-#include <functional>
-#include <iostream>
-#include <fstream>
-#include <sstream>
+#ifndef MD_HTTP_HPP
+#define MD_HTTP_HPP
 
 #include "module.hpp"
 
 namespace modules {
-	class Files : public Module {
+	class ModuleHTTP : public Module {
 	public:
-		Files();
-		~Files();
+		ModuleHTTP();
+		~ModuleHTTP();
 
 		void register_functions(visitor::SemanticAnalyser* visitor) override;
 		void register_functions(visitor::Interpreter* visitor) override;
 		void register_functions(visitor::Compiler* visitor) override;
-		void register_functions(VirtualMachine* vm) override;
+		void register_functions(vm::VirtualMachine* vm) override;
 	};
 }
 
-#endif // !FILES_HPP
+#endif // !MD_HTTP_HPP

@@ -3,10 +3,9 @@
 
 #include "compiler.hpp"
 #include "token.hpp"
-#include "builtin.hpp"
+#include "md_builtin.hpp"
 
-#include "vendor/axeutils.hpp"
-#include "vendor/axeuuid.hpp"
+#include "utils.hpp"
 
 using namespace visitor;
 using namespace parser;
@@ -39,7 +38,7 @@ void Compiler::visit(std::shared_ptr<ASTProgramNode> astnode) {
 }
 
 void Compiler::visit(std::shared_ptr<ASTUsingNode> astnode) {
-	std::string libname = axe::StringUtils::join(astnode->library, ".");
+	std::string libname = utils::StringUtils::join(astnode->library, ".");
 
 	if (built_in_libs.find(libname) != built_in_libs.end()) {
 		//built_in_libs.find(libname)->second->register_functions(this);
@@ -51,7 +50,7 @@ void Compiler::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	current_program.top()->libs.push_back(libname);
 
 	// if can't parsed yet
-	if (!axe::CollectionUtils::contains(parsed_libs, libname)) {
+	if (!utils::CollectionUtils::contains(parsed_libs, libname)) {
 		current_program.push(program);
 		parsed_libs.push_back(libname);
 		auto pop = push_namespace(cp_string(program->alias));
@@ -214,7 +213,7 @@ void Compiler::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 }
 
 void Compiler::visit(std::shared_ptr<ASTFunctionExpression> astnode) {
-	astnode->fun->identifier = axe::UUID::generate();
+	astnode->fun->identifier = utils::UUID::generate();
 	astnode->fun->accept(this);
 	add_instruction(OpCode::OP_PUSH_FUNCTION, cp_string(astnode->fun->identifier));
 }

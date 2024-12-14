@@ -1,4 +1,4 @@
-#include "files.hpp"
+#include "md_files.hpp"
 
 #include "interpreter.hpp"
 #include "semantic_analysis.hpp"
@@ -6,11 +6,11 @@
 using namespace modules;
 using namespace visitor;
 
-Files::Files() {}
+ModuleFiles::ModuleFiles() {}
 
-Files::~Files() = default;
+ModuleFiles::~ModuleFiles() = default;
 
-void Files::register_functions(visitor::SemanticAnalyser* visitor) {
+void ModuleFiles::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["open"] = nullptr;
 	visitor->builtin_functions["read"] = nullptr;
 	visitor->builtin_functions["read_line"] = nullptr;
@@ -26,7 +26,7 @@ void Files::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["path_exists"] = nullptr;
 }
 
-void Files::register_functions(visitor::Interpreter* visitor) {
+void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["open"] = [this, visitor]() {
 		auto& scope = visitor->scopes["cp"].back();
@@ -218,6 +218,6 @@ void Files::register_functions(visitor::Interpreter* visitor) {
 
 }
 
-void Files::register_functions(visitor::Compiler* visitor) {}
+void ModuleFiles::register_functions(visitor::Compiler* visitor) {}
 
-void Files::register_functions(VirtualMachine* vm) {}
+void ModuleFiles::register_functions(vm::VirtualMachine* vm) {}

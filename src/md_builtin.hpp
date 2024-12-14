@@ -21,18 +21,18 @@ namespace modules {
 
 	extern std::string BUILTIN_NAMES[];
 
-	class Builtin : public Module {
+	class ModuleBuiltin : public Module {
 	private:
 		std::unordered_map<std::string, FunctionDefinition> func_decls;
 
 	public:
-		Builtin();
-		~Builtin();
+		ModuleBuiltin();
+		~ModuleBuiltin();
 
 		void register_functions(visitor::SemanticAnalyser* visitor) override;
 		void register_functions(visitor::Interpreter* visitor) override;
 		void register_functions(visitor::Compiler* visitor) override;
-		void register_functions(VirtualMachine* vm) override;
+		void register_functions(vm::VirtualMachine* vm) override;
 
 	private:
 		void build_decls();

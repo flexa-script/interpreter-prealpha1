@@ -2,7 +2,7 @@
 
 #include "cputil.hpp"
 #include "linker.hpp"
-#include "vendor/axeutils.hpp"
+#include "utils.hpp"
 
 using namespace visitor;
 using namespace parser;
@@ -24,10 +24,10 @@ void Linker::visit(std::shared_ptr<ASTProgramNode> astnode) {
 }
 
 void Linker::visit(std::shared_ptr<ASTUsingNode> astnode) {
-	std::string libname = axe::StringUtils::join(astnode->library, ".");
+	std::string libname = utils::StringUtils::join(astnode->library, ".");
 
 	if (programs.find(libname) == programs.end()) {
-		std::string path = axe::StringUtils::replace(libname, ".", std::string{ std::filesystem::path::preferred_separator }) + ".cp";
+		std::string path = utils::StringUtils::replace(libname, ".", std::string{ std::filesystem::path::preferred_separator }) + ".cp";
 		if (std::find(lib_names.begin(), lib_names.end(), path) == lib_names.end()) {
 			lib_names.push_back(path);
 		}
@@ -37,7 +37,7 @@ void Linker::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	auto program = programs[libname];
 
 	// if wasn't parsed yet
-	if (!axe::CollectionUtils::contains(libs, libname)) {
+	if (!utils::CollectionUtils::contains(libs, libname)) {
 		libs.push_back(libname);
 		current_program.push(program);
 		start();

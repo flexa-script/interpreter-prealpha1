@@ -1,22 +1,24 @@
-#ifndef CPGRAPHICS_HPP
-#define CPGRAPHICS_HPP
+#ifndef MD_FILES_HPP
+#define MD_FILES_HPP
 
 #include <functional>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 #include "module.hpp"
-#include "vendor/axegraphics.hpp"
 
 namespace modules {
-	class Graphics : public Module {
+	class ModuleFiles : public Module {
 	public:
-		Graphics();
-		~Graphics();
+		ModuleFiles();
+		~ModuleFiles();
 
 		void register_functions(visitor::SemanticAnalyser* visitor) override;
 		void register_functions(visitor::Interpreter* visitor) override;
 		void register_functions(visitor::Compiler* visitor) override;
-		void register_functions(VirtualMachine* vm) override;
+		void register_functions(vm::VirtualMachine* vm) override;
 	};
 }
 
-#endif // !CPGRAPHICS_HPP
+#endif // !MD_FILES_HPP

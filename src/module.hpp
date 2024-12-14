@@ -8,9 +8,13 @@ namespace visitor {
 	class Interpreter;
 	class Compiler;
 }
-class VirtualMachine;
+
+namespace vm {
+	class VirtualMachine;
+}
 
 namespace modules {
+
 	class Module {
 	public:
 		static const std::string INSTANCE_ID_NAME;
@@ -21,8 +25,9 @@ namespace modules {
 		virtual void register_functions(visitor::SemanticAnalyser* visitor) = 0;
 		virtual void register_functions(visitor::Interpreter* visitor) = 0;
 		virtual void register_functions(visitor::Compiler* visitor) = 0;
-		virtual void register_functions(VirtualMachine* vm) = 0;
+		virtual void register_functions(vm::VirtualMachine* vm) = 0;
 	};
+
 }
 
 #endif // !MODULE_HPP

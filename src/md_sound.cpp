@@ -1,7 +1,7 @@
 #include <Windows.h>
 #include <mmsystem.h>
 
-#include "sound.hpp"
+#include "md_sound.hpp"
 
 #include "interpreter.hpp"
 #include "semantic_analysis.hpp"
@@ -10,18 +10,18 @@
 
 using namespace modules;
 
-Sound::Sound() {}
+ModuleSound::ModuleSound() {}
 
-Sound::~Sound() = default;
+ModuleSound::~ModuleSound() = default;
 
-void Sound::register_functions(visitor::SemanticAnalyser* visitor) {
+void ModuleSound::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["play_sound"] = nullptr;
 	visitor->builtin_functions["stop_sound_once"] = nullptr;
 	visitor->builtin_functions["stop_sound"] = nullptr;
 	visitor->builtin_functions["set_volume"] = nullptr;
 }
 
-void Sound::register_functions(visitor::Interpreter* visitor) {
+void ModuleSound::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["play_sound"] = [this, visitor]() {
 		auto& scope = visitor->scopes["cp"].back();
@@ -58,6 +58,6 @@ void Sound::register_functions(visitor::Interpreter* visitor) {
 		};
 }
 
-void Sound::register_functions(visitor::Compiler* visitor) {}
+void ModuleSound::register_functions(visitor::Compiler* visitor) {}
 
-void Sound::register_functions(VirtualMachine* vm) {}
+void ModuleSound::register_functions(vm::VirtualMachine* vm) {}

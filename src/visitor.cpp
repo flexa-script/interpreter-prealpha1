@@ -1,13 +1,13 @@
 #include "visitor.hpp"
 
-#include "builtin.hpp"
-#include "datetime.hpp"
-#include "graphics.hpp"
-#include "files.hpp"
-#include "console.hpp"
-#include "input.hpp"
-#include "sound.hpp"
-#include "HTTP.hpp"
+#include "md_builtin.hpp"
+#include "md_datetime.hpp"
+#include "md_graphics.hpp"
+#include "md_files.hpp"
+#include "md_console.hpp"
+#include "md_input.hpp"
+#include "md_sound.hpp"
+#include "md_HTTP.hpp"
 
 using namespace visitor;
 
@@ -40,12 +40,12 @@ std::vector<std::string> std_libs = {
 };
 
 std::map<std::string, std::shared_ptr<modules::Module>> built_in_libs = {
-	{"builtin", std::shared_ptr<modules::Builtin>(new modules::Builtin())},
-	{"cp.core.graphics", std::shared_ptr<modules::Graphics>(new modules::Graphics())},
-	{"cp.core.files", std::shared_ptr<modules::Files>(new modules::Files())},
-	{"cp.core.console", std::shared_ptr<modules::Console>(new modules::Console())},
-	{"cp.core.datetime", std::shared_ptr<modules::DateTime>(new modules::DateTime())},
-	{"cp.core.input", std::shared_ptr<modules::Input>(new modules::Input())},
-	{"cp.core.sound", std::shared_ptr<modules::Sound>(new modules::Sound())},
-	{"cp.core.HTTP", std::shared_ptr<modules::HTTP>(new modules::HTTP())}
+	{"builtin", std::shared_ptr<modules::ModuleBuiltin>(new modules::ModuleBuiltin())},
+	{"cp.core.graphics", std::shared_ptr<modules::ModuleGraphics>(new modules::ModuleGraphics())},
+	{"cp.core.files", std::shared_ptr<modules::ModuleFiles>(new modules::ModuleFiles())},
+	{"cp.core.console", std::shared_ptr<modules::ModuleConsole>(new modules::ModuleConsole())},
+	{"cp.core.datetime", std::shared_ptr<modules::ModuleDateTime>(new modules::ModuleDateTime())},
+	{"cp.core.input", std::shared_ptr<modules::ModuleInput>(new modules::ModuleInput())},
+	{"cp.core.sound", std::shared_ptr<modules::ModuleSound>(new modules::ModuleSound())},
+	{"cp.core.HTTP", std::shared_ptr<modules::ModuleHTTP>(new modules::ModuleHTTP())}
 };

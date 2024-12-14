@@ -1,15 +1,15 @@
-#include "datetime.hpp"
+#include "md_datetime.hpp"
 
 #include "interpreter.hpp"
 #include "semantic_analysis.hpp"
 
 using namespace modules;
 
-DateTime::DateTime() {}
+ModuleDateTime::ModuleDateTime() {}
 
-DateTime::~DateTime() = default;
+ModuleDateTime::~ModuleDateTime() = default;
 
-cp_struct DateTime::tm_to_date_time(visitor::Interpreter* visitor, time_t t, tm* tm) {
+cp_struct ModuleDateTime::tm_to_date_time(visitor::Interpreter* visitor, time_t t, tm* tm) {
 	cp_struct dt_str = cp_struct();
 	dt_str["timestamp"] = visitor->alocate_value(new RuntimeValue(cp_int(t)));
 	dt_str["second"] = visitor->alocate_value(new RuntimeValue(cp_int(tm->tm_sec)));
@@ -25,7 +25,7 @@ cp_struct DateTime::tm_to_date_time(visitor::Interpreter* visitor, time_t t, tm*
 	return dt_str;
 }
 
-void DateTime::register_functions(visitor::SemanticAnalyser* visitor) {
+void ModuleDateTime::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["create_date_time"] = nullptr;
 	visitor->builtin_functions["diff_date_time"] = nullptr;
 	visitor->builtin_functions["format_date_time"] = nullptr;
@@ -35,7 +35,7 @@ void DateTime::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["clock"] = nullptr;
 }
 
-void DateTime::register_functions(visitor::Interpreter* visitor) {
+void ModuleDateTime::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["create_date_time"] = [this, visitor]() {
 		auto& scope = visitor->scopes["cp"].back();
@@ -170,6 +170,6 @@ void DateTime::register_functions(visitor::Interpreter* visitor) {
 
 }
 
-void DateTime::register_functions(visitor::Compiler* visitor) {}
+void ModuleDateTime::register_functions(visitor::Compiler* visitor) {}
 
-void DateTime::register_functions(VirtualMachine* vm) {}
+void ModuleDateTime::register_functions(vm::VirtualMachine* vm) {}

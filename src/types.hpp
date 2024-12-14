@@ -10,6 +10,8 @@
 
 #include "gcobject.hpp"
 
+using namespace gc;
+
 namespace parser {
 	enum class Type {
 		T_UNDEFINED, T_VOID, T_BOOL, T_INT, T_FLOAT, T_CHAR, T_STRING, T_ARRAY, T_STRUCT, T_ANY, T_FUNCTION

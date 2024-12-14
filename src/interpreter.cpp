@@ -7,12 +7,11 @@
 #include "interpreter.hpp"
 #include "exception_handler.hpp"
 #include "token.hpp"
-#include "builtin.hpp"
+#include "md_builtin.hpp"
 #include "gc.hpp"
 
-#include "vendor/axeutils.hpp"
-#include "vendor/axewatch.hpp"
-#include "vendor/axeuuid.hpp"
+#include "utils.hpp"
+#include "watch.hpp"
 
 using namespace lexer;
 
@@ -63,7 +62,7 @@ void Interpreter::visit(std::shared_ptr<ASTProgramNode> astnode) {
 void Interpreter::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	std::string libname = axe::StringUtils::join(astnode->library, ".");
+	std::string libname = utils::StringUtils::join(astnode->library, ".");
 
 	if (built_in_libs.find(libname) != built_in_libs.end()) {
 		built_in_libs.find(libname)->second->register_functions(this);
@@ -75,7 +74,7 @@ void Interpreter::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	current_program.top()->libs.push_back(libname);
 
 	// if can't parsed yet
-	if (!axe::CollectionUtils::contains(parsed_libs, libname)) {
+	if (!utils::CollectionUtils::contains(parsed_libs, libname)) {
 		parsed_libs.push_back(libname);
 
 		current_program.push(program);
@@ -436,7 +435,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionExpression> astnode) {
 
 	// generate an random identifier and evaluates
 	auto& fun = astnode->fun;
-	fun->identifier = axe::UUID::generate();
+	fun->identifier = utils::UUID::generate();
 	fun->accept(this);
 
 	current_expression_value = alocate_value(new RuntimeValue(cp_function(nmspace, fun->identifier)));
@@ -1554,7 +1553,7 @@ void Interpreter::visit(std::shared_ptr<ASTTypingNode> astnode) {
 
 	if (astnode->image == "typeid") {
 		auto value = alocate_value(new RuntimeValue(Type::T_INT));
-		value->set(cp_int(axe::StringUtils::hashcode(str_type)));
+		value->set(cp_int(utils::StringUtils::hashcode(str_type)));
 		current_expression_value = value;
 	}
 	else {
@@ -1835,7 +1834,7 @@ long long Interpreter::hash(RuntimeValue* value) {
 	case Type::T_CHAR:
 		return static_cast<long long>(value->get_c());
 	case Type::T_STRING:
-		return axe::StringUtils::hashcode(value->get_s());
+		return utils::StringUtils::hashcode(value->get_s());
 	default:
 		throw std::runtime_error("cannot determine type");
 	}
@@ -1867,7 +1866,7 @@ long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_char>> astnode) {
 }
 
 long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) {
-	return axe::StringUtils::hashcode(astnode->val);
+	return utils::StringUtils::hashcode(astnode->val);
 }
 
 long long Interpreter::hash(std::shared_ptr<ASTIdentifierNode> astnode) {

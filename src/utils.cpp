@@ -4,10 +4,11 @@
 #include <iostream>
 #include <iterator>
 #include <filesystem>
+#include <random>
 
-#include "axeutils.hpp"
+#include "utils.hpp"
 
-namespace axe {
+namespace utils {
 
 	// StringUtils
 
@@ -102,14 +103,7 @@ namespace axe {
 		return h;
 	}
 
-
 	// CollectionUtils
-
-	//template<typename Container, typename T>
-	//bool CollectionUtils::contains(const Container& c, const T& value) {
-	//	return std::find(c.begin(), c.end(), value) != c.end();
-	//}
-
 
 	// PathUtils
 
@@ -127,6 +121,27 @@ namespace axe {
 	std::string PathUtils::normalize_path_sep(const std::string& path) {
 		std::string sep(std::string{ std::filesystem::path::preferred_separator });
 		return StringUtils::replace(StringUtils::replace(path, "\\", sep), "/", sep);
+	}
+
+	// UUID
+
+	std::string UUID::generate() {
+		static std::random_device dev;
+		static std::mt19937 rng(dev());
+
+		std::uniform_int_distribution<int> dist(0, 15);
+
+		const char* v = "0123456789abcdef";
+		const bool dash[] = { 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0 };
+
+		std::string res;
+		for (int i = 0; i < 16; i++) {
+			if (dash[i]) res += "-";
+			res += v[dist(rng)];
+			res += v[dist(rng)];
+		}
+
+		return res;
 	}
 
 }

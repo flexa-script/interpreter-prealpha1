@@ -1,16 +1,11 @@
-/**
- * MIT License
- * Copyright (c) 2024 Carlos Machado
- * v1.0.0
- */
-
-#ifndef AXELOGGING_HPP
-#define AXELOGGING_HPP
+#ifndef LOGGING_HPP
+#define LOGGING_HPP
 
 #include <string>
 #include <map>
 
-namespace axe {
+namespace utils {
+
 	enum LogLevel {
 		NOTSET,
 		DEBUG,
@@ -65,4 +60,4 @@ namespace axe {
 	};
 }
 
-#endif // !AXELOGGING_HPP
+#endif // !LOGGING_HPP

@@ -1,7 +1,7 @@
 ﻿#include "cprepl.hpp"
 #include "cpinterpreter.hpp"
-#include "vendor/axewatch.hpp"
-#include "argparse.hpp"
+#include "watch.hpp"
+#include "cpargparse.hpp"
 
 #include <Windows.h>
 
@@ -22,7 +22,7 @@ int main(int argc, const char* argv[]) {
 
 	auto interpreter = CPInterpreter(args);
 
-	auto sw = axe::ChronoStopwatch();
+	auto sw = utils::ChronoStopwatch();
 	sw.start();
 	int result = interpreter.execute();
 	sw.stop();

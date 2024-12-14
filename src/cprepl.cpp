@@ -1,6 +1,6 @@
 #include "cprepl.hpp"
 #include "cputil.hpp"
-#include "vendor/axeutils.hpp"
+#include "utils.hpp"
 #include "types.hpp"
 
 const std::string CPRepl::NAME = "CPLang";
@@ -104,7 +104,7 @@ int CPRepl::execute() {
 			catch (const std::exception& e) {
 				std::string err = e.what();
 				remove_header(err);
-				std::cerr << axe::StringUtils::trim(err) << std::endl;
+				std::cerr << utils::StringUtils::trim(err) << std::endl;
 				continue;
 			}
 
@@ -133,7 +133,7 @@ int CPRepl::execute() {
 		catch (const std::exception& e) {
 			std::string err = e.what();
 			remove_header(err);
-			std::cerr << axe::StringUtils::trim(err) << std::endl;
+			std::cerr << utils::StringUtils::trim(err) << std::endl;
 		}
 	}
 

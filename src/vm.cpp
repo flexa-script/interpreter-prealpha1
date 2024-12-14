@@ -7,9 +7,10 @@
 #include "vm.hpp"
 #include "exception_handler.hpp"
 
-#include "vendor/axeutils.hpp"
-#include "vendor/axewatch.hpp"
-#include "vendor/axeuuid.hpp"
+#include "utils.hpp"
+#include "watch.hpp"
+
+using namespace vm;
 
 VirtualMachine::VirtualMachine(std::shared_ptr<Scope> global_scope, std::vector<BytecodeInstruction> instructions)
 	: instructions(instructions), gc(GarbageCollector()), set_default_value(nullptr) {
@@ -62,7 +63,7 @@ void VirtualMachine::push_constant(RuntimeValue* value) {
 }
 
 void VirtualMachine::push_function_constant(const std::string& identifier) {
-	auto fdef = axe::StringUtils::split(identifier, ":");
+	auto fdef = utils::StringUtils::split(identifier, ":");
 	push_constant(new RuntimeValue(cp_function(fdef[0], fdef[1])));
 }
 
@@ -791,7 +792,7 @@ void VirtualMachine::decode_operation() {
 		push_constant(
 			new RuntimeValue(
 				cp_int(
-					axe::StringUtils::hashcode(RuntimeOperations::build_str_type(get_stack_top(), evaluate_access_vector_ptr))
+					utils::StringUtils::hashcode(RuntimeOperations::build_str_type(get_stack_top(), evaluate_access_vector_ptr))
 				)
 			)
 		);

@@ -15,6 +15,7 @@
 
 using namespace visitor;
 using namespace parser;
+using namespace gc;
 
 namespace visitor {
 	class Interpreter : public Visitor, public MetaVisitor {

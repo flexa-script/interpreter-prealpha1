@@ -5,7 +5,7 @@
 #include <conio.h>
 #include <memory>
 
-#include "builtin.hpp"
+#include "md_builtin.hpp"
 
 #include "types.hpp"
 #include "semantic_analysis.hpp"
@@ -16,6 +16,7 @@
 #include "visitor.hpp"
 
 using namespace modules;
+using namespace vm;
 
 std::string modules::BUILTIN_NAMES[] = {
 	"print",
@@ -27,13 +28,13 @@ std::string modules::BUILTIN_NAMES[] = {
 	"system"
 };
 
-Builtin::Builtin() {
+ModuleBuiltin::ModuleBuiltin() {
 	build_decls();
 }
 
-Builtin::~Builtin() = default;
+ModuleBuiltin::~ModuleBuiltin() = default;
 
-void Builtin::register_functions(visitor::SemanticAnalyser* visitor) {
+void ModuleBuiltin::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::PRINT], func_decls[BUILTIN_NAMES[BuintinFuncs::PRINT]]);
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]] = nullptr;
 
@@ -58,7 +59,7 @@ void Builtin::register_functions(visitor::SemanticAnalyser* visitor) {
 
 }
 
-void Builtin::register_functions(visitor::Interpreter* visitor) {
+void ModuleBuiltin::register_functions(visitor::Interpreter* visitor) {
 	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::PRINT], func_decls[BUILTIN_NAMES[BuintinFuncs::PRINT]]);
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
@@ -145,7 +146,7 @@ void Builtin::register_functions(visitor::Interpreter* visitor) {
 
 }
 
-void Builtin::register_functions(visitor::Compiler* visitor) {
+void ModuleBuiltin::register_functions(visitor::Compiler* visitor) {
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]] = nullptr;
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINTLN]] = nullptr;
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::READ]] = nullptr;
@@ -155,7 +156,7 @@ void Builtin::register_functions(visitor::Compiler* visitor) {
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::SYSTEM]] = nullptr;
 }
 
-void Builtin::register_functions(VirtualMachine* vm) {
+void ModuleBuiltin::register_functions(VirtualMachine* vm) {
 	vm->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::PRINT], func_decls[BUILTIN_NAMES[BuintinFuncs::PRINT]]);
 	vm->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]] = [this, vm]() {
 		try {
@@ -229,7 +230,7 @@ void Builtin::register_functions(VirtualMachine* vm) {
 
 }
 
-void Builtin::build_decls() {
+void ModuleBuiltin::build_decls() {
 	std::vector<TypeDefinition*> parameters;
 	VariableDefinition* variable;
 

@@ -1,5 +1,5 @@
-#ifndef DATETIME_HPP
-#define DATETIME_HPP
+#ifndef MD_DATETIME_HPP
+#define MD_DATETIME_HPP
 
 #include <ctime>
 
@@ -7,18 +7,18 @@
 #include "types.hpp"
 
 namespace modules {
-	class DateTime : public Module {
+	class ModuleDateTime : public Module {
 	public:
-		DateTime();
-		~DateTime();
+		ModuleDateTime();
+		~ModuleDateTime();
 
 		cp_struct tm_to_date_time(visitor::Interpreter* visitor, time_t t, tm* tm);
 
 		void register_functions(visitor::SemanticAnalyser* visitor) override;
 		void register_functions(visitor::Interpreter* visitor) override;
 		void register_functions(visitor::Compiler* visitor) override;
-		void register_functions(VirtualMachine* vm) override;
+		void register_functions(vm::VirtualMachine* vm) override;
 	};
 }
 
-#endif // !DATETIME_HPP
+#endif // !MD_DATETIME_HPP

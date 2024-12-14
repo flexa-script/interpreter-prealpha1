@@ -1,6 +1,6 @@
 #include <filesystem>
 
-#include "vendor/axeutils.hpp"
+#include "utils.hpp"
 #include "cputil.hpp"
 
 std::string CPUtil::load_source(const std::string& path) {
@@ -36,7 +36,7 @@ std::string CPUtil::get_lib_name(const std::string& libpath) {
 }
 
 std::string CPUtil::get_prog_name(const std::string& progpath) {
-	auto norm_path = axe::PathUtils::normalize_path_sep(progpath);
+	auto norm_path = utils::PathUtils::normalize_path_sep(progpath);
 	auto index = norm_path.rfind(std::filesystem::path::preferred_separator) + 1;
 	std::string file_name = progpath.substr(index, progpath.size());
 	std::string lib_name = file_name.substr(0, file_name.length() - 3);

@@ -8,15 +8,15 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "compiler.hpp"
-#include "vendor/axeutils.hpp"
+#include "utils.hpp"
 #include "cputil.hpp"
 #include "linker.hpp"
 #include "interpreter.hpp"
 #include "vm.hpp"
 
 CPInterpreter::CPInterpreter(const CpCliArgs& args)
-	: project_root(axe::PathUtils::normalize_path_sep(args.workspace)),
-	cp_root(axe::PathUtils::normalize_path_sep(axe::PathUtils::get_current_path() + "libs")),
+	: project_root(utils::PathUtils::normalize_path_sep(args.workspace)),
+	cp_root(utils::PathUtils::normalize_path_sep(utils::PathUtils::get_current_path() + "libs")),
 	args(args) {}
 
 int CPInterpreter::execute() {
@@ -31,7 +31,7 @@ std::vector<CPSource> CPInterpreter::load_programs(const std::vector<std::string
 	std::vector<CPSource> source_programs;
 
 	for (size_t i = 0; i < sources.size(); ++i) {
-		auto current_file_path = std::string{ std::filesystem::path::preferred_separator } + axe::PathUtils::normalize_path_sep(sources[i]);
+		auto current_file_path = std::string{ std::filesystem::path::preferred_separator } + utils::PathUtils::normalize_path_sep(sources[i]);
 		std::string current_full_path = "";
 
 		if (std::filesystem::exists(project_root + current_file_path)) {

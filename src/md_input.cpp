@@ -1,21 +1,21 @@
 #include <Windows.h>
 
-#include "input.hpp"
+#include "md_input.hpp"
 
 #include "interpreter.hpp"
 #include "semantic_analysis.hpp"
 
 using namespace modules;
 
-Input::Input() : running(false) {
+ModuleInput::ModuleInput() : running(false) {
 	start();
 }
 
-Input::~Input() {
+ModuleInput::~ModuleInput() {
 	stop();
 }
 
-void Input::register_functions(visitor::SemanticAnalyser* visitor) {
+void ModuleInput::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["update_key_states"] = nullptr;
 	visitor->builtin_functions["is_key_pressed"] = nullptr;
 	visitor->builtin_functions["is_key_released"] = nullptr;
@@ -24,7 +24,7 @@ void Input::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["is_mouse_button_pressed"] = nullptr;
 }
 
-void Input::register_functions(visitor::Interpreter* visitor) {
+void ModuleInput::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["update_key_states"] = [this, visitor]() {
 		previous_key_state = current_key_state;
@@ -106,7 +106,7 @@ void Input::register_functions(visitor::Interpreter* visitor) {
 		};
 }
 
-void Input::key_update_loop() {
+void ModuleInput::key_update_loop() {
 	while (running) {
 		{
 			std::lock_guard<std::mutex> lock(state_mutex);
@@ -120,14 +120,14 @@ void Input::key_update_loop() {
 	}
 }
 
-void Input::start() {
+void ModuleInput::start() {
 	if (!running) {
 		running = true;
-		key_update_thread = std::thread(&Input::key_update_loop, this);
+		key_update_thread = std::thread(&ModuleInput::key_update_loop, this);
 	}
 }
 
-void Input::stop() {
+void ModuleInput::stop() {
 	if (running) {
 		running = false;
 		if (key_update_thread.joinable()) {
@@ -136,6 +136,6 @@ void Input::stop() {
 	}
 }
 
-void Input::register_functions(visitor::Compiler* visitor) {}
+void ModuleInput::register_functions(visitor::Compiler* visitor) {}
 
-void Input::register_functions(VirtualMachine* vm) {}
+void ModuleInput::register_functions(vm::VirtualMachine* vm) {}

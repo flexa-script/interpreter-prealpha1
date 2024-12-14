@@ -1,18 +1,18 @@
 #include <cwchar>
 #include <Windows.h>
 
-#include "console.hpp"
+#include "md_console.hpp"
 
 #include "interpreter.hpp"
 #include "semantic_analysis.hpp"
 
 using namespace modules;
 
-Console::Console() {}
+ModuleConsole::ModuleConsole() {}
 
-Console::~Console() = default;
+ModuleConsole::~ModuleConsole() = default;
 
-void Console::register_functions(visitor::SemanticAnalyser* visitor) {
+void ModuleConsole::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["show_console"] = nullptr;
 	visitor->builtin_functions["is_console_visible"] = nullptr;
 	visitor->builtin_functions["set_console_color"] = nullptr;
@@ -20,7 +20,7 @@ void Console::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["set_console_font"] = nullptr;
 }
 
-void Console::register_functions(visitor::Interpreter* visitor) {
+void ModuleConsole::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["show_console"] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
@@ -97,6 +97,6 @@ void Console::register_functions(visitor::Interpreter* visitor) {
 
 }
 
-void Console::register_functions(visitor::Compiler* visitor) {}
+void ModuleConsole::register_functions(visitor::Compiler* visitor) {}
 
-void Console::register_functions(VirtualMachine* vm) {}
+void ModuleConsole::register_functions(vm::VirtualMachine* vm) {}

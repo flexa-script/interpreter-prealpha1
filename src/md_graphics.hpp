@@ -1,21 +1,22 @@
-#ifndef CONSOLE_HPP
-#define CONSOLE_HPP
+#ifndef MD_GRAPHICS_HPP
+#define MD_GRAPHICS_HPP
 
 #include <functional>
 
 #include "module.hpp"
+#include "graphics_utils.hpp"
 
 namespace modules {
-	class Console : public Module {
+	class ModuleGraphics : public Module {
 	public:
-		Console();
-		~Console();
+		ModuleGraphics();
+		~ModuleGraphics();
 
 		void register_functions(visitor::SemanticAnalyser* visitor) override;
 		void register_functions(visitor::Interpreter* visitor) override;
 		void register_functions(visitor::Compiler* visitor) override;
-		void register_functions(VirtualMachine* vm) override;
+		void register_functions(vm::VirtualMachine* vm) override;
 	};
 }
 
-#endif // !CONSOLE_HPP
+#endif // !MD_GRAPHICS_HPP

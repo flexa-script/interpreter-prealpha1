@@ -1,5 +1,7 @@
 #include "gc.hpp"
 
+using namespace gc;
+
 GarbageCollector::GarbageCollector() {}
 
 GarbageCollector::~GarbageCollector() {

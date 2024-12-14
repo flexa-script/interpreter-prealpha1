@@ -14,6 +14,7 @@
 
 using namespace visitor;
 using namespace parser;
+using namespace vm;
 
 namespace visitor {
 

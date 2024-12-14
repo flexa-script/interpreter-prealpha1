@@ -2,26 +2,26 @@
 #include <ws2tcpip.h>
 #include <iostream>
 
-#include "http.hpp"
+#include "md_http.hpp"
 
 #include "interpreter.hpp"
 #include "semantic_analysis.hpp"
-#include "vendor/axeutils.hpp"
+#include "utils.hpp"
 
 #pragma comment(lib, "ws2_32.lib")
 
 using namespace modules;
 using namespace visitor;
 
-HTTP::HTTP() {}
+ModuleHTTP::ModuleHTTP() {}
 
-HTTP::~HTTP() = default;
+ModuleHTTP::~ModuleHTTP() = default;
 
-void HTTP::register_functions(visitor::SemanticAnalyser* visitor) {
+void ModuleHTTP::register_functions(visitor::SemanticAnalyser* visitor) {
 	visitor->builtin_functions["request"] = nullptr;
 }
 
-void HTTP::register_functions(visitor::Interpreter* visitor) {
+void ModuleHTTP::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["request"] = [this, visitor]() {
 		auto& scope = visitor->scopes["cp"].back();
@@ -149,13 +149,13 @@ void HTTP::register_functions(visitor::Interpreter* visitor) {
 		WSACleanup();
 
 		std::string raw_response(buffer, bytes_received);
-		std::vector<std::string> response_lines = axe::StringUtils::split(raw_response, "\r\n");
+		std::vector<std::string> response_lines = utils::StringUtils::split(raw_response, "\r\n");
 		bool is_body = false;
 		std::string res_body;
 
 		// create response struct
 		cp_struct res_str;
-		auto status = axe::StringUtils::split(response_lines[0], ' ');
+		auto status = utils::StringUtils::split(response_lines[0], ' ');
 		res_str["http_version"] = visitor->alocate_value(new RuntimeValue(cp_string(status[0])));
 		res_str["status"] = visitor->alocate_value(new RuntimeValue(cp_int(stoll(status[1]))));
 		res_str["status_description"] = visitor->alocate_value(new RuntimeValue(cp_string(status[2])));
@@ -186,7 +186,7 @@ void HTTP::register_functions(visitor::Interpreter* visitor) {
 					continue;
 				}
 
-				auto header = axe::StringUtils::split(line, ": ");
+				auto header = utils::StringUtils::split(line, ": ");
 				auto parameters = std::vector<std::shared_ptr<ASTExprNode>> {
 					header_identifier,
 					std::make_shared<ASTLiteralNode<cp_string>>(header[0], 0, 0),
@@ -210,6 +210,6 @@ void HTTP::register_functions(visitor::Interpreter* visitor) {
 
 }
 
-void HTTP::register_functions(visitor::Compiler* visitor) {}
+void ModuleHTTP::register_functions(visitor::Compiler* visitor) {}
 
-void HTTP::register_functions(VirtualMachine* vm) {}
+void ModuleHTTP::register_functions(vm::VirtualMachine* vm) {}

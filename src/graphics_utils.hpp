@@ -1,18 +1,12 @@
-/**
- * MIT License
- * Copyright (c) 2024 Carlos Machado
- * v1.0.0
- */
+#ifndef GRAPHICS_UTILS_HPP
+#define GRAPHICS_UTILS_HPP
 
-#ifndef AXEGRAPHICS_HPP
-#define AXEGRAPHICS_HPP
-
-#include <windows.h>
+#include <Windows.h>
 #include <unordered_map>
 #include <map>
 #include <string>
 
-namespace axe {
+namespace utils {
 
 	struct Image {
 		HBITMAP bitmap;
@@ -76,4 +70,4 @@ namespace axe {
 	};
 }
 
-#endif // !AXEGRAPHICS_HPP
+#endif // !GRAPHICS_UTILS_HPP

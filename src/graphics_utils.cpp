@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include "axegraphics.hpp"
+#include "graphics_utils.hpp"
 
-using namespace axe;
+using namespace utils;
 
 Image::~Image() {
 	if (bitmap) {

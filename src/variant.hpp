@@ -4,11 +4,15 @@
 #include <vector>
 #include <cstdint>
 
-class Variant {
+namespace vm {
 
-    static std::vector<uint8_t> encode_varint(uint64_t value);
-    static uint64_t decode_varint(const std::vector<uint8_t>& bytes, size_t& index);
+	class Variant {
 
-};
+		static std::vector<uint8_t> encode_varint(uint64_t value);
+		static uint64_t decode_varint(const std::vector<uint8_t>& bytes, size_t& index);
+
+	};
+
+}
 
 #endif // !VARIANT_HPP
