@@ -1,9 +1,9 @@
-#include "cprepl.hpp"
-#include "cputil.hpp"
+#include "bsl_repl.hpp"
+#include "bsl_utils.hpp"
 #include "utils.hpp"
 #include "types.hpp"
 
-const std::string CPRepl::NAME = "CPLang";
+const std::string CPRepl::NAME = "BSL";
 const std::string CPRepl::VER = "v0.0.1";
 const std::string CPRepl::YEAR = "2024";
 
@@ -57,7 +57,7 @@ int CPRepl::execute() {
 			std::cout << std::setw(20);
 			std::cout << "" << ">>> #load .\\main.cp\n\n";
 
-			std::cout << " #quit              Exits the CPLang REPL.\n";
+			std::cout << " #quit              Exits the BSL REPL.\n";
 			std::cout << std::setw(20);
 			std::cout << "" << "functions and variables in the global scope.\n\n";
 
@@ -70,8 +70,8 @@ int CPRepl::execute() {
 			}
 
 			std::string file_path = input_line.substr(6);
-			source = CPUtil::load_source(file_path);
-			prog_name = CPUtil::get_prog_name(file_path);
+			source = load_source(file_path);
+			prog_name = get_prog_name(file_path);
 			file_load = true;
 		}
 		else if (input_line == "#clear") {

@@ -59,6 +59,8 @@ typedef std::vector<RuntimeValue*> cp_array;
 typedef std::unordered_map<std::string, RuntimeValue*> cp_struct;
 typedef std::pair<std::string, std::string> cp_function;
 
+extern std::string language_namespace;
+
 class SemanticVariable;
 class RuntimeVariable;
 

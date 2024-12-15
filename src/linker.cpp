@@ -1,6 +1,5 @@
 #include <filesystem>
 
-#include "cputil.hpp"
 #include "linker.hpp"
 #include "utils.hpp"
 
@@ -27,7 +26,7 @@ void Linker::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	std::string libname = utils::StringUtils::join(astnode->library, ".");
 
 	if (programs.find(libname) == programs.end()) {
-		std::string path = utils::StringUtils::replace(libname, ".", std::string{ std::filesystem::path::preferred_separator }) + ".cp";
+		std::string path = utils::StringUtils::replace(libname, ".", std::string{ std::filesystem::path::preferred_separator }) + ".bsl";
 		if (std::find(lib_names.begin(), lib_names.end(), path) == lib_names.end()) {
 			lib_names.push_back(path);
 		}

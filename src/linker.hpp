@@ -1,8 +1,8 @@
-#ifndef LIBFINDER_HPP
-#define LIBFINDER_HPP
+#ifndef LINKER_HPP
+#define LINKER_HPP
 
 #include "ast.hpp"
-#include "cpsource.hpp"
+#include "bsl_utils.hpp"
 
 namespace visitor {
 
@@ -79,4 +79,4 @@ namespace visitor {
 
 }
 
-#endif // !LIBFINDER_HPP
+#endif // !LINKER_HPP

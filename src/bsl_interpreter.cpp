@@ -4,17 +4,16 @@
 #include <iomanip>
 #include <filesystem>
 
-#include "cpinterpreter.hpp"
+#include "bsl_interpreter.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "compiler.hpp"
 #include "utils.hpp"
-#include "cputil.hpp"
 #include "linker.hpp"
 #include "interpreter.hpp"
 #include "vm.hpp"
 
-CPInterpreter::CPInterpreter(const CpCliArgs& args)
+CPInterpreter::CPInterpreter(const BSLCliArgs& args)
 	: project_root(utils::PathUtils::normalize_path_sep(args.workspace)),
 	cp_root(utils::PathUtils::normalize_path_sep(utils::PathUtils::get_current_path() + "libs")),
 	args(args) {}
@@ -27,8 +26,8 @@ int CPInterpreter::execute() {
 	return 0;
 }
 
-std::vector<CPSource> CPInterpreter::load_programs(const std::vector<std::string>& sources) {
-	std::vector<CPSource> source_programs;
+std::vector<BSLSource> CPInterpreter::load_programs(const std::vector<std::string>& sources) {
+	std::vector<BSLSource> source_programs;
 
 	for (size_t i = 0; i < sources.size(); ++i) {
 		auto current_file_path = std::string{ std::filesystem::path::preferred_separator } + utils::PathUtils::normalize_path_sep(sources[i]);
@@ -44,14 +43,14 @@ std::vector<CPSource> CPInterpreter::load_programs(const std::vector<std::string
 			throw std::runtime_error("file not found: '" + current_file_path + "'");
 		}
 
-		auto program = CPSource(CPUtil::get_lib_name(sources[i]), CPUtil::load_source(current_full_path));
+		auto program = BSLSource{ get_lib_name(sources[i]), load_source(current_full_path) };
 		source_programs.push_back(program);
 	}
 
 	return source_programs;
 }
 
-void CPInterpreter::parse_programs(const std::vector<CPSource>& source_programs, std::shared_ptr<ASTProgramNode>* main_program,
+void CPInterpreter::parse_programs(const std::vector<BSLSource>& source_programs, std::shared_ptr<ASTProgramNode>* main_program,
 	std::map<std::string, std::shared_ptr<ASTProgramNode>>* programs) {
 
 	for (const auto& source : source_programs) {
@@ -74,7 +73,7 @@ void CPInterpreter::parse_programs(const std::vector<CPSource>& source_programs,
 }
 
 int CPInterpreter::interpreter() {
-	std::vector<CPSource> source_programs;
+	std::vector<BSLSource> source_programs;
 	try {
 		source_programs = load_programs(args.sources);
 	}
@@ -118,7 +117,7 @@ int CPInterpreter::interpreter() {
 			visitor::Compiler compiler(main_program, programs, args.cpargs);
 			compiler.start();
 
-			BytecodeInstruction::write_bytecode_table(compiler.bytecode_program, project_root + "\\" + source_programs[0].name + ".cpt");
+			BytecodeInstruction::write_bytecode_table(compiler.bytecode_program, project_root + "\\" + source_programs[0].name + ".bslt");
 
 			// execute
 			VirtualMachine vm(interpreter_global_scope, compiler.bytecode_program);

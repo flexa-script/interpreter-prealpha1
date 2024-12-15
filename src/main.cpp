@@ -1,7 +1,6 @@
-﻿#include "cprepl.hpp"
-#include "cpinterpreter.hpp"
+﻿#include "bsl_repl.hpp"
+#include "bsl_interpreter.hpp"
 #include "watch.hpp"
-#include "cpargparse.hpp"
 
 #include <Windows.h>
 

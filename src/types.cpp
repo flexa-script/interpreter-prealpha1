@@ -17,6 +17,8 @@
 using namespace visitor;
 using namespace lexer;
 
+std::string language_namespace = "bsl";
+
 namespace parser {
 	std::string type_str(Type t) {
 		switch (t) {

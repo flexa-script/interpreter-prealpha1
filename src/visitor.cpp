@@ -19,33 +19,33 @@ Visitor::Visitor(const std::map<std::string, std::shared_ptr<ASTProgramNode>>& p
 std::string default_namespace = "__default__";
 
 std::vector<std::string> std_libs = {
-	"cp.std.collections.collection",
-	"cp.std.collections.dictionary",
-	"cp.std.collections.hashtable",
-	"cp.std.collections.list",
-	"cp.std.collections.queue",
-	"cp.std.collections.stack",
-	"cp.std.arrays",
-	"cp.std.math",
-	"cp.std.print",
-	"cp.std.random",
-	"cp.std.strings",
-	"cp.std.structs",
-	"cp.std.testing",
-	"cp.std.utils",
-	"cp.std.DSL.BPS",
-	"cp.std.DSL.JSON",
-	"cp.std.DSL.YAML",
-	"cp.std.DSL.XML"
+	"bsl.std.collections.collection",
+	"bsl.std.collections.dictionary",
+	"bsl.std.collections.hashtable",
+	"bsl.std.collections.list",
+	"bsl.std.collections.queue",
+	"bsl.std.collections.stack",
+	"bsl.std.arrays",
+	"bsl.std.math",
+	"bsl.std.print",
+	"bsl.std.random",
+	"bsl.std.strings",
+	"bsl.std.structs",
+	"bsl.std.testing",
+	"bsl.std.utils",
+	"bsl.std.DSL.BPS",
+	"bsl.std.DSL.JSON",
+	"bsl.std.DSL.YAML",
+	"bsl.std.DSL.XML"
 };
 
 std::map<std::string, std::shared_ptr<modules::Module>> built_in_libs = {
 	{"builtin", std::shared_ptr<modules::ModuleBuiltin>(new modules::ModuleBuiltin())},
-	{"cp.core.graphics", std::shared_ptr<modules::ModuleGraphics>(new modules::ModuleGraphics())},
-	{"cp.core.files", std::shared_ptr<modules::ModuleFiles>(new modules::ModuleFiles())},
-	{"cp.core.console", std::shared_ptr<modules::ModuleConsole>(new modules::ModuleConsole())},
-	{"cp.core.datetime", std::shared_ptr<modules::ModuleDateTime>(new modules::ModuleDateTime())},
-	{"cp.core.input", std::shared_ptr<modules::ModuleInput>(new modules::ModuleInput())},
-	{"cp.core.sound", std::shared_ptr<modules::ModuleSound>(new modules::ModuleSound())},
-	{"cp.core.HTTP", std::shared_ptr<modules::ModuleHTTP>(new modules::ModuleHTTP())}
+	{"bsl.core.graphics", std::shared_ptr<modules::ModuleGraphics>(new modules::ModuleGraphics())},
+	{"bsl.core.files", std::shared_ptr<modules::ModuleFiles>(new modules::ModuleFiles())},
+	{"bsl.core.console", std::shared_ptr<modules::ModuleConsole>(new modules::ModuleConsole())},
+	{"bsl.core.datetime", std::shared_ptr<modules::ModuleDateTime>(new modules::ModuleDateTime())},
+	{"bsl.core.input", std::shared_ptr<modules::ModuleInput>(new modules::ModuleInput())},
+	{"bsl.core.sound", std::shared_ptr<modules::ModuleSound>(new modules::ModuleSound())},
+	{"bsl.core.HTTP", std::shared_ptr<modules::ModuleHTTP>(new modules::ModuleHTTP())}
 };
