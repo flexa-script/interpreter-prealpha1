@@ -140,7 +140,8 @@
 - [X] Automatically find and load included libs without to send by command line arguments
 
 ## Known bugs
-- [ ] Can't executes returned function
+- [ ] Namespaces must be included in file, not in namespace level
+- [ ] Can't executes returned function from another function eg: `here_is_returning_a_function()();`
 - [X] Review value copy and equal (mainly cause of ponters)
 - [X] Some function definition are not being found:nd:
     - [X] `var arr = {1, 2, 3, 4, 5, 6}` X `fun arr_size(arr[])`
