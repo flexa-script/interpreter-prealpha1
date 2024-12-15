@@ -29,7 +29,7 @@ void ModuleFiles::register_functions(visitor::SemanticAnalyser* visitor) {
 void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["open"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("path"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("mode"))->value
@@ -57,7 +57,7 @@ void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["read"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value;
 
 		if (!parser::is_void(val->type)) {
@@ -79,7 +79,7 @@ void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["read_line"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value;
 
 		if (!parser::is_void(val->type)) {
@@ -96,7 +96,7 @@ void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["read_all_bytes"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value;
 
 		if (!parser::is_void(val->type)) {
@@ -134,7 +134,7 @@ void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["write"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("data"))->value
@@ -148,7 +148,7 @@ void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["write_bytes"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("bytes"))->value
@@ -173,7 +173,7 @@ void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["is_open"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value;
 
 		if (!parser::is_void(val->type)) {
@@ -184,7 +184,7 @@ void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["close"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("file"))->value;
 
 		if (!parser::is_void(val->type)) {

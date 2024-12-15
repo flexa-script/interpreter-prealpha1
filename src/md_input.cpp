@@ -36,7 +36,7 @@ void ModuleInput::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["is_key_pressed"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("key"))->value;
 
 		int key = val->get_i();
@@ -52,7 +52,7 @@ void ModuleInput::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["is_key_released"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("key"))->value;
 
 		int key = val->get_i();
@@ -83,7 +83,7 @@ void ModuleInput::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["set_mouse_position"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("y"))->value
@@ -96,7 +96,7 @@ void ModuleInput::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["is_mouse_button_pressed"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("button"))->value;
 
 		int button = val->get_i();

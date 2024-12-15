@@ -34,7 +34,7 @@ void ModuleGraphics::register_functions(visitor::SemanticAnalyser* visitor) {
 void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["create_window"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("title"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("width"))->value,
@@ -71,7 +71,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["clear_screen"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("color"))->value
@@ -93,7 +93,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["get_current_width"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value;
 
 		RuntimeValue* win = val;
@@ -108,7 +108,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["get_current_height"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value;
 
 		RuntimeValue* win = val;
@@ -123,7 +123,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_pixel"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x"))->value,
@@ -149,7 +149,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_line"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x1"))->value,
@@ -179,7 +179,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_rect"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x"))->value,
@@ -209,7 +209,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["fill_rect"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x"))->value,
@@ -239,7 +239,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_circle"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("xc"))->value,
@@ -267,7 +267,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["fill_circle"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("xc"))->value,
@@ -295,7 +295,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["create_font"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("size"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("name"))->value,
@@ -340,7 +340,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_text"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("x"))->value,
@@ -378,7 +378,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["get_text_size"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("text"))->value,
@@ -415,7 +415,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["load_image"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("path"))->value;
 
 		// initialize image struct values
@@ -444,7 +444,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["draw_image"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto vals = std::vector{
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value,
 			std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("image"))->value,
@@ -475,7 +475,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["update"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value;
 
 		RuntimeValue* win = val;
@@ -488,7 +488,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["destroy_window"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value;
 
 		RuntimeValue* win = val;
@@ -502,7 +502,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["is_quit"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		RuntimeValue* win = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("window"))->value;
 		auto val = visitor->alocate_value(new RuntimeValue(parser::Type::T_BOOL));
 		if (!parser::is_void(win->type)) {

@@ -24,7 +24,7 @@ void ModuleSound::register_functions(visitor::SemanticAnalyser* visitor) {
 void ModuleSound::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["play_sound"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("path"))->value;
 
 		auto file_path = val->get_s();
@@ -34,7 +34,7 @@ void ModuleSound::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["play_sound_once"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("path"))->value;
 
 		auto file_path = val->get_s();
@@ -49,7 +49,7 @@ void ModuleSound::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["set_volume"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("volume"))->value;
 
 		unsigned long volume = val->get_f() * 65535;

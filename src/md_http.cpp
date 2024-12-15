@@ -24,7 +24,7 @@ void ModuleHTTP::register_functions(visitor::SemanticAnalyser* visitor) {
 void ModuleHTTP::register_functions(visitor::Interpreter* visitor) {
 
 	visitor->builtin_functions["request"] = [this, visitor]() {
-		auto& scope = visitor->scopes["cp"].back();
+		auto& scope = visitor->scopes[language_namespace].back();
 		auto val = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("config"))->value;
 
 		RuntimeValue* config_value = val;
@@ -168,8 +168,8 @@ void ModuleHTTP::register_functions(visitor::Interpreter* visitor) {
 		auto identifier_vector = std::vector<Identifier>{ Identifier("emplace") };
 		auto fcall = std::make_shared<ASTFunctionCallNode>("cp", identifier_vector, std::vector<std::shared_ptr<ASTExprNode>>(), 0, 0);
 
-		visitor->scopes["cp"].push_back(std::make_shared<Scope>());
-		auto& curr_scope = visitor->scopes["cp"].back();
+		visitor->scopes[language_namespace].push_back(std::make_shared<Scope>());
+		auto& curr_scope = visitor->scopes[language_namespace].back();
 		(std::make_shared<ASTDeclarationNode>("headers_value", Type::T_STRUCT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(),
 			"Dictionary", "cp", std::make_shared<ASTNullNode>(0, 0), false, 0, 0))->accept(visitor);
 		auto var = std::dynamic_pointer_cast<RuntimeVariable>(curr_scope->find_declared_variable("headers_value"));
@@ -198,7 +198,7 @@ void ModuleHTTP::register_functions(visitor::Interpreter* visitor) {
 			}
 		}
 
-		visitor->scopes["cp"].pop_back();
+		visitor->scopes[language_namespace].pop_back();
 
 		res_str["headers"] = headers_value;
 		res_str["data"] = visitor->alocate_value(new RuntimeValue(cp_string(res_body)));
