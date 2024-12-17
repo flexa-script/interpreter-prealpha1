@@ -69,7 +69,7 @@ namespace visitor {
 
 		long long hash(RuntimeValue* value);
 
-		void declare_function_block_parameters(const std::string& nmspace);
+		void declare_function_block_parameters(const std::string& name_space);
 		void build_args(const std::vector<std::string>& args);
 
 		void set_curr_pos(unsigned int row, unsigned int col) override;

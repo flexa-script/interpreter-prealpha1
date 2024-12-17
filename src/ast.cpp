@@ -16,8 +16,8 @@ Identifier::Identifier(const std::string& identifier)
 Identifier::Identifier()
 	: identifier(""), access_vector(std::vector<std::shared_ptr<ASTExprNode>>()) {}
 
-ASTProgramNode::ASTProgramNode(const std::string& name, const std::string& alias, const std::vector<std::shared_ptr<ASTNode>>& statements)
-	: ASTNode(row, col), name(name), alias(alias), statements(statements), libs(std::vector<std::string>()) {}
+ASTProgramNode::ASTProgramNode(const std::string& name, const std::string& name_space, const std::vector<std::shared_ptr<ASTNode>>& statements)
+	: ASTNode(row, col), name(name), name_space(name_space), statements(statements), libs(std::vector<std::shared_ptr<ASTProgramNode>>()) {}
 
 ASTBuiltinFunctionExecuterNode::ASTBuiltinFunctionExecuterNode(std::string identifier, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), identifier(identifier) {}
@@ -25,8 +25,8 @@ ASTBuiltinFunctionExecuterNode::ASTBuiltinFunctionExecuterNode(std::string ident
 ASTUsingNode::ASTUsingNode(const std::vector<std::string>& library, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), library(library) {}
 
-ASTNamespaceManagerNode::ASTNamespaceManagerNode(const std::string& image, const std::string& nmspace, unsigned int row, unsigned int col)
-	: ASTStatementNode(row, col), image(image), nmspace(nmspace) {}
+ASTNamespaceManagerNode::ASTNamespaceManagerNode(const std::string& image, const std::string& name_space, unsigned int row, unsigned int col)
+	: ASTStatementNode(row, col), image(image), name_space(name_space) {}
 
 ASTDeclarationNode::ASTDeclarationNode(const std::string& identifier, Type type, Type array_type, const std::vector<std::shared_ptr<ASTExprNode>>& dim,
 	const std::string& type_name, const std::string& type_name_space, std::shared_ptr<ASTExprNode> expr, bool is_const, unsigned int row, unsigned int col)
@@ -39,10 +39,10 @@ ASTUnpackedDeclarationNode::ASTUnpackedDeclarationNode(Type type, Type array_typ
 	: ASTStatementNode(row, col), TypeDefinition(type, array_type, dim, type_name, type_name_space),
 	declarations(declarations), expr(expr) {}
 
-ASTAssignmentNode::ASTAssignmentNode(const std::vector<Identifier>& identifier_vector, const std::string& nmspace,
+ASTAssignmentNode::ASTAssignmentNode(const std::vector<Identifier>& identifier_vector, const std::string& name_space,
 	const std::string& op, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), identifier(identifier_vector[0].identifier),
-	identifier_vector(identifier_vector), nmspace(nmspace), expr(expr), op(op) {}
+	identifier_vector(identifier_vector), name_space(name_space), expr(expr), op(op) {}
 
 ASTReturnNode::ASTReturnNode(std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), expr(expr) {}
@@ -109,9 +109,9 @@ ASTFunctionDefinitionNode::ASTFunctionDefinitionNode(const std::string& identifi
 ASTArrayConstructorNode::ASTArrayConstructorNode(const std::vector<std::shared_ptr<ASTExprNode>>& values, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), values(values) {}
 
-ASTStructConstructorNode::ASTStructConstructorNode(const std::string& type_name, const std::string& nmspace,
+ASTStructConstructorNode::ASTStructConstructorNode(const std::string& type_name, const std::string& name_space,
 	const std::map<std::string, std::shared_ptr<ASTExprNode>>& values, unsigned int row, unsigned int col)
-	: ASTExprNode(row, col), type_name(type_name), nmspace(nmspace), values(values) {}
+	: ASTExprNode(row, col), type_name(type_name), name_space(name_space), values(values) {}
 
 ASTNullNode::ASTNullNode(unsigned int row, unsigned int col)
 	: ASTExprNode(row, col) {}
@@ -125,9 +125,9 @@ ASTBinaryExprNode::ASTBinaryExprNode(const std::string& op, std::shared_ptr<ASTE
 ASTUnaryExprNode::ASTUnaryExprNode(const std::string& unary_op, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), unary_op(unary_op), expr(expr) {}
 
-ASTIdentifierNode::ASTIdentifierNode(const std::vector<Identifier>& identifier_vector, std::string nmspace, unsigned int row, unsigned int col)
+ASTIdentifierNode::ASTIdentifierNode(const std::vector<Identifier>& identifier_vector, std::string name_space, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), identifier(identifier_vector[0].identifier),
-	identifier_vector(identifier_vector), nmspace(nmspace) {}
+	identifier_vector(identifier_vector), name_space(name_space) {}
 
 ASTTernaryNode::ASTTernaryNode(std::shared_ptr<ASTExprNode> condition, std::shared_ptr<ASTExprNode> value_if_true, std::shared_ptr<ASTExprNode> value_if_false, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), condition(condition), value_if_true(value_if_true), value_if_false(value_if_false) {}
@@ -135,11 +135,11 @@ ASTTernaryNode::ASTTernaryNode(std::shared_ptr<ASTExprNode> condition, std::shar
 ASTInNode::ASTInNode(std::shared_ptr<ASTExprNode> value, std::shared_ptr<ASTExprNode> collection, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), value(value), collection(collection) {}
 
-ASTFunctionCallNode::ASTFunctionCallNode(const std::string& nmspace,
+ASTFunctionCallNode::ASTFunctionCallNode(const std::string& name_space,
 	const std::vector<Identifier>& identifier_vector,
 	const std::vector<std::shared_ptr<ASTExprNode>>& parameters, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), identifier(identifier_vector[0].identifier),
-	nmspace(nmspace), identifier_vector(identifier_vector), parameters(parameters) {}
+	name_space(name_space), identifier_vector(identifier_vector), parameters(parameters) {}
 
 ASTTypeParseNode::ASTTypeParseNode(Type type, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), type(type), expr(expr) {}

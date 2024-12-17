@@ -30,8 +30,8 @@ int CPRepl::execute() {
 	std::cout << NAME << " " << VER << " [" << YEAR << "]\n";
 	std::cout << "Type \"#help\" for more information.\n";
 
-	std::shared_ptr<visitor::Scope> semantic_global_scope = std::make_shared<visitor::Scope>();
-	std::shared_ptr<visitor::Scope> interpreter_global_scope = std::make_shared<visitor::Scope>();
+	std::shared_ptr<visitor::Scope> semantic_global_scope = std::make_shared<visitor::Scope>(nullptr);
+	std::shared_ptr<visitor::Scope> interpreter_global_scope = std::make_shared<visitor::Scope>(nullptr);
 
 	while (true) {
 		std::string input_line;
@@ -107,6 +107,9 @@ int CPRepl::execute() {
 				std::cerr << utils::StringUtils::trim(err) << std::endl;
 				continue;
 			}
+
+			semantic_global_scope->owner = program;
+			interpreter_global_scope->owner = program;
 
 			// check if it's all ok using a temp global scope
 			std::shared_ptr<visitor::Scope> temp = std::make_shared<visitor::Scope>(*semantic_global_scope);

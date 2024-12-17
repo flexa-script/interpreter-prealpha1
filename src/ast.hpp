@@ -53,11 +53,11 @@ namespace parser {
 	class ASTProgramNode : public ASTNode {
 	public:
 		std::string name;
-		std::string alias;
+		std::string name_space;
 		std::vector<std::shared_ptr<ASTNode>> statements;
-		std::vector<std::string> libs;
+		std::vector<std::shared_ptr<ASTProgramNode>> libs;
 
-		explicit ASTProgramNode(const std::string& name, const std::string& alias,
+		explicit ASTProgramNode(const std::string& name, const std::string& name_space,
 			const std::vector<std::shared_ptr<ASTNode>>& statements);
 
 		void accept(Visitor*) override;
@@ -86,9 +86,9 @@ namespace parser {
 	class ASTNamespaceManagerNode : public ASTStatementNode {
 	public:
 		std::string image;
-		std::string nmspace;
+		std::string name_space;
 
-		ASTNamespaceManagerNode(const std::string& image, const std::string& nmspace, unsigned int col, unsigned int row);
+		ASTNamespaceManagerNode(const std::string& image, const std::string& name_space, unsigned int col, unsigned int row);
 
 		void accept(Visitor*) override;
 	};
@@ -123,12 +123,12 @@ namespace parser {
 	class ASTAssignmentNode : public ASTStatementNode {
 	public:
 		std::string identifier;
-		std::string nmspace;
+		std::string name_space;
 		std::vector<Identifier> identifier_vector;
 		std::string op;
 		std::shared_ptr<ASTExprNode> expr;
 
-		ASTAssignmentNode(const std::vector<Identifier>& identifier_vector, const std::string& nmspace,
+		ASTAssignmentNode(const std::vector<Identifier>& identifier_vector, const std::string& name_space,
 			const std::string& op, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
@@ -355,10 +355,10 @@ namespace parser {
 	class ASTStructConstructorNode : public ASTExprNode {
 	public:
 		std::string type_name;
-		std::string nmspace;
+		std::string name_space;
 		std::map<std::string, std::shared_ptr<ASTExprNode>> values;
 
-		ASTStructConstructorNode(const std::string& type_name, const std::string& nmspace,
+		ASTStructConstructorNode(const std::string& type_name, const std::string& name_space,
 			const std::map<std::string, std::shared_ptr<ASTExprNode>>& values, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
@@ -407,10 +407,10 @@ namespace parser {
 	class ASTIdentifierNode : public ASTExprNode {
 	public:
 		std::string identifier;
-		std::string nmspace;
+		std::string name_space;
 		std::vector<Identifier> identifier_vector;
 
-		explicit ASTIdentifierNode(const std::vector<Identifier>& identifier_vector, std::string nmspace, unsigned int row, unsigned int col);
+		explicit ASTIdentifierNode(const std::vector<Identifier>& identifier_vector, std::string name_space, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;
@@ -442,11 +442,11 @@ namespace parser {
 	class ASTFunctionCallNode : public ASTExprNode {
 	public:
 		std::string identifier;
-		std::string nmspace;
+		std::string name_space;
 		std::vector<Identifier> identifier_vector;
 		std::vector<std::shared_ptr<ASTExprNode>> parameters;
 
-		ASTFunctionCallNode(const std::string& nmspace,
+		ASTFunctionCallNode(const std::string& name_space,
 			const std::vector<Identifier>& identifier_vector,
 			const std::vector<std::shared_ptr<ASTExprNode>>& parameters, unsigned int row, unsigned int col);
 

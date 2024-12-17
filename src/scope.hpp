@@ -22,9 +22,10 @@ namespace visitor {
 
 	public:
 		std::string name;
+		std::shared_ptr<ASTProgramNode> owner;
 
-		Scope(std::string name);
-		Scope();
+		Scope(std::shared_ptr<ASTProgramNode> owner, std::string name);
+		Scope(std::shared_ptr<ASTProgramNode> owner);
 		~Scope();
 
 		bool already_declared_structure_definition(const std::string& identifier);

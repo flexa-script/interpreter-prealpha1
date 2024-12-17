@@ -10,9 +10,9 @@ const std::string& MetaVisitor::get_namespace() const {
 	return current_namespace.top();
 }
 
-bool MetaVisitor::push_namespace(const std::string nmspace) {
-	if (!nmspace.empty() && nmspace != get_namespace()) {
-		current_namespace.push(nmspace);
+bool MetaVisitor::push_namespace(const std::string name_space) {
+	if (!name_space.empty() && name_space != get_namespace()) {
+		current_namespace.push(name_space);
 		return true;
 	}
 	return false;
@@ -35,10 +35,10 @@ void MetaVisitor::validates_reference_type_assignment(TypeDefinition owner, Valu
 	}
 }
 
-StructureDefinition MetaVisitor::find_inner_most_struct(std::string& nmspace, const std::string& identifier) {
+StructureDefinition MetaVisitor::find_inner_most_struct(std::shared_ptr<ASTProgramNode> program, const std::string& identifier) {
 	std::shared_ptr<Scope> scope;
 	try {
-		scope = get_inner_most_struct_definition_scope(nmspace, identifier);
+		scope = get_inner_most_struct_definition_scope(program, identifier);
 	}
 	catch (std::exception ex) {
 		throw std::runtime_error(ex.what());
@@ -46,10 +46,10 @@ StructureDefinition MetaVisitor::find_inner_most_struct(std::string& nmspace, co
 	return scope->find_declared_structure_definition(identifier);
 }
 
-std::shared_ptr<Variable> MetaVisitor::find_inner_most_variable(std::string& nmspace, const std::string& identifier) {
+std::shared_ptr<Variable> MetaVisitor::find_inner_most_variable(std::shared_ptr<ASTProgramNode> program, const std::string& identifier) {
 	std::shared_ptr<Scope> scope;
 	try {
-		scope = get_inner_most_variable_scope(nmspace, identifier);
+		scope = get_inner_most_variable_scope(program, identifier);
 	}
 	catch (std::exception ex) {
 		throw std::runtime_error(ex.what());
@@ -57,95 +57,201 @@ std::shared_ptr<Variable> MetaVisitor::find_inner_most_variable(std::string& nms
 	return scope->find_declared_variable(identifier);
 }
 
-std::shared_ptr<Scope> MetaVisitor::get_inner_most_variable_scope(std::string& nmspace, const std::string& identifier) {
+std::shared_ptr<Scope> MetaVisitor::get_inner_most_variable_scope_aux(const std::string& name_space, const std::string& identifier, std::vector<std::string>& visited) {
+	if (utils::CollectionUtils::contains(visited, name_space)) {
+		return nullptr;
+	}
+	visited.push_back(name_space);
+
 	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_variable(identifier); i--) {
+	for (i = scopes[name_space].size() - 1; !scopes[name_space][i]->already_declared_variable(identifier); i--) {
 		if (i <= 0) {
-			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
-				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_variable(identifier); --i) {
-					if (i <= 0) {
-						i = -1;
-						break;
-					}
-				}
-				if (i >= 0) {
-					// returns real namespace
-					nmspace = prgnmspace;
-					return scopes[prgnmspace][i];
-				}
-			}
-			throw std::runtime_error("something went wrong searching '" + identifier + "' variable");
+			return nullptr;
 		}
 	}
-	return scopes[nmspace][i];
+	return scopes[name_space][i];
 }
 
-std::shared_ptr<Scope> MetaVisitor::get_inner_most_struct_definition_scope(std::string& nmspace, const std::string& identifier) {
-	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_structure_definition(identifier); i--) {
-		if (i <= 0) {
-			bool found = false;
-			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
-				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_structure_definition(identifier); --i) {
-					if (i <= 0) {
-						i = -1;
-						break;
-					}
-				}
-				if (i >= 0) {
-					// returns real namespace
-					nmspace = prgnmspace;
-					return scopes[prgnmspace][i];
-				}
-			}
-			throw std::runtime_error("something went wrong searching '" + identifier + "' struct");
+std::shared_ptr<Scope> MetaVisitor::get_inner_most_variable_scope(std::shared_ptr<ASTProgramNode> program, const std::string& identifier, std::vector<std::string> vp, std::vector<std::string> vf) {
+	if (utils::CollectionUtils::contains(vp, program->name_space)) {
+		return nullptr;
+	}
+	vp.push_back(program->name_space);
+
+	std::shared_ptr<Scope> scope = nullptr;
+
+	// try find at program
+	scope = get_inner_most_variable_scope_aux(program->name_space, identifier, vf);
+	if (scope) {
+		return scope;
+	}
+
+	// try find at program included namespace
+	for (const auto& prgnmspace : program_nmspaces[program->name]) {
+		scope = get_inner_most_variable_scope_aux(prgnmspace, identifier, vf);
+		if (scope) {
+			return scope;
 		}
 	}
-	return scopes[nmspace][i];
+
+	// try find at included libs
+	for (auto& lib : program->libs) {
+		scope = get_inner_most_variable_scope(lib, identifier, vp, vf);
+		if (scope) {
+			return scope;
+		}
+	}
+
+	return nullptr;
 }
 
-std::shared_ptr<Scope> MetaVisitor::get_inner_most_function_scope(std::string& nmspace, const std::string& identifier, const std::vector<TypeDefinition*>* signature, dim_eval_func_t evaluate_access_vector_ptr, bool strict) {
+std::shared_ptr<Scope> MetaVisitor::get_inner_most_struct_definition_scope_aux(const std::string& name_space, const std::string& identifier, std::vector<std::string>& visited) {
+	if (utils::CollectionUtils::contains(visited, name_space)) {
+		return nullptr;
+	}
+	visited.push_back(name_space);
+
 	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); --i) {
+	bool found = true;
+	for (i = scopes[name_space].size() - 1; !scopes[name_space][i]->already_declared_structure_definition(identifier); i--) {
 		if (i <= 0) {
-			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
-				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); --i) {
-					if (i <= 0) {
-						i = -1;
-						break;
-					}
-				}
-				if (i >= 0) {
-					// returns real namespace
-					nmspace = prgnmspace;
-					return scopes[prgnmspace][i];
-				}
-			}
-			throw std::runtime_error("something went wrong searching '" + identifier + "' function");
+			return nullptr;
 		}
 	}
-	return scopes[nmspace][i];
+	return scopes[name_space][i];
 }
 
-std::shared_ptr<Scope> MetaVisitor::get_inner_most_functions_scope(std::string& nmspace, const std::string& identifier) {
-	long long i;
-	for (i = scopes[nmspace].size() - 1; !scopes[nmspace][i]->already_declared_function_name(identifier); --i) {
-		if (i <= 0) {
-			for (const auto& prgnmspace : program_nmspaces[get_namespace()]) {
-				for (i = scopes[prgnmspace].size() - 1; !scopes[prgnmspace][i]->already_declared_function_name(identifier); --i) {
-					if (i <= 0) {
-						i = -1;
-						break;
-					}
-				}
-				if (i >= 0) {
-					// returns real namespace
-					nmspace = prgnmspace;
-					return scopes[prgnmspace][i];
-				}
-			}
-			throw std::runtime_error("something went wrong searching '" + identifier + "' fuction");
+std::shared_ptr<Scope> MetaVisitor::get_inner_most_struct_definition_scope(std::shared_ptr<ASTProgramNode> program, const std::string& identifier, std::vector<std::string> vp, std::vector<std::string> vf) {
+	if (utils::CollectionUtils::contains(vp, program->name_space)) {
+		return nullptr;
+	}
+	vp.push_back(program->name_space);
+
+	std::shared_ptr<Scope> scope = nullptr;
+
+	// try find at program
+	scope = get_inner_most_struct_definition_scope_aux(program->name_space, identifier, vf);
+	if (scope) {
+		return scope;
+	}
+
+	// try find at program included namespace
+	for (const auto& prgnmspace : program_nmspaces[program->name_space]) {
+		scope = get_inner_most_struct_definition_scope_aux(prgnmspace, identifier, vf);
+		if (scope) {
+			return scope;
 		}
 	}
-	return scopes[nmspace][i];
+
+	// try find at included libs
+	for (auto& lib : program->libs) {
+		scope = get_inner_most_struct_definition_scope(lib, identifier, vp, vf);
+		if (scope) {
+			return scope;
+		}
+	}
+
+	return nullptr;
+}
+
+std::shared_ptr<Scope> MetaVisitor::get_inner_most_functions_scope_aux(const std::string& name_space, const std::string& identifier, std::vector<std::string>& visited) {
+	if (utils::CollectionUtils::contains(visited, name_space)) {
+		return nullptr;
+	}
+	visited.push_back(name_space);
+
+	long long i;
+	bool found = true;
+	for (i = scopes[name_space].size() - 1; !scopes[name_space][i]->already_declared_function_name(identifier); i--) {
+		if (i <= 0) {
+			return nullptr;
+		}
+	}
+	return scopes[name_space][i];
+}
+
+std::shared_ptr<Scope> MetaVisitor::get_inner_most_functions_scope(std::shared_ptr<ASTProgramNode> program, const std::string& identifier,
+	std::vector<std::string> vp, std::vector<std::string> vf) {
+	if (utils::CollectionUtils::contains(vp, program->name_space)) {
+		return nullptr;
+	}
+	vp.push_back(program->name_space);
+
+	std::shared_ptr<Scope> scope = nullptr;
+
+	// try find at program
+	scope = get_inner_most_functions_scope_aux(program->name_space, identifier, vf);
+	if (scope) {
+		return scope;
+	}
+
+	// try find at program included namespace
+	for (const auto& prgnmspace : program_nmspaces[program->name]) {
+		scope = get_inner_most_functions_scope_aux(prgnmspace, identifier, vf);
+		if (scope) {
+			return scope;
+		}
+	}
+
+	// try find at included libs
+	for (auto& lib : program->libs) {
+		scope = get_inner_most_functions_scope(lib, identifier, vp, vf);
+		if (scope) {
+			return scope;
+		}
+	}
+
+	return nullptr;
+}
+
+std::shared_ptr<Scope> MetaVisitor::get_inner_most_function_scope_aux(const std::string& name_space,const std::string& identifier,
+	const std::vector<TypeDefinition*>* signature, dim_eval_func_t evaluate_access_vector_ptr, bool strict, std::vector<std::string>& visited) {
+	if (utils::CollectionUtils::contains(visited, name_space)) {
+		return nullptr;
+	}
+	visited.push_back(name_space);
+
+	long long i;
+	bool found = true;
+	for (i = scopes[name_space].size() - 1; !scopes[name_space][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); i--) {
+		if (i <= 0) {
+			return nullptr;
+		}
+	}
+	return scopes[name_space][i];
+}
+
+std::shared_ptr<Scope> MetaVisitor::get_inner_most_function_scope(std::shared_ptr<ASTProgramNode> program, const std::string& identifier,
+	const std::vector<TypeDefinition*>* signature, dim_eval_func_t evaluate_access_vector_ptr, bool strict,
+	std::vector<std::string> vp, std::vector<std::string> vf) {
+	if (utils::CollectionUtils::contains(vp, program->name_space)) {
+		return nullptr;
+	}
+	vp.push_back(program->name_space);
+
+	std::shared_ptr<Scope> scope = nullptr;
+
+	// try find at program
+	scope = get_inner_most_function_scope_aux(program->name_space, identifier, signature, evaluate_access_vector_ptr, strict, vf);
+	if (scope) {
+		return scope;
+	}
+
+	// try find at program included namespace
+	for (const auto& prgnmspace : program_nmspaces[program->name]) {
+		scope = get_inner_most_function_scope_aux(prgnmspace, identifier, signature, evaluate_access_vector_ptr, strict, vf);
+		if (scope) {
+			return scope;
+		}
+	}
+
+	// try find at included libs
+	for (auto& lib : program->libs) {
+		scope = get_inner_most_function_scope(lib, identifier, signature, evaluate_access_vector_ptr, strict, vp, vf);
+		if (scope) {
+			return scope;
+		}
+	}
+
+	return nullptr;
 }

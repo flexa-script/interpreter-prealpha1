@@ -16,11 +16,11 @@ Parser::Parser(const std::string& name, Lexer* lex) : name(name), lex(lex) {
 
 std::shared_ptr<ASTProgramNode> Parser::parse_program() {
 	auto statements = std::vector<std::shared_ptr<ASTNode>>();
-	std::string alias = "";
+	std::string name_space = "";
 
 	if (current_token.type == TOK_NAMESPACE) {
 		consume_token(TOK_IDENTIFIER);
-		alias = current_token.value;
+		name_space = current_token.value;
 		consume_token(TOK_SEMICOLON);
 		consume_token();
 	}
@@ -30,7 +30,7 @@ std::shared_ptr<ASTProgramNode> Parser::parse_program() {
 		consume_token();
 	}
 
-	return std::make_shared<ASTProgramNode>(name, alias, statements);
+	return std::make_shared<ASTProgramNode>(name, name_space, statements);
 }
 
 std::shared_ptr<ASTUsingNode> Parser::parse_using_statement() {
@@ -115,16 +115,16 @@ std::shared_ptr<ASTNode> Parser::parse_block_statement() {
 
 std::shared_ptr<ASTNamespaceManagerNode> Parser::parse_namespace_manager_statement() {
 	std::string image = current_token.value;
-	std::string nmspace = "";
+	std::string name_space = "";
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
 	consume_token();
 	consume_token(TOK_IDENTIFIER);
-	nmspace = current_token.value;
+	name_space = current_token.value;
 	consume_token(TOK_SEMICOLON);
 
-	return std::make_shared<ASTNamespaceManagerNode>(image, nmspace, row, col);
+	return std::make_shared<ASTNamespaceManagerNode>(image, name_space, row, col);
 }
 
 std::shared_ptr<ASTExprNode> Parser::parse_statement_expression() {
@@ -1122,7 +1122,7 @@ std::shared_ptr<ASTNode> Parser::parse_identifier_statement() {
 
 std::shared_ptr<ASTFunctionCallNode> Parser::parse_function_call_node(std::shared_ptr<ASTIdentifierNode> idnode) {
 	std::string identifier = std::move(idnode->identifier_vector[0].identifier);
-	std::string nmspace = std::move(idnode->nmspace);
+	std::string name_space = std::move(idnode->name_space);
 	auto identifier_vector = std::vector<Identifier>();
 	auto parameters = std::vector<std::shared_ptr<ASTExprNode>>();
 	unsigned int row = current_token.row;
@@ -1156,7 +1156,7 @@ std::shared_ptr<ASTFunctionCallNode> Parser::parse_function_call_node(std::share
 
 	identifier_vector.emplace(identifier_vector.begin(), id);
 
-	return std::make_shared<ASTFunctionCallNode>(nmspace, identifier_vector, parameters, row, col);
+	return std::make_shared<ASTFunctionCallNode>(name_space, identifier_vector, parameters, row, col);
 }
 
 std::shared_ptr<ASTUnaryExprNode> Parser::parse_increment_expression(std::shared_ptr<ASTIdentifierNode> identifier) {
@@ -1171,18 +1171,18 @@ std::shared_ptr<ASTUnaryExprNode> Parser::parse_increment_expression(std::shared
 std::shared_ptr<ASTIdentifierNode> Parser::parse_identifier_node() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
-	std::string nmspace = "";
+	std::string name_space = "";
 	auto identifier_vector = std::vector<Identifier>();
 
 	if (next_token.type == TOK_LIB_ACESSOR_OP) {
-		nmspace = current_token.value;
+		name_space = current_token.value;
 		consume_token();
 		consume_token();
 	}
 
 	identifier_vector = parse_identifier_vector();
 
-	return std::make_shared<ASTIdentifierNode>(identifier_vector, nmspace, row, col);
+	return std::make_shared<ASTIdentifierNode>(identifier_vector, name_space, row, col);
 }
 
 std::vector<std::shared_ptr<ASTExprNode>> Parser::parse_dimension_vector() {
@@ -1257,7 +1257,7 @@ std::shared_ptr<ASTAssignmentNode> Parser::parse_assignment_statement(std::share
 
 	check_consume_semicolon();
 
-	return std::make_shared<ASTAssignmentNode>(identifier->identifier_vector, identifier->nmspace, op, expr, identifier->row, identifier->col);
+	return std::make_shared<ASTAssignmentNode>(identifier->identifier_vector, identifier->name_space, op, expr, identifier->row, identifier->col);
 }
 
 std::shared_ptr<ASTDeclarationNode> Parser::parse_declaration_statement() {
@@ -1561,7 +1561,7 @@ std::shared_ptr<ASTStructConstructorNode> Parser::parse_struct_constructor_node(
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 	std::map<std::string, std::shared_ptr<ASTExprNode>> values = std::map<std::string, std::shared_ptr<ASTExprNode>>();
-	std::string nmspace = std::move(idnode->nmspace);
+	std::string name_space = std::move(idnode->name_space);
 	std::string type_name = std::move(idnode->identifier_vector[0].identifier);
 
 	consume_token();
@@ -1584,7 +1584,7 @@ std::shared_ptr<ASTStructConstructorNode> Parser::parse_struct_constructor_node(
 
 	check_current_token(TOK_RIGHT_CURLY);
 
-	return std::make_shared<ASTStructConstructorNode>(type_name, nmspace, values, row, col);
+	return std::make_shared<ASTStructConstructorNode>(type_name, name_space, values, row, col);
 }
 
 cp_bool Parser::parse_bool_literal(){

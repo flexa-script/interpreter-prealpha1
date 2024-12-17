@@ -47,6 +47,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTProgramNode> astnode) {
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
+	const auto& prg = current_program.top();
 
 	std::string libname = utils::StringUtils::join(astnode->library, ".");
 
@@ -58,35 +59,36 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTUsingNode> astnode) {
 		throw std::runtime_error("lib '" + libname + "' not found");
 	}
 
-	auto program = programs[libname];
+	auto& program = programs[libname];
 
 	// add lib to current program
-	if (utils::CollectionUtils::contains(current_program.top()->libs, libname)) {
+	if (utils::CollectionUtils::contains(current_program.top()->libs, program)) {
 		throw std::runtime_error("lib '" + libname + "' already declared in " + current_program.top()->name);
 	}
-	current_program.top()->libs.push_back(libname);
+	current_program.top()->libs.push_back(program);
 
 	// if can't parsed yet
 	if (!utils::CollectionUtils::contains(parsed_libs, libname)) {
-		if (!program->alias.empty()) {
-			nmspaces.push_back(program->alias);
-		}
-		parsed_libs.push_back(libname);
 		current_program.push(program);
 
-		if (program->alias == default_namespace) {
-			throw std::runtime_error("namespace '" + program->alias + "' is not valid ");
+		if (!program->name_space.empty() && !utils::CollectionUtils::contains(nmspaces, program->name_space)) {
+			nmspaces.push_back(program->name_space);
 		}
 
-		auto pop = push_namespace(program->alias);
-		auto nmspace = get_namespace();
-		if (!program->alias.empty()) {
-			scopes[program->alias].push_back(std::make_shared<Scope>());
-			if (std::find(program_nmspaces[nmspace].begin(), program_nmspaces[nmspace].end(), default_namespace) == program_nmspaces[nmspace].end()) {
-				program_nmspaces[nmspace].push_back(default_namespace);
-			}
+		parsed_libs.push_back(libname);
+
+		if (program->name_space == default_namespace) {
+			throw std::runtime_error("namespace '" + program->name_space + "' is not valid ");
 		}
-		
+
+		auto pop = push_namespace(program->name_space);
+
+		scopes[program->name_space].push_back(std::make_shared<Scope>(prg));
+
+		if (std::find(program_nmspaces[program->name].begin(), program_nmspaces[program->name].end(), default_namespace) == program_nmspaces[program->name].end()) {
+			program_nmspaces[program->name].push_back(default_namespace);
+		}
+
 		start();
 
 		current_program.pop();
@@ -97,44 +99,49 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTUsingNode> astnode) {
 void SemanticAnalyser::visit(std::shared_ptr<ASTNamespaceManagerNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	const auto& nmspace = get_namespace();
+	//const auto& nmspace = get_namespace();
+	const auto& prg_name = current_program.top()->name;
 
-	if (!utils::CollectionUtils::contains(nmspaces, astnode->nmspace)) {
-		throw std::runtime_error("namespace '" + astnode->nmspace + "' not found");
+	if (!utils::CollectionUtils::contains(nmspaces, astnode->name_space)) {
+		throw std::runtime_error("namespace '" + astnode->name_space + "' not found");
 	}
-	if (astnode->nmspace == default_namespace) {
-		throw std::runtime_error("namespace '" + astnode->nmspace + "' is not valid ");
+	if (astnode->name_space == default_namespace) {
+		throw std::runtime_error("namespace '" + astnode->name_space + "' is not valid ");
 	}
 
 	if (astnode->image == "include") {
-		if (std::find(program_nmspaces[nmspace].begin(), program_nmspaces[nmspace].end(), astnode->nmspace) == program_nmspaces[nmspace].end()) {
-			program_nmspaces[nmspace].push_back(astnode->nmspace);
+		if (std::find(program_nmspaces[prg_name].begin(), program_nmspaces[prg_name].end(), astnode->name_space) == program_nmspaces[prg_name].end()) {
+			program_nmspaces[prg_name].push_back(astnode->name_space);
 		}
 	}
 	else {
-		size_t pos = std::distance(program_nmspaces[nmspace].begin(),
-			std::find(program_nmspaces[nmspace].begin(),
-				program_nmspaces[nmspace].end(), astnode->nmspace));
-		program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + pos);
+		size_t pos = std::distance(program_nmspaces[prg_name].begin(),
+			std::find(program_nmspaces[prg_name].begin(),
+				program_nmspaces[prg_name].end(), astnode->name_space));
+		program_nmspaces[prg_name].erase(program_nmspaces[prg_name].begin() + pos);
 	}
 }
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTEnumNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	const auto& nmspace = get_namespace();
+	const auto& name_space = get_namespace();
+
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		auto value = std::make_shared<SemanticValue>(Type::T_INT, i, true, astnode->row, astnode->col);
 		auto variable = std::make_shared<SemanticVariable>(astnode->identifiers[i], Type::T_INT, true, astnode->row, astnode->col);
 		variable->set_value(value);
-		scopes[nmspace].back()->declare_variable(astnode->identifiers[i], variable);
+		scopes[name_space].back()->declare_variable(astnode->identifiers[i], variable);
 	}
 }
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	const auto& nmspace = get_namespace();
-	std::shared_ptr<Scope> current_scope = scopes[nmspace].back();
+
+	const auto& name_space = get_namespace();
+	const auto& prg = current_program.top();
+
+	std::shared_ptr<Scope> current_scope = scopes[name_space].back();
 
 	if (current_scope->already_declared_variable(astnode->identifier)) {
 		throw std::runtime_error("variable '" + astnode->identifier + "' already declared");
@@ -145,15 +152,9 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 	}
 
 	if (is_struct(astnode->type)) {
-		auto pop = push_namespace(astnode->type_name_space);
-		try {
-			auto strnmspace = get_namespace();
-			std::shared_ptr<Scope> curr_scope = get_inner_most_struct_definition_scope(strnmspace, astnode->type_name);
-		}
-		catch (...) {
+		if (!get_inner_most_struct_definition_scope(prg, astnode->type_name)) {
 			throw std::runtime_error("struct '" + astnode->type_name + "' not found");
 		}
-		pop_namespace(pop);
 	}
 
 	if (astnode->expr) {
@@ -168,7 +169,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 
 	if (is_function(current_expression.type)) {
 		auto f = FunctionDefinition(astnode->identifier, astnode->row, astnode->row);
-		scopes[nmspace].back()->declare_function(astnode->identifier, f);
+		scopes[name_space].back()->declare_function(astnode->identifier, f);
 	}
 
 	auto new_value = std::make_shared<SemanticValue>();
@@ -219,7 +220,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTUnpackedDeclarationNode> astnode
 		if (var) {
 			auto ids = var->identifier_vector;
 			ids.push_back(Identifier(declaration->identifier));
-			auto access_expr = std::make_shared<ASTIdentifierNode>(ids, var->nmspace, declaration->row, declaration->col);
+			auto access_expr = std::make_shared<ASTIdentifierNode>(ids, var->name_space, declaration->row, declaration->col);
 			declaration->expr = access_expr;
 		}
 
@@ -229,32 +230,26 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTUnpackedDeclarationNode> astnode
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	auto pop = push_namespace(astnode->nmspace);
+	auto pop = push_namespace(astnode->name_space);
+	auto name_space = get_namespace();
+	const auto& prg = current_program.top();
+	const auto& prg_name = current_program.top()->name;
+	const auto& identifier = astnode->identifier;
 
 	if (!Token::is_assignment_op(astnode->op)) {
 		throw std::runtime_error("expected assignment operator, but found '" + astnode->op + "'");
 	}
 
-	const auto& identifier = astnode->identifier;
-	auto nmspace = get_namespace();
-	std::shared_ptr<Scope> curr_scope;
-	try {
-		curr_scope = get_inner_most_variable_scope(nmspace, identifier);
-	}
-	catch (...) {
+	std::shared_ptr<Scope> curr_scope = get_inner_most_variable_scope(prg, identifier);
+	if (!curr_scope) {
 		bool isfunc = false;
-		try {
-			curr_scope = get_inner_most_function_scope(nmspace, identifier, nullptr, evaluate_access_vector_ptr);
+		curr_scope = get_inner_most_function_scope(prg, identifier, nullptr, evaluate_access_vector_ptr);
+		if (curr_scope) {
 			isfunc = true;
 			throw std::runtime_error("function '" + identifier + "' can't be assigned");
 		}
-		catch (std::exception ex) {
-			if (isfunc) {
-				throw std::runtime_error(ex.what());
-			}
-			else {
-				throw std::runtime_error("identifier '" + identifier + "' being reassigned was never declared");
-			}
+		else {
+			throw std::runtime_error("identifier '" + identifier + "' being reassigned was never declared");
 		}
 	}
 
@@ -266,7 +261,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 
 	if (is_function(current_expression.type)) {
 		auto f = FunctionDefinition(astnode->identifier, astnode->row, astnode->row);
-		scopes[nmspace].back()->declare_function(astnode->identifier, f);
+		scopes[name_space].back()->declare_function(astnode->identifier, f);
 	}
 
 	auto assignment_expr = current_expression;
@@ -319,8 +314,10 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTReturnNode> astnode) {
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	auto pop = push_namespace(astnode->nmspace);
-	auto nmspace = get_namespace();
+	auto pop = push_namespace(astnode->name_space);
+	const auto& prg = current_program.top();
+	const auto& prg_name = current_program.top()->name;
+	auto name_space = get_namespace();
 	bool strict = true;
 	std::vector<TypeDefinition*> signature = std::vector<TypeDefinition*>();
 
@@ -333,16 +330,14 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 		signature.push_back(new TypeDefinition(current_expression));
 	}
 
-	std::shared_ptr<Scope> curr_scope;
-	try {
-		curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, &signature, evaluate_access_vector_ptr, strict);
+	if (astnode->identifier == "print") {
+		int x = 0;
 	}
-	catch (...) {
-		try {
-			strict = false;
-			curr_scope = get_inner_most_function_scope(nmspace, astnode->identifier, &signature, evaluate_access_vector_ptr, strict);
-		}
-		catch (...) {
+
+	std::shared_ptr<Scope> curr_scope = get_inner_most_function_scope(prg, astnode->identifier, &signature, evaluate_access_vector_ptr, strict);
+	if (!curr_scope) {
+		curr_scope = get_inner_most_function_scope(prg, astnode->identifier, &signature, evaluate_access_vector_ptr, strict);
+		if (!curr_scope) {
 			std::string func_name = ExceptionHandler::buid_signature(astnode->identifier, signature, evaluate_access_vector_ptr);
 			throw std::runtime_error("function '" + func_name + "' was never declared");
 		}
@@ -355,7 +350,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	}
 	else {
 		auto typedeg = std::make_shared<SemanticValue>(static_cast<TypeDefinition>(curr_function), 0, false, 0, 0);
-		typedeg->type_name_space = astnode->nmspace;
+		typedeg->type_name_space = astnode->name_space;
 		current_expression = *access_value(typedeg, astnode->identifier_vector);
 	}
 
@@ -367,11 +362,11 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode> ast
 void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->type_name_space);
-	const auto& nmspace = get_namespace();
+	const auto& name_space = get_namespace();
 
-	for (const auto& scope : scopes[nmspace]) {
+	for (const auto& scope : scopes[name_space]) {
 		if (scope->already_declared_function(astnode->identifier, &astnode->parameters, evaluate_access_vector_ptr)) {
-			const auto& decl_function = scopes[nmspace].back()->find_declared_function(astnode->identifier, &astnode->parameters, evaluate_access_vector_ptr);
+			const auto& decl_function = scopes[name_space].back()->find_declared_function(astnode->identifier, &astnode->parameters, evaluate_access_vector_ptr);
 
 			if (!decl_function.block && astnode->block) {
 				break;
@@ -389,17 +384,17 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode)
 
 		if (astnode->identifier != "") {
 			try {
-				std::shared_ptr<Scope> func_scope = scopes[nmspace].back();
+				std::shared_ptr<Scope> func_scope = scopes[name_space].back();
 				auto& declfun = func_scope->find_declared_function(astnode->identifier, &astnode->parameters, evaluate_access_vector_ptr, true);
 				declfun.block = astnode->block;
 			}
 			catch (...) {
 				auto f = FunctionDefinition(astnode->identifier, type, astnode->type_name, astnode->type_name_space,
 					array_type, astnode->dim, astnode->parameters, astnode->block, astnode->row, astnode->row);
-				scopes[nmspace].back()->declare_function(astnode->identifier, f);
+				scopes[name_space].back()->declare_function(astnode->identifier, f);
 			}
 
-			auto& curr_function = scopes[nmspace].back()->find_declared_function(astnode->identifier, &astnode->parameters, evaluate_access_vector_ptr);
+			auto& curr_function = scopes[name_space].back()->find_declared_function(astnode->identifier, &astnode->parameters, evaluate_access_vector_ptr);
 
 			current_function.push(curr_function);
 		}
@@ -418,7 +413,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode)
 		if (astnode->identifier != "") {
 			auto f = FunctionDefinition(astnode->identifier, astnode->type, astnode->type_name, astnode->type_name_space,
 				astnode->array_type, astnode->dim, astnode->parameters, astnode->block, astnode->row, astnode->row);
-			scopes[nmspace].back()->declare_function(astnode->identifier, f);
+			scopes[name_space].back()->declare_function(astnode->identifier, f);
 		}
 	}
 	pop_namespace(pop);
@@ -449,11 +444,12 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionExpression> astnode) {
 void SemanticAnalyser::visit(std::shared_ptr<ASTBlockNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	const auto& nmspace = get_namespace();
+	const auto& name_space = get_namespace();
+	const auto& prg = current_program.top();
 
-	scopes[nmspace].push_back(std::make_shared<Scope>());
+	scopes[name_space].push_back(std::make_shared<Scope>(prg));
 
-	auto& curr_scope = scopes[nmspace].back();
+	auto& curr_scope = scopes[name_space].back();
 
 	if (!current_function.empty()) {
 		for (auto param : current_function.top().parameters) {
@@ -472,7 +468,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTBlockNode> astnode) {
 		stmt->accept(this);
 	}
 
-	scopes[nmspace].pop_back();
+	scopes[name_space].pop_back();
 }
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTExitNode> astnode) {
@@ -509,8 +505,10 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTSwitchNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	is_switch = true;
-	const auto& nmspace = get_namespace();
-	scopes[nmspace].push_back(std::make_shared<Scope>());
+	const auto& name_space = get_namespace();
+	const auto& prg = current_program.top();
+
+	scopes[name_space].push_back(std::make_shared<Scope>(prg));
 
 	astnode->parsed_case_blocks = std::map<unsigned int, unsigned int>();
 
@@ -563,7 +561,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTSwitchNode> astnode) {
 		stmt->accept(this);
 	}
 
-	scopes[nmspace].pop_back();
+	scopes[name_space].pop_back();
 	is_switch = false;
 }
 
@@ -613,9 +611,10 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTForNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	is_loop = true;
-	const auto& nmspace = get_namespace();
+	const auto& name_space = get_namespace();
+	const auto& prg = current_program.top();
 
-	scopes[nmspace].push_back(std::make_shared<Scope>());
+	scopes[name_space].push_back(std::make_shared<Scope>(prg));
 
 	if (astnode->dci[0]) {
 		astnode->dci[0]->accept(this);
@@ -637,7 +636,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTForNode> astnode) {
 	}
 	astnode->block->accept(this);
 
-	scopes[nmspace].pop_back();
+	scopes[name_space].pop_back();
 	is_loop = false;
 }
 
@@ -646,10 +645,11 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTForEachNode> astnode) {
 
 	is_loop = true;
 	SemanticValue col_value;
-	const auto& nmspace = get_namespace();
+	const auto& name_space = get_namespace();
+	const auto& prg = current_program.top();
 
-	scopes[nmspace].push_back(std::make_shared<Scope>());
-	std::shared_ptr<Scope> back_scope = scopes[nmspace].back();
+	scopes[name_space].push_back(std::make_shared<Scope>(prg));
+	std::shared_ptr<Scope> back_scope = scopes[name_space].back();
 
 	astnode->collection->accept(this);
 	col_value = current_expression;
@@ -728,18 +728,19 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTForEachNode> astnode) {
 
 	astnode->block->accept(this);
 
-	scopes[nmspace].pop_back();
+	scopes[name_space].pop_back();
 	is_loop = false;
 }
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	const auto& nmspace = get_namespace();
+	const auto& name_space = get_namespace();
+	const auto& prg = current_program.top();
 
 	astnode->try_block->accept(this);
 
-	scopes[nmspace].push_back(std::make_shared<Scope>());
+	scopes[name_space].push_back(std::make_shared<Scope>(prg));
 
 	if (const auto idnode = std::dynamic_pointer_cast<ASTUnpackedDeclarationNode>(astnode->decl)) {
 		if (idnode->declarations.size() != 1) {
@@ -764,24 +765,18 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 
 	astnode->catch_block->accept(this);
 
-	scopes[nmspace].pop_back();
+	scopes[name_space].pop_back();
 }
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTThrowNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
+	const auto& prg = current_program.top();
+
 	astnode->error->accept(this);
 
-	if (is_struct(current_expression.type)
-		&& current_expression.type_name == "Exception") {
-		try {
-			std::string nmspace = "cp";
-			get_inner_most_struct_definition_scope(nmspace, "Exception");
-			if (nmspace != "cp") {
-				throw std::runtime_error("");
-			}
-		}
-		catch (...) {
+	if (is_struct(current_expression.type) && current_expression.type_name == "Exception") {
+		if (!get_inner_most_struct_definition_scope(prg, "Exception")) {
 			throw std::runtime_error("struct 'cp::Exception' not found");
 		}
 	}
@@ -835,18 +830,16 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTDoWhileNode> astnode) {
 void SemanticAnalyser::visit(std::shared_ptr<ASTStructDefinitionNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	auto nmspace = get_namespace();
+	auto name_space = get_namespace();
+	const auto& prg = current_program.top();
 
-	try {
-		std::shared_ptr<Scope> curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->identifier);
-		throw std::runtime_error("struct '" + astnode->identifier +
-			"' already defined");
+	if (get_inner_most_struct_definition_scope(prg, astnode->identifier)) {
+		throw std::runtime_error("struct '" + astnode->identifier + "' already defined");
 	}
-	catch (...) {}
 
 	auto str = StructureDefinition(astnode->identifier, astnode->variables, astnode->row, astnode->col);
 
-	scopes[nmspace].back()->declare_structure_definition(str);
+	scopes[name_space].back()->declare_structure_definition(str);
 }
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTValueNode> astnode) {
@@ -966,23 +959,19 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	auto pop = push_namespace(astnode->nmspace);
+	auto pop = push_namespace(astnode->name_space);
+	const auto& prg = current_program.top();
 	auto is_const = true;
 
-	std::shared_ptr<Scope> curr_scope;
-	try {
-		auto nmspace = get_namespace();
-		curr_scope = get_inner_most_struct_definition_scope(nmspace, astnode->type_name);
-	}
-	catch (...) {
-		throw std::runtime_error("struct '" + astnode->type_name +
-			"' was not declared");
+	std::shared_ptr<Scope> curr_scope = get_inner_most_struct_definition_scope(prg, astnode->type_name);
+	if (!curr_scope) {
+		throw std::runtime_error("struct '" + astnode->type_name + "' was not declared");
 	}
 	auto type_struct = curr_scope->find_declared_structure_definition(astnode->type_name);
 
 	for (const auto& expr : astnode->values) {
 		if (type_struct.variables.find(expr.first) == type_struct.variables.end()) {
-			ExceptionHandler::throw_struct_member_err(astnode->nmspace, astnode->type_name, expr.first);
+			ExceptionHandler::throw_struct_member_err(astnode->name_space, astnode->type_name, expr.first);
 		}
 		const auto& var_type_struct = type_struct.variables[expr.first];
 		expr.second->accept(this);
@@ -992,14 +981,14 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTStructConstructorNode> astnode) 
 
 		if (!TypeDefinition::is_any_or_match_type(var_type_struct,
 			current_expression, evaluate_access_vector_ptr)) {
-			ExceptionHandler::throw_struct_type_err(astnode->nmspace, astnode->type_name, var_type_struct, evaluate_access_vector_ptr);
+			ExceptionHandler::throw_struct_type_err(astnode->name_space, astnode->type_name, var_type_struct, evaluate_access_vector_ptr);
 		}
 	}
 
 	current_expression = SemanticValue();
 	current_expression.type = Type::T_STRUCT;
 	current_expression.type_name = astnode->type_name;
-	current_expression.type_name_space = astnode->nmspace;
+	current_expression.type_name_space = astnode->name_space;
 	current_expression.is_const = is_const;
 
 	pop_namespace(pop);
@@ -1007,13 +996,17 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTStructConstructorNode> astnode) 
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	auto pop = push_namespace(astnode->nmspace);
-	auto nmspace = get_namespace();
-	std::shared_ptr<Scope> curr_scope;
-	try {
-		curr_scope = get_inner_most_variable_scope(nmspace, astnode->identifier);
-	}
-	catch (...) {
+	auto pop = push_namespace(astnode->name_space);
+	auto name_space = get_namespace();
+	const auto& prg = current_program.top();
+
+	//if (astnode->identifier == "comparator") {
+	//	int x = 0;
+	//}
+
+	std::shared_ptr<Scope> curr_scope = get_inner_most_variable_scope(prg, astnode->identifier);
+
+	if (!curr_scope) {
 		current_expression = SemanticValue();
 		if (astnode->identifier == "bool") {
 			current_expression.type = Type::T_BOOL;
@@ -1037,23 +1030,22 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 		}
 		else if (astnode->identifier == "function") {
 			current_expression.type = Type::T_FUNCTION;
+			return;
 		}
 
-		try {
-			curr_scope = get_inner_most_struct_definition_scope(
-				nmspace, astnode->identifier);
+		curr_scope = get_inner_most_struct_definition_scope(prg, astnode->identifier);
+
+		if (curr_scope) {
 			current_expression.type = Type::T_STRUCT;
 			return;
 		}
-		catch (...) {
-			try {
-				curr_scope = get_inner_most_function_scope(nmspace,
-					astnode->identifier, nullptr, evaluate_access_vector_ptr);
+		else {
+			curr_scope = get_inner_most_function_scope(prg, astnode->identifier, nullptr, evaluate_access_vector_ptr);
+			if (curr_scope) {
 				current_expression.type = Type::T_FUNCTION;
-
 				return;
 			}
-			catch (...) {
+			else {
 				throw std::runtime_error("identifier '" + astnode->identifier +
 					"' was not declared");
 			}
@@ -1292,8 +1284,8 @@ void SemanticAnalyser::declare_function_parameter(std::shared_ptr<Scope> scope, 
 	}
 }
 
-bool SemanticAnalyser::namespace_exists(const std::string& nmspace) {
-	return scopes.find(nmspace) != scopes.end();
+bool SemanticAnalyser::namespace_exists(const std::string& name_space) {
+	return scopes.find(name_space) != scopes.end();
 }
 
 TypeDefinition SemanticAnalyser::do_operation(const std::string& op, TypeDefinition lvar, TypeDefinition lvalue, TypeDefinition* rvar, TypeDefinition rvalue, bool is_expr) {
@@ -1447,6 +1439,7 @@ void SemanticAnalyser::equals_value(const SemanticValue& lval, const SemanticVal
 
 std::shared_ptr<SemanticValue> SemanticAnalyser::access_value(std::shared_ptr<SemanticValue> value, const std::vector<Identifier>& identifier_vector, size_t i) {
 	std::shared_ptr<SemanticValue> next_value = value;
+	const auto& prg = current_program.top();
 
 	auto access_vector = evaluate_access_vector(identifier_vector[i].access_vector);
 
@@ -1471,14 +1464,8 @@ std::shared_ptr<SemanticValue> SemanticAnalyser::access_value(std::shared_ptr<Se
 			next_value = std::make_shared<SemanticValue>(Type::T_ANY, next_value->row, next_value->col);
 		}
 		else {
-			std::shared_ptr<Scope> curr_scope;
-			try {
-				auto pop = push_namespace(next_value->type_name_space);
-				auto nmspace = get_namespace();
-				curr_scope = get_inner_most_struct_definition_scope(nmspace, next_value->type_name);
-				pop_namespace(pop);
-			}
-			catch (...) {
+			std::shared_ptr<Scope> curr_scope = get_inner_most_struct_definition_scope(prg, next_value->type_name);
+			if (!curr_scope) {
 				throw std::runtime_error("cannot find struct");
 			}
 			auto type_struct = curr_scope->find_declared_structure_definition(next_value->type_name);
@@ -1498,15 +1485,9 @@ std::shared_ptr<SemanticValue> SemanticAnalyser::access_value(std::shared_ptr<Se
 	return next_value;
 }
 
-void SemanticAnalyser::check_is_struct_exists(parser::Type type, const std::string& nmspace, const std::string& type_name) {
+void SemanticAnalyser::check_is_struct_exists(parser::Type type, const std::string& name_space, const std::string& type_name) {
 	if (is_struct(type)) {
-		try {
-			auto pop = push_namespace(nmspace);
-			auto crrnmspace = get_namespace();
-			get_inner_most_struct_definition_scope(crrnmspace, type_name);
-			pop_namespace(pop);
-		}
-		catch (...) {
+		if (!get_inner_most_struct_definition_scope(current_program.top(), type_name)) {
 			throw std::runtime_error("struct '" + type_name + "' was not defined");
 		}
 	}

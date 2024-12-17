@@ -41,7 +41,7 @@ namespace visitor {
 
 		void build_args(const std::vector<std::string>& args);
 
-		bool push_namespace(const std::string nmspace) override;
+		bool push_namespace(const std::string name_space) override;
 		void pop_namespace(bool pop) override;
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;

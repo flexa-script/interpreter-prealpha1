@@ -9,7 +9,7 @@ namespace visitor {
 	public:
 		NamespaceManager() = default;
 		virtual ~NamespaceManager() = default;
-		virtual bool push_namespace(const std::string nmspace) = 0;
+		virtual bool push_namespace(const std::string name_space) = 0;
 		virtual void pop_namespace(bool pop) = 0;
 	};
 }

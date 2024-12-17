@@ -82,8 +82,8 @@ int CPInterpreter::interpreter() {
 		return EXIT_FAILURE;
 	}
 
-	std::shared_ptr<visitor::Scope> semantic_global_scope = std::make_shared<visitor::Scope>();
-	std::shared_ptr<visitor::Scope> interpreter_global_scope = std::make_shared<visitor::Scope>();
+	std::shared_ptr<visitor::Scope> semantic_global_scope = std::make_shared<visitor::Scope>(nullptr);
+	std::shared_ptr<visitor::Scope> interpreter_global_scope = std::make_shared<visitor::Scope>(nullptr);
 
 	try {
 		std::shared_ptr<ASTProgramNode> main_program = nullptr;
@@ -101,6 +101,9 @@ int CPInterpreter::interpreter() {
 				parse_programs(cplib_programs, &main_program, &programs);
 			}
 		} while (cplibs_size > 0);
+
+		semantic_global_scope->owner = main_program;
+		interpreter_global_scope->owner = main_program;
 
 		visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, main_program, programs, args.cpargs);
 		semantic_analyser.start();

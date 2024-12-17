@@ -122,7 +122,7 @@ void VirtualMachine::unary_operation(const std::string& op) {
 void VirtualMachine::handle_call() {
 	return_stack.push(pc + 1);
 
-	std::string nmspace = get_namespace();
+	std::string name_space = get_namespace();
 	std::string identifier = current_instruction.get_string_operand();
 	bool strict = true;
 	std::vector<TypeDefinition*> signature;
@@ -149,21 +149,21 @@ void VirtualMachine::handle_call() {
 
 	std::shared_ptr<Scope> func_scope;
 	try {
-		func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, evaluate_access_vector_ptr, strict);
+		func_scope = get_inner_most_function_scope(nullptr, identifier, &signature, evaluate_access_vector_ptr, strict);
 	}
 	catch (...) {
 		try {
 			strict = false;
-			func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, evaluate_access_vector_ptr, strict);
+			func_scope = get_inner_most_function_scope(nullptr, identifier, &signature, evaluate_access_vector_ptr, strict);
 		}
 		catch (...) {
 			try {
-				auto var_scope = get_inner_most_variable_scope(nmspace, identifier);
+				auto var_scope = get_inner_most_variable_scope(nullptr, identifier);
 				auto var = std::dynamic_pointer_cast<RuntimeVariable>(var_scope->find_declared_variable(identifier));
-				nmspace = var->value->get_fun().first;
+				name_space = var->value->get_fun().first;
 				identifier = var->value->get_fun().second;
 				auto identifier_vector = std::vector<Identifier>{ Identifier(identifier) };
-				func_scope = get_inner_most_function_scope(nmspace, identifier, &signature, evaluate_access_vector_ptr, strict);
+				func_scope = get_inner_most_function_scope(nullptr, identifier, &signature, evaluate_access_vector_ptr, strict);
 			}
 			catch (...) {
 				std::string func_name = ExceptionHandler::buid_signature(identifier, signature, evaluate_access_vector_ptr);
@@ -191,8 +191,8 @@ void VirtualMachine::handle_throw() {
 	if (is_struct(value->type)
 		&& value->type_name == "Exception") {
 		try {
-			std::string nmspace = "cp";
-			get_inner_most_struct_definition_scope(nmspace, "Exception");
+			std::string name_space = "cp";
+			get_inner_most_struct_definition_scope(nullptr, "Exception");
 		}
 		catch (...) {
 			throw std::runtime_error("struct 'cp::Exception' not found");
@@ -321,7 +321,7 @@ void VirtualMachine::handle_type_parse() {
 }
 
 void VirtualMachine::handle_store_var() {
-	const auto& nmspace = get_namespace();
+	const auto& name_space = get_namespace();
 
 	auto identifier = current_instruction.get_string_operand();
 
@@ -344,19 +344,19 @@ void VirtualMachine::handle_store_var() {
 
 	RuntimeOperations::normalize_type(new_var.get(), new_value);
 
-	scopes[nmspace].back()->declare_variable(identifier, new_var);
+	scopes[name_space].back()->declare_variable(identifier, new_var);
 
 	cleanup_type_set();
 }
 
 void VirtualMachine::handle_load_var() {
-	auto nmspace = get_namespace();
+	auto name_space = get_namespace();
 
 	auto identifier = current_instruction.get_string_operand();
 
 	std::shared_ptr<Scope> id_scope;
 	try {
-		id_scope = get_inner_most_variable_scope(nmspace, identifier);
+		id_scope = get_inner_most_variable_scope(nullptr, identifier);
 	}
 	catch (...) {
 		//const auto& dim = astnode->identifier_vector[0].access_vector;
@@ -430,11 +430,11 @@ void VirtualMachine::handle_include_namespace() {
 
 void VirtualMachine::handle_exclude_namespace() {
 	const auto& op_nmspace = current_instruction.get_string_operand();
-	const auto& nmspace = get_namespace();
-	size_t pos = std::distance(program_nmspaces[nmspace].begin(),
-		std::find(program_nmspaces[nmspace].begin(),
-			program_nmspaces[nmspace].end(), op_nmspace));
-	program_nmspaces[nmspace].erase(program_nmspaces[nmspace].begin() + pos);
+	const auto& name_space = get_namespace();
+	size_t pos = std::distance(program_nmspaces[name_space].begin(),
+		std::find(program_nmspaces[name_space].begin(),
+			program_nmspaces[name_space].end(), op_nmspace));
+	program_nmspaces[name_space].erase(program_nmspaces[name_space].begin() + pos);
 }
 
 void VirtualMachine::handle_init_array() {

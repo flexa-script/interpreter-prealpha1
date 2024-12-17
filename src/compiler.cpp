@@ -44,16 +44,16 @@ void Compiler::visit(std::shared_ptr<ASTUsingNode> astnode) {
 		//built_in_libs.find(libname)->second->register_functions(this);
 	}
 
-	auto program = programs[libname];
+	auto& program = programs[libname];
 
 	// add lib to current program
-	current_program.top()->libs.push_back(libname);
+	current_program.top()->libs.push_back(program);
 
 	// if can't parsed yet
 	if (!utils::CollectionUtils::contains(parsed_libs, libname)) {
 		current_program.push(program);
 		parsed_libs.push_back(libname);
-		auto pop = push_namespace(cp_string(program->alias));
+		auto pop = push_namespace(cp_string(program->name_space));
 		visit(program);
 		current_program.pop();
 		pop_namespace(pop);
@@ -62,10 +62,10 @@ void Compiler::visit(std::shared_ptr<ASTUsingNode> astnode) {
 
 void Compiler::visit(std::shared_ptr<ASTNamespaceManagerNode> astnode) {
 	if (astnode->image == "include") {
-		add_instruction(OpCode::OP_INCLUDE_NAMESPACE, cp_string(astnode->nmspace));
+		add_instruction(OpCode::OP_INCLUDE_NAMESPACE, cp_string(astnode->name_space));
 	}
 	else {
-		add_instruction(OpCode::OP_EXCLUDE_NAMESPACE, cp_string(astnode->nmspace));
+		add_instruction(OpCode::OP_EXCLUDE_NAMESPACE, cp_string(astnode->name_space));
 	}
 }
 
@@ -101,7 +101,7 @@ void Compiler::visit(std::shared_ptr<ASTUnpackedDeclarationNode> astnode) {
 }
 
 void Compiler::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
-	auto pop = push_namespace(cp_string(astnode->nmspace));
+	auto pop = push_namespace(cp_string(astnode->name_space));
 
 	astnode->expr->accept(this);
 
@@ -152,7 +152,7 @@ void Compiler::visit(std::shared_ptr<ASTReturnNode> astnode) {
 }
 
 void Compiler::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
-	auto pop = push_namespace(cp_string(astnode->nmspace));
+	auto pop = push_namespace(cp_string(astnode->name_space));
 
 	for (const auto& param : astnode->parameters) {
 		param->accept(this);
@@ -432,7 +432,7 @@ void Compiler::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 }
 
 void Compiler::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
-	auto pop = push_namespace(cp_string(astnode->nmspace));
+	auto pop = push_namespace(cp_string(astnode->name_space));
 
 	add_instruction(OpCode::OP_INIT_STRUCT, cp_string(astnode->type_name));
 
@@ -703,9 +703,9 @@ void Compiler::build_args(const std::vector<std::string>& args) {
 	//scopes[default_namespace].back()->declare_variable("cpargs", var);
 }
 
-bool Compiler::push_namespace(const std::string nmspace) {
-	if (!nmspace.empty()) {
-		add_instruction(OpCode::OP_PUSH_NAMESPACE, nmspace);
+bool Compiler::push_namespace(const std::string name_space) {
+	if (!name_space.empty()) {
+		add_instruction(OpCode::OP_PUSH_NAMESPACE, name_space);
 		return true;
 	}
 	return false;

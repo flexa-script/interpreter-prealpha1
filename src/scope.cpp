@@ -7,9 +7,9 @@
 using namespace visitor;
 using namespace parser;
 
-Scope::Scope(std::string name) : name(name) {};
+Scope::Scope(std::shared_ptr<ASTProgramNode> owner, std::string name) : owner(owner), name(name) {};
 
-Scope::Scope() = default;
+Scope::Scope(std::shared_ptr<ASTProgramNode> owner) : owner(owner) {}
 
 Scope::~Scope() = default;
 
