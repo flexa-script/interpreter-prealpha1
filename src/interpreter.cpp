@@ -107,10 +107,10 @@ void Interpreter::visit(std::shared_ptr<ASTNamespaceManagerNode> astnode) {
 
 	if (astnode->image == "include") {
 		if (std::find(
-				program_nmspaces[current_program_name].begin(),
-				program_nmspaces[current_program_name].end(),
-				astnode->name_space
-			) == program_nmspaces[current_program_name].end()) {
+			program_nmspaces[current_program_name].begin(),
+			program_nmspaces[current_program_name].end(),
+			astnode->name_space
+		) == program_nmspaces[current_program_name].end()) {
 
 			program_nmspaces[current_program_name].push_back(astnode->name_space);
 		}
@@ -220,7 +220,7 @@ void Interpreter::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 
 	// finds assignment variable
 	auto name_space = get_namespace();
-	std::shared_ptr<RuntimeVariable> variable = std::dynamic_pointer_cast<RuntimeVariable>(find_inner_most_variable(prg, astnode->identifier));
+	std::shared_ptr<RuntimeVariable> variable = std::dynamic_pointer_cast<RuntimeVariable>(find_inner_most_variable(prg, name_space, astnode->identifier));
 	RuntimeValue* value = access_value(variable->get_value(), astnode->identifier_vector);
 
 	// evaluate assignment expression
@@ -360,22 +360,15 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 		signature.push_back(pvalue);
 	}
 
-	if (astnode->identifier == "abs") {
-		int x = 0;
-	}
-
-	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(prg, identifier, &signature, evaluate_access_vector_ptr, strict);
+	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(prg, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
 	if (func_scope) {
 		name_space = func_scope->owner->name_space;
 	}
 	else {
 		strict = false;
-		func_scope = get_inner_most_function_scope(prg, identifier, &signature, evaluate_access_vector_ptr, strict);
-		if (func_scope) {
-			name_space = func_scope->owner->name_space;
-		}
-		else {
-			auto var_scope = get_inner_most_variable_scope(prg, identifier);
+		func_scope = get_inner_most_function_scope(prg, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
+		if (!func_scope) {
+			auto var_scope = get_inner_most_variable_scope(prg, name_space, identifier);
 			if (!var_scope) {
 				std::string func_name = ExceptionHandler::buid_signature(identifier, signature, evaluate_access_vector_ptr);
 				throw std::runtime_error("function '" + func_name + "' was never declared");
@@ -384,7 +377,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 			name_space = var->value->get_fun().first;
 			identifier = var->value->get_fun().second;
 			identifier_vector = std::vector<Identifier>{ Identifier(identifier) };
-			func_scope = get_inner_most_function_scope(prg, identifier, &signature, evaluate_access_vector_ptr, strict);
+			func_scope = get_inner_most_function_scope(prg, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
 			if (!func_scope) {
 				std::string func_name = ExceptionHandler::buid_signature(identifier, signature, evaluate_access_vector_ptr);
 				throw std::runtime_error("function '" + func_name + "' was never declared");
@@ -396,7 +389,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 
 	if (!pop) {
 		// function actualy is in another namespace
-		pop = push_namespace(name_space);
+		pop = push_namespace(prg->name_space.empty() ? prg->name_space : name_space);
 	}
 
 	current_function.push(declfun);
@@ -955,7 +948,7 @@ void Interpreter::visit(std::shared_ptr<ASTWhileNode> astnode) {
 			ExceptionHandler::throw_condition_type_err();
 		}
 
-		if(!current_expression_value->get_b()){
+		if (!current_expression_value->get_b()) {
 			break;
 		}
 
@@ -1146,7 +1139,7 @@ void Interpreter::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
 	const auto& prg = current_program.top();
 
 	auto name_space = get_namespace();
-	auto type_struct = find_inner_most_struct(prg, astnode->type_name);
+	auto type_struct = find_inner_most_struct(prg, name_space, astnode->type_name);
 
 	auto str = cp_struct();
 
@@ -1207,7 +1200,7 @@ void Interpreter::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 	auto name_space = get_namespace();
 	const auto& prg = current_program.top();
 	try {
-		auto variable = std::dynamic_pointer_cast<RuntimeVariable>(find_inner_most_variable(prg, astnode->identifier));
+		auto variable = std::dynamic_pointer_cast<RuntimeVariable>(find_inner_most_variable(prg, name_space, astnode->identifier));
 		auto sub_val = access_value(variable->get_value(), astnode->identifier_vector);
 		sub_val->reset_ref();
 
@@ -1249,9 +1242,9 @@ void Interpreter::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 		}
 
 		if (is_undefined(type)) {
-			std::shared_ptr<Scope> curr_scope = get_inner_most_struct_definition_scope(prg, astnode->identifier);
-			if(!curr_scope){
-				curr_scope = get_inner_most_function_scope(prg, astnode->identifier, nullptr, evaluate_access_vector_ptr);
+			std::shared_ptr<Scope> curr_scope = get_inner_most_struct_definition_scope(prg, name_space, astnode->identifier);
+			if (!curr_scope) {
+				curr_scope = get_inner_most_function_scope(prg, name_space, astnode->identifier, nullptr, evaluate_access_vector_ptr);
 				if (!curr_scope) {
 					throw std::runtime_error("identifier '" + astnode->identifier + "' was not declared");
 				}
@@ -1903,7 +1896,8 @@ long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) 
 long long Interpreter::hash(std::shared_ptr<ASTIdentifierNode> astnode) {
 	auto pop = push_namespace(astnode->name_space);
 	const auto& prg = current_program.top();
-	auto variable = std::dynamic_pointer_cast<RuntimeVariable>(find_inner_most_variable(prg, astnode->identifier_vector[0].identifier));
+	const auto& name_space = get_namespace();
+	auto variable = std::dynamic_pointer_cast<RuntimeVariable>(find_inner_most_variable(prg, name_space, astnode->identifier_vector[0].identifier));
 	auto value = access_value(variable->get_value(), astnode->identifier_vector);
 	pop_namespace(pop);
 
@@ -1913,8 +1907,8 @@ long long Interpreter::hash(std::shared_ptr<ASTIdentifierNode> astnode) {
 void Interpreter::declare_function_parameter(std::shared_ptr<Scope> scope, const std::string& identifier, RuntimeValue* value) {
 	if (is_function(value->type)) {
 		const auto& prg = current_program.top();
-		auto name_space = value->get_fun().first;
-		auto funcs = get_inner_most_functions_scope(prg, value->get_fun().second)->find_declared_functions(value->get_fun().second);
+		const auto& name_space = value->get_fun().first;
+		auto funcs = get_inner_most_functions_scope(prg, name_space, value->get_fun().second)->find_declared_functions(value->get_fun().second);
 		for (auto& it = funcs.first; it != funcs.second; ++it) {
 			scope->declare_function(identifier, it->second);
 		}

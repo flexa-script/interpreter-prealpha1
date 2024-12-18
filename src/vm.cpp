@@ -149,21 +149,21 @@ void VirtualMachine::handle_call() {
 
 	std::shared_ptr<Scope> func_scope;
 	try {
-		func_scope = get_inner_most_function_scope(nullptr, identifier, &signature, evaluate_access_vector_ptr, strict);
+		func_scope = get_inner_most_function_scope(nullptr, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
 	}
 	catch (...) {
 		try {
 			strict = false;
-			func_scope = get_inner_most_function_scope(nullptr, identifier, &signature, evaluate_access_vector_ptr, strict);
+			func_scope = get_inner_most_function_scope(nullptr, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
 		}
 		catch (...) {
 			try {
-				auto var_scope = get_inner_most_variable_scope(nullptr, identifier);
+				auto var_scope = get_inner_most_variable_scope(nullptr, name_space, identifier);
 				auto var = std::dynamic_pointer_cast<RuntimeVariable>(var_scope->find_declared_variable(identifier));
 				name_space = var->value->get_fun().first;
 				identifier = var->value->get_fun().second;
 				auto identifier_vector = std::vector<Identifier>{ Identifier(identifier) };
-				func_scope = get_inner_most_function_scope(nullptr, identifier, &signature, evaluate_access_vector_ptr, strict);
+				func_scope = get_inner_most_function_scope(nullptr, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
 			}
 			catch (...) {
 				std::string func_name = ExceptionHandler::buid_signature(identifier, signature, evaluate_access_vector_ptr);
@@ -192,7 +192,7 @@ void VirtualMachine::handle_throw() {
 		&& value->type_name == "Exception") {
 		try {
 			std::string name_space = "cp";
-			get_inner_most_struct_definition_scope(nullptr, "Exception");
+			get_inner_most_struct_definition_scope(nullptr, "cp", "Exception");
 		}
 		catch (...) {
 			throw std::runtime_error("struct 'cp::Exception' not found");
@@ -356,7 +356,7 @@ void VirtualMachine::handle_load_var() {
 
 	std::shared_ptr<Scope> id_scope;
 	try {
-		id_scope = get_inner_most_variable_scope(nullptr, identifier);
+		id_scope = get_inner_most_variable_scope(nullptr, name_space, identifier);
 	}
 	catch (...) {
 		//const auto& dim = astnode->identifier_vector[0].access_vector;
