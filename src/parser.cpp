@@ -16,7 +16,7 @@ Parser::Parser(const std::string& name, Lexer* lex) : name(name), lex(lex) {
 
 std::shared_ptr<ASTProgramNode> Parser::parse_program() {
 	auto statements = std::vector<std::shared_ptr<ASTNode>>();
-	std::string name_space = "";
+	std::string name_space = default_namespace;
 
 	if (current_token.type == TOK_NAMESPACE) {
 		consume_token(TOK_IDENTIFIER);

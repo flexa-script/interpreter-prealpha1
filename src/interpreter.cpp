@@ -360,6 +360,10 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 		signature.push_back(pvalue);
 	}
 
+	if (astnode->identifier == "len") {
+		int x = 0;
+	}
+
 	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(prg, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
 	if (func_scope) {
 		name_space = func_scope->owner->name_space;
@@ -389,7 +393,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 
 	if (!pop) {
 		// function actualy is in another namespace
-		pop = push_namespace(prg->name_space.empty() ? prg->name_space : name_space);
+		pop = push_namespace(name_space);
 	}
 
 	current_function.push(declfun);
@@ -413,10 +417,8 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 }
 
 void Interpreter::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode> astnode) {
-	std::string name_space = get_namespace();
-
+	set_curr_pos(astnode->row, astnode->col);
 	builtin_functions[astnode->identifier]();
-
 	current_expression_value = access_value(current_expression_value, current_function_call_identifier_vector.top());
 }
 

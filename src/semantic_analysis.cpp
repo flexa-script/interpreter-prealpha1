@@ -77,9 +77,9 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTUsingNode> astnode) {
 
 		parsed_libs.push_back(libname);
 
-		if (program->name_space == default_namespace) {
-			throw std::runtime_error("namespace '" + program->name_space + "' is not valid ");
-		}
+		//if (program->name_space == default_namespace) {
+		//	throw std::runtime_error("namespace '" + program->name_space + "' is not valid ");
+		//}
 
 		auto pop = push_namespace(program->name_space);
 
