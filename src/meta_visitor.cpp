@@ -52,6 +52,9 @@ std::shared_ptr<Variable> MetaVisitor::find_inner_most_variable(std::shared_ptr<
 }
 
 std::shared_ptr<Scope> MetaVisitor::get_inner_most_variable_scope_aux(const std::string& name_space, const std::string& identifier, std::vector<std::string>& visited) {
+	if (name_space.empty()) {
+		return nullptr;
+	}
 	if (utils::CollectionUtils::contains(visited, name_space)) {
 		return nullptr;
 	}
@@ -108,6 +111,9 @@ std::shared_ptr<Scope> MetaVisitor::get_inner_most_variable_scope(std::shared_pt
 }
 
 std::shared_ptr<Scope> MetaVisitor::get_inner_most_struct_definition_scope_aux(const std::string& name_space, const std::string& identifier, std::vector<std::string>& visited) {
+	if (name_space.empty()) {
+		return nullptr;
+	}
 	if (utils::CollectionUtils::contains(visited, name_space)) {
 		return nullptr;
 	}
@@ -165,6 +171,9 @@ std::shared_ptr<Scope> MetaVisitor::get_inner_most_struct_definition_scope(std::
 }
 
 std::shared_ptr<Scope> MetaVisitor::get_inner_most_functions_scope_aux(const std::string& name_space, const std::string& identifier, std::vector<std::string>& visited) {
+	if (name_space.empty()) {
+		return nullptr;
+	}
 	if (utils::CollectionUtils::contains(visited, name_space)) {
 		return nullptr;
 	}
@@ -224,6 +233,9 @@ std::shared_ptr<Scope> MetaVisitor::get_inner_most_functions_scope(std::shared_p
 
 std::shared_ptr<Scope> MetaVisitor::get_inner_most_function_scope_aux(const std::string& name_space, const std::string& identifier,
 	const std::vector<TypeDefinition*>* signature, dim_eval_func_t evaluate_access_vector_ptr, bool strict, std::vector<std::string>& visited) {
+	if (name_space.empty()) {
+		return nullptr;
+	}
 	if (utils::CollectionUtils::contains(visited, name_space)) {
 		return nullptr;
 	}
@@ -240,8 +252,7 @@ std::shared_ptr<Scope> MetaVisitor::get_inner_most_function_scope_aux(const std:
 }
 
 std::shared_ptr<Scope> MetaVisitor::get_inner_most_function_scope(std::shared_ptr<ASTProgramNode> program, const std::string& name_space, const std::string& identifier,
-	const std::vector<TypeDefinition*>* signature, dim_eval_func_t evaluate_access_vector_ptr, bool strict,
-	std::vector<std::string> vp, std::vector<std::string> vf) {
+	const std::vector<TypeDefinition*>* signature, dim_eval_func_t evaluate_access_vector_ptr, bool strict, std::vector<std::string> vp, std::vector<std::string> vf) {
 	if (utils::CollectionUtils::contains(vp, program->name)) {
 		return nullptr;
 	}

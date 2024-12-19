@@ -71,7 +71,7 @@ void Interpreter::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	auto program = programs[libname];
 
 	// add lib to current program
-	current_program.top()->libs.push_back(program);
+	//current_program.top()->libs.push_back(program);
 
 	// if can't parsed yet
 	if (!utils::CollectionUtils::contains(parsed_libs, libname)) {
@@ -358,10 +358,6 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 
 		function_arguments.push_back(pvalue);
 		signature.push_back(pvalue);
-	}
-
-	if (astnode->identifier == "len") {
-		int x = 0;
 	}
 
 	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(prg, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
