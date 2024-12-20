@@ -141,6 +141,10 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 	const auto& name_space = get_namespace();
 	const auto& prg = current_program.top();
 
+	if (astnode->identifier == "default_collection") {
+		int x = 0;
+	}
+
 	std::shared_ptr<Scope> current_scope = scopes[name_space].back();
 
 	if (current_scope->already_declared_variable(astnode->identifier)) {

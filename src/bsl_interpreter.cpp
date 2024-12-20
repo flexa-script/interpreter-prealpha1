@@ -19,32 +19,39 @@ CPInterpreter::CPInterpreter(const BSLCliArgs& args)
 	args(args) {}
 
 int CPInterpreter::execute() {
-	if (args.sources.size() > 0) {
+	if (!args.main.empty() || args.sources.size() > 0) {
 		return interpreter();
 	}
 
 	return 0;
 }
 
+BSLSource CPInterpreter::load_program(const std::string& source) {
+	BSLSource source_program;
+
+	auto current_file_path = std::string{ std::filesystem::path::preferred_separator } + utils::PathUtils::normalize_path_sep(source);
+	std::string current_full_path = "";
+
+	if (std::filesystem::exists(project_root + current_file_path)) {
+		current_full_path = project_root + current_file_path;
+	}
+	else if (std::filesystem::exists(cp_root + current_file_path)) {
+		current_full_path = cp_root + current_file_path;
+	}
+	else {
+		throw std::runtime_error("file not found: '" + current_file_path + "'");
+	}
+
+	source_program = BSLSource{ get_lib_name(source), load_source(current_full_path) };
+
+	return source_program;
+}
+
 std::vector<BSLSource> CPInterpreter::load_programs(const std::vector<std::string>& sources) {
 	std::vector<BSLSource> source_programs;
 
-	for (size_t i = 0; i < sources.size(); ++i) {
-		auto current_file_path = std::string{ std::filesystem::path::preferred_separator } + utils::PathUtils::normalize_path_sep(sources[i]);
-		std::string current_full_path = "";
-
-		if (std::filesystem::exists(project_root + current_file_path)) {
-			current_full_path = project_root + current_file_path;
-		}
-		else if (std::filesystem::exists(cp_root + current_file_path)) {
-			current_full_path = cp_root + current_file_path;
-		}
-		else {
-			throw std::runtime_error("file not found: '" + current_file_path + "'");
-		}
-
-		auto program = BSLSource{ get_lib_name(sources[i]), load_source(current_full_path) };
-		source_programs.push_back(program);
+	for (const auto& source : sources) {
+		source_programs.push_back(load_program(source));
 	}
 
 	return source_programs;
@@ -73,9 +80,12 @@ void CPInterpreter::parse_programs(const std::vector<BSLSource>& source_programs
 }
 
 int CPInterpreter::interpreter() {
+	BSLSource main_program;
 	std::vector<BSLSource> source_programs;
 	try {
+		main_program = load_program(args.main);
 		source_programs = load_programs(args.sources);
+		source_programs.emplace(source_programs.begin(), main_program);
 	}
 	catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;

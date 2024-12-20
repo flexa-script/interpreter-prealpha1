@@ -16,6 +16,7 @@ public:
 	int execute();
 
 private:
+	BSLSource load_program(const std::string& source);
 	std::vector<BSLSource> load_programs(const std::vector<std::string>& sources);
 
 	void parse_programs(const std::vector<BSLSource>& source_programs, std::shared_ptr<ASTProgramNode>* main_program,

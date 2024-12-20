@@ -49,11 +49,7 @@ void throw_if_not_parameter(int argc, size_t i, std::string parameter) {
 
 BSLCliArgs parse_args(int argc, const char* argv[]) {
 	BSLCliArgs args;
-	args.debug = false;
 	args.engine = "ast";
-	args.workspace = "";
-
-	args.sources;
 
 	size_t i = 0;
 
@@ -79,6 +75,12 @@ BSLCliArgs parse_args(int argc, const char* argv[]) {
 			++i;
 			throw_if_not_parameter(argc, i, arg);
 			args.workspace = argv[i];
+			continue;
+		}
+		if (arg == "-m" || arg == "--main") {
+			++i;
+			throw_if_not_parameter(argc, i, arg);
+			args.main = argv[i];
 			continue;
 		}
 		if (arg == "-s" || arg == "--source") {

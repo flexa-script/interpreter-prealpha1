@@ -23,6 +23,7 @@ struct BSLCliArgs {
 	bool debug = false;
 	std::string engine;
 	std::string workspace;
+	std::string main;
 	std::vector<std::string> sources;
 	std::vector<std::string> cpargs;
 };
