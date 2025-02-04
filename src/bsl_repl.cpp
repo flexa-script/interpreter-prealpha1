@@ -5,7 +5,7 @@
 
 const std::string CPRepl::NAME = "BSL";
 const std::string CPRepl::VER = "v0.0.1";
-const std::string CPRepl::YEAR = "2024";
+const std::string CPRepl::YEAR = "2025";
 
 void CPRepl::remove_header(std::string& err) {
 	size_t pos = err.rfind(':');

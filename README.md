@@ -124,7 +124,6 @@
 - [x] General otimizations:
     - [x] Remove duplicate codes
         - [X] Organize semantic duplicated checks
-        - [x] ...?
     - [X] Implement detructors
 - [ ] Projects to implement in CP:
     - [ ] https://github.com/bpslib/bps
@@ -144,7 +143,6 @@
 - [ ] Can't executes returned function from another function eg: `here_is_returning_a_function()();`
 - [X] Review value copy and equal (mainly cause of ponters)
 - [X] Some function definition are not being found:nd:
-    - [X] `var arr = {1, 2, 3, 4, 5, 6}` X `fun arr_size(arr[])`
     - [X] `var arr = {1, 2, 3, 4, 5, 6}` X `fun arr_size(arr[])`
 - [X] Undefined variables cant be assigned
 - [X] Array items cant verified correctly
