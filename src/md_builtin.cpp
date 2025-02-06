@@ -64,8 +64,8 @@ void ModuleBuiltin::register_functions(visitor::Interpreter* visitor) {
 	visitor->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]] = [this, visitor]() {
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 
-		try {
-			auto& scope = visitor->scopes[default_namespace].back();
+		auto& scope = visitor->scopes[default_namespace].back();
+		if (scope->already_declared_variable("args")) {
 			auto var = std::dynamic_pointer_cast<RuntimeVariable>(scope->find_declared_variable("args"));
 			auto args = var->value->get_arr();
 
@@ -73,7 +73,6 @@ void ModuleBuiltin::register_functions(visitor::Interpreter* visitor) {
 				std::cout << RuntimeOperations::parse_value_to_string(args[i]);
 			}
 		}
-		catch (...) {}
 
 		};
 

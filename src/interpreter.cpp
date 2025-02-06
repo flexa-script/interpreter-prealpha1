@@ -81,7 +81,7 @@ void Interpreter::visit(std::shared_ptr<ASTUsingNode> astnode) {
 
 		auto pop = push_namespace(program->name_space);
 
-		if (!program->name_space.empty() && scopes.find(program->name_space) == scopes.end()) {
+		if (scopes[program->name_space].empty()) {
 			scopes[program->name_space].push_back(std::make_shared<Scope>(program));
 		}
 
@@ -360,14 +360,23 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 		signature.push_back(pvalue);
 	}
 
+	if (identifier == "xf") {
+		int x = 0;
+	}
+
 	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(prg, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
 	if (func_scope) {
+		//current_program.push(func_scope->owner);
 		name_space = func_scope->owner->name_space;
 	}
 	else {
 		strict = false;
 		func_scope = get_inner_most_function_scope(prg, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
-		if (!func_scope) {
+		if (func_scope) {
+			//current_program.push(func_scope->owner);
+			//name_space = func_scope->owner->name_space;
+		}
+		else {
 			auto var_scope = get_inner_most_variable_scope(prg, name_space, identifier);
 			if (!var_scope) {
 				std::string func_name = ExceptionHandler::buid_signature(identifier, signature, evaluate_access_vector_ptr);
@@ -408,6 +417,8 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	current_function_signature.pop();
 	current_this_name.pop();
 	gc.remove_root_container(&function_arguments);
+
+	//current_program.pop();
 
 	pop_namespace(pop);
 }

@@ -1,0 +1,40 @@
+using bsl.core.console;
+using bsl.core.datetime;
+
+include namespace bsl;
+
+struct StopWatch {
+    var start_time: int;
+    var end_time: int;
+};
+
+var usw: StopWatch = StopWatch{};
+
+fun timer_start(sw: StopWatch): void {
+    sw.start_time = clock();
+}
+
+fun timer_stop(sw: StopWatch): void {
+    sw.end_time = clock();
+}
+
+fun elapsed_time(sw: StopWatch): int {
+    return sw.end_time - sw.start_time;
+}
+
+fun print_elapsed_time(sw: StopWatch): void {
+    println("elapsed time: ", elapsed_time(sw), " ms");
+}
+
+fun start_test(title: string): void {
+    // set_console_color(CL_BRIGHT_WHITE, CL_BLACK);
+    println("--- ", title, " ---");
+    // set_console_color(CL_BLACK, CL_WHITE);
+    timer_start(usw);
+}
+
+fun end_test(): void {
+    timer_stop(usw);
+    print_elapsed_time(usw);
+    println();
+}

@@ -1,3 +1,12 @@
+using utils;
+
+var gsw: StopWatch = StopWatch{};
+
+timer_start(gsw);
+
 using test_suite;
 
 //execute_tests();
+
+timer_stop(gsw);
+print("full test suite elapsed time: ", elapsed_time(gsw), " ms");

@@ -47,7 +47,6 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTProgramNode> astnode) {
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
-	const auto& prg = current_program.top();
 
 	std::string libname = utils::StringUtils::join(astnode->library, ".");
 
@@ -77,13 +76,11 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTUsingNode> astnode) {
 
 		parsed_libs.push_back(libname);
 
-		//if (program->name_space == default_namespace) {
-		//	throw std::runtime_error("namespace '" + program->name_space + "' is not valid ");
-		//}
-
 		auto pop = push_namespace(program->name_space);
 
-		scopes[program->name_space].push_back(std::make_shared<Scope>(prg));
+		if (scopes[program->name_space].empty()) {
+			scopes[program->name_space].push_back(std::make_shared<Scope>(program));
+		}
 
 		if (std::find(program_nmspaces[program->name].begin(), program_nmspaces[program->name].end(), default_namespace) == program_nmspaces[program->name].end()) {
 			program_nmspaces[program->name].push_back(default_namespace);
@@ -140,10 +137,6 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 
 	const auto& name_space = get_namespace();
 	const auto& prg = current_program.top();
-
-	if (astnode->identifier == "default_collection") {
-		int x = 0;
-	}
 
 	std::shared_ptr<Scope> current_scope = scopes[name_space].back();
 
