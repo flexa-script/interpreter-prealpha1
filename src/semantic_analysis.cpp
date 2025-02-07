@@ -78,9 +78,9 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTUsingNode> astnode) {
 
 		auto pop = push_namespace(program->name_space);
 
-		if (scopes[program->name_space].empty()) {
+		//if (scopes[program->name_space].empty()) {
 			scopes[program->name_space].push_back(std::make_shared<Scope>(program));
-		}
+		//}
 
 		if (std::find(program_nmspaces[program->name].begin(), program_nmspaces[program->name].end(), default_namespace) == program_nmspaces[program->name].end()) {
 			program_nmspaces[program->name].push_back(default_namespace);

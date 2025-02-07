@@ -22,6 +22,7 @@ Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, std::shared_ptr<AS
 	gc.add_ptr_root(&current_expression_value);
 
 	push_namespace(default_namespace);
+	current_this_name.push(default_namespace);
 	scopes[default_namespace].push_back(global_scope);
 
 	built_in_libs["builtin"]->register_functions(this);
@@ -30,7 +31,7 @@ Interpreter::Interpreter(std::shared_ptr<Scope> global_scope, std::shared_ptr<AS
 }
 
 void Interpreter::start() {
-	current_this_name.push(get_namespace());
+	current_this_name.push(current_program.top()->name);
 	visit(current_program.top());
 	current_this_name.pop();
 }
@@ -81,20 +82,20 @@ void Interpreter::visit(std::shared_ptr<ASTUsingNode> astnode) {
 
 		auto pop = push_namespace(program->name_space);
 
-		if (scopes[program->name_space].empty()) {
+		//if (scopes[program->name_space].empty()) {
 			scopes[program->name_space].push_back(std::make_shared<Scope>(program));
-		}
+		//}
 
 		if (std::find(program_nmspaces[program->name].begin(), program_nmspaces[program->name].end(), default_namespace) == program_nmspaces[program->name].end()) {
 			program_nmspaces[program->name].push_back(default_namespace);
 		}
 
-		current_this_name.push(program->name_space);
+		//current_this_name.push(program->name);
 
 		start();
 
 		current_program.pop();
-		current_this_name.pop();
+		//current_this_name.pop();
 		pop_namespace(pop);
 	}
 }
@@ -336,7 +337,7 @@ void Interpreter::visit(std::shared_ptr<ASTReturnNode> astnode) {
 void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	auto pop = push_namespace(astnode->name_space);
-	const auto& prg = current_program.top();
+	const auto& caller_program = current_program.top();
 	std::string name_space = get_namespace();
 	std::string identifier = astnode->identifier;
 	std::vector<Identifier> identifier_vector = astnode->identifier_vector;
@@ -364,20 +365,20 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 		int x = 0;
 	}
 
-	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(prg, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
+	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(caller_program, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
 	if (func_scope) {
-		//current_program.push(func_scope->owner);
+		current_program.push(func_scope->owner);
 		name_space = func_scope->owner->name_space;
 	}
 	else {
 		strict = false;
-		func_scope = get_inner_most_function_scope(prg, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
+		func_scope = get_inner_most_function_scope(caller_program, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
 		if (func_scope) {
-			//current_program.push(func_scope->owner);
-			//name_space = func_scope->owner->name_space;
+			current_program.push(func_scope->owner);
+			name_space = func_scope->owner->name_space;
 		}
 		else {
-			auto var_scope = get_inner_most_variable_scope(prg, name_space, identifier);
+			auto var_scope = get_inner_most_variable_scope(caller_program, name_space, identifier);
 			if (!var_scope) {
 				std::string func_name = ExceptionHandler::buid_signature(identifier, signature, evaluate_access_vector_ptr);
 				throw std::runtime_error("function '" + func_name + "' was never declared");
@@ -386,7 +387,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 			name_space = var->value->get_fun().first;
 			identifier = var->value->get_fun().second;
 			identifier_vector = std::vector<Identifier>{ Identifier(identifier) };
-			func_scope = get_inner_most_function_scope(prg, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
+			func_scope = get_inner_most_function_scope(caller_program, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
 			if (!func_scope) {
 				std::string func_name = ExceptionHandler::buid_signature(identifier, signature, evaluate_access_vector_ptr);
 				throw std::runtime_error("function '" + func_name + "' was never declared");
@@ -418,7 +419,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	current_this_name.pop();
 	gc.remove_root_container(&function_arguments);
 
-	//current_program.pop();
+	current_program.pop();
 
 	pop_namespace(pop);
 }

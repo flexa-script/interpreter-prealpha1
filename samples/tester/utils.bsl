@@ -27,9 +27,9 @@ fun print_elapsed_time(sw: StopWatch): void {
 }
 
 fun start_test(title: string): void {
-    // set_console_color(CL_BRIGHT_WHITE, CL_BLACK);
+    set_console_color(CL_BRIGHT_WHITE, CL_BLACK);
     println("--- ", title, " ---");
-    // set_console_color(CL_BLACK, CL_WHITE);
+    set_console_color(CL_BLACK, CL_WHITE);
     timer_start(usw);
 }
 
