@@ -1,4 +1,4 @@
-start_test("DECLARATION / UNDEFINED / SIMPLE");
+start_test("DECLARATION / UNDEFINED / STRUCT");
 
 print("declaring 'ustr1' as Foo");
 var ustr1: Foo;

@@ -1021,7 +1021,6 @@ std::shared_ptr<ASTExprNode> Parser::parse_factor() {
 		return parse_array_constructor_node();
 
 		// type parsing cases
-	case TOK_ANY_TYPE:
 	case TOK_BOOL_TYPE:
 	case TOK_INT_TYPE:
 	case TOK_FLOAT_TYPE:

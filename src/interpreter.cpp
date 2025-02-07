@@ -71,9 +71,6 @@ void Interpreter::visit(std::shared_ptr<ASTUsingNode> astnode) {
 
 	auto program = programs[libname];
 
-	// add lib to current program
-	//current_program.top()->libs.push_back(program);
-
 	// if can't parsed yet
 	if (!utils::CollectionUtils::contains(parsed_libs, libname)) {
 		parsed_libs.push_back(libname);
@@ -82,20 +79,15 @@ void Interpreter::visit(std::shared_ptr<ASTUsingNode> astnode) {
 
 		auto pop = push_namespace(program->name_space);
 
-		//if (scopes[program->name_space].empty()) {
-			scopes[program->name_space].push_back(std::make_shared<Scope>(program));
-		//}
+		scopes[program->name_space].push_back(std::make_shared<Scope>(program));
 
 		if (std::find(program_nmspaces[program->name].begin(), program_nmspaces[program->name].end(), default_namespace) == program_nmspaces[program->name].end()) {
 			program_nmspaces[program->name].push_back(default_namespace);
 		}
 
-		//current_this_name.push(program->name);
-
 		start();
 
 		current_program.pop();
-		//current_this_name.pop();
 		pop_namespace(pop);
 	}
 }
@@ -103,7 +95,6 @@ void Interpreter::visit(std::shared_ptr<ASTUsingNode> astnode) {
 void Interpreter::visit(std::shared_ptr<ASTNamespaceManagerNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	//const auto& nmspace = get_namespace();
 	const auto& current_program_name = current_program.top()->name;
 
 	if (astnode->image == "include") {

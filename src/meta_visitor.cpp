@@ -99,13 +99,6 @@ std::shared_ptr<Scope> MetaVisitor::get_inner_most_variable_scope(std::shared_pt
 		}
 	}
 
-	//// try find at included libs
-	//for (auto& lib : program->libs) {
-	//	scope = get_inner_most_variable_scope(lib, name_space, identifier, vp, vf);
-	//	if (scope) {
-	//		return scope;
-	//	}
-	//}
 	// try find at included libs namespaces
 	for (auto& lib : program->libs) {
 		for (const auto& prgnmspace : program_nmspaces[lib->name]) {
@@ -168,13 +161,6 @@ std::shared_ptr<Scope> MetaVisitor::get_inner_most_struct_definition_scope(std::
 		}
 	}
 
-	//// try find at included libs
-	//for (auto& lib : program->libs) {
-	//	scope = get_inner_most_struct_definition_scope(lib, name_space, identifier, vp, vf);
-	//	if (scope) {
-	//		return scope;
-	//	}
-	//}
 	// try find at included libs namespaces
 	for (auto& lib : program->libs) {
 		for (const auto& prgnmspace : program_nmspaces[lib->name]) {
@@ -238,13 +224,6 @@ std::shared_ptr<Scope> MetaVisitor::get_inner_most_functions_scope(std::shared_p
 		}
 	}
 
-	//// try find at included libs
-	//for (auto& lib : program->libs) {
-	//	scope = get_inner_most_functions_scope(lib, name_space, identifier, vp, vf);
-	//	if (scope) {
-	//		return scope;
-	//	}
-	//}
 	// try find at included libs namespaces
 	for (auto& lib : program->libs) {
 		for (const auto& prgnmspace : program_nmspaces[lib->name]) {
@@ -309,13 +288,6 @@ std::shared_ptr<Scope> MetaVisitor::get_inner_most_function_scope(std::shared_pt
 		}
 	}
 
-	//// try find at included libs
-	//for (auto& lib : program->libs) {
-	//	scope = get_inner_most_function_scope(lib, name_space, identifier, signature, evaluate_access_vector_ptr, strict, vp, vf);
-	//	if (scope) {
-	//		return scope;
-	//	}
-	//}
 	// try find at included libs namespaces
 	for (auto& lib : program->libs) {
 		for (const auto& prgnmspace : program_nmspaces[lib->name]) {
