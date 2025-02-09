@@ -41,7 +41,7 @@ void VirtualMachine::run() {
 	}
 
 	if (value_stack.empty()) {
-		push_constant(new RuntimeValue(cp_int(0)));
+		push_constant(new RuntimeValue(flx_int(0)));
 	}
 
 	gc.collect();
@@ -64,7 +64,7 @@ void VirtualMachine::push_constant(RuntimeValue* value) {
 
 void VirtualMachine::push_function_constant(const std::string& identifier) {
 	auto fdef = utils::StringUtils::split(identifier, ":");
-	push_constant(new RuntimeValue(cp_function(fdef[0], fdef[1])));
+	push_constant(new RuntimeValue(flx_function(fdef[0], fdef[1])));
 }
 
 void VirtualMachine::binary_operation(const std::string& op) {
@@ -98,19 +98,19 @@ void VirtualMachine::unary_operation(const std::string& op) {
 		switch (value->type) {
 		case Type::T_INT:
 			if (op == "-") {
-				value->set(cp_int(-value->get_i()));
+				value->set(flx_int(-value->get_i()));
 			}
 			else if (op == "~") {
-				value->set(cp_int(~value->get_i()));
+				value->set(flx_int(~value->get_i()));
 			}
 			break;
 		case Type::T_FLOAT:
 			if (op == "-") {
-				value->set(cp_float(-value->get_f()));
+				value->set(flx_float(-value->get_f()));
 			}
 			break;
 		case Type::T_BOOL:
-			value->set(cp_bool(!value->get_b()));
+			value->set(flx_bool(!value->get_b()));
 			break;
 		default:
 			throw std::runtime_error("incompatible unary operator '" + op +
@@ -191,11 +191,11 @@ void VirtualMachine::handle_throw() {
 	if (is_struct(value->type)
 		&& value->type_name == "Exception") {
 		try {
-			std::string name_space = "cp";
-			get_inner_most_struct_definition_scope(nullptr, "cp", "Exception");
+			std::string name_space = "flx";
+			get_inner_most_struct_definition_scope(nullptr, "flx", "Exception");
 		}
 		catch (...) {
-			throw std::runtime_error("struct 'cp::Exception' not found");
+			throw std::runtime_error("struct 'flx::Exception' not found");
 		}
 
 		throw std::exception(value->get_str()["error"]->get_s().c_str());
@@ -204,7 +204,7 @@ void VirtualMachine::handle_throw() {
 		throw std::runtime_error(value->get_s());
 	}
 	else {
-		throw std::runtime_error("expected cp::Exception struct or string in throw");
+		throw std::runtime_error("expected flx::Exception struct or string in throw");
 	}
 
 }
@@ -221,16 +221,16 @@ void VirtualMachine::handle_type_parse() {
 			new_value->copy_from(value);
 			break;
 		case Type::T_INT:
-			new_value->set(cp_bool(value->get_i() != 0));
+			new_value->set(flx_bool(value->get_i() != 0));
 			break;
 		case Type::T_FLOAT:
-			new_value->set(cp_bool(value->get_f() != .0));
+			new_value->set(flx_bool(value->get_f() != .0));
 			break;
 		case Type::T_CHAR:
-			new_value->set(cp_bool(value->get_c() != '\0'));
+			new_value->set(flx_bool(value->get_c() != '\0'));
 			break;
 		case Type::T_STRING:
-			new_value->set(cp_bool(!value->get_s().empty()));
+			new_value->set(flx_bool(!value->get_s().empty()));
 			break;
 		}
 		break;
@@ -238,20 +238,20 @@ void VirtualMachine::handle_type_parse() {
 	case Type::T_INT:
 		switch (type) {
 		case Type::T_BOOL:
-			new_value->set(cp_int(value->get_b()));
+			new_value->set(flx_int(value->get_b()));
 			break;
 		case Type::T_INT:
 			new_value->copy_from(value);
 			break;
 		case Type::T_FLOAT:
-			new_value->set(cp_int(value->get_f()));
+			new_value->set(flx_int(value->get_f()));
 			break;
 		case Type::T_CHAR:
-			new_value->set(cp_int(value->get_c()));
+			new_value->set(flx_int(value->get_c()));
 			break;
 		case Type::T_STRING:
 			try {
-				new_value->set(cp_int(std::stoll(value->get_s())));
+				new_value->set(flx_int(std::stoll(value->get_s())));
 			}
 			catch (...) {
 				throw std::runtime_error("'" + value->get_s() + "' is not a valid value to parse int");
@@ -263,20 +263,20 @@ void VirtualMachine::handle_type_parse() {
 	case Type::T_FLOAT:
 		switch (value->type) {
 		case Type::T_BOOL:
-			new_value->set(cp_float(value->get_b()));
+			new_value->set(flx_float(value->get_b()));
 			break;
 		case Type::T_INT:
-			new_value->set(cp_float(value->get_i()));
+			new_value->set(flx_float(value->get_i()));
 			break;
 		case Type::T_FLOAT:
 			new_value->copy_from(value);
 			break;
 		case Type::T_CHAR:
-			new_value->set(cp_float(value->get_c()));
+			new_value->set(flx_float(value->get_c()));
 			break;
 		case Type::T_STRING:
 			try {
-				new_value->set(cp_float(std::stold(value->get_s())));
+				new_value->set(flx_float(std::stold(value->get_s())));
 			}
 			catch (...) {
 				throw std::runtime_error("'" + value->get_s() + "' is not a valid value to parse float");
@@ -288,13 +288,13 @@ void VirtualMachine::handle_type_parse() {
 	case Type::T_CHAR:
 		switch (value->type) {
 		case Type::T_BOOL:
-			new_value->set(cp_char(value->get_b()));
+			new_value->set(flx_char(value->get_b()));
 			break;
 		case Type::T_INT:
-			new_value->set(cp_char(value->get_i()));
+			new_value->set(flx_char(value->get_i()));
 			break;
 		case Type::T_FLOAT:
-			new_value->set(cp_char(value->get_f()));
+			new_value->set(flx_char(value->get_f()));
 			break;
 		case Type::T_CHAR:
 			new_value->copy_from(value);
@@ -304,14 +304,14 @@ void VirtualMachine::handle_type_parse() {
 				throw std::runtime_error("'" + value->get_s() + "' is not a valid value to parse char");
 			}
 			else {
-				new_value->set(cp_char(value->get_s()[0]));
+				new_value->set(flx_char(value->get_s()[0]));
 			}
 			break;
 		}
 		break;
 
 	case Type::T_STRING:
-		new_value->set(cp_string(RuntimeOperations::parse_value_to_string(value)));
+		new_value->set(flx_string(RuntimeOperations::parse_value_to_string(value)));
 
 	}
 
@@ -439,7 +439,7 @@ void VirtualMachine::handle_exclude_namespace() {
 
 void VirtualMachine::handle_init_array() {
 	auto size = current_instruction.get_size_operand();
-	value_build_stack.push(new RuntimeValue(cp_array(size)));
+	value_build_stack.push(new RuntimeValue(flx_array(size)));
 }
 
 void VirtualMachine::handle_set_element() {
@@ -455,7 +455,7 @@ void VirtualMachine::handle_push_array() {
 void VirtualMachine::handle_init_struct() {
 	auto type_name_space = get_namespace();
 	auto identifier = current_instruction.get_string_operand();
-	value_build_stack.push(new RuntimeValue(cp_struct(), identifier, type_name_space));
+	value_build_stack.push(new RuntimeValue(flx_struct(), identifier, type_name_space));
 }
 
 void VirtualMachine::handle_set_field() {
@@ -568,17 +568,17 @@ void VirtualMachine::handle_is_type() {
 	auto value = get_stack_top();
 	RuntimeValue* res_value = new RuntimeValue(Type::T_BOOL);
 	if (is_any(type)) {
-		res_value->set(cp_bool(
+		res_value->set(flx_bool(
 			(value->ref.lock() && (is_any(value->ref.lock()->type)) ||
 				is_any(value->ref.lock()->array_type))));
 		return;
 	}
 	else if (is_array(type)) {
-		res_value->set(cp_bool(is_array(value->type) || value->dim.size() > 0));
+		res_value->set(flx_bool(is_array(value->type) || value->dim.size() > 0));
 		return;
 	}
 	else if (is_struct(type)) {
-		res_value->set(cp_bool(is_struct(value->type) || is_struct(value->array_type)));
+		res_value->set(flx_bool(is_struct(value->type) || is_struct(value->array_type)));
 		return;
 	}
 }
@@ -777,12 +777,12 @@ void VirtualMachine::decode_operation() {
 		handle_is_type();
 		break;
 	case OP_REFID:
-		push_constant(new RuntimeValue(cp_int(get_stack_top())));
+		push_constant(new RuntimeValue(flx_int(get_stack_top())));
 		break;
 	case OP_TYPEID:
 		push_constant(
 			new RuntimeValue(
-				cp_string(
+				flx_string(
 					RuntimeOperations::build_str_type(get_stack_top(), evaluate_access_vector_ptr)
 				)
 			)
@@ -791,7 +791,7 @@ void VirtualMachine::decode_operation() {
 	case OP_TYPEOF:
 		push_constant(
 			new RuntimeValue(
-				cp_int(
+				flx_int(
 					utils::StringUtils::hashcode(RuntimeOperations::build_str_type(get_stack_top(), evaluate_access_vector_ptr))
 				)
 			)

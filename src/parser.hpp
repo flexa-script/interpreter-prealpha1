@@ -100,11 +100,11 @@ namespace parser {
 		VariableDefinition* parse_unpacked_formal_param();
 		std::shared_ptr<ASTExprNode> parse_identifier_expression();
 		std::shared_ptr<ASTIdentifierNode> parse_identifier_node();
-		cp_bool parse_bool_literal();
-		cp_int parse_int_literal();
-		cp_float parse_float_literal();
-		cp_char parse_char_literal();
-		cp_string parse_string_literal();
+		flx_bool parse_bool_literal();
+		flx_int parse_int_literal();
+		flx_float parse_float_literal();
+		flx_char parse_char_literal();
+		flx_string parse_string_literal();
 		std::vector<std::shared_ptr<ASTExprNode>> parse_dimension_vector();
 		Identifier parse_identifier();
 		std::vector<Identifier> parse_identifier_vector();

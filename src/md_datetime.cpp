@@ -9,18 +9,18 @@ ModuleDateTime::ModuleDateTime() {}
 
 ModuleDateTime::~ModuleDateTime() = default;
 
-cp_struct ModuleDateTime::tm_to_date_time(visitor::Interpreter* visitor, time_t t, tm* tm) {
-	cp_struct dt_str = cp_struct();
-	dt_str["timestamp"] = visitor->alocate_value(new RuntimeValue(cp_int(t)));
-	dt_str["second"] = visitor->alocate_value(new RuntimeValue(cp_int(tm->tm_sec)));
-	dt_str["minute"] = visitor->alocate_value(new RuntimeValue(cp_int(tm->tm_min)));
-	dt_str["hour"] = visitor->alocate_value(new RuntimeValue(cp_int(tm->tm_hour)));
-	dt_str["day"] = visitor->alocate_value(new RuntimeValue(cp_int(tm->tm_mday)));
-	dt_str["month"] = visitor->alocate_value(new RuntimeValue(cp_int(tm->tm_mon + 1)));
-	dt_str["year"] = visitor->alocate_value(new RuntimeValue(cp_int(tm->tm_year)));
-	dt_str["week_day"] = visitor->alocate_value(new RuntimeValue(cp_int(tm->tm_wday)));
-	dt_str["year_day"] = visitor->alocate_value(new RuntimeValue(cp_int(tm->tm_yday)));
-	dt_str["is_dst"] = visitor->alocate_value(new RuntimeValue(cp_int(tm->tm_isdst)));
+flx_struct ModuleDateTime::tm_to_date_time(visitor::Interpreter* visitor, time_t t, tm* tm) {
+	flx_struct dt_str = flx_struct();
+	dt_str["timestamp"] = visitor->alocate_value(new RuntimeValue(flx_int(t)));
+	dt_str["second"] = visitor->alocate_value(new RuntimeValue(flx_int(tm->tm_sec)));
+	dt_str["minute"] = visitor->alocate_value(new RuntimeValue(flx_int(tm->tm_min)));
+	dt_str["hour"] = visitor->alocate_value(new RuntimeValue(flx_int(tm->tm_hour)));
+	dt_str["day"] = visitor->alocate_value(new RuntimeValue(flx_int(tm->tm_mday)));
+	dt_str["month"] = visitor->alocate_value(new RuntimeValue(flx_int(tm->tm_mon + 1)));
+	dt_str["year"] = visitor->alocate_value(new RuntimeValue(flx_int(tm->tm_year)));
+	dt_str["week_day"] = visitor->alocate_value(new RuntimeValue(flx_int(tm->tm_wday)));
+	dt_str["year_day"] = visitor->alocate_value(new RuntimeValue(flx_int(tm->tm_yday)));
+	dt_str["is_dst"] = visitor->alocate_value(new RuntimeValue(flx_int(tm->tm_isdst)));
 
 	return dt_str;
 }
@@ -72,7 +72,7 @@ void ModuleDateTime::register_functions(visitor::Interpreter* visitor) {
 			t = mktime(tm);
 		}
 
-		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(tm_to_date_time(visitor, t, tm), "DateTime", "cp"));
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(tm_to_date_time(visitor, t, tm), "DateTime", "flx"));
 
 		};
 
@@ -89,7 +89,7 @@ void ModuleDateTime::register_functions(visitor::Interpreter* visitor) {
 		tm* tm = new struct tm();
 		gmtime_s(tm, &t);
 
-		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(tm_to_date_time(visitor, t, tm), "DateTime", "cp"));
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(tm_to_date_time(visitor, t, tm), "DateTime", "flx"));
 
 		};
 
@@ -164,7 +164,7 @@ void ModuleDateTime::register_functions(visitor::Interpreter* visitor) {
 		};
 
 	visitor->builtin_functions["clock"] = [this, visitor]() {
-		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(cp_int(clock())));
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(flx_int(clock())));
 
 		};
 

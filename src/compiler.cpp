@@ -20,7 +20,7 @@ Compiler::Compiler(std::shared_ptr<ASTProgramNode> main_program, std::map<std::s
 };
 
 void Compiler::start() {
-	auto pop = push_namespace(cp_string(default_namespace));
+	auto pop = push_namespace(flx_string(default_namespace));
 	visit(current_program.top());
 	pop_namespace(pop);
 	add_instruction(OpCode::OP_HALT, nullptr);
@@ -53,7 +53,7 @@ void Compiler::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	if (!utils::CollectionUtils::contains(parsed_libs, libname)) {
 		current_program.push(program);
 		parsed_libs.push_back(libname);
-		auto pop = push_namespace(cp_string(program->name_space));
+		auto pop = push_namespace(flx_string(program->name_space));
 		visit(program);
 		current_program.pop();
 		pop_namespace(pop);
@@ -62,23 +62,23 @@ void Compiler::visit(std::shared_ptr<ASTUsingNode> astnode) {
 
 void Compiler::visit(std::shared_ptr<ASTNamespaceManagerNode> astnode) {
 	if (astnode->image == "include") {
-		add_instruction(OpCode::OP_INCLUDE_NAMESPACE, cp_string(astnode->name_space));
+		add_instruction(OpCode::OP_INCLUDE_NAMESPACE, flx_string(astnode->name_space));
 	}
 	else {
-		add_instruction(OpCode::OP_EXCLUDE_NAMESPACE, cp_string(astnode->name_space));
+		add_instruction(OpCode::OP_EXCLUDE_NAMESPACE, flx_string(astnode->name_space));
 	}
 }
 
 void Compiler::visit(std::shared_ptr<ASTEnumNode> astnode) {
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
-		add_instruction(OpCode::OP_PUSH_INT, cp_int(i));
+		add_instruction(OpCode::OP_PUSH_INT, flx_int(i));
 		add_instruction(OpCode::OP_SET_TYPE, uint8_t(Type::T_INT));
-		add_instruction(OpCode::OP_STORE_VAR, cp_string(astnode->identifiers[i]));
+		add_instruction(OpCode::OP_STORE_VAR, flx_string(astnode->identifiers[i]));
 	}
 }
 
 void Compiler::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
-	auto pop = push_namespace(cp_string(astnode->type_name_space));
+	auto pop = push_namespace(flx_string(astnode->type_name_space));
 
 	type_definition_operations(*astnode);
 
@@ -89,7 +89,7 @@ void Compiler::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 		add_instruction(OpCode::OP_PUSH_UNDEFINED, nullptr);
 	}
 
-	add_instruction(OpCode::OP_STORE_VAR, cp_string(astnode->identifier));
+	add_instruction(OpCode::OP_STORE_VAR, flx_string(astnode->identifier));
 
 	pop_namespace(pop);
 }
@@ -101,22 +101,22 @@ void Compiler::visit(std::shared_ptr<ASTUnpackedDeclarationNode> astnode) {
 }
 
 void Compiler::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
-	auto pop = push_namespace(cp_string(astnode->name_space));
+	auto pop = push_namespace(flx_string(astnode->name_space));
 
 	astnode->expr->accept(this);
 
 	if (has_sub_value(astnode->identifier_vector)) {
-		add_instruction(OpCode::OP_LOAD_VAR, cp_string(astnode->identifier));
+		add_instruction(OpCode::OP_LOAD_VAR, flx_string(astnode->identifier));
 
 		for (size_t i = 0; i < astnode->identifier_vector.size(); ++i) {
 			const auto& id = astnode->identifier_vector[i];
 
 			if (i > 0) {
 				if (i == astnode->identifier_vector.size() - 1 && id.access_vector.size() == 0) {
-					add_instruction(OpCode::OP_ASSIGN_SUB_ID, cp_string(id.identifier));
+					add_instruction(OpCode::OP_ASSIGN_SUB_ID, flx_string(id.identifier));
 				}
 				else {
-					add_instruction(OpCode::OP_LOAD_SUB_ID, cp_string(id.identifier));
+					add_instruction(OpCode::OP_LOAD_SUB_ID, flx_string(id.identifier));
 				}
 			}
 
@@ -133,7 +133,7 @@ void Compiler::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 		}
 	}
 	else {
-		add_instruction(OpCode::OP_LOAD_VAR, cp_string(astnode->identifier));
+		add_instruction(OpCode::OP_LOAD_VAR, flx_string(astnode->identifier));
 		add_instruction(OpCode::OP_ASSIGN_VAR, nullptr);
 	}
 
@@ -152,7 +152,7 @@ void Compiler::visit(std::shared_ptr<ASTReturnNode> astnode) {
 }
 
 void Compiler::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
-	auto pop = push_namespace(cp_string(astnode->name_space));
+	auto pop = push_namespace(flx_string(astnode->name_space));
 
 	for (const auto& param : astnode->parameters) {
 		param->accept(this);
@@ -160,7 +160,7 @@ void Compiler::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 
 	add_instruction(OpCode::OP_CALL_PARAM_COUNT, astnode->parameters.size());
 
-	add_instruction(OpCode::OP_CALL, cp_string(astnode->identifier));
+	add_instruction(OpCode::OP_CALL, flx_string(astnode->identifier));
 
 	access_sub_value_operations(astnode->identifier_vector);
 
@@ -170,19 +170,19 @@ void Compiler::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 void Compiler::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode> astnode) {}
 
 void Compiler::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
-	auto pop = push_namespace(cp_string(astnode->type_name_space));
+	auto pop = push_namespace(flx_string(astnode->type_name_space));
 
 	if (astnode->block) {
 		// function will be defined here
 		type_definition_operations(*astnode);
-		add_instruction(OpCode::OP_FUN_START, cp_string(astnode->identifier));
+		add_instruction(OpCode::OP_FUN_START, flx_string(astnode->identifier));
 
 		for (auto& param : astnode->parameters) {
 			const auto& var = *dynamic_cast<VariableDefinition*>(param);
 			type_definition_operations(var);
 			//add_instruction(OpCode::OP_SET_DEFAULT_VALUE, var.default_value);
 			add_instruction(OpCode::OP_SET_IS_REST, var.is_rest);
-			add_instruction(OpCode::OP_FUN_SET_PARAM, cp_string(var.identifier));
+			add_instruction(OpCode::OP_FUN_SET_PARAM, flx_string(var.identifier));
 		}
 
 		// call will start here, function metadata will be stored with at starting pointer
@@ -215,7 +215,7 @@ void Compiler::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 void Compiler::visit(std::shared_ptr<ASTFunctionExpression> astnode) {
 	astnode->fun->identifier = utils::UUID::generate();
 	astnode->fun->accept(this);
-	add_instruction(OpCode::OP_PUSH_FUNCTION, cp_string(astnode->fun->identifier));
+	add_instruction(OpCode::OP_PUSH_FUNCTION, flx_string(astnode->fun->identifier));
 }
 
 void Compiler::visit(std::shared_ptr<ASTBlockNode> astnode) {
@@ -321,11 +321,11 @@ void Compiler::visit(std::shared_ptr<ASTForEachNode> astnode) {
 
 	if (const auto idnode = std::dynamic_pointer_cast<ASTUnpackedDeclarationNode>(astnode->itdecl)) {
 		for (auto decl : idnode->declarations) {
-			add_instruction(OpCode::OP_STORE_VAR, cp_string(decl->identifier));
+			add_instruction(OpCode::OP_STORE_VAR, flx_string(decl->identifier));
 		}
 	}
 	else if (const auto idnode = std::dynamic_pointer_cast<ASTDeclarationNode>(astnode->itdecl)) {
-		add_instruction(OpCode::OP_STORE_VAR, cp_string(idnode->identifier));
+		add_instruction(OpCode::OP_STORE_VAR, flx_string(idnode->identifier));
 	}
 
 	astnode->block->accept(this);
@@ -348,11 +348,11 @@ void Compiler::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 
 	if (const auto idnode = std::dynamic_pointer_cast<ASTUnpackedDeclarationNode>(astnode->decl)) {
 		for (auto decl : idnode->declarations) {
-			add_instruction(OpCode::OP_STORE_VAR, cp_string(decl->identifier));
+			add_instruction(OpCode::OP_STORE_VAR, flx_string(decl->identifier));
 		}
 	}
 	else if (const auto idnode = std::dynamic_pointer_cast<ASTDeclarationNode>(astnode->decl)) {
-		add_instruction(OpCode::OP_STORE_VAR, cp_string(idnode->identifier));
+		add_instruction(OpCode::OP_STORE_VAR, flx_string(idnode->identifier));
 	}
 
 	astnode->catch_block->accept(this);
@@ -388,34 +388,34 @@ void Compiler::visit(std::shared_ptr<ASTDoWhileNode> astnode) {
 }
 
 void Compiler::visit(std::shared_ptr<ASTStructDefinitionNode> astnode) {
-	add_instruction(OpCode::OP_STRUCT_START, cp_string(astnode->identifier));
+	add_instruction(OpCode::OP_STRUCT_START, flx_string(astnode->identifier));
 
 	for (const auto& var : astnode->variables) {
 		type_definition_operations(var.second);
-		add_instruction(OpCode::OP_STRUCT_SET_VAR, cp_string(var.first));
+		add_instruction(OpCode::OP_STRUCT_SET_VAR, flx_string(var.first));
 	}
 
 	add_instruction(OpCode::OP_STRUCT_END, nullptr);
 }
 
-void Compiler::visit(std::shared_ptr<ASTLiteralNode<cp_bool>> astnode) {
-	add_instruction(OpCode::OP_PUSH_BOOL, cp_bool(astnode->val));
+void Compiler::visit(std::shared_ptr<ASTLiteralNode<flx_bool>> astnode) {
+	add_instruction(OpCode::OP_PUSH_BOOL, flx_bool(astnode->val));
 }
 
-void Compiler::visit(std::shared_ptr<ASTLiteralNode<cp_int>> astnode) {
-	add_instruction(OpCode::OP_PUSH_INT, cp_int(astnode->val));
+void Compiler::visit(std::shared_ptr<ASTLiteralNode<flx_int>> astnode) {
+	add_instruction(OpCode::OP_PUSH_INT, flx_int(astnode->val));
 }
 
-void Compiler::visit(std::shared_ptr<ASTLiteralNode<cp_float>> astnode) {
-	add_instruction(OpCode::OP_PUSH_FLOAT, cp_float(astnode->val));
+void Compiler::visit(std::shared_ptr<ASTLiteralNode<flx_float>> astnode) {
+	add_instruction(OpCode::OP_PUSH_FLOAT, flx_float(astnode->val));
 }
 
-void Compiler::visit(std::shared_ptr<ASTLiteralNode<cp_char>> astnode) {
-	add_instruction(OpCode::OP_PUSH_CHAR, cp_char(astnode->val));
+void Compiler::visit(std::shared_ptr<ASTLiteralNode<flx_char>> astnode) {
+	add_instruction(OpCode::OP_PUSH_CHAR, flx_char(astnode->val));
 }
 
-void Compiler::visit(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) {
-	add_instruction(OpCode::OP_PUSH_STRING, cp_string(astnode->val));
+void Compiler::visit(std::shared_ptr<ASTLiteralNode<flx_string>> astnode) {
+	add_instruction(OpCode::OP_PUSH_STRING, flx_string(astnode->val));
 }
 
 void Compiler::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
@@ -432,13 +432,13 @@ void Compiler::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 }
 
 void Compiler::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
-	auto pop = push_namespace(cp_string(astnode->name_space));
+	auto pop = push_namespace(flx_string(astnode->name_space));
 
-	add_instruction(OpCode::OP_INIT_STRUCT, cp_string(astnode->type_name));
+	add_instruction(OpCode::OP_INIT_STRUCT, flx_string(astnode->type_name));
 
 	for (const auto& expr : astnode->values) {
 		expr.second->accept(this);
-		add_instruction(OpCode::OP_SET_FIELD, cp_string(expr.first));
+		add_instruction(OpCode::OP_SET_FIELD, flx_string(expr.first));
 	}
 
 	add_instruction(OpCode::OP_PUSH_STRUCT, nullptr);
@@ -451,7 +451,7 @@ void Compiler::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 		access_sub_value_operations(astnode->identifier_vector);
 	}
 	else {
-		add_instruction(OpCode::OP_LOAD_VAR, cp_string(astnode->identifier));
+		add_instruction(OpCode::OP_LOAD_VAR, flx_string(astnode->identifier));
 	}
 }
 
@@ -538,15 +538,15 @@ void Compiler::visit(std::shared_ptr<ASTUnaryExprNode> astnode) {
 		op = OpCode::OP_UNREF;
 	}
 	else if (astnode->unary_op == "-") {
-		add_instruction(OpCode::OP_PUSH_INT, cp_int(0));
+		add_instruction(OpCode::OP_PUSH_INT, flx_int(0));
 		op = OpCode::OP_SUB;
 	}
 	else if (astnode->unary_op == "++") {
-		add_instruction(OpCode::OP_PUSH_INT, cp_int(1));
+		add_instruction(OpCode::OP_PUSH_INT, flx_int(1));
 		op = OpCode::OP_ADD;
 	}
 	else if (astnode->unary_op == "--") {
-		add_instruction(OpCode::OP_PUSH_INT, cp_int(1));
+		add_instruction(OpCode::OP_PUSH_INT, flx_int(1));
 		op = OpCode::OP_SUB;
 	}
 	else if (astnode->unary_op == "not") {
@@ -630,7 +630,7 @@ void Compiler::type_definition_operations(TypeDefinition type) {
 				s->accept(this);
 			}
 			else {
-				add_instruction(OpCode::OP_PUSH_INT, cp_int(0));
+				add_instruction(OpCode::OP_PUSH_INT, flx_int(0));
 			}
 			add_instruction(OpCode::OP_SET_ARRAY_SIZE, nullptr);
 		}
@@ -649,21 +649,21 @@ void Compiler::type_definition_operations(TypeDefinition type) {
 
 	if (!type.type_name.empty()) {
 		if (!type.type_name_space.empty()) {
-			add_instruction(OpCode::OP_SET_TYPE_NAME_SPACE, cp_string(type.type_name_space));
+			add_instruction(OpCode::OP_SET_TYPE_NAME_SPACE, flx_string(type.type_name_space));
 		}
-		add_instruction(OpCode::OP_SET_TYPE_NAME, cp_string(type.type_name));
+		add_instruction(OpCode::OP_SET_TYPE_NAME, flx_string(type.type_name));
 	}
 }
 
 void Compiler::access_sub_value_operations(std::vector<Identifier> identifier_vector) {
 	if (has_sub_value(identifier_vector)) {
-		add_instruction(OpCode::OP_LOAD_VAR, cp_string(identifier_vector[0].identifier));
+		add_instruction(OpCode::OP_LOAD_VAR, flx_string(identifier_vector[0].identifier));
 
 		for (size_t i = 0; i < identifier_vector.size(); ++i) {
 			const auto& id = identifier_vector[i];
 
 			if (i > 0) {
-				add_instruction(OpCode::OP_LOAD_SUB_ID, cp_string(id.identifier));
+				add_instruction(OpCode::OP_LOAD_SUB_ID, flx_string(id.identifier));
 			}
 
 			for (auto& av : id.access_vector) {
@@ -719,11 +719,11 @@ void Compiler::pop_namespace(bool pop) {
 
 long long Compiler::hash(std::shared_ptr<ASTExprNode>) { return 0; }
 long long Compiler::hash(std::shared_ptr<ASTValueNode>) { return 0; }
-long long Compiler::hash(std::shared_ptr<ASTLiteralNode<cp_bool>>) { return 0; }
-long long Compiler::hash(std::shared_ptr<ASTLiteralNode<cp_int>>) { return 0; }
-long long Compiler::hash(std::shared_ptr<ASTLiteralNode<cp_float>>) { return 0; }
-long long Compiler::hash(std::shared_ptr<ASTLiteralNode<cp_char>>) { return 0; }
-long long Compiler::hash(std::shared_ptr<ASTLiteralNode<cp_string>>) { return 0; }
+long long Compiler::hash(std::shared_ptr<ASTLiteralNode<flx_bool>>) { return 0; }
+long long Compiler::hash(std::shared_ptr<ASTLiteralNode<flx_int>>) { return 0; }
+long long Compiler::hash(std::shared_ptr<ASTLiteralNode<flx_float>>) { return 0; }
+long long Compiler::hash(std::shared_ptr<ASTLiteralNode<flx_char>>) { return 0; }
+long long Compiler::hash(std::shared_ptr<ASTLiteralNode<flx_string>>) { return 0; }
 long long Compiler::hash(std::shared_ptr<ASTIdentifierNode>) { return 0; }
 
 void Compiler::set_curr_pos(unsigned int row, unsigned int col) {

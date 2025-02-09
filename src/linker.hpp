@@ -43,11 +43,11 @@ namespace visitor {
 		void visit(std::shared_ptr<ASTDoWhileNode>) override;
 		void visit(std::shared_ptr<ASTFunctionDefinitionNode>) override;
 		void visit(std::shared_ptr<ASTStructDefinitionNode>) override;
-		void visit(std::shared_ptr<ASTLiteralNode<cp_bool>>) override;
-		void visit(std::shared_ptr<ASTLiteralNode<cp_int>>) override;
-		void visit(std::shared_ptr<ASTLiteralNode<cp_float>>) override;
-		void visit(std::shared_ptr<ASTLiteralNode<cp_char>>) override;
-		void visit(std::shared_ptr<ASTLiteralNode<cp_string>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<flx_bool>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<flx_int>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<flx_float>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<flx_char>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<flx_string>>) override;
 		void visit(std::shared_ptr<ASTFunctionExpression>) override;
 		void visit(std::shared_ptr<ASTArrayConstructorNode>) override;
 		void visit(std::shared_ptr<ASTStructConstructorNode>) override;
@@ -67,11 +67,11 @@ namespace visitor {
 		long long hash(std::shared_ptr<ASTExprNode>) override;
 		long long hash(std::shared_ptr<ASTValueNode>) override;
 		long long hash(std::shared_ptr<ASTIdentifierNode>) override;
-		long long hash(std::shared_ptr<ASTLiteralNode<cp_bool>>) override;
-		long long hash(std::shared_ptr<ASTLiteralNode<cp_int>>) override;
-		long long hash(std::shared_ptr<ASTLiteralNode<cp_float>>) override;
-		long long hash(std::shared_ptr<ASTLiteralNode<cp_char>>) override;
-		long long hash(std::shared_ptr<ASTLiteralNode<cp_string>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<flx_bool>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<flx_int>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<flx_float>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<flx_char>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<flx_string>>) override;
 
 		void set_curr_pos(unsigned int row, unsigned int col) override;
 		std::string msg_header() override;

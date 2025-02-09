@@ -153,44 +153,44 @@ ASTFunctionExpression::ASTFunctionExpression(std::shared_ptr<ASTFunctionDefiniti
 ASTValueNode::ASTValueNode(Value* value, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), value(value) {}
 
-void ASTLiteralNode<cp_bool>::accept(Visitor* v) {
-	v->visit(std::dynamic_pointer_cast<ASTLiteralNode<cp_bool>>(shared_from_this()));
+void ASTLiteralNode<flx_bool>::accept(Visitor* v) {
+	v->visit(std::dynamic_pointer_cast<ASTLiteralNode<flx_bool>>(shared_from_this()));
 }
 
-long long ASTLiteralNode<cp_bool>::hash(Visitor* v) {
-	return v->hash(std::dynamic_pointer_cast<ASTLiteralNode<cp_bool>>(shared_from_this()));
+long long ASTLiteralNode<flx_bool>::hash(Visitor* v) {
+	return v->hash(std::dynamic_pointer_cast<ASTLiteralNode<flx_bool>>(shared_from_this()));
 }
 
-void ASTLiteralNode<cp_int>::accept(Visitor* v) {
-	v->visit(std::dynamic_pointer_cast<ASTLiteralNode<cp_int>>(shared_from_this()));
+void ASTLiteralNode<flx_int>::accept(Visitor* v) {
+	v->visit(std::dynamic_pointer_cast<ASTLiteralNode<flx_int>>(shared_from_this()));
 }
 
-long long ASTLiteralNode<cp_int>::hash(Visitor* v) {
-	return v->hash(std::dynamic_pointer_cast<ASTLiteralNode<cp_int>>(shared_from_this()));
+long long ASTLiteralNode<flx_int>::hash(Visitor* v) {
+	return v->hash(std::dynamic_pointer_cast<ASTLiteralNode<flx_int>>(shared_from_this()));
 }
 
-void ASTLiteralNode<cp_float>::accept(Visitor* v) {
-	v->visit(std::dynamic_pointer_cast<ASTLiteralNode<cp_float>>(shared_from_this()));
+void ASTLiteralNode<flx_float>::accept(Visitor* v) {
+	v->visit(std::dynamic_pointer_cast<ASTLiteralNode<flx_float>>(shared_from_this()));
 }
 
-long long ASTLiteralNode<cp_float>::hash(Visitor* v) {
-	return v->hash(std::dynamic_pointer_cast<ASTLiteralNode<cp_float>>(shared_from_this()));
+long long ASTLiteralNode<flx_float>::hash(Visitor* v) {
+	return v->hash(std::dynamic_pointer_cast<ASTLiteralNode<flx_float>>(shared_from_this()));
 }
 
-void ASTLiteralNode<cp_char>::accept(Visitor* v) {
-	v->visit(std::dynamic_pointer_cast<ASTLiteralNode<cp_char>>(shared_from_this()));
+void ASTLiteralNode<flx_char>::accept(Visitor* v) {
+	v->visit(std::dynamic_pointer_cast<ASTLiteralNode<flx_char>>(shared_from_this()));
 }
 
-long long ASTLiteralNode<cp_char>::hash(Visitor* v) {
-	return v->hash(std::dynamic_pointer_cast<ASTLiteralNode<cp_char>>(shared_from_this()));
+long long ASTLiteralNode<flx_char>::hash(Visitor* v) {
+	return v->hash(std::dynamic_pointer_cast<ASTLiteralNode<flx_char>>(shared_from_this()));
 }
 
-void ASTLiteralNode<cp_string>::accept(Visitor* v) {
-	v->visit(std::dynamic_pointer_cast<ASTLiteralNode<cp_string>>(shared_from_this()));
+void ASTLiteralNode<flx_string>::accept(Visitor* v) {
+	v->visit(std::dynamic_pointer_cast<ASTLiteralNode<flx_string>>(shared_from_this()));
 }
 
-long long ASTLiteralNode<cp_string>::hash(Visitor* v) {
-	return v->hash(std::dynamic_pointer_cast<ASTLiteralNode<cp_string>>(shared_from_this()));
+long long ASTLiteralNode<flx_string>::hash(Visitor* v) {
+	return v->hash(std::dynamic_pointer_cast<ASTLiteralNode<flx_string>>(shared_from_this()));
 }
 
 void ASTArrayConstructorNode::accept(Visitor* v) {

@@ -17,7 +17,7 @@
 using namespace visitor;
 using namespace lexer;
 
-std::string language_namespace = "bsl";
+std::string language_namespace = "flx";
 
 namespace parser {
 	std::string type_str(Type t) {
@@ -466,47 +466,47 @@ RuntimeValue::RuntimeValue()
 	: Value(Type::T_UNDEFINED, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 }
 
-RuntimeValue::RuntimeValue(cp_bool rawv)
+RuntimeValue::RuntimeValue(flx_bool rawv)
 	: Value(Type::T_BOOL, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
 
-RuntimeValue::RuntimeValue(cp_int rawv)
+RuntimeValue::RuntimeValue(flx_int rawv)
 	: Value(Type::T_INT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
 
-RuntimeValue::RuntimeValue(cp_float rawv)
+RuntimeValue::RuntimeValue(flx_float rawv)
 	: Value(Type::T_FLOAT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
 
-RuntimeValue::RuntimeValue(cp_char rawv)
+RuntimeValue::RuntimeValue(flx_char rawv)
 	: Value(Type::T_CHAR, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
 
-RuntimeValue::RuntimeValue(cp_string rawv)
+RuntimeValue::RuntimeValue(flx_string rawv)
 	: Value(Type::T_STRING, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
 
-RuntimeValue::RuntimeValue(cp_array rawv)
+RuntimeValue::RuntimeValue(flx_array rawv)
 	: Value(Type::T_ARRAY, Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
 
-RuntimeValue::RuntimeValue(cp_array rawv, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name, std::string type_name_space)
+RuntimeValue::RuntimeValue(flx_array rawv, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name, std::string type_name_space)
 	: Value(Type::T_ARRAY, array_type, dim, type_name, type_name_space) {
 	set(rawv, array_type, dim, type_name, type_name_space);
 }
 
-RuntimeValue::RuntimeValue(cp_struct rawv, std::string type_name, std::string type_name_space)
+RuntimeValue::RuntimeValue(flx_struct rawv, std::string type_name, std::string type_name_space)
 	: Value(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), type_name, type_name_space) {
 	set(rawv, type_name, type_name_space);
 }
 
-RuntimeValue::RuntimeValue(cp_function rawv)
+RuntimeValue::RuntimeValue(flx_function rawv)
 	: Value(Type::T_FUNCTION, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "") {
 	set(rawv);
 }
@@ -542,68 +542,68 @@ RuntimeValue::~RuntimeValue() {
 	unset();
 };
 
-void RuntimeValue::set(cp_bool b) {
+void RuntimeValue::set(flx_bool b) {
 	unset();
-	this->b = new cp_bool(b);
+	this->b = new flx_bool(b);
 	type = Type::T_BOOL;
 	array_type = Type::T_UNDEFINED;
 }
 
-void RuntimeValue::set(cp_int i) {
+void RuntimeValue::set(flx_int i) {
 	unset();
-	this->i = new cp_int(i);
+	this->i = new flx_int(i);
 	type = Type::T_INT;
 	array_type = Type::T_UNDEFINED;
 }
 
-void RuntimeValue::set(cp_float f) {
+void RuntimeValue::set(flx_float f) {
 	unset();
-	this->f = new cp_float(f);
+	this->f = new flx_float(f);
 	type = Type::T_FLOAT;
 	array_type = Type::T_UNDEFINED;
 }
 
-void RuntimeValue::set(cp_char c) {
+void RuntimeValue::set(flx_char c) {
 	unset();
-	this->c = new cp_char(c);
+	this->c = new flx_char(c);
 	type = Type::T_CHAR;
 	array_type = Type::T_UNDEFINED;
 }
 
-void RuntimeValue::set(cp_string s) {
+void RuntimeValue::set(flx_string s) {
 	unset();
-	this->s = new cp_string(s);
+	this->s = new flx_string(s);
 	type = Type::T_STRING;
 	array_type = Type::T_UNDEFINED;
 }
 
-void RuntimeValue::set(cp_array arr) {
+void RuntimeValue::set(flx_array arr) {
 	unset();
-	this->arr = new cp_array(arr);
+	this->arr = new flx_array(arr);
 	type = Type::T_ARRAY;
 }
 
-void RuntimeValue::set(cp_array arr, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name, std::string type_name_space) {
+void RuntimeValue::set(flx_array arr, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name, std::string type_name_space) {
 	unset();
-	this->arr = new cp_array(arr);
+	this->arr = new flx_array(arr);
 	type = Type::T_ARRAY;
 	this->array_type = array_type;
 	this->type_name = type_name;
 	this->type_name_space = type_name_space;
 }
 
-void RuntimeValue::set(cp_struct str, std::string type_name, std::string type_name_space) {
+void RuntimeValue::set(flx_struct str, std::string type_name, std::string type_name_space) {
 	unset();
-	this->str = new cp_struct(str);
+	this->str = new flx_struct(str);
 	type = Type::T_STRUCT;
 	array_type = Type::T_UNDEFINED;
 	this->type_name = type_name;
 	this->type_name_space = type_name_space;
 }
 
-void RuntimeValue::set(cp_function fun) {
+void RuntimeValue::set(flx_function fun) {
 	unset();
-	this->fun = new cp_function(fun);
+	this->fun = new flx_function(fun);
 	type = Type::T_FUNCTION;
 	array_type = Type::T_UNDEFINED;
 }
@@ -620,43 +620,43 @@ void RuntimeValue::set_sub(size_t index, RuntimeValue* sub_value) {
 	(*arr)[index] = sub_value;
 }
 
-cp_bool RuntimeValue::get_b() const {
-	if (!b) return cp_bool();
+flx_bool RuntimeValue::get_b() const {
+	if (!b) return flx_bool();
 	return *b;
 }
 
-cp_int RuntimeValue::get_i() const {
-	if (!i) return cp_int();
+flx_int RuntimeValue::get_i() const {
+	if (!i) return flx_int();
 	return *i;
 }
 
-cp_float RuntimeValue::get_f() const {
-	if (!f) return cp_float();
+flx_float RuntimeValue::get_f() const {
+	if (!f) return flx_float();
 	return *f;
 }
 
-cp_char RuntimeValue::get_c() const {
-	if (!c) return cp_char();
+flx_char RuntimeValue::get_c() const {
+	if (!c) return flx_char();
 	return *c;
 }
 
-cp_string RuntimeValue::get_s() const {
-	if (!s) return cp_string();
+flx_string RuntimeValue::get_s() const {
+	if (!s) return flx_string();
 	return *s;
 }
 
-cp_array RuntimeValue::get_arr() const {
-	if (!arr) return cp_array();
+flx_array RuntimeValue::get_arr() const {
+	if (!arr) return flx_array();
 	return *arr;
 }
 
-cp_struct RuntimeValue::get_str() const {
-	if (!str) return cp_struct();
+flx_struct RuntimeValue::get_str() const {
+	if (!str) return flx_struct();
 	return *str;
 }
 
-cp_function RuntimeValue::get_fun() const {
-	if (!fun) return cp_function();
+flx_function RuntimeValue::get_fun() const {
+	if (!fun) return flx_function();
 	return *fun;
 }
 
@@ -674,35 +674,35 @@ RuntimeValue* RuntimeValue::get_sub(size_t index) {
 	return sub_value;
 }
 
-cp_bool* RuntimeValue::get_raw_b() {
+flx_bool* RuntimeValue::get_raw_b() {
 	return b;
 }
 
-cp_int* RuntimeValue::get_raw_i() {
+flx_int* RuntimeValue::get_raw_i() {
 	return i;
 }
 
-cp_float* RuntimeValue::get_raw_f() {
+flx_float* RuntimeValue::get_raw_f() {
 	return f;
 }
 
-cp_char* RuntimeValue::get_raw_c() {
+flx_char* RuntimeValue::get_raw_c() {
 	return c;
 }
 
-cp_string* RuntimeValue::get_raw_s() {
+flx_string* RuntimeValue::get_raw_s() {
 	return s;
 }
 
-cp_array* RuntimeValue::get_raw_arr() {
+flx_array* RuntimeValue::get_raw_arr() {
 	return arr;
 }
 
-cp_struct* RuntimeValue::get_raw_str() {
+flx_struct* RuntimeValue::get_raw_str() {
 	return str;
 }
 
-cp_function* RuntimeValue::get_raw_fun() {
+flx_function* RuntimeValue::get_raw_fun() {
 	return fun;
 }
 
@@ -812,28 +812,28 @@ void RuntimeValue::copy_from(RuntimeValue* value) {
 	switch (type)
 	{
 	case parser::Type::T_BOOL:
-		b = new cp_bool(value->get_b());
+		b = new flx_bool(value->get_b());
 		break;
 	case parser::Type::T_INT:
-		i = new cp_int(value->get_i());
+		i = new flx_int(value->get_i());
 		break;
 	case parser::Type::T_FLOAT:
-		f = new cp_float(value->get_f());
+		f = new flx_float(value->get_f());
 		break;
 	case parser::Type::T_CHAR:
-		c = new cp_char(value->get_c());
+		c = new flx_char(value->get_c());
 		break;
 	case parser::Type::T_STRING:
-		s = new cp_string(value->get_s());
+		s = new flx_string(value->get_s());
 		break;
 	case parser::Type::T_ARRAY:
-		arr = new cp_array(value->get_arr());
+		arr = new flx_array(value->get_arr());
 		break;
 	case parser::Type::T_STRUCT:
-		str = new cp_struct(value->get_str());
+		str = new flx_struct(value->get_str());
 		break;
 	case parser::Type::T_FUNCTION:
-		fun = new cp_function(value->get_fun());
+		fun = new flx_function(value->get_fun());
 		break;
 	default:
 		break;
@@ -910,7 +910,7 @@ std::vector<GCObject*> RuntimeVariable::get_references() {
 	return references;
 }
 
-cp_bool RuntimeOperations::equals_value(const RuntimeValue* lval, const RuntimeValue* rval, std::vector<uintptr_t> compared) {
+flx_bool RuntimeOperations::equals_value(const RuntimeValue* lval, const RuntimeValue* rval, std::vector<uintptr_t> compared) {
 	if (lval->use_ref) {
 		return lval == rval;
 	}
@@ -958,7 +958,7 @@ cp_bool RuntimeOperations::equals_value(const RuntimeValue* lval, const RuntimeV
 	return false;
 }
 
-cp_bool RuntimeOperations::equals_struct(const cp_struct& lstr, const cp_struct& rstr, std::vector<uintptr_t> compared) {
+flx_bool RuntimeOperations::equals_struct(const flx_struct& lstr, const flx_struct& rstr, std::vector<uintptr_t> compared) {
 	if (lstr.size() != rstr.size()) {
 		return false;
 	}
@@ -975,7 +975,7 @@ cp_bool RuntimeOperations::equals_struct(const cp_struct& lstr, const cp_struct&
 	return true;
 }
 
-cp_bool RuntimeOperations::equals_array(const cp_array& larr, const cp_array& rarr, std::vector<uintptr_t> compared) {
+flx_bool RuntimeOperations::equals_array(const flx_array& larr, const flx_array& rarr, std::vector<uintptr_t> compared) {
 	if (larr.size() != rarr.size()) {
 		return false;
 	}
@@ -1005,7 +1005,7 @@ std::string RuntimeOperations::parse_value_to_string(const RuntimeValue* value, 
 		str = std::to_string(value->get_f());
 		break;
 	case Type::T_CHAR:
-		str = cp_string(std::string{ value->get_c() });
+		str = flx_string(std::string{ value->get_c() });
 		break;
 	case Type::T_STRING:
 		str = value->get_s();
@@ -1047,7 +1047,7 @@ std::string RuntimeOperations::parse_value_to_string(const RuntimeValue* value, 
 	return str;
 }
 
-std::string RuntimeOperations::parse_array_to_string(const cp_array& arr_value, std::vector<uintptr_t> printed) {
+std::string RuntimeOperations::parse_array_to_string(const flx_array& arr_value, std::vector<uintptr_t> printed) {
 	std::stringstream s = std::stringstream();
 	s << "[";
 	for (auto i = 0; i < arr_value.size(); ++i) {
@@ -1090,7 +1090,7 @@ std::string RuntimeOperations::parse_struct_to_string(const RuntimeValue* value,
 	return s.str();
 }
 
-RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, dim_eval_func_t evaluate_access_vector_ptr, bool is_expr, cp_int str_pos) {
+RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, dim_eval_func_t evaluate_access_vector_ptr, bool is_expr, flx_int str_pos) {
 	Type l_var_type = lval->ref.lock() ? lval->ref.lock()->type : lval->type;
 	Type l_var_array_type = lval->ref.lock() ? lval->ref.lock()->array_type : lval->array_type;
 	Type l_type = is_undefined(lval->type) ? l_var_type : lval->type;
@@ -1112,14 +1112,14 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 
 	if ((is_void(l_type) || is_void(r_type))
 		&& Token::is_equality_op(op)) {
-		return new RuntimeValue((cp_bool)((op == "==") ?
+		return new RuntimeValue((flx_bool)((op == "==") ?
 			match_type(l_type, r_type)
 			: !match_type(l_type, r_type)));
 	}
 
 	if (lval->use_ref
 		&& Token::is_equality_op(op)) {
-		return new RuntimeValue((cp_bool)((op == "==") ?
+		return new RuntimeValue((flx_bool)((op == "==") ?
 			lval == rval
 			: lval != rval));
 	}
@@ -1139,16 +1139,16 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 			lval->set(rval->get_b());
 		}
 		else if (op == "and") {
-			res_value = new RuntimeValue((cp_bool)(lval->get_b() && rval->get_b()));
+			res_value = new RuntimeValue((flx_bool)(lval->get_b() && rval->get_b()));
 		}
 		else if (op == "or") {
-			res_value = new RuntimeValue((cp_bool)(lval->get_b() || rval->get_b()));
+			res_value = new RuntimeValue((flx_bool)(lval->get_b() || rval->get_b()));
 		}
 		else if (op == "==") {
-			res_value = new RuntimeValue((cp_bool)(lval->get_b() == rval->get_b()));
+			res_value = new RuntimeValue((flx_bool)(lval->get_b() == rval->get_b()));
 		}
 		else if (op == "!=") {
-			res_value = new RuntimeValue((cp_bool)(lval->get_b() != rval->get_b()));
+			res_value = new RuntimeValue((flx_bool)(lval->get_b() != rval->get_b()));
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
@@ -1165,7 +1165,7 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 		if (is_expr
 			&& is_numeric(l_type)
 			&& op == "<=>") {
-			res_value = new RuntimeValue((cp_int)(do_spaceship_operation(op, lval, rval)));
+			res_value = new RuntimeValue((flx_int)(do_spaceship_operation(op, lval, rval)));
 
 			break;
 		}
@@ -1181,21 +1181,21 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 		if (is_expr
 			&& is_numeric(l_type)
 			&& Token::is_equality_op(op)) {
-			cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
-			cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
+			flx_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
+			flx_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
-			res_value = new RuntimeValue((cp_bool)(op == "==" ?
+			res_value = new RuntimeValue((flx_bool)(op == "==" ?
 				l == r : l != r));
 
 			break;
 		}
 
 		if (is_float(l_type) && (is_any(l_var_type) || is_expr)) {
-			lval->set(do_operation(lval->get_f(), cp_float(rval->get_i()), op));
+			lval->set(do_operation(lval->get_f(), flx_float(rval->get_i()), op));
 		}
 		else if (is_int(l_type) && is_any(l_var_type)
 			&& (op == "/=" || op == "/%=" || op == "/" || op == "/%")) {
-			lval->set(do_operation(cp_float(lval->get_i()), cp_float(rval->get_i()), op));
+			lval->set(do_operation(flx_float(lval->get_i()), flx_float(rval->get_i()), op));
 		}
 		else if (is_int(l_type)) {
 			lval->set(do_operation(lval->get_i(), rval->get_i(), op));
@@ -1231,10 +1231,10 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 		if (is_expr
 			&& is_numeric(l_type)
 			&& Token::is_equality_op(op)) {
-			cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
-			cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
+			flx_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
+			flx_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
-			res_value = new RuntimeValue((cp_bool)(op == "==" ?
+			res_value = new RuntimeValue((flx_bool)(op == "==" ?
 				l == r : l != r));
 
 			break;
@@ -1244,7 +1244,7 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 			lval->set(do_operation(lval->get_f(), rval->get_f(), op));
 		}
 		else if (is_int(l_type)) {
-			lval->set(do_operation(cp_float(lval->get_i()), rval->get_f(), op));
+			lval->set(do_operation(flx_float(lval->get_i()), rval->get_f(), op));
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
@@ -1261,7 +1261,7 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 		if (is_expr
 			&& is_char(l_type)
 			&& Token::is_equality_op(op)) {
-			res_value = new RuntimeValue((cp_bool)(op == "==" ?
+			res_value = new RuntimeValue((flx_bool)(op == "==" ?
 				lval->get_c() == rval->get_c()
 				: lval->get_c() != lval->get_c()));
 
@@ -1315,7 +1315,7 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 				int x = 0;
 			}
 
-			res_value = new RuntimeValue((cp_bool)(op == "==" ?
+			res_value = new RuntimeValue((flx_bool)(op == "==" ?
 				lval->get_s() == rval->get_s()
 				: lval->get_s() != rval->get_s()));
 
@@ -1326,7 +1326,7 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 			lval->set(do_operation(lval->get_s(), rval->get_s(), op));
 		}
 		else if (is_expr && is_char(l_type)) {
-			lval->set(do_operation(cp_string{ lval->get_c() }, rval->get_s(), op));
+			lval->set(do_operation(flx_string{ lval->get_c() }, rval->get_s(), op));
 		}
 		else {
 			ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
@@ -1343,7 +1343,7 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 		if (is_expr
 			&& is_array(l_type)
 			&& Token::is_equality_op(op)) {
-			res_value = new RuntimeValue((cp_bool)(op == "==" ?
+			res_value = new RuntimeValue((flx_bool)(op == "==" ?
 				equals_value(lval, rval)
 				: !equals_value(lval, rval)));
 
@@ -1374,7 +1374,7 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 		if (is_expr
 			&& is_struct(l_type)
 			&& Token::is_equality_op(op)) {
-			res_value = new RuntimeValue((cp_bool)(op == "==" ?
+			res_value = new RuntimeValue((flx_bool)(op == "==" ?
 				equals_value(lval, rval)
 				: !equals_value(lval, rval)));
 
@@ -1415,9 +1415,9 @@ RuntimeValue* RuntimeOperations::do_operation(const std::string& op, RuntimeValu
 	return res_value;
 }
 
-cp_bool RuntimeOperations::do_relational_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, dim_eval_func_t evaluate_access_vector_ptr) {
-	cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
-	cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
+flx_bool RuntimeOperations::do_relational_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, dim_eval_func_t evaluate_access_vector_ptr) {
+	flx_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
+	flx_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
 	if (op == "<") {
 		return l < r;
@@ -1434,23 +1434,23 @@ cp_bool RuntimeOperations::do_relational_operation(const std::string& op, Runtim
 	ExceptionHandler::throw_operation_err(op, *lval, *rval, evaluate_access_vector_ptr);
 }
 
-cp_int RuntimeOperations::do_spaceship_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval) {
-	cp_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
-	cp_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
+flx_int RuntimeOperations::do_spaceship_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval) {
+	flx_float l = is_float(lval->type) ? lval->get_f() : lval->get_i();
+	flx_float r = is_float(rval->type) ? rval->get_f() : rval->get_i();
 
 	auto res = l <=> r;
 	if (res == std::strong_ordering::less) {
-		return cp_int(-1);
+		return flx_int(-1);
 	}
 	else if (res == std::strong_ordering::equal) {
-		return cp_int(0);
+		return flx_int(0);
 	}
 	else if (res == std::strong_ordering::greater) {
-		return cp_int(1);
+		return flx_int(1);
 	}
 }
 
-cp_int RuntimeOperations::do_operation(cp_int lval, cp_int rval, const std::string& op) {
+flx_int RuntimeOperations::do_operation(flx_int lval, flx_int rval, const std::string& op) {
 	if (op == "=") {
 		return rval;
 	}
@@ -1479,10 +1479,10 @@ cp_int RuntimeOperations::do_operation(cp_int lval, cp_int rval, const std::stri
 		if (rval == 0) {
 			throw std::runtime_error("floor division by zero encountered");
 		}
-		return cp_int(std::floor(lval / rval));
+		return flx_int(std::floor(lval / rval));
 	}
 	else if (op == "**=" || op == "**") {
-		return cp_int(std::pow(lval, rval));
+		return flx_int(std::pow(lval, rval));
 	}
 	else if (op == ">>=" || op == ">>") {
 		return lval >> rval;
@@ -1502,7 +1502,7 @@ cp_int RuntimeOperations::do_operation(cp_int lval, cp_int rval, const std::stri
 	throw std::runtime_error("invalid '" + op + "' operator for types 'int' and 'int'");
 }
 
-cp_float RuntimeOperations::do_operation(cp_float lval, cp_float rval, const std::string& op) {
+flx_float RuntimeOperations::do_operation(flx_float lval, flx_float rval, const std::string& op) {
 	if (op == "=") {
 		return rval;
 	}
@@ -1534,12 +1534,12 @@ cp_float RuntimeOperations::do_operation(cp_float lval, cp_float rval, const std
 		return std::floor(lval / rval);
 	}
 	else if (op == "**=" || op == "**") {
-		return cp_int(std::pow(lval, rval));
+		return flx_int(std::pow(lval, rval));
 	}
 	throw std::runtime_error("invalid '" + op + "' operator");
 }
 
-cp_string RuntimeOperations::do_operation(cp_string lval, cp_string rval, const std::string& op) {
+flx_string RuntimeOperations::do_operation(flx_string lval, flx_string rval, const std::string& op) {
 	if (op == "=") {
 		return rval;
 	}
@@ -1549,7 +1549,7 @@ cp_string RuntimeOperations::do_operation(cp_string lval, cp_string rval, const 
 	throw std::runtime_error("invalid '" + op + "' operator for types 'string' and 'string'");
 }
 
-cp_array RuntimeOperations::do_operation(cp_array lval, cp_array rval, const std::string& op) {
+flx_array RuntimeOperations::do_operation(flx_array lval, flx_array rval, const std::string& op) {
 	if (op == "=") {
 		return rval;
 	}
@@ -1565,11 +1565,11 @@ cp_array RuntimeOperations::do_operation(cp_array lval, cp_array rval, const std
 void RuntimeOperations::normalize_type(TypeDefinition* owner, RuntimeValue* value) {
 	if (is_string(owner->type) && is_char(value->type)) {
 		value->type = owner->type;
-		value->set(cp_string{ value->get_c() });
+		value->set(flx_string{ value->get_c() });
 	}
 	else if (is_float(owner->type) && is_int(value->type)) {
 		value->type = owner->type;
-		value->set(cp_float(value->get_i()));
+		value->set(flx_float(value->get_i()));
 	}
 }
 

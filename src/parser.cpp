@@ -312,7 +312,7 @@ VariableDefinition* Parser::parse_struct_var_def() {
 	type_def = parse_declaration_type_definition(type);
 
 	if (is_rest) {
-		auto ndim = std::make_shared<ASTLiteralNode<cp_int>>(0, row, col);
+		auto ndim = std::make_shared<ASTLiteralNode<flx_int>>(0, row, col);
 		if (!is_array(type_def.type)) {
 			type_def.array_type = type;
 			type_def.type = Type::T_ARRAY;
@@ -1007,15 +1007,15 @@ std::shared_ptr<ASTExprNode> Parser::parse_factor() {
 
 		// literal cases
 	case TOK_BOOL_LITERAL:
-		return std::make_shared<ASTLiteralNode<cp_bool>>(parse_bool_literal(), row, col);
+		return std::make_shared<ASTLiteralNode<flx_bool>>(parse_bool_literal(), row, col);
 	case TOK_INT_LITERAL:
-		return std::make_shared<ASTLiteralNode<cp_int>>(parse_int_literal(), row, col);
+		return std::make_shared<ASTLiteralNode<flx_int>>(parse_int_literal(), row, col);
 	case TOK_FLOAT_LITERAL:
-		return std::make_shared<ASTLiteralNode<cp_float>>(parse_float_literal(), row, col);
+		return std::make_shared<ASTLiteralNode<flx_float>>(parse_float_literal(), row, col);
 	case TOK_CHAR_LITERAL:
-		return std::make_shared<ASTLiteralNode<cp_char>>(parse_char_literal(), row, col);
+		return std::make_shared<ASTLiteralNode<flx_char>>(parse_char_literal(), row, col);
 	case TOK_STRING_LITERAL:
-		return std::make_shared<ASTLiteralNode<cp_string>>(parse_string_literal(), row, col);
+		return std::make_shared<ASTLiteralNode<flx_string>>(parse_string_literal(), row, col);
 
 	case TOK_LEFT_CURLY:
 		return parse_array_constructor_node();
@@ -1403,7 +1403,7 @@ VariableDefinition* Parser::parse_formal_param() {
 	array_type = current_array_type;
 
 	if (is_rest) {
-		auto ndim = std::make_shared<ASTLiteralNode<cp_int>>(0, row, col);
+		auto ndim = std::make_shared<ASTLiteralNode<flx_int>>(0, row, col);
 		if (!is_array(type)) {
 			array_type = type;
 			type = Type::T_ARRAY;
@@ -1587,11 +1587,11 @@ std::shared_ptr<ASTStructConstructorNode> Parser::parse_struct_constructor_node(
 	return std::make_shared<ASTStructConstructorNode>(type_name, name_space, values, row, col);
 }
 
-cp_bool Parser::parse_bool_literal(){
+flx_bool Parser::parse_bool_literal(){
 	return current_token.value == "true";
 }
 
-cp_int Parser::parse_int_literal() {
+flx_int Parser::parse_int_literal() {
 	try {
 		if (current_token.value.starts_with("0b")) {
 			return std::stoll(current_token.value.substr(2), 0, 2);
@@ -1612,7 +1612,7 @@ cp_int Parser::parse_int_literal() {
 	}
 }
 
-cp_float Parser::parse_float_literal() {
+flx_float Parser::parse_float_literal() {
 	try {
 		return std::stold(current_token.value);
 	}
@@ -1621,7 +1621,7 @@ cp_float Parser::parse_float_literal() {
 	}
 }
 
-cp_char Parser::parse_char_literal() {
+flx_char Parser::parse_char_literal() {
 	char chr = 0;
 	if (current_token.value == "'\\\\'") {
 		chr = '\\';
@@ -1650,7 +1650,7 @@ cp_char Parser::parse_char_literal() {
 	return chr;
 }
 
-cp_string Parser::parse_string_literal() {
+flx_string Parser::parse_string_literal() {
 	std::string str = current_token.value.substr(1, current_token.value.size() - 2);
 
 	size_t pos = 0;

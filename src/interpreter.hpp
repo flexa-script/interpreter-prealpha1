@@ -58,11 +58,11 @@ namespace visitor {
 		void declare_function_parameter(std::shared_ptr<Scope> scope, const std::string& identifier, RuntimeValue* value);
 
 		std::vector<unsigned int> evaluate_access_vector(const std::vector<std::shared_ptr<ASTExprNode>>& expr_access_vector);
-		std::vector<unsigned int> calculate_array_dim_size(const cp_array& arr);
+		std::vector<unsigned int> calculate_array_dim_size(const flx_array& arr);
 
 		void check_build_array(RuntimeValue* new_value, std::vector<std::shared_ptr<ASTExprNode>> dim);
-		cp_array build_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, RuntimeValue* init_value, long long i);
-		cp_array build_undefined_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, long long i);
+		flx_array build_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, RuntimeValue* init_value, long long i);
+		flx_array build_undefined_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, long long i);
 
 		RuntimeValue* set_value(std::shared_ptr<RuntimeVariable> var, const std::vector<Identifier>& identifier_vector, RuntimeValue* new_value);
 		RuntimeValue* access_value(RuntimeValue* value, const std::vector<Identifier>& identifier_vector, size_t i = 0);
@@ -107,11 +107,11 @@ namespace visitor {
 		void visit(std::shared_ptr<ASTDoWhileNode>) override;
 		void visit(std::shared_ptr<ASTFunctionDefinitionNode>) override;
 		void visit(std::shared_ptr<ASTStructDefinitionNode>) override;
-		void visit(std::shared_ptr<ASTLiteralNode<cp_bool>>) override;
-		void visit(std::shared_ptr<ASTLiteralNode<cp_int>>) override;
-		void visit(std::shared_ptr<ASTLiteralNode<cp_float>>) override;
-		void visit(std::shared_ptr<ASTLiteralNode<cp_char>>) override;
-		void visit(std::shared_ptr<ASTLiteralNode<cp_string>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<flx_bool>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<flx_int>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<flx_float>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<flx_char>>) override;
+		void visit(std::shared_ptr<ASTLiteralNode<flx_string>>) override;
 		void visit(std::shared_ptr<ASTFunctionExpression>) override;
 		void visit(std::shared_ptr<ASTArrayConstructorNode>) override;
 		void visit(std::shared_ptr<ASTStructConstructorNode>) override;
@@ -131,11 +131,11 @@ namespace visitor {
 		long long hash(std::shared_ptr<ASTExprNode>) override;
 		long long hash(std::shared_ptr<ASTValueNode>) override;
 		long long hash(std::shared_ptr<ASTIdentifierNode>) override;
-		long long hash(std::shared_ptr<ASTLiteralNode<cp_bool>>) override;
-		long long hash(std::shared_ptr<ASTLiteralNode<cp_int>>) override;
-		long long hash(std::shared_ptr<ASTLiteralNode<cp_float>>) override;
-		long long hash(std::shared_ptr<ASTLiteralNode<cp_char>>) override;
-		long long hash(std::shared_ptr<ASTLiteralNode<cp_string>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<flx_bool>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<flx_int>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<flx_float>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<flx_char>>) override;
+		long long hash(std::shared_ptr<ASTLiteralNode<flx_string>>) override;
 	};
 }
 

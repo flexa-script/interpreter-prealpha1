@@ -127,7 +127,7 @@ void Interpreter::visit(std::shared_ptr<ASTEnumNode> astnode) {
 	for (size_t i = 0; i < astnode->identifiers.size(); ++i) {
 		auto var = std::make_shared<RuntimeVariable>(astnode->identifiers[i], Type::T_INT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "");
 		gc.add_var_root(var);
-		var->set_value(alocate_value(new RuntimeValue(cp_int(i))));
+		var->set_value(alocate_value(new RuntimeValue(flx_int(i))));
 		scopes[name_space].back()->declare_variable(astnode->identifiers[i], var);
 	}
 }
@@ -261,7 +261,7 @@ void Interpreter::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 		}
 		else {
 			// gets string access position
-			cp_int pos = -1;
+			flx_int pos = -1;
 			if (has_string_access) {
 				std::dynamic_pointer_cast<ASTExprNode>(astnode->identifier_vector.back().access_vector[astnode->identifier_vector.back().access_vector.size() - 1])->accept(this);
 				pos = current_expression_value->get_i();
@@ -299,7 +299,7 @@ void Interpreter::visit(std::shared_ptr<ASTReturnNode> astnode) {
 			curr_func_call_id_vector.back().access_vector[curr_func_call_id_vector.back().access_vector.size() - 1]->accept(this);
 			auto pos = value->get_i();
 
-			value = alocate_value(new RuntimeValue(cp_char(str[pos])));
+			value = alocate_value(new RuntimeValue(flx_char(str[pos])));
 		}
 
 		// check types match
@@ -457,7 +457,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionExpression> astnode) {
 	fun->identifier = utils::UUID::generate();
 	fun->accept(this);
 
-	current_expression_value = alocate_value(new RuntimeValue(cp_function(name_space, fun->identifier)));
+	current_expression_value = alocate_value(new RuntimeValue(flx_function(name_space, fun->identifier)));
 }
 
 void Interpreter::visit(std::shared_ptr<ASTBlockNode> astnode) {
@@ -674,7 +674,7 @@ void Interpreter::visit(std::shared_ptr<ASTForNode> astnode) {
 		}
 		else {
 			// if empty, execute with no condition
-			current_expression_value = alocate_value(new RuntimeValue(cp_bool(true)));
+			current_expression_value = alocate_value(new RuntimeValue(flx_bool(true)));
 		}
 
 		// if result is false
@@ -769,7 +769,7 @@ void Interpreter::visit(std::shared_ptr<ASTForEachNode> astnode) {
 		const auto& colletion = current_expression_value->get_s();
 		for (auto val : colletion) {
 			// declare each valueat meta block
-			auto exnode = std::make_shared<ASTValueNode>(alocate_value(new RuntimeValue(cp_char(val))), astnode->row, astnode->col);
+			auto exnode = std::make_shared<ASTValueNode>(alocate_value(new RuntimeValue(flx_char(val))), astnode->row, astnode->col);
 			itdecl->expr = exnode;
 			itdecl->accept(this);
 			itdecl->expr = nullptr;
@@ -800,14 +800,14 @@ void Interpreter::visit(std::shared_ptr<ASTForEachNode> astnode) {
 		// if the collection is a struct
 		const auto& colletion = current_expression_value->get_str();
 		for (const auto& val : colletion) {
-			auto key = std::make_shared<ASTLiteralNode<cp_string>>(cp_string(val.first), astnode->row, astnode->col);
+			auto key = std::make_shared<ASTLiteralNode<flx_string>>(flx_string(val.first), astnode->row, astnode->col);
 			auto value = std::make_shared<ASTValueNode>(val.second, astnode->row, astnode->col);
 
 			// when handling structs, we have a second type of declaration: unpacked declaration
 			// so if itdecl is null, it's a unpacked [key, value]
 			if (itdecl) {
 				std::map<std::string, std::shared_ptr<ASTExprNode>> values = { { "key", key }, { "value", value } };
-				auto exnode = std::make_shared<ASTStructConstructorNode>("Pair", "cp", values, astnode->row, astnode->col);
+				auto exnode = std::make_shared<ASTStructConstructorNode>("Pair", "flx", values, astnode->row, astnode->col);
 				itdecl->expr = exnode;
 				itdecl->accept(this);
 				itdecl->expr = nullptr;
@@ -877,7 +877,7 @@ void Interpreter::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 
 		scopes[name_space].push_back(std::make_shared<Scope>(prg));
 
-		auto error = std::make_shared<ASTLiteralNode<cp_string>>(ex.what(), astnode->row, astnode->col);
+		auto error = std::make_shared<ASTLiteralNode<flx_string>>(ex.what(), astnode->row, astnode->col);
 
 		// another place we can use unpacked declaration
 		if (const auto idnode = std::dynamic_pointer_cast<ASTUnpackedDeclarationNode>(astnode->decl)) {
@@ -890,7 +890,7 @@ void Interpreter::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 		}
 		else if (const auto idnode = std::dynamic_pointer_cast<ASTDeclarationNode>(astnode->decl)) {
 			std::map<std::string, std::shared_ptr<ASTExprNode>> values = { { "error", error } };
-			auto exnode = std::make_shared<ASTStructConstructorNode>("Exception", "cp", values, astnode->row, astnode->col);
+			auto exnode = std::make_shared<ASTStructConstructorNode>("Exception", "flx", values, astnode->row, astnode->col);
 			idnode->expr = exnode;
 			idnode->expr = nullptr;
 		}
@@ -913,8 +913,8 @@ void Interpreter::visit(std::shared_ptr<ASTThrowNode> astnode) {
 	if (is_struct(current_expression_value->type)) {
 		// check struct type
 		if (current_expression_value->type_name != "Exception"
-			|| current_expression_value->type_name_space != "cp") {
-			throw std::runtime_error("expected cp::Exception not " + ExceptionHandler::buid_type_str(*current_expression_value, evaluate_access_vector_ptr));
+			|| current_expression_value->type_name_space != "flx") {
+			throw std::runtime_error("expected flx::Exception not " + ExceptionHandler::buid_type_str(*current_expression_value, evaluate_access_vector_ptr));
 		}
 
 		throw std::exception(current_expression_value->get_str()["error"]->get_s().c_str());
@@ -924,7 +924,7 @@ void Interpreter::visit(std::shared_ptr<ASTThrowNode> astnode) {
 		throw std::runtime_error(current_expression_value->get_s());
 	}
 	else {
-		throw std::runtime_error("expected cp::Exception struct or string in throw");
+		throw std::runtime_error("expected flx::Exception struct or string in throw");
 	}
 
 }
@@ -1027,27 +1027,27 @@ void Interpreter::visit(std::shared_ptr<ASTValueNode> astnode) {
 	current_expression_value = dynamic_cast<RuntimeValue*>(astnode->value);
 }
 
-void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_bool>> astnode) {
+void Interpreter::visit(std::shared_ptr<ASTLiteralNode<flx_bool>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	current_expression_value = alocate_value(new RuntimeValue(astnode->val));
 }
 
-void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_int>> astnode) {
+void Interpreter::visit(std::shared_ptr<ASTLiteralNode<flx_int>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	current_expression_value = alocate_value(new RuntimeValue(astnode->val));
 }
 
-void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_float>> astnode) {
+void Interpreter::visit(std::shared_ptr<ASTLiteralNode<flx_float>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	current_expression_value = alocate_value(new RuntimeValue(astnode->val));
 }
 
-void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_char>> astnode) {
+void Interpreter::visit(std::shared_ptr<ASTLiteralNode<flx_char>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	current_expression_value = alocate_value(new RuntimeValue(astnode->val));
 }
 
-void Interpreter::visit(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) {
+void Interpreter::visit(std::shared_ptr<ASTLiteralNode<flx_string>> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	current_expression_value = alocate_value(new RuntimeValue(astnode->val));
 }
@@ -1056,7 +1056,7 @@ void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	// initialize raw array
-	cp_array arr = cp_array(astnode->values.size());
+	flx_array arr = flx_array(astnode->values.size());
 
 	// clean array type on start
 	if (current_expression_array_dim.size() == 0) {
@@ -1071,7 +1071,7 @@ void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 	++current_expression_array_dim_max;
 	// if isn't reached max yet, we adds more one dim
 	if (!is_max) {
-		current_expression_array_dim.push_back(std::make_shared<ASTLiteralNode<cp_int>>(0, astnode->row, astnode->col));
+		current_expression_array_dim.push_back(std::make_shared<ASTLiteralNode<flx_int>>(0, astnode->row, astnode->col));
 	}
 
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
@@ -1103,7 +1103,7 @@ void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 
 	// if it isn't reached max yet, we add size
 	if (!is_max) {
-		std::dynamic_pointer_cast<ASTLiteralNode<cp_int>>(current_expression_array_dim.back())->val = arr.size();
+		std::dynamic_pointer_cast<ASTLiteralNode<flx_int>>(current_expression_array_dim.back())->val = arr.size();
 	}
 
 	// as size by dimension is fixed, it's not necessary to check after max (max nested deep)
@@ -1142,7 +1142,7 @@ void Interpreter::visit(std::shared_ptr<ASTStructConstructorNode> astnode) {
 	auto name_space = get_namespace();
 	auto type_struct = find_inner_most_struct(prg, name_space, astnode->type_name);
 
-	auto str = cp_struct();
+	auto str = flx_struct();
 
 	for (auto& expr : astnode->values) {
 		// check it is a member
@@ -1214,7 +1214,7 @@ void Interpreter::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 			auto pos = current_expression_value->get_i();
 
 			auto char_value = alocate_value(new RuntimeValue(Type::T_CHAR));
-			char_value->set(cp_char(str[pos]));
+			char_value->set(flx_char(str[pos]));
 			current_expression_value = char_value;
 		}
 	}
@@ -1249,7 +1249,7 @@ void Interpreter::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 				if (!curr_scope) {
 					throw std::runtime_error("identifier '" + astnode->identifier + "' was not declared");
 				}
-				auto fun = cp_function();
+				auto fun = flx_function();
 				fun.first = name_space;
 				fun.second = astnode->identifier;
 				current_expression_value = alocate_value(new RuntimeValue(Type::T_FUNCTION));
@@ -1257,14 +1257,14 @@ void Interpreter::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 				return;
 			}
 			type = Type::T_STRUCT;
-			auto str = cp_struct();
+			auto str = flx_struct();
 			expression_value->set(str, astnode->identifier, name_space);
 		}
 
 		expression_value->set_type(type);
 
 		if (dim.size() > 0) {
-			cp_array arr = build_array(dim, expression_value, dim.size() - 1);
+			flx_array arr = build_array(dim, expression_value, dim.size() - 1);
 
 			current_expression_value = alocate_value(new RuntimeValue(arr, type, dim));
 		}
@@ -1328,7 +1328,7 @@ void Interpreter::visit(std::shared_ptr<ASTInNode> astnode) {
 	bool res = false;
 
 	if (is_array(current_expression_value->type)) {
-		cp_array expr_col = current_expression_value->get_arr();
+		flx_array expr_col = current_expression_value->get_arr();
 
 		for (size_t i = 0; i < expr_col.size(); ++i) {
 			res = RuntimeOperations::equals_value(&expr_val, expr_col[i]);
@@ -1348,14 +1348,14 @@ void Interpreter::visit(std::shared_ptr<ASTInNode> astnode) {
 		}
 	}
 
-	current_expression_value = alocate_value(new RuntimeValue(cp_bool(res)));
+	current_expression_value = alocate_value(new RuntimeValue(flx_bool(res)));
 }
 
 void Interpreter::visit(std::shared_ptr<ASTUnaryExprNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	if (astnode->unary_op == "--" || astnode->unary_op == "++") {
-		auto expr = std::make_shared<ASTLiteralNode<cp_int>>(1, astnode->row, astnode->col);
+		auto expr = std::make_shared<ASTLiteralNode<flx_int>>(1, astnode->row, astnode->col);
 		if (const auto id = std::dynamic_pointer_cast<ASTIdentifierNode>(astnode->expr)) {
 			auto assign_node = std::make_shared<ASTAssignmentNode>(id->identifier_vector, id->name_space, std::string{ astnode->unary_op[0] } + "=", expr, astnode->row, astnode->col);
 			assign_node->accept(this);
@@ -1384,10 +1384,10 @@ void Interpreter::visit(std::shared_ptr<ASTUnaryExprNode> astnode) {
 			switch (current_expression_value->type) {
 			case Type::T_INT:
 				if (astnode->unary_op == "-") {
-					current_expression_value->set(cp_int(-current_expression_value->get_i()));
+					current_expression_value->set(flx_int(-current_expression_value->get_i()));
 				}
 				else if (astnode->unary_op == "~") {
-					current_expression_value->set(cp_int(~current_expression_value->get_i()));
+					current_expression_value->set(flx_int(~current_expression_value->get_i()));
 				}
 				else {
 					ExceptionHandler::throw_unary_operation_err(astnode->unary_op, *current_expression_value, evaluate_access_vector_ptr);
@@ -1395,7 +1395,7 @@ void Interpreter::visit(std::shared_ptr<ASTUnaryExprNode> astnode) {
 				break;
 			case Type::T_FLOAT:
 				if (astnode->unary_op == "-") {
-					current_expression_value->set(cp_float(-current_expression_value->get_f()));
+					current_expression_value->set(flx_float(-current_expression_value->get_f()));
 				}
 				else {
 					ExceptionHandler::throw_unary_operation_err(astnode->unary_op, *current_expression_value, evaluate_access_vector_ptr);
@@ -1403,7 +1403,7 @@ void Interpreter::visit(std::shared_ptr<ASTUnaryExprNode> astnode) {
 				break;
 			case Type::T_BOOL:
 				if (astnode->unary_op == "not") {
-					current_expression_value->set(cp_bool(!current_expression_value->get_b()));
+					current_expression_value->set(flx_bool(!current_expression_value->get_b()));
 				}
 				else {
 					ExceptionHandler::throw_unary_operation_err(astnode->unary_op, *current_expression_value, evaluate_access_vector_ptr);
@@ -1431,16 +1431,16 @@ void Interpreter::visit(std::shared_ptr<ASTTypeParseNode> astnode) {
 			new_value->copy_from(current_expression_value);
 			break;
 		case Type::T_INT:
-			new_value->set(cp_bool(current_expression_value->get_i() != 0));
+			new_value->set(flx_bool(current_expression_value->get_i() != 0));
 			break;
 		case Type::T_FLOAT:
-			new_value->set(cp_bool(current_expression_value->get_f() != .0));
+			new_value->set(flx_bool(current_expression_value->get_f() != .0));
 			break;
 		case Type::T_CHAR:
-			new_value->set(cp_bool(current_expression_value->get_c() != '\0'));
+			new_value->set(flx_bool(current_expression_value->get_c() != '\0'));
 			break;
 		case Type::T_STRING:
-			new_value->set(cp_bool(!current_expression_value->get_s().empty()));
+			new_value->set(flx_bool(!current_expression_value->get_s().empty()));
 			break;
 		}
 		break;
@@ -1448,20 +1448,20 @@ void Interpreter::visit(std::shared_ptr<ASTTypeParseNode> astnode) {
 	case Type::T_INT:
 		switch (current_expression_value->type) {
 		case Type::T_BOOL:
-			new_value->set(cp_int(current_expression_value->get_b()));
+			new_value->set(flx_int(current_expression_value->get_b()));
 			break;
 		case Type::T_INT:
 			new_value->copy_from(current_expression_value);
 			break;
 		case Type::T_FLOAT:
-			new_value->set(cp_int(current_expression_value->get_f()));
+			new_value->set(flx_int(current_expression_value->get_f()));
 			break;
 		case Type::T_CHAR:
-			new_value->set(cp_int(current_expression_value->get_c()));
+			new_value->set(flx_int(current_expression_value->get_c()));
 			break;
 		case Type::T_STRING:
 			try {
-				new_value->set(cp_int(std::stoll(current_expression_value->get_s())));
+				new_value->set(flx_int(std::stoll(current_expression_value->get_s())));
 			}
 			catch (...) {
 				throw std::runtime_error("'" + current_expression_value->get_s() + "' is not a valid value to parse int");
@@ -1473,20 +1473,20 @@ void Interpreter::visit(std::shared_ptr<ASTTypeParseNode> astnode) {
 	case Type::T_FLOAT:
 		switch (current_expression_value->type) {
 		case Type::T_BOOL:
-			new_value->set(cp_float(current_expression_value->get_b()));
+			new_value->set(flx_float(current_expression_value->get_b()));
 			break;
 		case Type::T_INT:
-			new_value->set(cp_float(current_expression_value->get_i()));
+			new_value->set(flx_float(current_expression_value->get_i()));
 			break;
 		case Type::T_FLOAT:
 			new_value->copy_from(current_expression_value);
 			break;
 		case Type::T_CHAR:
-			new_value->set(cp_float(current_expression_value->get_c()));
+			new_value->set(flx_float(current_expression_value->get_c()));
 			break;
 		case Type::T_STRING:
 			try {
-				new_value->set(cp_float(std::stold(current_expression_value->get_s())));
+				new_value->set(flx_float(std::stold(current_expression_value->get_s())));
 			}
 			catch (...) {
 				throw std::runtime_error("'" + current_expression_value->get_s() + "' is not a valid value to parse float");
@@ -1498,13 +1498,13 @@ void Interpreter::visit(std::shared_ptr<ASTTypeParseNode> astnode) {
 	case Type::T_CHAR:
 		switch (current_expression_value->type) {
 		case Type::T_BOOL:
-			new_value->set(cp_char(current_expression_value->get_b()));
+			new_value->set(flx_char(current_expression_value->get_b()));
 			break;
 		case Type::T_INT:
-			new_value->set(cp_char(current_expression_value->get_i()));
+			new_value->set(flx_char(current_expression_value->get_i()));
 			break;
 		case Type::T_FLOAT:
-			new_value->set(cp_char(current_expression_value->get_f()));
+			new_value->set(flx_char(current_expression_value->get_f()));
 			break;
 		case Type::T_CHAR:
 			new_value->copy_from(current_expression_value);
@@ -1514,14 +1514,14 @@ void Interpreter::visit(std::shared_ptr<ASTTypeParseNode> astnode) {
 				throw std::runtime_error("'" + current_expression_value->get_s() + "' is not a valid value to parse char");
 			}
 			else {
-				new_value->set(cp_char(current_expression_value->get_s()[0]));
+				new_value->set(flx_char(current_expression_value->get_s()[0]));
 			}
 			break;
 		}
 		break;
 
 	case Type::T_STRING:
-		new_value->set(cp_string(RuntimeOperations::parse_value_to_string(current_expression_value)));
+		new_value->set(flx_string(RuntimeOperations::parse_value_to_string(current_expression_value)));
 
 	}
 
@@ -1539,7 +1539,7 @@ void Interpreter::visit(std::shared_ptr<ASTNullNode> astnode) {
 void Interpreter::visit(std::shared_ptr<ASTThisNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
-	current_expression_value = alocate_value(new RuntimeValue(cp_string(current_this_name.top())));
+	current_expression_value = alocate_value(new RuntimeValue(flx_string(current_this_name.top())));
 }
 
 void Interpreter::visit(std::shared_ptr<ASTTypingNode> astnode) {
@@ -1548,13 +1548,13 @@ void Interpreter::visit(std::shared_ptr<ASTTypingNode> astnode) {
 	astnode->expr->accept(this);
 
 	if (astnode->image == "refid") {
-		current_expression_value = alocate_value(new RuntimeValue(cp_int(current_expression_value)));
+		current_expression_value = alocate_value(new RuntimeValue(flx_int(current_expression_value)));
 		return;
 	}
 
 	if (astnode->image == "is_any") {
 		auto value = alocate_value(new RuntimeValue(Type::T_BOOL));
-		value->set(cp_bool(
+		value->set(flx_bool(
 			(current_expression_value->ref.lock()
 				&& (is_any(current_expression_value->ref.lock()->type))
 				|| is_any(current_expression_value->ref.lock()->array_type))));
@@ -1563,13 +1563,13 @@ void Interpreter::visit(std::shared_ptr<ASTTypingNode> astnode) {
 	}
 	else if (astnode->image == "is_array") {
 		auto value = alocate_value(new RuntimeValue(Type::T_BOOL));
-		value->set(cp_bool(is_array(current_expression_value->type) || current_expression_value->dim.size() > 0));
+		value->set(flx_bool(is_array(current_expression_value->type) || current_expression_value->dim.size() > 0));
 		current_expression_value = value;
 		return;
 	}
 	else if (astnode->image == "is_struct") {
 		auto value = alocate_value(new RuntimeValue(Type::T_BOOL));
-		value->set(cp_bool(is_struct(current_expression_value->type) || is_struct(current_expression_value->array_type)));
+		value->set(flx_bool(is_struct(current_expression_value->type) || is_struct(current_expression_value->array_type)));
 		current_expression_value = value;
 		return;
 	}
@@ -1578,12 +1578,12 @@ void Interpreter::visit(std::shared_ptr<ASTTypingNode> astnode) {
 
 	if (astnode->image == "typeid") {
 		auto value = alocate_value(new RuntimeValue(Type::T_INT));
-		value->set(cp_int(utils::StringUtils::hashcode(str_type)));
+		value->set(flx_int(utils::StringUtils::hashcode(str_type)));
 		current_expression_value = value;
 	}
 	else {
 		auto value = alocate_value(new RuntimeValue(Type::T_STRING));
-		value->set(cp_string(str_type));
+		value->set(flx_string(str_type));
 		current_expression_value = value;
 	}
 }
@@ -1718,7 +1718,7 @@ void Interpreter::check_build_array(RuntimeValue* new_value, std::vector<std::sh
 	if (is_array(new_value->type) && dim.size() > 0) {
 		auto arr = new_value->get_arr();
 		bool has_array = false;
-		cp_array rarr = cp_array();
+		flx_array rarr = flx_array();
 
 		if (arr.size() == 1) {
 			has_array = true;
@@ -1738,8 +1738,8 @@ void Interpreter::check_build_array(RuntimeValue* new_value, std::vector<std::sh
 	}
 }
 
-cp_array Interpreter::build_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, RuntimeValue* init_value, long long i) {
-	cp_array raw_arr;
+flx_array Interpreter::build_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, RuntimeValue* init_value, long long i) {
+	flx_array raw_arr;
 
 	if (dim.size() - 1 == i) {
 		current_expression_array_type = TypeDefinition();
@@ -1755,7 +1755,7 @@ cp_array Interpreter::build_array(const std::vector<std::shared_ptr<ASTExprNode>
 		size = current_expression_value->get_i();
 	}
 
-	raw_arr = cp_array(size);
+	raw_arr = flx_array(size);
 
 	for (size_t j = 0; j < size; ++j) {
 		auto val = alocate_value(new RuntimeValue(init_value));
@@ -1787,8 +1787,8 @@ cp_array Interpreter::build_array(const std::vector<std::shared_ptr<ASTExprNode>
 	return raw_arr;
 }
 
-cp_array Interpreter::build_undefined_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, long long i) {
-	cp_array raw_arr;
+flx_array Interpreter::build_undefined_array(const std::vector<std::shared_ptr<ASTExprNode>>& dim, long long i) {
+	flx_array raw_arr;
 
 	if (dim.size() - 1 == i) {
 		current_expression_array_type = TypeDefinition();
@@ -1804,7 +1804,7 @@ cp_array Interpreter::build_undefined_array(const std::vector<std::shared_ptr<AS
 		size = current_expression_value->get_i();
 	}
 
-	raw_arr = cp_array(size);
+	raw_arr = flx_array(size);
 
 	--i;
 
@@ -1815,7 +1815,7 @@ cp_array Interpreter::build_undefined_array(const std::vector<std::shared_ptr<AS
 	return raw_arr;
 }
 
-std::vector<unsigned int> Interpreter::calculate_array_dim_size(const cp_array& arr) {
+std::vector<unsigned int> Interpreter::calculate_array_dim_size(const flx_array& arr) {
 	auto dim = std::vector<unsigned int>();
 
 	dim.push_back(arr.size());
@@ -1874,23 +1874,23 @@ long long Interpreter::hash(std::shared_ptr<ASTValueNode> astnode) {
 	return hash(dynamic_cast<RuntimeValue*>(astnode->value));
 }
 
-long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_bool>> astnode) {
+long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<flx_bool>> astnode) {
 	return static_cast<long long>(astnode->val);
 }
 
-long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_int>> astnode) {
+long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<flx_int>> astnode) {
 	return static_cast<long long>(astnode->val);
 }
 
-long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_float>> astnode) {
+long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<flx_float>> astnode) {
 	return static_cast<long long>(astnode->val);
 }
 
-long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_char>> astnode) {
+long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<flx_char>> astnode) {
 	return static_cast<long long>(astnode->val);
 }
 
-long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<cp_string>> astnode) {
+long long Interpreter::hash(std::shared_ptr<ASTLiteralNode<flx_string>> astnode) {
 	return utils::StringUtils::hashcode(astnode->val);
 }
 
@@ -1999,7 +1999,7 @@ void Interpreter::declare_function_block_parameters(const std::string& name_spac
 	}
 
 	if (vec.size() > 0) {
-		auto arr = cp_array(vec.size());
+		auto arr = flx_array(vec.size());
 		for (size_t i = 0; i < vec.size(); ++i) {
 			arr[i] = vec[i];
 		}
@@ -2015,12 +2015,12 @@ void Interpreter::declare_function_block_parameters(const std::string& name_spac
 }
 
 void Interpreter::build_args(const std::vector<std::string>& args) {
-	auto dim = std::vector<std::shared_ptr<ASTExprNode>>{ std::make_shared<ASTLiteralNode<cp_int>>(cp_int(args.size()), 0, 0) };
+	auto dim = std::vector<std::shared_ptr<ASTExprNode>>{ std::make_shared<ASTLiteralNode<flx_int>>(flx_int(args.size()), 0, 0) };
 
 	auto var = std::make_shared<RuntimeVariable>("cpargs", Type::T_ARRAY, Type::T_STRING, dim, "", "");
 	gc.add_var_root(var);
 
-	auto arr = cp_array();
+	auto arr = flx_array();
 	for (size_t i = 0; i < args.size(); ++i) {
 		arr.push_back(alocate_value(new RuntimeValue(args[i])));
 	}

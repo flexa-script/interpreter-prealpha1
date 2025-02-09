@@ -44,14 +44,14 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		// initialize window struct values
 		RuntimeValue* win = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRUCT));
 
-		cp_struct str = cp_struct();
+		flx_struct str = flx_struct();
 		str["title"] = visitor->alocate_value(new RuntimeValue(vals[0]));
 		str["width"] = visitor->alocate_value(new RuntimeValue(vals[1]));
 		str["height"] = visitor->alocate_value(new RuntimeValue(vals[2]));
 
 		// create a new window graphic engine
 		str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
-		str[INSTANCE_ID_NAME]->set(cp_int(new utils::Window()));
+		str[INSTANCE_ID_NAME]->set(flx_int(new utils::Window()));
 
 		// initialize window graphic engine and return value
 		auto res = ((utils::Window*)str[INSTANCE_ID_NAME]->get_i())->initialize(
@@ -60,7 +60,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 			(int)str["height"]->get_i()
 		);
 
-		win->set(str, "Window", "cp");
+		win->set(str, "Window", "flx");
 
 		if (!res) {
 			win->set_null();
@@ -103,7 +103,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		if (!win->get_str()[INSTANCE_ID_NAME]->get_i()) {
 			throw std::runtime_error("Window is corrupted");
 		}
-		visitor->current_expression_value=visitor->alocate_value(new RuntimeValue(cp_int(((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_width())));
+		visitor->current_expression_value=visitor->alocate_value(new RuntimeValue(flx_int(((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_width())));
 
 		};
 
@@ -118,7 +118,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		if (!win->get_str()[INSTANCE_ID_NAME]->get_i()) {
 			throw std::runtime_error("Window is corrupted");
 		}
-		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(cp_int(((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_height())));
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(flx_int(((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_height())));
 
 		};
 
@@ -309,7 +309,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		// initialize image struct values
 		RuntimeValue* font_value = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRUCT));
 
-		auto str = cp_struct();
+		auto str = flx_struct();
 		str["size"] = visitor->alocate_value(new RuntimeValue(vals[0]));
 		str["name"] = visitor->alocate_value(new RuntimeValue(vals[1]));
 		str["weight"] = visitor->alocate_value(new RuntimeValue(vals[2]));
@@ -331,9 +331,9 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("there was an error creating font");
 		}
 		str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
-		str[INSTANCE_ID_NAME]->set(cp_int(font));
+		str[INSTANCE_ID_NAME]->set(flx_int(font));
 
-		font_value->set(str, "Font", "cp");
+		font_value->set(str, "Font", "flx");
 
 		visitor->current_expression_value = font_value;
 
@@ -404,11 +404,11 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 
 		auto point = ((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->get_text_size(text, font);
 
-		cp_struct str = cp_struct();
-		str["width"] = visitor->alocate_value(new RuntimeValue(cp_int(point.cx * 2 * 0.905)));
-		str["height"] = visitor->alocate_value(new RuntimeValue(cp_int(point.cy * 2 * 0.875)));
+		flx_struct str = flx_struct();
+		str["width"] = visitor->alocate_value(new RuntimeValue(flx_int(point.cx * 2 * 0.905)));
+		str["height"] = visitor->alocate_value(new RuntimeValue(flx_int(point.cy * 2 * 0.875)));
 
-		RuntimeValue* res = visitor->alocate_value(new RuntimeValue(str, "Size", "cp"));
+		RuntimeValue* res = visitor->alocate_value(new RuntimeValue(str, "Size", "flx"));
 
 		visitor->current_expression_value = res;
 
@@ -421,7 +421,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		// initialize image struct values
 		RuntimeValue* img = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRUCT));
 
-		auto str = cp_struct();
+		auto str = flx_struct();
 		str["path"] = visitor->alocate_value(new RuntimeValue(val));
 
 		// loads image
@@ -430,14 +430,14 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 			throw std::runtime_error("there was an error loading image");
 		}
 		str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
-		str[INSTANCE_ID_NAME]->set(cp_int(image));
+		str[INSTANCE_ID_NAME]->set(flx_int(image));
 
 		str["width"] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
-		str["width"]->set(cp_int(image->width));
+		str["width"]->set(flx_int(image->width));
 		str["height"] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
-		str["height"]->set(cp_int(image->height));
+		str["height"]->set(flx_int(image->height));
 
-		img->set(str, "Image", "cp");
+		img->set(str, "Image", "flx");
 
 		visitor->current_expression_value = img;
 
@@ -507,14 +507,14 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		auto val = visitor->alocate_value(new RuntimeValue(parser::Type::T_BOOL));
 		if (!parser::is_void(win->type)) {
 			if (((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())) {
-				val->set(cp_bool(((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->is_quit()));
+				val->set(flx_bool(((utils::Window*)win->get_str()[INSTANCE_ID_NAME]->get_i())->is_quit()));
 			}
 			else {
-				val->set(cp_bool(true));
+				val->set(flx_bool(true));
 			}
 		}
 		else {
-			val->set(cp_bool(true));
+			val->set(flx_bool(true));
 		}
 		visitor->current_expression_value = val;
 

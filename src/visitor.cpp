@@ -19,33 +19,33 @@ Visitor::Visitor(const std::map<std::string, std::shared_ptr<ASTProgramNode>>& p
 std::string default_namespace = "__default__";
 
 std::vector<std::string> std_libs = {
-	"bsl.std.collections.collection",
-	"bsl.std.collections.dictionary",
-	"bsl.std.collections.hashtable",
-	"bsl.std.collections.list",
-	"bsl.std.collections.queue",
-	"bsl.std.collections.stack",
-	"bsl.std.arrays",
-	"bsl.std.math",
-	"bsl.std.print",
-	"bsl.std.random",
-	"bsl.std.strings",
-	"bsl.std.structs",
-	"bsl.std.testing",
-	"bsl.std.utils",
-	"bsl.std.DSL.BPS",
-	"bsl.std.DSL.JSON",
-	"bsl.std.DSL.YAML",
-	"bsl.std.DSL.XML"
+	"flx.std.collections.collection",
+	"flx.std.collections.dictionary",
+	"flx.std.collections.hashtable",
+	"flx.std.collections.list",
+	"flx.std.collections.queue",
+	"flx.std.collections.stack",
+	"flx.std.arrays",
+	"flx.std.math",
+	"flx.std.print",
+	"flx.std.random",
+	"flx.std.strings",
+	"flx.std.structs",
+	"flx.std.testing",
+	"flx.std.utils",
+	"flx.std.DSL.BPS",
+	"flx.std.DSL.JSON",
+	"flx.std.DSL.YAML",
+	"flx.std.DSL.XML"
 };
 
 std::map<std::string, std::shared_ptr<modules::Module>> built_in_libs = {
 	{"builtin", std::shared_ptr<modules::ModuleBuiltin>(new modules::ModuleBuiltin())},
-	{"bsl.core.graphics", std::shared_ptr<modules::ModuleGraphics>(new modules::ModuleGraphics())},
-	{"bsl.core.files", std::shared_ptr<modules::ModuleFiles>(new modules::ModuleFiles())},
-	{"bsl.core.console", std::shared_ptr<modules::ModuleConsole>(new modules::ModuleConsole())},
-	{"bsl.core.datetime", std::shared_ptr<modules::ModuleDateTime>(new modules::ModuleDateTime())},
-	{"bsl.core.input", std::shared_ptr<modules::ModuleInput>(new modules::ModuleInput())},
-	{"bsl.core.sound", std::shared_ptr<modules::ModuleSound>(new modules::ModuleSound())},
-	{"bsl.core.HTTP", std::shared_ptr<modules::ModuleHTTP>(new modules::ModuleHTTP())}
+	{"flx.core.graphics", std::shared_ptr<modules::ModuleGraphics>(new modules::ModuleGraphics())},
+	{"flx.core.files", std::shared_ptr<modules::ModuleFiles>(new modules::ModuleFiles())},
+	{"flx.core.console", std::shared_ptr<modules::ModuleConsole>(new modules::ModuleConsole())},
+	{"flx.core.datetime", std::shared_ptr<modules::ModuleDateTime>(new modules::ModuleDateTime())},
+	{"flx.core.input", std::shared_ptr<modules::ModuleInput>(new modules::ModuleInput())},
+	{"flx.core.sound", std::shared_ptr<modules::ModuleSound>(new modules::ModuleSound())},
+	{"flx.core.HTTP", std::shared_ptr<modules::ModuleHTTP>(new modules::ModuleHTTP())}
 };

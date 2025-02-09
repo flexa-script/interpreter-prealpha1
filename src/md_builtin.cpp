@@ -88,7 +88,7 @@ void ModuleBuiltin::register_functions(visitor::Interpreter* visitor) {
 		std::string line;
 		std::getline(std::cin, line);
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_STRING));
-		visitor->current_expression_value->set(cp_string(std::move(line)));
+		visitor->current_expression_value->set(flx_string(std::move(line)));
 		};
 
 	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::READCH], func_decls[BUILTIN_NAMES[BuintinFuncs::READCH]]);
@@ -96,7 +96,7 @@ void ModuleBuiltin::register_functions(visitor::Interpreter* visitor) {
 		while (!_kbhit());
 		char ch = _getch();
 		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(Type::T_CHAR));
-		visitor->current_expression_value->set(cp_char(ch));
+		visitor->current_expression_value->set(flx_char(ch));
 		};
 
 	visitor->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::LEN], func_decls[BUILTIN_NAMES[BuintinFuncs::LEN] + "A"]);
@@ -109,10 +109,10 @@ void ModuleBuiltin::register_functions(visitor::Interpreter* visitor) {
 		auto val = visitor->alocate_value(new RuntimeValue(Type::T_INT));
 
 		if (is_array(itval->type)) {
-			val->set(cp_int(itval->get_arr().size()));
+			val->set(flx_int(itval->get_arr().size()));
 		}
 		else {
-			val->set(cp_int(itval->get_s().size()));
+			val->set(flx_int(itval->get_s().size()));
 		}
 
 		visitor->current_expression_value = val;
@@ -159,7 +159,7 @@ void ModuleBuiltin::register_functions(VirtualMachine* vm) {
 	vm->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::PRINT], func_decls[BUILTIN_NAMES[BuintinFuncs::PRINT]]);
 	vm->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]] = [this, vm]() {
 		try {
-			cp_array args;
+			flx_array args;
 			while (vm->param_count-- > 0) {
 				args.push_back(vm->get_stack_top());
 			}
@@ -183,14 +183,14 @@ void ModuleBuiltin::register_functions(VirtualMachine* vm) {
 		vm->builtin_functions[BUILTIN_NAMES[BuintinFuncs::PRINT]]();
 		std::string line;
 		std::getline(std::cin, line);
-		vm->push_constant(new RuntimeValue(cp_string(std::move(line))));
+		vm->push_constant(new RuntimeValue(flx_string(std::move(line))));
 		};
 
 	vm->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::READCH], func_decls[BUILTIN_NAMES[BuintinFuncs::READCH]]);
 	vm->builtin_functions[BUILTIN_NAMES[BuintinFuncs::READCH]] = [this, vm]() {
 		while (!_kbhit());
 		char ch = _getch();
-		vm->push_constant(new RuntimeValue(cp_char(ch)));
+		vm->push_constant(new RuntimeValue(flx_char(ch)));
 		};
 
 	vm->scopes[default_namespace].back()->declare_function(BUILTIN_NAMES[BuintinFuncs::LEN], func_decls[BUILTIN_NAMES[BuintinFuncs::LEN] + "A"]);
@@ -201,10 +201,10 @@ void ModuleBuiltin::register_functions(VirtualMachine* vm) {
 		auto val = new RuntimeValue(Type::T_INT);
 
 		if (is_array(itval->type)) {
-			val->set(cp_int(itval->get_arr().size()));
+			val->set(flx_int(itval->get_arr().size()));
 		}
 		else {
-			val->set(cp_int(itval->get_s().size()));
+			val->set(flx_int(itval->get_s().size()));
 		}
 
 		vm->push_constant(val);

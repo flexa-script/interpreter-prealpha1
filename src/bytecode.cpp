@@ -17,19 +17,19 @@ BytecodeInstruction::BytecodeInstruction(OpCode opcode, uint8_t operand)
 BytecodeInstruction::BytecodeInstruction(OpCode opcode, size_t operand)
 	: opcode(opcode), operand(to_byteopnd(operand)) {}
 
-BytecodeInstruction::BytecodeInstruction(OpCode opcode, cp_bool operand)
+BytecodeInstruction::BytecodeInstruction(OpCode opcode, flx_bool operand)
 	: opcode(opcode), operand(to_byteopnd(operand)) {}
 
-BytecodeInstruction::BytecodeInstruction(OpCode opcode, cp_int operand)
+BytecodeInstruction::BytecodeInstruction(OpCode opcode, flx_int operand)
 	: opcode(opcode), operand(to_byteopnd(operand)) {}
 
-BytecodeInstruction::BytecodeInstruction(OpCode opcode, cp_float operand)
+BytecodeInstruction::BytecodeInstruction(OpCode opcode, flx_float operand)
 	: opcode(opcode), operand(to_byteopnd(operand)) {}
 
-BytecodeInstruction::BytecodeInstruction(OpCode opcode, cp_char operand)
+BytecodeInstruction::BytecodeInstruction(OpCode opcode, flx_char operand)
 	: opcode(opcode), operand(to_byteopnd(operand)) {}
 
-BytecodeInstruction::BytecodeInstruction(OpCode opcode, const cp_string& operand)
+BytecodeInstruction::BytecodeInstruction(OpCode opcode, const flx_string& operand)
 	: opcode(opcode), operand(to_byteopnd(operand)) {}
 
 uint8_t BytecodeInstruction::get_uint8_operand() const {
@@ -40,23 +40,23 @@ size_t BytecodeInstruction::get_size_operand() const {
 	return *reinterpret_cast<size_t*>(operand);
 }
 
-cp_bool BytecodeInstruction::get_bool_operand() const {
-	return *reinterpret_cast<cp_bool*>(operand);
+flx_bool BytecodeInstruction::get_bool_operand() const {
+	return *reinterpret_cast<flx_bool*>(operand);
 }
 
-cp_int BytecodeInstruction::get_int_operand() const {
-	return *reinterpret_cast<cp_int*>(operand);
+flx_int BytecodeInstruction::get_int_operand() const {
+	return *reinterpret_cast<flx_int*>(operand);
 }
 
-cp_float BytecodeInstruction::get_float_operand() const {
-	return *reinterpret_cast<cp_float*>(operand);
+flx_float BytecodeInstruction::get_float_operand() const {
+	return *reinterpret_cast<flx_float*>(operand);
 }
 
-cp_char BytecodeInstruction::get_char_operand() const {
-	return *reinterpret_cast<cp_char*>(operand);
+flx_char BytecodeInstruction::get_char_operand() const {
+	return *reinterpret_cast<flx_char*>(operand);
 }
 
-cp_string BytecodeInstruction::get_string_operand() const {
+flx_string BytecodeInstruction::get_string_operand() const {
 	uint64_t size;
 	std::memcpy(&size, operand, sizeof(uint64_t));
 

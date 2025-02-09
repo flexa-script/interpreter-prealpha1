@@ -50,14 +50,14 @@ using namespace visitor;
 
 class RuntimeValue;
 
-typedef bool cp_bool;
-typedef int64_t cp_int;
-typedef long double cp_float;
-typedef char cp_char;
-typedef std::string cp_string;
-typedef std::vector<RuntimeValue*> cp_array;
-typedef std::unordered_map<std::string, RuntimeValue*> cp_struct;
-typedef std::pair<std::string, std::string> cp_function;
+typedef bool flx_bool;
+typedef int64_t flx_int;
+typedef long double flx_float;
+typedef char flx_char;
+typedef std::string flx_string;
+typedef std::vector<RuntimeValue*> flx_array;
+typedef std::unordered_map<std::string, RuntimeValue*> flx_struct;
+typedef std::pair<std::string, std::string> flx_function;
 
 extern std::string language_namespace;
 
@@ -261,14 +261,14 @@ public:
 
 class RuntimeValue : public Value, public GCObject {
 private:
-	cp_bool* b = nullptr;
-	cp_int* i = nullptr;
-	cp_float* f = nullptr;
-	cp_char* c = nullptr;
-	cp_string* s = nullptr;
-	cp_array* arr = nullptr;
-	cp_struct* str = nullptr;
-	cp_function* fun = nullptr;
+	flx_bool* b = nullptr;
+	flx_int* i = nullptr;
+	flx_float* f = nullptr;
+	flx_char* c = nullptr;
+	flx_string* s = nullptr;
+	flx_array* arr = nullptr;
+	flx_struct* str = nullptr;
+	flx_function* fun = nullptr;
 
 public:
 	RuntimeValue* value_ref = nullptr;
@@ -276,15 +276,15 @@ public:
 	RuntimeValue(Type type, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim,
 		const std::string& type_name, const std::string& type_name_space,
 		unsigned int row, unsigned int col);
-	RuntimeValue(cp_bool);
-	RuntimeValue(cp_int);
-	RuntimeValue(cp_float);
-	RuntimeValue(cp_char);
-	RuntimeValue(cp_string);
-	RuntimeValue(cp_array);
-	RuntimeValue(cp_array, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name = "", std::string type_name_space = "");
-	RuntimeValue(cp_struct, std::string type_name, std::string type_name_space);
-	RuntimeValue(cp_function);
+	RuntimeValue(flx_bool);
+	RuntimeValue(flx_int);
+	RuntimeValue(flx_float);
+	RuntimeValue(flx_char);
+	RuntimeValue(flx_string);
+	RuntimeValue(flx_array);
+	RuntimeValue(flx_array, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name = "", std::string type_name_space = "");
+	RuntimeValue(flx_struct, std::string type_name, std::string type_name_space);
+	RuntimeValue(flx_function);
 	RuntimeValue(Type type);
 	RuntimeValue(Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name = "", std::string type_name_space = "");
 	RuntimeValue(std::string type_name, std::string type_name_space);
@@ -293,37 +293,37 @@ public:
 	RuntimeValue();
 	~RuntimeValue();
 
-	void set(cp_bool);
-	void set(cp_int);
-	void set(cp_float);
-	void set(cp_char);
-	void set(cp_string);
-	void set(cp_array);
-	void set(cp_array, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name = "", std::string type_name_space = "");
-	void set(cp_struct, std::string type_name, std::string type_name_space);
-	void set(cp_function);
+	void set(flx_bool);
+	void set(flx_int);
+	void set(flx_float);
+	void set(flx_char);
+	void set(flx_string);
+	void set(flx_array);
+	void set(flx_array, Type array_type, std::vector<std::shared_ptr<ASTExprNode>> dim, std::string type_name = "", std::string type_name_space = "");
+	void set(flx_struct, std::string type_name, std::string type_name_space);
+	void set(flx_function);
 	void set_sub(std::string identifier, RuntimeValue* sub_value);
 	void set_sub(size_t index, RuntimeValue* sub_value);
 
-	cp_bool get_b() const;
-	cp_int get_i() const;
-	cp_float get_f() const;
-	cp_char get_c() const;
-	cp_string get_s() const;
-	cp_array get_arr() const;
-	cp_struct get_str() const;
-	cp_function get_fun() const;
+	flx_bool get_b() const;
+	flx_int get_i() const;
+	flx_float get_f() const;
+	flx_char get_c() const;
+	flx_string get_s() const;
+	flx_array get_arr() const;
+	flx_struct get_str() const;
+	flx_function get_fun() const;
 	RuntimeValue* get_sub(std::string identifier);
 	RuntimeValue* get_sub(size_t index);
 
-	cp_bool* get_raw_b();
-	cp_int* get_raw_i();
-	cp_float* get_raw_f();
-	cp_char* get_raw_c();
-	cp_string* get_raw_s();
-	cp_array* get_raw_arr();
-	cp_struct* get_raw_str();
-	cp_function* get_raw_fun();
+	flx_bool* get_raw_b();
+	flx_int* get_raw_i();
+	flx_float* get_raw_f();
+	flx_char* get_raw_c();
+	flx_string* get_raw_s();
+	flx_array* get_raw_arr();
+	flx_struct* get_raw_str();
+	flx_function* get_raw_fun();
 
 	void set_null();
 	void set_undefined();
@@ -335,7 +335,7 @@ public:
 
 	long double value_hash() const;
 
-	void copy_array(cp_array arr);
+	void copy_array(flx_array arr);
 	void copy_from(RuntimeValue* value);
 
 	virtual std::vector<GCObject*> get_references() override;
@@ -367,21 +367,21 @@ public:
 
 class RuntimeOperations {
 public:
-	static cp_bool equals_value(const RuntimeValue* lval, const RuntimeValue* rval, std::vector<uintptr_t> compared = std::vector<uintptr_t>());
-	static cp_bool equals_struct(const cp_struct& lstr, const cp_struct& rstr, std::vector<uintptr_t> compared);
-	static cp_bool equals_array(const cp_array& larr, const cp_array& rarr, std::vector<uintptr_t> compared);
+	static flx_bool equals_value(const RuntimeValue* lval, const RuntimeValue* rval, std::vector<uintptr_t> compared = std::vector<uintptr_t>());
+	static flx_bool equals_struct(const flx_struct& lstr, const flx_struct& rstr, std::vector<uintptr_t> compared);
+	static flx_bool equals_array(const flx_array& larr, const flx_array& rarr, std::vector<uintptr_t> compared);
 
 	static std::string parse_value_to_string(const RuntimeValue* value, std::vector<uintptr_t> printed = std::vector<uintptr_t>());
-	static std::string parse_array_to_string(const cp_array& arr_value, std::vector<uintptr_t> printed);
+	static std::string parse_array_to_string(const flx_array& arr_value, std::vector<uintptr_t> printed);
 	static std::string parse_struct_to_string(const RuntimeValue* value, std::vector<uintptr_t> printed);
 
-	static RuntimeValue* do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, dim_eval_func_t evaluate_access_vector_ptr, bool is_expr = false, cp_int str_pos = -1);
-	static cp_bool do_relational_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, dim_eval_func_t evaluate_access_vector_ptr);
-	static cp_int do_spaceship_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval);
-	static cp_int do_operation(cp_int lval, cp_int rval, const std::string& op);
-	static cp_float do_operation(cp_float lval, cp_float rval, const std::string& op);
-	static cp_string do_operation(cp_string lval, cp_string rval, const std::string& op);
-	static cp_array do_operation(cp_array lval, cp_array rval, const std::string& op);
+	static RuntimeValue* do_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, dim_eval_func_t evaluate_access_vector_ptr, bool is_expr = false, flx_int str_pos = -1);
+	static flx_bool do_relational_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval, dim_eval_func_t evaluate_access_vector_ptr);
+	static flx_int do_spaceship_operation(const std::string& op, RuntimeValue* lval, RuntimeValue* rval);
+	static flx_int do_operation(flx_int lval, flx_int rval, const std::string& op);
+	static flx_float do_operation(flx_float lval, flx_float rval, const std::string& op);
+	static flx_string do_operation(flx_string lval, flx_string rval, const std::string& op);
+	static flx_array do_operation(flx_array lval, flx_array rval, const std::string& op);
 
 	static void normalize_type(TypeDefinition* owner, RuntimeValue* value);
 	

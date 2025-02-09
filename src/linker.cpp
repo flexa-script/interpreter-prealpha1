@@ -26,7 +26,7 @@ void Linker::visit(std::shared_ptr<ASTUsingNode> astnode) {
 	std::string libname = utils::StringUtils::join(astnode->library, ".");
 
 	if (programs.find(libname) == programs.end()) {
-		std::string path = utils::StringUtils::replace(libname, ".", std::string{ std::filesystem::path::preferred_separator }) + ".bsl";
+		std::string path = utils::StringUtils::replace(libname, ".", std::string{ std::filesystem::path::preferred_separator }) + ".flx";
 		if (std::find(lib_names.begin(), lib_names.end(), path) == lib_names.end()) {
 			lib_names.push_back(path);
 		}
@@ -78,11 +78,11 @@ void Linker::visit(std::shared_ptr<ASTDoWhileNode>) {}
 void Linker::visit(std::shared_ptr<ASTBinaryExprNode>) {}
 void Linker::visit(std::shared_ptr<ASTUnaryExprNode>) {}
 void Linker::visit(std::shared_ptr<ASTTernaryNode>) {}
-void Linker::visit(std::shared_ptr<ASTLiteralNode<cp_bool>>) {}
-void Linker::visit(std::shared_ptr<ASTLiteralNode<cp_int>>) {}
-void Linker::visit(std::shared_ptr<ASTLiteralNode<cp_float>>) {}
-void Linker::visit(std::shared_ptr<ASTLiteralNode<cp_char>>) {}
-void Linker::visit(std::shared_ptr<ASTLiteralNode<cp_string>>) {}
+void Linker::visit(std::shared_ptr<ASTLiteralNode<flx_bool>>) {}
+void Linker::visit(std::shared_ptr<ASTLiteralNode<flx_int>>) {}
+void Linker::visit(std::shared_ptr<ASTLiteralNode<flx_float>>) {}
+void Linker::visit(std::shared_ptr<ASTLiteralNode<flx_char>>) {}
+void Linker::visit(std::shared_ptr<ASTLiteralNode<flx_string>>) {}
 void Linker::visit(std::shared_ptr<ASTIdentifierNode>) {}
 void Linker::visit(std::shared_ptr<ASTInNode>) {}
 
@@ -99,11 +99,11 @@ void Linker::visit(std::shared_ptr<ASTValueNode>) {}
 
 long long Linker::hash(std::shared_ptr<ASTExprNode>) { return 0; }
 long long Linker::hash(std::shared_ptr<ASTValueNode>) { return 0; }
-long long Linker::hash(std::shared_ptr<ASTLiteralNode<cp_bool>>) { return 0; }
-long long Linker::hash(std::shared_ptr<ASTLiteralNode<cp_int>>) { return 0; }
-long long Linker::hash(std::shared_ptr<ASTLiteralNode<cp_float>>) { return 0; }
-long long Linker::hash(std::shared_ptr<ASTLiteralNode<cp_char>>) { return 0; }
-long long Linker::hash(std::shared_ptr<ASTLiteralNode<cp_string>>) { return 0; }
+long long Linker::hash(std::shared_ptr<ASTLiteralNode<flx_bool>>) { return 0; }
+long long Linker::hash(std::shared_ptr<ASTLiteralNode<flx_int>>) { return 0; }
+long long Linker::hash(std::shared_ptr<ASTLiteralNode<flx_float>>) { return 0; }
+long long Linker::hash(std::shared_ptr<ASTLiteralNode<flx_char>>) { return 0; }
+long long Linker::hash(std::shared_ptr<ASTLiteralNode<flx_string>>) { return 0; }
 long long Linker::hash(std::shared_ptr<ASTIdentifierNode>) { return 0; }
 
 void Linker::set_curr_pos(unsigned int, unsigned int) {}

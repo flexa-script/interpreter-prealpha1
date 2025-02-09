@@ -94,7 +94,7 @@ BSLCliArgs parse_args(int argc, const char* argv[]) {
 		break;
 	}
 
-	// parse cp arguments
+	// parse flx arguments
 	while (++i < argc) {
 		args.cpargs.push_back(argv[i]);
 	}

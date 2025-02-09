@@ -104,11 +104,11 @@ namespace visitor {
 		virtual void visit(std::shared_ptr<ASTDoWhileNode>) = 0;
 		virtual void visit(std::shared_ptr<ASTFunctionDefinitionNode>) = 0;
 		virtual void visit(std::shared_ptr<ASTStructDefinitionNode>) = 0;
-		virtual void visit(std::shared_ptr<ASTLiteralNode<cp_bool>>) = 0;
-		virtual void visit(std::shared_ptr<ASTLiteralNode<cp_int>>) = 0;
-		virtual void visit(std::shared_ptr<ASTLiteralNode<cp_float>>) = 0;
-		virtual void visit(std::shared_ptr<ASTLiteralNode<cp_char>>) = 0;
-		virtual void visit(std::shared_ptr<ASTLiteralNode<cp_string>>) = 0;
+		virtual void visit(std::shared_ptr<ASTLiteralNode<flx_bool>>) = 0;
+		virtual void visit(std::shared_ptr<ASTLiteralNode<flx_int>>) = 0;
+		virtual void visit(std::shared_ptr<ASTLiteralNode<flx_float>>) = 0;
+		virtual void visit(std::shared_ptr<ASTLiteralNode<flx_char>>) = 0;
+		virtual void visit(std::shared_ptr<ASTLiteralNode<flx_string>>) = 0;
 		virtual void visit(std::shared_ptr<ASTFunctionExpression>) = 0;
 		virtual void visit(std::shared_ptr<ASTArrayConstructorNode>) = 0;
 		virtual void visit(std::shared_ptr<ASTStructConstructorNode>) = 0;
@@ -128,11 +128,11 @@ namespace visitor {
 		virtual long long hash(std::shared_ptr<ASTExprNode>) = 0;
 		virtual long long hash(std::shared_ptr<ASTValueNode>) = 0;
 		virtual long long hash(std::shared_ptr<ASTIdentifierNode>) = 0;
-		virtual long long hash(std::shared_ptr<ASTLiteralNode<cp_bool>>) = 0;
-		virtual long long hash(std::shared_ptr<ASTLiteralNode<cp_int>>) = 0;
-		virtual long long hash(std::shared_ptr<ASTLiteralNode<cp_float>>) = 0;
-		virtual long long hash(std::shared_ptr<ASTLiteralNode<cp_char>>) = 0;
-		virtual long long hash(std::shared_ptr<ASTLiteralNode<cp_string>>) = 0;
+		virtual long long hash(std::shared_ptr<ASTLiteralNode<flx_bool>>) = 0;
+		virtual long long hash(std::shared_ptr<ASTLiteralNode<flx_int>>) = 0;
+		virtual long long hash(std::shared_ptr<ASTLiteralNode<flx_float>>) = 0;
+		virtual long long hash(std::shared_ptr<ASTLiteralNode<flx_char>>) = 0;
+		virtual long long hash(std::shared_ptr<ASTLiteralNode<flx_string>>) = 0;
 	};
 }
 

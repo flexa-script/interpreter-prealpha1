@@ -38,7 +38,7 @@ void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 		// initialize file struct values
 		RuntimeValue* cpfile = visitor->alocate_value(new RuntimeValue(parser::Type::T_STRUCT));
 
-		cp_struct str = cp_struct();
+		flx_struct str = flx_struct();
 		str["path"] = visitor->alocate_value(new RuntimeValue(vals[0]));
 		str["mode"] = visitor->alocate_value(new RuntimeValue(vals[1]));
 
@@ -47,8 +47,8 @@ void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 		std::fstream* fs = nullptr;
 		try {
 			fs = new std::fstream(vals[0]->get_s(), parmode);
-			str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(cp_int(fs)));
-			cpfile->set(str, "File", "cp");
+			str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(flx_int(fs)));
+			cpfile->set(str, "File", "flx");
 			visitor->current_expression_value = cpfile;
 		}
 		catch (std::exception ex) {
@@ -115,7 +115,7 @@ void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 			// buffer to store readed data
 			char* buffer = new char[buffer_size];
 
-			cp_array arr = cp_array(buffer_size);
+			flx_array arr = flx_array(buffer_size);
 
 			// read all bytes
 			if (fs->read(buffer, buffer_size)) {
@@ -178,7 +178,7 @@ void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 
 		if (!parser::is_void(val->type)) {
 			auto rval = visitor->alocate_value(new RuntimeValue(parser::Type::T_BOOL));
-			rval->set(cp_bool(((std::fstream*)val->get_str()[INSTANCE_ID_NAME]->get_i())->is_open()));
+			rval->set(flx_bool(((std::fstream*)val->get_str()[INSTANCE_ID_NAME]->get_i())->is_open()));
 			visitor->current_expression_value = rval;
 		}
 		};
