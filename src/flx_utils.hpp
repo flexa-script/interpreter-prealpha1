@@ -8,7 +8,7 @@
 #include <iomanip>
 #include <vector>
 
-struct BSLSource {
+struct FlexaSource {
 	std::string name;
 	std::string source;
 };
@@ -19,7 +19,7 @@ extern std::string get_lib_name(const std::string& libpath);
 
 extern std::string get_prog_name(const std::string& progpath);
 
-struct BSLCliArgs {
+struct FlexaCliArgs {
 	bool debug = false;
 	std::string engine;
 	std::string workspace;
@@ -30,6 +30,6 @@ struct BSLCliArgs {
 
 extern void throw_if_not_parameter(int argc, size_t i, std::string parameter);
 
-extern BSLCliArgs parse_args(int argc, const char* argv[]);
+extern FlexaCliArgs parse_args(int argc, const char* argv[]);
 
 #endif // !BSLUTILS_HPP

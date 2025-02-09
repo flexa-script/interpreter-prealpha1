@@ -18,7 +18,7 @@
 #define clear_screen() system("cls")
 #endif // __unix__
 
-class CPRepl {
+class FlexaRepl {
 private:
 	static const std::string NAME;
 	static const std::string VER;

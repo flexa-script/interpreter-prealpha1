@@ -1,5 +1,5 @@
-﻿#include "bsl_repl.hpp"
-#include "bsl_interpreter.hpp"
+﻿#include "flx_repl.hpp"
+#include "flx_interpreter.hpp"
 #include "watch.hpp"
 
 #include <Windows.h>
@@ -8,18 +8,18 @@ int main(int argc, const char* argv[]) {
 	SetConsoleOutputCP(CP_UTF8);
 
 	if (argc == 1) {
-		return CPRepl::execute();
+		return FlexaRepl::execute();
 	}
 
 	auto args = parse_args(argc, argv);
 
 	if (args.debug) {
-#ifndef __CP_DEBUG__
-#define __CP_DEBUG__
-#endif // !__CP_DEBUG__
+#ifndef __FLX_DEBUG__
+#define __FLX_DEBUG__
+#endif // !__FLX_DEBUG__
 	}
 
-	auto interpreter = CPInterpreter(args);
+	auto interpreter = FlexaInterpreter(args);
 
 	auto sw = utils::ChronoStopwatch();
 	sw.start();

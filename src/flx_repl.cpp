@@ -1,32 +1,32 @@
-#include "bsl_repl.hpp"
-#include "bsl_utils.hpp"
+#include "flx_repl.hpp"
+#include "flx_utils.hpp"
 #include "utils.hpp"
 #include "types.hpp"
 
-const std::string CPRepl::NAME = "BSL";
-const std::string CPRepl::VER = "v0.0.1";
-const std::string CPRepl::YEAR = "2025";
+const std::string FlexaRepl::NAME = "Flexa";
+const std::string FlexaRepl::VER = "v0.0.1";
+const std::string FlexaRepl::YEAR = "2025";
 
-void CPRepl::remove_header(std::string& err) {
+void FlexaRepl::remove_header(std::string& err) {
 	size_t pos = err.rfind(':');
 	if (pos != std::string::npos) {
 		err = err.substr(pos + 1);
 	}
 }
 
-std::string CPRepl::read(const std::string& msg) {
+std::string FlexaRepl::read(const std::string& msg) {
 	std::string input_line;
 	std::cout << msg;
 	std::getline(std::cin, input_line);
 	return input_line;
 }
 
-void CPRepl::count_scopes(const std::string& input_line, unsigned int& open_scopes) {
+void FlexaRepl::count_scopes(const std::string& input_line, unsigned int& open_scopes) {
 	open_scopes += std::count(input_line.begin(), input_line.end(), '{');
 	open_scopes -= std::count(input_line.begin(), input_line.end(), '}');
 }
 
-int CPRepl::execute() {
+int FlexaRepl::execute() {
 	std::cout << NAME << " " << VER << " [" << YEAR << "]\n";
 	std::cout << "Type \"#help\" for more information.\n";
 
@@ -48,7 +48,7 @@ int CPRepl::execute() {
 		}
 		else if (input_line == "#help") {
 			std::cout << "\n" << "Welcome to " << NAME << " " << VER << "! \n";
-			std::cout << "To use this interactive REPL, just type in regular CP commands and hit\n";
+			std::cout << "To use this interactive REPL, just type in regular Flexa commands and hit\n";
 			std::cout << "enter. You can also make use of the following commands: \n\n";
 
 			std::cout << " #load \"file path\"  Loads variable and function declarations from a specified\n";
@@ -57,7 +57,7 @@ int CPRepl::execute() {
 			std::cout << std::setw(20);
 			std::cout << "" << ">>> #load .\\main.flx\n\n";
 
-			std::cout << " #quit              Exits the BSL REPL.\n";
+			std::cout << " #quit              Exits the Flexa REPL.\n";
 			std::cout << std::setw(20);
 			std::cout << "" << "functions and variables in the global scope.\n\n";
 

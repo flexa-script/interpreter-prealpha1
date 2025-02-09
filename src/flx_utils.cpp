@@ -1,7 +1,7 @@
 #include <filesystem>
 
 #include "utils.hpp"
-#include "bsl_utils.hpp"
+#include "flx_utils.hpp"
 
 std::string load_source(const std::string& path) {
 	std::string source;
@@ -47,8 +47,8 @@ void throw_if_not_parameter(int argc, size_t i, std::string parameter) {
 	}
 }
 
-BSLCliArgs parse_args(int argc, const char* argv[]) {
-	BSLCliArgs args;
+FlexaCliArgs parse_args(int argc, const char* argv[]) {
+	FlexaCliArgs args;
 	args.engine = "ast";
 
 	size_t i = 0;

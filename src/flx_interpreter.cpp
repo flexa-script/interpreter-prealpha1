@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <filesystem>
 
-#include "bsl_interpreter.hpp"
+#include "flx_interpreter.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "compiler.hpp"
@@ -13,12 +13,12 @@
 #include "interpreter.hpp"
 #include "vm.hpp"
 
-CPInterpreter::CPInterpreter(const BSLCliArgs& args)
+FlexaInterpreter::FlexaInterpreter(const FlexaCliArgs& args)
 	: project_root(utils::PathUtils::normalize_path_sep(args.workspace)),
 	cp_root(utils::PathUtils::normalize_path_sep(utils::PathUtils::get_current_path() + "libs")),
 	args(args) {}
 
-int CPInterpreter::execute() {
+int FlexaInterpreter::execute() {
 	if (!args.main.empty() || args.sources.size() > 0) {
 		return interpreter();
 	}
@@ -26,8 +26,8 @@ int CPInterpreter::execute() {
 	return 0;
 }
 
-BSLSource CPInterpreter::load_program(const std::string& source) {
-	BSLSource source_program;
+FlexaSource FlexaInterpreter::load_program(const std::string& source) {
+	FlexaSource source_program;
 
 	auto current_file_path = std::string{ std::filesystem::path::preferred_separator } + utils::PathUtils::normalize_path_sep(source);
 	std::string current_full_path = "";
@@ -42,13 +42,13 @@ BSLSource CPInterpreter::load_program(const std::string& source) {
 		throw std::runtime_error("file not found: '" + current_file_path + "'");
 	}
 
-	source_program = BSLSource{ get_lib_name(source), load_source(current_full_path) };
+	source_program = FlexaSource{ get_lib_name(source), load_source(current_full_path) };
 
 	return source_program;
 }
 
-std::vector<BSLSource> CPInterpreter::load_programs(const std::vector<std::string>& sources) {
-	std::vector<BSLSource> source_programs;
+std::vector<FlexaSource> FlexaInterpreter::load_programs(const std::vector<std::string>& sources) {
+	std::vector<FlexaSource> source_programs;
 
 	for (const auto& source : sources) {
 		source_programs.push_back(load_program(source));
@@ -57,7 +57,7 @@ std::vector<BSLSource> CPInterpreter::load_programs(const std::vector<std::strin
 	return source_programs;
 }
 
-void CPInterpreter::parse_programs(const std::vector<BSLSource>& source_programs, std::shared_ptr<ASTProgramNode>* main_program,
+void FlexaInterpreter::parse_programs(const std::vector<FlexaSource>& source_programs, std::shared_ptr<ASTProgramNode>* main_program,
 	std::map<std::string, std::shared_ptr<ASTProgramNode>>* programs) {
 
 	for (const auto& source : source_programs) {
@@ -79,9 +79,9 @@ void CPInterpreter::parse_programs(const std::vector<BSLSource>& source_programs
 	}
 }
 
-int CPInterpreter::interpreter() {
-	BSLSource main_program;
-	std::vector<BSLSource> source_programs;
+int FlexaInterpreter::interpreter() {
+	FlexaSource main_program;
+	std::vector<FlexaSource> source_programs;
 	try {
 		main_program = load_program(args.main);
 		source_programs = load_programs(args.sources);

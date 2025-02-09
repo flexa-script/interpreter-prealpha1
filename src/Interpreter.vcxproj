@@ -74,9 +74,9 @@
     <ClInclude Include="gc.hpp" />
     <ClInclude Include="gcobject.hpp" />
     <ClInclude Include="md_graphics.hpp" />
-    <ClInclude Include="bsl_interpreter.hpp" />
-    <ClInclude Include="bsl_repl.hpp" />
-    <ClInclude Include="bsl_utils.hpp" />
+    <ClInclude Include="flx_interpreter.hpp" />
+    <ClInclude Include="flx_repl.hpp" />
+    <ClInclude Include="flx_utils.hpp" />
     <ClInclude Include="md_http.hpp" />
     <ClInclude Include="md_input.hpp" />
     <ClInclude Include="interpreter.hpp" />
@@ -111,9 +111,9 @@
     <ClCompile Include="gc.cpp" />
     <ClCompile Include="gcobject.cpp" />
     <ClCompile Include="md_graphics.cpp" />
-    <ClCompile Include="bsl_interpreter.cpp" />
-    <ClCompile Include="bsl_repl.cpp" />
-    <ClCompile Include="bsl_utils.cpp" />
+    <ClCompile Include="flx_interpreter.cpp" />
+    <ClCompile Include="flx_repl.cpp" />
+    <ClCompile Include="flx_utils.cpp" />
     <ClCompile Include="md_http.cpp" />
     <ClCompile Include="md_input.cpp" />
     <ClCompile Include="interpreter.cpp" />
