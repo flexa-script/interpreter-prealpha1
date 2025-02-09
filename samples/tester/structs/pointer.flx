@@ -1,11 +1,4 @@
-// struct-pointer.cp
-
-struct Element {
-  var has_value : bool;
-  var value : any;
-};
-
-def element_create(value : any) : Element {
+fun element_create_p(value : any) : Element {
   //var newElement : Element = Element { };
   //newElement.has_value = true; // deveria gerar erro na analise semantica pois newElement é nulo
   //newElement.value = value; // preciso saber se a variável é parametro ou do escopo
@@ -20,7 +13,7 @@ def element_create(value : any) : Element {
   return newElement;
 }
 
-def element_print(element : Element) {
+fun element_print_p(element : Element) {
   print("Element {\n");
   print("  has_value: " + string(element.has_value));
   print(",\n  value: " + string(element.value));
@@ -30,16 +23,16 @@ def element_print(element : Element) {
 var element1 : Element;
 var element2 : Element;
 
-element1 = element_create(10);
+element1 = element_create_p(10);
 
 element2 = element1;
 
 element2.value = 20;
 
-element_print(element1);
-element_print(element2);
+element_print_p(element1);
+element_print_p(element2);
 
 element1.value = 99;
 
-element_print(element1);
-element_print(element2);
+element_print_p(element1);
+element_print_p(element2);

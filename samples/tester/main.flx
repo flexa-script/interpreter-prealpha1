@@ -11,3 +11,5 @@ using test_suite;
 
 timer_stop(gsw);
 print("full test suite elapsed time: ", elapsed_time(gsw), " ms");
+
+println('\n');

@@ -1,23 +1,18 @@
-struct Foo {
-  var val1: int;
-  var val2: string;
-};
-
-def funalt(p: Foo) {
-    p.val1 = 99;
+fun funalt(p: Foo) {
+    p.x = 99;
 }
 
-def funtest(p: Foo) {
+fun funtest(p: Foo) {
     p = null;
 }
 
-def funtest(p: int, p1: int, p2: int) {
+fun funtest(p: int, p1: int, p2: int) {
     p = 1000;
     p1 = 1000;
     p2 = 1000;
 }
 
-var v: Foo = Foo{val1=10, val2="aaa"};
+var v: Foo = Foo{x=10, y=20};
 
 print(string(v)+"\n");
 

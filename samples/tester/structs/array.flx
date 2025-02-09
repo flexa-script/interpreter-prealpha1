@@ -1,11 +1,9 @@
-// struct-array.cp
-
-struct Element {
+struct ElementArray {
   var arr[3] : int;
   var value : any;
 };
 
-var element : Element = Element {
+var element : ElementArray = ElementArray {
   arr = null,
   //arr = { 1, 2, 3 },
   value = 10

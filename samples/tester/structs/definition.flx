@@ -19,3 +19,8 @@ struct Bar {
     var str2[10][10]: Foo;
     var str3[10][10][10]: Foo;
 };
+
+struct Element {
+  var has_value : bool;
+  var value : any;
+};

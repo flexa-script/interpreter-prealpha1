@@ -35,6 +35,8 @@ fun start_test(title: string): void {
 
 fun end_test(): void {
     timer_stop(usw);
+    set_console_color(CL_BRIGHT_WHITE, CL_BLACK);
     print_elapsed_time(usw);
+    set_console_color(CL_BLACK, CL_WHITE);
     println();
 }

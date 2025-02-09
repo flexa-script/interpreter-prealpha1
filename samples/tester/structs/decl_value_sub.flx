@@ -1,18 +1,16 @@
-// struct-decl-value-sub.cp
-
-struct Element {
+struct ElementX {
   var has_value : bool;
   var value : any;
-  var next : Element;
+  var next : ElementX;
 };
 
 struct List{
-  var root : Element;
+  var root : ElementX;
 };
 
 var list : List;
 
-list.root = Element {
+list.root = ElementX {
   has_value = true,
   value = 10
 };
