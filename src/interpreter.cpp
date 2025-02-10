@@ -1071,7 +1071,7 @@ void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 	++current_expression_array_dim_max;
 	// if isn't reached max yet, we adds more one dim
 	if (!is_max) {
-		current_expression_array_dim.push_back(std::make_shared<ASTLiteralNode<flx_int>>(0, astnode->row, astnode->col));
+		current_expression_array_dim.push_back(std::make_shared<ASTLiteralNode<flx_int>>(arr.size(), astnode->row, astnode->col));
 	}
 
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
@@ -1099,11 +1099,6 @@ void Interpreter::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 		}
 
 		arr[i] = arr_value;
-	}
-
-	// if it isn't reached max yet, we add size
-	if (!is_max) {
-		std::dynamic_pointer_cast<ASTLiteralNode<flx_int>>(current_expression_array_dim.back())->val = arr.size();
 	}
 
 	// as size by dimension is fixed, it's not necessary to check after max (max nested deep)

@@ -146,7 +146,8 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTDeclarationNode> astnode) {
 	}
 
 	if (is_struct(astnode->type)) {
-		if (!get_inner_most_struct_definition_scope(prg, name_space, astnode->type_name)) {
+		auto type_name_space = astnode->type_name_space.empty() ? name_space : astnode->type_name_space;
+		if (!get_inner_most_struct_definition_scope(prg, type_name_space, astnode->type_name)) {
 			throw std::runtime_error("struct '" + astnode->type_name + "' not found");
 		}
 	}
@@ -287,21 +288,20 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTAssignmentNode> astnode) {
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTReturnNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
+	auto return_expr = SemanticValue();
 
 	if (astnode->expr) {
 		astnode->expr->accept(this);
-		if (is_undefined(current_expression.type)) {
+		return_expr = current_expression;
+		if (is_undefined(return_expr.type)) {
 			throw std::runtime_error("undefined expression");
 		}
-	}
-	else {
-		current_expression = SemanticValue();
 	}
 
 	if (!current_function.empty()) {
 		auto& currfun = current_function.top();
-		if (!TypeDefinition::is_any_or_match_type(currfun, current_expression, evaluate_access_vector_ptr)) {
-			ExceptionHandler::throw_return_type_err(currfun.identifier, currfun, current_expression, evaluate_access_vector_ptr);
+		if (!TypeDefinition::is_any_or_match_type(currfun, return_expr, evaluate_access_vector_ptr)) {
+			ExceptionHandler::throw_return_type_err(currfun.identifier, currfun, return_expr, evaluate_access_vector_ptr);
 		}
 	}
 }
@@ -890,7 +890,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 
 	++current_expression_array_dim_max;
 	if (!is_max) {
-		current_expression_array_dim.push_back(std::make_shared<ASTLiteralNode<flx_int>>(0, astnode->row, astnode->col));
+		current_expression_array_dim.push_back(std::make_shared<ASTLiteralNode<flx_int>>(-1, astnode->row, astnode->col));
 	}
 
 	for (size_t i = 0; i < astnode->values.size(); ++i) {
@@ -917,8 +917,9 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTArrayConstructorNode> astnode) {
 		++arr_size;
 	}
 
-	if (!is_max) {
-		std::dynamic_pointer_cast<ASTLiteralNode<flx_int>>(current_expression_array_dim.back())->val = arr_size;
+	auto current_sim_index = current_expression_array_dim_max - 1;
+	if (std::dynamic_pointer_cast<ASTLiteralNode<flx_int>>(current_expression_array_dim[current_sim_index])->val == -1) {
+		std::dynamic_pointer_cast<ASTLiteralNode<flx_int>>(current_expression_array_dim[current_sim_index])->val = arr_size;
 	}
 
 	is_max = true;
@@ -1425,6 +1426,7 @@ void SemanticAnalyser::equals_value(const SemanticValue& lval, const SemanticVal
 }
 
 std::shared_ptr<SemanticValue> SemanticAnalyser::access_value(std::shared_ptr<SemanticValue> value, const std::vector<Identifier>& identifier_vector, size_t i) {
+	bool pop = push_namespace(value->type_name_space);
 	std::shared_ptr<SemanticValue> next_value = value;
 	const auto& prg = current_program.top();
 	const auto& name_space = get_namespace();
@@ -1454,7 +1456,7 @@ std::shared_ptr<SemanticValue> SemanticAnalyser::access_value(std::shared_ptr<Se
 		else {
 			std::shared_ptr<Scope> curr_scope = get_inner_most_struct_definition_scope(prg, name_space, next_value->type_name);
 			if (!curr_scope) {
-				throw std::runtime_error("cannot find struct");
+				throw std::runtime_error("cannot find '" + ExceptionHandler::buid_struct_type_name(name_space, next_value->type_name) + "' struct");
 			}
 			auto type_struct = curr_scope->find_declared_structure_definition(next_value->type_name);
 
@@ -1470,13 +1472,15 @@ std::shared_ptr<SemanticValue> SemanticAnalyser::access_value(std::shared_ptr<Se
 		}
 	}
 
+	pop_namespace(pop);
+
 	return next_value;
 }
 
 void SemanticAnalyser::check_is_struct_exists(parser::Type type, const std::string& name_space, const std::string& type_name) {
 	if (is_struct(type)) {
 		if (!get_inner_most_struct_definition_scope(current_program.top(), name_space, type_name)) {
-			throw std::runtime_error("struct '" + type_name + "' was not defined");
+			throw std::runtime_error("struct '" + ExceptionHandler::buid_struct_type_name(name_space, type_name) + "' was not defined");
 		}
 	}
 }

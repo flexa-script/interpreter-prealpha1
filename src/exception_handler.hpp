@@ -20,6 +20,7 @@ public:
 
 	static std::string buid_signature(const std::string& identifier, const std::vector<TypeDefinition*> signature, dim_eval_func_t evaluate_access_vector);
 	static std::string buid_type_str(const TypeDefinition& type, dim_eval_func_t evaluate_access_vector);
+	static std::string buid_struct_type_name(const std::string& type_name_space, const std::string& type_name);
 };
 
 #endif // !EXCEPTION_HANDLER_HPP

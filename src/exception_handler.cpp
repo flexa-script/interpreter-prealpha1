@@ -84,3 +84,7 @@ std::string ExceptionHandler::buid_type_str(const TypeDefinition& type_def, dim_
 
 	return ss;
 }
+
+std::string ExceptionHandler::buid_struct_type_name(const std::string& type_name_space, const std::string& type_name) {
+	return (type_name_space == default_namespace ? "" : type_name_space + "::") + type_name;
+}
