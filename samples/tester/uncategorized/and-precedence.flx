@@ -1,4 +1,4 @@
-def main() {
+fun main() {
     if (6 % 3 == 0 or 10 % 5 == 0) {
         print("Mod ok\n");
     }

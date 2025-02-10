@@ -1,6 +1,6 @@
-using cp.core.HTTP;
+using flx.core.HTTP;
 
-as namespace cp;
+include namespace flx;
 
 var config = HttpConfig {
 	hostname="example.com",

@@ -1,8 +1,8 @@
-using cp.core.console;
-using cp.std.random;
-using cp.core.datetime;
+using flx.core.console;
+using flx.std.random;
+using flx.core.datetime;
 
-include namespace cp;
+include namespace flx;
 
 const PRINT_HORIZONTAL_LINE = "+---------------------------------------+";
 const PRINT_BLANK_LINE = "                                       ";
@@ -223,7 +223,7 @@ fun counts_zero(board[4][4]: int): int {
 }
 
 fun spawn_random(n: int, board[4][4]: int) {
-    var spawn: int = 1 + (cp::randi() % n);
+    var spawn: int = 1 + (flx::randi() % n);
     var p: int = 0;
     var spawn2: bool = true;
     for (var i: int = 0; i < 4; i++) {

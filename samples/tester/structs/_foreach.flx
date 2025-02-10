@@ -1,7 +1,7 @@
-using bsl.std.structs;
+using flx.std.structs;
 using structs.definition;
 
-include namespace bsl;
+include namespace flx;
 
 var f = Foo{x=1, y=2};
 // var f = Foo{name="Carlos", age = 29, bar = null};

@@ -1,6 +1,6 @@
-using cp.core.datetime;
+using flx.core.datetime;
 
-as namespace cp;
+include namespace flx;
 
 // defaults UTC
 var dt = create_date_time();

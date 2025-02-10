@@ -1,7 +1,7 @@
-using bsl.core.console;
-using bsl.core.datetime;
+using flx.core.console;
+using flx.core.datetime;
 
-include namespace bsl;
+include namespace flx;
 
 struct StopWatch {
     var start_time: int;

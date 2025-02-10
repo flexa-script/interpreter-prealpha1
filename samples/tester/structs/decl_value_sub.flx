@@ -4,11 +4,11 @@ struct ElementX {
   var next : ElementX;
 };
 
-struct List{
+struct MyList{
   var root : ElementX;
 };
 
-var list : List;
+var list : MyList;
 
 list.root = ElementX {
   has_value = true,

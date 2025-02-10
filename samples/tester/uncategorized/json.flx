@@ -1,4 +1,4 @@
-// using cp.core.pair;
+// using flx.std.structs;
 
 struct Bar {
 	var x: int;
@@ -14,7 +14,7 @@ struct Foo {
 
 var f = Foo{name="Carlos",age=29,bar=Bar{x=10,j=false}};
 
-def substr(str, s, n = null){
+fun substr(str, s, n = null){
 	// print("called " + this, '\n');
 	var ss = "";
 	if(n == null) {
@@ -26,7 +26,7 @@ def substr(str, s, n = null){
 	return ss;
 }
 
-def to_json(f){
+fun to_json(f){
 	// print("called " + this, '\n');
 	var json = "{";
 	foreach (var it in f) {

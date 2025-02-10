@@ -142,11 +142,11 @@ aaa(fun () {
 //     var next: Node;
 // };
 
-// struct List {
+// struct MyList {
 //     var first: Node;
 // };
 
-// var list: List = List{first=Node{value=1, next=Node{value=2, next=null}}};
+// var list: MyList = MyList{first=Node{value=1, next=Node{value=2, next=null}}};
 
 // var node = list.first;
 // while (node != null) {
@@ -199,7 +199,7 @@ aaa(fun () {
 // 	print(4);
 // 	break;
 // default:
-// 	print("def");
+// 	print("fun");
 // }
 
 

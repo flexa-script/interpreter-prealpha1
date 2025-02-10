@@ -1,6 +1,6 @@
-using cp.core.console;
+using flx.core.console;
 
-as namespace cp;
+include namespace flx;
 
 show_console(false);
 

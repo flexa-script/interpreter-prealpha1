@@ -1,6 +1,6 @@
-using cp.core.input;
+using flx.core.input;
 
-as namespace cp;
+include namespace flx;
 
 fun test_key_press() {
     println("Press 'A' to continue...");

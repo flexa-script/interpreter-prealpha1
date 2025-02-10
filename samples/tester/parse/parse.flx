@@ -1,4 +1,4 @@
-// parser.cp
+// parser
 
 var boolVal = bool("true");
 var intVal = int("10");

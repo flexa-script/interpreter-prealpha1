@@ -1,6 +1,6 @@
-// func-param.cp
+// func-param
 
-def pow(base : float, exponent: int) : float {
+fun pow(base : float, exponent: int) : float {
   var newValue = base;
   var i = 0;
   while (i < exponent) {
@@ -20,7 +20,7 @@ print("\n\n");
 print(num);
 print("\n\n");
 
-def tryAlterVariableInsideFunction(num : int, test : float) {
+fun tryAlterVariableInsideFunction(num : int, test : float) {
   num = 99;
   test = 99;
 }

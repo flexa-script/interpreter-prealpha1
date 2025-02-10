@@ -1,6 +1,6 @@
 // super
 
-def array_decl() {
+fun array_decl() {
   var test5[6];
   var test6[3] : char;
 
