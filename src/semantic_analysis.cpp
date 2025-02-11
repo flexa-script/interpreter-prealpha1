@@ -356,7 +356,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode)
 
 	for (const auto& scope : scopes[name_space]) {
 		if (scope->already_declared_function(astnode->identifier, &astnode->parameters, evaluate_access_vector_ptr)) {
-			const auto& decl_function = scopes[name_space].back()->find_declared_function(astnode->identifier, &astnode->parameters, evaluate_access_vector_ptr);
+			const auto& decl_function = scope->find_declared_function(astnode->identifier, &astnode->parameters, evaluate_access_vector_ptr);
 
 			if (!decl_function.block && astnode->block) {
 				break;

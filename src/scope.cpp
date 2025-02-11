@@ -14,11 +14,11 @@ Scope::Scope(std::shared_ptr<ASTProgramNode> owner) : owner(owner) {}
 Scope::~Scope() = default;
 
 StructureDefinition Scope::find_declared_structure_definition(const std::string& identifier) {
-	return structure_symbol_table[identifier];
+	return structure_symbol_table.at(identifier);
 }
 
 std::shared_ptr<Variable> Scope::find_declared_variable(const std::string& identifier) {
-	auto& var = variable_symbol_table[identifier];
+	auto& var = variable_symbol_table.at(identifier);
 	var->reset_ref();
 	return var;
 }
@@ -28,7 +28,7 @@ FunctionDefinition& Scope::find_declared_function(const std::string& identifier,
 	auto funcs = function_symbol_table.equal_range(identifier);
 
 	if (std::distance(funcs.first, funcs.second) == 0) {
-		throw std::runtime_error("something went wrong when determining the type of '" + identifier + "'");
+		throw std::runtime_error("definition of '" + identifier + "' function signature not found");
 	}
 
 	for (auto& it = funcs.first; it != funcs.second; ++it) {
@@ -125,7 +125,7 @@ FunctionDefinition& Scope::find_declared_function(const std::string& identifier,
 		}
 	}
 
-	throw std::runtime_error("definition of '" + identifier + "' function not found");
+	throw std::runtime_error("something went wrong when determining the type of '" + identifier + "' function");
 }
 
 std::pair<std::unordered_multimap<std::string, FunctionDefinition>::iterator,
@@ -133,7 +133,7 @@ std::pair<std::unordered_multimap<std::string, FunctionDefinition>::iterator,
 	Scope::find_declared_functions(const std::string& identifier) {
 	auto funcs = function_symbol_table.equal_range(identifier);
 	if (std::distance(funcs.first, funcs.second) == 0) {
-		throw std::runtime_error("something went wrong searching '" + identifier + "'");
+		throw std::runtime_error("definition of '" + identifier + "' function signature not found");
 	}
 	return funcs;
 }
