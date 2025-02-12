@@ -1042,6 +1042,11 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTIdentifierNode> astnode) {
 	}
 
 	const auto& declared_variable = std::dynamic_pointer_cast<SemanticVariable>(curr_scope->find_declared_variable(astnode->identifier));
+	
+	if (is_undefined(declared_variable->get_value()->type)) {
+		throw std::runtime_error("variable '" + astnode->identifier + "' is undefined");
+	}
+
 	auto variable_expr = access_value(declared_variable->value, astnode->identifier_vector);
 	variable_expr->reset_ref();
 
