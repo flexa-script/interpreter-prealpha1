@@ -747,6 +747,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 		};
 		auto exnode = std::make_shared<ASTStructConstructorNode>("Exception", "flx", values, astnode->row, astnode->col);
 		idnode->expr = exnode;
+		idnode->accept(this);
 		idnode->expr = nullptr;
 	}
 	else if (!std::dynamic_pointer_cast<ASTReticencesNode>(astnode->decl)) {
