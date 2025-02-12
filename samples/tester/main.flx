@@ -1,15 +1,20 @@
-using utils;
-using flx.std.testing;
+// using utils;
+// using flx.std.testing;
 
-var gsw: StopWatch = StopWatch{};
+// // include namespace flx;
 
-timer_start(gsw);
+// var gsw: StopWatch = StopWatch{};
 
-using test_suite;
+// timer_start(gsw);
 
-//execute_tests();
+// using test_suite;
 
-timer_stop(gsw);
-print("full test suite elapsed time: ", elapsed_time(gsw), " ms");
+// //execute_tests();
 
-println('\n');
+// timer_stop(gsw);
+// print("full test suite elapsed time: ", gsw.elapsed_time, " ms");
+
+// println('\n');
+
+
+using structs.decl_null;

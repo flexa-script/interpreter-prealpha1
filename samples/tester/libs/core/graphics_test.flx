@@ -4,8 +4,8 @@ using flx.core.graphics;
 
 var window1: flx::Window = flx::create_window("flx Graphics 1", 800, 450);
 var window2: flx::Window = flx::create_window("flx Graphics 2", 400, 225);
-var img1: flx::Image = flx::load_image("C:\\Users\\Carlos\\repos\\flx-lang\\interpreter\\samples\\flx-example\\file\\logo.bmp");
-var img2: flx::Image = flx::load_image("C:\\Users\\Carlos\\repos\\flx-lang\\interpreter\\samples\\flx-example\\file\\logo-old.bmp");
+var img1: flx::Image = flx::load_image("logo.bmp");
+var img2: flx::Image = flx::load_image("logo-old.bmp");
 var font: flx::Font = flx::create_font();
 var font2: flx::Font = flx::create_font(30, "Arial", 0, false, false, true);
 

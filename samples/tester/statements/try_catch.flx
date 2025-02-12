@@ -19,7 +19,7 @@ try{
 }catch(var ex: flx::Exception){
   print(ex.error);
 }
-  print(i);
+print(i);
 
 // var i = 10 / 0;
 // print(i);

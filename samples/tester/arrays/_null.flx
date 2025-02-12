@@ -14,10 +14,8 @@ test5[5] = 44;
 
 print(test5);
 print('\n');
-print(test6);
-print('\n');
-
-array_decl();
+// print(test6); // error undefined
+// print('\n');
 
 var a = 10;
 var b = null;

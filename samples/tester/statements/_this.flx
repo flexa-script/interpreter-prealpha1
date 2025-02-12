@@ -4,11 +4,11 @@ print(this);
 
 print('\n');
 
-fun foo() {
+fun foo_this() {
   print(this);
 }
 
-foo();
+foo_this();
 
 print('\n');
 
@@ -16,6 +16,6 @@ print(this);
 
 print('\n');
 
-foo();
+foo_this();
 
 print('\n');

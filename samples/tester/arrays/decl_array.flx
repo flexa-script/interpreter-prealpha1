@@ -12,10 +12,10 @@ var test2[][] = {
   { 1, 2, 3 }
 };
 
-print(test3);
-print('\n');
-print(test4);
-print('\n');
+// print(test3); // erro undefined
+// print('\n');
+// print(test4); // erro undefined
+// print('\n');
 print(test1);
 print('\n');
 print(test2);

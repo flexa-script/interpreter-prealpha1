@@ -1,19 +1,18 @@
 using flx.std.structs;
-using flx.std.structs;
 
-struct Foo {
+struct Foo_unp {
 	var name: string;
 	var age: int;
 };
 
-var f = Foo{name="Carlos",age=29};
+var f = Foo_unp{name="Carlos",age=29};
 
 println("foreach struct as flx::Pair");
 foreach(var i: flx::Pair in f){
   println("", i.key, ":", i.value);
 }
 
-var u = Foo{name="Nati",age=34};
+var u = Foo_unp{name="Nati",age=34};
 
 println("foreach struct as unpack declaration");
 foreach(var [key, value] in u){

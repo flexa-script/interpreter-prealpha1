@@ -22,13 +22,13 @@ print(arr6);
 // print(arr8);
 print("\n\n");
 
-fun foo() : int[] { return { 1, 2, 3 }; }
-fun bar() : int[][] { return { { 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } }; }
+fun foo_dim() : int[] { return { 1, 2, 3 }; }
+fun bar_dim() : int[][] { return { { 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } }; }
 // fun doe() : int[] { return { { 1, 2, 3 }, { 1, 2, 3 }, { 1, 2, 3 } }; } // check dimensions
 // fun lar() : int[][] { return { 1, 2, 3 }; } // check dimensions
-print(foo());
+print(foo_dim());
 print("\n");
-print(bar());
+print(bar_dim());
 // print(doe());
 // print(lar());
 print("\n\n");
@@ -44,12 +44,12 @@ print(bae());
 // print(lae());
 print("\n\n");
 
-struct StructFoo {
+struct StructFoo_dim {
     var asd : int;
     var bar : string;
 };
-fun jon() : StructFoo {
-    return StructFoo { asd=5, bar="foo" };
+fun jon() : StructFoo_dim {
+    return StructFoo_dim { asd=5, bar="foo_dim" };
 }
 print(jon());
 print("\n\n");

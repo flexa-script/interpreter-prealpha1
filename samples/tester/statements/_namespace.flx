@@ -6,4 +6,4 @@ println(max({1,2,3}));
 
 exclude namespace flx;
 
-println(max({1,2,3}));
+println(flx::max({1,2,3}));

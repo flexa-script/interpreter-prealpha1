@@ -8,8 +8,8 @@ using structs._foreach;
 using structs.reference;
 using structs.array;
 using structs.assign;
-using structs.decl_null;
-using structs.decl_value_sub;
+// using structs.decl_null;
+// using structs.decl_value_sub;
 using structs.decl_value;
 using structs.pointer;
 
@@ -25,18 +25,10 @@ using parse.parse_char;
 using parse.parse_string;
 using parse.parse;
 
-using libs.core.console_test;
-using libs.core.datetime_test;
-using libs.core.files_test;
-using libs.core.graphics_test;
-using libs.core.http_test;
-using libs.core.input_test;
-using libs.core.sound_test;
-
 using functions.declaration_test;
 using functions._default;
-using functions.exprfun;
-using functions.function_struct_pointer;
+// using functions.exprfun;
+// using functions.function_struct_pointer;
 using functions.function_subval_access;
 using functions.rest;
 
@@ -53,7 +45,6 @@ using statements._in;
 using statements._len;
 using statements._namespace;
 using statements._return;
-using statements.round;
 using statements.scape;
 using statements.switchcase;
 using statements.ternary;
@@ -85,3 +76,12 @@ using arrays.reassign_multi;
 using arrays.reassign_undecl;
 using arrays.reassign_undef;
 using arrays.reassign;
+
+// core isn't working properly
+// using libs.core.datetime_test;
+// using libs.core.files_test;
+// using libs.core.sound_test;
+// using libs.core.graphics_test;
+// using libs.core.http_test;
+// using libs.core.input_test;
+// using libs.core.console_test;

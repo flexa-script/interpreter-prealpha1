@@ -23,29 +23,29 @@ println("is_array: ", is_array(c));
 println("is_struct: ", is_struct(c));
 
 println("\nmulti-dim array:");
-var d[3]: int = {{10,9,8},{10,9,8},{10,9,8}};
+var d[3][3]: int = {{10,9,8},{10,9,8},{10,9,8}};
 println("is_any: ", is_any(d));
 println("is_array: ", is_array(d));
 println("is_struct: ", is_struct(d));
 
-struct Foo {
+struct Foo_ist {
   var bar: int;
 };
 
 println("\nstruct:");
-var e: Foo = Foo{bar=10};
+var e: Foo_ist = Foo_ist{bar=10};
 println("is_any: ", is_any(e));
 println("is_array: ", is_array(e));
 println("is_struct: ", is_struct(e));
 
 println("\nany struct:");
-var i = Foo{bar=10};
+var i = Foo_ist{bar=10};
 println("is_any: ", is_any(i));
 println("is_array: ", is_array(i));
 println("is_struct: ", is_struct(i));
 
 println("\nstruct array:");
-var g[3]: Foo = {e,e,e};
+var g[3]: Foo_ist = {e,e,e};
 println("is_any: ", is_any(g));
 println("is_array: ", is_array(g));
 println("is_struct: ", is_struct(g));

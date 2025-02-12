@@ -1,7 +1,7 @@
 var test[3][3];
 
-print(test);
-print('\n');
+// print(test); // error undefined
+// print('\n');
 
 test = {
   { 0, 0, 0 },

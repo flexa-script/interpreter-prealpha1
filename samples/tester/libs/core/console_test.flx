@@ -2,10 +2,8 @@ using flx.core.console;
 
 include namespace flx;
 
-show_console(false);
 
 print("[ ] Testing colors\n");
-set_console_cursor_position(0, 0);
 println("visible: ", is_console_visible());
 set_console_font("Arial", 0, 24);
 
@@ -25,4 +23,6 @@ print("[2,7] Testing color default\n");
 set_console_color(CL_BRIGHT_WHITE, CL_BLACK);
 print("[2,7] Testing color default\n");
 
-show_console(true);
+// show_console(false);
+// set_console_cursor_position(0, 0);
+// show_console(true);

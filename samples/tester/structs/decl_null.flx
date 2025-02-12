@@ -1,4 +1,9 @@
-var element : Element;
+struct Element_decl_null {
+    var has_value;
+    var value;
+};
+
+var element : Element_decl_null;
 
 element.has_value = true;
 element.value = 10;
