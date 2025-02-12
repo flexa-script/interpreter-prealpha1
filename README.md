@@ -6,16 +6,22 @@
 - [X] Rewrite the lexer
 - [X] Change expression evaluation to left to right
 - [X] Add and precedence
-- [X] Add library support
+- [X] Add library support:
+    - [ ] Adds `using flx.core.*;` support
 - [X] Add collum on throwed errors
 - [X] Add 'this' token to get current function name
 - [X] Add const support
 - [X] Add unpacked declaration statement to unpack struct values
 - [X] Add char type
 - [X] Add any type
-- [X] Add array type
+- [X] Add array type:
+    - [ ] Change `var arr[]: any;` to `var arr: any[];`?
+    - [ ] Add `items[] = item;` as append support?
 - [X] Add struct support
-    - [X] Add struct array-like constructor
+    - [ ] Add code error to Exception struct
+    - [ ] Add struct functions? also init function?
+    - [ ] Add struct heritage?
+    - [X] Add struct array-like constructoror
     - [X] Add Java class pointer-like behavior
     - [X] Add struct iterating over in foreach
         - [X] add: builtin key, value like `foreach (var [key, value] in struct_var)`
@@ -121,6 +127,8 @@
     - [X] Now expressions can be executed in statements, dont need more to execute expression parser directly
 - [X] Add a default interface to implements built in functions
 - [X] Add a default interface to implements core libs
+- [ ] Adds working directory
+- [ ] Adds C-types?
 - [x] General otimizations:
     - [x] Remove duplicate codes
         - [X] Organize semantic duplicated checks
