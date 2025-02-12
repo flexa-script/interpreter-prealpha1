@@ -61,10 +61,9 @@ std::shared_ptr<Scope> MetaVisitor::get_inner_most_variable_scope_aux(const std:
 	visited.push_back(name_space);
 
 	long long i;
-	for (i = scopes[name_space].size() - 1; !scopes[name_space][i]->already_declared_variable(identifier); i--) {
-		if (i <= 0) {
-			return nullptr;
-		}
+	for (i = scopes[name_space].size() - 1; i >= 0 && !scopes[name_space][i]->already_declared_variable(identifier); i--);
+	if (i < 0) {
+		return nullptr;
 	}
 	return scopes[name_space][i];
 }
@@ -122,11 +121,9 @@ std::shared_ptr<Scope> MetaVisitor::get_inner_most_struct_definition_scope_aux(c
 	visited.push_back(name_space);
 
 	long long i;
-	bool found = true;
-	for (i = scopes[name_space].size() - 1; !scopes[name_space][i]->already_declared_structure_definition(identifier); i--) {
-		if (i <= 0) {
-			return nullptr;
-		}
+	for (i = scopes[name_space].size() - 1; i >= 0 && !scopes[name_space][i]->already_declared_structure_definition(identifier); i--);
+	if (i < 0) {
+		return nullptr;
 	}
 	return scopes[name_space][i];
 }
@@ -184,11 +181,9 @@ std::shared_ptr<Scope> MetaVisitor::get_inner_most_functions_scope_aux(const std
 	visited.push_back(name_space);
 
 	long long i;
-	bool found = true;
-	for (i = scopes[name_space].size() - 1; !scopes[name_space][i]->already_declared_function_name(identifier); i--) {
-		if (i <= 0) {
-			return nullptr;
-		}
+	for (i = scopes[name_space].size() - 1; i >= 0 && !scopes[name_space][i]->already_declared_function_name(identifier); i--);
+	if (i < 0) {
+		return nullptr;
 	}
 	return scopes[name_space][i];
 }
@@ -248,11 +243,9 @@ std::shared_ptr<Scope> MetaVisitor::get_inner_most_function_scope_aux(const std:
 	visited.push_back(name_space);
 
 	long long i;
-	bool found = true;
-	for (i = scopes[name_space].size() - 1; !scopes[name_space][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); i--) {
-		if (i <= 0) {
-			return nullptr;
-		}
+	for (i = scopes[name_space].size() - 1; i >= 0 && !scopes[name_space][i]->already_declared_function(identifier, signature, evaluate_access_vector_ptr, strict); i--);
+	if (i < 0) {
+		return nullptr;
 	}
 	return scopes[name_space][i];
 }
