@@ -72,7 +72,7 @@ void ModuleDateTime::register_functions(visitor::Interpreter* visitor) {
 			t = mktime(tm);
 		}
 
-		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(tm_to_date_time(visitor, t, tm), "DateTime", "flx"));
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(tm_to_date_time(visitor, t, tm), "DateTime", language_namespace));
 
 		};
 
@@ -89,7 +89,7 @@ void ModuleDateTime::register_functions(visitor::Interpreter* visitor) {
 		tm* tm = new struct tm();
 		gmtime_s(tm, &t);
 
-		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(tm_to_date_time(visitor, t, tm), "DateTime", "flx"));
+		visitor->current_expression_value = visitor->alocate_value(new RuntimeValue(tm_to_date_time(visitor, t, tm), "DateTime", language_namespace));
 
 		};
 

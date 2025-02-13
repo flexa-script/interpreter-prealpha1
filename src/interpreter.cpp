@@ -812,7 +812,7 @@ void Interpreter::visit(std::shared_ptr<ASTForEachNode> astnode) {
 			// so if itdecl is null, it's a unpacked [key, value]
 			if (itdecl) {
 				std::map<std::string, std::shared_ptr<ASTExprNode>> values = { { "key", key }, { "value", value } };
-				auto exnode = std::make_shared<ASTStructConstructorNode>("Pair", "flx", values, astnode->row, astnode->col);
+				auto exnode = std::make_shared<ASTStructConstructorNode>("Pair", language_namespace, values, astnode->row, astnode->col);
 				itdecl->expr = exnode;
 				itdecl->accept(this);
 				itdecl->expr = nullptr;
@@ -895,7 +895,7 @@ void Interpreter::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 		}
 		else if (const auto idnode = std::dynamic_pointer_cast<ASTDeclarationNode>(astnode->decl)) {
 			std::map<std::string, std::shared_ptr<ASTExprNode>> values = { { "error", error } };
-			auto exnode = std::make_shared<ASTStructConstructorNode>("Exception", "flx", values, astnode->row, astnode->col);
+			auto exnode = std::make_shared<ASTStructConstructorNode>("Exception", language_namespace, values, astnode->row, astnode->col);
 			idnode->expr = exnode;
 			idnode->accept(this);
 			idnode->expr = nullptr;
@@ -919,7 +919,7 @@ void Interpreter::visit(std::shared_ptr<ASTThrowNode> astnode) {
 	if (is_struct(current_expression_value->type)) {
 		// check struct type
 		if (current_expression_value->type_name != "Exception"
-			|| current_expression_value->type_name_space != "flx") {
+			|| current_expression_value->type_name_space != language_namespace) {
 			throw std::runtime_error("expected flx::Exception not " + ExceptionHandler::buid_type_str(*current_expression_value, evaluate_access_vector_ptr));
 		}
 

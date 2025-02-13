@@ -191,8 +191,7 @@ void VirtualMachine::handle_throw() {
 	if (is_struct(value->type)
 		&& value->type_name == "Exception") {
 		try {
-			std::string name_space = "flx";
-			get_inner_most_struct_definition_scope(nullptr, "flx", "Exception");
+			get_inner_most_struct_definition_scope(nullptr, language_namespace, "Exception");
 		}
 		catch (...) {
 			throw std::runtime_error("struct 'flx::Exception' not found");

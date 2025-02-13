@@ -672,7 +672,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTForEachNode> astnode) {
 		SemanticValue* value;
 
 		if (is_struct(col_value.type)) {
-			value = new SemanticValue(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "Pair", "flx", 0, false, astnode->row, astnode->col);
+			value = new SemanticValue(Type::T_STRUCT, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "Pair", language_namespace, 0, false, astnode->row, astnode->col);
 		}
 		else if (is_string(col_value.type)) {
 			value = new SemanticValue(Type::T_CHAR, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "", 0, false, astnode->row, astnode->col);
@@ -745,7 +745,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 		std::map<std::string, std::shared_ptr<ASTExprNode>> values = {
 			{ "error", std::make_shared<ASTLiteralNode<flx_string>>("", astnode->row, astnode->col) }
 		};
-		auto exnode = std::make_shared<ASTStructConstructorNode>("Exception", "flx", values, astnode->row, astnode->col);
+		auto exnode = std::make_shared<ASTStructConstructorNode>("Exception", language_namespace, values, astnode->row, astnode->col);
 		idnode->expr = exnode;
 		idnode->accept(this);
 		idnode->expr = nullptr;
@@ -767,7 +767,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTThrowNode> astnode) {
 	astnode->error->accept(this);
 
 	if (is_struct(current_expression.type) && current_expression.type_name == "Exception") {
-		if (!get_inner_most_struct_definition_scope(prg, "flx", "Exception")) {
+		if (!get_inner_most_struct_definition_scope(prg, language_namespace, "Exception")) {
 			throw std::runtime_error("struct 'flx::Exception' not found");
 		}
 	}

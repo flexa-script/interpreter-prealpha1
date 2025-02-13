@@ -76,7 +76,7 @@ void ModuleInput::register_functions(visitor::Interpreter* visitor) {
 		flx_struct str = flx_struct();
 		str["x"] = visitor->alocate_value(new RuntimeValue(flx_int(point.x * 2 * 0.905)));
 		str["y"] = visitor->alocate_value(new RuntimeValue(flx_int(point.y * 2 * 0.875)));
-		RuntimeValue* res = visitor->alocate_value(new RuntimeValue(str, "Point", "flx"));
+		RuntimeValue* res = visitor->alocate_value(new RuntimeValue(str, "Point", language_namespace));
 
 		visitor->current_expression_value = res;
 

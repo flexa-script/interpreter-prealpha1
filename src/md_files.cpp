@@ -48,7 +48,7 @@ void ModuleFiles::register_functions(visitor::Interpreter* visitor) {
 		try {
 			fs = new std::fstream(vals[0]->get_s(), parmode);
 			str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(flx_int(fs)));
-			cpfile->set(str, "File", "flx");
+			cpfile->set(str, "File", language_namespace);
 			visitor->current_expression_value = cpfile;
 		}
 		catch (std::exception ex) {

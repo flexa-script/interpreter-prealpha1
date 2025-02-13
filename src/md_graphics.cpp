@@ -60,7 +60,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 			(int)str["height"]->get_i()
 		);
 
-		win->set(str, "Window", "flx");
+		win->set(str, "Window", language_namespace);
 
 		if (!res) {
 			win->set_null();
@@ -333,7 +333,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		str[INSTANCE_ID_NAME] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
 		str[INSTANCE_ID_NAME]->set(flx_int(font));
 
-		font_value->set(str, "Font", "flx");
+		font_value->set(str, "Font", language_namespace);
 
 		visitor->current_expression_value = font_value;
 
@@ -408,7 +408,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		str["width"] = visitor->alocate_value(new RuntimeValue(flx_int(point.cx * 2 * 0.905)));
 		str["height"] = visitor->alocate_value(new RuntimeValue(flx_int(point.cy * 2 * 0.875)));
 
-		RuntimeValue* res = visitor->alocate_value(new RuntimeValue(str, "Size", "flx"));
+		RuntimeValue* res = visitor->alocate_value(new RuntimeValue(str, "Size", language_namespace));
 
 		visitor->current_expression_value = res;
 
@@ -437,7 +437,7 @@ void ModuleGraphics::register_functions(visitor::Interpreter* visitor) {
 		str["height"] = visitor->alocate_value(new RuntimeValue(parser::Type::T_INT));
 		str["height"]->set(flx_int(image->height));
 
-		img->set(str, "Image", "flx");
+		img->set(str, "Image", language_namespace);
 
 		visitor->current_expression_value = img;
 
