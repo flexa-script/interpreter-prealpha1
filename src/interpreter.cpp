@@ -40,6 +40,10 @@ void Interpreter::visit(std::shared_ptr<ASTProgramNode> astnode) {
 	for (const auto& statement : astnode->statements) {
 		try {
 			statement->accept(this);
+
+			if (exit_from_program) {
+				break;
+			}
 		}
 		catch (std::exception ex) {
 			if (curr_row == 0 || curr_col == 0) {
@@ -351,10 +355,6 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 
 		function_arguments.push_back(pvalue);
 		signature.push_back(pvalue);
-	}
-
-	if (identifier == "xf") {
-		int x = 0;
 	}
 
 	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(caller_program, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
