@@ -3,6 +3,7 @@
 #include <cmath>
 #include <compare>
 #include <functional>
+#include <filesystem>
 
 #include "interpreter.hpp"
 #include "exception_handler.hpp"
@@ -1646,7 +1647,7 @@ RuntimeValue* Interpreter::set_value(std::shared_ptr<RuntimeVariable> var, const
 						ss << '.';
 					}
 				}
-				throw std::runtime_error("cannot reach '" + ss.str() + "', previous '" + identifier_vector[i - 1].identifier + "' value is null");
+				throw std::runtime_error("cannot reach '" + ss.str() + "', previous '" + identifier_vector[i - 1].identifier + "' is null");
 			}
 
 			if (i == identifier_vector.size() - 1 && identifier_vector[i].access_vector.size() == 0) {
@@ -2016,9 +2017,9 @@ void Interpreter::declare_function_block_parameters(const std::string& name_spac
 }
 
 void Interpreter::build_args(const std::vector<std::string>& args) {
+	// args
 	auto dim = std::vector<std::shared_ptr<ASTExprNode>>{ std::make_shared<ASTLiteralNode<flx_int>>(flx_int(args.size()), 0, 0) };
-
-	auto var = std::make_shared<RuntimeVariable>("cpargs", Type::T_ARRAY, Type::T_STRING, dim, "", "");
+	auto var = std::make_shared<RuntimeVariable>("args", Type::T_ARRAY, Type::T_STRING, dim, "", "");
 	gc.add_var_root(var);
 
 	auto arr = flx_array();
@@ -2027,8 +2028,13 @@ void Interpreter::build_args(const std::vector<std::string>& args) {
 	}
 
 	var->set_value(alocate_value(new RuntimeValue(arr, Type::T_STRING, dim)));
+	scopes[default_namespace].back()->declare_variable("args", var);
 
-	scopes[default_namespace].back()->declare_variable("cpargs", var);
+	// cwd
+	auto cwd_var = std::make_shared<RuntimeVariable>("cwd", Type::T_STRING, Type::T_UNDEFINED, std::vector<std::shared_ptr<ASTExprNode>>(), "", "");
+	gc.add_var_root(cwd_var);
+	cwd_var->set_value(alocate_value(new RuntimeValue(std::filesystem::current_path().string())));
+	scopes[default_namespace].back()->declare_variable("cwd", cwd_var);
 }
 
 void Interpreter::set_curr_pos(unsigned int row, unsigned int col) {

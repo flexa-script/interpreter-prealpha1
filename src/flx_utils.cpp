@@ -53,6 +53,8 @@ FlexaCliArgs parse_args(int argc, const char* argv[]) {
 
 	size_t i = 0;
 
+	args.args.push_back(argv[i]);
+
 	// parse optional parameters
 	while (++i < argc) {
 		std::string arg = argv[i];
@@ -96,7 +98,7 @@ FlexaCliArgs parse_args(int argc, const char* argv[]) {
 
 	// parse flx arguments
 	while (++i < argc) {
-		args.cpargs.push_back(argv[i]);
+		args.args.push_back(argv[i]);
 	}
 
 	return args;

@@ -115,19 +115,19 @@ int FlexaInterpreter::interpreter() {
 		semantic_global_scope->owner = main_program;
 		interpreter_global_scope->owner = main_program;
 
-		visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, main_program, programs, args.cpargs);
+		visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, main_program, programs, args.args);
 		semantic_analyser.start();
 
 		long long result = 0;
 
 		if (args.engine == "ast") {
-			visitor::Interpreter interpreter(interpreter_global_scope, main_program, programs, args.cpargs);
+			visitor::Interpreter interpreter(interpreter_global_scope, main_program, programs, args.args);
 			interpreter.start();
 			result = interpreter.current_expression_value->get_i();
 		}
 		else {
 			// compile
-			visitor::Compiler compiler(main_program, programs, args.cpargs);
+			visitor::Compiler compiler(main_program, programs, args.args);
 			compiler.start();
 
 			BytecodeInstruction::write_bytecode_table(compiler.bytecode_program, project_root + "\\" + source_programs[0].name + ".bslt");

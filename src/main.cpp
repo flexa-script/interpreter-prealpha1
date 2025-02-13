@@ -7,11 +7,11 @@
 int main(int argc, const char* argv[]) {
 	SetConsoleOutputCP(CP_UTF8);
 
+	auto args = parse_args(argc, argv);
+
 	if (argc == 1) {
 		return FlexaRepl::execute();
 	}
-
-	auto args = parse_args(argc, argv);
 
 	if (args.debug) {
 #ifndef __FLX_DEBUG__

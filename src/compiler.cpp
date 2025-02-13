@@ -690,7 +690,7 @@ void Compiler::replace_last_operand(size_t pos, T operand) {
 void Compiler::build_args(const std::vector<std::string>& args) {
 	//auto dim = std::vector<std::shared_ptr<ASTExprNode>>{ std::make_shared<ASTLiteralNode<cp_int>>(cp_int(args.size()), 0, 0) };
 
-	//auto var = std::make_shared<RuntimeVariable>("cpargs", Type::T_ARRAY, Type::T_STRING, dim, "", "");
+	//auto var = std::make_shared<RuntimeVariable>("args", Type::T_ARRAY, Type::T_STRING, dim, "", "");
 	//gc.add_var_root(var);
 
 	//auto arr = cp_array();
@@ -700,7 +700,7 @@ void Compiler::build_args(const std::vector<std::string>& args) {
 
 	//var->set_value(alocate_value(new RuntimeValue(arr, Type::T_STRING, dim)));
 
-	//scopes[default_namespace].back()->declare_variable("cpargs", var);
+	//scopes[default_namespace].back()->declare_variable("args", var);
 }
 
 bool Compiler::push_namespace(const std::string name_space) {

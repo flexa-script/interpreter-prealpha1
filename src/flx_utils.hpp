@@ -25,7 +25,7 @@ struct FlexaCliArgs {
 	std::string workspace;
 	std::string main;
 	std::vector<std::string> sources;
-	std::vector<std::string> cpargs;
+	std::vector<std::string> args;
 };
 
 extern void throw_if_not_parameter(int argc, size_t i, std::string parameter);
