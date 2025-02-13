@@ -3,7 +3,7 @@ struct Element_decl_null {
     var value;
 };
 
-var element : Element_decl_null;
+var element : Element_decl_null = Element_decl_null{};
 
 element.has_value = true;
 element.value = 10;

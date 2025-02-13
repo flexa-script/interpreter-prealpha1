@@ -8,7 +8,7 @@ struct MyList{
   var root : ElementX;
 };
 
-var list : MyList;
+var list : MyList = MyList{};
 
 list.root = ElementX {
   has_value = true,

@@ -8,8 +8,8 @@ using structs._foreach;
 using structs.reference;
 using structs.array;
 using structs.assign;
-// using structs.decl_null;
-// using structs.decl_value_sub;
+using structs.decl_null;
+using structs.decl_value_sub;
 using structs.decl_value;
 using structs.pointer;
 
@@ -27,8 +27,8 @@ using parse.parse;
 
 using functions.declaration_test;
 using functions._default;
-// using functions.exprfun;
-// using functions.function_struct_pointer;
+using functions.exprfun;
+using functions.function_struct_pointer;
 using functions.function_subval_access;
 using functions.rest;
 
