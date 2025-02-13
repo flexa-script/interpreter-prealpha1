@@ -335,6 +335,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	bool strict = true;
 	std::vector<TypeDefinition*> signature;
 	std::vector<RuntimeValue*> function_arguments;
+	bool pop_program = false;
 
 	// adds function args container to root, to prevent values sweep while evaluating each one
 	gc.add_root_container(&function_arguments);
@@ -359,6 +360,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	std::shared_ptr<Scope> func_scope = get_inner_most_function_scope(caller_program, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
 	if (func_scope) {
 		current_program.push(func_scope->owner);
+		pop_program = true;
 		name_space = func_scope->owner->name_space;
 	}
 	else {
@@ -366,6 +368,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 		func_scope = get_inner_most_function_scope(caller_program, name_space, identifier, &signature, evaluate_access_vector_ptr, strict);
 		if (func_scope) {
 			current_program.push(func_scope->owner);
+			pop_program = true;
 			name_space = func_scope->owner->name_space;
 		}
 		else {
@@ -410,7 +413,9 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	current_this_name.pop();
 	gc.remove_root_container(&function_arguments);
 
-	current_program.pop();
+	if (pop_program) {
+		current_program.pop();
+	}
 
 	pop_namespace(pop);
 }
