@@ -15,21 +15,3 @@ timer_stop(gsw);
 print("full test suite elapsed time: ", gsw.elapsed_time, " ms");
 
 println('\n');
-
-// fun foo(){
-//   println("foo: ", this);
-// }
-
-// fun aaa(foo: function){
-//   foo();
-// }
-
-// aaa(fun () {
-//   println("aaa");}
-// );
-
-// fun test(aaa: a){
-// 	aaa = null;
-// }
-
-// using functions.exprfun;
