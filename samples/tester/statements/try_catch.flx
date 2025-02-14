@@ -13,7 +13,6 @@ try {
 
 var i = 0;
 try{
-  //var i: int = "asda";
   i = 10 / 0;
   print(i);
 }catch(var ex: flx::Exception){
@@ -31,5 +30,5 @@ try {
 	print("catch\n");
 }
 
-print("end");
+println("end");
 

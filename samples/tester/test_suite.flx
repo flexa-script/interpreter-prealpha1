@@ -37,7 +37,6 @@ using statements._break;
 using statements._continue;
 using statements.do_while;
 using statements._enum;
-using statements._exit;
 using statements._for;
 using statements._foreach;
 using statements.ifelse;
@@ -77,11 +76,11 @@ using arrays.reassign_undecl;
 using arrays.reassign_undef;
 using arrays.reassign;
 
-// core isn't working properly
-using libs.core.datetime_test; // aparently working
-// using libs.core.files_test; // problem with relative path, it's necessary implements working directory
-// using libs.core.sound_test; // not playing
-// using libs.core.graphics_test; // problem with relative path, it's necessary implements working directory
+using libs.core.datetime_test;
+using libs.core.files_test;
 // using libs.core.http_test; // not working
-// using libs.core.input_test; // not working in this context, but works alone in main.flx
-// using libs.core.console_test; // not working in this context, but works alone in main.flx
+using libs.core.input_test;
+using libs.core.sound_test;
+using libs.core.console_test;
+using libs.core.graphics_test;
+
