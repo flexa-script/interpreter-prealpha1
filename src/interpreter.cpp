@@ -339,11 +339,11 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	std::vector<Identifier> identifier_vector = astnode->identifier_vector;
 	bool strict = true;
 	std::vector<TypeDefinition*> signature;
-	std::vector<RuntimeValue*> function_arguments;
+	std::vector<RuntimeValue*>* function_arguments = new std::vector<RuntimeValue*>();
 	bool pop_program = false;
 
 	// adds function args container to root, to prevent values sweep while evaluating each one
-	gc.add_root_container(&function_arguments);
+	gc.add_root_container(function_arguments);
 
 	for (auto& param : astnode->parameters) {
 		param->accept(this);
@@ -354,7 +354,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 			pvalue = alocate_value(new RuntimeValue(current_expression_value));
 		}
 
-		function_arguments.push_back(pvalue);
+		function_arguments->push_back(pvalue);
 		signature.push_back(pvalue);
 	}
 
@@ -402,7 +402,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	current_this_name.push(identifier);
 	current_function_signature.push(signature);
 	current_function_call_identifier_vector.push(identifier_vector);
-	current_function_calling_arguments.push(function_arguments);
+	current_function_calling_arguments.push(*function_arguments);
 
 	// it's not a stack cause it's one shot use, right it reachs block it's cleaned
 	function_call_name = identifier;
@@ -412,7 +412,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	current_function_call_identifier_vector.pop();
 	current_function_signature.pop();
 	current_this_name.pop();
-	gc.remove_root_container(&function_arguments);
+	gc.remove_root_container(function_arguments);
 
 	if (pop_program) {
 		current_program.pop();
@@ -1285,8 +1285,9 @@ void Interpreter::visit(std::shared_ptr<ASTBinaryExprNode> astnode) {
 	RuntimeValue* l_value = current_expression_value;
 	if (!current_expression_value->use_ref) {
 		l_value = alocate_value(new RuntimeValue(current_expression_value));
-		gc.add_root(l_value);
+		//gc.add_root(l_value);
 	}
+	gc.add_root(l_value);
 
 	if (is_bool(current_expression_value->type) && astnode->op == "and" && !current_expression_value->get_b()) {
 		return;
@@ -1296,8 +1297,9 @@ void Interpreter::visit(std::shared_ptr<ASTBinaryExprNode> astnode) {
 	RuntimeValue* r_value = current_expression_value;
 	if (!current_expression_value->use_ref) {
 		r_value = alocate_value(new RuntimeValue(current_expression_value));
-		gc.add_root(r_value);
+		//gc.add_root(r_value);
 	}
+	gc.add_root(r_value);
 
 	current_expression_value = RuntimeOperations::do_operation(astnode->op, l_value, r_value, evaluate_access_vector_ptr, true);
 
