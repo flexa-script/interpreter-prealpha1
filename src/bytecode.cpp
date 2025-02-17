@@ -118,10 +118,11 @@ void BytecodeInstruction::write_bytecode_table(const std::vector<BytecodeInstruc
 			file << instruction.get_size_operand();
 			break;
 		case OP_PUSH_BOOL:
+		case OP_INIT_ARRAY:
 			file << instruction.get_bool_operand();
 			break;
 		case OP_PUSH_INT:
-			file << int(instruction.get_int_operand());
+			file << instruction.get_int_operand();
 			break;
 		case OP_PUSH_FLOAT:
 			file << instruction.get_float_operand();
@@ -142,9 +143,6 @@ void BytecodeInstruction::write_bytecode_table(const std::vector<BytecodeInstruc
 		case OP_CALL:
 		case OP_LOAD_SUB_ID:
 			file << instruction.get_string_operand();
-			break;
-		case OP_INIT_ARRAY:
-			file << instruction.get_bool_operand();
 			break;
 		default:
 			if (instruction.operand) {
