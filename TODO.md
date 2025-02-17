@@ -148,7 +148,7 @@
 - [X] Automatically find and load included libs without to send by command line arguments
 
 ## Known bugs
-- [ ] Fix function parameters root container, is generating mem leak
+- [X] Fix function parameters root container, is generating mem leak
 - [X] Namespaces must be included in file, not in namespace level
 - [ ] Can't executes returned function from another function eg: `here_is_returning_a_function()();`
 - [X] Review value copy and equal (mainly cause of ponters)

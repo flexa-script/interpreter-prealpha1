@@ -24,7 +24,7 @@ namespace vm {
 
 	class VirtualMachine : public MetaVisitor {
 	public:
-		std::vector<RuntimeValue*> value_stack;
+		std::shared_ptr<std::vector<RuntimeValue*>> value_stack;
 		size_t param_count = 0;
 		std::map<std::string, std::function<void()>> builtin_functions;
 

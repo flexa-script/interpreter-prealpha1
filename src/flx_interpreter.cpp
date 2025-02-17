@@ -136,7 +136,7 @@ int FlexaInterpreter::interpreter() {
 			VirtualMachine vm(interpreter_global_scope, compiler.bytecode_program);
 			vm.run();
 
-			result = vm.value_stack.back()->get_i();
+			result = vm.value_stack->back()->get_i();
 		}
 
 		return result;

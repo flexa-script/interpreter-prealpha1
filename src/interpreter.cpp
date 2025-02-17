@@ -339,7 +339,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	std::vector<Identifier> identifier_vector = astnode->identifier_vector;
 	bool strict = true;
 	std::vector<TypeDefinition*> signature;
-	std::vector<RuntimeValue*>* function_arguments = new std::vector<RuntimeValue*>();
+	std::shared_ptr<std::vector<RuntimeValue*>> function_arguments = std::make_shared<std::vector<RuntimeValue*>>();
 	bool pop_program = false;
 
 	// adds function args container to root, to prevent values sweep while evaluating each one

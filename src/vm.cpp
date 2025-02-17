@@ -15,7 +15,7 @@ using namespace vm;
 VirtualMachine::VirtualMachine(std::shared_ptr<Scope> global_scope, std::vector<BytecodeInstruction> instructions)
 	: instructions(instructions), gc(GarbageCollector()), set_default_value(nullptr) {
 	cleanup_type_set();
-	gc.add_root_container(&value_stack);
+	gc.add_root_container(value_stack);
 
 	push_namespace(default_namespace);
 	scopes[default_namespace].push_back(global_scope);
@@ -40,7 +40,7 @@ void VirtualMachine::run() {
 		}
 	}
 
-	if (value_stack.empty()) {
+	if (value_stack->empty()) {
 		push_constant(new RuntimeValue(flx_int(0)));
 	}
 
@@ -50,7 +50,7 @@ void VirtualMachine::run() {
 
 void VirtualMachine::push_empty(Type type) {
 	auto val = gc.allocate(new RuntimeValue(type));
-	value_stack.push_back(dynamic_cast<RuntimeValue*>(val));
+	value_stack->push_back(dynamic_cast<RuntimeValue*>(val));
 }
 
 RuntimeValue* VirtualMachine::alocate_value(RuntimeValue* value) {
@@ -59,7 +59,7 @@ RuntimeValue* VirtualMachine::alocate_value(RuntimeValue* value) {
 
 void VirtualMachine::push_constant(RuntimeValue* value) {
 	auto val = gc.allocate(value);
-	value_stack.push_back(dynamic_cast<RuntimeValue*>(val));
+	value_stack->push_back(dynamic_cast<RuntimeValue*>(val));
 }
 
 void VirtualMachine::push_function_constant(const std::string& identifier) {
@@ -79,7 +79,7 @@ void VirtualMachine::binary_operation(const std::string& op) {
 }
 
 void VirtualMachine::unary_operation(const std::string& op) {
-	RuntimeValue* value = value_stack.back();
+	RuntimeValue* value = value_stack->back();
 
 	if (op == "ref" || op == "unref") {
 		if (op == "unref") {
@@ -91,7 +91,7 @@ void VirtualMachine::unary_operation(const std::string& op) {
 	}
 	else {
 		if (!value->use_ref) {
-			value_stack.pop_back();
+			value_stack->pop_back();
 			push_constant(new RuntimeValue(value));
 		}
 
@@ -130,10 +130,10 @@ void VirtualMachine::handle_call() {
 
 	//gc.add_root_container(&function_arguments);
 
-	auto ss = value_stack.size();
+	auto ss = value_stack->size();
 	long long l = ss - param_count;
 	for (long long i = ss - 1; i >= l; --i) {
-		RuntimeValue* value = value_stack[i];
+		RuntimeValue* value = value_stack->at(i);
 
 		RuntimeValue* pvalue = nullptr;
 		if (value->use_ref) {
@@ -420,7 +420,7 @@ void VirtualMachine::handle_load_var() {
 	}
 
 	auto variable = std::dynamic_pointer_cast<RuntimeVariable>(id_scope->find_declared_variable(identifier));
-	value_stack.push_back(variable->get_value());
+	value_stack->push_back(variable->get_value());
 }
 
 void VirtualMachine::handle_include_namespace() {
@@ -495,7 +495,7 @@ void VirtualMachine::handle_load_sub_id() {
 	if (!is_struct(val->type)) {
 		throw std::runtime_error("Invalid " + type_str(val->type) + " access, this operation can only be performed on struct values");
 	}
-	value_stack.push_back(val->get_sub(id));
+	value_stack->push_back(val->get_sub(id));
 }
 
 void VirtualMachine::handle_load_sub_ix() {
@@ -507,7 +507,7 @@ void VirtualMachine::handle_load_sub_ix() {
 	if (!is_array(val->type) && !is_string(val->type)) {
 		throw std::runtime_error("Invalid " + type_str(val->type) + " index access, this operation can only be performed on array or string values");
 	}
-	value_stack.push_back(val->get_sub(i->get_i()));
+	value_stack->push_back(val->get_sub(i->get_i()));
 }
 
 void VirtualMachine::handle_assign_var() {
@@ -606,9 +606,9 @@ void VirtualMachine::decode_operation() {
 		handle_exclude_namespace();
 		break;
 
-							 // constant operations
+		// constant operations
 	case OP_POP_CONSTANT:
-		value_stack.pop_back();
+		value_stack->pop_back();
 		break;
 	case OP_PUSH_UNDEFINED:
 		push_empty(Type::T_UNDEFINED);
@@ -664,7 +664,7 @@ void VirtualMachine::decode_operation() {
 		handle_struct_end();
 		break;
 
-					  // typing operations
+		// typing operations
 	case OP_SET_TYPE:
 		set_type = (Type)current_instruction.get_uint8_operand();
 		break;
@@ -678,8 +678,8 @@ void VirtualMachine::decode_operation() {
 		set_type_name_space = current_instruction.get_string_operand();
 		break;
 	case OP_SET_ARRAY_SIZE:
-			// todo: generating bug
-		//set_array_dim.push_back(std::make_shared<ASTValueNode>(get_stack_top(), 0, 0));
+		// todo: generating bug
+	//set_array_dim.push_back(std::make_shared<ASTValueNode>(get_stack_top(), 0, 0));
 		break;
 	case OP_SET_DEFAULT_VALUE:
 		set_default_value = std::make_shared<ASTValueNode>(get_stack_top(), 0, 0);
@@ -711,7 +711,7 @@ void VirtualMachine::decode_operation() {
 		handle_assign_sub_ix();
 		break;
 
-				  // function operations
+		// function operations
 	case OP_FUN_START:
 		handle_fun_start();
 		break;
@@ -896,8 +896,8 @@ void VirtualMachine::decode_operation() {
 }
 
 RuntimeValue* VirtualMachine::get_stack_top() {
-	auto value = value_stack.back();
-	value_stack.pop_back();
+	auto value = value_stack->back();
+	value_stack->pop_back();
 	return value;
 }
 
