@@ -53,7 +53,7 @@ FlexaCliArgs parse_args(int argc, const char* argv[]) {
 
 	size_t i = 0;
 
-	args.args.push_back(argv[i]);
+	args.program_args.push_back(argv[i]);
 
 	// parse optional parameters
 	while (++i < argc) {
@@ -76,19 +76,19 @@ FlexaCliArgs parse_args(int argc, const char* argv[]) {
 		if (arg == "-w" || arg == "--workspace") {
 			++i;
 			throw_if_not_parameter(argc, i, arg);
-			args.workspace = argv[i];
+			args.workspace_path = argv[i];
 			continue;
 		}
 		if (arg == "-m" || arg == "--main") {
 			++i;
 			throw_if_not_parameter(argc, i, arg);
-			args.main = argv[i];
+			args.main_file = argv[i];
 			continue;
 		}
 		if (arg == "-s" || arg == "--source") {
 			++i;
 			throw_if_not_parameter(argc, i, arg);
-			args.sources.push_back(argv[i]);
+			args.source_files.push_back(argv[i]);
 			continue;
 		}
 		--i;
@@ -98,7 +98,7 @@ FlexaCliArgs parse_args(int argc, const char* argv[]) {
 
 	// parse flx arguments
 	while (++i < argc) {
-		args.args.push_back(argv[i]);
+		args.program_args.push_back(argv[i]);
 	}
 
 	return args;

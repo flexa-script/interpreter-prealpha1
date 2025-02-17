@@ -22,10 +22,11 @@ extern std::string get_prog_name(const std::string& progpath);
 struct FlexaCliArgs {
 	bool debug = false;
 	std::string engine;
-	std::string workspace;
-	std::string main;
-	std::vector<std::string> sources;
-	std::vector<std::string> args;
+	std::string libs_path;
+	std::string workspace_path;
+	std::string main_file;
+	std::vector<std::string> source_files;
+	std::vector<std::string> program_args;
 };
 
 extern void throw_if_not_parameter(int argc, size_t i, std::string parameter);

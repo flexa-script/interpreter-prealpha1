@@ -6,6 +6,7 @@
 - [X] Send rest arguments to flexa program
 - [X] Implements library support:
     - [ ] Implements `using flx.core.*;` support
+- [ ] Implements interpreter parameter to says where are sdt libs
 - [X] Implements 'this' token to get current context name
 - [X] Implements any type
 - [X] Implements array type

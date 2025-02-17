@@ -34,7 +34,7 @@ int FlexaRepl::execute(const FlexaCliArgs& args) {
 
 	while (true) {
 		std::string input_line;
-		std::string prog_name = "main";
+		std::string prog_name = "REPL";
 		std::string source;
 		bool file_load = false;
 		bool expr = false;
@@ -112,13 +112,13 @@ int FlexaRepl::execute(const FlexaCliArgs& args) {
 
 			// check if it's all ok using a temp global scope
 			std::shared_ptr<visitor::Scope> temp = std::make_shared<visitor::Scope>(*semantic_global_scope);
-			visitor::SemanticAnalyser temp_semantic_analyser(temp, program, programs, args.args);
+			visitor::SemanticAnalyser temp_semantic_analyser(temp, program, programs, args.program_args);
 			temp_semantic_analyser.start();
 
-			visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, program, programs, args.args);
+			visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, program, programs, args.program_args);
 			semantic_analyser.start();
 
-			visitor::Interpreter interpreter(interpreter_global_scope, program, programs, args.args);
+			visitor::Interpreter interpreter(interpreter_global_scope, program, programs, args.program_args);
 			interpreter.visit(program);
 
 			if (file_load) {

@@ -14,12 +14,12 @@
 #include "vm.hpp"
 
 FlexaInterpreter::FlexaInterpreter(const FlexaCliArgs& args)
-	: project_root(utils::PathUtils::normalize_path_sep(args.workspace)),
+	: project_root(utils::PathUtils::normalize_path_sep(args.workspace_path)),
 	cp_root(utils::PathUtils::normalize_path_sep(utils::PathUtils::get_current_path() + "libs")),
 	args(args) {}
 
 int FlexaInterpreter::execute() {
-	if (!args.main.empty() || args.sources.size() > 0) {
+	if (!args.main_file.empty() || args.source_files.size() > 0) {
 		return interpreter();
 	}
 
@@ -47,10 +47,10 @@ FlexaSource FlexaInterpreter::load_program(const std::string& source) {
 	return source_program;
 }
 
-std::vector<FlexaSource> FlexaInterpreter::load_programs(const std::vector<std::string>& sources) {
+std::vector<FlexaSource> FlexaInterpreter::load_programs(const std::vector<std::string>& source_files) {
 	std::vector<FlexaSource> source_programs;
 
-	for (const auto& source : sources) {
+	for (const auto& source : source_files) {
 		source_programs.push_back(load_program(source));
 	}
 
@@ -83,8 +83,8 @@ int FlexaInterpreter::interpreter() {
 	FlexaSource main_program;
 	std::vector<FlexaSource> source_programs;
 	try {
-		main_program = load_program(args.main);
-		source_programs = load_programs(args.sources);
+		main_program = load_program(args.main_file);
+		source_programs = load_programs(args.source_files);
 		source_programs.emplace(source_programs.begin(), main_program);
 	}
 	catch (const std::exception& e) {
@@ -99,35 +99,35 @@ int FlexaInterpreter::interpreter() {
 		std::shared_ptr<ASTProgramNode> main_program = nullptr;
 		std::map<std::string, std::shared_ptr<ASTProgramNode>> programs;
 		parse_programs(source_programs, &main_program, &programs);
-		size_t cplibs_size = 0;
+		size_t libs_size = 0;
 		do {
 			visitor::DependencyResolver libfinder(main_program, programs);
 			libfinder.start();
 
-			cplibs_size = libfinder.lib_names.size();
+			libs_size = libfinder.lib_names.size();
 
-			if (cplibs_size > 0) {
+			if (libs_size > 0) {
 				auto cplib_programs = load_programs(libfinder.lib_names);
 				parse_programs(cplib_programs, &main_program, &programs);
 			}
-		} while (cplibs_size > 0);
+		} while (libs_size > 0);
 
 		semantic_global_scope->owner = main_program;
 		interpreter_global_scope->owner = main_program;
 
-		visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, main_program, programs, args.args);
+		visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, main_program, programs, args.program_args);
 		semantic_analyser.start();
 
 		long long result = 0;
 
 		if (args.engine == "ast") {
-			visitor::Interpreter interpreter(interpreter_global_scope, main_program, programs, args.args);
+			visitor::Interpreter interpreter(interpreter_global_scope, main_program, programs, args.program_args);
 			interpreter.start();
 			result = interpreter.current_expression_value->get_i();
 		}
 		else {
 			// compile
-			visitor::Compiler compiler(main_program, programs, args.args);
+			visitor::Compiler compiler(main_program, programs, args.program_args);
 			compiler.start();
 
 			BytecodeInstruction::write_bytecode_table(compiler.bytecode_program, project_root + "\\" + source_programs[0].name + ".bslt");
