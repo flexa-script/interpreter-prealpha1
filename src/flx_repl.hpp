@@ -10,6 +10,7 @@
 #include "parser.hpp"
 #include "semantic_analysis.hpp"
 #include "interpreter.hpp"
+#include "flx_utils.hpp"
 
 
 #ifdef __unix__
@@ -27,7 +28,7 @@ public:
 	static void remove_header(std::string& err);
 	static void count_scopes(const std::string& input_line, unsigned int& open_scopes);
 	static std::string read(const std::string& msg);
-	static int execute();
+	static int execute(const FlexaCliArgs& args);
 };
 
 #endif // !CPREPL_HPP

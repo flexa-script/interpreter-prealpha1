@@ -1,5 +1,4 @@
 #include "flx_repl.hpp"
-#include "flx_utils.hpp"
 #include "utils.hpp"
 #include "types.hpp"
 
@@ -26,7 +25,7 @@ void FlexaRepl::count_scopes(const std::string& input_line, unsigned int& open_s
 	open_scopes -= std::count(input_line.begin(), input_line.end(), '}');
 }
 
-int FlexaRepl::execute() {
+int FlexaRepl::execute(const FlexaCliArgs& args) {
 	std::cout << NAME << " " << VER << " [" << YEAR << "]\n";
 	std::cout << "Type \"#help\" for more information.\n";
 
@@ -63,7 +62,7 @@ int FlexaRepl::execute() {
 
 			std::cout << " #clear             Clears the terminal window.\n\n";
 		}
-		else if (input_line.substr(0, 5) == "#load") {
+		else if (input_line.starts_with("#load")) {
 			if (input_line.size() <= 6) {
 				std::cout << "File path expected after '#load'." << std::endl;
 				continue;
@@ -113,13 +112,13 @@ int FlexaRepl::execute() {
 
 			// check if it's all ok using a temp global scope
 			std::shared_ptr<visitor::Scope> temp = std::make_shared<visitor::Scope>(*semantic_global_scope);
-			visitor::SemanticAnalyser temp_semantic_analyser(temp, program, programs, std::vector<std::string>());
+			visitor::SemanticAnalyser temp_semantic_analyser(temp, program, programs, args.args);
 			temp_semantic_analyser.start();
 
-			visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, program, programs, std::vector<std::string>());
+			visitor::SemanticAnalyser semantic_analyser(semantic_global_scope, program, programs, args.args);
 			semantic_analyser.start();
 
-			visitor::Interpreter interpreter(interpreter_global_scope, program, programs, std::vector<std::string>());
+			visitor::Interpreter interpreter(interpreter_global_scope, program, programs, args.args);
 			interpreter.visit(program);
 
 			if (file_load) {

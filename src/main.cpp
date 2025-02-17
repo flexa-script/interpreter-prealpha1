@@ -10,7 +10,7 @@ int main(int argc, const char* argv[]) {
 	auto args = parse_args(argc, argv);
 
 	if (argc == 1) {
-		return FlexaRepl::execute();
+		return FlexaRepl::execute(args);
 	}
 
 	if (args.debug) {

@@ -116,6 +116,10 @@
     - [ ] https://github.com/carlosebmachado-games/tetris-Clone
     - [X] 2048
 
+## Refactoring
+- [ ] Split ASTTypingNode to more specific responsabilities
+- [ ] Split ASTNamespaceManagerNode to ASTIncludeNamespaceNode and ASTExcludeNamespaceNode
+
 ## Known bugs
 - [ ] Can't executes returned function from another function eg: `here_is_returning_a_function()();`
 - [ ] Fix HTTP core lib
