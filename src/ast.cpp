@@ -141,7 +141,7 @@ ASTFunctionCallNode::ASTFunctionCallNode(const std::string& name_space,
 	: ASTExprNode(row, col), identifier(identifier_vector[0].identifier),
 	name_space(name_space), identifier_vector(identifier_vector), parameters(parameters) {}
 
-ASTTypeParseNode::ASTTypeParseNode(Type type, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col)
+ASTTypeCastNode::ASTTypeCastNode(Type type, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), type(type), expr(expr) {}
 
 ASTTypingNode::ASTTypingNode(const std::string& image, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col)
@@ -249,11 +249,11 @@ void ASTTernaryNode::accept(Visitor* v) {
 
 long long ASTTernaryNode::hash(Visitor* v) { return 0; }
 
-void ASTTypeParseNode::accept(Visitor* v) {
-	v->visit(std::dynamic_pointer_cast<ASTTypeParseNode>(shared_from_this()));
+void ASTTypeCastNode::accept(Visitor* v) {
+	v->visit(std::dynamic_pointer_cast<ASTTypeCastNode>(shared_from_this()));
 }
 
-long long ASTTypeParseNode::hash(Visitor* v) { return 0; }
+long long ASTTypeCastNode::hash(Visitor* v) { return 0; }
 
 void ASTNullNode::accept(Visitor* v) {
 	v->visit(std::dynamic_pointer_cast<ASTNullNode>(shared_from_this()));

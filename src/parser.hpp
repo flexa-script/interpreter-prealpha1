@@ -90,7 +90,7 @@ namespace parser {
 		std::shared_ptr<ASTStructConstructorNode> parse_struct_constructor_node(std::shared_ptr<ASTIdentifierNode> idnode);
 		std::shared_ptr<ASTFunctionCallNode> parse_function_call_node(std::shared_ptr<ASTIdentifierNode> idnode);
 		std::shared_ptr<ASTThisNode> parse_this_node();
-		std::shared_ptr<ASTTypeParseNode> parse_type_parse_node();
+		std::shared_ptr<ASTTypeCastNode> parse_type_parse_node();
 		std::shared_ptr<ASTTypingNode> parse_typing_node();
 
 		// special

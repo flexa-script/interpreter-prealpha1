@@ -121,7 +121,7 @@ namespace visitor {
 		void visit(std::shared_ptr<ASTTernaryNode>) override;
 		void visit(std::shared_ptr<ASTInNode>) override;
 		void visit(std::shared_ptr<ASTFunctionCallNode>) override;
-		void visit(std::shared_ptr<ASTTypeParseNode>) override;
+		void visit(std::shared_ptr<ASTTypeCastNode>) override;
 		void visit(std::shared_ptr<ASTNullNode>) override;
 		void visit(std::shared_ptr<ASTThisNode>) override;
 		void visit(std::shared_ptr<ASTTypingNode>) override;

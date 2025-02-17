@@ -91,7 +91,7 @@ void DependencyResolver::visit(std::shared_ptr<ASTLambdaFunction>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTArrayConstructorNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTStructConstructorNode>) {}
 
-void DependencyResolver::visit(std::shared_ptr<ASTTypeParseNode>) {}
+void DependencyResolver::visit(std::shared_ptr<ASTTypeCastNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTTypingNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTNullNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTThisNode>) {}

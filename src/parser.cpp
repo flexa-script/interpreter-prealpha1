@@ -1705,7 +1705,7 @@ flx_string Parser::parse_string_literal() {
 	return str;
 }
 
-std::shared_ptr<ASTTypeParseNode> Parser::parse_type_parse_node() {
+std::shared_ptr<ASTTypeCastNode> Parser::parse_type_parse_node() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 	Type type = parse_type();
@@ -1717,7 +1717,7 @@ std::shared_ptr<ASTTypeParseNode> Parser::parse_type_parse_node() {
 
 	consume_token(TOK_RIGHT_BRACKET);
 
-	return std::make_shared<ASTTypeParseNode>(type, expr, row, col);
+	return std::make_shared<ASTTypeCastNode>(type, expr, row, col);
 }
 
 std::shared_ptr<ASTThisNode> Parser::parse_this_node() {

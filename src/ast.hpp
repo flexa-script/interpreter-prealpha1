@@ -454,12 +454,12 @@ namespace parser {
 		virtual long long hash(Visitor*) override;
 	};
 
-	class ASTTypeParseNode : public ASTExprNode {
+	class ASTTypeCastNode : public ASTExprNode {
 	public:
 		Type type;
 		std::shared_ptr<ASTExprNode> expr;
 
-		ASTTypeParseNode(Type type, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col);
+		ASTTypeCastNode(Type type, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;

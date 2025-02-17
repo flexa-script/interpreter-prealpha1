@@ -1200,7 +1200,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTInNode> astnode) {
 
 }
 
-void SemanticAnalyser::visit(std::shared_ptr<ASTTypeParseNode> astnode) {
+void SemanticAnalyser::visit(std::shared_ptr<ASTTypeCastNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 
 	astnode->expr->accept(this);
