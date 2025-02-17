@@ -81,6 +81,5 @@ using libs.core.files_test;
 // using libs.core.http_test; // not working
 using libs.core.input_test;
 using libs.core.sound_test;
-using libs.core.console_test;
 using libs.core.graphics_test;
-
+using libs.core.console_test;

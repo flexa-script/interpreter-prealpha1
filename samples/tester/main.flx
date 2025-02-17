@@ -15,3 +15,9 @@ timer_stop(gsw);
 print("full test suite elapsed time: ", gsw.elapsed_time, " ms");
 
 println('\n');
+
+exit(0);
+
+using test_suite_call;
+
+println("not exited the program");
