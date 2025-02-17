@@ -98,9 +98,9 @@ void BytecodeInstruction::write_bytecode_table(const std::vector<BytecodeInstruc
 	for (const auto& instruction : instructions) {
 		file << "0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(instruction.opcode) << "\t";
 
-		file << OP_NAMES[static_cast<int>(instruction.opcode)];
+		file << OP_NAMES.at(instruction.opcode);
 		
-		file << std::setw(22 - OP_NAMES[static_cast<int>(instruction.opcode)].size()) << std::setfill(' ') << "\t" << std::dec;
+		file << std::setw(22 - OP_NAMES.at(instruction.opcode).size()) << std::setfill(' ') << "\t" << std::dec;
 
 		switch (instruction.opcode)
 		{

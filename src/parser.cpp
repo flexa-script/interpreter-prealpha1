@@ -304,7 +304,7 @@ VariableDefinition* Parser::parse_struct_var_def() {
 	auto id = parse_identifier();
 	identifier = id.identifier;
 	dim = id.access_vector;
-	
+
 	if (dim.size() > 0) {
 		type = Type::T_ARRAY;
 	}
@@ -1056,7 +1056,7 @@ std::shared_ptr<ASTExprNode> Parser::parse_factor() {
 		return sub_expr;
 	}
 
-		// unary expression cases
+						 // unary expression cases
 	case TOK_REF:
 	case TOK_UNREF: {
 		std::string current_token_value = current_token.value;
@@ -1587,7 +1587,7 @@ std::shared_ptr<ASTStructConstructorNode> Parser::parse_struct_constructor_node(
 	return std::make_shared<ASTStructConstructorNode>(type_name, name_space, values, row, col);
 }
 
-flx_bool Parser::parse_bool_literal(){
+flx_bool Parser::parse_bool_literal() {
 	return current_token.value == "true";
 }
 

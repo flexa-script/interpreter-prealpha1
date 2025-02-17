@@ -1,204 +1,44 @@
-# CP Interpreter
+# Flexa Interpreter
+Flexa is a toy programming language developed for fun.
 
-## TODO
-- [X] Add load file from arguments
-- [X] Send rest arguments to flexa program
-- [ ] Add cwd
-- [X] Rewrite the lexer
-- [X] Change expression evaluation to left to right
-- [X] Add and precedence
-- [X] Add library support:
-    - [ ] Adds `using flx.core.*;` support
-- [X] Add collum on throwed errors
-- [X] Add 'this' token to get current function name
-- [X] Add const support
-- [X] Add unpacked declaration statement to unpack struct values
-- [X] Add char type
-- [X] Add any type
-- [X] Add array type:
-    - [ ] Change `var arr[]: any;` to `var arr: any[];`?
-    - [ ] Add `items[] = item;` as append support?
-- [X] Add struct support
-    - [ ] Add code error to Exception struct
-    - [ ] Add struct functions? also init function?
-    - [ ] Add struct heritage?
-    - [X] Add struct array-like constructoror
-    - [X] Add Java class pointer-like behavior
-    - [X] Add struct iterating over in foreach
-        - [X] add: builtin key, value like `foreach (var [key, value] in struct_var)`
-- [X] Add null support
-- [X] Add type convert support
-- [X] Remove mandatory variable type definition
-- [X] Add string array-like accessor/assign
-- [X] Function improvements:
-    - [X] Add void support to function
-    - [X] Add void return
-    - [X] Pass parameter by reference
-    - [X] Change builtin functions to ASTFunctionDefinitionNode
-    - [X] Add callback as type function
-    - [X] Add rest parameters, like `def foo(...args: any)`
-    - [X] Add optional parameters `def foo(arg: any = 10)`
-    - [X] Add arrow function `def (arg): void {}`, `def (arg) {}`, `def () {}`
-    - [X] struct access from function call
-- [X] Add built in funcs:
-    - [X] print
-    - [X] read
-    - [X] len: returns size of array/string
-    - [X] readch: read 1 single char
-    - [X] equals: compare values, if struct, compare struct values and not struct pointer
-    - [X] system: execute systems commands
-- [X] Add statements:
-    - [X] for
-    - [X] foreach
-    - [X] else if
-    - [X] switch
-    - [X] break
-    - [X] continue
-    - [X] assignment
-        - [X] +=, -=
-        - [X] *=, /=, %=, %/=, **=
-        - [x] <<=, >>=
-        - [x] &=, ^=, |=
-    - [X] namespace
-    - [X] include namespace
-    - [X] exclude namespace
-    - [X] exit
-    - [X] enum
-    - [X] try catch throw
-        - [X] Bring error header to a higher level
-        - [X] add ... to ignore catch error
-        - [X] add unpacked declaration `[type, error]` in catch to not include exception lib
-        - [X] add: throw a simple string as Exception to avoid Exception include `throw "string error";`
-    - [X] do while
-- [X] Add expression:
-    - [X] add: multiline string using ``
-        - [X] add: expression inside `This is a expression ${10 + 5} inside`
-    - [X] add: runtime type checking for any types
-        - [X] assign operation
-        - [X] expressions
-        - [X] unify operations
-        - [X] create equality functions
-        - [X] other nodes
-    - [X] refact expression return type:
-        - [X] if real type is any change to float
-        - [X] if both real type is int trunc to int
-        - [X] if some real type is float expression is float
-    - [X] refact: let `+` operator join arrays
-    - [X] Add expression operators:
-        - [X] binary operators 
-            - [X] mod `%` operation
-            - [X] floor `/%` division
-            - [X] pow `**` operation
-            - [X] spaceship `<=>` operation
-        - [X] add: `++`, `--` incrementor
-        - [X] add: `ref` and `unref` to handle variable references
-        - [X] add: `{ init_value }` to initilize all positions with same value
-        - [X] add: `in` operator to check if anything is in array/string
-        - [X] add: ternary (immediate) if `expr ? texpr : fexpr`
-        - [X] add typing:
-            - [X] `typeof`: returns type of object
-                - [X] fix: add namespace to type name return
-            - [X] `typeid`: returns hash of typeof
-            - [X] `is_any`: returns if a variable is any
-            - [X] `is_array`: returns if a variable is array
-            - [X] `is_struct`: returns if a variable is struct
-        - [X] `refid`: returns reference id
-    - [X] add: bitwise operators:
-        - [x] &   bitwise AND
-        - [x] |   bitwise inclusive OR
-        - [x] ^   bitwise XOR (exclusive OR)
-        - [x] <<  left shift
-        - [x] >>  right shift
-        - [x] ~	  bitwise NOT (ones' complement) (unary)
-    - [X] Add expression literal:
-        - [X] base literals:
-            - [X] bin
-            - [X] oct
-            - [X] dec
-            - [X] hex
-        - [X] scientific notation `10e-1`, `10e0`, `10e1`
-- [X] Let functions return array
-- [X] Add namespace scope nmspace::(method|variable|struct)
-- [X] Guanrantee that a lib is loaded once
-- [X] Flex function return, remove mandatory type definition in return
-- [X] Remove struct as bool in expression and change this type of verification to void value comparation (eg: var == null)
-- [X] Move function body parser to caller node (as interpreter), to check parameters of each caller
-- [x] Improve error system messages
-- [X] Improve REPL:
-    - [X] Now expressions can be executed in statements, dont need more to execute expression parser directly
-- [X] Add a default interface to implements built in functions
-- [X] Add a default interface to implements core libs
-- [ ] Adds working directory
-- [ ] Adds C-types?
-- [x] General otimizations:
-    - [x] Remove duplicate codes
-        - [X] Organize semantic duplicated checks
-    - [X] Implement detructors
-- [ ] Projects to implement in CP:
-    - [ ] https://github.com/bpslib/bps
-    - [ ] https://github.com/drmenguin/minilang-interpreter
-    - [ ] https://github.com/univesity-projects/sort-algorithms
-    - [ ] https://github.com/univesity-projects/caesar-cipher
-    - [ ] https://github.com/univesity-projects/pong-pro-player
-    - [ ] https://github.com/carlosebmachado-games/tetris-Clone
-    - [X] 2048
+## Features
+- Easy Syntax
+- Dynamic Typing
+- Built-in Libraries
 
+## Getting Started
 
-## Improvements from existent resources
-- [X] Automatically find and load included libs without to send by command line arguments
+### Installation
+To use Flexa, follow these steps:
+1. Download the interpreter release (not available yet)
+2. Navigate to the Flexa directory
+3. Execute Flexa interpreter by running the following command: `./flexa main.flx`
 
-## Known bugs
-- [ ] Fix function parameters root container, is generating mem leak
-- [X] Namespaces must be included in file, not in namespace level
-- [ ] Can't executes returned function from another function eg: `here_is_returning_a_function()();`
-- [X] Review value copy and equal (mainly cause of ponters)
-- [X] Some function definition are not being found:nd:
-    - [X] `var arr = {1, 2, 3, 4, 5, 6}` X `fun arr_size(arr[])`
-- [X] Undefined variables cant be assigned
-- [X] Array items cant verified correctly
-- [ ] Check behaviour of rest arrays and why join and print haven't the same signature
-- [X] Return is not returning in some cases eg `while(){if(){return;}}`
-- [X] This is not working on libs, maybe set lib name in current name
-- [X] Fix references
-    - [X] Remove reference from variable
-    - [X] Function call is not taking account value ref
-- [X] Test function as parameter or variable behaviour when already exists a function with its name
-    - [X] Fix function assign, i cant declare function in expression evaluation of a declaration node...
-    - [X] change consume semicolon to stack
-- [X] Interpreter is not checking null struct values correctly
-- [X] Throw an error when trying to pass char to string or int to float reference in function parameter
-- [X] function shadowing IS GENERATING ERROR
-- [X] When a struct is passed by parameter, it can't be assigned as null, it occours because it's passed just the strcut reference and not the variable
-- [X] Can't assing string position
-- [X] Parser can't handle unary assign operators when its inside a expression, as declaration expression its work (eg print(i++))
-- [X] This does not always return the expected value, eg when its inside a function tha does not has in main file
-- [X] If file is empty, it throw error
-- [X] If an statement is before include, it generate a semantic error
-- [X] Assigning struct values on constructors is not checking types correctly
-- [X] Function call strcut, string and array acessors is not working
-- [X] print({0,2} + {0,2}); is passing semantic analisys
-- [X] functions with no block are not checked (should check if is builtin)
-- [X] some expression nodes aren't cleaning return type like void funcions
-    - [X] add undefined checks after expression semantical analysis
-- [X] reference is not working properly
-- [X] searching functions in scope, it will not handle struct type
-- [X] struct assign seems not working in semantical analisys
+### Hello, World!
+Here's a classic "Hello, World!" program in Flexa:
 
-## Errors
-- Errors has CP prefix, eg. CP9999
-- Token errors init with 1
-- Lexer errors init with 2
-- Semantic scope errors init with 3
-- Semantic analyser errors init with 4
-- Interpreter scope errors init with 5
-- Interpreter errors init with 6
+```flexa
+print("Hello, World!");
+```
 
-## Rules
+Save this code in a file with a `.flx` extension, for example, `hello.flx`. Then, run it using the Flexa interpreter:
 
-### Arrays
-- If an array has your size defined in declaration, it can just assigned and reassigned with a same size and dimension array expression.
+```bash
+$ ./flexa  hello.flx
+```
 
-### Types
-- If an variable is not defined, it's undef, and it can be initialized with null or a value.
-- Variable has a type, if it is defined, it is fixed, else it will be any and the type can change.
-- If a variable is not an array, it can not be assined, even if it be any.
+You should see the output:
+
+```
+Hello, World!
+```
+
+For more detailed information and examples, check out the [documentation](https://flexa-script.github.io/).
+
+## Contributing
+
+Flexa is an open-source project, and we welcome contributions from the community. Whether you want to report a bug, suggest a feature, or submit code, your help is appreciated. Check out the [Contributing Guide](https://flexa-script.github.io/docs/contributing.md) to learn how to get involved.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
