@@ -347,7 +347,7 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	pop_namespace(pop);
 }
 
-void SemanticAnalyser::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode> astnode) {}
+void SemanticAnalyser::visit(std::shared_ptr<ASTBuiltinCallNode> astnode) {}
 
 void SemanticAnalyser::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);

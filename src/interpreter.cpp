@@ -421,7 +421,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionCallNode> astnode) {
 	pop_namespace(pop);
 }
 
-void Interpreter::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode> astnode) {
+void Interpreter::visit(std::shared_ptr<ASTBuiltinCallNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	builtin_functions[astnode->identifier]();
 	current_expression_value = access_value(current_expression_value, current_function_call_identifier_vector.top());
@@ -443,7 +443,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 		// if node not has block and it's a builtin, it's create a builtin executor
 		if (!block && builtin_functions.find(astnode->identifier) != builtin_functions.end()) {
 			block = std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
-				std::make_shared<ASTBuiltinFunctionExecuterNode>(astnode->identifier, astnode->row, astnode->col)
+				std::make_shared<ASTBuiltinCallNode>(astnode->identifier, astnode->row, astnode->col)
 			}, astnode->row, astnode->col);
 		}
 

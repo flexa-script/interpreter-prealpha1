@@ -238,52 +238,52 @@ void ModuleBuiltin::build_decls() {
 	parameters.push_back(variable);
 	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::PRINT], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::PRINT], Type::T_VOID, parameters,
 		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
-		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::PRINT], 0, 0)}, 0, 0)));
+		std::make_shared<ASTBuiltinCallNode>(BUILTIN_NAMES[BuintinFuncs::PRINT], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
 	parameters.push_back(variable);
 	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::PRINTLN], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::PRINTLN], Type::T_VOID, parameters,
 		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
-		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::PRINTLN], 0, 0)}, 0, 0)));
+		std::make_shared<ASTBuiltinCallNode>(BUILTIN_NAMES[BuintinFuncs::PRINTLN], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("args", Type::T_ANY, std::make_shared<ASTNullNode>(0, 0), true);
 	parameters.push_back(variable);
 	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::READ], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::READ], Type::T_STRING, parameters,
 		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
-		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::READ], 0, 0)}, 0, 0)));
+		std::make_shared<ASTBuiltinCallNode>(BUILTIN_NAMES[BuintinFuncs::READ], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
 	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::READCH], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::READCH], Type::T_CHAR, parameters,
 		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
-		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::READCH], 0, 0)}, 0, 0)));
+		std::make_shared<ASTBuiltinCallNode>(BUILTIN_NAMES[BuintinFuncs::READCH], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("it", Type::T_ANY, std::vector<std::shared_ptr<ASTExprNode>>());
 	parameters.push_back(variable);
 	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::LEN] + "A", FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::LEN] + "A", Type::T_INT, parameters,
 		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
-		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::LEN], 0, 0)}, 0, 0)));
+		std::make_shared<ASTBuiltinCallNode>(BUILTIN_NAMES[BuintinFuncs::LEN], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("it", Type::T_STRING);
 	parameters.push_back(variable);
 	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::LEN] + "S", FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::LEN] + "S", Type::T_INT, parameters,
 		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
-		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::LEN], 0, 0)}, 0, 0)));
+		std::make_shared<ASTBuiltinCallNode>(BUILTIN_NAMES[BuintinFuncs::LEN], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("ms", Type::T_INT);
 	parameters.push_back(variable);
 	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::SLEEP], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::SLEEP], Type::T_VOID, parameters,
 		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
-		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::SLEEP], 0, 0)}, 0, 0)));
+		std::make_shared<ASTBuiltinCallNode>(BUILTIN_NAMES[BuintinFuncs::SLEEP], 0, 0)}, 0, 0)));
 
 	parameters = std::vector<TypeDefinition*>();
 	variable = new VariableDefinition("cmd", Type::T_STRING);
 	parameters.push_back(variable);
 	func_decls.emplace(BUILTIN_NAMES[BuintinFuncs::SYSTEM], FunctionDefinition(BUILTIN_NAMES[BuintinFuncs::SYSTEM], Type::T_VOID, parameters,
 		std::make_shared<ASTBlockNode>(std::vector<std::shared_ptr<ASTNode>>{
-		std::make_shared<ASTBuiltinFunctionExecuterNode>(BUILTIN_NAMES[BuintinFuncs::SYSTEM], 0, 0)}, 0, 0)));
+		std::make_shared<ASTBuiltinCallNode>(BUILTIN_NAMES[BuintinFuncs::SYSTEM], 0, 0)}, 0, 0)));
 }

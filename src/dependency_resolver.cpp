@@ -51,7 +51,7 @@ void DependencyResolver::visit(std::shared_ptr<ASTUnpackedDeclarationNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTAssignmentNode>) {}
 
 
-void DependencyResolver::visit(std::shared_ptr<ASTBuiltinFunctionExecuterNode>) {}
+void DependencyResolver::visit(std::shared_ptr<ASTBuiltinCallNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTFunctionCallNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTFunctionDefinitionNode>) {}
 
