@@ -1,31 +1,33 @@
-# Statements Suportados na Linguagem CP
+# Supported Statements in the CP Language
 
-- **Declarações e Definições:**
-    - [X] `struct` (declaração de structs)
-    - [X] `var` (declaração de variáveis)
-    - [ ] `const` (declaração de constantes)
-    - [ ] `fun` (declaração de funções)
+A objective version from [TODO.md](TODO.md) for VM development.
 
-- [ ] **Controle de Fluxo:**
-    - [ ] `if` (bloco condicional)
-    - [ ] `elif` (bloco condicional alternativo)
-    - [ ] `else` (bloco condicional final)
-    - [ ] `switch` (declaração de múltiplos casos)
-    - [ ] `case` (caso dentro de `switch`)
-    - [ ] `default` (caso padrão em `switch`)
-    - [ ] `while` (laço de repetição)
-    - [ ] `do-while` (laço de repetição pós-condicional)
-    - [ ] `for` (laço de repetição clássico)
-    - [ ] `foreach` (laço para iteração em coleções)
-    - [ ] `try` (bloco para tratamento de exceções)
-    - [ ] `catch` (captura de exceções)
+- **Declarations and Definitions:**
+    - [X] `struct` (struct declarations)
+    - [X] `var` (variable declarations)
+    - [ ] `const` (constant declarations)
+    - [ ] `fun` (function declarations)
 
-- [ ] **Interrupções de Fluxo:**
-    - [ ] `return` (retorno de valor)
-    - [ ] `throw` (lançamento de exceções)
-    - [ ] `continue` (continuação para próxima iteração do laço)
-    - [ ] `break` (interrupção de laço ou `switch`)
-    - [ ] `exit` (saída imediata do programa)
+- [ ] **Flow Control:**
+    - [ ] `if` (conditional block)
+    - [ ] `elif` (alternative conditional block)
+    - [ ] `else` (final conditional block)
+    - [ ] `switch` (multi-case statement)
+    - [ ] `case` (case within `switch`)
+    - [ ] `default` (default case in `switch`)
+    - [ ] `while` (loop)
+    - [ ] `do-while` (post-conditional loop)
+    - [ ] `for` (classic loop)
+    - [ ] `foreach` (loop for iterating over collections)
+    - [ ] `try` (block for exception handling)
+    - [ ] `catch` (exception catching)
+
+- [ ] **Flow Interruptions:**
+    - [ ] `return` (value return)
+    - [ ] `throw` (exception throwing)
+    - [ ] `continue` (continuation to the next loop iteration)
+    - [ ] `break` (loop or `switch` interruption)
+    - [ ] `exit` (immediate program exit)
 
 - [ ] **Builtin:**
     - [ ] Builtin functions
@@ -39,9 +41,8 @@
     - [ ] Console
     - [ ] Web/API
 
-
-- [ ] **Outros:**
-    - [ ] Expressões (`expression`) seguidas de `;`
+- [ ] **Others:**
+    - [ ] Expressions (`expression`) followed by `;`
         - [ ] Array constructor
         - [ ] Struct constructor
-    - [ ] Atribuições (`assignment`) como `var_identifier = expression`
+    - [ ] Assignments (`assignment`) such as `var_identifier = expression`
