@@ -895,7 +895,10 @@ void Interpreter::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 			idnode->declarations[0]->expr = nullptr;
 		}
 		else if (const auto idnode = std::dynamic_pointer_cast<ASTDeclarationNode>(astnode->decl)) {
-			std::map<std::string, std::shared_ptr<ASTExprNode>> values = { { "error", error } };
+			std::map<std::string, std::shared_ptr<ASTExprNode>> values = {
+				{ "error", error },
+				{ "code", std::make_shared<ASTLiteralNode<flx_int>>(0, astnode->row, astnode->col) }
+			};
 			auto exnode = std::make_shared<ASTStructConstructorNode>("Exception", language_namespace, values, astnode->row, astnode->col);
 			idnode->expr = exnode;
 			idnode->accept(this);

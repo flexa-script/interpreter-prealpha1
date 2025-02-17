@@ -732,18 +732,20 @@ void SemanticAnalyser::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 
 	scopes[name_space].push_back(std::make_shared<Scope>(prg));
 
+	auto error_node = std::make_shared<ASTLiteralNode<flx_string>>("", astnode->row, astnode->col);
+
 	if (const auto idnode = std::dynamic_pointer_cast<ASTUnpackedDeclarationNode>(astnode->decl)) {
 		if (idnode->declarations.size() != 1) {
 			throw std::runtime_error("invalid number of values");
 		}
-		auto exnode = std::make_shared<ASTLiteralNode<flx_string>>("", astnode->row, astnode->col);
-		idnode->declarations[0]->expr = exnode;
+		idnode->declarations[0]->expr = error_node;
 		idnode->accept(this);
 		idnode->declarations[0]->expr = nullptr;
 	}
 	else if (const auto idnode = std::dynamic_pointer_cast<ASTDeclarationNode>(astnode->decl)) {
 		std::map<std::string, std::shared_ptr<ASTExprNode>> values = {
-			{ "error", std::make_shared<ASTLiteralNode<flx_string>>("", astnode->row, astnode->col) }
+			{ "error", error_node },
+			{ "code", std::make_shared<ASTLiteralNode<flx_int>>(0, astnode->row, astnode->col) }
 		};
 		auto exnode = std::make_shared<ASTStructConstructorNode>("Exception", language_namespace, values, astnode->row, astnode->col);
 		idnode->expr = exnode;
