@@ -32,7 +32,7 @@ namespace parser {
 	class ASTIfNode;
 	class ASTTryCatchNode;
 	class ASTThrowNode;
-	class ASTReticencesNode;
+	class ASTEllipsisNode;
 	class ASTForNode;
 	class ASTForEachNode;
 	class ASTWhileNode;
@@ -40,7 +40,7 @@ namespace parser {
 	class ASTFunctionDefinitionNode;
 	class ASTStructDefinitionNode;
 	template <typename T> class ASTLiteralNode;
-	class ASTFunctionExpression;
+	class ASTLambdaFunction;
 	class ASTExprNode;
 	class ASTArrayConstructorNode;
 	class ASTStructConstructorNode;
@@ -96,7 +96,7 @@ namespace visitor {
 		virtual void visit(std::shared_ptr<ASTEnumNode>) = 0;
 		virtual void visit(std::shared_ptr<ASTTryCatchNode>) = 0;
 		virtual void visit(std::shared_ptr<ASTThrowNode>) = 0;
-		virtual void visit(std::shared_ptr<ASTReticencesNode>) = 0;
+		virtual void visit(std::shared_ptr<ASTEllipsisNode>) = 0;
 		virtual void visit(std::shared_ptr<ASTIfNode>) = 0;
 		virtual void visit(std::shared_ptr<ASTForNode>) = 0;
 		virtual void visit(std::shared_ptr<ASTForEachNode>) = 0;
@@ -109,7 +109,7 @@ namespace visitor {
 		virtual void visit(std::shared_ptr<ASTLiteralNode<flx_float>>) = 0;
 		virtual void visit(std::shared_ptr<ASTLiteralNode<flx_char>>) = 0;
 		virtual void visit(std::shared_ptr<ASTLiteralNode<flx_string>>) = 0;
-		virtual void visit(std::shared_ptr<ASTFunctionExpression>) = 0;
+		virtual void visit(std::shared_ptr<ASTLambdaFunction>) = 0;
 		virtual void visit(std::shared_ptr<ASTArrayConstructorNode>) = 0;
 		virtual void visit(std::shared_ptr<ASTStructConstructorNode>) = 0;
 		virtual void visit(std::shared_ptr<ASTBinaryExprNode>) = 0;

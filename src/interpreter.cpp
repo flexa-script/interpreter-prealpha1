@@ -454,7 +454,7 @@ void Interpreter::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 	pop_namespace(pop);
 }
 
-void Interpreter::visit(std::shared_ptr<ASTFunctionExpression> astnode) {
+void Interpreter::visit(std::shared_ptr<ASTLambdaFunction> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	const auto& name_space = get_namespace();
 
@@ -901,7 +901,7 @@ void Interpreter::visit(std::shared_ptr<ASTTryCatchNode> astnode) {
 			idnode->accept(this);
 			idnode->expr = nullptr;
 		}
-		else if (!std::dynamic_pointer_cast<ASTReticencesNode>(astnode->decl)) {
+		else if (!std::dynamic_pointer_cast<ASTEllipsisNode>(astnode->decl)) {
 			throw std::runtime_error("expected declaration");
 		}
 
@@ -936,7 +936,7 @@ void Interpreter::visit(std::shared_ptr<ASTThrowNode> astnode) {
 
 }
 
-void Interpreter::visit(std::shared_ptr<ASTReticencesNode> astnode) {
+void Interpreter::visit(std::shared_ptr<ASTEllipsisNode> astnode) {
 	set_curr_pos(astnode->row, astnode->col);
 	current_expression_value = alocate_value(new RuntimeValue(Type::T_UNDEFINED));
 }

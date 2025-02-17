@@ -65,7 +65,7 @@ void DependencyResolver::visit(std::shared_ptr<ASTExitNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTEnumNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTTryCatchNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTThrowNode>) {}
-void DependencyResolver::visit(std::shared_ptr<ASTReticencesNode>) {}
+void DependencyResolver::visit(std::shared_ptr<ASTEllipsisNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTSwitchNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTElseIfNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTIfNode>) {}
@@ -87,7 +87,7 @@ void DependencyResolver::visit(std::shared_ptr<ASTIdentifierNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTInNode>) {}
 
 void DependencyResolver::visit(std::shared_ptr<ASTStructDefinitionNode>) {}
-void DependencyResolver::visit(std::shared_ptr<ASTFunctionExpression>) {}
+void DependencyResolver::visit(std::shared_ptr<ASTLambdaFunction>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTArrayConstructorNode>) {}
 void DependencyResolver::visit(std::shared_ptr<ASTStructConstructorNode>) {}
 

@@ -81,7 +81,7 @@ ASTTryCatchNode::ASTTryCatchNode(std::shared_ptr<ASTStatementNode> decl, std::sh
 ASTThrowNode::ASTThrowNode(std::shared_ptr<ASTExprNode> error, unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col), error(error) {}
 
-ASTReticencesNode::ASTReticencesNode(unsigned int row, unsigned int col)
+ASTEllipsisNode::ASTEllipsisNode(unsigned int row, unsigned int col)
 	: ASTStatementNode(row, col) {}
 
 ASTForNode::ASTForNode(const std::array<std::shared_ptr<ASTNode>, 3>& dci, std::shared_ptr<ASTBlockNode> block, unsigned int row, unsigned int col)
@@ -147,7 +147,7 @@ ASTTypeParseNode::ASTTypeParseNode(Type type, std::shared_ptr<ASTExprNode> expr,
 ASTTypingNode::ASTTypingNode(const std::string& image, std::shared_ptr<ASTExprNode> expr, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), image(image), expr(expr) {}
 
-ASTFunctionExpression::ASTFunctionExpression(std::shared_ptr<ASTFunctionDefinitionNode> fun, unsigned int row, unsigned int col)
+ASTLambdaFunction::ASTLambdaFunction(std::shared_ptr<ASTFunctionDefinitionNode> fun, unsigned int row, unsigned int col)
 	: ASTExprNode(row, col), fun(fun) {}
 
 ASTValueNode::ASTValueNode(Value* value, unsigned int row, unsigned int col)
@@ -267,11 +267,11 @@ void ASTThisNode::accept(Visitor* v) {
 
 long long ASTThisNode::hash(Visitor* v) { return 0; }
 
-void ASTFunctionExpression::accept(Visitor* v) {
-	v->visit(std::dynamic_pointer_cast<ASTFunctionExpression>(shared_from_this()));
+void ASTLambdaFunction::accept(Visitor* v) {
+	v->visit(std::dynamic_pointer_cast<ASTLambdaFunction>(shared_from_this()));
 }
 
-long long ASTFunctionExpression::hash(Visitor* v) { return 0; }
+long long ASTLambdaFunction::hash(Visitor* v) { return 0; }
 
 void ASTValueNode::accept(Visitor* v) {
 	v->visit(std::dynamic_pointer_cast<ASTValueNode>(shared_from_this()));
@@ -333,8 +333,8 @@ void ASTThrowNode::accept(Visitor* v) {
 	v->visit(std::dynamic_pointer_cast<ASTThrowNode>(shared_from_this()));
 }
 
-void ASTReticencesNode::accept(Visitor* v) {
-	v->visit(std::dynamic_pointer_cast<ASTReticencesNode>(shared_from_this()));
+void ASTEllipsisNode::accept(Visitor* v) {
+	v->visit(std::dynamic_pointer_cast<ASTEllipsisNode>(shared_from_this()));
 }
 
 void ASTElseIfNode::accept(Visitor* v) {

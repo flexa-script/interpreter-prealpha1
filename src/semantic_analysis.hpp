@@ -77,7 +77,7 @@ namespace visitor {
 		void visit(std::shared_ptr<ASTEnumNode>) override;
 		void visit(std::shared_ptr<ASTTryCatchNode>) override;
 		void visit(std::shared_ptr<ASTThrowNode>) override;
-		void visit(std::shared_ptr<ASTReticencesNode>) override;
+		void visit(std::shared_ptr<ASTEllipsisNode>) override;
 		void visit(std::shared_ptr<ASTElseIfNode>) override;
 		void visit(std::shared_ptr<ASTIfNode>) override;
 		void visit(std::shared_ptr<ASTForNode>) override;
@@ -91,7 +91,7 @@ namespace visitor {
 		void visit(std::shared_ptr<ASTLiteralNode<flx_float>>) override;
 		void visit(std::shared_ptr<ASTLiteralNode<flx_char>>) override;
 		void visit(std::shared_ptr<ASTLiteralNode<flx_string>>) override;
-		void visit(std::shared_ptr<ASTFunctionExpression>) override;
+		void visit(std::shared_ptr<ASTLambdaFunction>) override;
 		void visit(std::shared_ptr<ASTArrayConstructorNode>) override;
 		void visit(std::shared_ptr<ASTStructConstructorNode>) override;
 		void visit(std::shared_ptr<ASTBinaryExprNode>) override;

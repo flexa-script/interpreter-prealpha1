@@ -13,7 +13,7 @@
 namespace parser {
 	class ASTProgramNode;
 	template <typename T> class ASTLiteralNode;
-	class ASTFunctionExpression;
+	class ASTLambdaFunction;
 	class ASTIdentifierNode;
 }
 

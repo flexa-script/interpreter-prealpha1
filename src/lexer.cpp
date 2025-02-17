@@ -515,7 +515,7 @@ Token Lexer::process_symbol() {
 			}
 			str_symbol += current_char;
 			advance();
-			type = TOK_RETICENCES;
+			type = TOK_ELLIPSIS;
 		}
 		else {
 			type = TOK_DOT;

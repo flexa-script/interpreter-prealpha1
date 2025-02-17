@@ -60,7 +60,7 @@ namespace parser {
 		std::shared_ptr<ASTForEachNode> parse_foreach_statement();
 		std::shared_ptr<ASTWhileNode> parse_while_statement();
 		std::shared_ptr<ASTDoWhileNode> parse_do_while_statement();
-		std::shared_ptr<ASTFunctionExpression> parse_function_expression();
+		std::shared_ptr<ASTLambdaFunction> parse_function_expression();
 		std::shared_ptr<ASTFunctionDefinitionNode> parse_function_statement();
 		std::shared_ptr<ASTFunctionDefinitionNode> parse_function_definition(const std::string& identifier);
 		std::shared_ptr<ASTStructDefinitionNode> parse_struct_definition();

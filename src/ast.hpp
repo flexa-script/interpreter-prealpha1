@@ -242,9 +242,9 @@ namespace parser {
 		void accept(Visitor*) override;
 	};
 
-	class ASTReticencesNode : public ASTStatementNode {
+	class ASTEllipsisNode : public ASTStatementNode {
 	public:
-		ASTReticencesNode(unsigned int row, unsigned int col);
+		ASTEllipsisNode(unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 	};
@@ -332,11 +332,11 @@ namespace parser {
 		virtual long long hash(Visitor*) override;
 	};
 
-	class ASTFunctionExpression : public ASTExprNode {
+	class ASTLambdaFunction : public ASTExprNode {
 	public:
 		std::shared_ptr<ASTFunctionDefinitionNode> fun;
 
-		ASTFunctionExpression(std::shared_ptr<ASTFunctionDefinitionNode> fun, unsigned int row, unsigned int col);
+		ASTLambdaFunction(std::shared_ptr<ASTFunctionDefinitionNode> fun, unsigned int row, unsigned int col);
 
 		void accept(Visitor*) override;
 		virtual long long hash(Visitor*) override;

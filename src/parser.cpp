@@ -293,7 +293,7 @@ VariableDefinition* Parser::parse_struct_var_def() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	if (current_token.type == TOK_RETICENCES) {
+	if (current_token.type == TOK_ELLIPSIS) {
 		is_rest = true;
 		consume_token(TOK_IDENTIFIER);
 	}
@@ -473,8 +473,8 @@ std::shared_ptr<ASTTryCatchNode> Parser::parse_try_catch_statement() {
 	consume_token(TOK_CATCH);
 	consume_token(TOK_LEFT_BRACKET);
 	consume_token();
-	if (current_token.type == TOK_RETICENCES) {
-		decl = std::make_shared<ASTReticencesNode>(row, col);
+	if (current_token.type == TOK_ELLIPSIS) {
+		decl = std::make_shared<ASTEllipsisNode>(row, col);
 	}
 	else {
 		check_current_token(TOK_VAR);
@@ -612,11 +612,11 @@ std::shared_ptr<ASTDoWhileNode> Parser::parse_do_while_statement() {
 	return std::make_shared<ASTDoWhileNode>(condition, block, row, col);
 }
 
-std::shared_ptr<ASTFunctionExpression> Parser::parse_function_expression() {
+std::shared_ptr<ASTLambdaFunction> Parser::parse_function_expression() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 	consume_token();
-	return std::make_shared<ASTFunctionExpression>(parse_function_definition(""), row, col);
+	return std::make_shared<ASTLambdaFunction>(parse_function_definition(""), row, col);
 }
 
 std::shared_ptr<ASTFunctionDefinitionNode> Parser::parse_function_statement() {
@@ -1352,7 +1352,7 @@ VariableDefinition* Parser::parse_formal_param() {
 	unsigned int row = current_token.row;
 	unsigned int col = current_token.col;
 
-	if (current_token.type == TOK_RETICENCES) {
+	if (current_token.type == TOK_ELLIPSIS) {
 		is_rest = true;
 		consume_token(TOK_IDENTIFIER);
 	}

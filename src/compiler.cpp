@@ -212,7 +212,7 @@ void Compiler::visit(std::shared_ptr<ASTFunctionDefinitionNode> astnode) {
 	pop_namespace(pop);
 }
 
-void Compiler::visit(std::shared_ptr<ASTFunctionExpression> astnode) {
+void Compiler::visit(std::shared_ptr<ASTLambdaFunction> astnode) {
 	astnode->fun->identifier = utils::UUID::generate();
 	astnode->fun->accept(this);
 	add_instruction(OpCode::OP_PUSH_FUNCTION, flx_string(astnode->fun->identifier));
@@ -365,7 +365,7 @@ void Compiler::visit(std::shared_ptr<ASTThrowNode> astnode) {
 	add_instruction(OpCode::OP_THROW, nullptr);
 }
 
-void Compiler::visit(std::shared_ptr<ASTReticencesNode> astnode) {}
+void Compiler::visit(std::shared_ptr<ASTEllipsisNode> astnode) {}
 
 void Compiler::visit(std::shared_ptr<ASTWhileNode> astnode) {
 	astnode->condition->accept(this);
