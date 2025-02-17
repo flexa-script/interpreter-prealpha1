@@ -6,7 +6,7 @@
 
 namespace visitor {
 
-	class Linker : Visitor {
+	class DependencyResolver : Visitor {
 	public:
 		std::vector<std::string> lib_names;
 
@@ -14,7 +14,7 @@ namespace visitor {
 		std::vector<std::string> libs;
 
 	public:
-		Linker(std::shared_ptr<ASTProgramNode> main_program, const std::map<std::string, std::shared_ptr<ASTProgramNode>>& programs);
+		DependencyResolver(std::shared_ptr<ASTProgramNode> main_program, const std::map<std::string, std::shared_ptr<ASTProgramNode>>& programs);
 
 		void start();
 

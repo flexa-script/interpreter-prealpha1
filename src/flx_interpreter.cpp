@@ -9,7 +9,7 @@
 #include "parser.hpp"
 #include "compiler.hpp"
 #include "utils.hpp"
-#include "linker.hpp"
+#include "dependency_resolver.hpp"
 #include "interpreter.hpp"
 #include "vm.hpp"
 
@@ -101,7 +101,7 @@ int FlexaInterpreter::interpreter() {
 		parse_programs(source_programs, &main_program, &programs);
 		size_t cplibs_size = 0;
 		do {
-			visitor::Linker libfinder(main_program, programs);
+			visitor::DependencyResolver libfinder(main_program, programs);
 			libfinder.start();
 
 			cplibs_size = libfinder.lib_names.size();
